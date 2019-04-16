@@ -1,14 +1,39 @@
-apiVersion: skaffold/v1alpha5
+apiVersion: skaffold/v1beta7
 kind: Config
 build:
+  tagPolicy:
+    sha256: {}
   artifacts:
   # When you're using minikube context, this image will be pushed to your local
   # docker daemon. If you're using a non-minikube context, the image will be
   # pushed to a private quay.io repository.
   - image: quay.io/newrelic/infrastructure-k8s-dev
     context: .
+    docker:
+      dockerfile: Dockerfile
   local: {}
 deploy:
   kubectl:
     manifests:
     - deploy/local.yaml
+profiles:
+- name: unprivileged
+  build:
+    tagPolicy:
+      sha256: {}
+    artifacts:
+    # When you're using minikube context, this image will be pushed to your local
+    # docker daemon. If you're using a non-minikube context, the image will be
+    # pushed to a private quay.io repository.
+    - image: quay.io/newrelic/infrastructure-k8s-dev
+      context: .
+      docker:
+        dockerfile: Dockerfile
+        buildArgs:
+          IMAGE_TAG: "1.3.5"
+          MODE: unprivileged
+    local: {}
+  deploy:
+    kubectl:
+      manifests:
+        - deploy/local-unprivileged.yaml

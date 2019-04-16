@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## 1.9.0
+
+### Changed
+
+- The integraion now uses the infrastructure agent v1.3.18 instead of 1.1.14. Refer to the
+  [infrastructure agent release notes](https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/new-relic-infrastructure-agent-1318) 
+  for more information about all the changes from this upgrade. 
+
 ## 1.8.0
 
 ### Added

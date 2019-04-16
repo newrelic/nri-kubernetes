@@ -20,8 +20,11 @@ pipeline {
     GOPATH = "${ws}/go"
     PATH = "${GOPATH}/bin:${PATH}"
     DOCKER_IMAGE = imageName(quayImage, branchName())
+    DOCKER_IMAGE_UNPRIVILEGED = "${DOCKER_IMAGE}_unprivileged"
     DOCKER_TAG = tagName(branchName())
+    DOCKER_EXPIRES_LABEL = "quay.expires-after=1w"
     E2E_DOCKER_IMAGE = "${quayE2eImage}:${DOCKER_TAG}"
+    E2E_UNPRIVILEGED_DOCKER_IMAGE = "${quayE2eImage}:${DOCKER_TAG}_unprivileged"
   }
 
   stages {
@@ -55,7 +58,9 @@ pipeline {
             sh 'make compile'
             script {
               docker.withRegistry('https://quay.io/v2/', 'quay_fsi_robot') {
-                docker.build("${DOCKER_IMAGE}", "--label 'quay.expires-after=1w' ${integrationPath}").push()
+                // There is a known issue with Docker plugin and docker multi-stages. See: https://issues.jenkins-ci.org/browse/JENKINS-44609
+                sh "docker build -t ${DOCKER_IMAGE} --label '${DOCKER_EXPIRES_LABEL}' ${integrationPath} && docker push ${DOCKER_IMAGE}"
+                sh "docker build -t ${DOCKER_IMAGE_UNPRIVILEGED} --build-arg 'MODE=unprivileged' --build-arg 'IMAGE_TAG=1.3.5' --label '${DOCKER_EXPIRES_LABEL}' ${integrationPath} && docker push ${DOCKER_IMAGE_UNPRIVILEGED}"
               }
             }
           }
