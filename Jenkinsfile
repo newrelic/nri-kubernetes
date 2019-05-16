@@ -2,7 +2,7 @@ def ws = "/data/jenkins/workspace/${JOB_NAME}-${BUILD_NUMBER}"
 def quayImage = 'quay.io/newrelic/infrastructure-k8s-staging'
 def quayE2eImage = 'quay.io/newrelic/infrastructure-k8s-e2e'
 def integrationPath = '.'
-def kubernetesTestCluster = 'fsi-jenkins-111-rbac'
+def kubernetesTestCluster1_11 = 'fsi-jenkins-111-rbac'
 
 pipeline {
   agent {
@@ -100,16 +100,36 @@ pipeline {
       }
     }
     stage('Running e2e tests') {
-      steps {
-        // We lock the e2e build execution in order to run this step only once at a time.
-        lock(resource: "k8s_cluster_${kubernetesTestCluster}", inversePrecedence: true) {
-          build job: 'k8s-integration-e2e', parameters: [
-            string(name: 'CLUSTER_NAME', value: kubernetesTestCluster),
-            string(name: 'INTEGRATION_IMAGE_TAG', value: "${DOCKER_TAG}"),
-            string(name: 'RBAC', value: 'true'),
-            string(name: 'VERBOSE', value: 'true'),
-            string(name: 'E2E_DOCKER_IMAGE_TAG', value: "${DOCKER_TAG}")
-          ]
+      parallel {
+        stage('privileged version') {
+          steps {
+            // We lock the e2e build execution in order to run this step only once at a time.
+            lock(resource: "k8s_cluster_${kubernetesTestCluster1_11}", inversePrecedence: true) {
+              build job: 'k8s-integration-e2e', parameters: [
+                string(name: 'CLUSTER_NAME', value: kubernetesTestCluster1_11),
+                string(name: 'INTEGRATION_IMAGE_TAG', value: "${DOCKER_TAG}"),
+                string(name: 'RBAC', value: 'true'),
+                string(name: 'UNPRIVILEGED', value: 'false'),
+                string(name: 'VERBOSE', value: 'true'),
+                string(name: 'E2E_DOCKER_IMAGE_TAG', value: "${DOCKER_TAG}")
+              ]
+            }
+          }
+        }
+        stage('unprivileged version') {
+          steps {
+            // We lock the e2e build execution in order to run this step only once at a time.
+            lock(resource: "k8s_cluster_${kubernetesTestCluster1_11}", inversePrecedence: true) {
+              build job: 'k8s-integration-e2e', parameters: [
+                string(name: 'CLUSTER_NAME', value: kubernetesTestCluster1_11),
+                string(name: 'INTEGRATION_IMAGE_TAG', value: "${DOCKER_TAG}_unprivileged"),
+                string(name: 'RBAC', value: 'true'),
+                string(name: 'UNPRIVILEGED', value: 'true'),
+                string(name: 'VERBOSE', value: 'true'),
+                string(name: 'E2E_DOCKER_IMAGE_TAG', value: "${DOCKER_TAG}")
+              ]
+            }
+          }
         }
       }
     }

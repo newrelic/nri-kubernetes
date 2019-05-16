@@ -61,7 +61,7 @@ spec:
       serviceAccountName: newrelic
       containers:
         - name: newrelic-infra
-          image: newrelic/infrastructure-k8s:1.9.0-unprivileged
+          image: newrelic/infrastructure-k8s:1.9.1-unprivileged
           resources:
             limits:
               memory: 150M
@@ -69,6 +69,7 @@ spec:
               cpu: 100m
               memory: 30M
           securityContext:
+            runAsUser: 1000 # nri-agent
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
           volumeMounts:

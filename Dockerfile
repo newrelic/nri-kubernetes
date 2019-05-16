@@ -14,8 +14,12 @@ FROM base AS branch-normal
 USER root
 
 FROM base AS branch-unprivileged
+
 RUN addgroup -g 2000 nri-agent && adduser -D -u 1000 -G nri-agent nri-agent
 USER nri-agent
+
+ENV NRIA_OVERRIDE_HOST_ROOT ""
+ENV NRIA_IS_SECURE_FORWARD_ONLY true
 
 FROM branch-${MODE}
 CMD ["/usr/bin/newrelic-infra"]

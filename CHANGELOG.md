@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## 1.9.1
+### Fixed
+
+- The unprivileged integration runs always as `nri-agent` user. Fixes https://github.com/kubernetes/kubernetes/issues/78308.
+- Infrastructure agent is now behaving in secure-forwarder mode.
+- Autodiscovery cache directory permissions got changed from 644 to 744 in order to let the nri-agent user write inside.
+
 ## 1.9.0
 
 ### Changed

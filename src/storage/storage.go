@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	fileExt  = ".json"
-	filePerm = 0644
+	fileExt    = ".json"
+	filePerm   = 0644
+	folderPerm = 0744
 )
 
 var now = time.Now
@@ -53,7 +54,7 @@ func (j JSONDiskStorage) pathFor(key string) string {
 // NewJSONDiskStorage returns a JSONDiskStorage using the rootPath argument as root folder for the persistent entities.
 func NewJSONDiskStorage(rootPath string) JSONDiskStorage {
 	if _, err := os.Stat(rootPath); os.IsNotExist(err) {
-		err := os.MkdirAll(rootPath, 0644)
+		err := os.MkdirAll(rootPath, folderPerm)
 		if err != nil {
 			logrus.WithError(err).Warnf("can't create storage directory: %s", rootPath)
 		}

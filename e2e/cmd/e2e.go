@@ -39,6 +39,7 @@ var cliArgs = struct {
 	Context                    string `default:"" help:"Kubernetes context"`
 	CleanBeforeRun             bool   `default:"true" help:"Clean the cluster before running the tests"`
 	FailFast                   bool   `default:"false" help:"Fail the whole suit on the first failure"`
+	Unprivileged               bool   `default:"false" help:"Deploy and run the integration in unprivileged mode"`
 }{}
 
 const (
@@ -67,23 +68,23 @@ func (e entityID) split() []string {
 	return strings.Split(string(e), ":")
 }
 
-func scenarios(integrationImageRepository string, integrationImageTag string, rbac bool) []string {
+func scenarios(integrationImageRepository string, integrationImageTag string, rbac bool, unprivileged bool) []string {
 	return []string{
-		s(rbac, integrationImageRepository, integrationImageTag, "v1.1.0", false),
-		s(rbac, integrationImageRepository, integrationImageTag, "v1.1.0", true),
-		s(rbac, integrationImageRepository, integrationImageTag, "v1.2.0", false),
-		s(rbac, integrationImageRepository, integrationImageTag, "v1.2.0", true),
-		s(rbac, integrationImageRepository, integrationImageTag, "v1.3.0", false),
-		s(rbac, integrationImageRepository, integrationImageTag, "v1.3.0", true),
-		s(rbac, integrationImageRepository, integrationImageTag, "v1.4.0", false),
-		s(rbac, integrationImageRepository, integrationImageTag, "v1.4.0", true),
-		s(rbac, integrationImageRepository, integrationImageTag, "v1.5.0", false),
-		s(rbac, integrationImageRepository, integrationImageTag, "v1.5.0", true),
+		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.1.0", false),
+		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.1.0", true),
+		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.2.0", false),
+		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.2.0", true),
+		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.3.0", false),
+		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.3.0", true),
+		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.4.0", false),
+		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.4.0", true),
+		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.5.0", false),
+		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.5.0", true),
 	}
 }
 
-func s(rbac bool, integrationImageRepository, integrationImageTag, ksmVersion string, twoKSMInstances bool) string {
-	str := fmt.Sprintf("rbac=%v,ksm-instance-one.rbac.create=%v,ksm-instance-one.image.tag=%s,daemonset.image.repository=%s,daemonset.image.tag=%s", rbac, rbac, ksmVersion, integrationImageRepository, integrationImageTag)
+func s(rbac bool, unprivileged bool, integrationImageRepository, integrationImageTag, ksmVersion string, twoKSMInstances bool) string {
+	str := fmt.Sprintf("rbac=%v,ksm-instance-one.rbac.create=%v,ksm-instance-one.image.tag=%s,daemonset.unprivileged=%v,daemonset.image.repository=%s,daemonset.image.tag=%s", rbac, rbac, ksmVersion, unprivileged, integrationImageRepository, integrationImageTag)
 	if twoKSMInstances {
 		return fmt.Sprintf("%s,ksm-instance-two.rbac.create=%v,ksm-instance-two.image.tag=%s,two-ksm-instances=true", str, rbac, ksmVersion)
 	}
@@ -182,7 +183,7 @@ func main() {
 	// TODO
 	var errs []error
 	ctx := context.TODO()
-	for _, s := range scenarios(cliArgs.IntegrationImageRepository, cliArgs.IntegrationImageTag, cliArgs.Rbac) {
+	for _, s := range scenarios(cliArgs.IntegrationImageRepository, cliArgs.IntegrationImageTag, cliArgs.Rbac, cliArgs.Unprivileged) {
 		logger.Infof("Scenario: %q", s)
 		err := executeScenario(ctx, s, c, logger)
 		if err != nil {

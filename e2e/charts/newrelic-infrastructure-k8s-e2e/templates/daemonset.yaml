@@ -35,12 +35,26 @@ spec:
           imagePullPolicy: Always
           resources:
 {{ toYaml .Values.daemonset.resources | indent 12 }}
+          {{- if .Values.daemonset.unprivileged }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          {{- end }}
           volumeMounts:
+            {{- if .Values.daemonset.unprivileged }}
+            - mountPath: /var/db/newrelic-infra/data
+              name: tmpfs-data
+            - mountPath: /var/db/newrelic-infra/user_data
+              name: tmpfs-user-data
+            - mountPath: /tmp
+              name: tmpfs-tmp
+            {{- else }}
             - mountPath: /host
               name: host-volume
               readOnly: true
             - mountPath: /var/run/docker.sock
               name: host-docker-socket
+            {{- end }}
           env:
             - name: "CLUSTER_NAME"
               value: {{ .Values.integration.k8sClusterName | quote }}
@@ -60,6 +74,10 @@ spec:
             - name: "KUBE_STATE_METRICS_URL" # If this value is specified then discovery process for kube-state-metrics endpoint won't be triggered.
               value: {{ .Values.integration.ksm.url | quote}} # This is example value. Only HTTP request is accepted.
             {{- end }}
+            {{- if .Values.daemonset.unprivileged }}
+            - name: "DISCOVERY_CACHE_DIR"
+              value: "/tmp/nr-kuberentes"
+            {{- end }}
             - name: "NRIA_DISPLAY_NAME"
               valueFrom:
                 fieldRef:
@@ -71,14 +89,23 @@ spec:
                   apiVersion: "v1"
                   fieldPath: "spec.nodeName"
             - name: "NRIA_PASSTHROUGH_ENVIRONMENT"
-              value: "KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,CLUSTER_NAME,CADVISOR_PORT,NRK8S_NODE_NAME,KUBE_STATE_METRICS_URL"
+              value: "KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,CLUSTER_NAME,CADVISOR_PORT,NRK8S_NODE_NAME,KUBE_STATE_METRICS_URL,DISCOVERY_CACHE_DIR"
       volumes:
+        {{- if .Values.daemonset.unprivileged }}
+        - name: tmpfs-data
+          emptyDir: {}
+        - name: tmpfs-user-data
+          emptyDir: {}
+        - name: tmpfs-tmp
+          emptyDir: {}
+        {{- else }}
         - name: host-volume
           hostPath:
             path: /
         - name: host-docker-socket
           hostPath:
             path: /var/run/docker.sock
+        {{- end }}
       {{- if semverCompare ">=1.6.0" .Capabilities.KubeVersion.GitVersion }}
       tolerations:
         - operator: "Exists"
