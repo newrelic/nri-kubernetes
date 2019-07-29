@@ -18,7 +18,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 )
 
 func fakeLookupSRV(service, proto, name string) (cname string, addrs []*net.SRV, err error) {
@@ -97,41 +97,58 @@ func TestDiscover_portThroughDNSAndGuessedNodeIPFromMultiplePods(t *testing.T) {
 	assert.Equal(t, "162.178.1.1", ksmClient.(*ksm).nodeIP)
 }
 func TestDiscover_metricsPortThroughAPIWhenDNSEmptyResponse(t *testing.T) {
-	// Given a client
-	c := new(client.MockedKubernetes)
-	c.On("FindServicesByLabel", mock.Anything, mock.Anything).
-		Return(&v1.ServiceList{Items: []v1.Service{{
-			Spec: v1.ServiceSpec{
-				ClusterIP: "1.2.3.4",
-				Ports: []v1.ServicePort{{
-					Name: ksmPortName,
-					Port: 8888,
-				}},
-			},
-		},
-		}}, nil)
-	c.On("FindPodsByLabel", mock.Anything, mock.Anything).
-		Return(&v1.PodList{Items: []v1.Pod{{
-			Status: v1.PodStatus{HostIP: "6.7.8.9"},
-		}}}, nil)
-
-	// and an Discoverer implementation whose DNS returns empty response
-	d := discoverer{
-		lookupSRV: emptyLookupSRV,
-		apiClient: c,
-		logger:    logger,
+	tt := []struct {
+		label string
+	}{
+		{"k8s-app"},
+		{"app"},
+		{"app.kubernetes.io/name"},
 	}
 
-	// When discovering the KSM client
-	ksmClient, err := d.Discover(timeout)
+	for _, entry := range tt {
+		t.Run(fmt.Sprintf("KSM test for label %s", entry.label), func(t *testing.T) {
+			// Given a client
+			c := new(client.MockedKubernetes)
+			c.On("FindServicesByLabel", entry.label, mock.Anything).
+				Return(&v1.ServiceList{Items: []v1.Service{{
+					Spec: v1.ServiceSpec{
+						ClusterIP: "1.2.3.4",
+						Ports: []v1.ServicePort{{
+							Name: ksmPortName,
+							Port: 8888,
+						}},
+					},
+				},
+				}}, nil)
+			c.On("FindServicesByLabel", mock.Anything, mock.Anything).
+				Return(&v1.ServiceList{}, nil)
 
-	// The call works correctly
-	assert.Nil(t, err, "should not return error")
-	// And the discovered host:port of the KSM Service is returned
-	assert.Equal(t, "1.2.3.4:8888", ksmClient.(*ksm).endpoint.Host)
-	assert.Equal(t, "http", ksmClient.(*ksm).endpoint.Scheme)
-	// And the nodeIP is correctly returned
-	assert.Equal(t, "6.7.8.9", ksmClient.(*ksm).nodeIP)
+			c.On("FindPodsByLabel", entry.label, mock.Anything).
+				Return(&v1.PodList{Items: []v1.Pod{{
+					Status: v1.PodStatus{HostIP: "6.7.8.9"},
+				}}}, nil)
+			c.On("FindPodsByLabel", mock.Anything, mock.Anything).
+				Return(&v1.PodList{}, nil)
+
+			// and an Discoverer implementation whose DNS returns empty response
+			d := discoverer{
+				lookupSRV: emptyLookupSRV,
+				apiClient: c,
+				logger:    logger,
+			}
+
+			// When discovering the KSM client
+			ksmClient, err := d.Discover(timeout)
+
+			// The call works correctly
+			assert.Nil(t, err, "should not return error")
+			// And the discovered host:port of the KSM Service is returned
+			assert.Equal(t, "1.2.3.4:8888", ksmClient.(*ksm).endpoint.Host)
+			assert.Equal(t, "http", ksmClient.(*ksm).endpoint.Scheme)
+			// And the nodeIP is correctly returned
+			assert.Equal(t, "6.7.8.9", ksmClient.(*ksm).nodeIP)
+		})
+	}
 }
 
 func TestDiscover_metricsPortThroughAPIWhenDNSError(t *testing.T) {
@@ -232,7 +249,7 @@ func TestDiscover_errorRetrievingPortWhenDNSAndAPIResponsesEmpty(t *testing.T) {
 	// When retrieving the KSM client
 	ksmClient, err := d.Discover(timeout)
 	// The call returns the error
-	assert.EqualError(t, err, "failed to discover kube-state-metrics endpoint, got error: no services found by any of labels k8s-app, app with value kube-state-metrics")
+	assert.EqualError(t, err, "failed to discover kube-state-metrics endpoint, got error: no services found by any of labels [k8s-app app app.kubernetes.io/name] with value kube-state-metrics")
 
 	// And the KSM client is not returned
 	assert.Nil(t, ksmClient)
@@ -280,7 +297,7 @@ func TestDiscover_errorRetrievingNodeIPWhenPodListEmpty(t *testing.T) {
 	// When retrieving the KSM client
 	ksmClient, err := d.Discover(timeout)
 	// The call returns the error
-	assert.EqualError(t, err, "failed to discover nodeIP with kube-state-metrics, got error: no pods found by any of labels k8s-app, app with value kube-state-metrics")
+	assert.EqualError(t, err, "failed to discover nodeIP with kube-state-metrics, got error: no pods found by any of labels [k8s-app app app.kubernetes.io/name] with value kube-state-metrics")
 
 	// And the KSM client is not returned
 	assert.Nil(t, ksmClient)

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## 1.9.3
+### Added
+- Support for discovering KSMs when running with the label `app.kubernetes.io/name`.
+
 ## 1.9.2
 ### Fixed
 - No code changes has been made. The fix is at docker image level. We got affected by https://github.com/moby/moby/issues/35443.

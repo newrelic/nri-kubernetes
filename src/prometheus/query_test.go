@@ -29,7 +29,7 @@ func (c *ksm) Do(method, path string) (*http.Response, error) {
 
 	w := httptest.NewRecorder()
 
-	io.Copy(w, f)
+	io.Copy(w, f) // nolint: errcheck
 
 	return w.Result(), nil
 }

@@ -41,7 +41,6 @@ pipeline {
         stage('Linting and Validation') {
           steps {
             sh 'make lint'
-            sh 'make license-check'
           }
         }
         stage('Unit Tests') {

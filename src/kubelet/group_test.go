@@ -59,7 +59,7 @@ func rawGroupsHandlerFunc(w http.ResponseWriter, r *http.Request) {
 		}
 		defer f.Close() // nolint: errcheck
 		w.Header().Set("Content-Type", "text/plain")
-		io.Copy(w, f)
+		io.Copy(w, f) // nolint: errcheck
 	}
 
 }

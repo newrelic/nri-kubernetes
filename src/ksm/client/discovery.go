@@ -15,17 +15,18 @@ import (
 	"github.com/newrelic/nri-kubernetes/src/prometheus"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	v1 "k8s.io/api/core/v1"
 )
 
+var ksmAppLabelNames = []string{"k8s-app", "app", "app.kubernetes.io/name"}
+
 const (
-	ksmK8sAppLabelName = "k8s-app"
-	ksmAppLabelName    = "app"
-	ksmAppLabelValue   = "kube-state-metrics"
-	ksmPortName        = "http-metrics"
-	k8sTCP             = "TCP"
-	ksmQualifiedName   = "kube-state-metrics.kube-system.svc.cluster.local"
-	ksmDNSService      = "http-metrics"
-	ksmDNSProto        = "tcp"
+	ksmAppLabelValue = "kube-state-metrics"
+	ksmPortName      = "http-metrics"
+	k8sTCP           = "TCP"
+	ksmQualifiedName = "kube-state-metrics.kube-system.svc.cluster.local"
+	ksmDNSService    = "http-metrics"
+	ksmDNSProto      = "tcp"
 )
 
 // discoverer implements Discoverer interface by using official Kubernetes' Go client
@@ -116,17 +117,21 @@ func (sd *discoverer) dnsDiscover() (url.URL, error) {
 // apiDiscover uses Kubernetes API to discover KSM
 func (sd *discoverer) apiDiscover() (url.URL, error) {
 	var endpoint url.URL
+	var services *v1.ServiceList
+	var err error
 
-	services, err := sd.apiClient.FindServicesByLabel(ksmK8sAppLabelName, ksmAppLabelValue)
-	if err != nil || len(services.Items) == 0 {
-		services, err = sd.apiClient.FindServicesByLabel(ksmAppLabelName, ksmAppLabelValue)
+	for _, label := range ksmAppLabelNames {
+		services, err = sd.apiClient.FindServicesByLabel(label, ksmAppLabelValue)
+		if err == nil && len(services.Items) > 0 {
+			break
+		}
 	}
 
 	if err != nil {
 		return endpoint, err
 	}
 	if len(services.Items) == 0 {
-		return endpoint, fmt.Errorf("no services found by any of labels %s, %s with value %s", ksmK8sAppLabelName, ksmAppLabelName, ksmAppLabelValue)
+		return endpoint, fmt.Errorf("no services found by any of labels %v with value %s", ksmAppLabelNames, ksmAppLabelValue)
 	}
 
 	for _, service := range services.Items {
@@ -153,15 +158,21 @@ func (sd *discoverer) apiDiscover() (url.URL, error) {
 
 // nodeIP discover IP of a node, where kube-state-metrics is installed
 func (sd *discoverer) nodeIP() (string, error) {
-	pods, err := sd.apiClient.FindPodsByLabel(ksmK8sAppLabelName, ksmAppLabelValue)
-	if err != nil || len(pods.Items) == 0 {
-		pods, err = sd.apiClient.FindPodsByLabel(ksmAppLabelName, ksmAppLabelValue)
+	var pods *v1.PodList
+	var err error
+
+	for _, label := range ksmAppLabelNames {
+		pods, err = sd.apiClient.FindPodsByLabel(label, ksmAppLabelValue)
+		if err == nil && len(pods.Items) > 0 {
+			break
+		}
 	}
+
 	if err != nil {
 		return "", err
 	}
 	if len(pods.Items) == 0 {
-		return "", fmt.Errorf("no pods found by any of labels %s, %s with value %s", ksmK8sAppLabelName, ksmAppLabelName, ksmAppLabelValue)
+		return "", fmt.Errorf("no pods found by any of labels %v with value %s", ksmAppLabelNames, ksmAppLabelValue)
 	}
 
 	// In case there are multiple pods for the same service, we must be sure we always show the Node IP of the

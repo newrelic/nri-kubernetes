@@ -30,7 +30,7 @@ var cadvisorQueries = []prometheus.Query{
 
 func readerToHandler(r io.Reader) http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
-		io.Copy(w, r)
+		io.Copy(w, r) // nolint: errcheck
 	}
 }
 
