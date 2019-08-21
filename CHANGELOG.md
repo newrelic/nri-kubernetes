@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## 1.9.4
+### Fixed
+
+- No code changes have been made. This fixes a regression at Docker image level related to https://github.com/moby/moby/issues/35443.
+
 ## 1.9.3
 ### Added
 - Support for discovering KSMs when running with the label `app.kubernetes.io/name`.
