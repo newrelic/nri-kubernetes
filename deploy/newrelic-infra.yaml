@@ -61,7 +61,9 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: newrelic-infra
-          image: newrelic/infrastructure-k8s:1.9.4
+          image: newrelic/infrastructure-k8s:1.9.5
+          securityContext:
+            privileged: true
           resources:
             limits:
               memory: 150M

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## 1.9.5
+### Changed
+
+- The integration now uses the Infrastructu Agent v1.5.31. The biggest changes were major improvements to logging and
+  to the StorageSampler. For more information refer to the [infrastructure agent release notes](https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/) between versions v1.3.18 and v1.5.31.
+
 ## 1.9.4
 ### Fixed
 
