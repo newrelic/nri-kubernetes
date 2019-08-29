@@ -5,7 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased
+## Unreleased 
+
+## 1.10.0
+### Added
+- Node labes are added to the `K8sNodeSample`. They are retrieved from the k8s
+  api and cached.
+- The integration now uses the infrastructure agent v1.5.51. For more
+  information refer to the [infrastructure agent release notes](https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/)
+  between versions v1.5.31 and v1.5.51.
 
 ## 1.9.5
 ### Changed
@@ -38,8 +46,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 - The integraion now uses the infrastructure agent v1.3.18 instead of 1.1.14. Refer to the
-  [infrastructure agent release notes](https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/new-relic-infrastructure-agent-1318) 
-  for more information about all the changes from this upgrade. 
+  [infrastructure agent release notes](https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/new-relic-infrastructure-agent-1318)
+  for more information about all the changes from this upgrade.
 
 ## 1.8.0
 
@@ -53,7 +61,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Support for kube-state-metrics v1.5.
 - Pod's status reason and status message are now sent in the `K8sPodSample` as `reason` and `message` fields.
-- Container's `memory_working_set_bytes` is now sent in the `K8sContainerSample` as `workingSetBytes`. 
+- Container's `memory_working_set_bytes` is now sent in the `K8sContainerSample` as `workingSetBytes`.
 
 ### Changed
 - Always request metrics from kube-state-metrics in the text format. In kube-state-metrics v1.5 this is the default
@@ -217,7 +225,7 @@ Initial public beta release.
 - Removed legacy Kubernetes spec files.
 
 ### Fixed
-- Replace `log.Fatal()` by `log.Panic()` in order to call all defer statements. 
+- Replace `log.Fatal()` by `log.Panic()` in order to call all defer statements.
 - Skip missing data from /stats/summary endpoint, instead of reporting them as zero values.
 - Entities not reported in case of problem with setting their name or type.
 

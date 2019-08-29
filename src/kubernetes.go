@@ -4,8 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 	"time"
+
+	"github.com/newrelic/nri-kubernetes/src/apiserver"
 
 	"github.com/newrelic/nri-kubernetes/src/client"
 	"github.com/newrelic/nri-kubernetes/src/data"
@@ -29,14 +32,23 @@ type argumentList struct {
 	sdkArgs.DefaultArgumentList
 	Timeout             int    `default:"5000" help:"timeout in milliseconds for calling metrics sources"`
 	ClusterName         string `help:"Identifier of your cluster. You could use it later to filter data in your New Relic account"`
-	DiscoveryCacheDir   string `default:"/var/cache/nr-kubernetes" help:"The location of the cached values for discovered endpoints."`
+	DiscoveryCacheDir   string `default:"/var/cache/nr-kubernetes" help:"The location of the cached values for discovered endpoints. Obsolete, use CacheDir instead."`
+	CacheDir            string `default:"/var/cache/nr-kubernetes" help:"The location where to store various cached data."`
 	DiscoveryCacheTTL   string `default:"1h" help:"Duration since the discovered endpoints are stored in the cache until they expire. Valid time units: 'ns', 'us', 'ms', 's', 'm', 'h'"`
+	APIServerCacheTTL   string `default:"5m" help:"Duration to cache responses from the API Server. Valid time units: 'ns', 'us', 'ms', 's', 'm', 'h'. Set to 0s to disable"`
 	KubeStateMetricsURL string `help:"kube-state-metrics URL. If it is not provided, it will be discovered."`
 }
 
 const (
+	defaultCacheDir   = "/var/cache/nr-kubernetes"
+	discoveryCacheDir = "discovery"
+	apiserverCacheDir = "apiserver"
+
+	defaultAPIServerCacheTTL = time.Minute * 5
+	defaultDiscoveryCacheTTL = time.Hour
+
 	integrationName    = "com.newrelic.kubernetes"
-	integrationVersion = "1.9.5"
+	integrationVersion = "1.10.0"
 	nodeNameEnvVar     = "NRK8S_NODE_NAME"
 )
 
@@ -56,6 +68,17 @@ func populate(grouper data.Grouper, specs definition.SpecGroups, i *sdk.Integrat
 	}
 
 	return metric.NewK8sPopulator().Populate(groups, specs, i, clusterName)
+}
+
+func getCacheDir(subDirectory string) string {
+	cacheDir := args.CacheDir
+
+	// accept the old cache directory argument if it's explicitly set
+	if args.DiscoveryCacheDir != defaultCacheDir {
+		cacheDir = args.DiscoveryCacheDir
+	}
+
+	return path.Join(cacheDir, subDirectory)
 }
 
 func main() {
@@ -92,8 +115,8 @@ func main() {
 	if args.All || args.Metrics {
 		ttl, err := time.ParseDuration(args.DiscoveryCacheTTL)
 		if err != nil {
-			logger.WithError(err).Error("while parsing the cache TTL value. Defaulting to 1h")
-			ttl = time.Hour
+			logger.WithError(err).Errorf("while parsing the cache TTL value. Defaulting to %s", defaultDiscoveryCacheTTL)
+			ttl = defaultDiscoveryCacheTTL
 		}
 
 		timeout := time.Millisecond * time.Duration(args.Timeout)
@@ -102,7 +125,7 @@ func main() {
 		if err != nil {
 			logger.Panicf("error during Kubelet auto discovering process. %s", err)
 		}
-		cacheStorage := storage.NewJSONDiskStorage(args.DiscoveryCacheDir)
+		cacheStorage := storage.NewJSONDiskStorage(getCacheDir(discoveryCacheDir))
 		kubeletDiscoverer := clientKubelet.NewDiscoveryCacher(innerKubeletDiscoverer, cacheStorage, ttl, logger)
 
 		kubeletClient, err := kubeletDiscoverer.Discover(timeout)
@@ -143,7 +166,28 @@ func main() {
 		}
 		logger.Debugf("Auto-discovered role = %s", role)
 
-		kubeletGrouper := kubelet.NewGrouper(kubeletClient, logger, metric2.PodsFetchFunc(logger, kubeletClient), metric2.CadvisorFetchFunc(kubeletClient, metric.CadvisorQueries))
+		k8s, err := client.NewKubernetes()
+		if err != nil {
+			logger.Panic(err)
+		}
+
+		ttlAPIServerCache, err := time.ParseDuration(args.APIServerCacheTTL)
+		if err != nil {
+			logger.WithError(err).Errorf("while parsing the api server cache TTL value. Defaulting to %s", ttlAPIServerCache)
+			ttlAPIServerCache = defaultAPIServerCacheTTL
+		}
+
+		apiServerClient := apiserver.NewClient(k8s)
+
+		if ttlAPIServerCache != time.Duration(0) {
+			apiServerClient = apiserver.NewFileCacheClientWrapper(apiServerClient,
+				getCacheDir(apiserverCacheDir),
+				ttlAPIServerCache)
+		}
+
+		kubeletGrouper := kubelet.NewGrouper(kubeletClient, logger, apiServerClient,
+			metric2.PodsFetchFunc(logger, kubeletClient),
+			metric2.CadvisorFetchFunc(kubeletClient, metric.CadvisorQueries))
 
 		switch role {
 		case "leader":

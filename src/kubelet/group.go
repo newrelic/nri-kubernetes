@@ -3,6 +3,8 @@ package kubelet
 import (
 	"fmt"
 
+	"github.com/newrelic/nri-kubernetes/src/apiserver"
+
 	"github.com/newrelic/nri-kubernetes/src/client"
 	"github.com/newrelic/nri-kubernetes/src/data"
 	"github.com/newrelic/nri-kubernetes/src/definition"
@@ -11,9 +13,10 @@ import (
 )
 
 type kubelet struct {
-	client   client.HTTPClient
-	fetchers []data.FetchFunc
-	logger   *logrus.Logger
+	apiServer apiserver.Client
+	client    client.HTTPClient
+	fetchers  []data.FetchFunc
+	logger    *logrus.Logger
 }
 
 func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.ErrorGroup) {
@@ -49,15 +52,31 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 
 	fillGroupsAndMergeNonExistent(rawGroups, resources)
 
+	//TODO: should this be here? We need to know the NodeName before we can query NodeInfo
+	nodeInfo, err := r.apiServer.GetNodeInfo(response.Node.NodeName)
+	if err != nil {
+		return nil, &data.ErrorGroup{
+			Recoverable: false,
+			Errors:      []error{fmt.Errorf("error querying ApiServer: %v", err)},
+		}
+	}
+	g := definition.RawGroups{"node": {}}
+	g["node"][response.Node.NodeName] = definition.RawMetrics{
+		"labels": nodeInfo.Labels,
+	}
+
+	fillGroupsAndMergeNonExistent(rawGroups, g)
+
 	return rawGroups, nil
 }
 
 // NewGrouper creates a grouper aware of Kubelet raw metrics.
-func NewGrouper(c client.HTTPClient, logger *logrus.Logger, fetchers ...data.FetchFunc) data.Grouper {
+func NewGrouper(c client.HTTPClient, logger *logrus.Logger, apiServer apiserver.Client, fetchers ...data.FetchFunc) data.Grouper {
 	return &kubelet{
-		client:   c,
-		logger:   logger,
-		fetchers: fetchers,
+		apiServer: apiServer,
+		client:    c,
+		logger:    logger,
+		fetchers:  fetchers,
 	}
 }
 

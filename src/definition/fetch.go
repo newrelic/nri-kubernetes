@@ -21,6 +21,7 @@ type FetchedValues map[string]FetchedValue
 type FetchFunc func(groupLabel, entityID string, groups RawGroups) (FetchedValue, error)
 
 // RawGroups are grouped raw metrics.
+// map[entityType][entityName][metricName]metricValue as interface{}
 type RawGroups map[string]map[string]RawMetrics
 
 // TransformFunc transforms a FetchedValue.

@@ -59,7 +59,7 @@ pipeline {
               docker.withRegistry('https://quay.io/v2/', 'quay_fsi_robot') {
                 // There is a known issue with Docker plugin and docker multi-stages. See: https://issues.jenkins-ci.org/browse/JENKINS-44609
                 sh "docker build -t ${DOCKER_IMAGE} --label '${DOCKER_EXPIRES_LABEL}' ${integrationPath} && docker push ${DOCKER_IMAGE}"
-                sh "docker build -t ${DOCKER_IMAGE_UNPRIVILEGED} --build-arg 'MODE=unprivileged' --build-arg 'IMAGE_TAG=1.3.5' --label '${DOCKER_EXPIRES_LABEL}' ${integrationPath} && docker push ${DOCKER_IMAGE_UNPRIVILEGED}"
+                sh "docker build -t ${DOCKER_IMAGE_UNPRIVILEGED} --build-arg 'MODE=unprivileged' --label '${DOCKER_EXPIRES_LABEL}' ${integrationPath} && docker push ${DOCKER_IMAGE_UNPRIVILEGED}"
               }
             }
           }

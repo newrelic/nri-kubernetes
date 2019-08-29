@@ -7,6 +7,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/newrelic/nri-kubernetes/src/apiserver"
+
 	"github.com/newrelic/nri-kubernetes/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/src/kubelet/metric/testdata"
 	"github.com/newrelic/nri-kubernetes/src/prometheus"
@@ -68,7 +70,17 @@ func TestGroup(t *testing.T) {
 	c := testClient{
 		handler: rawGroupsHandlerFunc,
 	}
-
+	a := apiserver.TestAPIServer{Mem: map[string]*apiserver.NodeInfo{
+		"minikube": {
+			NodeName: "minikube",
+			Labels: map[string]string{
+				"kubernetes.io/arch":             "amd64",
+				"kubernetes.io/hostname":         "minikube",
+				"kubernetes.io/os":               "linux",
+				"node-role.kubernetes.io/master": "",
+			},
+		},
+	}}
 	queries := []prometheus.Query{
 		{
 			MetricName: "container_memory_usage_bytes",
@@ -81,9 +93,9 @@ func TestGroup(t *testing.T) {
 		},
 	}
 
-	grouper := NewGrouper(&c, logrus.StandardLogger(), metric.PodsFetchFunc(logrus.StandardLogger(), &c), metric.CadvisorFetchFunc(&c, queries))
+	grouper := NewGrouper(&c, logrus.StandardLogger(), a, metric.PodsFetchFunc(logrus.StandardLogger(), &c), metric.CadvisorFetchFunc(&c, queries))
 	r, errGroup := grouper.Group(nil)
-	assert.Nil(t, errGroup)
 
+	assert.Nil(t, errGroup)
 	assert.Equal(t, testdata.ExpectedGroupData, r)
 }

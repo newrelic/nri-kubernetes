@@ -203,6 +203,12 @@ var ExpectedGroupData = definition.RawGroups{
 			"txBytes":               uint64(120789968),
 			"usageCoreNanoSeconds":  uint64(22332102208229),
 			"usageNanoCores":        uint64(228759290),
+			"labels": map[string]string{
+				"kubernetes.io/arch":             "amd64",
+				"kubernetes.io/hostname":         "minikube",
+				"kubernetes.io/os":               "linux",
+				"node-role.kubernetes.io/master": "",
+			},
 		},
 	},
 	"volume": {

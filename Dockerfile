@@ -1,6 +1,6 @@
-# Agent v1.5.31 (2019-08-21)
+# Agent v1.5.51 (2019-10-17)
 ARG IMAGE_NAME=newrelic/infrastructure
-ARG IMAGE_TAG=1.5.31
+ARG IMAGE_TAG=1.5.51
 ARG MODE=normal
 
 FROM $IMAGE_NAME:$IMAGE_TAG AS base
@@ -22,4 +22,4 @@ ENV NRIA_OVERRIDE_HOST_ROOT ""
 ENV NRIA_IS_SECURE_FORWARD_ONLY true
 
 FROM branch-${MODE}
-CMD ["/usr/bin/newrelic-infra"]
+ENTRYPOINT ["/usr/bin/newrelic-infra"]

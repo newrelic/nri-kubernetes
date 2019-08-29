@@ -294,6 +294,8 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "runtimeInodesFree", ValueFunc: definition.FromRaw("runtimeInodesFree"), Type: sdkMetric.GAUGE},
 			{Name: "runtimeInodes", ValueFunc: definition.FromRaw("runtimeInodes"), Type: sdkMetric.GAUGE},
 			{Name: "runtimeInodesUsed", ValueFunc: definition.FromRaw("runtimeInodesUsed"), Type: sdkMetric.GAUGE},
+
+			{Name: "label.*", ValueFunc: definition.Transform(definition.FromRaw("labels"), kubeletMetric.OneMetricPerLabel), Type: sdkMetric.ATTRIBUTE},
 		},
 	},
 	"volume": {
