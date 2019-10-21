@@ -5,7 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased 
+## 1.10.1
+### Changed
+- Rollback agent version to v1.5.31 because there is an issue with nodes
+  reporting inventory using the node ip as entity key, this causes the nodes to
+  be indexed as clusters.
 
 ## 1.10.0
 ### Added
