@@ -12,9 +12,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var s = EventTypeToSchemaFilename{
-	"TestNodeSample":    "schema-testnode.json",
-	"TestServiceSample": "schema-testservice.json",
+var s = map[string]EventTypeToSchemaFilename{
+	"dummy-task-name": {
+		"TestNodeSample":    "schema-testnode.json",
+		"TestServiceSample": "schema-testservice.json",
+	},
 }
 
 func TestNoError(t *testing.T) {
@@ -51,11 +53,14 @@ func TestErrorValidatingEventTypes(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = MatchEntities(i.Data, EventTypeToSchemaFilename{
-		"TestNodeSample":    "testdata/schema-testnode.json",
-		"TestServiceSample": "testdata/schema-testservice.json",
-		"TestPodSample":     "testdata/schema-testpod.json", // this file doesn't exist, I just want to test with 2 missing types
-	}, "testdata")
+	jobMetrics := map[string]EventTypeToSchemaFilename{
+		"dummy-job-name": {
+			"TestNodeSample":    "testdata/schema-testnode.json",
+			"TestServiceSample": "testdata/schema-testservice.json",
+			"TestPodSample":     "testdata/schema-testpod.json", // this file doesn't exist, I just want to test with 2 missing types
+		},
+	}
+	err = MatchEntities(i.Data, jobMetrics, "testdata")
 
 	assert.Contains(t, err.Error(), "mandatory types were not found: ")
 	assert.Contains(t, err.Error(), "TestServiceSample, ")

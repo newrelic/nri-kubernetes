@@ -31,27 +31,23 @@ func (e MultipleErrs) Error() string {
 }
 
 // Populate populates k8s raw data to sdk metrics.
-func (p *k8sPopulator) Populate(groups definition.RawGroups, specGroups definition.SpecGroups, i *sdk.IntegrationProtocol2, clusterName string) (err *data.PopulateErr) {
+func (p *k8sPopulator) Populate(groups definition.RawGroups, specGroups definition.SpecGroups, i *sdk.IntegrationProtocol2, clusterName string) data.PopulateResult {
 	populatorFunc := definition.IntegrationProtocol2PopulateFunc(i, clusterName, K8sMetricSetTypeGuesser, K8sEntityMetricsManipulator, K8sClusterMetricsManipulator)
 	ok, errs := populatorFunc(groups, specGroups)
 
 	if len(errs) > 0 {
-		err = &data.PopulateErr{
-			Errs:      errs,
-			Populated: ok,
-		}
-		return
+		return data.PopulateResult{Errors: errs, Populated: ok}
 	}
 
 	// This should not happen ideally if no errors were reported.
 	if !ok {
-		return &data.PopulateErr{
-			Errs:      []error{errors.New("no data was populated")},
-			Populated: ok,
+		return data.PopulateResult{
+			Errors:    []error{errors.New("no data was populated")},
+			Populated: false,
 		}
 	}
 
-	return err
+	return data.PopulateResult{Errors: nil, Populated: true}
 }
 
 // NewK8sPopulator creates a Kubernetes aware populator.

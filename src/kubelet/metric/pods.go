@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/sirupsen/logrus"
 
@@ -24,88 +25,118 @@ import (
 // KubeletPodsPath is the path where kubelet serves information about pods.
 const KubeletPodsPath = "/pods"
 
-// PodsFetchFunc creates a FetchFunc that fetches data from the kubelet pods path.
-func PodsFetchFunc(logger *logrus.Logger, c client.HTTPClient) data.FetchFunc {
-	return func() (definition.RawGroups, error) {
-		r, err := c.Do(http.MethodGet, KubeletPodsPath)
-		if err != nil {
-			return nil, err
+// PodsFetcher queries the kubelet and fetches the information of pods
+// running on the node. It contains an in-memory cache to store the
+// results and avoid querying the kubelet multiple times in the same
+// integration execution.
+type PodsFetcher struct {
+	once       sync.Once
+	cached     bool
+	cachedPods definition.RawGroups
+	fetchError error
+	logger     *logrus.Logger
+	client     client.HTTPClient
+}
+
+func doPodsFetch(logger *logrus.Logger, c client.HTTPClient) (definition.RawGroups, error) {
+	r, err := c.Do(http.MethodGet, KubeletPodsPath)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		_ = r.Body.Close()
+	}()
+
+	if r.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error calling kubelet %s path. Status code %d", KubeletPodsPath, r.StatusCode)
+	}
+
+	rawPods, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading response from kubelet %s path. %s", KubeletPodsPath, err)
+	}
+
+	if len(rawPods) == 0 {
+		return nil, fmt.Errorf("error reading response from kubelet %s path. Response is empty", KubeletPodsPath)
+	}
+
+	// v1.PodList comes from k8s api core library.
+	var pods v1.PodList
+	err = json.Unmarshal(rawPods, &pods)
+	if err != nil {
+		return nil, fmt.Errorf("error decoding response from kubelet %s path. %s", KubeletPodsPath, err)
+	}
+
+	raw := definition.RawGroups{
+		"pod":       make(map[string]definition.RawMetrics),
+		"container": make(map[string]definition.RawMetrics),
+	}
+
+	// If missing, we get the nodeIP from any other container in the node.
+	// Due to Kubelet "Wrong Pending status" bug. See https://github.com/kubernetes/kubernetes/pull/57106
+	var missingNodeIPContainerIDs []string
+	var missingNodeIPPodIDs []string
+	var nodeIP string
+
+	for _, p := range pods.Items {
+		id := podID(&p)
+		raw["pod"][id] = fetchPodData(logger, &p)
+
+		if _, ok := raw["pod"][id]["nodeIP"]; ok && nodeIP == "" {
+			nodeIP = raw["pod"][id]["nodeIP"].(string)
 		}
 
-		defer func() {
-			r.Body.Close() // nolint: errcheck
-		}()
-
-		if r.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("error calling kubelet %s path. Status code %d", KubeletPodsPath, r.StatusCode)
-		}
-
-		rawPods, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			return nil, fmt.Errorf("error reading response from kubelet %s path. %s", KubeletPodsPath, err)
-		}
-
-		if len(rawPods) == 0 {
-			return nil, fmt.Errorf("error reading response from kubelet %s path. Response is empty", KubeletPodsPath)
-		}
-
-		// v1.PodList comes from k8s api core library.
-		var pods v1.PodList
-		err = json.Unmarshal(rawPods, &pods)
-		if err != nil {
-			return nil, fmt.Errorf("error decoding response from kubelet %s path. %s", KubeletPodsPath, err)
-		}
-
-		raw := definition.RawGroups{
-			"pod":       make(map[string]definition.RawMetrics),
-			"container": make(map[string]definition.RawMetrics),
-		}
-
-		// If missing, we get the nodeIP from any other container in the node.
-		// Due to Kubelet "Wrong Pending status" bug. See https://github.com/kubernetes/kubernetes/pull/57106
-		var missingNodeIPContainerIDs []string
-		var missingNodeIPPodIDs []string
-		var nodeIP string
-
-		for _, p := range pods.Items {
-			id := podID(&p)
-			raw["pod"][id] = fetchPodData(logger, &p)
-
-			if _, ok := raw["pod"][id]["nodeIP"]; ok && nodeIP == "" {
-				nodeIP = raw["pod"][id]["nodeIP"].(string)
-			}
-
-			if nodeIP == "" {
-				missingNodeIPPodIDs = append(missingNodeIPPodIDs, id)
-			} else {
-				raw["pod"][id]["nodeIP"] = nodeIP
-			}
-
-			containers := fetchContainersData(logger, &p)
-			for id, c := range containers {
-				raw["container"][id] = c
-
-				if _, ok := c["nodeIP"]; ok && nodeIP == "" {
-					nodeIP = c["nodeIP"].(string)
-				}
-
-				if nodeIP == "" {
-					missingNodeIPContainerIDs = append(missingNodeIPContainerIDs, id)
-				} else {
-					raw["container"][id]["nodeIP"] = nodeIP
-				}
-			}
-		}
-
-		for _, id := range missingNodeIPPodIDs {
+		if nodeIP == "" {
+			missingNodeIPPodIDs = append(missingNodeIPPodIDs, id)
+		} else {
 			raw["pod"][id]["nodeIP"] = nodeIP
 		}
 
-		for _, id := range missingNodeIPContainerIDs {
-			raw["container"][id]["nodeIP"] = nodeIP
-		}
+		containers := fetchContainersData(logger, &p)
+		for id, c := range containers {
+			raw["container"][id] = c
 
-		return raw, nil
+			if _, ok := c["nodeIP"]; ok && nodeIP == "" {
+				nodeIP = c["nodeIP"].(string)
+			}
+
+			if nodeIP == "" {
+				missingNodeIPContainerIDs = append(missingNodeIPContainerIDs, id)
+			} else {
+				raw["container"][id]["nodeIP"] = nodeIP
+			}
+		}
+	}
+
+	for _, id := range missingNodeIPPodIDs {
+		raw["pod"][id]["nodeIP"] = nodeIP
+	}
+
+	for _, id := range missingNodeIPContainerIDs {
+		raw["container"][id]["nodeIP"] = nodeIP
+	}
+
+	return raw, nil
+}
+
+// FetchFuncWithCache creates a data.FetchFunc that fetches data from the
+// kubelet pods path. The results are cached in memory, this means that
+// the cache is maintain per integration execution.
+func (f *PodsFetcher) FetchFuncWithCache() data.FetchFunc {
+	return func() (definition.RawGroups, error) {
+		f.once.Do(func() {
+			f.cachedPods, f.fetchError = doPodsFetch(f.logger, f.client)
+		})
+		return f.cachedPods, f.fetchError
+	}
+}
+
+// NewPodsFetcher returns a new PodsFetcher.
+func NewPodsFetcher(l *logrus.Logger, c client.HTTPClient) *PodsFetcher {
+	return &PodsFetcher{
+		logger: l,
+		client: c,
 	}
 }
 

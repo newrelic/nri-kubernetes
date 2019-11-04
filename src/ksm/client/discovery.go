@@ -191,22 +191,17 @@ func (sd *discoverer) nodeIP() (string, error) {
 
 // NewDiscoverer instantiates a new Discoverer required for discovering node IP
 // of kube-state-metrics pod and endpoint of kube-state-metrics service
-func NewDiscoverer(logger *logrus.Logger) (client.Discoverer, error) {
-	return NewDiscovererForNodeIP("", logger)
+func NewDiscoverer(logger *logrus.Logger, kubernetes client.Kubernetes) client.Discoverer {
+	return NewStaticEndpointDiscoverer("", logger, kubernetes)
 }
 
-// NewDiscovererForNodeIP instantiates a new Discoverer required for discovering only
+// NewStaticEndpointDiscoverer instantiates a new Discoverer required for discovering only
 // node IP of kube-state-metrics pod
-func NewDiscovererForNodeIP(ksmEndpoint string, logger *logrus.Logger) (client.Discoverer, error) {
-	var discoverer discoverer
-	var err error
-
-	discoverer.apiClient, err = client.NewKubernetes()
-	if err != nil {
-		return nil, err
+func NewStaticEndpointDiscoverer(ksmEndpoint string, logger *logrus.Logger, kubernetes client.Kubernetes) client.Discoverer {
+	return &discoverer{
+		lookupSRV:         net.LookupSRV,
+		apiClient:         kubernetes,
+		logger:            logger,
+		overridenEndpoint: ksmEndpoint,
 	}
-	discoverer.lookupSRV = net.LookupSRV
-	discoverer.logger = logger
-	discoverer.overridenEndpoint = ksmEndpoint
-	return &discoverer, nil
 }

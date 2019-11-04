@@ -1,0 +1,1618 @@
+# HELP kube_certificatesigningrequest_labels Kubernetes labels converted to Prometheus labels.
+# TYPE kube_certificatesigningrequest_labels gauge
+# HELP kube_certificatesigningrequest_created Unix creation timestamp
+# TYPE kube_certificatesigningrequest_created gauge
+# HELP kube_certificatesigningrequest_condition The number of each certificatesigningrequest condition
+# TYPE kube_certificatesigningrequest_condition gauge
+# HELP kube_certificatesigningrequest_cert_length Length of the issued cert
+# TYPE kube_certificatesigningrequest_cert_length gauge
+# HELP kube_configmap_info Information about configmap.
+# TYPE kube_configmap_info gauge
+kube_configmap_info{namespace="kube-system",configmap="kubelet-config-1.16"} 1
+kube_configmap_info{namespace="kube-public",configmap="cluster-info"} 1
+kube_configmap_info{namespace="kube-system",configmap="coredns"} 1
+kube_configmap_info{namespace="kube-system",configmap="kube-proxy"} 1
+kube_configmap_info{namespace="kubernetes-dashboard",configmap="kubernetes-dashboard-settings"} 1
+kube_configmap_info{namespace="kube-system",configmap="extension-apiserver-authentication"} 1
+kube_configmap_info{namespace="kube-system",configmap="kubeadm-config"} 1
+# HELP kube_configmap_created Unix creation timestamp
+# TYPE kube_configmap_created gauge
+kube_configmap_created{namespace="kube-public",configmap="cluster-info"} 1.571668252e+09
+kube_configmap_created{namespace="kube-system",configmap="coredns"} 1.571668252e+09
+kube_configmap_created{namespace="kube-system",configmap="kube-proxy"} 1.571668252e+09
+kube_configmap_created{namespace="kubernetes-dashboard",configmap="kubernetes-dashboard-settings"} 1.571668263e+09
+kube_configmap_created{namespace="kube-system",configmap="extension-apiserver-authentication"} 1.571668248e+09
+kube_configmap_created{namespace="kube-system",configmap="kubeadm-config"} 1.57166825e+09
+kube_configmap_created{namespace="kube-system",configmap="kubelet-config-1.16"} 1.57166825e+09
+# HELP kube_configmap_metadata_resource_version Resource version representing a specific version of the configmap.
+# TYPE kube_configmap_metadata_resource_version gauge
+kube_configmap_metadata_resource_version{namespace="kubernetes-dashboard",configmap="kubernetes-dashboard-settings",resource_version="449"} 1
+kube_configmap_metadata_resource_version{namespace="kube-system",configmap="extension-apiserver-authentication",resource_version="40"} 1
+kube_configmap_metadata_resource_version{namespace="kube-system",configmap="kubeadm-config",resource_version="155"} 1
+kube_configmap_metadata_resource_version{namespace="kube-system",configmap="kubelet-config-1.16",resource_version="158"} 1
+kube_configmap_metadata_resource_version{namespace="kube-public",configmap="cluster-info",resource_version="313"} 1
+kube_configmap_metadata_resource_version{namespace="kube-system",configmap="coredns",resource_version="185"} 1
+kube_configmap_metadata_resource_version{namespace="kube-system",configmap="kube-proxy",resource_version="201"} 1
+# HELP kube_cronjob_labels Kubernetes labels converted to Prometheus labels.
+# TYPE kube_cronjob_labels gauge
+# HELP kube_cronjob_info Info about cronjob.
+# TYPE kube_cronjob_info gauge
+# HELP kube_cronjob_created Unix creation timestamp
+# TYPE kube_cronjob_created gauge
+# HELP kube_cronjob_status_active Active holds pointers to currently running jobs.
+# TYPE kube_cronjob_status_active gauge
+# HELP kube_cronjob_status_last_schedule_time LastScheduleTime keeps information of when was the last time the job was successfully scheduled.
+# TYPE kube_cronjob_status_last_schedule_time gauge
+# HELP kube_cronjob_spec_suspend Suspend flag tells the controller to suspend subsequent executions.
+# TYPE kube_cronjob_spec_suspend gauge
+# HELP kube_cronjob_spec_starting_deadline_seconds Deadline in seconds for starting the job if it misses scheduled time for any reason.
+# TYPE kube_cronjob_spec_starting_deadline_seconds gauge
+# HELP kube_cronjob_next_schedule_time Next time the cronjob should be scheduled. The time after lastScheduleTime, or after the cron job's creation time if it's never been scheduled. Use this to determine if the job is delayed.
+# TYPE kube_cronjob_next_schedule_time gauge
+# HELP kube_daemonset_created Unix creation timestamp
+# TYPE kube_daemonset_created gauge
+kube_daemonset_created{namespace="default",daemonset="newrelic-infra"} 1.571761578e+09
+kube_daemonset_created{namespace="kube-system",daemonset="kube-proxy"} 1.571668252e+09
+# HELP kube_daemonset_status_current_number_scheduled The number of nodes running at least one daemon pod and are supposed to.
+# TYPE kube_daemonset_status_current_number_scheduled gauge
+kube_daemonset_status_current_number_scheduled{namespace="kube-system",daemonset="kube-proxy"} 1
+kube_daemonset_status_current_number_scheduled{namespace="default",daemonset="newrelic-infra"} 1
+# HELP kube_daemonset_status_desired_number_scheduled The number of nodes that should be running the daemon pod.
+# TYPE kube_daemonset_status_desired_number_scheduled gauge
+kube_daemonset_status_desired_number_scheduled{namespace="default",daemonset="newrelic-infra"} 1
+kube_daemonset_status_desired_number_scheduled{namespace="kube-system",daemonset="kube-proxy"} 1
+# HELP kube_daemonset_status_number_available The number of nodes that should be running the daemon pod and have one or more of the daemon pod running and available
+# TYPE kube_daemonset_status_number_available gauge
+kube_daemonset_status_number_available{namespace="default",daemonset="newrelic-infra"} 1
+kube_daemonset_status_number_available{namespace="kube-system",daemonset="kube-proxy"} 1
+# HELP kube_daemonset_status_number_misscheduled The number of nodes running a daemon pod but are not supposed to.
+# TYPE kube_daemonset_status_number_misscheduled gauge
+kube_daemonset_status_number_misscheduled{namespace="default",daemonset="newrelic-infra"} 0
+kube_daemonset_status_number_misscheduled{namespace="kube-system",daemonset="kube-proxy"} 0
+# HELP kube_daemonset_status_number_ready The number of nodes that should be running the daemon pod and have one or more of the daemon pod running and ready.
+# TYPE kube_daemonset_status_number_ready gauge
+kube_daemonset_status_number_ready{namespace="default",daemonset="newrelic-infra"} 1
+kube_daemonset_status_number_ready{namespace="kube-system",daemonset="kube-proxy"} 1
+# HELP kube_daemonset_status_number_unavailable The number of nodes that should be running the daemon pod and have none of the daemon pod running and available
+# TYPE kube_daemonset_status_number_unavailable gauge
+kube_daemonset_status_number_unavailable{namespace="default",daemonset="newrelic-infra"} 0
+kube_daemonset_status_number_unavailable{namespace="kube-system",daemonset="kube-proxy"} 0
+# HELP kube_daemonset_updated_number_scheduled The total number of nodes that are running updated daemon pod
+# TYPE kube_daemonset_updated_number_scheduled gauge
+kube_daemonset_updated_number_scheduled{namespace="default",daemonset="newrelic-infra"} 1
+kube_daemonset_updated_number_scheduled{namespace="kube-system",daemonset="kube-proxy"} 1
+# HELP kube_daemonset_metadata_generation Sequence number representing a specific generation of the desired state.
+# TYPE kube_daemonset_metadata_generation gauge
+kube_daemonset_metadata_generation{namespace="kube-system",daemonset="kube-proxy"} 1
+kube_daemonset_metadata_generation{namespace="default",daemonset="newrelic-infra"} 1
+# HELP kube_daemonset_labels Kubernetes labels converted to Prometheus labels.
+# TYPE kube_daemonset_labels gauge
+kube_daemonset_labels{namespace="default",daemonset="newrelic-infra",label_skaffold_dev_cleanup="true",label_skaffold_dev_run_id="e8871f1c-20e6-4d1f-89fb-3b44db679cd1",label_app="newrelic-infra",label_skaffold_dev_builder="local",label_skaffold_dev_deployer="kubectl",label_skaffold_dev_docker_api_version="1.39",label_skaffold_dev_tag_policy="sha256",label_skaffold_dev_tail="true",label_app_kubernetes_io_managed_by="skaffold-v0.36.0"} 1
+kube_daemonset_labels{namespace="kube-system",daemonset="kube-proxy",label_k8s_app="kube-proxy"} 1
+# HELP kube_deployment_created Unix creation timestamp
+# TYPE kube_deployment_created gauge
+kube_deployment_created{namespace="kube-system",deployment="kube-state-metrics"} 1.571753733e+09
+kube_deployment_created{namespace="default",deployment="nginx"} 1.571754411e+09
+kube_deployment_created{namespace="kube-system",deployment="coredns"} 1.571668252e+09
+kube_deployment_created{namespace="kubernetes-dashboard",deployment="dashboard-metrics-scraper"} 1.571668263e+09
+kube_deployment_created{namespace="kubernetes-dashboard",deployment="kubernetes-dashboard"} 1.571668263e+09
+# HELP kube_deployment_status_replicas The number of replicas per deployment.
+# TYPE kube_deployment_status_replicas gauge
+kube_deployment_status_replicas{namespace="kube-system",deployment="coredns"} 2
+kube_deployment_status_replicas{namespace="kubernetes-dashboard",deployment="dashboard-metrics-scraper"} 1
+kube_deployment_status_replicas{namespace="kubernetes-dashboard",deployment="kubernetes-dashboard"} 1
+kube_deployment_status_replicas{namespace="kube-system",deployment="kube-state-metrics"} 1
+kube_deployment_status_replicas{namespace="default",deployment="nginx"} 1
+# HELP kube_deployment_status_replicas_available The number of available replicas per deployment.
+# TYPE kube_deployment_status_replicas_available gauge
+kube_deployment_status_replicas_available{namespace="kube-system",deployment="coredns"} 2
+kube_deployment_status_replicas_available{namespace="kubernetes-dashboard",deployment="dashboard-metrics-scraper"} 1
+kube_deployment_status_replicas_available{namespace="kubernetes-dashboard",deployment="kubernetes-dashboard"} 1
+kube_deployment_status_replicas_available{namespace="kube-system",deployment="kube-state-metrics"} 1
+kube_deployment_status_replicas_available{namespace="default",deployment="nginx"} 1
+# HELP kube_deployment_status_replicas_unavailable The number of unavailable replicas per deployment.
+# TYPE kube_deployment_status_replicas_unavailable gauge
+kube_deployment_status_replicas_unavailable{namespace="kube-system",deployment="coredns"} 0
+kube_deployment_status_replicas_unavailable{namespace="kubernetes-dashboard",deployment="dashboard-metrics-scraper"} 0
+kube_deployment_status_replicas_unavailable{namespace="kubernetes-dashboard",deployment="kubernetes-dashboard"} 0
+kube_deployment_status_replicas_unavailable{namespace="kube-system",deployment="kube-state-metrics"} 0
+kube_deployment_status_replicas_unavailable{namespace="default",deployment="nginx"} 0
+# HELP kube_deployment_status_replicas_updated The number of updated replicas per deployment.
+# TYPE kube_deployment_status_replicas_updated gauge
+kube_deployment_status_replicas_updated{namespace="kube-system",deployment="coredns"} 2
+kube_deployment_status_replicas_updated{namespace="kubernetes-dashboard",deployment="dashboard-metrics-scraper"} 1
+kube_deployment_status_replicas_updated{namespace="kubernetes-dashboard",deployment="kubernetes-dashboard"} 1
+kube_deployment_status_replicas_updated{namespace="kube-system",deployment="kube-state-metrics"} 1
+kube_deployment_status_replicas_updated{namespace="default",deployment="nginx"} 1
+# HELP kube_deployment_status_observed_generation The generation observed by the deployment controller.
+# TYPE kube_deployment_status_observed_generation gauge
+kube_deployment_status_observed_generation{namespace="kube-system",deployment="coredns"} 1
+kube_deployment_status_observed_generation{namespace="kubernetes-dashboard",deployment="dashboard-metrics-scraper"} 1
+kube_deployment_status_observed_generation{namespace="kubernetes-dashboard",deployment="kubernetes-dashboard"} 1
+kube_deployment_status_observed_generation{namespace="kube-system",deployment="kube-state-metrics"} 1
+kube_deployment_status_observed_generation{namespace="default",deployment="nginx"} 1
+# HELP kube_deployment_spec_replicas Number of desired pods for a deployment.
+# TYPE kube_deployment_spec_replicas gauge
+kube_deployment_spec_replicas{namespace="kube-system",deployment="coredns"} 2
+kube_deployment_spec_replicas{namespace="kubernetes-dashboard",deployment="dashboard-metrics-scraper"} 1
+kube_deployment_spec_replicas{namespace="kubernetes-dashboard",deployment="kubernetes-dashboard"} 1
+kube_deployment_spec_replicas{namespace="kube-system",deployment="kube-state-metrics"} 1
+kube_deployment_spec_replicas{namespace="default",deployment="nginx"} 1
+# HELP kube_deployment_spec_paused Whether the deployment is paused and will not be processed by the deployment controller.
+# TYPE kube_deployment_spec_paused gauge
+kube_deployment_spec_paused{namespace="kubernetes-dashboard",deployment="dashboard-metrics-scraper"} 0
+kube_deployment_spec_paused{namespace="kubernetes-dashboard",deployment="kubernetes-dashboard"} 0
+kube_deployment_spec_paused{namespace="kube-system",deployment="kube-state-metrics"} 0
+kube_deployment_spec_paused{namespace="default",deployment="nginx"} 0
+kube_deployment_spec_paused{namespace="kube-system",deployment="coredns"} 0
+# HELP kube_deployment_spec_strategy_rollingupdate_max_unavailable Maximum number of unavailable replicas during a rolling update of a deployment.
+# TYPE kube_deployment_spec_strategy_rollingupdate_max_unavailable gauge
+kube_deployment_spec_strategy_rollingupdate_max_unavailable{namespace="default",deployment="nginx"} 1
+kube_deployment_spec_strategy_rollingupdate_max_unavailable{namespace="kube-system",deployment="coredns"} 1
+kube_deployment_spec_strategy_rollingupdate_max_unavailable{namespace="kubernetes-dashboard",deployment="dashboard-metrics-scraper"} 1
+kube_deployment_spec_strategy_rollingupdate_max_unavailable{namespace="kubernetes-dashboard",deployment="kubernetes-dashboard"} 1
+kube_deployment_spec_strategy_rollingupdate_max_unavailable{namespace="kube-system",deployment="kube-state-metrics"} 1
+# HELP kube_deployment_spec_strategy_rollingupdate_max_surge Maximum number of replicas that can be scheduled above the desired number of replicas during a rolling update of a deployment.
+# TYPE kube_deployment_spec_strategy_rollingupdate_max_surge gauge
+kube_deployment_spec_strategy_rollingupdate_max_surge{namespace="kube-system",deployment="kube-state-metrics"} 1
+kube_deployment_spec_strategy_rollingupdate_max_surge{namespace="default",deployment="nginx"} 1
+kube_deployment_spec_strategy_rollingupdate_max_surge{namespace="kube-system",deployment="coredns"} 1
+kube_deployment_spec_strategy_rollingupdate_max_surge{namespace="kubernetes-dashboard",deployment="dashboard-metrics-scraper"} 1
+kube_deployment_spec_strategy_rollingupdate_max_surge{namespace="kubernetes-dashboard",deployment="kubernetes-dashboard"} 1
+# HELP kube_deployment_metadata_generation Sequence number representing a specific generation of the desired state.
+# TYPE kube_deployment_metadata_generation gauge
+kube_deployment_metadata_generation{namespace="kube-system",deployment="coredns"} 1
+kube_deployment_metadata_generation{namespace="kubernetes-dashboard",deployment="dashboard-metrics-scraper"} 1
+kube_deployment_metadata_generation{namespace="kubernetes-dashboard",deployment="kubernetes-dashboard"} 1
+kube_deployment_metadata_generation{namespace="kube-system",deployment="kube-state-metrics"} 1
+kube_deployment_metadata_generation{namespace="default",deployment="nginx"} 1
+# HELP kube_deployment_labels Kubernetes labels converted to Prometheus labels.
+# TYPE kube_deployment_labels gauge
+kube_deployment_labels{namespace="kube-system",deployment="coredns",label_k8s_app="kube-dns"} 1
+kube_deployment_labels{namespace="kubernetes-dashboard",deployment="dashboard-metrics-scraper",label_k8s_app="dashboard-metrics-scraper",label_kubernetes_io_minikube_addons="dashboard",label_addonmanager_kubernetes_io_mode="Reconcile"} 1
+kube_deployment_labels{namespace="kubernetes-dashboard",deployment="kubernetes-dashboard",label_k8s_app="kubernetes-dashboard",label_kubernetes_io_minikube_addons="dashboard",label_addonmanager_kubernetes_io_mode="Reconcile"} 1
+kube_deployment_labels{namespace="kube-system",deployment="kube-state-metrics",label_k8s_app="kube-state-metrics"} 1
+kube_deployment_labels{namespace="default",deployment="nginx",label_run="nginx"} 1
+# HELP kube_endpoint_info Information about endpoint.
+# TYPE kube_endpoint_info gauge
+kube_endpoint_info{namespace="default",endpoint="kubernetes"} 1
+kube_endpoint_info{namespace="kubernetes-dashboard",endpoint="kubernetes-dashboard"} 1
+kube_endpoint_info{namespace="kube-system",endpoint="kube-scheduler"} 1
+kube_endpoint_info{namespace="kubernetes-dashboard",endpoint="dashboard-metrics-scraper"} 1
+kube_endpoint_info{namespace="kube-system",endpoint="monitoring-grafana"} 1
+kube_endpoint_info{namespace="kube-system",endpoint="kube-state-metrics"} 1
+kube_endpoint_info{namespace="kube-system",endpoint="kube-controller-manager"} 1
+kube_endpoint_info{namespace="kube-system",endpoint="heapster"} 1
+kube_endpoint_info{namespace="kube-system",endpoint="kube-dns"} 1
+kube_endpoint_info{namespace="kube-system",endpoint="monitoring-influxdb"} 1
+# HELP kube_endpoint_created Unix creation timestamp
+# TYPE kube_endpoint_created gauge
+kube_endpoint_created{namespace="kube-system",endpoint="monitoring-grafana"} 1.571668259e+09
+kube_endpoint_created{namespace="kube-system",endpoint="kube-state-metrics"} 1.571753733e+09
+kube_endpoint_created{namespace="default",endpoint="kubernetes"} 1.57166825e+09
+kube_endpoint_created{namespace="kubernetes-dashboard",endpoint="kubernetes-dashboard"} 1.571668259e+09
+kube_endpoint_created{namespace="kube-system",endpoint="kube-scheduler"} 1.57166825e+09
+kube_endpoint_created{namespace="kubernetes-dashboard",endpoint="dashboard-metrics-scraper"} 1.571668259e+09
+kube_endpoint_created{namespace="kube-system",endpoint="kube-dns"} 1.571668258e+09
+kube_endpoint_created{namespace="kube-system",endpoint="monitoring-influxdb"} 1.57166826e+09
+kube_endpoint_created{namespace="kube-system",endpoint="kube-controller-manager"} 1.57166825e+09
+kube_endpoint_created{namespace="kube-system",endpoint="heapster"} 1.571668259e+09
+# HELP kube_endpoint_labels Kubernetes labels converted to Prometheus labels.
+# TYPE kube_endpoint_labels gauge
+kube_endpoint_labels{namespace="kube-system",endpoint="monitoring-grafana",label_kubernetes_io_minikube_addons="heapster",label_kubernetes_io_minikube_addons_endpoint="heapster",label_kubernetes_io_name="monitoring-grafana",label_addonmanager_kubernetes_io_mode="Reconcile"} 1
+kube_endpoint_labels{namespace="kube-system",endpoint="kube-state-metrics",label_k8s_app="kube-state-metrics"} 1
+kube_endpoint_labels{namespace="default",endpoint="kubernetes"} 1
+kube_endpoint_labels{namespace="kubernetes-dashboard",endpoint="kubernetes-dashboard",label_addonmanager_kubernetes_io_mode="Reconcile",label_k8s_app="kubernetes-dashboard",label_kubernetes_io_minikube_addons="dashboard"} 1
+kube_endpoint_labels{namespace="kube-system",endpoint="kube-scheduler"} 1
+kube_endpoint_labels{namespace="kubernetes-dashboard",endpoint="dashboard-metrics-scraper",label_k8s_app="dashboard-metrics-scraper",label_kubernetes_io_minikube_addons="dashboard",label_addonmanager_kubernetes_io_mode="Reconcile"} 1
+kube_endpoint_labels{namespace="kube-system",endpoint="kube-dns",label_k8s_app="kube-dns",label_kubernetes_io_cluster_service="true",label_kubernetes_io_name="KubeDNS"} 1
+kube_endpoint_labels{namespace="kube-system",endpoint="monitoring-influxdb",label_addonmanager_kubernetes_io_mode="Reconcile",label_kubernetes_io_minikube_addons="heapster",label_kubernetes_io_name="monitoring-influxdb"} 1
+kube_endpoint_labels{namespace="kube-system",endpoint="kube-controller-manager"} 1
+kube_endpoint_labels{namespace="kube-system",endpoint="heapster",label_kubernetes_io_name="heapster",label_addonmanager_kubernetes_io_mode="Reconcile",label_kubernetes_io_minikube_addons="heapster",label_kubernetes_io_minikube_addons_endpoint="heapster"} 1
+# HELP kube_endpoint_address_available Number of addresses available in endpoint.
+# TYPE kube_endpoint_address_available gauge
+kube_endpoint_address_available{namespace="kube-system",endpoint="heapster"} 1
+kube_endpoint_address_available{namespace="kube-system",endpoint="kube-dns"} 6
+kube_endpoint_address_available{namespace="kube-system",endpoint="monitoring-influxdb"} 2
+kube_endpoint_address_available{namespace="kube-system",endpoint="kube-controller-manager"} 0
+kube_endpoint_address_available{namespace="kubernetes-dashboard",endpoint="kubernetes-dashboard"} 1
+kube_endpoint_address_available{namespace="kube-system",endpoint="kube-scheduler"} 0
+kube_endpoint_address_available{namespace="kubernetes-dashboard",endpoint="dashboard-metrics-scraper"} 1
+kube_endpoint_address_available{namespace="kube-system",endpoint="monitoring-grafana"} 1
+kube_endpoint_address_available{namespace="kube-system",endpoint="kube-state-metrics"} 2
+kube_endpoint_address_available{namespace="default",endpoint="kubernetes"} 1
+# HELP kube_endpoint_address_not_ready Number of addresses not ready in endpoint
+# TYPE kube_endpoint_address_not_ready gauge
+kube_endpoint_address_not_ready{namespace="kube-system",endpoint="monitoring-influxdb"} 0
+kube_endpoint_address_not_ready{namespace="kube-system",endpoint="kube-controller-manager"} 0
+kube_endpoint_address_not_ready{namespace="kube-system",endpoint="heapster"} 0
+kube_endpoint_address_not_ready{namespace="kube-system",endpoint="kube-dns"} 0
+kube_endpoint_address_not_ready{namespace="kube-system",endpoint="kube-state-metrics"} 0
+kube_endpoint_address_not_ready{namespace="default",endpoint="kubernetes"} 0
+kube_endpoint_address_not_ready{namespace="kubernetes-dashboard",endpoint="kubernetes-dashboard"} 0
+kube_endpoint_address_not_ready{namespace="kube-system",endpoint="kube-scheduler"} 0
+kube_endpoint_address_not_ready{namespace="kubernetes-dashboard",endpoint="dashboard-metrics-scraper"} 0
+kube_endpoint_address_not_ready{namespace="kube-system",endpoint="monitoring-grafana"} 0
+# HELP kube_hpa_metadata_generation The generation observed by the HorizontalPodAutoscaler controller.
+# TYPE kube_hpa_metadata_generation gauge
+# HELP kube_hpa_spec_max_replicas Upper limit for the number of pods that can be set by the autoscaler; cannot be smaller than MinReplicas.
+# TYPE kube_hpa_spec_max_replicas gauge
+# HELP kube_hpa_spec_min_replicas Lower limit for the number of pods that can be set by the autoscaler, default 1.
+# TYPE kube_hpa_spec_min_replicas gauge
+# HELP kube_hpa_status_current_replicas Current number of replicas of pods managed by this autoscaler.
+# TYPE kube_hpa_status_current_replicas gauge
+# HELP kube_hpa_status_desired_replicas Desired number of replicas of pods managed by this autoscaler.
+# TYPE kube_hpa_status_desired_replicas gauge
+# HELP kube_hpa_labels Kubernetes labels converted to Prometheus labels.
+# TYPE kube_hpa_labels gauge
+# HELP kube_hpa_status_condition The condition of this autoscaler.
+# TYPE kube_hpa_status_condition gauge
+# HELP kube_ingress_info Information about ingress.
+# TYPE kube_ingress_info gauge
+# HELP kube_ingress_labels Kubernetes labels converted to Prometheus labels.
+# TYPE kube_ingress_labels gauge
+# HELP kube_ingress_created Unix creation timestamp
+# TYPE kube_ingress_created gauge
+# HELP kube_ingress_metadata_resource_version Resource version representing a specific version of ingress.
+# TYPE kube_ingress_metadata_resource_version gauge
+# HELP kube_ingress_path Ingress host, paths and backend service information.
+# TYPE kube_ingress_path gauge
+# HELP kube_job_labels Kubernetes labels converted to Prometheus labels.
+# TYPE kube_job_labels gauge
+# HELP kube_job_info Information about job.
+# TYPE kube_job_info gauge
+# HELP kube_job_created Unix creation timestamp
+# TYPE kube_job_created gauge
+# HELP kube_job_spec_parallelism The maximum desired number of pods the job should run at any given time.
+# TYPE kube_job_spec_parallelism gauge
+# HELP kube_job_spec_completions The desired number of successfully finished pods the job should be run with.
+# TYPE kube_job_spec_completions gauge
+# HELP kube_job_spec_active_deadline_seconds The duration in seconds relative to the startTime that the job may be active before the system tries to terminate it.
+# TYPE kube_job_spec_active_deadline_seconds gauge
+# HELP kube_job_status_succeeded The number of pods which reached Phase Succeeded.
+# TYPE kube_job_status_succeeded gauge
+# HELP kube_job_status_failed The number of pods which reached Phase Failed.
+# TYPE kube_job_status_failed gauge
+# HELP kube_job_status_active The number of actively running pods.
+# TYPE kube_job_status_active gauge
+# HELP kube_job_complete The job has completed its execution.
+# TYPE kube_job_complete gauge
+# HELP kube_job_failed The job has failed its execution.
+# TYPE kube_job_failed gauge
+# HELP kube_job_status_start_time StartTime represents time when the job was acknowledged by the Job Manager.
+# TYPE kube_job_status_start_time gauge
+# HELP kube_job_status_completion_time CompletionTime represents time when the job was completed.
+# TYPE kube_job_status_completion_time gauge
+# HELP kube_job_owner Information about the Job's owner.
+# TYPE kube_job_owner gauge
+# HELP kube_limitrange Information about limit range.
+# TYPE kube_limitrange gauge
+# HELP kube_limitrange_created Unix creation timestamp
+# TYPE kube_limitrange_created gauge
+# HELP kube_namespace_created Unix creation timestamp
+# TYPE kube_namespace_created gauge
+kube_namespace_created{namespace="kube-public"} 1.571668247e+09
+kube_namespace_created{namespace="kube-node-lease"} 1.571668247e+09
+kube_namespace_created{namespace="default"} 1.57166825e+09
+kube_namespace_created{namespace="kubernetes-dashboard"} 1.571668259e+09
+kube_namespace_created{namespace="kube-system"} 1.571668247e+09
+# HELP kube_namespace_labels Kubernetes labels converted to Prometheus labels.
+# TYPE kube_namespace_labels gauge
+kube_namespace_labels{namespace="kube-public"} 1
+kube_namespace_labels{namespace="kube-node-lease"} 1
+kube_namespace_labels{namespace="default"} 1
+kube_namespace_labels{namespace="kubernetes-dashboard",label_addonmanager_kubernetes_io_mode="Reconcile",label_kubernetes_io_minikube_addons="dashboard"} 1
+kube_namespace_labels{namespace="kube-system"} 1
+# HELP kube_namespace_status_phase kubernetes namespace status phase.
+# TYPE kube_namespace_status_phase gauge
+kube_namespace_status_phase{namespace="default",phase="Active"} 1
+kube_namespace_status_phase{namespace="default",phase="Terminating"} 0
+kube_namespace_status_phase{namespace="kubernetes-dashboard",phase="Active"} 1
+kube_namespace_status_phase{namespace="kubernetes-dashboard",phase="Terminating"} 0
+kube_namespace_status_phase{namespace="kube-system",phase="Active"} 1
+kube_namespace_status_phase{namespace="kube-system",phase="Terminating"} 0
+kube_namespace_status_phase{namespace="kube-public",phase="Active"} 1
+kube_namespace_status_phase{namespace="kube-public",phase="Terminating"} 0
+kube_namespace_status_phase{namespace="kube-node-lease",phase="Active"} 1
+kube_namespace_status_phase{namespace="kube-node-lease",phase="Terminating"} 0
+# HELP kube_node_info Information about a cluster node.
+# TYPE kube_node_info gauge
+kube_node_info{node="minikube",kernel_version="4.15.0",os_image="Buildroot 2018.05.3",container_runtime_version="docker://18.9.9",kubelet_version="v1.16.0",kubeproxy_version="v1.16.0",provider_id=""} 1
+# HELP kube_node_created Unix creation timestamp
+# TYPE kube_node_created gauge
+kube_node_created{node="minikube"} 1.571668247e+09
+# HELP kube_node_labels Kubernetes labels converted to Prometheus labels.
+# TYPE kube_node_labels gauge
+kube_node_labels{node="minikube",label_beta_kubernetes_io_arch="amd64",label_beta_kubernetes_io_os="linux",label_kubernetes_io_arch="amd64",label_kubernetes_io_hostname="minikube",label_kubernetes_io_os="linux",label_node_role_kubernetes_io_master=""} 1
+# HELP kube_node_spec_unschedulable Whether a node can schedule new pods.
+# TYPE kube_node_spec_unschedulable gauge
+kube_node_spec_unschedulable{node="minikube"} 0
+# HELP kube_node_spec_taint The taint of a cluster node.
+# TYPE kube_node_spec_taint gauge
+# HELP kube_node_status_condition The condition of a cluster node.
+# TYPE kube_node_status_condition gauge
+kube_node_status_condition{node="minikube",condition="MemoryPressure",status="true"} 0
+kube_node_status_condition{node="minikube",condition="MemoryPressure",status="false"} 1
+kube_node_status_condition{node="minikube",condition="MemoryPressure",status="unknown"} 0
+kube_node_status_condition{node="minikube",condition="DiskPressure",status="true"} 0
+kube_node_status_condition{node="minikube",condition="DiskPressure",status="false"} 1
+kube_node_status_condition{node="minikube",condition="DiskPressure",status="unknown"} 0
+kube_node_status_condition{node="minikube",condition="PIDPressure",status="true"} 0
+kube_node_status_condition{node="minikube",condition="PIDPressure",status="false"} 1
+kube_node_status_condition{node="minikube",condition="PIDPressure",status="unknown"} 0
+kube_node_status_condition{node="minikube",condition="Ready",status="true"} 1
+kube_node_status_condition{node="minikube",condition="Ready",status="false"} 0
+kube_node_status_condition{node="minikube",condition="Ready",status="unknown"} 0
+# HELP kube_node_status_phase The phase the node is currently in.
+# TYPE kube_node_status_phase gauge
+# HELP kube_node_status_capacity The capacity for different resources of a node.
+# TYPE kube_node_status_capacity gauge
+kube_node_status_capacity{node="minikube",resource="memory",unit="byte"} 2.037219328e+09
+kube_node_status_capacity{node="minikube",resource="pods",unit="integer"} 110
+kube_node_status_capacity{node="minikube",resource="cpu",unit="core"} 2
+kube_node_status_capacity{node="minikube",resource="ephemeral_storage",unit="byte"} 1.8211606528e+10
+kube_node_status_capacity{node="minikube",resource="hugepages_2Mi",unit="byte"} 0
+# HELP kube_node_status_capacity_pods The total pod resources of the node.
+# TYPE kube_node_status_capacity_pods gauge
+kube_node_status_capacity_pods{node="minikube"} 110
+# HELP kube_node_status_capacity_cpu_cores The total CPU resources of the node.
+# TYPE kube_node_status_capacity_cpu_cores gauge
+kube_node_status_capacity_cpu_cores{node="minikube"} 2
+# HELP kube_node_status_capacity_memory_bytes The total memory resources of the node.
+# TYPE kube_node_status_capacity_memory_bytes gauge
+kube_node_status_capacity_memory_bytes{node="minikube"} 2.037219328e+09
+# HELP kube_node_status_allocatable The allocatable for different resources of a node that are available for scheduling.
+# TYPE kube_node_status_allocatable gauge
+kube_node_status_allocatable{node="minikube",resource="memory",unit="byte"} 1.932361728e+09
+kube_node_status_allocatable{node="minikube",resource="pods",unit="integer"} 110
+kube_node_status_allocatable{node="minikube",resource="cpu",unit="core"} 2
+kube_node_status_allocatable{node="minikube",resource="ephemeral_storage",unit="byte"} 1.6390445849e+10
+kube_node_status_allocatable{node="minikube",resource="hugepages_2Mi",unit="byte"} 0
+# HELP kube_node_status_allocatable_pods The pod resources of a node that are available for scheduling.
+# TYPE kube_node_status_allocatable_pods gauge
+kube_node_status_allocatable_pods{node="minikube"} 110
+# HELP kube_node_status_allocatable_cpu_cores The CPU resources of a node that are available for scheduling.
+# TYPE kube_node_status_allocatable_cpu_cores gauge
+kube_node_status_allocatable_cpu_cores{node="minikube"} 2
+# HELP kube_node_status_allocatable_memory_bytes The memory resources of a node that are available for scheduling.
+# TYPE kube_node_status_allocatable_memory_bytes gauge
+kube_node_status_allocatable_memory_bytes{node="minikube"} 1.932361728e+09
+# HELP kube_persistentvolumeclaim_labels Kubernetes labels converted to Prometheus labels.
+# TYPE kube_persistentvolumeclaim_labels gauge
+# HELP kube_persistentvolumeclaim_info Information about persistent volume claim.
+# TYPE kube_persistentvolumeclaim_info gauge
+# HELP kube_persistentvolumeclaim_status_phase The phase the persistent volume claim is currently in.
+# TYPE kube_persistentvolumeclaim_status_phase gauge
+# HELP kube_persistentvolumeclaim_resource_requests_storage_bytes The capacity of storage requested by the persistent volume claim.
+# TYPE kube_persistentvolumeclaim_resource_requests_storage_bytes gauge
+# HELP kube_persistentvolumeclaim_access_mode The access mode(s) specified by the persistent volume claim.
+# TYPE kube_persistentvolumeclaim_access_mode gauge
+# HELP kube_persistentvolume_labels Kubernetes labels converted to Prometheus labels.
+# TYPE kube_persistentvolume_labels gauge
+# HELP kube_persistentvolume_status_phase The phase indicates if a volume is available, bound to a claim, or released by a claim.
+# TYPE kube_persistentvolume_status_phase gauge
+# HELP kube_persistentvolume_info Information about persistentvolume.
+# TYPE kube_persistentvolume_info gauge
+# HELP kube_persistentvolume_capacity_bytes Persistentvolume capacity in bytes.
+# TYPE kube_persistentvolume_capacity_bytes gauge
+# HELP kube_poddisruptionbudget_created Unix creation timestamp
+# TYPE kube_poddisruptionbudget_created gauge
+# HELP kube_poddisruptionbudget_status_current_healthy Current number of healthy pods
+# TYPE kube_poddisruptionbudget_status_current_healthy gauge
+# HELP kube_poddisruptionbudget_status_desired_healthy Minimum desired number of healthy pods
+# TYPE kube_poddisruptionbudget_status_desired_healthy gauge
+# HELP kube_poddisruptionbudget_status_pod_disruptions_allowed Number of pod disruptions that are currently allowed
+# TYPE kube_poddisruptionbudget_status_pod_disruptions_allowed gauge
+# HELP kube_poddisruptionbudget_status_expected_pods Total number of pods counted by this disruption budget
+# TYPE kube_poddisruptionbudget_status_expected_pods gauge
+# HELP kube_poddisruptionbudget_status_observed_generation Most recent generation observed when updating this PDB status
+# TYPE kube_poddisruptionbudget_status_observed_generation gauge
+# HELP kube_pod_info Information about pod.
+# TYPE kube_pod_info gauge
+kube_pod_info{namespace="kube-system",pod="heapster-h29l5",host_ip="10.0.2.15",pod_ip="172.17.0.4",uid="87e87c67-374a-4d90-93a1-812140b5bf12",node="minikube",created_by_kind="ReplicationController",created_by_name="heapster",priority_class=""} 1
+kube_pod_info{namespace="kube-system",pod="etcd-minikube",host_ip="10.0.2.15",pod_ip="10.0.2.15",uid="65533ccf-11c0-4b60-994f-f7d1d626e92f",node="minikube",created_by_kind="<none>",created_by_name="<none>",priority_class="system-cluster-critical"} 1
+kube_pod_info{namespace="default",pod="myapp",host_ip="10.0.2.15",pod_ip="172.17.0.8",uid="6249e5d9-091e-4281-af7a-d551c9a18c84",node="minikube",created_by_kind="<none>",created_by_name="<none>",priority_class=""} 1
+kube_pod_info{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",host_ip="10.0.2.15",pod_ip="172.17.0.7",uid="cb985a74-8ed1-49d7-99b3-583900b4fbde",node="minikube",created_by_kind="ReplicaSet",created_by_name="kubernetes-dashboard-57f4cb4545",priority_class=""} 1
+kube_pod_info{namespace="kube-system",pod="kube-controller-manager-minikube",host_ip="10.0.2.15",pod_ip="10.0.2.15",uid="f74722f3-fba4-465f-8f9d-2838d3435f0c",node="minikube",created_by_kind="<none>",created_by_name="<none>",priority_class="system-cluster-critical"} 1
+kube_pod_info{namespace="kube-system",pod="influxdb-grafana-pppn8",host_ip="10.0.2.15",pod_ip="172.17.0.5",uid="90b3e4ec-229c-4398-be61-e016892653fc",node="minikube",created_by_kind="ReplicationController",created_by_name="influxdb-grafana",priority_class=""} 1
+kube_pod_info{namespace="default",pod="newrelic-infra-4gv5k",host_ip="10.0.2.15",pod_ip="10.0.2.15",uid="504efc04-e5cc-4cf4-a246-f5a9b25d4249",node="minikube",created_by_kind="DaemonSet",created_by_name="newrelic-infra",priority_class=""} 1
+kube_pod_info{namespace="kube-system",pod="kube-apiserver-minikube",host_ip="10.0.2.15",pod_ip="10.0.2.15",uid="e31c1ba7-d481-4bfc-98d2-79789792eb69",node="minikube",created_by_kind="<none>",created_by_name="<none>",priority_class="system-cluster-critical"} 1
+kube_pod_info{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",host_ip="10.0.2.15",pod_ip="172.17.0.3",uid="7b51555c-403f-4bed-8fdb-4d110a27cf44",node="minikube",created_by_kind="ReplicaSet",created_by_name="coredns-5644d7b6d9",priority_class="system-cluster-critical"} 1
+kube_pod_info{namespace="kube-system",pod="kube-proxy-ntvvr",host_ip="10.0.2.15",pod_ip="10.0.2.15",uid="bc059100-8328-4957-9be0-a3490c1cc99f",node="minikube",created_by_kind="DaemonSet",created_by_name="kube-proxy",priority_class="system-node-critical"} 1
+kube_pod_info{namespace="default",pod="nginx-6db489d4b7-rcg9p",host_ip="10.0.2.15",pod_ip="172.17.0.10",uid="ae5eb2f9-c128-4631-b9c2-a43606d2b72b",node="minikube",created_by_kind="ReplicaSet",created_by_name="nginx-6db489d4b7",priority_class=""} 1
+kube_pod_info{namespace="kube-system",pod="storage-provisioner",host_ip="10.0.2.15",pod_ip="10.0.2.15",uid="72580d52-dded-4440-9069-0118662e2ab5",node="minikube",created_by_kind="<none>",created_by_name="<none>",priority_class=""} 1
+kube_pod_info{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",host_ip="10.0.2.15",pod_ip="172.17.0.6",uid="ef0c5116-0158-4978-a320-eac37f63d8b5",node="minikube",created_by_kind="ReplicaSet",created_by_name="dashboard-metrics-scraper-76585494d8",priority_class=""} 1
+kube_pod_info{namespace="kube-system",pod="kube-addon-manager-minikube",host_ip="10.0.2.15",pod_ip="10.0.2.15",uid="12dbf97b-7b50-48c1-880b-b74901396444",node="minikube",created_by_kind="<none>",created_by_name="<none>",priority_class=""} 1
+kube_pod_info{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",host_ip="10.0.2.15",pod_ip="172.17.0.9",uid="6f84358b-7676-41d5-8db4-dac7adb0981f",node="minikube",created_by_kind="ReplicaSet",created_by_name="kube-state-metrics-85cf88c7fb",priority_class=""} 1
+kube_pod_info{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",host_ip="10.0.2.15",pod_ip="172.17.0.2",uid="fdb8f9a6-866d-4d6c-88a7-c3c99ed14206",node="minikube",created_by_kind="ReplicaSet",created_by_name="coredns-5644d7b6d9",priority_class="system-cluster-critical"} 1
+kube_pod_info{namespace="kube-system",pod="kube-scheduler-minikube",host_ip="10.0.2.15",pod_ip="10.0.2.15",uid="0df32cac-ffc9-46e7-9a80-05949defada3",node="minikube",created_by_kind="<none>",created_by_name="<none>",priority_class="system-cluster-critical"} 1
+# HELP kube_pod_start_time Start time in unix timestamp for a pod.
+# TYPE kube_pod_start_time gauge
+kube_pod_start_time{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g"} 1.571668263e+09
+kube_pod_start_time{namespace="kube-system",pod="kube-controller-manager-minikube"} 1.571668242e+09
+kube_pod_start_time{namespace="kube-system",pod="influxdb-grafana-pppn8"} 1.57166826e+09
+kube_pod_start_time{namespace="default",pod="newrelic-infra-4gv5k"} 1.571761578e+09
+kube_pod_start_time{namespace="kube-system",pod="heapster-h29l5"} 1.571668259e+09
+kube_pod_start_time{namespace="kube-system",pod="etcd-minikube"} 1.571668328e+09
+kube_pod_start_time{namespace="default",pod="myapp"} 1.571671345e+09
+kube_pod_start_time{namespace="kube-system",pod="kube-proxy-ntvvr"} 1.571668258e+09
+kube_pod_start_time{namespace="default",pod="nginx-6db489d4b7-rcg9p"} 1.571754411e+09
+kube_pod_start_time{namespace="kube-system",pod="kube-apiserver-minikube"} 1.571668242e+09
+kube_pod_start_time{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g"} 1.571668258e+09
+kube_pod_start_time{namespace="kube-system",pod="kube-addon-manager-minikube"} 1.571668242e+09
+kube_pod_start_time{namespace="kube-system",pod="storage-provisioner"} 1.571668261e+09
+kube_pod_start_time{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc"} 1.571668263e+09
+kube_pod_start_time{namespace="kube-system",pod="kube-scheduler-minikube"} 1.571668242e+09
+kube_pod_start_time{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk"} 1.571753734e+09
+kube_pod_start_time{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk"} 1.571668258e+09
+# HELP kube_pod_completion_time Completion time in unix timestamp for a pod.
+# TYPE kube_pod_completion_time gauge
+# HELP kube_pod_owner Information about the Pod's owner.
+# TYPE kube_pod_owner gauge
+kube_pod_owner{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",owner_kind="ReplicaSet",owner_name="kube-state-metrics-85cf88c7fb",owner_is_controller="true"} 1
+kube_pod_owner{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",owner_kind="ReplicaSet",owner_name="coredns-5644d7b6d9",owner_is_controller="true"} 1
+kube_pod_owner{namespace="kube-system",pod="kube-scheduler-minikube",owner_kind="<none>",owner_name="<none>",owner_is_controller="<none>"} 1
+kube_pod_owner{namespace="kube-system",pod="influxdb-grafana-pppn8",owner_kind="ReplicationController",owner_name="influxdb-grafana",owner_is_controller="true"} 1
+kube_pod_owner{namespace="default",pod="newrelic-infra-4gv5k",owner_kind="DaemonSet",owner_name="newrelic-infra",owner_is_controller="true"} 1
+kube_pod_owner{namespace="kube-system",pod="heapster-h29l5",owner_kind="ReplicationController",owner_name="heapster",owner_is_controller="true"} 1
+kube_pod_owner{namespace="kube-system",pod="etcd-minikube",owner_kind="<none>",owner_name="<none>",owner_is_controller="<none>"} 1
+kube_pod_owner{namespace="default",pod="myapp",owner_kind="<none>",owner_name="<none>",owner_is_controller="<none>"} 1
+kube_pod_owner{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",owner_kind="ReplicaSet",owner_name="kubernetes-dashboard-57f4cb4545",owner_is_controller="true"} 1
+kube_pod_owner{namespace="kube-system",pod="kube-controller-manager-minikube",owner_kind="<none>",owner_name="<none>",owner_is_controller="<none>"} 1
+kube_pod_owner{namespace="kube-system",pod="kube-apiserver-minikube",owner_kind="<none>",owner_name="<none>",owner_is_controller="<none>"} 1
+kube_pod_owner{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",owner_kind="ReplicaSet",owner_name="coredns-5644d7b6d9",owner_is_controller="true"} 1
+kube_pod_owner{namespace="kube-system",pod="kube-proxy-ntvvr",owner_kind="DaemonSet",owner_name="kube-proxy",owner_is_controller="true"} 1
+kube_pod_owner{namespace="default",pod="nginx-6db489d4b7-rcg9p",owner_kind="ReplicaSet",owner_name="nginx-6db489d4b7",owner_is_controller="true"} 1
+kube_pod_owner{namespace="kube-system",pod="storage-provisioner",owner_kind="<none>",owner_name="<none>",owner_is_controller="<none>"} 1
+kube_pod_owner{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",owner_kind="ReplicaSet",owner_name="dashboard-metrics-scraper-76585494d8",owner_is_controller="true"} 1
+kube_pod_owner{namespace="kube-system",pod="kube-addon-manager-minikube",owner_kind="<none>",owner_name="<none>",owner_is_controller="<none>"} 1
+# HELP kube_pod_labels Kubernetes labels converted to Prometheus labels.
+# TYPE kube_pod_labels gauge
+kube_pod_labels{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",label_k8s_app="dashboard-metrics-scraper",label_pod_template_hash="76585494d8"} 1
+kube_pod_labels{namespace="kube-system",pod="kube-addon-manager-minikube",label_component="kube-addon-manager",label_kubernetes_io_minikube_addons="addon-manager",label_version="v9.0.2"} 1
+kube_pod_labels{namespace="kube-system",pod="storage-provisioner",label_addonmanager_kubernetes_io_mode="Reconcile",label_integration_test="storage-provisioner"} 1
+kube_pod_labels{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",label_k8s_app="kube-dns",label_pod_template_hash="5644d7b6d9"} 1
+kube_pod_labels{namespace="kube-system",pod="kube-scheduler-minikube",label_component="kube-scheduler",label_tier="control-plane"} 1
+kube_pod_labels{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",label_k8s_app="kube-state-metrics",label_pod_template_hash="85cf88c7fb"} 1
+kube_pod_labels{namespace="default",pod="myapp"} 1
+kube_pod_labels{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",label_k8s_app="kubernetes-dashboard",label_pod_template_hash="57f4cb4545"} 1
+kube_pod_labels{namespace="kube-system",pod="kube-controller-manager-minikube",label_component="kube-controller-manager",label_tier="control-plane"} 1
+kube_pod_labels{namespace="kube-system",pod="influxdb-grafana-pppn8",label_addonmanager_kubernetes_io_mode="Reconcile",label_k8s_app="influx-grafana"} 1
+kube_pod_labels{namespace="default",pod="newrelic-infra-4gv5k",label_skaffold_dev_run_id="e8871f1c-20e6-4d1f-89fb-3b44db679cd1",label_controller_revision_hash="f4c5ffcb7",label_name="newrelic-infra",label_pod_template_generation="1",label_skaffold_dev_cleanup="true",label_skaffold_dev_tag_policy="sha256",label_skaffold_dev_tail="true",label_app_kubernetes_io_managed_by="skaffold-v0.36.0",label_skaffold_dev_builder="local",label_skaffold_dev_deployer="kubectl",label_skaffold_dev_docker_api_version="1.39"} 1
+kube_pod_labels{namespace="kube-system",pod="heapster-h29l5",label_addonmanager_kubernetes_io_mode="Reconcile",label_k8s_app="heapster",label_version="v1.5.3"} 1
+kube_pod_labels{namespace="kube-system",pod="etcd-minikube",label_component="etcd",label_tier="control-plane"} 1
+kube_pod_labels{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",label_pod_template_hash="5644d7b6d9",label_k8s_app="kube-dns"} 1
+kube_pod_labels{namespace="kube-system",pod="kube-proxy-ntvvr",label_pod_template_generation="1",label_controller_revision_hash="68594d95c",label_k8s_app="kube-proxy"} 1
+kube_pod_labels{namespace="default",pod="nginx-6db489d4b7-rcg9p",label_pod_template_hash="6db489d4b7",label_run="nginx"} 1
+kube_pod_labels{namespace="kube-system",pod="kube-apiserver-minikube",label_component="kube-apiserver",label_tier="control-plane"} 1
+# HELP kube_pod_created Unix creation timestamp
+# TYPE kube_pod_created gauge
+kube_pod_created{namespace="kube-system",pod="kube-addon-manager-minikube"} 1.571668317e+09
+kube_pod_created{namespace="kube-system",pod="storage-provisioner"} 1.571668261e+09
+kube_pod_created{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc"} 1.571668263e+09
+kube_pod_created{namespace="kube-system",pod="kube-scheduler-minikube"} 1.571668321e+09
+kube_pod_created{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk"} 1.571753734e+09
+kube_pod_created{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk"} 1.571668258e+09
+kube_pod_created{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g"} 1.571668263e+09
+kube_pod_created{namespace="kube-system",pod="kube-controller-manager-minikube"} 1.571668321e+09
+kube_pod_created{namespace="kube-system",pod="influxdb-grafana-pppn8"} 1.57166826e+09
+kube_pod_created{namespace="default",pod="newrelic-infra-4gv5k"} 1.571761578e+09
+kube_pod_created{namespace="kube-system",pod="heapster-h29l5"} 1.571668259e+09
+kube_pod_created{namespace="kube-system",pod="etcd-minikube"} 1.571668328e+09
+kube_pod_created{namespace="default",pod="myapp"} 1.571671345e+09
+kube_pod_created{namespace="kube-system",pod="kube-proxy-ntvvr"} 1.571668258e+09
+kube_pod_created{namespace="default",pod="nginx-6db489d4b7-rcg9p"} 1.571754411e+09
+kube_pod_created{namespace="kube-system",pod="kube-apiserver-minikube"} 1.57166832e+09
+kube_pod_created{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g"} 1.571668258e+09
+# HELP kube_pod_status_scheduled_time Unix timestamp when pod moved into scheduled status
+# TYPE kube_pod_status_scheduled_time gauge
+kube_pod_status_scheduled_time{namespace="kube-system",pod="kube-addon-manager-minikube"} 1.571668242e+09
+kube_pod_status_scheduled_time{namespace="kube-system",pod="storage-provisioner"} 1.571668261e+09
+kube_pod_status_scheduled_time{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc"} 1.571668263e+09
+kube_pod_status_scheduled_time{namespace="kube-system",pod="kube-scheduler-minikube"} 1.571668242e+09
+kube_pod_status_scheduled_time{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk"} 1.571753734e+09
+kube_pod_status_scheduled_time{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk"} 1.571668258e+09
+kube_pod_status_scheduled_time{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g"} 1.571668263e+09
+kube_pod_status_scheduled_time{namespace="kube-system",pod="kube-controller-manager-minikube"} 1.571668242e+09
+kube_pod_status_scheduled_time{namespace="kube-system",pod="influxdb-grafana-pppn8"} 1.57166826e+09
+kube_pod_status_scheduled_time{namespace="default",pod="newrelic-infra-4gv5k"} 1.571761578e+09
+kube_pod_status_scheduled_time{namespace="kube-system",pod="heapster-h29l5"} 1.571668259e+09
+kube_pod_status_scheduled_time{namespace="kube-system",pod="etcd-minikube"} 1.571668328e+09
+kube_pod_status_scheduled_time{namespace="default",pod="myapp"} 1.571671345e+09
+kube_pod_status_scheduled_time{namespace="kube-system",pod="kube-proxy-ntvvr"} 1.571668258e+09
+kube_pod_status_scheduled_time{namespace="default",pod="nginx-6db489d4b7-rcg9p"} 1.571754411e+09
+kube_pod_status_scheduled_time{namespace="kube-system",pod="kube-apiserver-minikube"} 1.571668242e+09
+kube_pod_status_scheduled_time{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g"} 1.571668258e+09
+# HELP kube_pod_status_phase The pods current phase.
+# TYPE kube_pod_status_phase gauge
+kube_pod_status_phase{namespace="kube-system",pod="storage-provisioner",phase="Pending"} 0
+kube_pod_status_phase{namespace="kube-system",pod="storage-provisioner",phase="Succeeded"} 0
+kube_pod_status_phase{namespace="kube-system",pod="storage-provisioner",phase="Failed"} 0
+kube_pod_status_phase{namespace="kube-system",pod="storage-provisioner",phase="Running"} 1
+kube_pod_status_phase{namespace="kube-system",pod="storage-provisioner",phase="Unknown"} 0
+kube_pod_status_phase{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",phase="Pending"} 0
+kube_pod_status_phase{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",phase="Succeeded"} 0
+kube_pod_status_phase{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",phase="Failed"} 0
+kube_pod_status_phase{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",phase="Running"} 1
+kube_pod_status_phase{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",phase="Unknown"} 0
+kube_pod_status_phase{namespace="kube-system",pod="kube-addon-manager-minikube",phase="Pending"} 0
+kube_pod_status_phase{namespace="kube-system",pod="kube-addon-manager-minikube",phase="Succeeded"} 0
+kube_pod_status_phase{namespace="kube-system",pod="kube-addon-manager-minikube",phase="Failed"} 0
+kube_pod_status_phase{namespace="kube-system",pod="kube-addon-manager-minikube",phase="Running"} 1
+kube_pod_status_phase{namespace="kube-system",pod="kube-addon-manager-minikube",phase="Unknown"} 0
+kube_pod_status_phase{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",phase="Pending"} 0
+kube_pod_status_phase{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",phase="Succeeded"} 0
+kube_pod_status_phase{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",phase="Failed"} 0
+kube_pod_status_phase{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",phase="Running"} 1
+kube_pod_status_phase{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",phase="Unknown"} 0
+kube_pod_status_phase{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",phase="Pending"} 0
+kube_pod_status_phase{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",phase="Succeeded"} 0
+kube_pod_status_phase{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",phase="Failed"} 0
+kube_pod_status_phase{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",phase="Running"} 1
+kube_pod_status_phase{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",phase="Unknown"} 0
+kube_pod_status_phase{namespace="kube-system",pod="kube-scheduler-minikube",phase="Pending"} 0
+kube_pod_status_phase{namespace="kube-system",pod="kube-scheduler-minikube",phase="Succeeded"} 0
+kube_pod_status_phase{namespace="kube-system",pod="kube-scheduler-minikube",phase="Failed"} 0
+kube_pod_status_phase{namespace="kube-system",pod="kube-scheduler-minikube",phase="Running"} 1
+kube_pod_status_phase{namespace="kube-system",pod="kube-scheduler-minikube",phase="Unknown"} 0
+kube_pod_status_phase{namespace="kube-system",pod="heapster-h29l5",phase="Pending"} 0
+kube_pod_status_phase{namespace="kube-system",pod="heapster-h29l5",phase="Succeeded"} 0
+kube_pod_status_phase{namespace="kube-system",pod="heapster-h29l5",phase="Failed"} 0
+kube_pod_status_phase{namespace="kube-system",pod="heapster-h29l5",phase="Running"} 1
+kube_pod_status_phase{namespace="kube-system",pod="heapster-h29l5",phase="Unknown"} 0
+kube_pod_status_phase{namespace="kube-system",pod="etcd-minikube",phase="Pending"} 0
+kube_pod_status_phase{namespace="kube-system",pod="etcd-minikube",phase="Succeeded"} 0
+kube_pod_status_phase{namespace="kube-system",pod="etcd-minikube",phase="Failed"} 0
+kube_pod_status_phase{namespace="kube-system",pod="etcd-minikube",phase="Running"} 1
+kube_pod_status_phase{namespace="kube-system",pod="etcd-minikube",phase="Unknown"} 0
+kube_pod_status_phase{namespace="default",pod="myapp",phase="Pending"} 0
+kube_pod_status_phase{namespace="default",pod="myapp",phase="Succeeded"} 0
+kube_pod_status_phase{namespace="default",pod="myapp",phase="Failed"} 0
+kube_pod_status_phase{namespace="default",pod="myapp",phase="Running"} 1
+kube_pod_status_phase{namespace="default",pod="myapp",phase="Unknown"} 0
+kube_pod_status_phase{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",phase="Pending"} 0
+kube_pod_status_phase{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",phase="Succeeded"} 0
+kube_pod_status_phase{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",phase="Failed"} 0
+kube_pod_status_phase{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",phase="Running"} 1
+kube_pod_status_phase{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",phase="Unknown"} 0
+kube_pod_status_phase{namespace="kube-system",pod="kube-controller-manager-minikube",phase="Pending"} 0
+kube_pod_status_phase{namespace="kube-system",pod="kube-controller-manager-minikube",phase="Succeeded"} 0
+kube_pod_status_phase{namespace="kube-system",pod="kube-controller-manager-minikube",phase="Failed"} 0
+kube_pod_status_phase{namespace="kube-system",pod="kube-controller-manager-minikube",phase="Running"} 1
+kube_pod_status_phase{namespace="kube-system",pod="kube-controller-manager-minikube",phase="Unknown"} 0
+kube_pod_status_phase{namespace="kube-system",pod="influxdb-grafana-pppn8",phase="Pending"} 0
+kube_pod_status_phase{namespace="kube-system",pod="influxdb-grafana-pppn8",phase="Succeeded"} 0
+kube_pod_status_phase{namespace="kube-system",pod="influxdb-grafana-pppn8",phase="Failed"} 0
+kube_pod_status_phase{namespace="kube-system",pod="influxdb-grafana-pppn8",phase="Running"} 1
+kube_pod_status_phase{namespace="kube-system",pod="influxdb-grafana-pppn8",phase="Unknown"} 0
+kube_pod_status_phase{namespace="default",pod="newrelic-infra-4gv5k",phase="Pending"} 0
+kube_pod_status_phase{namespace="default",pod="newrelic-infra-4gv5k",phase="Succeeded"} 0
+kube_pod_status_phase{namespace="default",pod="newrelic-infra-4gv5k",phase="Failed"} 0
+kube_pod_status_phase{namespace="default",pod="newrelic-infra-4gv5k",phase="Running"} 1
+kube_pod_status_phase{namespace="default",pod="newrelic-infra-4gv5k",phase="Unknown"} 0
+kube_pod_status_phase{namespace="kube-system",pod="kube-apiserver-minikube",phase="Pending"} 0
+kube_pod_status_phase{namespace="kube-system",pod="kube-apiserver-minikube",phase="Succeeded"} 0
+kube_pod_status_phase{namespace="kube-system",pod="kube-apiserver-minikube",phase="Failed"} 0
+kube_pod_status_phase{namespace="kube-system",pod="kube-apiserver-minikube",phase="Running"} 1
+kube_pod_status_phase{namespace="kube-system",pod="kube-apiserver-minikube",phase="Unknown"} 0
+kube_pod_status_phase{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",phase="Pending"} 0
+kube_pod_status_phase{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",phase="Succeeded"} 0
+kube_pod_status_phase{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",phase="Failed"} 0
+kube_pod_status_phase{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",phase="Running"} 1
+kube_pod_status_phase{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",phase="Unknown"} 0
+kube_pod_status_phase{namespace="kube-system",pod="kube-proxy-ntvvr",phase="Pending"} 0
+kube_pod_status_phase{namespace="kube-system",pod="kube-proxy-ntvvr",phase="Succeeded"} 0
+kube_pod_status_phase{namespace="kube-system",pod="kube-proxy-ntvvr",phase="Failed"} 0
+kube_pod_status_phase{namespace="kube-system",pod="kube-proxy-ntvvr",phase="Running"} 1
+kube_pod_status_phase{namespace="kube-system",pod="kube-proxy-ntvvr",phase="Unknown"} 0
+kube_pod_status_phase{namespace="default",pod="nginx-6db489d4b7-rcg9p",phase="Pending"} 0
+kube_pod_status_phase{namespace="default",pod="nginx-6db489d4b7-rcg9p",phase="Succeeded"} 0
+kube_pod_status_phase{namespace="default",pod="nginx-6db489d4b7-rcg9p",phase="Failed"} 0
+kube_pod_status_phase{namespace="default",pod="nginx-6db489d4b7-rcg9p",phase="Running"} 1
+kube_pod_status_phase{namespace="default",pod="nginx-6db489d4b7-rcg9p",phase="Unknown"} 0
+# HELP kube_pod_status_ready Describes whether the pod is ready to serve requests.
+# TYPE kube_pod_status_ready gauge
+kube_pod_status_ready{namespace="default",pod="myapp",condition="true"} 1
+kube_pod_status_ready{namespace="default",pod="myapp",condition="false"} 0
+kube_pod_status_ready{namespace="default",pod="myapp",condition="unknown"} 0
+kube_pod_status_ready{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",condition="true"} 1
+kube_pod_status_ready{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",condition="false"} 0
+kube_pod_status_ready{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",condition="unknown"} 0
+kube_pod_status_ready{namespace="kube-system",pod="kube-controller-manager-minikube",condition="true"} 1
+kube_pod_status_ready{namespace="kube-system",pod="kube-controller-manager-minikube",condition="false"} 0
+kube_pod_status_ready{namespace="kube-system",pod="kube-controller-manager-minikube",condition="unknown"} 0
+kube_pod_status_ready{namespace="kube-system",pod="influxdb-grafana-pppn8",condition="true"} 1
+kube_pod_status_ready{namespace="kube-system",pod="influxdb-grafana-pppn8",condition="false"} 0
+kube_pod_status_ready{namespace="kube-system",pod="influxdb-grafana-pppn8",condition="unknown"} 0
+kube_pod_status_ready{namespace="default",pod="newrelic-infra-4gv5k",condition="true"} 1
+kube_pod_status_ready{namespace="default",pod="newrelic-infra-4gv5k",condition="false"} 0
+kube_pod_status_ready{namespace="default",pod="newrelic-infra-4gv5k",condition="unknown"} 0
+kube_pod_status_ready{namespace="kube-system",pod="heapster-h29l5",condition="true"} 1
+kube_pod_status_ready{namespace="kube-system",pod="heapster-h29l5",condition="false"} 0
+kube_pod_status_ready{namespace="kube-system",pod="heapster-h29l5",condition="unknown"} 0
+kube_pod_status_ready{namespace="kube-system",pod="etcd-minikube",condition="true"} 1
+kube_pod_status_ready{namespace="kube-system",pod="etcd-minikube",condition="false"} 0
+kube_pod_status_ready{namespace="kube-system",pod="etcd-minikube",condition="unknown"} 0
+kube_pod_status_ready{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",condition="true"} 1
+kube_pod_status_ready{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",condition="false"} 0
+kube_pod_status_ready{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",condition="unknown"} 0
+kube_pod_status_ready{namespace="kube-system",pod="kube-proxy-ntvvr",condition="true"} 1
+kube_pod_status_ready{namespace="kube-system",pod="kube-proxy-ntvvr",condition="false"} 0
+kube_pod_status_ready{namespace="kube-system",pod="kube-proxy-ntvvr",condition="unknown"} 0
+kube_pod_status_ready{namespace="default",pod="nginx-6db489d4b7-rcg9p",condition="true"} 1
+kube_pod_status_ready{namespace="default",pod="nginx-6db489d4b7-rcg9p",condition="false"} 0
+kube_pod_status_ready{namespace="default",pod="nginx-6db489d4b7-rcg9p",condition="unknown"} 0
+kube_pod_status_ready{namespace="kube-system",pod="kube-apiserver-minikube",condition="true"} 1
+kube_pod_status_ready{namespace="kube-system",pod="kube-apiserver-minikube",condition="false"} 0
+kube_pod_status_ready{namespace="kube-system",pod="kube-apiserver-minikube",condition="unknown"} 0
+kube_pod_status_ready{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",condition="true"} 1
+kube_pod_status_ready{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",condition="false"} 0
+kube_pod_status_ready{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",condition="unknown"} 0
+kube_pod_status_ready{namespace="kube-system",pod="kube-addon-manager-minikube",condition="true"} 1
+kube_pod_status_ready{namespace="kube-system",pod="kube-addon-manager-minikube",condition="false"} 0
+kube_pod_status_ready{namespace="kube-system",pod="kube-addon-manager-minikube",condition="unknown"} 0
+kube_pod_status_ready{namespace="kube-system",pod="storage-provisioner",condition="true"} 1
+kube_pod_status_ready{namespace="kube-system",pod="storage-provisioner",condition="false"} 0
+kube_pod_status_ready{namespace="kube-system",pod="storage-provisioner",condition="unknown"} 0
+kube_pod_status_ready{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",condition="true"} 1
+kube_pod_status_ready{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",condition="false"} 0
+kube_pod_status_ready{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",condition="unknown"} 0
+kube_pod_status_ready{namespace="kube-system",pod="kube-scheduler-minikube",condition="true"} 1
+kube_pod_status_ready{namespace="kube-system",pod="kube-scheduler-minikube",condition="false"} 0
+kube_pod_status_ready{namespace="kube-system",pod="kube-scheduler-minikube",condition="unknown"} 0
+kube_pod_status_ready{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",condition="true"} 1
+kube_pod_status_ready{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",condition="false"} 0
+kube_pod_status_ready{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",condition="unknown"} 0
+# HELP kube_pod_status_scheduled Describes the status of the scheduling process for the pod.
+# TYPE kube_pod_status_scheduled gauge
+kube_pod_status_scheduled{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",condition="true"} 1
+kube_pod_status_scheduled{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",condition="false"} 0
+kube_pod_status_scheduled{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",condition="unknown"} 0
+kube_pod_status_scheduled{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",condition="true"} 1
+kube_pod_status_scheduled{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",condition="false"} 0
+kube_pod_status_scheduled{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",condition="unknown"} 0
+kube_pod_status_scheduled{namespace="kube-system",pod="kube-scheduler-minikube",condition="true"} 1
+kube_pod_status_scheduled{namespace="kube-system",pod="kube-scheduler-minikube",condition="false"} 0
+kube_pod_status_scheduled{namespace="kube-system",pod="kube-scheduler-minikube",condition="unknown"} 0
+kube_pod_status_scheduled{namespace="default",pod="newrelic-infra-4gv5k",condition="true"} 1
+kube_pod_status_scheduled{namespace="default",pod="newrelic-infra-4gv5k",condition="false"} 0
+kube_pod_status_scheduled{namespace="default",pod="newrelic-infra-4gv5k",condition="unknown"} 0
+kube_pod_status_scheduled{namespace="kube-system",pod="heapster-h29l5",condition="true"} 1
+kube_pod_status_scheduled{namespace="kube-system",pod="heapster-h29l5",condition="false"} 0
+kube_pod_status_scheduled{namespace="kube-system",pod="heapster-h29l5",condition="unknown"} 0
+kube_pod_status_scheduled{namespace="kube-system",pod="etcd-minikube",condition="true"} 1
+kube_pod_status_scheduled{namespace="kube-system",pod="etcd-minikube",condition="false"} 0
+kube_pod_status_scheduled{namespace="kube-system",pod="etcd-minikube",condition="unknown"} 0
+kube_pod_status_scheduled{namespace="default",pod="myapp",condition="true"} 1
+kube_pod_status_scheduled{namespace="default",pod="myapp",condition="false"} 0
+kube_pod_status_scheduled{namespace="default",pod="myapp",condition="unknown"} 0
+kube_pod_status_scheduled{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",condition="true"} 1
+kube_pod_status_scheduled{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",condition="false"} 0
+kube_pod_status_scheduled{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",condition="unknown"} 0
+kube_pod_status_scheduled{namespace="kube-system",pod="kube-controller-manager-minikube",condition="true"} 1
+kube_pod_status_scheduled{namespace="kube-system",pod="kube-controller-manager-minikube",condition="false"} 0
+kube_pod_status_scheduled{namespace="kube-system",pod="kube-controller-manager-minikube",condition="unknown"} 0
+kube_pod_status_scheduled{namespace="kube-system",pod="influxdb-grafana-pppn8",condition="true"} 1
+kube_pod_status_scheduled{namespace="kube-system",pod="influxdb-grafana-pppn8",condition="false"} 0
+kube_pod_status_scheduled{namespace="kube-system",pod="influxdb-grafana-pppn8",condition="unknown"} 0
+kube_pod_status_scheduled{namespace="kube-system",pod="kube-apiserver-minikube",condition="true"} 1
+kube_pod_status_scheduled{namespace="kube-system",pod="kube-apiserver-minikube",condition="false"} 0
+kube_pod_status_scheduled{namespace="kube-system",pod="kube-apiserver-minikube",condition="unknown"} 0
+kube_pod_status_scheduled{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",condition="true"} 1
+kube_pod_status_scheduled{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",condition="false"} 0
+kube_pod_status_scheduled{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",condition="unknown"} 0
+kube_pod_status_scheduled{namespace="kube-system",pod="kube-proxy-ntvvr",condition="true"} 1
+kube_pod_status_scheduled{namespace="kube-system",pod="kube-proxy-ntvvr",condition="false"} 0
+kube_pod_status_scheduled{namespace="kube-system",pod="kube-proxy-ntvvr",condition="unknown"} 0
+kube_pod_status_scheduled{namespace="default",pod="nginx-6db489d4b7-rcg9p",condition="true"} 1
+kube_pod_status_scheduled{namespace="default",pod="nginx-6db489d4b7-rcg9p",condition="false"} 0
+kube_pod_status_scheduled{namespace="default",pod="nginx-6db489d4b7-rcg9p",condition="unknown"} 0
+kube_pod_status_scheduled{namespace="kube-system",pod="storage-provisioner",condition="true"} 1
+kube_pod_status_scheduled{namespace="kube-system",pod="storage-provisioner",condition="false"} 0
+kube_pod_status_scheduled{namespace="kube-system",pod="storage-provisioner",condition="unknown"} 0
+kube_pod_status_scheduled{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",condition="true"} 1
+kube_pod_status_scheduled{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",condition="false"} 0
+kube_pod_status_scheduled{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",condition="unknown"} 0
+kube_pod_status_scheduled{namespace="kube-system",pod="kube-addon-manager-minikube",condition="true"} 1
+kube_pod_status_scheduled{namespace="kube-system",pod="kube-addon-manager-minikube",condition="false"} 0
+kube_pod_status_scheduled{namespace="kube-system",pod="kube-addon-manager-minikube",condition="unknown"} 0
+# HELP kube_pod_container_info Information about a container in a pod.
+# TYPE kube_pod_container_info gauge
+kube_pod_container_info{namespace="default",pod="nginx-6db489d4b7-rcg9p",container="nginx",image="nginx:latest",image_id="docker-pullable://nginx@sha256:77ebc94e0cec30b20f9056bac1066b09fbdc049401b71850922c63fc0cc1762e",container_id="docker://b2cae6c8f75104cce7b803395fdaccba29ea7b5352564c7b5985aa551dcb51e9"} 1
+kube_pod_container_info{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver",image="k8s.gcr.io/kube-apiserver:v1.16.0",image_id="docker-pullable://k8s.gcr.io/kube-apiserver@sha256:f4168527c91289da2708f62ae729fdde5fb484167dd05ffbb7ab666f60de96cd",container_id="docker://f906ff294ab98cfa0dd8f4b43c2a2853abed9967be4e43ab2e4578386dd24216"} 1
+kube_pod_container_info{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns",image="k8s.gcr.io/coredns:1.6.2",image_id="docker-pullable://k8s.gcr.io/coredns@sha256:12eb885b8685b1b13a04ecf5c23bc809c2e57917252fd7b0be9e9c00644e8ee5",container_id="docker://4fa232547a828809fdecf40d8f86e27a0cb3e547d279c5a5c762ff31af3ba180"} 1
+kube_pod_container_info{namespace="kube-system",pod="kube-proxy-ntvvr",container="kube-proxy",image="k8s.gcr.io/kube-proxy:v1.16.0",image_id="docker-pullable://k8s.gcr.io/kube-proxy@sha256:e7f0f8e320cfeeaafdc9c0cb8e23f51e542fa1d955ae39c8131a0531ba72c794",container_id="docker://d26c9056d65e475325083d4593a212d9a5e2e1199aad950259653f8018709015"} 1
+kube_pod_container_info{namespace="kube-system",pod="storage-provisioner",container="storage-provisioner",image="gcr.io/k8s-minikube/storage-provisioner:v1.8.1",image_id="docker://sha256:4689081edb103a9e8174bf23a255bfbe0b2d9ed82edc907abab6989d1c60f02c",container_id="docker://a2d90a031813d9f2eb5a7537fc69b2824a4f8ef78ae1b4859e4ed5ba3cbe2cf8"} 1
+kube_pod_container_info{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",container="dashboard-metrics-scraper",image="kubernetesui/metrics-scraper:v1.0.1",image_id="docker-pullable://kubernetesui/metrics-scraper@sha256:35fcae4fd9232a541a8cb08f2853117ba7231750b75c2cb3b6a58a2aaa57f878",container_id="docker://4e8a8d4f09d6298a1e7d6e92e1d7b1d3cef52da28ffe447d11a281ffaa53eda6"} 1
+kube_pod_container_info{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager",image="k8s.gcr.io/kube-addon-manager:v9.0.2",image_id="docker://sha256:bd12a212f9dcbafe64323774c6b937dec3099d65f39a8d29896cf0d1d0c906cf",container_id="docker://7bfeac953156ec10abc50987b450dcaf6cbc571c8394fdda9c4e80975daa1947"} 1
+kube_pod_container_info{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",container="kube-state-metrics",image="quay.io/coreos/kube-state-metrics:v1.7.2",image_id="docker-pullable://quay.io/coreos/kube-state-metrics@sha256:99a3e3297e281fec09fe850d6d4bccf4d9fd58ff62a5b37764d8a8bd1e79bd14",container_id="docker://76aec7b0fda0c58e88f767d8c8bb224a4cbc63f5c088916c04ef890a44a99c92"} 1
+kube_pod_container_info{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns",image="k8s.gcr.io/coredns:1.6.2",image_id="docker-pullable://k8s.gcr.io/coredns@sha256:12eb885b8685b1b13a04ecf5c23bc809c2e57917252fd7b0be9e9c00644e8ee5",container_id="docker://092e1010637fadbe19283d94544cc825be7c446b618542d287c576b07e9393d6"} 1
+kube_pod_container_info{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler",image="k8s.gcr.io/kube-scheduler:v1.16.0",image_id="docker-pullable://k8s.gcr.io/kube-scheduler@sha256:094023ab9cd02059eb0295d234ff9ea321e0e22e4813986d7f1a1ac4dc1990d0",container_id="docker://0b806a0298794eead5193d12d589871c3815ea15c5aaa1ae56fe7185d4c9a8d0"} 1
+kube_pod_container_info{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager",image="k8s.gcr.io/kube-controller-manager:v1.16.0",image_id="docker-pullable://k8s.gcr.io/kube-controller-manager@sha256:c156a05ee9d40e3ca2ebf9337f38a10558c1fc6c9124006f128a82e6c38cdf3e",container_id="docker://692dd9f0012c3c86d283f2ac2c6799d9d8321edca8bd6edd7944ef85130cdec0"} 1
+kube_pod_container_info{namespace="kube-system",pod="influxdb-grafana-pppn8",container="grafana",image="k8s.gcr.io/heapster-grafana-amd64:v4.4.3",image_id="docker-pullable://k8s.gcr.io/heapster-grafana-amd64@sha256:4a472eb4df03f4f557d80e7c6b903d9c8fe31493108b99fbd6da6540b5448d70",container_id="docker://a0e75f2a7da1472f11034c2aabb0320f2a9ec1fc81d25c1f9469cc4caf4d1511"} 1
+kube_pod_container_info{namespace="kube-system",pod="influxdb-grafana-pppn8",container="influxdb",image="k8s.gcr.io/heapster-influxdb-amd64:v1.3.3",image_id="docker-pullable://k8s.gcr.io/heapster-influxdb-amd64@sha256:f433e331c1865ad87bc5387589965528b78cd6b1b2f61697e589584d690c1edd",container_id="docker://022641321a5fc39e7ddad7372e7636079b66ca4c4a6e299288dfa49a16748590"} 1
+kube_pod_container_info{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra",image="quay.io/newrelic/infrastructure-k8s-dev:0b8aae82cf9c9911f5ec0a1a98b9b4ebdff30e850ff6c46b630f30ebb9bd26c5",image_id="docker://sha256:0b8aae82cf9c9911f5ec0a1a98b9b4ebdff30e850ff6c46b630f30ebb9bd26c5",container_id="docker://9a8f43b32cb71dbd003eb827f47a88ba3c58215cd4e87a2d210353d319f5c56f"} 1
+kube_pod_container_info{namespace="kube-system",pod="heapster-h29l5",container="heapster",image="k8s.gcr.io/heapster-amd64:v1.5.3",image_id="docker-pullable://k8s.gcr.io/heapster-amd64@sha256:fc33c690a3a446de5abc24b048b88050810a58b9e4477fa763a43d7df029301a",container_id="docker://441bf808453d3d6857e414b56e025d0340c0f3a23ba5c0be5121b26d92d0ecd1"} 1
+kube_pod_container_info{namespace="kube-system",pod="etcd-minikube",container="etcd",image="k8s.gcr.io/etcd:3.3.15-0",image_id="docker-pullable://k8s.gcr.io/etcd@sha256:12c2c5e5731c3bcd56e6f1c05c0f9198b6f06793fa7fca2fb43aab9622dc4afa",container_id="docker://240b77b46be45b68bf7a5530be2c865a1b7feed7eff44ebe60aa30f1576a2939"} 1
+kube_pod_container_info{namespace="default",pod="myapp",container="nginx",image="nginx:latest",image_id="docker-pullable://nginx@sha256:77ebc94e0cec30b20f9056bac1066b09fbdc049401b71850922c63fc0cc1762e",container_id="docker://22971739e8edfa65eb1b061ff83f77f932e27ab2b46fdcecdf4fae62e1f238e2"} 1
+kube_pod_container_info{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",container="kubernetes-dashboard",image="kubernetesui/dashboard:v2.0.0-beta4",image_id="docker://sha256:6802d83967b995c2c2499645ede60aa234727afc06079e635285f54c82acbceb",container_id="docker://f798ca5924c3c893d87c1e3c2768e1aae34cdcf3d7170aeafe3d61ee53a33b16"} 1
+# HELP kube_pod_init_container_info Information about an init container in a pod.
+# TYPE kube_pod_init_container_info gauge
+# HELP kube_pod_container_status_waiting Describes whether the container is currently in waiting state.
+# TYPE kube_pod_container_status_waiting gauge
+kube_pod_container_status_waiting{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",container="kube-state-metrics"} 0
+kube_pod_container_status_waiting{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns"} 0
+kube_pod_container_status_waiting{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler"} 0
+kube_pod_container_status_waiting{namespace="kube-system",pod="influxdb-grafana-pppn8",container="grafana"} 0
+kube_pod_container_status_waiting{namespace="kube-system",pod="influxdb-grafana-pppn8",container="influxdb"} 0
+kube_pod_container_status_waiting{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra"} 0
+kube_pod_container_status_waiting{namespace="kube-system",pod="heapster-h29l5",container="heapster"} 0
+kube_pod_container_status_waiting{namespace="kube-system",pod="etcd-minikube",container="etcd"} 0
+kube_pod_container_status_waiting{namespace="default",pod="myapp",container="nginx"} 0
+kube_pod_container_status_waiting{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",container="kubernetes-dashboard"} 0
+kube_pod_container_status_waiting{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager"} 0
+kube_pod_container_status_waiting{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver"} 0
+kube_pod_container_status_waiting{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns"} 0
+kube_pod_container_status_waiting{namespace="kube-system",pod="kube-proxy-ntvvr",container="kube-proxy"} 0
+kube_pod_container_status_waiting{namespace="default",pod="nginx-6db489d4b7-rcg9p",container="nginx"} 0
+kube_pod_container_status_waiting{namespace="kube-system",pod="storage-provisioner",container="storage-provisioner"} 0
+kube_pod_container_status_waiting{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",container="dashboard-metrics-scraper"} 0
+kube_pod_container_status_waiting{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager"} 0
+# HELP kube_pod_init_container_status_waiting Describes whether the init container is currently in waiting state.
+# TYPE kube_pod_init_container_status_waiting gauge
+# HELP kube_pod_container_status_waiting_reason Describes the reason the container is currently in waiting state.
+# TYPE kube_pod_container_status_waiting_reason gauge
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns",reason="ContainerCreating"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns",reason="CrashLoopBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns",reason="CreateContainerConfigError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns",reason="ErrImagePull"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns",reason="ImagePullBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns",reason="CreateContainerError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns",reason="InvalidImageName"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-proxy-ntvvr",container="kube-proxy",reason="ContainerCreating"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-proxy-ntvvr",container="kube-proxy",reason="CrashLoopBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-proxy-ntvvr",container="kube-proxy",reason="CreateContainerConfigError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-proxy-ntvvr",container="kube-proxy",reason="ErrImagePull"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-proxy-ntvvr",container="kube-proxy",reason="ImagePullBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-proxy-ntvvr",container="kube-proxy",reason="CreateContainerError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-proxy-ntvvr",container="kube-proxy",reason="InvalidImageName"} 0
+kube_pod_container_status_waiting_reason{namespace="default",pod="nginx-6db489d4b7-rcg9p",container="nginx",reason="ContainerCreating"} 0
+kube_pod_container_status_waiting_reason{namespace="default",pod="nginx-6db489d4b7-rcg9p",container="nginx",reason="CrashLoopBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="default",pod="nginx-6db489d4b7-rcg9p",container="nginx",reason="CreateContainerConfigError"} 0
+kube_pod_container_status_waiting_reason{namespace="default",pod="nginx-6db489d4b7-rcg9p",container="nginx",reason="ErrImagePull"} 0
+kube_pod_container_status_waiting_reason{namespace="default",pod="nginx-6db489d4b7-rcg9p",container="nginx",reason="ImagePullBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="default",pod="nginx-6db489d4b7-rcg9p",container="nginx",reason="CreateContainerError"} 0
+kube_pod_container_status_waiting_reason{namespace="default",pod="nginx-6db489d4b7-rcg9p",container="nginx",reason="InvalidImageName"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver",reason="ContainerCreating"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver",reason="CrashLoopBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver",reason="CreateContainerConfigError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver",reason="ErrImagePull"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver",reason="ImagePullBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver",reason="CreateContainerError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver",reason="InvalidImageName"} 0
+kube_pod_container_status_waiting_reason{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",container="dashboard-metrics-scraper",reason="ContainerCreating"} 0
+kube_pod_container_status_waiting_reason{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",container="dashboard-metrics-scraper",reason="CrashLoopBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",container="dashboard-metrics-scraper",reason="CreateContainerConfigError"} 0
+kube_pod_container_status_waiting_reason{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",container="dashboard-metrics-scraper",reason="ErrImagePull"} 0
+kube_pod_container_status_waiting_reason{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",container="dashboard-metrics-scraper",reason="ImagePullBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",container="dashboard-metrics-scraper",reason="CreateContainerError"} 0
+kube_pod_container_status_waiting_reason{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",container="dashboard-metrics-scraper",reason="InvalidImageName"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager",reason="ContainerCreating"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager",reason="CrashLoopBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager",reason="CreateContainerConfigError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager",reason="ErrImagePull"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager",reason="ImagePullBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager",reason="CreateContainerError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager",reason="InvalidImageName"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="storage-provisioner",container="storage-provisioner",reason="ContainerCreating"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="storage-provisioner",container="storage-provisioner",reason="CrashLoopBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="storage-provisioner",container="storage-provisioner",reason="CreateContainerConfigError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="storage-provisioner",container="storage-provisioner",reason="ErrImagePull"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="storage-provisioner",container="storage-provisioner",reason="ImagePullBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="storage-provisioner",container="storage-provisioner",reason="CreateContainerError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="storage-provisioner",container="storage-provisioner",reason="InvalidImageName"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns",reason="ContainerCreating"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns",reason="CrashLoopBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns",reason="CreateContainerConfigError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns",reason="ErrImagePull"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns",reason="ImagePullBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns",reason="CreateContainerError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns",reason="InvalidImageName"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler",reason="ContainerCreating"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler",reason="CrashLoopBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler",reason="CreateContainerConfigError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler",reason="ErrImagePull"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler",reason="ImagePullBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler",reason="CreateContainerError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler",reason="InvalidImageName"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",container="kube-state-metrics",reason="ContainerCreating"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",container="kube-state-metrics",reason="CrashLoopBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",container="kube-state-metrics",reason="CreateContainerConfigError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",container="kube-state-metrics",reason="ErrImagePull"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",container="kube-state-metrics",reason="ImagePullBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",container="kube-state-metrics",reason="CreateContainerError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",container="kube-state-metrics",reason="InvalidImageName"} 0
+kube_pod_container_status_waiting_reason{namespace="default",pod="myapp",container="nginx",reason="ContainerCreating"} 0
+kube_pod_container_status_waiting_reason{namespace="default",pod="myapp",container="nginx",reason="CrashLoopBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="default",pod="myapp",container="nginx",reason="CreateContainerConfigError"} 0
+kube_pod_container_status_waiting_reason{namespace="default",pod="myapp",container="nginx",reason="ErrImagePull"} 0
+kube_pod_container_status_waiting_reason{namespace="default",pod="myapp",container="nginx",reason="ImagePullBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="default",pod="myapp",container="nginx",reason="CreateContainerError"} 0
+kube_pod_container_status_waiting_reason{namespace="default",pod="myapp",container="nginx",reason="InvalidImageName"} 0
+kube_pod_container_status_waiting_reason{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",container="kubernetes-dashboard",reason="ContainerCreating"} 0
+kube_pod_container_status_waiting_reason{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",container="kubernetes-dashboard",reason="CrashLoopBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",container="kubernetes-dashboard",reason="CreateContainerConfigError"} 0
+kube_pod_container_status_waiting_reason{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",container="kubernetes-dashboard",reason="ErrImagePull"} 0
+kube_pod_container_status_waiting_reason{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",container="kubernetes-dashboard",reason="ImagePullBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",container="kubernetes-dashboard",reason="CreateContainerError"} 0
+kube_pod_container_status_waiting_reason{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",container="kubernetes-dashboard",reason="InvalidImageName"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager",reason="ContainerCreating"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager",reason="CrashLoopBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager",reason="CreateContainerConfigError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager",reason="ErrImagePull"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager",reason="ImagePullBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager",reason="CreateContainerError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager",reason="InvalidImageName"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="grafana",reason="ContainerCreating"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="grafana",reason="CrashLoopBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="grafana",reason="CreateContainerConfigError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="grafana",reason="ErrImagePull"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="grafana",reason="ImagePullBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="grafana",reason="CreateContainerError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="grafana",reason="InvalidImageName"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="influxdb",reason="ContainerCreating"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="influxdb",reason="CrashLoopBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="influxdb",reason="CreateContainerConfigError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="influxdb",reason="ErrImagePull"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="influxdb",reason="ImagePullBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="influxdb",reason="CreateContainerError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="influxdb",reason="InvalidImageName"} 0
+kube_pod_container_status_waiting_reason{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra",reason="ContainerCreating"} 0
+kube_pod_container_status_waiting_reason{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra",reason="CrashLoopBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra",reason="CreateContainerConfigError"} 0
+kube_pod_container_status_waiting_reason{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra",reason="ErrImagePull"} 0
+kube_pod_container_status_waiting_reason{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra",reason="ImagePullBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra",reason="CreateContainerError"} 0
+kube_pod_container_status_waiting_reason{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra",reason="InvalidImageName"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="heapster-h29l5",container="heapster",reason="ContainerCreating"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="heapster-h29l5",container="heapster",reason="CrashLoopBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="heapster-h29l5",container="heapster",reason="CreateContainerConfigError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="heapster-h29l5",container="heapster",reason="ErrImagePull"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="heapster-h29l5",container="heapster",reason="ImagePullBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="heapster-h29l5",container="heapster",reason="CreateContainerError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="heapster-h29l5",container="heapster",reason="InvalidImageName"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="etcd-minikube",container="etcd",reason="ContainerCreating"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="etcd-minikube",container="etcd",reason="CrashLoopBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="etcd-minikube",container="etcd",reason="CreateContainerConfigError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="etcd-minikube",container="etcd",reason="ErrImagePull"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="etcd-minikube",container="etcd",reason="ImagePullBackOff"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="etcd-minikube",container="etcd",reason="CreateContainerError"} 0
+kube_pod_container_status_waiting_reason{namespace="kube-system",pod="etcd-minikube",container="etcd",reason="InvalidImageName"} 0
+# HELP kube_pod_init_container_status_waiting_reason Describes the reason the init container is currently in waiting state.
+# TYPE kube_pod_init_container_status_waiting_reason gauge
+# HELP kube_pod_container_status_running Describes whether the container is currently in running state.
+# TYPE kube_pod_container_status_running gauge
+kube_pod_container_status_running{namespace="kube-system",pod="influxdb-grafana-pppn8",container="grafana"} 1
+kube_pod_container_status_running{namespace="kube-system",pod="influxdb-grafana-pppn8",container="influxdb"} 1
+kube_pod_container_status_running{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra"} 1
+kube_pod_container_status_running{namespace="kube-system",pod="heapster-h29l5",container="heapster"} 1
+kube_pod_container_status_running{namespace="kube-system",pod="etcd-minikube",container="etcd"} 1
+kube_pod_container_status_running{namespace="default",pod="myapp",container="nginx"} 1
+kube_pod_container_status_running{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",container="kubernetes-dashboard"} 1
+kube_pod_container_status_running{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager"} 1
+kube_pod_container_status_running{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver"} 1
+kube_pod_container_status_running{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns"} 1
+kube_pod_container_status_running{namespace="kube-system",pod="kube-proxy-ntvvr",container="kube-proxy"} 1
+kube_pod_container_status_running{namespace="default",pod="nginx-6db489d4b7-rcg9p",container="nginx"} 1
+kube_pod_container_status_running{namespace="kube-system",pod="storage-provisioner",container="storage-provisioner"} 1
+kube_pod_container_status_running{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",container="dashboard-metrics-scraper"} 1
+kube_pod_container_status_running{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager"} 1
+kube_pod_container_status_running{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",container="kube-state-metrics"} 1
+kube_pod_container_status_running{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns"} 1
+kube_pod_container_status_running{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler"} 1
+# HELP kube_pod_init_container_status_running Describes whether the init container is currently in running state.
+# TYPE kube_pod_init_container_status_running gauge
+# HELP kube_pod_container_status_terminated Describes whether the container is currently in terminated state.
+# TYPE kube_pod_container_status_terminated gauge
+kube_pod_container_status_terminated{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver"} 0
+kube_pod_container_status_terminated{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns"} 0
+kube_pod_container_status_terminated{namespace="kube-system",pod="kube-proxy-ntvvr",container="kube-proxy"} 0
+kube_pod_container_status_terminated{namespace="default",pod="nginx-6db489d4b7-rcg9p",container="nginx"} 0
+kube_pod_container_status_terminated{namespace="kube-system",pod="storage-provisioner",container="storage-provisioner"} 0
+kube_pod_container_status_terminated{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",container="dashboard-metrics-scraper"} 0
+kube_pod_container_status_terminated{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager"} 0
+kube_pod_container_status_terminated{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",container="kube-state-metrics"} 0
+kube_pod_container_status_terminated{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns"} 0
+kube_pod_container_status_terminated{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler"} 0
+kube_pod_container_status_terminated{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra"} 0
+kube_pod_container_status_terminated{namespace="kube-system",pod="heapster-h29l5",container="heapster"} 0
+kube_pod_container_status_terminated{namespace="kube-system",pod="etcd-minikube",container="etcd"} 0
+kube_pod_container_status_terminated{namespace="default",pod="myapp",container="nginx"} 0
+kube_pod_container_status_terminated{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",container="kubernetes-dashboard"} 0
+kube_pod_container_status_terminated{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager"} 0
+kube_pod_container_status_terminated{namespace="kube-system",pod="influxdb-grafana-pppn8",container="grafana"} 0
+kube_pod_container_status_terminated{namespace="kube-system",pod="influxdb-grafana-pppn8",container="influxdb"} 0
+# HELP kube_pod_init_container_status_terminated Describes whether the init container is currently in terminated state.
+# TYPE kube_pod_init_container_status_terminated gauge
+# HELP kube_pod_container_status_terminated_reason Describes the reason the container is currently in terminated state.
+# TYPE kube_pod_container_status_terminated_reason gauge
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-proxy-ntvvr",container="kube-proxy",reason="OOMKilled"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-proxy-ntvvr",container="kube-proxy",reason="Completed"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-proxy-ntvvr",container="kube-proxy",reason="Error"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-proxy-ntvvr",container="kube-proxy",reason="ContainerCannotRun"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-proxy-ntvvr",container="kube-proxy",reason="DeadlineExceeded"} 0
+kube_pod_container_status_terminated_reason{namespace="default",pod="nginx-6db489d4b7-rcg9p",container="nginx",reason="OOMKilled"} 0
+kube_pod_container_status_terminated_reason{namespace="default",pod="nginx-6db489d4b7-rcg9p",container="nginx",reason="Completed"} 0
+kube_pod_container_status_terminated_reason{namespace="default",pod="nginx-6db489d4b7-rcg9p",container="nginx",reason="Error"} 0
+kube_pod_container_status_terminated_reason{namespace="default",pod="nginx-6db489d4b7-rcg9p",container="nginx",reason="ContainerCannotRun"} 0
+kube_pod_container_status_terminated_reason{namespace="default",pod="nginx-6db489d4b7-rcg9p",container="nginx",reason="DeadlineExceeded"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver",reason="OOMKilled"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver",reason="Completed"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver",reason="Error"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver",reason="ContainerCannotRun"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver",reason="DeadlineExceeded"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns",reason="OOMKilled"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns",reason="Completed"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns",reason="Error"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns",reason="ContainerCannotRun"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns",reason="DeadlineExceeded"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager",reason="OOMKilled"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager",reason="Completed"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager",reason="Error"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager",reason="ContainerCannotRun"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager",reason="DeadlineExceeded"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="storage-provisioner",container="storage-provisioner",reason="OOMKilled"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="storage-provisioner",container="storage-provisioner",reason="Completed"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="storage-provisioner",container="storage-provisioner",reason="Error"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="storage-provisioner",container="storage-provisioner",reason="ContainerCannotRun"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="storage-provisioner",container="storage-provisioner",reason="DeadlineExceeded"} 0
+kube_pod_container_status_terminated_reason{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",container="dashboard-metrics-scraper",reason="OOMKilled"} 0
+kube_pod_container_status_terminated_reason{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",container="dashboard-metrics-scraper",reason="Completed"} 0
+kube_pod_container_status_terminated_reason{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",container="dashboard-metrics-scraper",reason="Error"} 0
+kube_pod_container_status_terminated_reason{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",container="dashboard-metrics-scraper",reason="ContainerCannotRun"} 0
+kube_pod_container_status_terminated_reason{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",container="dashboard-metrics-scraper",reason="DeadlineExceeded"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler",reason="OOMKilled"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler",reason="Completed"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler",reason="Error"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler",reason="ContainerCannotRun"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler",reason="DeadlineExceeded"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",container="kube-state-metrics",reason="OOMKilled"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",container="kube-state-metrics",reason="Completed"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",container="kube-state-metrics",reason="Error"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",container="kube-state-metrics",reason="ContainerCannotRun"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",container="kube-state-metrics",reason="DeadlineExceeded"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns",reason="OOMKilled"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns",reason="Completed"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns",reason="Error"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns",reason="ContainerCannotRun"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns",reason="DeadlineExceeded"} 0
+kube_pod_container_status_terminated_reason{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",container="kubernetes-dashboard",reason="OOMKilled"} 0
+kube_pod_container_status_terminated_reason{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",container="kubernetes-dashboard",reason="Completed"} 0
+kube_pod_container_status_terminated_reason{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",container="kubernetes-dashboard",reason="Error"} 0
+kube_pod_container_status_terminated_reason{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",container="kubernetes-dashboard",reason="ContainerCannotRun"} 0
+kube_pod_container_status_terminated_reason{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",container="kubernetes-dashboard",reason="DeadlineExceeded"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager",reason="OOMKilled"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager",reason="Completed"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager",reason="Error"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager",reason="ContainerCannotRun"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager",reason="DeadlineExceeded"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="grafana",reason="OOMKilled"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="grafana",reason="Completed"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="grafana",reason="Error"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="grafana",reason="ContainerCannotRun"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="grafana",reason="DeadlineExceeded"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="influxdb",reason="OOMKilled"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="influxdb",reason="Completed"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="influxdb",reason="Error"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="influxdb",reason="ContainerCannotRun"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="influxdb",reason="DeadlineExceeded"} 0
+kube_pod_container_status_terminated_reason{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra",reason="OOMKilled"} 0
+kube_pod_container_status_terminated_reason{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra",reason="Completed"} 0
+kube_pod_container_status_terminated_reason{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra",reason="Error"} 0
+kube_pod_container_status_terminated_reason{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra",reason="ContainerCannotRun"} 0
+kube_pod_container_status_terminated_reason{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra",reason="DeadlineExceeded"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="heapster-h29l5",container="heapster",reason="OOMKilled"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="heapster-h29l5",container="heapster",reason="Completed"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="heapster-h29l5",container="heapster",reason="Error"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="heapster-h29l5",container="heapster",reason="ContainerCannotRun"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="heapster-h29l5",container="heapster",reason="DeadlineExceeded"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="etcd-minikube",container="etcd",reason="OOMKilled"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="etcd-minikube",container="etcd",reason="Completed"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="etcd-minikube",container="etcd",reason="Error"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="etcd-minikube",container="etcd",reason="ContainerCannotRun"} 0
+kube_pod_container_status_terminated_reason{namespace="kube-system",pod="etcd-minikube",container="etcd",reason="DeadlineExceeded"} 0
+kube_pod_container_status_terminated_reason{namespace="default",pod="myapp",container="nginx",reason="OOMKilled"} 0
+kube_pod_container_status_terminated_reason{namespace="default",pod="myapp",container="nginx",reason="Completed"} 0
+kube_pod_container_status_terminated_reason{namespace="default",pod="myapp",container="nginx",reason="Error"} 0
+kube_pod_container_status_terminated_reason{namespace="default",pod="myapp",container="nginx",reason="ContainerCannotRun"} 0
+kube_pod_container_status_terminated_reason{namespace="default",pod="myapp",container="nginx",reason="DeadlineExceeded"} 0
+# HELP kube_pod_init_container_status_terminated_reason Describes the reason the init container is currently in terminated state.
+# TYPE kube_pod_init_container_status_terminated_reason gauge
+# HELP kube_pod_container_status_last_terminated_reason Describes the last reason the container was in terminated state.
+# TYPE kube_pod_container_status_last_terminated_reason gauge
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="storage-provisioner",container="storage-provisioner",reason="OOMKilled"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="storage-provisioner",container="storage-provisioner",reason="Completed"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="storage-provisioner",container="storage-provisioner",reason="Error"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="storage-provisioner",container="storage-provisioner",reason="ContainerCannotRun"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="storage-provisioner",container="storage-provisioner",reason="DeadlineExceeded"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",container="dashboard-metrics-scraper",reason="OOMKilled"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",container="dashboard-metrics-scraper",reason="Completed"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",container="dashboard-metrics-scraper",reason="Error"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",container="dashboard-metrics-scraper",reason="ContainerCannotRun"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",container="dashboard-metrics-scraper",reason="DeadlineExceeded"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager",reason="OOMKilled"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager",reason="Completed"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager",reason="Error"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager",reason="ContainerCannotRun"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager",reason="DeadlineExceeded"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",container="kube-state-metrics",reason="OOMKilled"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",container="kube-state-metrics",reason="Completed"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",container="kube-state-metrics",reason="Error"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",container="kube-state-metrics",reason="ContainerCannotRun"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",container="kube-state-metrics",reason="DeadlineExceeded"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns",reason="OOMKilled"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns",reason="Completed"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns",reason="Error"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns",reason="ContainerCannotRun"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns",reason="DeadlineExceeded"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler",reason="OOMKilled"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler",reason="Completed"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler",reason="Error"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler",reason="ContainerCannotRun"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler",reason="DeadlineExceeded"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager",reason="OOMKilled"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager",reason="Completed"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager",reason="Error"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager",reason="ContainerCannotRun"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager",reason="DeadlineExceeded"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="grafana",reason="OOMKilled"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="grafana",reason="Completed"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="grafana",reason="Error"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="grafana",reason="ContainerCannotRun"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="grafana",reason="DeadlineExceeded"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="influxdb",reason="OOMKilled"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="influxdb",reason="Completed"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="influxdb",reason="Error"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="influxdb",reason="ContainerCannotRun"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="influxdb-grafana-pppn8",container="influxdb",reason="DeadlineExceeded"} 0
+kube_pod_container_status_last_terminated_reason{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra",reason="OOMKilled"} 0
+kube_pod_container_status_last_terminated_reason{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra",reason="Completed"} 0
+kube_pod_container_status_last_terminated_reason{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra",reason="Error"} 0
+kube_pod_container_status_last_terminated_reason{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra",reason="ContainerCannotRun"} 0
+kube_pod_container_status_last_terminated_reason{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra",reason="DeadlineExceeded"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="heapster-h29l5",container="heapster",reason="OOMKilled"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="heapster-h29l5",container="heapster",reason="Completed"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="heapster-h29l5",container="heapster",reason="Error"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="heapster-h29l5",container="heapster",reason="ContainerCannotRun"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="heapster-h29l5",container="heapster",reason="DeadlineExceeded"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="etcd-minikube",container="etcd",reason="OOMKilled"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="etcd-minikube",container="etcd",reason="Completed"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="etcd-minikube",container="etcd",reason="Error"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="etcd-minikube",container="etcd",reason="ContainerCannotRun"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="etcd-minikube",container="etcd",reason="DeadlineExceeded"} 0
+kube_pod_container_status_last_terminated_reason{namespace="default",pod="myapp",container="nginx",reason="OOMKilled"} 0
+kube_pod_container_status_last_terminated_reason{namespace="default",pod="myapp",container="nginx",reason="Completed"} 0
+kube_pod_container_status_last_terminated_reason{namespace="default",pod="myapp",container="nginx",reason="Error"} 0
+kube_pod_container_status_last_terminated_reason{namespace="default",pod="myapp",container="nginx",reason="ContainerCannotRun"} 0
+kube_pod_container_status_last_terminated_reason{namespace="default",pod="myapp",container="nginx",reason="DeadlineExceeded"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",container="kubernetes-dashboard",reason="OOMKilled"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",container="kubernetes-dashboard",reason="Completed"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",container="kubernetes-dashboard",reason="Error"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",container="kubernetes-dashboard",reason="ContainerCannotRun"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",container="kubernetes-dashboard",reason="DeadlineExceeded"} 0
+kube_pod_container_status_last_terminated_reason{namespace="default",pod="nginx-6db489d4b7-rcg9p",container="nginx",reason="OOMKilled"} 0
+kube_pod_container_status_last_terminated_reason{namespace="default",pod="nginx-6db489d4b7-rcg9p",container="nginx",reason="Completed"} 0
+kube_pod_container_status_last_terminated_reason{namespace="default",pod="nginx-6db489d4b7-rcg9p",container="nginx",reason="Error"} 0
+kube_pod_container_status_last_terminated_reason{namespace="default",pod="nginx-6db489d4b7-rcg9p",container="nginx",reason="ContainerCannotRun"} 0
+kube_pod_container_status_last_terminated_reason{namespace="default",pod="nginx-6db489d4b7-rcg9p",container="nginx",reason="DeadlineExceeded"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver",reason="OOMKilled"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver",reason="Completed"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver",reason="Error"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver",reason="ContainerCannotRun"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver",reason="DeadlineExceeded"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns",reason="OOMKilled"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns",reason="Completed"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns",reason="Error"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns",reason="ContainerCannotRun"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns",reason="DeadlineExceeded"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-proxy-ntvvr",container="kube-proxy",reason="OOMKilled"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-proxy-ntvvr",container="kube-proxy",reason="Completed"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-proxy-ntvvr",container="kube-proxy",reason="Error"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-proxy-ntvvr",container="kube-proxy",reason="ContainerCannotRun"} 0
+kube_pod_container_status_last_terminated_reason{namespace="kube-system",pod="kube-proxy-ntvvr",container="kube-proxy",reason="DeadlineExceeded"} 0
+# HELP kube_pod_init_container_status_last_terminated_reason Describes the last reason the init container was in terminated state.
+# TYPE kube_pod_init_container_status_last_terminated_reason gauge
+# HELP kube_pod_container_status_ready Describes whether the containers readiness check succeeded.
+# TYPE kube_pod_container_status_ready gauge
+kube_pod_container_status_ready{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",container="kube-state-metrics"} 1
+kube_pod_container_status_ready{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns"} 1
+kube_pod_container_status_ready{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler"} 1
+kube_pod_container_status_ready{namespace="kube-system",pod="influxdb-grafana-pppn8",container="grafana"} 1
+kube_pod_container_status_ready{namespace="kube-system",pod="influxdb-grafana-pppn8",container="influxdb"} 1
+kube_pod_container_status_ready{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra"} 1
+kube_pod_container_status_ready{namespace="kube-system",pod="heapster-h29l5",container="heapster"} 1
+kube_pod_container_status_ready{namespace="kube-system",pod="etcd-minikube",container="etcd"} 1
+kube_pod_container_status_ready{namespace="default",pod="myapp",container="nginx"} 1
+kube_pod_container_status_ready{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",container="kubernetes-dashboard"} 1
+kube_pod_container_status_ready{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager"} 1
+kube_pod_container_status_ready{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver"} 1
+kube_pod_container_status_ready{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns"} 1
+kube_pod_container_status_ready{namespace="kube-system",pod="kube-proxy-ntvvr",container="kube-proxy"} 1
+kube_pod_container_status_ready{namespace="default",pod="nginx-6db489d4b7-rcg9p",container="nginx"} 1
+kube_pod_container_status_ready{namespace="kube-system",pod="storage-provisioner",container="storage-provisioner"} 1
+kube_pod_container_status_ready{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",container="dashboard-metrics-scraper"} 1
+kube_pod_container_status_ready{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager"} 1
+# HELP kube_pod_init_container_status_ready Describes whether the init containers readiness check succeeded.
+# TYPE kube_pod_init_container_status_ready gauge
+# HELP kube_pod_container_status_restarts_total The number of container restarts per container.
+# TYPE kube_pod_container_status_restarts_total counter
+kube_pod_container_status_restarts_total{namespace="kube-system",pod="storage-provisioner",container="storage-provisioner"} 0
+kube_pod_container_status_restarts_total{namespace="kubernetes-dashboard",pod="dashboard-metrics-scraper-76585494d8-bn8bc",container="dashboard-metrics-scraper"} 0
+kube_pod_container_status_restarts_total{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager"} 0
+kube_pod_container_status_restarts_total{namespace="kube-system",pod="kube-state-metrics-85cf88c7fb-dl6jk",container="kube-state-metrics"} 0
+kube_pod_container_status_restarts_total{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns"} 0
+kube_pod_container_status_restarts_total{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler"} 0
+kube_pod_container_status_restarts_total{namespace="kube-system",pod="etcd-minikube",container="etcd"} 0
+kube_pod_container_status_restarts_total{namespace="default",pod="myapp",container="nginx"} 0
+kube_pod_container_status_restarts_total{namespace="kubernetes-dashboard",pod="kubernetes-dashboard-57f4cb4545-cs86g",container="kubernetes-dashboard"} 0
+kube_pod_container_status_restarts_total{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager"} 0
+kube_pod_container_status_restarts_total{namespace="kube-system",pod="influxdb-grafana-pppn8",container="grafana"} 0
+kube_pod_container_status_restarts_total{namespace="kube-system",pod="influxdb-grafana-pppn8",container="influxdb"} 0
+kube_pod_container_status_restarts_total{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra"} 0
+kube_pod_container_status_restarts_total{namespace="kube-system",pod="heapster-h29l5",container="heapster"} 0
+kube_pod_container_status_restarts_total{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver"} 0
+kube_pod_container_status_restarts_total{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns"} 0
+kube_pod_container_status_restarts_total{namespace="kube-system",pod="kube-proxy-ntvvr",container="kube-proxy"} 0
+kube_pod_container_status_restarts_total{namespace="default",pod="nginx-6db489d4b7-rcg9p",container="nginx"} 0
+# HELP kube_pod_init_container_status_restarts_total The number of restarts for the init container.
+# TYPE kube_pod_init_container_status_restarts_total counter
+# HELP kube_pod_container_resource_requests The number of requested request resource by a container.
+# TYPE kube_pod_container_resource_requests gauge
+kube_pod_container_resource_requests{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager",node="minikube",resource="cpu",unit="core"} 0.005
+kube_pod_container_resource_requests{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager",node="minikube",resource="memory",unit="byte"} 5.24288e+07
+kube_pod_container_resource_requests{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns",node="minikube",resource="cpu",unit="core"} 0.1
+kube_pod_container_resource_requests{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns",node="minikube",resource="memory",unit="byte"} 7.340032e+07
+kube_pod_container_resource_requests{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler",node="minikube",resource="cpu",unit="core"} 0.1
+kube_pod_container_resource_requests{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager",node="minikube",resource="cpu",unit="core"} 0.2
+kube_pod_container_resource_requests{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra",node="minikube",resource="cpu",unit="core"} 0.1
+kube_pod_container_resource_requests{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra",node="minikube",resource="memory",unit="byte"} 3e+07
+kube_pod_container_resource_requests{namespace="default",pod="myapp",container="nginx",node="minikube",resource="cpu",unit="core"} 0.05
+kube_pod_container_resource_requests{namespace="default",pod="myapp",container="nginx",node="minikube",resource="memory",unit="byte"} 1.34217728e+08
+kube_pod_container_resource_requests{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver",node="minikube",resource="cpu",unit="core"} 0.25
+kube_pod_container_resource_requests{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns",node="minikube",resource="cpu",unit="core"} 0.1
+kube_pod_container_resource_requests{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns",node="minikube",resource="memory",unit="byte"} 7.340032e+07
+# HELP kube_pod_container_resource_limits The number of requested limit resource by a container.
+# TYPE kube_pod_container_resource_limits gauge
+kube_pod_container_resource_limits{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns",node="minikube",resource="memory",unit="byte"} 1.7825792e+08
+kube_pod_container_resource_limits{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra",node="minikube",resource="memory",unit="byte"} 1.5e+08
+kube_pod_container_resource_limits{namespace="default",pod="myapp",container="nginx",node="minikube",resource="cpu",unit="core"} 0.05
+kube_pod_container_resource_limits{namespace="default",pod="myapp",container="nginx",node="minikube",resource="memory",unit="byte"} 1.34217728e+08
+kube_pod_container_resource_limits{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns",node="minikube",resource="memory",unit="byte"} 1.7825792e+08
+# HELP kube_pod_init_container_resource_limits The number of requested limit resource by the init container.
+# TYPE kube_pod_init_container_resource_limits gauge
+# HELP kube_pod_container_resource_requests_cpu_cores The number of requested cpu cores by a container.
+# TYPE kube_pod_container_resource_requests_cpu_cores gauge
+kube_pod_container_resource_requests_cpu_cores{namespace="kube-system",pod="kube-apiserver-minikube",container="kube-apiserver",node="minikube"} 0.25
+kube_pod_container_resource_requests_cpu_cores{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns",node="minikube"} 0.1
+kube_pod_container_resource_requests_cpu_cores{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager",node="minikube"} 0.005
+kube_pod_container_resource_requests_cpu_cores{namespace="kube-system",pod="kube-scheduler-minikube",container="kube-scheduler",node="minikube"} 0.1
+kube_pod_container_resource_requests_cpu_cores{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns",node="minikube"} 0.1
+kube_pod_container_resource_requests_cpu_cores{namespace="kube-system",pod="kube-controller-manager-minikube",container="kube-controller-manager",node="minikube"} 0.2
+kube_pod_container_resource_requests_cpu_cores{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra",node="minikube"} 0.1
+kube_pod_container_resource_requests_cpu_cores{namespace="default",pod="myapp",container="nginx",node="minikube"} 0.05
+# HELP kube_init_pod_container_resource_requests_cpu_cores The number of requested cpu cores by an init container.
+# TYPE kube_init_pod_container_resource_requests_cpu_cores gauge
+# HELP kube_pod_container_resource_requests_memory_bytes The number of requested memory bytes by a container.
+# TYPE kube_pod_container_resource_requests_memory_bytes gauge
+kube_pod_container_resource_requests_memory_bytes{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns",node="minikube"} 7.340032e+07
+kube_pod_container_resource_requests_memory_bytes{namespace="default",pod="myapp",container="nginx",node="minikube"} 1.34217728e+08
+kube_pod_container_resource_requests_memory_bytes{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra",node="minikube"} 3e+07
+kube_pod_container_resource_requests_memory_bytes{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns",node="minikube"} 7.340032e+07
+kube_pod_container_resource_requests_memory_bytes{namespace="kube-system",pod="kube-addon-manager-minikube",container="kube-addon-manager",node="minikube"} 5.24288e+07
+# HELP kube_pod_container_resource_limits_cpu_cores The limit on cpu cores to be used by a container.
+# TYPE kube_pod_container_resource_limits_cpu_cores gauge
+kube_pod_container_resource_limits_cpu_cores{namespace="default",pod="myapp",container="nginx",node="minikube"} 0.05
+# HELP kube_pod_container_resource_limits_memory_bytes The limit on memory to be used by a container in bytes.
+# TYPE kube_pod_container_resource_limits_memory_bytes gauge
+kube_pod_container_resource_limits_memory_bytes{namespace="default",pod="newrelic-infra-4gv5k",container="newrelic-infra",node="minikube"} 1.5e+08
+kube_pod_container_resource_limits_memory_bytes{namespace="default",pod="myapp",container="nginx",node="minikube"} 1.34217728e+08
+kube_pod_container_resource_limits_memory_bytes{namespace="kube-system",pod="coredns-5644d7b6d9-nst6g",container="coredns",node="minikube"} 1.7825792e+08
+kube_pod_container_resource_limits_memory_bytes{namespace="kube-system",pod="coredns-5644d7b6d9-cjzjk",container="coredns",node="minikube"} 1.7825792e+08
+# HELP kube_pod_spec_volumes_persistentvolumeclaims_info Information about persistentvolumeclaim volumes in a pod.
+# TYPE kube_pod_spec_volumes_persistentvolumeclaims_info gauge
+# HELP kube_pod_spec_volumes_persistentvolumeclaims_readonly Describes whether a persistentvolumeclaim is mounted read only.
+# TYPE kube_pod_spec_volumes_persistentvolumeclaims_readonly gauge
+# HELP kube_replicaset_created Unix creation timestamp
+# TYPE kube_replicaset_created gauge
+kube_replicaset_created{namespace="default",replicaset="nginx-6db489d4b7"} 1.571754411e+09
+kube_replicaset_created{namespace="kube-system",replicaset="coredns-5644d7b6d9"} 1.571668258e+09
+kube_replicaset_created{namespace="kubernetes-dashboard",replicaset="dashboard-metrics-scraper-76585494d8"} 1.571668263e+09
+kube_replicaset_created{namespace="kubernetes-dashboard",replicaset="kubernetes-dashboard-57f4cb4545"} 1.571668263e+09
+kube_replicaset_created{namespace="kube-system",replicaset="kube-state-metrics-85cf88c7fb"} 1.571753733e+09
+# HELP kube_replicaset_status_replicas The number of replicas per ReplicaSet.
+# TYPE kube_replicaset_status_replicas gauge
+kube_replicaset_status_replicas{namespace="kube-system",replicaset="coredns-5644d7b6d9"} 2
+kube_replicaset_status_replicas{namespace="kubernetes-dashboard",replicaset="dashboard-metrics-scraper-76585494d8"} 1
+kube_replicaset_status_replicas{namespace="kubernetes-dashboard",replicaset="kubernetes-dashboard-57f4cb4545"} 1
+kube_replicaset_status_replicas{namespace="kube-system",replicaset="kube-state-metrics-85cf88c7fb"} 1
+kube_replicaset_status_replicas{namespace="default",replicaset="nginx-6db489d4b7"} 1
+# HELP kube_replicaset_status_fully_labeled_replicas The number of fully labeled replicas per ReplicaSet.
+# TYPE kube_replicaset_status_fully_labeled_replicas gauge
+kube_replicaset_status_fully_labeled_replicas{namespace="kube-system",replicaset="coredns-5644d7b6d9"} 2
+kube_replicaset_status_fully_labeled_replicas{namespace="kubernetes-dashboard",replicaset="dashboard-metrics-scraper-76585494d8"} 1
+kube_replicaset_status_fully_labeled_replicas{namespace="kubernetes-dashboard",replicaset="kubernetes-dashboard-57f4cb4545"} 1
+kube_replicaset_status_fully_labeled_replicas{namespace="kube-system",replicaset="kube-state-metrics-85cf88c7fb"} 1
+kube_replicaset_status_fully_labeled_replicas{namespace="default",replicaset="nginx-6db489d4b7"} 1
+# HELP kube_replicaset_status_ready_replicas The number of ready replicas per ReplicaSet.
+# TYPE kube_replicaset_status_ready_replicas gauge
+kube_replicaset_status_ready_replicas{namespace="kube-system",replicaset="coredns-5644d7b6d9"} 2
+kube_replicaset_status_ready_replicas{namespace="kubernetes-dashboard",replicaset="dashboard-metrics-scraper-76585494d8"} 1
+kube_replicaset_status_ready_replicas{namespace="kubernetes-dashboard",replicaset="kubernetes-dashboard-57f4cb4545"} 1
+kube_replicaset_status_ready_replicas{namespace="kube-system",replicaset="kube-state-metrics-85cf88c7fb"} 1
+kube_replicaset_status_ready_replicas{namespace="default",replicaset="nginx-6db489d4b7"} 1
+# HELP kube_replicaset_status_observed_generation The generation observed by the ReplicaSet controller.
+# TYPE kube_replicaset_status_observed_generation gauge
+kube_replicaset_status_observed_generation{namespace="kubernetes-dashboard",replicaset="dashboard-metrics-scraper-76585494d8"} 1
+kube_replicaset_status_observed_generation{namespace="kubernetes-dashboard",replicaset="kubernetes-dashboard-57f4cb4545"} 1
+kube_replicaset_status_observed_generation{namespace="kube-system",replicaset="kube-state-metrics-85cf88c7fb"} 1
+kube_replicaset_status_observed_generation{namespace="default",replicaset="nginx-6db489d4b7"} 1
+kube_replicaset_status_observed_generation{namespace="kube-system",replicaset="coredns-5644d7b6d9"} 1
+# HELP kube_replicaset_spec_replicas Number of desired pods for a ReplicaSet.
+# TYPE kube_replicaset_spec_replicas gauge
+kube_replicaset_spec_replicas{namespace="kube-system",replicaset="coredns-5644d7b6d9"} 2
+kube_replicaset_spec_replicas{namespace="kubernetes-dashboard",replicaset="dashboard-metrics-scraper-76585494d8"} 1
+kube_replicaset_spec_replicas{namespace="kubernetes-dashboard",replicaset="kubernetes-dashboard-57f4cb4545"} 1
+kube_replicaset_spec_replicas{namespace="kube-system",replicaset="kube-state-metrics-85cf88c7fb"} 1
+kube_replicaset_spec_replicas{namespace="default",replicaset="nginx-6db489d4b7"} 1
+# HELP kube_replicaset_metadata_generation Sequence number representing a specific generation of the desired state.
+# TYPE kube_replicaset_metadata_generation gauge
+kube_replicaset_metadata_generation{namespace="kubernetes-dashboard",replicaset="dashboard-metrics-scraper-76585494d8"} 1
+kube_replicaset_metadata_generation{namespace="kubernetes-dashboard",replicaset="kubernetes-dashboard-57f4cb4545"} 1
+kube_replicaset_metadata_generation{namespace="kube-system",replicaset="kube-state-metrics-85cf88c7fb"} 1
+kube_replicaset_metadata_generation{namespace="default",replicaset="nginx-6db489d4b7"} 1
+kube_replicaset_metadata_generation{namespace="kube-system",replicaset="coredns-5644d7b6d9"} 1
+# HELP kube_replicaset_owner Information about the ReplicaSet's owner.
+# TYPE kube_replicaset_owner gauge
+kube_replicaset_owner{namespace="kubernetes-dashboard",replicaset="dashboard-metrics-scraper-76585494d8",owner_kind="Deployment",owner_name="dashboard-metrics-scraper",owner_is_controller="true"} 1
+kube_replicaset_owner{namespace="kubernetes-dashboard",replicaset="kubernetes-dashboard-57f4cb4545",owner_kind="Deployment",owner_name="kubernetes-dashboard",owner_is_controller="true"} 1
+kube_replicaset_owner{namespace="kube-system",replicaset="kube-state-metrics-85cf88c7fb",owner_kind="Deployment",owner_name="kube-state-metrics",owner_is_controller="true"} 1
+kube_replicaset_owner{namespace="default",replicaset="nginx-6db489d4b7",owner_kind="Deployment",owner_name="nginx",owner_is_controller="true"} 1
+kube_replicaset_owner{namespace="kube-system",replicaset="coredns-5644d7b6d9",owner_kind="Deployment",owner_name="coredns",owner_is_controller="true"} 1
+# HELP kube_replicaset_labels Kubernetes labels converted to Prometheus labels.
+# TYPE kube_replicaset_labels gauge
+kube_replicaset_labels{namespace="default",replicaset="nginx-6db489d4b7",label_pod_template_hash="6db489d4b7",label_run="nginx"} 1
+kube_replicaset_labels{namespace="kube-system",replicaset="coredns-5644d7b6d9",label_k8s_app="kube-dns",label_pod_template_hash="5644d7b6d9"} 1
+kube_replicaset_labels{namespace="kubernetes-dashboard",replicaset="dashboard-metrics-scraper-76585494d8",label_k8s_app="dashboard-metrics-scraper",label_pod_template_hash="76585494d8"} 1
+kube_replicaset_labels{namespace="kubernetes-dashboard",replicaset="kubernetes-dashboard-57f4cb4545",label_k8s_app="kubernetes-dashboard",label_pod_template_hash="57f4cb4545"} 1
+kube_replicaset_labels{namespace="kube-system",replicaset="kube-state-metrics-85cf88c7fb",label_k8s_app="kube-state-metrics",label_pod_template_hash="85cf88c7fb"} 1
+# HELP kube_replicationcontroller_created Unix creation timestamp
+# TYPE kube_replicationcontroller_created gauge
+kube_replicationcontroller_created{namespace="kube-system",replicationcontroller="heapster"} 1.571668259e+09
+kube_replicationcontroller_created{namespace="kube-system",replicationcontroller="influxdb-grafana"} 1.57166826e+09
+# HELP kube_replicationcontroller_status_replicas The number of replicas per ReplicationController.
+# TYPE kube_replicationcontroller_status_replicas gauge
+kube_replicationcontroller_status_replicas{namespace="kube-system",replicationcontroller="heapster"} 1
+kube_replicationcontroller_status_replicas{namespace="kube-system",replicationcontroller="influxdb-grafana"} 1
+# HELP kube_replicationcontroller_status_fully_labeled_replicas The number of fully labeled replicas per ReplicationController.
+# TYPE kube_replicationcontroller_status_fully_labeled_replicas gauge
+kube_replicationcontroller_status_fully_labeled_replicas{namespace="kube-system",replicationcontroller="heapster"} 1
+kube_replicationcontroller_status_fully_labeled_replicas{namespace="kube-system",replicationcontroller="influxdb-grafana"} 1
+# HELP kube_replicationcontroller_status_ready_replicas The number of ready replicas per ReplicationController.
+# TYPE kube_replicationcontroller_status_ready_replicas gauge
+kube_replicationcontroller_status_ready_replicas{namespace="kube-system",replicationcontroller="heapster"} 1
+kube_replicationcontroller_status_ready_replicas{namespace="kube-system",replicationcontroller="influxdb-grafana"} 1
+# HELP kube_replicationcontroller_status_available_replicas The number of available replicas per ReplicationController.
+# TYPE kube_replicationcontroller_status_available_replicas gauge
+kube_replicationcontroller_status_available_replicas{namespace="kube-system",replicationcontroller="heapster"} 1
+kube_replicationcontroller_status_available_replicas{namespace="kube-system",replicationcontroller="influxdb-grafana"} 1
+# HELP kube_replicationcontroller_status_observed_generation The generation observed by the ReplicationController controller.
+# TYPE kube_replicationcontroller_status_observed_generation gauge
+kube_replicationcontroller_status_observed_generation{namespace="kube-system",replicationcontroller="heapster"} 1
+kube_replicationcontroller_status_observed_generation{namespace="kube-system",replicationcontroller="influxdb-grafana"} 1
+# HELP kube_replicationcontroller_spec_replicas Number of desired pods for a ReplicationController.
+# TYPE kube_replicationcontroller_spec_replicas gauge
+kube_replicationcontroller_spec_replicas{namespace="kube-system",replicationcontroller="heapster"} 1
+kube_replicationcontroller_spec_replicas{namespace="kube-system",replicationcontroller="influxdb-grafana"} 1
+# HELP kube_replicationcontroller_metadata_generation Sequence number representing a specific generation of the desired state.
+# TYPE kube_replicationcontroller_metadata_generation gauge
+kube_replicationcontroller_metadata_generation{namespace="kube-system",replicationcontroller="heapster"} 1
+kube_replicationcontroller_metadata_generation{namespace="kube-system",replicationcontroller="influxdb-grafana"} 1
+# HELP kube_resourcequota_created Unix creation timestamp
+# TYPE kube_resourcequota_created gauge
+# HELP kube_resourcequota Information about resource quota.
+# TYPE kube_resourcequota gauge
+# HELP kube_secret_info Information about secret.
+# TYPE kube_secret_info gauge
+kube_secret_info{namespace="kube-system",secret="service-account-controller-token-4t9q2"} 1
+kube_secret_info{namespace="kube-system",secret="coredns-token-8fdd7"} 1
+kube_secret_info{namespace="kubernetes-dashboard",secret="kubernetes-dashboard-token-46kfd"} 1
+kube_secret_info{namespace="kube-system",secret="endpoint-controller-token-z7bd9"} 1
+kube_secret_info{namespace="kube-system",secret="kube-state-metrics-token-ppg8m"} 1
+kube_secret_info{namespace="kube-system",secret="token-cleaner-token-hkxqn"} 1
+kube_secret_info{namespace="kube-system",secret="generic-garbage-collector-token-lxc77"} 1
+kube_secret_info{namespace="kube-system",secret="job-controller-token-xqlts"} 1
+kube_secret_info{namespace="kube-system",secret="pvc-protection-controller-token-h8vc7"} 1
+kube_secret_info{namespace="kube-system",secret="node-controller-token-5m8m7"} 1
+kube_secret_info{namespace="kube-system",secret="service-controller-token-tv97h"} 1
+kube_secret_info{namespace="kube-system",secret="replication-controller-token-pjgz8"} 1
+kube_secret_info{namespace="kube-public",secret="default-token-gc72m"} 1
+kube_secret_info{namespace="kube-system",secret="resourcequota-controller-token-lwspj"} 1
+kube_secret_info{namespace="kube-system",secret="horizontal-pod-autoscaler-token-xncgk"} 1
+kube_secret_info{namespace="kube-system",secret="kube-proxy-token-2ns8v"} 1
+kube_secret_info{namespace="kubernetes-dashboard",secret="default-token-l655z"} 1
+kube_secret_info{namespace="kube-system",secret="default-token-xtzqq"} 1
+kube_secret_info{namespace="kube-system",secret="cronjob-controller-token-kgjb6"} 1
+kube_secret_info{namespace="kube-system",secret="certificate-controller-token-rxb6l"} 1
+kube_secret_info{namespace="kube-system",secret="disruption-controller-token-xwpdp"} 1
+kube_secret_info{namespace="kubernetes-dashboard",secret="kubernetes-dashboard-csrf"} 1
+kube_secret_info{namespace="kube-system",secret="bootstrap-token-si4ejn"} 1
+kube_secret_info{namespace="kube-system",secret="daemon-set-controller-token-zpmbr"} 1
+kube_secret_info{namespace="kubernetes-dashboard",secret="kubernetes-dashboard-certs"} 1
+kube_secret_info{namespace="default",secret="newrelic-token-46mlj"} 1
+kube_secret_info{namespace="kube-system",secret="persistent-volume-binder-token-tbjnz"} 1
+kube_secret_info{namespace="kube-system",secret="pod-garbage-collector-token-vrns7"} 1
+kube_secret_info{namespace="kube-system",secret="clusterrole-aggregation-controller-token-4vb25"} 1
+kube_secret_info{namespace="kube-system",secret="replicaset-controller-token-75st6"} 1
+kube_secret_info{namespace="kube-system",secret="expand-controller-token-kck5v"} 1
+kube_secret_info{namespace="kubernetes-dashboard",secret="kubernetes-dashboard-key-holder"} 1
+kube_secret_info{namespace="kube-system",secret="bootstrap-signer-token-nrrv5"} 1
+kube_secret_info{namespace="kube-system",secret="attachdetach-controller-token-gr5r8"} 1
+kube_secret_info{namespace="kube-node-lease",secret="default-token-4qfbx"} 1
+kube_secret_info{namespace="kube-system",secret="pv-protection-controller-token-958vm"} 1
+kube_secret_info{namespace="default",secret="default-token-xfbk7"} 1
+kube_secret_info{namespace="kube-system",secret="storage-provisioner-token-fw66v"} 1
+kube_secret_info{namespace="kube-system",secret="ttl-controller-token-5zzfs"} 1
+kube_secret_info{namespace="kube-system",secret="deployment-controller-token-j5j4r"} 1
+kube_secret_info{namespace="kube-system",secret="statefulset-controller-token-qlbjn"} 1
+kube_secret_info{namespace="kube-system",secret="namespace-controller-token-s4fnb"} 1
+# HELP kube_secret_type Type about secret.
+# TYPE kube_secret_type gauge
+kube_secret_type{namespace="kube-system",secret="default-token-xtzqq",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="cronjob-controller-token-kgjb6",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="certificate-controller-token-rxb6l",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="resourcequota-controller-token-lwspj",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="horizontal-pod-autoscaler-token-xncgk",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="kube-proxy-token-2ns8v",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kubernetes-dashboard",secret="default-token-l655z",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="bootstrap-token-si4ejn",type="bootstrap.kubernetes.io/token"} 1
+kube_secret_type{namespace="kube-system",secret="daemon-set-controller-token-zpmbr",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="disruption-controller-token-xwpdp",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kubernetes-dashboard",secret="kubernetes-dashboard-csrf",type="Opaque"} 1
+kube_secret_type{namespace="kube-system",secret="persistent-volume-binder-token-tbjnz",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="pod-garbage-collector-token-vrns7",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kubernetes-dashboard",secret="kubernetes-dashboard-certs",type="Opaque"} 1
+kube_secret_type{namespace="default",secret="newrelic-token-46mlj",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="clusterrole-aggregation-controller-token-4vb25",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="attachdetach-controller-token-gr5r8",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-node-lease",secret="default-token-4qfbx",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="pv-protection-controller-token-958vm",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="replicaset-controller-token-75st6",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="expand-controller-token-kck5v",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kubernetes-dashboard",secret="kubernetes-dashboard-key-holder",type="Opaque"} 1
+kube_secret_type{namespace="kube-system",secret="bootstrap-signer-token-nrrv5",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="statefulset-controller-token-qlbjn",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="namespace-controller-token-s4fnb",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="default",secret="default-token-xfbk7",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="storage-provisioner-token-fw66v",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="ttl-controller-token-5zzfs",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="deployment-controller-token-j5j4r",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="kube-state-metrics-token-ppg8m",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="token-cleaner-token-hkxqn",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="generic-garbage-collector-token-lxc77",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="job-controller-token-xqlts",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="service-account-controller-token-4t9q2",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="coredns-token-8fdd7",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kubernetes-dashboard",secret="kubernetes-dashboard-token-46kfd",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="endpoint-controller-token-z7bd9",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="replication-controller-token-pjgz8",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-public",secret="default-token-gc72m",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="pvc-protection-controller-token-h8vc7",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="node-controller-token-5m8m7",type="kubernetes.io/service-account-token"} 1
+kube_secret_type{namespace="kube-system",secret="service-controller-token-tv97h",type="kubernetes.io/service-account-token"} 1
+# HELP kube_secret_labels Kubernetes labels converted to Prometheus labels.
+# TYPE kube_secret_labels gauge
+kube_secret_labels{namespace="kube-system",secret="persistent-volume-binder-token-tbjnz"} 1
+kube_secret_labels{namespace="kube-system",secret="pod-garbage-collector-token-vrns7"} 1
+kube_secret_labels{namespace="kubernetes-dashboard",secret="kubernetes-dashboard-certs",label_addonmanager_kubernetes_io_mode="Reconcile",label_k8s_app="kubernetes-dashboard",label_kubernetes_io_minikube_addons="dashboard"} 1
+kube_secret_labels{namespace="default",secret="newrelic-token-46mlj"} 1
+kube_secret_labels{namespace="kube-system",secret="clusterrole-aggregation-controller-token-4vb25"} 1
+kube_secret_labels{namespace="kube-node-lease",secret="default-token-4qfbx"} 1
+kube_secret_labels{namespace="kube-system",secret="pv-protection-controller-token-958vm"} 1
+kube_secret_labels{namespace="kube-system",secret="replicaset-controller-token-75st6"} 1
+kube_secret_labels{namespace="kube-system",secret="expand-controller-token-kck5v"} 1
+kube_secret_labels{namespace="kubernetes-dashboard",secret="kubernetes-dashboard-key-holder",label_addonmanager_kubernetes_io_mode="Reconcile",label_k8s_app="kubernetes-dashboard",label_kubernetes_io_minikube_addons="dashboard"} 1
+kube_secret_labels{namespace="kube-system",secret="bootstrap-signer-token-nrrv5"} 1
+kube_secret_labels{namespace="kube-system",secret="attachdetach-controller-token-gr5r8"} 1
+kube_secret_labels{namespace="kube-system",secret="statefulset-controller-token-qlbjn"} 1
+kube_secret_labels{namespace="kube-system",secret="namespace-controller-token-s4fnb"} 1
+kube_secret_labels{namespace="default",secret="default-token-xfbk7"} 1
+kube_secret_labels{namespace="kube-system",secret="storage-provisioner-token-fw66v"} 1
+kube_secret_labels{namespace="kube-system",secret="ttl-controller-token-5zzfs"} 1
+kube_secret_labels{namespace="kube-system",secret="deployment-controller-token-j5j4r"} 1
+kube_secret_labels{namespace="kube-system",secret="token-cleaner-token-hkxqn"} 1
+kube_secret_labels{namespace="kube-system",secret="generic-garbage-collector-token-lxc77"} 1
+kube_secret_labels{namespace="kube-system",secret="job-controller-token-xqlts"} 1
+kube_secret_labels{namespace="kube-system",secret="service-account-controller-token-4t9q2"} 1
+kube_secret_labels{namespace="kube-system",secret="coredns-token-8fdd7"} 1
+kube_secret_labels{namespace="kubernetes-dashboard",secret="kubernetes-dashboard-token-46kfd"} 1
+kube_secret_labels{namespace="kube-system",secret="endpoint-controller-token-z7bd9"} 1
+kube_secret_labels{namespace="kube-system",secret="kube-state-metrics-token-ppg8m"} 1
+kube_secret_labels{namespace="kube-system",secret="replication-controller-token-pjgz8"} 1
+kube_secret_labels{namespace="kube-public",secret="default-token-gc72m"} 1
+kube_secret_labels{namespace="kube-system",secret="pvc-protection-controller-token-h8vc7"} 1
+kube_secret_labels{namespace="kube-system",secret="node-controller-token-5m8m7"} 1
+kube_secret_labels{namespace="kube-system",secret="service-controller-token-tv97h"} 1
+kube_secret_labels{namespace="kube-system",secret="cronjob-controller-token-kgjb6"} 1
+kube_secret_labels{namespace="kube-system",secret="certificate-controller-token-rxb6l"} 1
+kube_secret_labels{namespace="kube-system",secret="resourcequota-controller-token-lwspj"} 1
+kube_secret_labels{namespace="kube-system",secret="horizontal-pod-autoscaler-token-xncgk"} 1
+kube_secret_labels{namespace="kube-system",secret="kube-proxy-token-2ns8v"} 1
+kube_secret_labels{namespace="kubernetes-dashboard",secret="default-token-l655z"} 1
+kube_secret_labels{namespace="kube-system",secret="default-token-xtzqq"} 1
+kube_secret_labels{namespace="kube-system",secret="bootstrap-token-si4ejn"} 1
+kube_secret_labels{namespace="kube-system",secret="daemon-set-controller-token-zpmbr"} 1
+kube_secret_labels{namespace="kube-system",secret="disruption-controller-token-xwpdp"} 1
+kube_secret_labels{namespace="kubernetes-dashboard",secret="kubernetes-dashboard-csrf",label_addonmanager_kubernetes_io_mode="Reconcile",label_k8s_app="kubernetes-dashboard",label_kubernetes_io_minikube_addons="dashboard"} 1
+# HELP kube_secret_created Unix creation timestamp
+# TYPE kube_secret_created gauge
+kube_secret_created{namespace="kube-system",secret="persistent-volume-binder-token-tbjnz"} 1.571668258e+09
+kube_secret_created{namespace="kube-system",secret="pod-garbage-collector-token-vrns7"} 1.571668252e+09
+kube_secret_created{namespace="kubernetes-dashboard",secret="kubernetes-dashboard-certs"} 1.571668259e+09
+kube_secret_created{namespace="default",secret="newrelic-token-46mlj"} 1.571761578e+09
+kube_secret_created{namespace="kube-system",secret="clusterrole-aggregation-controller-token-4vb25"} 1.571668252e+09
+kube_secret_created{namespace="kube-system",secret="attachdetach-controller-token-gr5r8"} 1.571668257e+09
+kube_secret_created{namespace="kube-node-lease",secret="default-token-4qfbx"} 1.571668258e+09
+kube_secret_created{namespace="kube-system",secret="pv-protection-controller-token-958vm"} 1.571668251e+09
+kube_secret_created{namespace="kube-system",secret="replicaset-controller-token-75st6"} 1.571668254e+09
+kube_secret_created{namespace="kube-system",secret="expand-controller-token-kck5v"} 1.571668252e+09
+kube_secret_created{namespace="kubernetes-dashboard",secret="kubernetes-dashboard-key-holder"} 1.571668259e+09
+kube_secret_created{namespace="kube-system",secret="bootstrap-signer-token-nrrv5"} 1.571668254e+09
+kube_secret_created{namespace="kube-system",secret="statefulset-controller-token-qlbjn"} 1.571668255e+09
+kube_secret_created{namespace="kube-system",secret="namespace-controller-token-s4fnb"} 1.571668252e+09
+kube_secret_created{namespace="default",secret="default-token-xfbk7"} 1.571668258e+09
+kube_secret_created{namespace="kube-system",secret="storage-provisioner-token-fw66v"} 1.57166826e+09
+kube_secret_created{namespace="kube-system",secret="ttl-controller-token-5zzfs"} 1.571668254e+09
+kube_secret_created{namespace="kube-system",secret="deployment-controller-token-j5j4r"} 1.571668251e+09
+kube_secret_created{namespace="kube-system",secret="kube-state-metrics-token-ppg8m"} 1.571753733e+09
+kube_secret_created{namespace="kube-system",secret="token-cleaner-token-hkxqn"} 1.571668255e+09
+kube_secret_created{namespace="kube-system",secret="generic-garbage-collector-token-lxc77"} 1.571668256e+09
+kube_secret_created{namespace="kube-system",secret="job-controller-token-xqlts"} 1.571668253e+09
+kube_secret_created{namespace="kube-system",secret="service-account-controller-token-4t9q2"} 1.571668254e+09
+kube_secret_created{namespace="kube-system",secret="coredns-token-8fdd7"} 1.571668252e+09
+kube_secret_created{namespace="kubernetes-dashboard",secret="kubernetes-dashboard-token-46kfd"} 1.571668259e+09
+kube_secret_created{namespace="kube-system",secret="endpoint-controller-token-z7bd9"} 1.571668255e+09
+kube_secret_created{namespace="kube-system",secret="replication-controller-token-pjgz8"} 1.571668253e+09
+kube_secret_created{namespace="kube-public",secret="default-token-gc72m"} 1.571668258e+09
+kube_secret_created{namespace="kube-system",secret="pvc-protection-controller-token-h8vc7"} 1.571668252e+09
+kube_secret_created{namespace="kube-system",secret="node-controller-token-5m8m7"} 1.571668253e+09
+kube_secret_created{namespace="kube-system",secret="service-controller-token-tv97h"} 1.571668257e+09
+kube_secret_created{namespace="kube-system",secret="default-token-xtzqq"} 1.571668258e+09
+kube_secret_created{namespace="kube-system",secret="cronjob-controller-token-kgjb6"} 1.571668256e+09
+kube_secret_created{namespace="kube-system",secret="certificate-controller-token-rxb6l"} 1.571668251e+09
+kube_secret_created{namespace="kube-system",secret="resourcequota-controller-token-lwspj"} 1.571668257e+09
+kube_secret_created{namespace="kube-system",secret="horizontal-pod-autoscaler-token-xncgk"} 1.571668251e+09
+kube_secret_created{namespace="kube-system",secret="kube-proxy-token-2ns8v"} 1.571668252e+09
+kube_secret_created{namespace="kubernetes-dashboard",secret="default-token-l655z"} 1.571668259e+09
+kube_secret_created{namespace="kube-system",secret="bootstrap-token-si4ejn"} 1.571668251e+09
+kube_secret_created{namespace="kube-system",secret="daemon-set-controller-token-zpmbr"} 1.571668255e+09
+kube_secret_created{namespace="kube-system",secret="disruption-controller-token-xwpdp"} 1.571668253e+09
+kube_secret_created{namespace="kubernetes-dashboard",secret="kubernetes-dashboard-csrf"} 1.571668259e+09
+# HELP kube_secret_metadata_resource_version Resource version representing a specific version of secret.
+# TYPE kube_secret_metadata_resource_version gauge
+kube_secret_metadata_resource_version{namespace="kube-system",secret="deployment-controller-token-j5j4r",resource_version="163"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="statefulset-controller-token-qlbjn",resource_version="267"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="namespace-controller-token-s4fnb",resource_version="182"} 1
+kube_secret_metadata_resource_version{namespace="default",secret="default-token-xfbk7",resource_version="341"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="storage-provisioner-token-fw66v",resource_version="422"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="ttl-controller-token-5zzfs",resource_version="252"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="endpoint-controller-token-z7bd9",resource_version="271"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="kube-state-metrics-token-ppg8m",resource_version="26790"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="token-cleaner-token-hkxqn",resource_version="279"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="generic-garbage-collector-token-lxc77",resource_version="284"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="job-controller-token-xqlts",resource_version="243"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="service-account-controller-token-4t9q2",resource_version="262"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="coredns-token-8fdd7",resource_version="189"} 1
+kube_secret_metadata_resource_version{namespace="kubernetes-dashboard",secret="kubernetes-dashboard-token-46kfd",resource_version="382"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="replication-controller-token-pjgz8",resource_version="239"} 1
+kube_secret_metadata_resource_version{namespace="kube-public",secret="default-token-gc72m",resource_version="337"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="pvc-protection-controller-token-h8vc7",resource_version="211"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="node-controller-token-5m8m7",resource_version="235"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="service-controller-token-tv97h",resource_version="306"} 1
+kube_secret_metadata_resource_version{namespace="kubernetes-dashboard",secret="default-token-l655z",resource_version="377"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="default-token-xtzqq",resource_version="336"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="cronjob-controller-token-kgjb6",resource_version="292"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="certificate-controller-token-rxb6l",resource_version="169"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="resourcequota-controller-token-lwspj",resource_version="301"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="horizontal-pod-autoscaler-token-xncgk",resource_version="166"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="kube-proxy-token-2ns8v",resource_version="198"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="bootstrap-token-si4ejn",resource_version="173"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="daemon-set-controller-token-zpmbr",resource_version="275"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="disruption-controller-token-xwpdp",resource_version="230"} 1
+kube_secret_metadata_resource_version{namespace="kubernetes-dashboard",secret="kubernetes-dashboard-csrf",resource_version="506"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="persistent-volume-binder-token-tbjnz",resource_version="310"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="pod-garbage-collector-token-vrns7",resource_version="226"} 1
+kube_secret_metadata_resource_version{namespace="kubernetes-dashboard",secret="kubernetes-dashboard-certs",resource_version="384"} 1
+kube_secret_metadata_resource_version{namespace="default",secret="newrelic-token-46mlj",resource_version="35714"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="clusterrole-aggregation-controller-token-4vb25",resource_version="202"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="bootstrap-signer-token-nrrv5",resource_version="257"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="attachdetach-controller-token-gr5r8",resource_version="296"} 1
+kube_secret_metadata_resource_version{namespace="kube-node-lease",secret="default-token-4qfbx",resource_version="338"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="pv-protection-controller-token-958vm",resource_version="174"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="replicaset-controller-token-75st6",resource_version="248"} 1
+kube_secret_metadata_resource_version{namespace="kube-system",secret="expand-controller-token-kck5v",resource_version="195"} 1
+kube_secret_metadata_resource_version{namespace="kubernetes-dashboard",secret="kubernetes-dashboard-key-holder",resource_version="507"} 1
+# HELP kube_service_info Information about service.
+# TYPE kube_service_info gauge
+kube_service_info{namespace="kube-system",service="kube-dns",cluster_ip="10.96.0.10",external_name="",load_balancer_ip=""} 1
+kube_service_info{namespace="kubernetes-dashboard",service="kubernetes-dashboard",cluster_ip="10.110.10.254",external_name="",load_balancer_ip=""} 1
+kube_service_info{namespace="kubernetes-dashboard",service="dashboard-metrics-scraper",cluster_ip="10.100.113.171",external_name="",load_balancer_ip=""} 1
+kube_service_info{namespace="kube-system",service="monitoring-grafana",cluster_ip="10.105.15.73",external_name="",load_balancer_ip=""} 1
+kube_service_info{namespace="kube-system",service="heapster",cluster_ip="10.107.162.54",external_name="",load_balancer_ip=""} 1
+kube_service_info{namespace="kube-system",service="monitoring-influxdb",cluster_ip="10.102.212.48",external_name="",load_balancer_ip=""} 1
+kube_service_info{namespace="kube-system",service="kube-state-metrics",cluster_ip="10.110.88.217",external_name="",load_balancer_ip=""} 1
+kube_service_info{namespace="default",service="kubernetes",cluster_ip="10.96.0.1",external_name="",load_balancer_ip=""} 1
+# HELP kube_service_created Unix creation timestamp
+# TYPE kube_service_created gauge
+kube_service_created{namespace="kube-system",service="heapster"} 1.571668259e+09
+kube_service_created{namespace="kube-system",service="monitoring-influxdb"} 1.57166826e+09
+kube_service_created{namespace="kube-system",service="kube-state-metrics"} 1.571753733e+09
+kube_service_created{namespace="default",service="kubernetes"} 1.57166825e+09
+kube_service_created{namespace="kube-system",service="kube-dns"} 1.571668252e+09
+kube_service_created{namespace="kubernetes-dashboard",service="kubernetes-dashboard"} 1.571668259e+09
+kube_service_created{namespace="kubernetes-dashboard",service="dashboard-metrics-scraper"} 1.571668259e+09
+kube_service_created{namespace="kube-system",service="monitoring-grafana"} 1.571668259e+09
+# HELP kube_service_spec_type Type about service.
+# TYPE kube_service_spec_type gauge
+kube_service_spec_type{namespace="kubernetes-dashboard",service="dashboard-metrics-scraper",type="ClusterIP"} 1
+kube_service_spec_type{namespace="kube-system",service="monitoring-grafana",type="NodePort"} 1
+kube_service_spec_type{namespace="kube-system",service="heapster",type="ClusterIP"} 1
+kube_service_spec_type{namespace="kube-system",service="monitoring-influxdb",type="ClusterIP"} 1
+kube_service_spec_type{namespace="kube-system",service="kube-state-metrics",type="ClusterIP"} 1
+kube_service_spec_type{namespace="default",service="kubernetes",type="ClusterIP"} 1
+kube_service_spec_type{namespace="kube-system",service="kube-dns",type="ClusterIP"} 1
+kube_service_spec_type{namespace="kubernetes-dashboard",service="kubernetes-dashboard",type="ClusterIP"} 1
+# HELP kube_service_labels Kubernetes labels converted to Prometheus labels.
+# TYPE kube_service_labels gauge
+kube_service_labels{namespace="kube-system",service="kube-dns",label_k8s_app="kube-dns",label_kubernetes_io_cluster_service="true",label_kubernetes_io_name="KubeDNS"} 1
+kube_service_labels{namespace="kubernetes-dashboard",service="kubernetes-dashboard",label_kubernetes_io_minikube_addons="dashboard",label_addonmanager_kubernetes_io_mode="Reconcile",label_k8s_app="kubernetes-dashboard"} 1
+kube_service_labels{namespace="kubernetes-dashboard",service="dashboard-metrics-scraper",label_k8s_app="dashboard-metrics-scraper",label_kubernetes_io_minikube_addons="dashboard",label_addonmanager_kubernetes_io_mode="Reconcile"} 1
+kube_service_labels{namespace="kube-system",service="monitoring-grafana",label_addonmanager_kubernetes_io_mode="Reconcile",label_kubernetes_io_minikube_addons="heapster",label_kubernetes_io_minikube_addons_endpoint="heapster",label_kubernetes_io_name="monitoring-grafana"} 1
+kube_service_labels{namespace="kube-system",service="heapster",label_addonmanager_kubernetes_io_mode="Reconcile",label_kubernetes_io_minikube_addons="heapster",label_kubernetes_io_minikube_addons_endpoint="heapster",label_kubernetes_io_name="heapster"} 1
+kube_service_labels{namespace="kube-system",service="monitoring-influxdb",label_kubernetes_io_name="monitoring-influxdb",label_addonmanager_kubernetes_io_mode="Reconcile",label_kubernetes_io_minikube_addons="heapster"} 1
+kube_service_labels{namespace="kube-system",service="kube-state-metrics",label_k8s_app="kube-state-metrics"} 1
+kube_service_labels{namespace="default",service="kubernetes",label_component="apiserver",label_provider="kubernetes"} 1
+# HELP kube_service_spec_external_ip Service external ips. One series for each ip
+# TYPE kube_service_spec_external_ip gauge
+# HELP kube_service_status_load_balancer_ingress Service load balancer ingress status
+# TYPE kube_service_status_load_balancer_ingress gauge
+# HELP kube_statefulset_created Unix creation timestamp
+# TYPE kube_statefulset_created gauge
+# HELP kube_statefulset_status_replicas The number of replicas per StatefulSet.
+# TYPE kube_statefulset_status_replicas gauge
+# HELP kube_statefulset_status_replicas_current The number of current replicas per StatefulSet.
+# TYPE kube_statefulset_status_replicas_current gauge
+# HELP kube_statefulset_status_replicas_ready The number of ready replicas per StatefulSet.
+# TYPE kube_statefulset_status_replicas_ready gauge
+# HELP kube_statefulset_status_replicas_updated The number of updated replicas per StatefulSet.
+# TYPE kube_statefulset_status_replicas_updated gauge
+# HELP kube_statefulset_status_observed_generation The generation observed by the StatefulSet controller.
+# TYPE kube_statefulset_status_observed_generation gauge
+# HELP kube_statefulset_replicas Number of desired pods for a StatefulSet.
+# TYPE kube_statefulset_replicas gauge
+# HELP kube_statefulset_metadata_generation Sequence number representing a specific generation of the desired state for the StatefulSet.
+# TYPE kube_statefulset_metadata_generation gauge
+# HELP kube_statefulset_labels Kubernetes labels converted to Prometheus labels.
+# TYPE kube_statefulset_labels gauge
+# HELP kube_statefulset_status_current_revision Indicates the version of the StatefulSet used to generate Pods in the sequence [0,currentReplicas).
+# TYPE kube_statefulset_status_current_revision gauge
+# HELP kube_statefulset_status_update_revision Indicates the version of the StatefulSet used to generate Pods in the sequence [replicas-updatedReplicas,replicas)
+# TYPE kube_statefulset_status_update_revision gauge
+# HELP kube_storageclass_info Information about storageclass.
+# TYPE kube_storageclass_info gauge
+kube_storageclass_info{storageclass="standard",provisioner="k8s.io/minikube-hostpath",reclaimPolicy="Delete",volumeBindingMode="Immediate"} 1
+# HELP kube_storageclass_created Unix creation timestamp
+# TYPE kube_storageclass_created gauge
+kube_storageclass_created{storageclass="standard"} 1.571668258e+09
+# HELP kube_storageclass_labels Kubernetes labels converted to Prometheus labels.
+# TYPE kube_storageclass_labels gauge
+kube_storageclass_labels{storageclass="standard",label_addonmanager_kubernetes_io_mode="EnsureExists"} 1

@@ -11,7 +11,11 @@ import (
 
 // K8sMetricSetTypeGuesser is the metric set type guesser for k8s integrations.
 func K8sMetricSetTypeGuesser(_, groupLabel, _ string, _ definition.RawGroups) (string, error) {
-	return fmt.Sprintf("K8s%vSample", strings.Title(groupLabel)), nil
+	var sampleName string
+	for _, s := range strings.Split(groupLabel, "-") {
+		sampleName += strings.Title(s)
+	}
+	return fmt.Sprintf("K8s%vSample", sampleName), nil
 }
 
 // K8sClusterMetricsManipulator adds 'clusterName' metric to the MetricSet 'ms',

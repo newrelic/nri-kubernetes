@@ -5,6 +5,95 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.11.0
+### Changed
+ - The old way of determining Leader/Follower status has been switched to a
+   job based architecture. The old Leader/Follower was needed to detect which nri-kubernetes Pod
+   should query Kube State Metrics (a.k.a. the Leader), but it was hard to add additional scrape targets (e.g. control plane).
+   Important notice: The output logs have been changed. Before the integration logged whether
+   it was Follower or a Leader, and this has been changed to show which jobs are executed.
+
+   Following are 2 examples of logs that are being output by the integration before and after this update.
+
+   Before, logs for leaders:
+   ```
+   Auto-discovered role: Leader
+   ```
+
+   After, equivalent example, now using jobs:
+   ```
+   Running job: kubelet
+   Running job: kube state metrics
+   ```
+
+   Before, logs for followers:
+   ```
+   Auto-disovered role: Follower
+   ```
+
+   After, equivalent example, now using jobs:
+   ```
+   Running job: kubelet
+   ```
+   These 2 before & after examples are identical in the targets & information they scrape.
+
+ - The e2e test package has been updated to work with this refactor.
+### Added
+ - Control Plane Monitoring: the integration will automatically detect if it's running on a master node using
+   its Kubernetes pod's labels, which are retrieved from the API Server. If it finds itself running on a master 
+   node, these additional jobs will run: 
+     - ETCD 
+     - API Server
+     - Controller Manager
+     - Scheduler
+   
+   All jobs, except ETCD, will work out of the box with no further configuration needed.
+   ETCD exposes its metrics using Mutual TLS, which can be configured as follows.
+    
+   First, create a secret containing the following fields:
+   ```
+   key: <private_key_data, PEM format>
+   cert: <certificate_belonging_to_private_key, PEM format>
+   cacert: <optional, the ETCD cacert, PEM format>
+   insecureSkipVerify: <optional, bool 'true' or 'false', default: 'false'>
+   ```
+   Which can be created like this (expecting the files `key`, `cert` and `cacert` to be present):
+   ```
+   kubectl create secret generic etcd-server-tls --from-file=./key --from-file=./cert --from-file=./cacert
+   ```
+   Then, configure the integration to use this secret using these environment variables.
+   ```
+   ETCD_TLS_SECRET_NAME: etcd-server-tls
+   ETCD_TLS_SECRET_NAMESPACE: default 
+   ```
+   
+   If everything is configured properly the integration should start collecting ETCD metrics.
+ - A new command, called kubernetes-static has been added, which enables the
+   integration to be run locally on your machine, without deploying it to k8s.
+   It uses a static set of exports from kubelet & KSM.
+ - A new way to query a specific Kube State Metrics (KSM) pod  when running multiple redundant pods: by Label Selector.
+   If you want to target a certain KSM instance, you can now use the `KUBE_STATE_METRICS_POD_LABEL` environment variable. 
+   If this variable has been set (and KUBE_STATE_METRICS_URL is unset) the integration will find the KSM pod by this variable.
+   
+   For example:
+      ```shell script
+      # Label a specific KSM pod. Always set the value to the string "true".
+      kubectl label pod kube-state-metrics please-use-this-ksm-pod=true
+      ```
+   Configure `nri-kubernetes` to use this KSM pod:
+    
+   ```yaml
+    env:
+    - name: KUBE_STATE_METRICS_POD_LABEL
+      value: please-use-this-ksm-pod 
+    ```
+
+## 1.10.2
+### Added
+- The integration now uses the infrastructure agent v1.5.75. For more
+  information refer to the [infrastructure agent release notes](https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/)
+  between versions v1.5.31 and v1.5.75.
+
 ## 1.10.1
 ### Changed
 - Rollback agent version to v1.5.31 because there is an issue with nodes

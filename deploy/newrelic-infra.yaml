@@ -18,6 +18,7 @@ rules:
     - "nodes/stats"
     - "nodes/proxy"
     - "pods"
+    - "secrets"
     - "services"
   verbs: ["get", "list"]
 ---
@@ -61,7 +62,7 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: newrelic-infra
-          image: newrelic/infrastructure-k8s:1.10.1
+          image: newrelic/infrastructure-k8s:1.11.0
           securityContext:
             privileged: true
           resources:
@@ -87,6 +88,10 @@ spec:
            #   value: "4194"
            # - name: "KUBE_STATE_METRICS_URL" # If this value is specified then discovery process for kube-state-metrics endpoint won't be triggered.
            #   value: "http://172.17.0.3:8080" # This is example value. Only HTTP request is accepted.
+           # - name: "ETCD_TLS_SECRET_NAME" # Name of the secret containing the cacert, cert and key used for setting the mTLS config for retrieving metrics from ETCD.
+           #   value: "newrelic-infra-etcd-tls-secret"
+           # - name: "ETCD_TLS_SECRET_NAMESPACE" # Namespace where the the secret specified in ETCD_TLS_SECRET_NAME was created.
+           #   value: "default"
             - name: "NRIA_DISPLAY_NAME"
               valueFrom:
                 fieldRef:
@@ -100,7 +105,7 @@ spec:
             - name: "NRIA_CUSTOM_ATTRIBUTES"
               value: '{"clusterName":"$(CLUSTER_NAME)"}'
             - name: "NRIA_PASSTHROUGH_ENVIRONMENT"
-              value: "KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,CLUSTER_NAME,CADVISOR_PORT,NRK8S_NODE_NAME,KUBE_STATE_METRICS_URL"
+              value: "KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,CLUSTER_NAME,CADVISOR_PORT,NRK8S_NODE_NAME,KUBE_STATE_METRICS_URL,KUBE_STATE_METRICS_POD_LABEL,ETCD_TLS_SECRET_NAME,ETCD_TLS_SECRET_NAMESPACE"
       volumes:
         - name: host-volume
           hostPath:

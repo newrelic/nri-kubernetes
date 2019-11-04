@@ -15,6 +15,7 @@ type Spec struct {
 	Name      string
 	ValueFunc FetchFunc
 	Type      sdk.SourceType
+	Optional  bool
 }
 
 // SpecGroup represents a bunch of specs that share logic.

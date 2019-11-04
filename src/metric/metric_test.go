@@ -37,9 +37,22 @@ func TestK8sClusterMetricsManipulator(t *testing.T) {
 }
 
 func TestK8sMetricSetTypeGuesser(t *testing.T) {
-	guess, err := K8sMetricSetTypeGuesser("", "replicaset", "", nil)
-	assert.Nil(t, err)
-	assert.Equal(t, "K8sReplicasetSample", guess)
+	testCases := []struct {
+		groupLabel string
+		expected   string
+	}{
+		{groupLabel: "replicaset", expected: "K8sReplicasetSample"},
+		{groupLabel: "api-server", expected: "K8sApiServerSample"},
+		{groupLabel: "controller-manager", expected: "K8sControllerManagerSample"},
+		{groupLabel: "-controller-manager-", expected: "K8sControllerManagerSample"},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.groupLabel, func(*testing.T) {
+			guess, err := K8sMetricSetTypeGuesser("", testCase.groupLabel, "", nil)
+			assert.Nil(t, err)
+			assert.Equal(t, testCase.expected, guess)
+		})
+	}
 }
 
 func TestK8sEntityMetricsManipulator(t *testing.T) {

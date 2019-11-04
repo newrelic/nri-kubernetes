@@ -1,6 +1,7 @@
 package metric
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -45,13 +46,40 @@ func servePayload(w http.ResponseWriter, _ *http.Request) {
 	io.Copy(w, f) // nolint: errcheck
 }
 
-func TestNewPodsFetchFunc(t *testing.T) {
+func serverPanic(w http.ResponseWriter, _ *http.Request) {
+	panic(fmt.Errorf("server panic"))
+}
+
+func TestFetchFunc(t *testing.T) {
 	c := testClient{
 		handler: servePayload,
 	}
 
-	g, err := PodsFetchFunc(logrus.StandardLogger(), &c)()
+	f := NewPodsFetcher(logrus.StandardLogger(), &c)
+	g, err := f.FetchFuncWithCache()()
 
+	assert.NoError(t, err)
+	assert.Equal(t, testdata.ExpectedRawData, g)
+}
+
+func TestFetchFuncCache(t *testing.T) {
+	// Given an HTTPClient
+	c := testClient{
+		handler: servePayload,
+	}
+
+	// When calling the fetch pods func the results are cached
+	f := NewPodsFetcher(logrus.StandardLogger(), &c)
+	g, err := f.FetchFuncWithCache()()
+	assert.NoError(t, err)
+	assert.Equal(t, testdata.ExpectedRawData, g)
+
+	// Subsequent calls will use the cached data
+	c = testClient{
+		handler: serverPanic,
+	}
+	f.client = &c
+	g, err = f.FetchFuncWithCache()()
 	assert.NoError(t, err)
 	assert.Equal(t, testdata.ExpectedRawData, g)
 }
@@ -109,7 +137,8 @@ func assertError(t *testing.T, errorMessage string, handler http.HandlerFunc) {
 		handler: handler,
 	}
 
-	g, err := PodsFetchFunc(logrus.StandardLogger(), &c)()
+	f := NewPodsFetcher(logrus.StandardLogger(), &c)
+	g, err := f.FetchFuncWithCache()()
 
 	assert.EqualError(t, err, errorMessage)
 	assert.Empty(t, g)

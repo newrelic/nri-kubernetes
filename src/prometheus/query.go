@@ -117,8 +117,7 @@ func valueFromPrometheus(metricType model.MetricType, metric *model.Metric) Valu
 		// Not supported yet
 		fallthrough
 	case model.MetricType_SUMMARY:
-		// Not supported yet
-		fallthrough
+		return metric.Summary
 	case model.MetricType_UNTYPED:
 		// Not supported yet
 		fallthrough

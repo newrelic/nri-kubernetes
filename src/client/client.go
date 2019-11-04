@@ -2,15 +2,19 @@ package client
 
 import (
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"net/http"
+	"path"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 )
 
 // Kubernetes provides an interface to common Kubernetes API operations
@@ -30,6 +34,8 @@ type Kubernetes interface {
 	Config() *rest.Config
 	// SecureHTTPClient returns http.Client configured with timeout and CA Cert
 	SecureHTTPClient(time.Duration) (*http.Client, error)
+	// FindSecret returns the secret with the given name, if any
+	FindSecret(name, namespace string) (*v1.Secret, error)
 }
 
 type goClientImpl struct {
@@ -77,6 +83,10 @@ func (ka *goClientImpl) SecureHTTPClient(t time.Duration) (*http.Client, error) 
 	return c.Client, nil
 }
 
+func (ka *goClientImpl) FindSecret(name, namespace string) (*v1.Secret, error) {
+	return ka.client.CoreV1().Secrets(namespace).Get(name, metav1.GetOptions{})
+}
+
 // BasicHTTPClient returns http.Client configured with timeout
 func BasicHTTPClient(t time.Duration) *http.Client {
 	return &http.Client{
@@ -95,13 +105,23 @@ func InsecureHTTPClient(t time.Duration) *http.Client {
 }
 
 // NewKubernetes instantiates a Kubernetes API client
-func NewKubernetes() (Kubernetes, error) {
+// if tryLocalKubeConfig is true, this will try to load your kubeconfig from ~/.kube/config
+func NewKubernetes(tryLocalKubeConfig bool) (Kubernetes, error) {
 	ka := new(goClientImpl)
 	var err error
 
 	ka.config, err = rest.InClusterConfig()
 	if err != nil {
-		return nil, err
+		if !tryLocalKubeConfig {
+			return nil, err
+		}
+
+		kubeconf := path.Join(homedir.HomeDir(), ".kube", "config")
+		config, err := clientcmd.BuildConfigFromFlags("", kubeconf)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not load local kube config")
+		}
+		ka.config = config
 	}
 
 	ka.client, err = kubernetes.NewForConfig(ka.config)

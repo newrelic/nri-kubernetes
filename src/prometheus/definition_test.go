@@ -3,10 +3,12 @@ package prometheus
 import (
 	"errors"
 	"fmt"
+	"math"
 	"testing"
 
 	"github.com/newrelic/infra-integrations-sdk/metric"
 	"github.com/newrelic/nri-kubernetes/src/definition"
+	model "github.com/prometheus/client_model/go"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -83,18 +85,46 @@ var mFamily = []MetricFamily{
 }
 
 var spec = []definition.Spec{
-	{"podStartTime", FromValue("kube_pod_start_time"), metric.GAUGE},
-	{"podInfo.namespace", FromLabelValue("kube_pod_info", "namespace"), metric.ATTRIBUTE},
-	{"podInfo.pod", FromLabelValue("kube_pod_info", "pod"), metric.ATTRIBUTE},
+	{
+		Name:      "podStartTime",
+		ValueFunc: FromValue("kube_pod_start_time"),
+		Type:      metric.GAUGE,
+	},
+	{
+		Name:      "podInfo.namespace",
+		ValueFunc: FromLabelValue("kube_pod_info", "namespace"),
+		Type:      metric.ATTRIBUTE,
+	},
+	{
+		Name:      "podInfo.pod",
+		ValueFunc: FromLabelValue("kube_pod_info", "pod"),
+		Type:      metric.ATTRIBUTE,
+	},
 }
 
 var containersSpec = definition.SpecGroups{
 	"container": definition.SpecGroup{
 		Specs: []definition.Spec{
-			{"container", FromLabelValue("kube_pod_container_info", "container"), metric.ATTRIBUTE},
-			{"image", FromLabelValue("kube_pod_container_info", "image"), metric.ATTRIBUTE},
-			{"namespace", FromLabelValue("kube_pod_container_info", "namespace"), metric.ATTRIBUTE},
-			{"pod", FromLabelValue("kube_pod_container_info", "pod"), metric.ATTRIBUTE},
+			{
+				Name:      "container",
+				ValueFunc: FromLabelValue("kube_pod_container_info", "container"),
+				Type:      metric.ATTRIBUTE,
+			},
+			{
+				Name:      "image",
+				ValueFunc: FromLabelValue("kube_pod_container_info", "image"),
+				Type:      metric.ATTRIBUTE,
+			},
+			{
+				Name:      "namespace",
+				ValueFunc: FromLabelValue("kube_pod_container_info", "namespace"),
+				Type:      metric.ATTRIBUTE,
+			},
+			{
+				Name:      "pod",
+				ValueFunc: FromLabelValue("kube_pod_container_info", "pod"),
+				Type:      metric.ATTRIBUTE,
+			},
 		},
 	},
 }
@@ -216,6 +246,138 @@ var rawGroupsIncompatibleType = definition.RawGroups{
 	},
 }
 
+var summarySpec = definition.SpecGroups{
+	"scheduler": definition.SpecGroup{
+		Specs: []definition.Spec{
+			{Name: "http_request_duration_microseconds", ValueFunc: FromSummary("http_request_duration_microseconds"), Type: metric.GAUGE},
+		},
+	},
+}
+
+func float64Ptr(f float64) *float64 {
+	return &f
+}
+func uint64Ptr(u uint64) *uint64 {
+	return &u
+}
+
+var summaryRawGroups = definition.RawGroups{
+	"scheduler": {
+		"kube-scheduler-minikube": {
+			"http_request_duration_microseconds": []Metric{
+				{
+					Labels: Labels{"l2": "v2", "l1": "v1", "handler": "prometheus"},
+					Value: &model.Summary{
+						SampleCount: uint64Ptr(5),
+						SampleSum:   float64Ptr(45),
+						Quantile: []*model.Quantile{
+							{
+								Quantile:         float64Ptr(0.5),
+								Value:            float64Ptr(42),
+								XXX_unrecognized: nil,
+							},
+							{
+								Quantile:         float64Ptr(0.9),
+								Value:            float64Ptr(43),
+								XXX_unrecognized: nil,
+							},
+							{
+								Quantile:         float64Ptr(0.99),
+								Value:            float64Ptr(44),
+								XXX_unrecognized: nil,
+							},
+						},
+						XXX_unrecognized: nil,
+					},
+				}, {
+					Labels: Labels{"l2": "v2", "l1": "v1", "handler": "other"},
+					Value: &model.Summary{
+						SampleCount: uint64Ptr(5),
+						SampleSum:   float64Ptr(45),
+						Quantile: []*model.Quantile{
+							{
+								Quantile:         float64Ptr(0.5),
+								Value:            float64Ptr(42),
+								XXX_unrecognized: nil,
+							},
+							{
+								Quantile:         float64Ptr(0.9),
+								Value:            float64Ptr(43),
+								XXX_unrecognized: nil,
+							},
+							{
+								Quantile:         float64Ptr(0.99),
+								Value:            float64Ptr(44),
+								XXX_unrecognized: nil,
+							},
+						},
+						XXX_unrecognized: nil,
+					},
+				},
+			},
+		},
+	},
+}
+
+var summaryMetricFamily = []MetricFamily{
+	{
+		Name: "http_request_duration_microseconds",
+		Type: "SUMMARY",
+		Metrics: []Metric{
+			{
+				Labels: Labels{"l2": "v2", "l1": "v1", "handler": "prometheus"},
+				Value: &model.Summary{
+					SampleCount: uint64Ptr(5),
+					SampleSum:   float64Ptr(45),
+					Quantile: []*model.Quantile{
+						{
+							Quantile:         float64Ptr(0.5),
+							Value:            float64Ptr(42),
+							XXX_unrecognized: nil,
+						},
+						{
+							Quantile:         float64Ptr(0.9),
+							Value:            float64Ptr(43),
+							XXX_unrecognized: nil,
+						},
+						{
+							Quantile:         float64Ptr(0.99),
+							Value:            float64Ptr(44),
+							XXX_unrecognized: nil,
+						},
+					},
+					XXX_unrecognized: nil,
+				},
+			},
+			{
+				Labels: Labels{"l2": "v2", "l1": "v1", "handler": "other"},
+				Value: &model.Summary{
+					SampleCount: uint64Ptr(5),
+					SampleSum:   float64Ptr(45),
+					Quantile: []*model.Quantile{
+						{
+							Quantile:         float64Ptr(0.5),
+							Value:            float64Ptr(42),
+							XXX_unrecognized: nil,
+						},
+						{
+							Quantile:         float64Ptr(0.9),
+							Value:            float64Ptr(43),
+							XXX_unrecognized: nil,
+						},
+						{
+							Quantile:         float64Ptr(0.99),
+							Value:            float64Ptr(44),
+							XXX_unrecognized: nil,
+						},
+					},
+					XXX_unrecognized: nil,
+				},
+			},
+		},
+	},
+}
+
 // --------------- GroupMetricsBySpec ---------------
 func TestGroupMetricsBySpec_CorrectValue(t *testing.T) {
 	expectedMetricGroup := definition.RawGroups{
@@ -328,43 +490,336 @@ func TestGroupMetricsBySpec_EmptyMetricFamily(t *testing.T) {
 	assert.Empty(t, metricGroup)
 }
 
-func TestGroupMetricsBySpec_MultipleMetricsPerFamily(t *testing.T) {
-	families := []MetricFamily{
+func TestGroupEntityMetricsBySpec_CorrectValue(t *testing.T) {
+
+	metricGroup, errs := GroupEntityMetricsBySpec(
+		summarySpec,
+		summaryMetricFamily,
+		"kube-scheduler-minikube",
+	)
+	assert.Empty(t, errs)
+	assert.Equal(t, summaryRawGroups, metricGroup)
+}
+
+func TestGroupEntityMetricsBySpec_NoMatch(t *testing.T) {
+	var emptyMetricFamily []MetricFamily
+
+	metricGroup, errs := GroupEntityMetricsBySpec(
+		summarySpec,
+		emptyMetricFamily,
+		"kube-scheduler-minikube",
+	)
+	assert.Len(t, errs, 1)
+	assert.Equal(t, errors.New("no data found for scheduler object"), errs[0])
+	assert.Empty(t, metricGroup)
+}
+
+func TestFetchFuncs_CorrectValue(t *testing.T) {
+
+	testCases := []struct {
+		name                 string
+		rawGroups            definition.RawGroups
+		expectedFetchedValue definition.FetchedValues
+		fetchFunc            definition.FetchFunc
+	}{
 		{
-			Name: "container_cpu_usage_seconds_total",
-			Metrics: []Metric{
-				{
-					Value: GaugeValue(0.001262964),
-					Labels: map[string]string{
-						"namespace":      "kube-system",
-						"pod_name":       "newrelic-infra-monitoring-cglrn",
-						"container_name": "POD",
-						"cpu":            "cpu00",
+			name: "FromValue correct value",
+			rawGroups: definition.RawGroups{
+				"scheduler": {
+					"kube-scheduler-minikube": {
+						"leader_election_master_status": []Metric{
+							{
+								Labels: Labels{"name": "kube-scheduler"},
+								Value:  GaugeValue(1),
+							},
+						},
 					},
 				},
-				{
-					Value: GaugeValue(0.005540791),
-					Labels: map[string]string{
-						"namespace":      "kube-system",
-						"pod_name":       "newrelic-infra-monitoring-cglrn",
-						"container_name": "POD",
-						"cpu":            "cpu01",
+			},
+			fetchFunc: FromValue("leader_election_master_status", IgnoreLabelsFilter("name")),
+			expectedFetchedValue: definition.FetchedValues{
+				"leader_election_master_status": GaugeValue(1),
+			},
+		},
+		{
+			name: "FromValueOverriddenName sets the correct name",
+			rawGroups: definition.RawGroups{
+				"scheduler": {
+					"kube-scheduler-minikube": {
+						"http_request_count": []Metric{
+							{
+								Labels: Labels{"verb": "GET"},
+								Value:  GaugeValue(1),
+							},
+							{
+								Labels: Labels{"verb": "POST"},
+								Value:  GaugeValue(9),
+							},
+						},
 					},
 				},
+			},
+			fetchFunc: FromValueWithOverriddenName("http_request_count", "my_custom_request_count"),
+			expectedFetchedValue: definition.FetchedValues{
+				"my_custom_request_count_verb_GET":  GaugeValue(1),
+				"my_custom_request_count_verb_POST": GaugeValue(9),
+			},
+		},
+		{
+			name: "FromValue correct multiple values",
+			rawGroups: definition.RawGroups{
+				"scheduler": {
+					"kube-scheduler-minikube": {
+						"leader_election_master_status": []Metric{
+							{
+								Labels: Labels{"name": "kube-scheduler", "l": "v1"},
+								Value:  GaugeValue(1),
+							},
+							{
+								Labels: Labels{"name": "kube-scheduler", "l": "v2"},
+								Value:  GaugeValue(0),
+							},
+						},
+					},
+				},
+			},
+			fetchFunc: FromValue("leader_election_master_status", IgnoreLabelsFilter("name")),
+			expectedFetchedValue: definition.FetchedValues{
+				"leader_election_master_status_l_v1": GaugeValue(1),
+				"leader_election_master_status_l_v2": GaugeValue(0),
+			},
+		},
+		{
+			name: "FromValue correct aggregated values",
+			rawGroups: definition.RawGroups{
+				"scheduler": {
+					"kube-scheduler-minikube": {
+						"leader_election_master_status": []Metric{
+							{
+								Labels: Labels{"name": "kube-scheduler", "l": "v1"},
+								Value:  CounterValue(1),
+							},
+							{
+								Labels: Labels{"name": "kube-scheduler", "l": "v2"},
+								Value:  CounterValue(2),
+							},
+							{
+								Labels: Labels{"name": "kube-scheduler-02", "l": "v1"},
+								Value:  CounterValue(3),
+							},
+							{
+								Labels: Labels{"name": "kube-scheduler-02", "l": "v2"},
+								Value:  CounterValue(4),
+							},
+						},
+					},
+				},
+			},
+			fetchFunc: FromValue("leader_election_master_status", IncludeOnlyLabelsFilter("name")),
+			expectedFetchedValue: definition.FetchedValues{
+				"leader_election_master_status_name_kube-scheduler":    CounterValue(3),
+				"leader_election_master_status_name_kube-scheduler-02": CounterValue(7),
+			},
+		},
+		{
+			name: "FromSummary correct values with NaN and Infinite discarded",
+			rawGroups: definition.RawGroups{
+				"scheduler": {
+					"kube-scheduler-minikube": {
+						"http_request_duration_microseconds": []Metric{
+							{
+								Labels: Labels{"l2": "v2", "l1": "v1", "handler": "prometheus"},
+								Value: &model.Summary{
+									SampleCount: uint64Ptr(5),
+									SampleSum:   float64Ptr(math.Inf(1)),
+									Quantile: []*model.Quantile{
+										{
+											Quantile:         float64Ptr(0.5),
+											Value:            float64Ptr(math.NaN()),
+											XXX_unrecognized: nil,
+										},
+										{
+											Quantile:         float64Ptr(0.9),
+											Value:            float64Ptr(math.NaN()),
+											XXX_unrecognized: nil,
+										},
+										{
+											Quantile:         float64Ptr(0.99),
+											Value:            float64Ptr(44),
+											XXX_unrecognized: nil,
+										},
+									},
+									XXX_unrecognized: nil,
+								},
+							},
+						},
+					},
+				},
+			},
+			fetchFunc: FromSummary("http_request_duration_microseconds"),
+			expectedFetchedValue: definition.FetchedValues{
+				"http_request_duration_microseconds_handler_prometheus_l1_v1_l2_v2_count":         uint64(5),
+				"http_request_duration_microseconds_handler_prometheus_l1_v1_l2_v2_quantile_0.99": float64(44),
+			},
+		},
+		{
+			name:      "FromSummary correct value",
+			rawGroups: summaryRawGroups,
+			fetchFunc: FromSummary("http_request_duration_microseconds"),
+			expectedFetchedValue: definition.FetchedValues{
+				"http_request_duration_microseconds_handler_prometheus_l1_v1_l2_v2_count":         uint64(5),
+				"http_request_duration_microseconds_handler_prometheus_l1_v1_l2_v2_quantile_0.5":  float64(42),
+				"http_request_duration_microseconds_handler_prometheus_l1_v1_l2_v2_quantile_0.9":  float64(43),
+				"http_request_duration_microseconds_handler_prometheus_l1_v1_l2_v2_quantile_0.99": float64(44),
+				"http_request_duration_microseconds_handler_prometheus_l1_v1_l2_v2_sum":           float64(45),
+				"http_request_duration_microseconds_handler_other_l1_v1_l2_v2_count":              uint64(5),
+				"http_request_duration_microseconds_handler_other_l1_v1_l2_v2_quantile_0.5":       float64(42),
+				"http_request_duration_microseconds_handler_other_l1_v1_l2_v2_quantile_0.9":       float64(43),
+				"http_request_duration_microseconds_handler_other_l1_v1_l2_v2_quantile_0.99":      float64(44),
+				"http_request_duration_microseconds_handler_other_l1_v1_l2_v2_sum":                float64(45),
 			},
 		},
 	}
 
-	specs := definition.SpecGroups{
-		"pod": definition.SpecGroup{
-			Specs: spec,
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			fetchedValue, err := testCase.fetchFunc(
+				"scheduler",
+				"kube-scheduler-minikube",
+				testCase.rawGroups,
+			)
+			assert.Equal(t, testCase.expectedFetchedValue, fetchedValue)
+			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestFetchFunc_RawMetricNotFound(t *testing.T) {
+
+	testCases := []struct {
+		name                 string
+		rawGroups            definition.RawGroups
+		expectedFetchedValue definition.FetchedValues
+		fetchFunc            definition.FetchFunc
+	}{
+		{
+			name: "FromValue",
+			rawGroups: definition.RawGroups{
+				"scheduler": {
+					"kube-scheduler-minikube": {
+						"leader_election_master_status": []Metric{
+							{
+								Labels: Labels{"name": "kube-scheduler", "l": "v1"},
+								Value:  GaugeValue(1),
+							},
+						},
+					},
+				},
+			},
+			fetchFunc: FromValue("nope"),
+		},
+		{
+			name:      "FromSummary",
+			rawGroups: summaryRawGroups,
+			fetchFunc: FromSummary("nope"),
 		},
 	}
 
-	metricGroup, errs := GroupMetricsBySpec(specs, families)
-	assert.Len(t, errs, 1)
-	assert.Equal(t, errors.New("no data found for pod object"), errs[0])
-	assert.Empty(t, metricGroup)
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+
+			fetchedValue, err := testCase.fetchFunc(
+				"scheduler",
+				"kube-scheduler-minikube",
+				testCase.rawGroups,
+			)
+			assert.Nil(t, fetchedValue)
+			assert.EqualError(t, err, "metric not found")
+		})
+	}
+}
+
+func TestFetchFunc_IncompatibleType(t *testing.T) {
+
+	testCases := []struct {
+		name                 string
+		rawGroups            definition.RawGroups
+		expectedFetchedValue definition.FetchedValues
+		fetchFunc            definition.FetchFunc
+		expectedType         string
+		actualType           string
+		key                  string
+	}{
+		{
+			name: "FromValue",
+			rawGroups: definition.RawGroups{
+				"scheduler": {
+					"kube-scheduler-minikube": {
+						"leader_election_master_status": GaugeValue(1),
+					},
+				},
+			},
+			fetchFunc:    FromValue("leader_election_master_status"),
+			expectedType: "Metric or []Metric",
+			actualType:   "prometheus.GaugeValue",
+			key:          "leader_election_master_status",
+		},
+		{
+			name: "FromSummaryNo[]Metric",
+			rawGroups: definition.RawGroups{
+				"scheduler": {
+					"kube-scheduler-minikube": {
+						"http_request_duration_microseconds": GaugeValue(1),
+					},
+				},
+			},
+			fetchFunc:    FromSummary("http_request_duration_microseconds"),
+			expectedType: "[]Metric",
+			actualType:   "prometheus.GaugeValue",
+			key:          "http_request_duration_microseconds",
+		},
+		{
+			name: "FromSummaryNoSummary",
+			rawGroups: definition.RawGroups{
+				"scheduler": {
+					"kube-scheduler-minikube": {
+						"http_request_duration_microseconds": []Metric{
+							{
+								Labels: Labels{"l2": "v2", "l1": "v1", "handler": "prometheus"},
+								Value:  GaugeValue(1),
+							},
+						},
+					},
+				},
+			},
+			fetchFunc:    FromSummary("http_request_duration_microseconds"),
+			expectedType: "Summary",
+			actualType:   "prometheus.GaugeValue",
+			key:          "http_request_duration_microseconds",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+
+			fetchedValue, err := testCase.fetchFunc(
+				"scheduler",
+				"kube-scheduler-minikube",
+				testCase.rawGroups,
+			)
+			assert.Nil(t, fetchedValue)
+			assert.EqualError(
+				t,
+				err,
+				fmt.Sprintf(
+					"incompatible metric type for %s. Expected: %s. Got: %s",
+					testCase.key,
+					testCase.expectedType,
+					testCase.actualType,
+				),
+			)
+		})
+	}
 }
 
 // --------------- FromValue ---------------
@@ -387,7 +842,14 @@ func TestFromRawValue_IncompatibleType(t *testing.T) {
 
 	fetchedValue, err := FromValue("kube_pod_start_time")("pod", "fluentd-elasticsearch-jnqb7", rawGroupsIncompatibleType)
 	assert.Nil(t, fetchedValue)
-	assert.EqualError(t, err, "incompatible metric type. Expected: Metric. Got: string")
+	assert.EqualError(
+		t,
+		err,
+		fmt.Sprintf(
+			"incompatible metric type for %s. Expected: Metric or []Metric. Got: string",
+			"kube_pod_start_time",
+		),
+	)
 }
 
 // --------------- FromLabelValue ---------------
@@ -885,4 +1347,10 @@ func TestInheritAllLabelsFrom_RelatedMetricNotFound(t *testing.T) {
 	fetchedValue, err := InheritAllLabelsFrom("pod", "non_existent_metric_key")("container", containerRawEntityID, raw)
 	assert.EqualError(t, err, fmt.Sprintf("related metric not found. Metric: non_existent_metric_key pod:%v", expectedPodRawEntityID))
 	assert.Empty(t, fetchedValue)
+}
+
+func TestControlPlaneComponentTypeGenerator(t *testing.T) {
+	generatedType, err := ControlPlaneComponentTypeGenerator("my-component", "", nil, "myCluster")
+	assert.NoError(t, err)
+	assert.Equal(t, "k8s:myCluster:controlplane:my-component", generatedType)
 }

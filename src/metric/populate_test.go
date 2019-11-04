@@ -152,7 +152,7 @@ func TestPopulateK8s(t *testing.T) {
 		errors.New("error populating metric for entity ID kube-system_newrelic-infra-rz225_newrelic-infra: cannot fetch value for metric reason, metric not found"),
 	}
 
-	assert.ElementsMatch(t, expectedErrs, err.(*data.PopulateErr).Errs)
+	assert.ElementsMatch(t, expectedErrs, err.(data.PopulateResult).Errors)
 	expectedInventory := sdk.Inventory{}
 	expectedInventory.SetItem("cluster", "name", expectedMetrics[0].Entity.Name)
 	expectedMetrics[0].Inventory = expectedInventory

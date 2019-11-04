@@ -249,7 +249,7 @@ func NewDiscoverer(nodeName string, logger *logrus.Logger) (client.Discoverer, e
 		return nil, errors.New("nodeName is empty")
 	}
 
-	c, err := client.NewKubernetes()
+	c, err := client.NewKubernetes(false)
 	if err != nil {
 		return nil, err
 	}

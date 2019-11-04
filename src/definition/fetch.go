@@ -24,6 +24,8 @@ type FetchFunc func(groupLabel, entityID string, groups RawGroups) (FetchedValue
 // map[entityType][entityName][metricName]metricValue as interface{}
 type RawGroups map[string]map[string]RawMetrics
 
+type RawGroupsMultipleMetrics RawGroups
+
 // TransformFunc transforms a FetchedValue.
 type TransformFunc func(FetchedValue) (FetchedValue, error)
 

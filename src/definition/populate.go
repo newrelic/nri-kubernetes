@@ -90,7 +90,6 @@ func IntegrationProtocol2PopulateFunc(i *sdk.IntegrationProtocol2, clusterName s
 				if wasPopulated {
 					populated = true
 				}
-
 			}
 		}
 		if populated {
@@ -108,7 +107,9 @@ func metricSetPopulateFunc(ms metric.MetricSet, groupLabel, entityID string) Pop
 		for _, ex := range specs[groupLabel].Specs {
 			val, err := ex.ValueFunc(groupLabel, entityID, groups)
 			if err != nil {
-				errs = append(errs, fmt.Errorf("cannot fetch value for metric %s, %s", ex.Name, err))
+				if !ex.Optional {
+					errs = append(errs, fmt.Errorf("cannot fetch value for metric %s, %s", ex.Name, err))
+				}
 				continue
 			}
 
@@ -116,7 +117,9 @@ func metricSetPopulateFunc(ms metric.MetricSet, groupLabel, entityID string) Pop
 				for k, v := range multiple {
 					err := ms.SetMetric(k, v, ex.Type)
 					if err != nil {
-						errs = append(errs, fmt.Errorf("cannot set metric %s with value %v in metric set, %s", k, v, err))
+						if !ex.Optional {
+							errs = append(errs, fmt.Errorf("cannot set metric %s with value %v in metric set, %s", k, v, err))
+						}
 						continue
 					}
 
@@ -125,7 +128,9 @@ func metricSetPopulateFunc(ms metric.MetricSet, groupLabel, entityID string) Pop
 			} else {
 				err := ms.SetMetric(ex.Name, val, ex.Type)
 				if err != nil {
-					errs = append(errs, fmt.Errorf("cannot set metric %s with value %v in metric set, %s", ex.Name, val, err))
+					if !ex.Optional {
+						errs = append(errs, fmt.Errorf("cannot set metric %s with value %v in metric set, %s", ex.Name, val, err))
+					}
 					continue
 				}
 

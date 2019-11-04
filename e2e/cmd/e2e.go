@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -16,14 +15,15 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/args"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/infra-integrations-sdk/sdk"
+	"github.com/sirupsen/logrus"
+	v1 "k8s.io/api/core/v1"
+
 	_ "github.com/newrelic/nri-kubernetes/e2e/gcp"
 	"github.com/newrelic/nri-kubernetes/e2e/helm"
 	"github.com/newrelic/nri-kubernetes/e2e/jsonschema"
 	"github.com/newrelic/nri-kubernetes/e2e/k8s"
 	"github.com/newrelic/nri-kubernetes/e2e/retry"
 	"github.com/newrelic/nri-kubernetes/e2e/timer"
-	"github.com/sirupsen/logrus"
-	v1 "k8s.io/api/core/v1"
 )
 
 var cliArgs = struct {
@@ -93,11 +93,11 @@ func s(rbac bool, unprivileged bool, integrationImageRepository, integrationImag
 }
 
 type integrationData struct {
-	role    string
-	podName string
-	stdOut  []byte
-	stdErr  []byte
-	err     error
+	expectedJobs []job
+	podName      string
+	stdOut       []byte
+	stdErr       []byte
+	err          error
 }
 
 type executionErr struct {
@@ -114,38 +114,44 @@ func (err executionErr) Error() string {
 	return errsStr
 }
 
-func execIntegration(podName string, dataChannel chan integrationData, wg *sync.WaitGroup, c *k8s.Client, logger *logrus.Logger) {
-	defer timer.Track(time.Now(), fmt.Sprintf("execIntegration func for pod %s", podName), logger)
+type job string
+
+const (
+	jobKSM               job = "kube-state-metrics"
+	jobKubelet           job = "kubelet"
+	jobScheduler         job = "scheduler"
+	jobEtcd              job = "etcd"
+	jobControllerManager job = "controller-manager"
+	jobAPIServer         job = "api-server"
+)
+
+var allJobs = [...]job{jobKSM, jobKubelet, jobScheduler, jobEtcd, jobControllerManager, jobAPIServer}
+
+func execIntegration(pod v1.Pod, ksmPod *v1.Pod, dataChannel chan integrationData, wg *sync.WaitGroup, c *k8s.Client, logger *logrus.Logger) {
+	defer timer.Track(time.Now(), fmt.Sprintf("execIntegration func for pod %s", pod.Name), logger)
 	defer wg.Done()
 	d := integrationData{
-		podName: podName,
+		podName: pod.Name,
 	}
 
-	output, err := c.PodExec(namespace, podName, nrContainer, "/var/db/newrelic-infra/newrelic-integrations/bin/nr-kubernetes", "-timeout=15000", "-verbose")
+	output, err := c.PodExec(namespace, pod.Name, nrContainer, "/var/db/newrelic-infra/newrelic-integrations/bin/nr-kubernetes", "-timeout=15000", "-verbose")
 	if err != nil {
 		d.err = err
 		dataChannel <- d
 		return
 	}
 
-	re, err := regexp.Compile("Auto-discovered role = (\\w*)")
-	if err != nil {
-		d.err = fmt.Errorf("cannot compile regex and determine role for pod %s, err: %v", podName, err)
-		dataChannel <- d
-		return
-	}
-
-	matches := re.FindStringSubmatch(output.Stderr.String())
-	role := matches[1]
-	if role == "" {
-		d.err = fmt.Errorf("cannot find a role for pod %s", podName)
-		dataChannel <- d
-		return
-	}
-
-	d.role = role
 	d.stdOut = output.Stdout.Bytes()
 	d.stdErr = output.Stderr.Bytes()
+
+	for _, j := range allJobs {
+		expectedStr := fmt.Sprintf("Running job: %s", string(j))
+		if strings.Contains(string(d.stdErr), expectedStr) {
+			d.expectedJobs = append(d.expectedJobs, j)
+		}
+	}
+
+	logrus.Printf("Pod: %s, hostIP %s, expected jobs: %#v", pod.Name, pod.Status.HostIP, d.expectedJobs)
 
 	dataChannel <- d
 }
@@ -244,8 +250,9 @@ func initHelm(c *k8s.Client, rbac bool, logger *logrus.Logger) error {
 	return helm.DependencyBuild(cliArgs.Context, cliArgs.NrChartPath, logger)
 }
 
-func waitForKSM(c *k8s.Client, logger *logrus.Logger) error {
+func waitForKSM(c *k8s.Client, logger *logrus.Logger) (*v1.Pod, error) {
 	defer timer.Track(time.Now(), "waitForKSM", logger)
+	var foundPod v1.Pod
 	err := retry.Do(
 		func() error {
 			ksmPodList, err := c.PodsListByLabels(namespace, []string{ksmLabel})
@@ -257,6 +264,7 @@ func waitForKSM(c *k8s.Client, logger *logrus.Logger) error {
 					logger.Debugf("Waiting for kube-state-metrics pod to be ready, current condition: %s - %s", con.Type, con.Status)
 
 					if con.Type == "Ready" && con.Status == "True" {
+						foundPod = ksmPodList.Items[0]
 						return nil
 					}
 				}
@@ -268,9 +276,9 @@ func waitForKSM(c *k8s.Client, logger *logrus.Logger) error {
 		}),
 	)
 	if err != nil {
-		return fmt.Errorf("kube-state-metrics pod is not ready: %s", err)
+		return nil, fmt.Errorf("kube-state-metrics pod is not ready: %s", err)
 	}
-	return nil
+	return &foundPod, nil
 }
 
 func executeScenario(ctx context.Context, scenario string, c *k8s.Client, logger *logrus.Logger) error {
@@ -281,18 +289,20 @@ func executeScenario(ctx context.Context, scenario string, c *k8s.Client, logger
 		return err
 	}
 
-	defer helm.DeleteRelease(releaseName, cliArgs.Context, logger) // nolint: errcheck
+	defer func() {
+		_ = helm.DeleteRelease(releaseName, cliArgs.Context, logger)
+	}()
 
 	// At least one of kube-state-metrics pods needs to be ready to enter to the newrelic-infra pod and execute the integration.
 	// If the kube-state-metrics pod is not ready, then metrics from replicaset, namespace and deployment will not be populate and JSON schemas will fail.
-	err = waitForKSM(c, logger)
+	ksmPod, err := waitForKSM(c, logger)
 	if err != nil {
 		return err
 	}
-	return executeTests(c, releaseName, scenario, logger)
+	return executeTests(c, ksmPod, releaseName, logger)
 }
 
-func executeTests(c *k8s.Client, releaseName string, scenario string, logger *logrus.Logger) error {
+func executeTests(c *k8s.Client, ksmPod *v1.Pod, releaseName string, logger *logrus.Logger) error {
 	// We're fetching the list of NR pods here just to fetch it once. If for
 	// some reason this list or the contents of it could change during the
 	// execution of these tests, we could move it to `test*` functions.
@@ -300,11 +310,17 @@ func executeTests(c *k8s.Client, releaseName string, scenario string, logger *lo
 	if err != nil {
 		return err
 	}
+
+	logger.Info("Found the following pods for test execution:")
+	for _, pod := range podsList.Items {
+		logger.Infof("[%s] status: %s %s", pod.Name, pod.Status.Message, pod.Status.Reason)
+	}
+
 	nodes, err := c.NodesList()
 	if err != nil {
 		return fmt.Errorf("error getting the list of nodes in the cluster: %s", err)
 	}
-	output, err := executeIntegrationForAllPods(c, podsList, logger)
+	output, err := executeIntegrationForAllPods(c, ksmPod, podsList, logger)
 	if err != nil {
 		return err
 	}
@@ -323,7 +339,7 @@ func executeTests(c *k8s.Client, releaseName string, scenario string, logger *lo
 				err := testSpecificEntities(output, releaseName)
 				if err != nil {
 					var otherErr error
-					output, otherErr = executeIntegrationForAllPods(c, podsList, logger)
+					output, otherErr = executeIntegrationForAllPods(c, ksmPod, podsList, logger)
 					if otherErr != nil {
 						return otherErr
 					}
@@ -345,7 +361,7 @@ func executeTests(c *k8s.Client, releaseName string, scenario string, logger *lo
 			err := testEventTypes(output)
 			if err != nil {
 				var otherErr error
-				output, otherErr = executeIntegrationForAllPods(c, podsList, logger)
+				output, otherErr = executeIntegrationForAllPods(c, ksmPod, podsList, logger)
 				if otherErr != nil {
 					return otherErr
 				}
@@ -366,7 +382,7 @@ func executeTests(c *k8s.Client, releaseName string, scenario string, logger *lo
 	return nil
 }
 
-func executeIntegrationForAllPods(c *k8s.Client, nrPods *v1.PodList, logger *logrus.Logger) (map[string]integrationData, error) {
+func executeIntegrationForAllPods(c *k8s.Client, ksmPod *v1.Pod, nrPods *v1.PodList, logger *logrus.Logger) (map[string]integrationData, error) {
 	output := make(map[string]integrationData)
 	dataChannel := make(chan integrationData)
 
@@ -379,7 +395,7 @@ func executeIntegrationForAllPods(c *k8s.Client, nrPods *v1.PodList, logger *log
 
 	for _, p := range nrPods.Items {
 		logger.Debugf("Executing integration inside pod: %s", p.Name)
-		go execIntegration(p.Name, dataChannel, &wg, c, logger)
+		go execIntegration(p, ksmPod, dataChannel, &wg, c, logger)
 	}
 
 	for d := range dataChannel {
@@ -410,7 +426,10 @@ func testSpecificEntities(output map[string]integrationData, releaseName string)
 				return err
 			}
 			if len(entityData.Metrics) > 0 {
-				foundEntities[eid] = jsonschema.MatchEntities([]*sdk.EntityData{entityData}, s, cliArgs.SchemasDirectory)
+				jobEventTypeSchema := map[string]jsonschema.EventTypeToSchemaFilename{
+					"dummy": s,
+				}
+				foundEntities[eid] = jsonschema.MatchEntities([]*sdk.EntityData{entityData}, jobEventTypeSchema, cliArgs.SchemasDirectory)
 			}
 		}
 	}
@@ -426,51 +445,71 @@ func testSpecificEntities(output map[string]integrationData, releaseName string)
 	return nil
 }
 
-func testRoles(nodesCount int, output map[string]integrationData) error {
-	var execErr executionErr
-	var lcount, fcount int
+func testRoles(nodeCount int, integrationOutput map[string]integrationData) error {
+	jobRunCount := map[job]int{}
 
-	for _, o := range output {
-		switch o.role {
-		case "leader":
-			lcount++
-		case "follower":
-			fcount++
+	for podName, output := range integrationOutput {
+		for _, job := range output.expectedJobs {
+			jobRunCount[job]++
+			stderr := string(output.stdErr)
+			found := strings.Count(stderr, fmt.Sprintf("Running job: %s", job)) > 0
+			if !found {
+				return fmt.Errorf("cannot find job %s for pod %s", job, podName)
+			}
 		}
 	}
-	if lcount+fcount != nodesCount {
-		execErr.errs = append(execErr.errs, fmt.Errorf("there are %d nodes in the cluster but only %d integrations were executed", nodesCount, lcount+fcount))
+
+	count, ok := jobRunCount[jobKSM]
+	if !ok || count != 1 {
+		return fmt.Errorf("expected exactly 1 KSM job to run, foud %d", count)
 	}
-	if lcount != 1 {
-		execErr.errs = append(execErr.errs, fmt.Errorf("%d pod leaders were found, but only 1 is expected", lcount))
-	}
-	if len(execErr.errs) > 0 {
-		return execErr
+
+	count, ok = jobRunCount[jobKubelet]
+	if !ok || count != nodeCount {
+		return fmt.Errorf(
+			"expected %d kubelet jobs to run, got %d",
+			nodeCount,
+			count,
+		)
 	}
 	return nil
 }
 
+var eventTypeSchemas = map[string]jsonschema.EventTypeToSchemaFilename{
+	"kube-state-metrics": {
+		"K8sReplicasetSample": "replicaset.json",
+		"K8sNamespaceSample":  "namespace.json",
+		"K8sDeploymentSample": "deployment.json",
+	},
+	"kubelet": {
+		"K8sPodSample":       "pod.json",
+		"K8sContainerSample": "container.json",
+		"K8sNodeSample":      "node.json",
+		"K8sVolumeSample":    "volume.json",
+		"K8sClusterSample":   "cluster.json",
+	},
+	"scheduler": {
+		"K8sSchedulerSample": "scheduler.json",
+	},
+	"etcd": {
+		"K8sEtcdSample": "etcd.json",
+	},
+	"controller-manager": {
+		"K8sControllerManagerSample": "controller-manager.json",
+	},
+	"api-server": {
+		"K8sApiServerSample": "apiserver.json",
+	},
+}
+
 func testEventTypes(output map[string]integrationData) error {
-	eventTypeSchemas := map[string]jsonschema.EventTypeToSchemaFilename{
-		"leader": {
-			"K8sReplicasetSample": "replicaset.json",
-			"K8sNamespaceSample":  "namespace.json",
-			"K8sDeploymentSample": "deployment.json",
-			"K8sPodSample":        "pod.json",
-			"K8sContainerSample":  "container.json",
-			"K8sNodeSample":       "node.json",
-			"K8sVolumeSample":     "volume.json",
-			"K8sClusterSample":    "cluster.json",
-		},
-	}
-	eventTypeSchemas["follower"] = jsonschema.EventTypeToSchemaFilename{
-		"K8sPodSample":       eventTypeSchemas["leader"]["K8sPodSample"],
-		"K8sContainerSample": eventTypeSchemas["leader"]["K8sContainerSample"],
-		"K8sNodeSample":      eventTypeSchemas["leader"]["K8sNodeSample"],
-		"K8sVolumeSample":    eventTypeSchemas["leader"]["K8sVolumeSample"],
-		"K8sClusterSample":   eventTypeSchemas["leader"]["K8sClusterSample"],
-	}
 	for podName, o := range output {
+		schemasToMatch := make(map[string]jsonschema.EventTypeToSchemaFilename)
+		for _, expectedJob := range o.expectedJobs {
+			logrus.Printf("Job: %s, types: %#v", expectedJob, eventTypeSchemas[string(expectedJob)])
+			schemasToMatch[string(expectedJob)] = eventTypeSchemas[string(expectedJob)]
+		}
+
 		i := sdk.IntegrationProtocol2{}
 		err := json.Unmarshal(o.stdOut, &i)
 		if err != nil {
@@ -480,7 +519,8 @@ func testEventTypes(output map[string]integrationData) error {
 		if err != nil {
 			return fmt.Errorf("pod %s failed with: %s", podName, err)
 		}
-		err = jsonschema.MatchEntities(i.Data, eventTypeSchemas[o.role], cliArgs.SchemasDirectory)
+
+		err = jsonschema.MatchEntities(i.Data, schemasToMatch, cliArgs.SchemasDirectory)
 		if err != nil {
 			return fmt.Errorf("pod %s failed with: %s", podName, err)
 		}
@@ -488,7 +528,7 @@ func testEventTypes(output map[string]integrationData) error {
 	return nil
 }
 
-func installRelease(ctx context.Context, scenario string, logger *logrus.Logger) (string, error) {
+func installRelease(_ context.Context, scenario string, logger *logrus.Logger) (string, error) {
 	dir, err := os.Getwd()
 	if err != nil {
 		return "", err

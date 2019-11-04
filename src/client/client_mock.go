@@ -55,3 +55,9 @@ func (m *MockedKubernetes) FindServicesByLabel(name, value string) (*v1.ServiceL
 	args := m.Called(name, value)
 	return args.Get(0).(*v1.ServiceList), args.Error(1)
 }
+
+// FindSecret mocks Kubernetes FindSecret
+func (m *MockedKubernetes) FindSecret(name, namespace string) (*v1.Secret, error) {
+	args := m.Called(name)
+	return args.Get(0).(*v1.Secret), args.Error(1)
+}

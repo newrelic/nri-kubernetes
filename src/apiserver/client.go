@@ -41,3 +41,13 @@ type NodeInfo struct {
 	NodeName string
 	Labels   map[string]string
 }
+
+func (i *NodeInfo) IsMasterNode() bool {
+	if val, ok := i.Labels["kubernetes.io/role"]; ok && val == "master" {
+		return true
+	}
+	if _, ok := i.Labels["node-role.kubernetes.io/master"]; ok {
+		return true
+	}
+	return false
+}

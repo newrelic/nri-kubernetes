@@ -36,32 +36,47 @@ func MatchIntegration(o *sdk.IntegrationProtocol2) error {
 
 // MatchEntities matches metric sets of entities against a set of JSON schema
 // for each event type.
-func MatchEntities(d []*sdk.EntityData, m EventTypeToSchemaFilename, schemasDir string) error {
+func MatchEntities(data []*sdk.EntityData, schemaFileByJobByType map[string]EventTypeToSchemaFilename, schemasDir string) error {
 	var errs []error
 	missingSchemas := make(map[string]struct{})
 	foundTypes := make(map[string]struct{})
-	for _, e := range d {
-		for _, ms := range e.Metrics {
-			if t, ok := m[ms["event_type"].(string)]; ok {
-				foundTypes[ms["event_type"].(string)] = struct{}{}
-				fp, err := schemaFilepath(t, schemasDir)
-				if err != nil {
-					errs = append(errs, fmt.Errorf("%s schema not found", t))
-					continue
-				}
 
-				err = validate(gojsonschema.NewReferenceLoader(fp), gojsonschema.NewGoLoader(ms))
-				if err != nil {
-					errs = append(errs, fmt.Errorf("%s:%s %s:\n%s", e.Entity.Type, e.Entity.Name, ms["event_type"], err))
-				}
-			} else {
-				missingSchemas[ms["event_type"].(string)] = struct{}{}
+	expectedEvents := make(map[string]string)
+	for jobName, eventTypeToSchema := range schemaFileByJobByType {
+		for event := range eventTypeToSchema {
+			expectedEvents[event] = jobName
+		}
+	}
+
+	for _, entityData := range data {
+		for _, metric := range entityData.Metrics {
+			eventType := metric["event_type"].(string)
+			_, found := expectedEvents[eventType]
+			if !found {
+				missingSchemas[eventType] = struct{}{}
+				continue
+			}
+
+			foundTypes[eventType] = struct{}{}
+			job := expectedEvents[eventType]
+			schemaFilename := schemaFileByJobByType[job][eventType]
+			fp, err := schemaFilepath(schemaFilename, schemasDir)
+			if err != nil {
+				errs = append(errs, fmt.Errorf("found event %s, but schema not found", eventType))
+				continue
+			}
+
+			err = validate(gojsonschema.NewReferenceLoader(fp), gojsonschema.NewGoLoader(metric))
+			if err != nil {
+				entity := entityData.Entity
+				errMsg := fmt.Errorf("%s:%s %s:\n%s", entity.Type, entity.Name, metric["event_type"], err)
+				errs = append(errs, errMsg)
 			}
 		}
 	}
 
 	var terr string
-	for t := range m {
+	for t := range expectedEvents {
 		if _, ok := foundTypes[t]; !ok {
 			terr = fmt.Sprintf("%s%s, ", terr, t)
 		}

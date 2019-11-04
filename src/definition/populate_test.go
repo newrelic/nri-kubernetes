@@ -37,8 +37,8 @@ var specs = SpecGroups{
 		TypeGenerator: fromGroupEntityTypeGuessFunc,
 		Specs: []Spec{
 
-			{"metric_1", FromRaw("raw_metric_name_1"), metric.GAUGE},
-			{"metric_2", FromRaw("raw_metric_name_2"), metric.ATTRIBUTE},
+			{"metric_1", FromRaw("raw_metric_name_1"), metric.GAUGE, false},
+			{"metric_2", FromRaw("raw_metric_name_2"), metric.ATTRIBUTE, false},
 			{
 				"metric_3",
 				fromMultiple(
@@ -50,6 +50,7 @@ var specs = SpecGroups{
 					),
 				),
 				metric.ATTRIBUTE,
+				false,
 			},
 		},
 	},
@@ -129,8 +130,8 @@ func TestIntegrationProtocol2PopulateFunc_PartialResult(t *testing.T) {
 		"test": SpecGroup{
 			TypeGenerator: fromGroupEntityTypeGuessFunc,
 			Specs: []Spec{
-				{"metric_1", FromRaw("raw_metric_name_1"), metric.GAUGE},
-				{"metric_2", FromRaw("raw_metric_name_2"), metric.GAUGE}, // Source type not correct
+				{"metric_1", FromRaw("raw_metric_name_1"), metric.GAUGE, false},
+				{"metric_2", FromRaw("raw_metric_name_2"), metric.GAUGE, false}, // Source type not correct
 			},
 		},
 	}
@@ -220,7 +221,7 @@ func TestIntegrationProtocol2PopulateFunc_MetricsSetsNotPopulated_OnlyEntity(t *
 		"test": SpecGroup{
 			TypeGenerator: fromGroupEntityTypeGuessFunc,
 			Specs: []Spec{
-				{"useless", FromRaw("nonExistentMetric"), metric.GAUGE},
+				{"useless", FromRaw("nonExistentMetric"), metric.GAUGE, false},
 			},
 		},
 	}
@@ -276,8 +277,8 @@ func TestIntegrationProtocol2PopulateFunc_EntityIDGenerator(t *testing.T) {
 			IDGenerator:   generator,
 			TypeGenerator: fromGroupEntityTypeGuessFunc,
 			Specs: []Spec{
-				{"metric_1", FromRaw("raw_metric_name_1"), metric.GAUGE},
-				{"metric_2", FromRaw("raw_metric_name_2"), metric.GAUGE},
+				{"metric_1", FromRaw("raw_metric_name_1"), metric.GAUGE, false},
+				{"metric_2", FromRaw("raw_metric_name_2"), metric.GAUGE, false},
 			},
 		},
 	}
@@ -348,8 +349,8 @@ func TestIntegrationProtocol2PopulateFunc_EntityIDGeneratorFuncWithError(t *test
 			IDGenerator:   generator,
 			TypeGenerator: fromGroupEntityTypeGuessFunc,
 			Specs: []Spec{
-				{"metric_1", FromRaw("raw_metric_name_1"), metric.GAUGE},
-				{"metric_2", FromRaw("raw_metric_name_2"), metric.ATTRIBUTE},
+				{"metric_1", FromRaw("raw_metric_name_1"), metric.GAUGE, false},
+				{"metric_2", FromRaw("raw_metric_name_2"), metric.ATTRIBUTE, false},
 			},
 		},
 	}
@@ -376,8 +377,8 @@ func TestIntegrationProtocol2PopulateFunc_PopulateOnlySpecifiedGroups(t *testing
 			TypeGenerator: fromGroupEntityTypeGuessFunc,
 			IDGenerator:   generator,
 			Specs: []Spec{
-				{"metric_1", FromRaw("raw_metric_name_1"), metric.GAUGE},
-				{"metric_2", FromRaw("raw_metric_name_2"), metric.GAUGE},
+				{"metric_1", FromRaw("raw_metric_name_1"), metric.GAUGE, false},
+				{"metric_2", FromRaw("raw_metric_name_2"), metric.GAUGE, false},
 			},
 		},
 	}
@@ -471,8 +472,8 @@ func TestIntegrationProtocol2PopulateFunc_EntityTypeGeneratorFuncWithError(t *te
 		"test": SpecGroup{
 			TypeGenerator: generatorWithError,
 			Specs: []Spec{
-				{"metric_1", FromRaw("raw_metric_name_1"), metric.GAUGE},
-				{"metric_2", FromRaw("raw_metric_name_2"), metric.ATTRIBUTE},
+				{"metric_1", FromRaw("raw_metric_name_1"), metric.GAUGE, false},
+				{"metric_2", FromRaw("raw_metric_name_2"), metric.ATTRIBUTE, false},
 			},
 		},
 	}
