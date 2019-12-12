@@ -22,7 +22,7 @@ type Component struct {
 	Endpoint           url.URL
 	Specs              definition.SpecGroups
 	Queries            []prometheus.Query
-	Labels             map[string]string
+	Labels             []labels
 }
 
 // ComponentName is a typed name for components
@@ -70,13 +70,17 @@ func findComponentByName(name ComponentName, components []Component) *Component 
 	return nil
 }
 
+// labels is a collection of labels, key-value style
+type labels map[string]string
+
 // BuildComponentList returns a list of components that the integration will monitor.
 func BuildComponentList(options ...ComponentOption) []Component {
 	components := []Component{
 		{
 			Name: Scheduler,
-			Labels: map[string]string{
-				"k8s-app": "kube-scheduler",
+			Labels: []labels{
+				{"k8s-app": "kube-scheduler"},
+				{"tier": "control-plane", "component": "kube-scheduler"},
 			},
 			Queries: metric.SchedulerQueries,
 			Specs:   metric.SchedulerSpecs,
@@ -87,8 +91,9 @@ func BuildComponentList(options ...ComponentOption) []Component {
 		},
 		{
 			Name: Etcd,
-			Labels: map[string]string{
-				"k8s-app": "etcd-manager-main",
+			Labels: []labels{
+				{"k8s-app": "etcd-manager-main"},
+				{"tier": "control-plane", "component": "etcd"},
 			},
 			Queries: metric.EtcdQueries,
 			Specs:   metric.EtcdSpecs,
@@ -99,8 +104,9 @@ func BuildComponentList(options ...ComponentOption) []Component {
 		},
 		{
 			Name: ControllerManager,
-			Labels: map[string]string{
-				"k8s-app": "kube-controller-manager",
+			Labels: []labels{
+				{"k8s-app": "kube-controller-manager"},
+				{"tier": "control-plane", "component": "kube-controller-manager"},
 			},
 			Queries: metric.ControllerManagerQueries,
 			Specs:   metric.ControllerManagerSpecs,
@@ -111,8 +117,9 @@ func BuildComponentList(options ...ComponentOption) []Component {
 		},
 		{
 			Name: APIServer,
-			Labels: map[string]string{
-				"k8s-app": "kube-apiserver",
+			Labels: []labels{
+				{"k8s-app": "kube-apiserver"},
+				{"tier": "control-plane", "component": "kube-apiserver"},
 			},
 			Queries: metric.APIServerQueries,
 			Specs:   metric.APIServerSpecs,

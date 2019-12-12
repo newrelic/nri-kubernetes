@@ -2,7 +2,7 @@ def ws = "/data/jenkins/workspace/${JOB_NAME}-${BUILD_NUMBER}"
 def quayImage = 'quay.io/newrelic/infrastructure-k8s-staging'
 def quayE2eImage = 'quay.io/newrelic/infrastructure-k8s-e2e'
 def integrationPath = '.'
-def kubernetesTestCluster1_11 = 'fsi-jenkins-111-rbac'
+def kubernetesE2ECluster = 'e2e-cluster-1-15-7'
 
 pipeline {
   agent {
@@ -103,9 +103,9 @@ pipeline {
         stage('privileged version') {
           steps {
             // We lock the e2e build execution in order to run this step only once at a time.
-            lock(resource: "k8s_cluster_${kubernetesTestCluster1_11}", inversePrecedence: true) {
+            lock(resource: "k8s_cluster_${kubernetesE2ECluster}", inversePrecedence: true) {
               build job: 'k8s-integration-e2e', parameters: [
-                string(name: 'CLUSTER_NAME', value: kubernetesTestCluster1_11),
+                string(name: 'CLUSTER_NAME', value: kubernetesE2ECluster),
                 string(name: 'INTEGRATION_IMAGE_TAG', value: "${DOCKER_TAG}"),
                 string(name: 'RBAC', value: 'true'),
                 string(name: 'UNPRIVILEGED', value: 'false'),
@@ -118,9 +118,9 @@ pipeline {
         stage('unprivileged version') {
           steps {
             // We lock the e2e build execution in order to run this step only once at a time.
-            lock(resource: "k8s_cluster_${kubernetesTestCluster1_11}", inversePrecedence: true) {
+            lock(resource: "k8s_cluster_${kubernetesE2ECluster}", inversePrecedence: true) {
               build job: 'k8s-integration-e2e', parameters: [
-                string(name: 'CLUSTER_NAME', value: kubernetesTestCluster1_11),
+                string(name: 'CLUSTER_NAME', value: kubernetesE2ECluster),
                 string(name: 'INTEGRATION_IMAGE_TAG', value: "${DOCKER_TAG}_unprivileged"),
                 string(name: 'RBAC', value: 'true'),
                 string(name: 'UNPRIVILEGED', value: 'true'),

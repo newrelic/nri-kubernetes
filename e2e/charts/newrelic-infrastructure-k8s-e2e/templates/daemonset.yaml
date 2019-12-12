@@ -74,6 +74,8 @@ spec:
             - name: "KUBE_STATE_METRICS_URL" # If this value is specified then discovery process for kube-state-metrics endpoint won't be triggered.
               value: {{ .Values.integration.ksm.url | quote}} # This is example value. Only HTTP request is accepted.
             {{- end }}
+            - name: DISCOVERY_CACHE_TTL
+              value: 0s
             {{- if .Values.daemonset.unprivileged }}
             - name: "DISCOVERY_CACHE_DIR"
               value: "/tmp/nr-kuberentes"
@@ -89,7 +91,7 @@ spec:
                   apiVersion: "v1"
                   fieldPath: "spec.nodeName"
             - name: "NRIA_PASSTHROUGH_ENVIRONMENT"
-              value: "KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,CLUSTER_NAME,CADVISOR_PORT,NRK8S_NODE_NAME,KUBE_STATE_METRICS_URL,DISCOVERY_CACHE_DIR"
+              value: "KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,CLUSTER_NAME,CADVISOR_PORT,NRK8S_NODE_NAME,KUBE_STATE_METRICS_URL,DISCOVERY_CACHE_DIR,DISCOVERY_CACHE_TTL"
       volumes:
         {{- if .Values.daemonset.unprivileged }}
         - name: tmpfs-data

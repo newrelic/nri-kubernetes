@@ -177,30 +177,41 @@ func (sd *discoverer) Discover(timeout time.Duration) (client.HTTPClient, error)
 }
 
 func (sd *discoverer) findComponentOnNode(nodePods definition.RawGroups) (string, bool) {
-	var podName string
 	for _, podData := range nodePods[podEntityType] {
 		rawValueLabels, ok := podData["labels"]
 		if !ok {
 			continue
 		}
 
-		labels, ok := rawValueLabels.(map[string]string)
+		podLabels, ok := rawValueLabels.(map[string]string)
 		if !ok {
 			continue
 		}
 
-		for key, value := range labels {
-			componentLabelValue, ok := sd.component.Labels[key]
-			if !ok {
+		// Loop over the different sets of labels that this component might have, and check if this pod has all the labels from one set.
+		// e.g., for the scheduler, these are the sets:
+		// Labels[0] = {"k8s-app": "kube-scheduler"}
+		// Labels[1] = {"tier": "control-plane", "component": "kube-scheduler"}
+		for _, labels := range sd.component.Labels {
+			foundLabels := 0
+
+			// check if each label of this set is present on the pod
+			for labelKey, labelValue := range labels {
+				if podLabels[labelKey] == labelValue {
+					foundLabels++
+				}
+			}
+
+			// Is every label from this set present on the pod? If not, continue
+			if foundLabels != len(labels) {
 				continue
 			}
-			if componentLabelValue != value {
-				continue
-			}
+
 			rawValuePodName, ok := podData["podName"]
 			if !ok {
 				continue
 			}
+
 			podName, ok := rawValuePodName.(string)
 			if !ok {
 				continue
@@ -208,7 +219,7 @@ func (sd *discoverer) findComponentOnNode(nodePods definition.RawGroups) (string
 			return podName, true
 		}
 	}
-	return podName, false
+	return "", false
 }
 
 // NewComponentDiscoverer returns a `Discoverer` that will find the

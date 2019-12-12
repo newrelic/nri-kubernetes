@@ -17,11 +17,8 @@ var logger = logrus.StandardLogger()
 func TestDiscover(t *testing.T) {
 
 	component := controlplane.BuildComponentList()[0]
-	var labelKey, labelValue string
-	for labelKey, labelValue = range component.Labels {
-		break
-	}
 	podName := "scheduler"
+
 	var testCases = []struct {
 		name                     string
 		assertIsComponentRunning func(assert.TestingT, bool, ...interface{}) bool
@@ -29,7 +26,7 @@ func TestDiscover(t *testing.T) {
 		podsFetcher              data.FetchFunc
 	}{
 		{
-			name:                     "component is not running on node",
+			name:                     "component is not running on node: missing tier",
 			assertIsComponentRunning: assert.False,
 			assertPodName: func(p string) {
 				assert.Equal(t, "", p)
@@ -52,7 +49,7 @@ func TestDiscover(t *testing.T) {
 			},
 		},
 		{
-			name:                     "component is running on node",
+			name:                     "component is running on node: using tier and component labels",
 			assertIsComponentRunning: assert.True,
 			assertPodName: func(p string) {
 				assert.Equal(t, podName, p)
@@ -67,7 +64,33 @@ func TestDiscover(t *testing.T) {
 							"nodeIP":    "10.0.2.15",
 							"startTime": time.Now(),
 							"labels": map[string]string{
-								labelKey: labelValue,
+								"component": "kube-scheduler",
+								"tier":      "control-plane",
+							},
+						},
+					},
+				}, nil
+			},
+		},
+		{
+			name:                     "component is running on node: using k8s-app label",
+			assertIsComponentRunning: assert.True,
+			assertPodName: func(p string) {
+				assert.Equal(t, podName, p)
+			},
+			podsFetcher: func() (definition.RawGroups, error) {
+				return definition.RawGroups{
+					podEntityType: map[string]definition.RawMetrics{
+						"kube-system_kube-scheduler-minikube": {
+							"namespace": "kube-system",
+							"podName":   podName,
+							"nodeName":  "minikube",
+							"nodeIP":    "10.0.2.15",
+							"startTime": time.Now(),
+							"labels": map[string]string{
+								"k8s-app":     "kube-scheduler",
+								"extra-label": "iluvetests",
+								"tier":        "control-plane",
 							},
 						},
 					},

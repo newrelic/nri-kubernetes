@@ -47,7 +47,7 @@ const (
 	namespace    = "default"
 	nrContainer  = "newrelic-infra"
 	ksmLabel     = "app=kube-state-metrics"
-	minikubeHost = "https://192.168.99.100:8443"
+	minikubeHost = "https://192.168.109.128:8443"
 )
 
 type eventTypeSchemasPerEntity map[entityID]jsonschema.EventTypeToSchemaFilename
@@ -70,16 +70,18 @@ func (e entityID) split() []string {
 
 func scenarios(integrationImageRepository string, integrationImageTag string, rbac bool, unprivileged bool) []string {
 	return []string{
-		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.1.0", false),
-		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.1.0", true),
-		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.2.0", false),
-		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.2.0", true),
-		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.3.0", false),
-		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.3.0", true),
 		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.4.0", false),
 		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.4.0", true),
 		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.5.0", false),
 		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.5.0", true),
+		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.6.0", false),
+		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.6.0", true),
+		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.7.0", false),
+		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.7.0", true),
+		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.8.0", false),
+		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.8.0", true),
+		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.9.0", false),
+		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.9.0", true),
 	}
 }
 

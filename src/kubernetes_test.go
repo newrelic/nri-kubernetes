@@ -30,8 +30,13 @@ func TestControlPlaneJobs(t *testing.T) {
 	components := controlplane.BuildComponentList()
 
 	for _, com := range components {
+
+		if len(com.Labels) == 0 {
+			t.Fatalf("component %s has no labels associated", com.Name)
+		}
+
 		var labelKey, labelValue string
-		for labelKey, labelValue = range com.Labels {
+		for labelKey, labelValue = range com.Labels[0] {
 			break
 		}
 		rawGroups["pod"][fmt.Sprintf("kube-system_%s-pod", com.Name)] = definition.RawMetrics(map[string]definition.RawValue{
