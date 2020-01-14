@@ -5,15 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased
+## 1.13.0 
+### Added
+ - Added samples for Statefulsets, Daemonsets, Endpoints and Services.
+ - API Server metrics can now be queried using the secure port. Configure the port using the `API_SERVER_SECURE_PORT` environment variable. The ClusterRole has been updated to allow this query to happen. 
+ - The integration now uses the infrastructure agent v1.8.32-bundle. For more
+   information refer to the [infrastructure agent release notes](https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/)
+   between versions v1.8.23 and v1.8.32.
+
+   The bundle container contains a subset of [On-host integrations](https://docs.newrelic.com/docs/integrations/new-relic-integrations/get-started/introduction-infrastructure-integrations) that are supported by New Relic.
+   This also includes the ability to "Auto Discover" services running on Kubernetes in a similar way to our [Container auto-discovery](https://docs.newrelic.com/docs/integrations/host-integrations/installation/container-auto-discovery)
+ - The integration has been renamed from `nr-kubernetes` to `nri-kubernetes`.
 
 ## 1.12.0
 ### Changed
  - Control Plane components can now also be discovered using the `tier` and `component` labels, besides `k8s-app`.
-- The integration now uses the infrastructure agent v1.8.23. For more
-  information refer to the [infrastructure agent release notes](https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/)
-  between versions v1.5.75 and v1.8.23.
-
+ - The integration now uses the infrastructure agent v1.8.23. For more
+   information refer to the [infrastructure agent release notes](https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/)
+   between versions v1.5.75 and v1.8.23.
+  
 ## 1.11.0
 ### Changed
  - The old way of determining Leader/Follower status has been switched to a

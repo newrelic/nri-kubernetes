@@ -12,6 +12,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// _helmBinary is the path to the helm 2 binary
+// Helm v2 is used, and with the release of helm v3 the helm command no longer links to v2.
+// Set the path to helm v2 here, for example:
+//const _helmBinary = "/usr/local/bin/helm2"
+const _helmBinary = "helm"
+
 // InstallRelease installs a chart release
 func InstallRelease(path, context string, logger *logrus.Logger, config ...string) ([]byte, error) {
 	defer timer.Track(time.Now(), "Helm InstallRelease", logger)
@@ -29,10 +35,10 @@ func InstallRelease(path, context string, logger *logrus.Logger, config ...strin
 		args = append(args, "--kube-context", context)
 	}
 
-	c := exec.Command("helm", args...)
+	c := exec.Command(_helmBinary, args...)
 	o, err := c.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("%s - %s", err, o)
+		return nil, fmt.Errorf("%s - %s", err, string(o))
 	}
 
 	return o, nil
@@ -50,10 +56,10 @@ func DeleteRelease(release, context string, logger *logrus.Logger) error {
 		args = append(args, "--kube-context", context)
 	}
 
-	c := exec.Command("helm", args...)
+	c := exec.Command(_helmBinary, args...)
 	o, err := c.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("%s - %s", err, o)
+		return fmt.Errorf("%s - %s", err, string(o))
 	}
 
 	return nil
@@ -71,10 +77,10 @@ func DeleteAllReleases(context string, logger *logrus.Logger) error {
 		args = append(args, "--kube-context", context)
 	}
 
-	c := exec.Command("helm", args...)
+	c := exec.Command(_helmBinary, args...)
 	o, err := c.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("%s - %s", err, o)
+		return fmt.Errorf("%s - %s", err, string(o))
 	}
 
 	scanner := bufio.NewScanner(bytes.NewReader(o))
@@ -86,6 +92,19 @@ func DeleteAllReleases(context string, logger *logrus.Logger) error {
 	}
 
 	return scanner.Err()
+}
+
+// IsRunningHelm3 is a small function to check whether Helm3 is used
+func IsRunningHelm3(logger *logrus.Logger) bool {
+	c := exec.Command(_helmBinary, "version", "--client", "--short")
+
+	o, err := c.CombinedOutput()
+	if err != nil {
+		logrus.Infof("Could not determine whether Helm3 is running: %v. Output: %s", err, string(o))
+		return false // not sure if Helm3
+	}
+
+	return strings.HasPrefix(string(o), "v3.")
 }
 
 // Init installs Tiller (the Helm server-side component) onto your cluster
@@ -100,10 +119,10 @@ func Init(context string, logger *logrus.Logger, arg ...string) error {
 		args = append(args, "--kube-context", context)
 	}
 
-	c := exec.Command("helm", args...)
+	c := exec.Command(_helmBinary, args...)
 	o, err := c.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("%s - %s", err, o)
+		return fmt.Errorf("%s - %s", err, string(o))
 	}
 
 	return nil
@@ -122,10 +141,10 @@ func DependencyBuild(context, chart string, logger *logrus.Logger) error {
 		args = append(args, "--kube-context", context)
 	}
 
-	c := exec.Command("helm", args...)
+	c := exec.Command(_helmBinary, args...)
 	o, err := c.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("%s - %s", err, o)
+		return fmt.Errorf("%s - %s", err, string(o))
 	}
 
 	return nil

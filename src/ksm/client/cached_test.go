@@ -9,7 +9,7 @@ import (
 
 	"github.com/newrelic/nri-kubernetes/src/client"
 	"github.com/newrelic/nri-kubernetes/src/storage"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

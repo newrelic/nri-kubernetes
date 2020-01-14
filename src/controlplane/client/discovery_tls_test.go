@@ -114,6 +114,7 @@ func createClientComponent(endpoint string, cacert, key, cert []byte, insecureSk
 	return &ControlPlaneComponentClient{
 		httpClient:               &http.Client{},
 		tlsSecretName:            secretName,
+		authenticationMethod:     mTLS,
 		logger:                   log.New(true),
 		IsComponentRunningOnNode: true,
 		k8sClient:                c,

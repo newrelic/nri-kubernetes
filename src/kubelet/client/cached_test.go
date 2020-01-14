@@ -10,7 +10,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/src/client"
 	"github.com/newrelic/nri-kubernetes/src/storage"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 )
 
 const defaultNodeName = "the-node-name"

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/mock"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
 )
 
@@ -60,4 +60,10 @@ func (m *MockedKubernetes) FindServicesByLabel(name, value string) (*v1.ServiceL
 func (m *MockedKubernetes) FindSecret(name, namespace string) (*v1.Secret, error) {
 	args := m.Called(name)
 	return args.Get(0).(*v1.Secret), args.Error(1)
+}
+
+// ListServices mocks Kubernetes ListServices
+func (m *MockedKubernetes) ListServices() (*v1.ServiceList, error) {
+	args := m.Called()
+	return args.Get(0).(*v1.ServiceList), args.Error(1)
 }

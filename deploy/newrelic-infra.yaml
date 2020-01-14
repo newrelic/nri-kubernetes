@@ -21,6 +21,8 @@ rules:
     - "secrets"
     - "services"
   verbs: ["get", "list"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -62,7 +64,7 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: newrelic-infra
-          image: newrelic/infrastructure-k8s:1.12.0
+          image: newrelic/infrastructure-k8s:1.13.0
           securityContext:
             privileged: true
           resources:
@@ -77,6 +79,10 @@ spec:
               readOnly: true
             - mountPath: /var/run/docker.sock
               name: host-docker-socket
+            - mountPath: /var/db/newrelic-infra/integrations.d/
+              name: nri-default-integration-cfg-volume
+            - mountPath: /etc/newrelic-infra/integrations.d/
+              name: nri-integration-cfg-volume
           env:
             - name: "CLUSTER_NAME"
               value: "<YOUR_CLUSTER_NAME>"
@@ -92,6 +98,8 @@ spec:
            #   value: "newrelic-infra-etcd-tls-secret"
            # - name: "ETCD_TLS_SECRET_NAMESPACE" # Namespace where the the secret specified in ETCD_TLS_SECRET_NAME was created.
            #   value: "default"
+           # - name: API_SERVER_SECURE_PORT
+           #   value: "6443"
             - name: "NRIA_DISPLAY_NAME"
               valueFrom:
                 fieldRef:
@@ -105,7 +113,7 @@ spec:
             - name: "NRIA_CUSTOM_ATTRIBUTES"
               value: '{"clusterName":"$(CLUSTER_NAME)"}'
             - name: "NRIA_PASSTHROUGH_ENVIRONMENT"
-              value: "KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,CLUSTER_NAME,CADVISOR_PORT,NRK8S_NODE_NAME,KUBE_STATE_METRICS_URL,KUBE_STATE_METRICS_POD_LABEL,ETCD_TLS_SECRET_NAME,ETCD_TLS_SECRET_NAMESPACE"
+              value: "KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,CLUSTER_NAME,CADVISOR_PORT,NRK8S_NODE_NAME,KUBE_STATE_METRICS_URL,KUBE_STATE_METRICS_POD_LABEL,ETCD_TLS_SECRET_NAME,ETCD_TLS_SECRET_NAMESPACE,API_SERVER_SECURE_PORT"
       volumes:
         - name: host-volume
           hostPath:
@@ -113,8 +121,32 @@ spec:
         - name: host-docker-socket
           hostPath:
             path: /var/run/docker.sock
+        - name: nri-default-integration-cfg-volume
+          configMap:
+            name: nri-default-integration-cfg
+        - name: nri-integration-cfg-volume
+          configMap:
+            name: nri-integration-cfg
       tolerations:
         - operator: "Exists"
           effect: "NoSchedule"
         - operator: "Exists"
           effect: "NoExecute"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nri-default-integration-cfg # integrations config provided by default
+  namespace: default
+data:
+  nri-kubernetes-config.yml: |
+    integration_name: com.newrelic.kubernetes
+    instances:
+      - name: nri-kubernetes
+        command: metrics
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nri-integration-cfg # aimed to be safely overridden by users
+  namespace: default

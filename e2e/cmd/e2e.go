@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -43,11 +44,10 @@ var cliArgs = struct {
 }{}
 
 const (
-	nrLabel      = "name=newrelic-infra"
-	namespace    = "default"
-	nrContainer  = "newrelic-infra"
-	ksmLabel     = "app=kube-state-metrics"
-	minikubeHost = "https://192.168.109.128:8443"
+	nrLabel     = "name=newrelic-infra"
+	namespace   = "default"
+	nrContainer = "newrelic-infra"
+	ksmLabel    = "app=kube-state-metrics"
 )
 
 type eventTypeSchemasPerEntity map[entityID]jsonschema.EventTypeToSchemaFilename
@@ -136,7 +136,7 @@ func execIntegration(pod v1.Pod, ksmPod *v1.Pod, dataChannel chan integrationDat
 		podName: pod.Name,
 	}
 
-	output, err := c.PodExec(namespace, pod.Name, nrContainer, "/var/db/newrelic-infra/newrelic-integrations/bin/nr-kubernetes", "-timeout=15000", "-verbose")
+	output, err := c.PodExec(namespace, pod.Name, nrContainer, "/var/db/newrelic-infra/newrelic-integrations/bin/nri-kubernetes", "-timeout=15000", "-verbose")
 	if err != nil {
 		d.err = err
 		dataChannel <- d
@@ -197,6 +197,8 @@ func main() {
 		if err != nil {
 			if cliArgs.FailFast {
 				logger.Info("Finishing execution because 'FailFast' is true")
+				logger.Infof("Ran with the following configuration: %s", s)
+
 				logger.Fatal(err.Error())
 			}
 			errs = append(errs, err)
@@ -214,6 +216,11 @@ func main() {
 }
 
 func initHelm(c *k8s.Client, rbac bool, logger *logrus.Logger) error {
+
+	if helm.IsRunningHelm3(logger) {
+		logger.Fatal("You're running Helm3, which is not supported. Please configure the helm._helmBinary to point to Helm2")
+	}
+
 	var initArgs []string
 	if rbac {
 		ns := "kube-system"
@@ -250,6 +257,20 @@ func initHelm(c *k8s.Client, rbac bool, logger *logrus.Logger) error {
 	}
 
 	return helm.DependencyBuild(cliArgs.Context, cliArgs.NrChartPath, logger)
+}
+
+func determineMinikubeHost(logger *logrus.Logger) string {
+	cmd := exec.Command("minikube", "ip")
+	var out bytes.Buffer
+
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		logger.Infof("Could not determine Minikube host: %v", err)
+		return ""
+	}
+
+	return fmt.Sprintf("https://%s:8443", strings.TrimSpace(out.String()))
 }
 
 func waitForKSM(c *k8s.Client, logger *logrus.Logger) (*v1.Pod, error) {
@@ -332,6 +353,8 @@ func executeTests(c *k8s.Client, ksmPod *v1.Pod, releaseName string, logger *log
 	if err != nil {
 		execErr.errs = append(execErr.errs, err)
 	}
+
+	minikubeHost := determineMinikubeHost(logger)
 	if c.Config.Host == minikubeHost {
 		logger.Info("Skipping `testSpecificEntities` because you're running them in Minikube (persistent volumes don't work well in Minikube)")
 	} else {
@@ -479,9 +502,13 @@ func testRoles(nodeCount int, integrationOutput map[string]integrationData) erro
 
 var eventTypeSchemas = map[string]jsonschema.EventTypeToSchemaFilename{
 	"kube-state-metrics": {
-		"K8sReplicasetSample": "replicaset.json",
-		"K8sNamespaceSample":  "namespace.json",
-		"K8sDeploymentSample": "deployment.json",
+		"K8sReplicasetSample":  "replicaset.json",
+		"K8sNamespaceSample":   "namespace.json",
+		"K8sDeploymentSample":  "deployment.json",
+		"K8sDaemonsetSample":   "daemonset.json",
+		"K8sStatefulsetSample": "statefulset.json",
+		"K8sEndpointSample":    "endpoint.json",
+		"K8sServiceSample":     "service.json",
 	},
 	"kubelet": {
 		"K8sPodSample":       "pod.json",

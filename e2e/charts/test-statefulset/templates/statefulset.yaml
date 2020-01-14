@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-statefulset
+  labels:
+    app: test-statefulset
+spec:
+  clusterIP: None
+  selector:
+    app: test-statefulset
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: test-statefulset
+spec:
+  serviceName: test-statefulset
+  replicas: 2
+  selector:
+    matchLabels:
+      app: test-statefulset
+  template:
+    metadata:
+      labels:
+        app: test-statefulset
+    spec:
+      containers:
+      - name: busybox
+        image: busybox
+        args:
+          - sleep
+          - infinity

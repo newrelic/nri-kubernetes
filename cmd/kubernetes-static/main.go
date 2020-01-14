@@ -10,6 +10,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/infra-integrations-sdk/sdk"
 	"github.com/newrelic/nri-kubernetes/src/apiserver"
+	"github.com/newrelic/nri-kubernetes/src/client"
 	"github.com/newrelic/nri-kubernetes/src/controlplane"
 	"github.com/newrelic/nri-kubernetes/src/ksm"
 	"github.com/newrelic/nri-kubernetes/src/kubelet"
@@ -17,6 +18,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/src/metric"
 	"github.com/newrelic/nri-kubernetes/src/scrape"
 	"github.com/sirupsen/logrus"
+	v1 "k8s.io/api/core/v1"
 )
 
 const (
@@ -62,7 +64,23 @@ func main() {
 		metric2.CadvisorFetchFunc(kubeletClient, metric.CadvisorQueries))
 	// KSM
 	ksmClient := newBasicHTTPClient(endpoint + "/ksm")
-	ksmGrouper := ksm.NewGrouper(ksmClient, metric.KSMQueries, logger)
+	k8sClient := new(client.MockedKubernetes)
+	serviceList := &v1.ServiceList{
+		Items: []v1.Service{
+			{
+				Spec: v1.ServiceSpec{
+					Selector: map[string]string{
+						"l1": "v1",
+						"l2": "v2",
+					},
+				},
+			},
+		},
+	}
+	serviceList.Items[0].Namespace = "kube-system"
+	serviceList.Items[0].Name = "kube-state-metrics"
+	k8sClient.On("ListServices").Return(serviceList, nil)
+	ksmGrouper := ksm.NewGrouper(ksmClient, metric.KSMQueries, logger, k8sClient)
 
 	jobs := []*scrape.Job{
 		scrape.NewScrapeJob("kubelet", kubeletGrouper, metric.KubeletSpecs),

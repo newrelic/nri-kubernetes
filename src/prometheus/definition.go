@@ -567,26 +567,64 @@ func InheritSpecificLabelValuesFrom(parentGroupLabel, relatedMetricKey string, l
 	}
 }
 
+// labelsFromMetric returns the labels of the metric. The labels keys
+// are formatted from "<prefix>_" to "<prefix>."
+func labelsFromMetric(
+	parentGroupLabel string,
+	relatedMetricKey string,
+	groupLabel string,
+	entityID string,
+	groups definition.RawGroups,
+	prefix string,
+) (definition.FetchedValue, error) {
+	rawEntityID, err := getRawEntityID(parentGroupLabel, groupLabel, entityID, groups)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"cannot retrieve the entity ID of metrics to inherit labels from, got error: %v",
+			err,
+		)
+	}
+
+	parent, err := fetchMetric(relatedMetricKey)(parentGroupLabel, rawEntityID, groups)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"related metric not found. Metric: %s %s:%s",
+			relatedMetricKey,
+			parentGroupLabel,
+			rawEntityID,
+		)
+	}
+
+	multiple := make(definition.FetchedValues)
+	for k, v := range parent.(Metric).Labels {
+		key := fmt.Sprintf(
+			"%s.%s",
+			prefix,
+			strings.TrimPrefix(k, fmt.Sprintf("%s_", prefix)),
+		)
+		multiple[key] = v
+	}
+
+	return multiple, nil
+
+}
+
 // InheritAllLabelsFrom gets all the label values from from a related metric.
 // Related metric means any metric you can get with the info that you have in your own metric.
 func InheritAllLabelsFrom(parentGroupLabel, relatedMetricKey string) definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
-		rawEntityID, err := getRawEntityID(parentGroupLabel, groupLabel, entityID, groups)
-		if err != nil {
-			return nil, fmt.Errorf("cannot retrieve the entity ID of metrics to inherit labels from, got error: %v", err)
-		}
+		return labelsFromMetric(parentGroupLabel, relatedMetricKey, groupLabel, entityID, groups, "label")
+	}
+}
 
-		parent, err := fetchMetric(relatedMetricKey)(parentGroupLabel, rawEntityID, groups)
-		if err != nil {
-			return nil, fmt.Errorf("related metric not found. Metric: %s %s:%s", relatedMetricKey, parentGroupLabel, rawEntityID)
-		}
-
-		multiple := make(definition.FetchedValues)
-		for k, v := range parent.(Metric).Labels {
-			multiple[fmt.Sprintf("label.%v", strings.TrimPrefix(k, "label_"))] = v
-		}
-
-		return multiple, nil
+// InheritAllSelectorsFrom gets all the label values from from a related
+// metric and changes the prefix "selector_" for "selector.". It's meant to
+// be used with metrics that contain label selectors.
+// Related metric means any metric you can get with the info that you
+// have in your own metric.
+func InheritAllSelectorsFrom(parentGroupLabel, relatedMetricKey string) definition.FetchFunc {
+	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
+		return labelsFromMetric(parentGroupLabel, relatedMetricKey, groupLabel, entityID, groups, "selector")
 	}
 }
 

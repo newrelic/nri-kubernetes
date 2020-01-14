@@ -11,8 +11,9 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-
 	"github.com/sirupsen/logrus"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/transport"
 
 	"github.com/newrelic/nri-kubernetes/src/client"
 	"github.com/newrelic/nri-kubernetes/src/controlplane"
@@ -31,8 +32,17 @@ func (i invalidTLSConfig) Error() string {
 	return i.message
 }
 
+type authenticationMethod string
+
+const (
+	none           authenticationMethod = "None (http)"
+	mTLS           authenticationMethod = "Mutual TLS"
+	serviceAccount authenticationMethod = "Service account (Bearer token)"
+)
+
 // ControlPlaneComponentClient implements Client interface.
 type ControlPlaneComponentClient struct {
+	authenticationMethod     authenticationMethod
 	httpClient               *http.Client
 	tlsSecretName            string
 	tlsSecretNamespace       string
@@ -50,23 +60,51 @@ func (c *ControlPlaneComponentClient) Do(method, path string) (*http.Response, e
 
 	r, err := prometheus.NewRequest(method, e.String())
 	if err != nil {
-		return nil, fmt.Errorf("Error creating %s request to: %s. Got error: %s ", method, e.String(), err)
+		return nil, fmt.Errorf("Error creating %s request to: %s. Got error: %v ", method, e.String(), err)
 	}
 
-	c.logger.Debugf("Calling endpoint: %s, TLS enabled: %t", r.URL.String(), c.tlsSecretName != "")
+	if err = c.configureAuthentication(); err != nil {
+		return nil, errors.Wrapf(err, "could not configure request for authentication method %s", c.authenticationMethod)
+	}
 
-	if c.tlsSecretName != "" {
+	c.logger.Debugf("Calling endpoint: %s, authentication method: %s", r.URL.String(), string(c.authenticationMethod))
+
+	return c.httpClient.Do(r)
+}
+
+func (c *ControlPlaneComponentClient) configureAuthentication() error {
+
+	if c.authenticationMethod == mTLS {
 		tlsConfig, err := c.getTLSConfigFromSecret()
 		if err != nil {
-			return nil, errors.Wrap(err, "could not load TLS configuration")
+			return errors.Wrap(err, "could not load TLS configuration")
 		}
 
 		c.httpClient.Transport = &http.Transport{
 			TLSClientConfig: tlsConfig,
 		}
+		return nil
 	}
 
-	return c.httpClient.Do(r)
+	if c.authenticationMethod == serviceAccount {
+
+		config, err := rest.InClusterConfig()
+		if err != nil {
+			return errors.Wrapf(err, "could not create in cluster Kubernetes configuration to query pod: %s", c.PodName)
+		}
+
+		// Here we're using the default http.Transport configuration, but with a modified TLS config.
+		// For some reason the DefaultTransport is casted to an http.RoundTripper interface, so we need to convert it back.
+		t := http.DefaultTransport.(*http.Transport).Clone()
+		t.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
+		// Use the default kubernetes Bearer token authentication RoundTripper
+		c.httpClient.Transport = transport.NewBearerAuthRoundTripper(config.BearerToken, t)
+		return nil
+	}
+
+	c.httpClient.Transport = http.DefaultTransport
+	return nil
 }
 
 func (c *ControlPlaneComponentClient) getTLSConfigFromSecret() (*tls.Config, error) {
@@ -161,18 +199,28 @@ func (sd *discoverer) Discover(timeout time.Duration) (client.HTTPClient, error)
 	}
 	podName, isComponentRunningOnNode := sd.findComponentOnNode(nodePods)
 
+	var authMethod authenticationMethod
+
+	switch {
+	case sd.component.UseServiceAccountAuthentication:
+		authMethod = serviceAccount
+	case sd.component.TLSSecretName != "":
+		authMethod = mTLS
+	default:
+		authMethod = none
+	}
+
 	return &ControlPlaneComponentClient{
 		endpoint:                 sd.component.Endpoint,
 		tlsSecretName:            sd.component.TLSSecretName,
 		tlsSecretNamespace:       sd.component.TLSSecretNamespace,
 		IsComponentRunningOnNode: isComponentRunningOnNode,
 		PodName:                  podName,
+		authenticationMethod:     authMethod,
 		logger:                   sd.logger,
 		nodeIP:                   sd.nodeIP,
 		k8sClient:                sd.k8sClient,
-		httpClient: &http.Client{
-			Timeout: timeout,
-		},
+		httpClient:               &http.Client{Timeout: timeout},
 	}, nil
 }
 

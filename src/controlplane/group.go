@@ -11,7 +11,7 @@ import (
 )
 
 // prometheusMetricsPath is the control plane component prometheus
-// metrics endpoint.
+// metrics endpoint
 const prometheusMetricsPath = "/metrics"
 
 type componentGrouper struct {

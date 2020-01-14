@@ -40,9 +40,14 @@ type argumentList struct {
 	EtcdTLSSecretName        string `help:"Name of the secret that stores your ETCD TLS configuration"`
 	EtcdTLSSecretNamespace   string `default:"default" help:"Namespace in which the ETCD TLS secret lives"`
 	KubeStateMetricsPodLabel string `help:"discover KSM using Kubernetes Labels."`
+	APIServerSecurePort      string `default:"" help:"Set to query the API Server over a secure port. Disabled by default"`
 }
 
 const (
+	// we use '/var/cache/nr-kubernetes' as the temp cache dir rather than
+	// '/var/cache/nri-kubernetes' due to the fact that this would break
+	// customers setup when running unprivileged mode. Changing this value
+	// would mean clients would have to update their manifest file.
 	defaultCacheDir   = "/var/cache/nr-kubernetes"
 	discoveryCacheDir = "discovery"
 	apiserverCacheDir = "apiserver"
@@ -51,7 +56,7 @@ const (
 	defaultDiscoveryCacheTTL = time.Hour
 
 	integrationName    = "com.newrelic.kubernetes"
-	integrationVersion = "1.12.0"
+	integrationVersion = "1.13.0"
 	nodeNameEnvVar     = "NRK8S_NODE_NAME"
 )
 
@@ -72,14 +77,13 @@ func controlPlaneJobs(
 	logger *logrus.Logger,
 	apiServerClient apiserver.Client,
 	nodeName string,
-	ttl time.Duration,
 	timeout time.Duration,
-	cacheStorage storage.Storage,
 	nodeIP string,
 	podsFetcher data.FetchFunc,
 	k8sClient client.Kubernetes,
 	etcdTLSSecretName string,
 	etcdTLSSecretNamespace string,
+	apiServerSecurePort string,
 ) ([]*scrape.Job, error) {
 
 	nodeInfo, err := apiServerClient.GetNodeInfo(nodeName)
@@ -94,6 +98,10 @@ func controlPlaneJobs(
 	var opts []controlplane.ComponentOption
 	if etcdTLSSecretName != "" {
 		opts = append(opts, controlplane.WithEtcdTLSConfig(etcdTLSSecretName, etcdTLSSecretNamespace))
+	}
+
+	if apiServerSecurePort != "" {
+		opts = append(opts, controlplane.WithAPIServerSecurePort(apiServerSecurePort))
 	}
 
 	var jobs []*scrape.Job
@@ -231,14 +239,13 @@ func main() {
 		logger,
 		apiServerClient,
 		nodeName,
-		ttl,
 		timeout,
-		cacheStorage,
 		kubeletNodeIP,
 		podsFetcher,
 		k8s,
 		args.EtcdTLSSecretName,
 		args.EtcdTLSSecretNamespace,
+		args.APIServerSecurePort,
 	)
 
 	if err != nil {
@@ -255,7 +262,7 @@ func main() {
 
 	// we only scrape KSM when we are on the same Node as KSM
 	if kubeletNodeIP == ksmNodeIP {
-		ksmGrouper := ksm.NewGrouper(ksmClient, metric.KSMQueries, logger)
+		ksmGrouper := ksm.NewGrouper(ksmClient, metric.KSMQueries, logger, k8s)
 		jobs = append(jobs, scrape.NewScrapeJob("kube-state-metrics", ksmGrouper, metric.KSMSpecs))
 	}
 

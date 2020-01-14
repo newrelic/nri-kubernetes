@@ -13,16 +13,17 @@ import (
 // Component represents a control plane component from which the
 // integration will fetch metrics.
 type Component struct {
-	Skip               bool
-	SkipReason         string
-	Name               ComponentName
-	LabelValue         string
-	TLSSecretName      string
-	TLSSecretNamespace string
-	Endpoint           url.URL
-	Specs              definition.SpecGroups
-	Queries            []prometheus.Query
-	Labels             []labels
+	Skip                            bool
+	SkipReason                      string
+	Name                            ComponentName
+	LabelValue                      string
+	TLSSecretName                   string
+	TLSSecretNamespace              string
+	Endpoint                        url.URL
+	UseServiceAccountAuthentication bool
+	Specs                           definition.SpecGroups
+	Queries                         []prometheus.Query
+	Labels                          []labels
 }
 
 // ComponentName is a typed name for components
@@ -60,7 +61,24 @@ func WithEtcdTLSConfig(etcdTLSSecretName, etcdTLSSecretNamespace string) Compone
 	}
 }
 
-// findComponentByName will find the compeont with the given name
+// WithAPIServerSecurePort configures the API Server component to be query using HTTPS, with the Service Account token
+// as authentication
+func WithAPIServerSecurePort(port string) ComponentOption {
+	return func(components []Component) {
+		apiServer := findComponentByName(APIServer, components)
+		if apiServer == nil {
+			panic(fmt.Sprintf("expected component %s in list of components, but not found", string(APIServer)))
+		}
+
+		apiServer.UseServiceAccountAuthentication = true
+		apiServer.Endpoint = url.URL{
+			Scheme: "https",
+			Host:   fmt.Sprintf("localhost:%s", port),
+		}
+	}
+}
+
+// findComponentByName will find the component with the given name
 func findComponentByName(name ComponentName, components []Component) *Component {
 	for i := range components {
 		if components[i].Name == name {

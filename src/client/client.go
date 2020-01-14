@@ -9,7 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -30,6 +30,8 @@ type Kubernetes interface {
 	// FindServicesByLabel returns a ServiceList containing the services matching the provided name/value label pair
 	// name/value pairs
 	FindServicesByLabel(name, value string) (*v1.ServiceList, error)
+	// ListServices returns a ServiceList containing all the services.
+	ListServices() (*v1.ServiceList, error)
 	// Config returns a config of API client
 	Config() *rest.Config
 	// SecureHTTPClient returns http.Client configured with timeout and CA Cert
@@ -73,6 +75,10 @@ func (ka *goClientImpl) FindServicesByLabel(name, value string) (*v1.ServiceList
 	return ka.client.CoreV1().Services("").List(metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("%s=%s", name, value),
 	})
+}
+
+func (ka *goClientImpl) ListServices() (*v1.ServiceList, error) {
+	return ka.client.CoreV1().Services("").List(metav1.ListOptions{})
 }
 
 func (ka *goClientImpl) SecureHTTPClient(t time.Duration) (*http.Client, error) {

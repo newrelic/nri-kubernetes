@@ -1,13 +1,13 @@
 ARG IMAGE_NAME=newrelic/infrastructure
-ARG IMAGE_TAG=1.8.23
+ARG IMAGE_TAG=1.8.32-bundle
 ARG MODE=normal
 
 FROM $IMAGE_NAME:$IMAGE_TAG AS base
-ADD nr-kubernetes-definition.yml /var/db/newrelic-infra/newrelic-integrations/
-ADD bin/nr-kubernetes /var/db/newrelic-infra/newrelic-integrations/bin/
+ADD nri-kubernetes-definition.yml /var/db/newrelic-infra/newrelic-integrations/
+ADD bin/nri-kubernetes /var/db/newrelic-infra/newrelic-integrations/bin/
 # Warning: First, Edit sample file to suit your needs and rename it to
-# `nr-kubernetes-config.yml`
-ADD nr-kubernetes-config.yml.sample /etc/newrelic-infra/integrations.d/nr-kubernetes-config.yml
+# `nri-kubernetes-config.yml`
+ADD nri-kubernetes-config.yml.sample /var/db/newrelic-infra/integrations.d/nri-kubernetes-config.yml
 
 FROM base AS branch-normal
 USER root

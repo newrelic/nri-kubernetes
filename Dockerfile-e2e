@@ -13,8 +13,8 @@ RUN apk add --update ca-certificates \
  && rm /var/cache/apk/* \
  && rm -f /helm-${HELM_LATEST_VERSION}-linux-amd64.tar.gz
 
-COPY ./bin/nr-kubernetes-e2e nr-kubernetes-e2e
+COPY ./bin/nri-kubernetes-e2e nri-kubernetes-e2e
 COPY e2e/schema e2e/schema
 COPY e2e/charts e2e/charts
 
-ENTRYPOINT ["/var/db/newrelic-infra/fsi/nr-kubernetes-e2e"]
+ENTRYPOINT ["/var/db/newrelic-infra/fsi/nri-kubernetes-e2e"]

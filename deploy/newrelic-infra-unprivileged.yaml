@@ -62,7 +62,7 @@ spec:
       serviceAccountName: newrelic
       containers:
         - name: newrelic-infra
-          image: newrelic/infrastructure-k8s:1.12.0-unprivileged
+          image: newrelic/infrastructure-k8s:1.13.0-unprivileged
           resources:
             limits:
               memory: 150M
@@ -82,6 +82,10 @@ spec:
               name: tmpfs-tmp
             - mountPath: /var/cache/nr-kubernetes
               name: tmpfs-cache
+            - mountPath: /var/db/newrelic-infra/integrations.d/
+              name: nri-default-integration-cfg-volume
+            - mountPath: /etc/newrelic-infra/integrations.d/
+              name: nri-integration-cfg-volume
           env:
             - name: "CLUSTER_NAME"
               value: "<YOUR_CLUSTER_NAME>"
@@ -105,8 +109,10 @@ spec:
                   fieldPath: "spec.nodeName"
             - name: "NRIA_CUSTOM_ATTRIBUTES"
               value: '{"clusterName":"$(CLUSTER_NAME)"}'
+            # - name: API_SERVER_SECURE_PORT
+            #   value: "6443"
             - name: "NRIA_PASSTHROUGH_ENVIRONMENT"
-              value: "KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,CLUSTER_NAME,CADVISOR_PORT,NRK8S_NODE_NAME,KUBE_STATE_METRICS_URL,KUBE_STATE_METRICS_POD_LABEL"
+              value: "KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,CLUSTER_NAME,CADVISOR_PORT,NRK8S_NODE_NAME,KUBE_STATE_METRICS_URL,KUBE_STATE_METRICS_POD_LABEL,API_SERVER_SECURE_PORT"
       volumes:
         - name: tmpfs-data
           emptyDir: {}
@@ -116,8 +122,32 @@ spec:
           emptyDir: {}
         - name: tmpfs-cache
           emptyDir: {}
+        - name: nri-default-integration-cfg-volume
+          configMap:
+            name: nri-default-integration-cfg
+        - name: nri-integration-cfg-volume
+          configMap:
+            name: nri-integration-cfg
       tolerations:
         - operator: "Exists"
           effect: "NoSchedule"
         - operator: "Exists"
           effect: "NoExecute"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nri-default-integration-cfg # integrations config provided by default
+  namespace: default
+data:
+  nri-kubernetes-config.yml: |
+    integration_name: com.newrelic.kubernetes
+    instances:
+      - name: nri-kubernetes
+        command: metrics
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nri-integration-cfg # aimed to be safely overridden by users
+  namespace: default
