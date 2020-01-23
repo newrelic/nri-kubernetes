@@ -511,6 +511,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "podsUpdatedScheduled", ValueFunc: prometheus.FromValue("kube_daemonset_updated_number_scheduled"), Type: sdkMetric.GAUGE},
 			{Name: "metadataGeneration", ValueFunc: prometheus.FromValue("kube_daemonset_metadata_generation"), Type: sdkMetric.GAUGE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_daemonset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "daemonsetName", ValueFunc: prometheus.FromLabelValue("kube_daemonset_created", "daemonset"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("daemonset", "kube_daemonset_labels"), Type: sdkMetric.ATTRIBUTE},
 		},
 	},

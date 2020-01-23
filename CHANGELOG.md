@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.13.1 
+### Added
+ - Added daemonsetName field to the K8sDaemonsetSample
+
 ## 1.13.0 
 ### Added
  - Added samples for Statefulsets, Daemonsets, Endpoints and Services.
