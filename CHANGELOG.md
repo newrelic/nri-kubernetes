@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.13.2
+### Changed 
+ - The integration now uses the infrastructure agent v1.9.0-bundle. For more
+   information refer to the [infrastructure agent release notes](https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/)
+   between versions v1.8.32 and v1.9.0.
+
 ## 1.13.1 
 ### Added
  - Added daemonsetName field to the K8sDaemonsetSample
