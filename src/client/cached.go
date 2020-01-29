@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/newrelic/nri-kubernetes/src/storage"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -117,3 +118,65 @@ func (c *cacheAwareClient) NodeIP() string {
 func WrappedClient(caClient HTTPClient) HTTPClient {
 	return caClient.(*cacheAwareClient).client
 }
+
+// MultiDiscoveryCacher is a wrapper for MultiDiscoverer implementations that can cache the results into some storages.
+// It implements the MultiDiscoverer interface.
+// This type is not threadsafe.
+type MultiDiscoveryCacher struct {
+	Discoverer    MultiDiscoverer
+	CachedDataPtr interface{}
+	StorageKey    string
+	Storage       storage.Storage
+	TTL           time.Duration
+	Logger        *logrus.Logger
+	Compose       MultiComposer
+	Decompose     MultiDecomposer
+}
+
+// Discover runs the underlying discovery and caches its result.
+// If there is a non-expired discover cache in the storage, it will be loaded.
+// If the cache is not present or has expired, it will be written.
+// If the cache read fails, the underlying discovery will still run.
+func (d *MultiDiscoveryCacher) Discover(timeout time.Duration) ([]HTTPClient, error) {
+	ts, err := d.Storage.Read(d.StorageKey, d.CachedDataPtr)
+	if err == nil {
+		d.Logger.Debugf("Found cached copy of %q stored at %s", d.StorageKey, time.Unix(ts, 0))
+		// Check cached object TTL
+		if time.Now().Unix() < ts+int64(d.TTL.Seconds()) {
+			clients, err := d.Compose(d.CachedDataPtr, d, timeout)
+			if err != nil {
+				return nil, errors.Wrap(err, "could not compose cache")
+			}
+			return clients, nil
+		}
+		d.Logger.Debugf("Cached copy of %q expired. Refreshing", d.StorageKey)
+	} else {
+		d.Logger.Debugf("Cached %q not found. Triggering discovery process", d.StorageKey)
+	}
+	clients, err := d.discoverAndCache(timeout)
+	if err != nil {
+		return nil, err
+	}
+	return clients, nil
+}
+
+func (d *MultiDiscoveryCacher) discoverAndCache(timeout time.Duration) ([]HTTPClient, error) {
+	clients, err := d.Discoverer.Discover(timeout)
+	if err != nil {
+		return nil, err
+	}
+	toCache, err := d.Decompose(clients)
+	if err == nil {
+		err = d.Storage.Write(d.StorageKey, toCache)
+	}
+	if err != nil {
+		d.Logger.WithError(err).Warnf("while storing %q in the cache", d.StorageKey)
+	}
+	return clients, nil
+}
+
+// MultiDecomposer implementors must convert a HTTPClient into a data structure that can be Stored in the cache.
+type MultiDecomposer func(sources []HTTPClient) (interface{}, error)
+
+// MultiComposer implementors must convert the cached data to a []HTTPClient.
+type MultiComposer func(source interface{}, cacher *MultiDiscoveryCacher, timeout time.Duration) ([]HTTPClient, error)

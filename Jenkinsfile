@@ -2,7 +2,6 @@ def ws = "/data/jenkins/workspace/${JOB_NAME}-${BUILD_NUMBER}"
 def quayImage = 'quay.io/newrelic/infrastructure-k8s-staging'
 def quayE2eImage = 'quay.io/newrelic/infrastructure-k8s-e2e'
 def integrationPath = '.'
-def kubernetesE2ECluster = 'e2e-cluster-1-15-7'
 
 pipeline {
   agent {
@@ -98,38 +97,17 @@ pipeline {
         }
       }
     }
+
     stage('Running e2e tests') {
       parallel {
-        stage('privileged version') {
-          steps {
-            // We lock the e2e build execution in order to run this step only once at a time.
-            lock(resource: "k8s_cluster_${kubernetesE2ECluster}", inversePrecedence: true) {
-              build job: 'k8s-integration-e2e', parameters: [
-                string(name: 'CLUSTER_NAME', value: kubernetesE2ECluster),
-                string(name: 'INTEGRATION_IMAGE_TAG', value: "${DOCKER_TAG}"),
-                string(name: 'RBAC', value: 'true'),
-                string(name: 'UNPRIVILEGED', value: 'false'),
-                string(name: 'VERBOSE', value: 'true'),
-                string(name: 'E2E_DOCKER_IMAGE_TAG', value: "${DOCKER_TAG}")
-              ]
-            }
-          }
-        }
-        stage('unprivileged version') {
-          steps {
-            // We lock the e2e build execution in order to run this step only once at a time.
-            lock(resource: "k8s_cluster_${kubernetesE2ECluster}", inversePrecedence: true) {
-              build job: 'k8s-integration-e2e', parameters: [
-                string(name: 'CLUSTER_NAME', value: kubernetesE2ECluster),
-                string(name: 'INTEGRATION_IMAGE_TAG', value: "${DOCKER_TAG}_unprivileged"),
-                string(name: 'RBAC', value: 'true'),
-                string(name: 'UNPRIVILEGED', value: 'true'),
-                string(name: 'VERBOSE', value: 'true'),
-                string(name: 'E2E_DOCKER_IMAGE_TAG', value: "${DOCKER_TAG}")
-              ]
-            }
-          }
-        }
+        stage('Privileged: 1.13.12')   { steps { runPrivilegedE2ETest('e2e-cluster-1-13-12') } }
+        stage('Unprivileged: 1.13.12') { steps { runUnprivilegedE2ETest('e2e-cluster-1-13-12') } }
+
+        stage('Privileged: 1.14.6')    { steps { runPrivilegedE2ETest('e2e-cluster-1-14-6') } }
+        stage('Unprivileged: 1.14.6')  { steps { runUnprivilegedE2ETest('e2e-cluster-1-14-6') } }
+
+        stage('Privileged: 1.15.7')    { steps { runPrivilegedE2ETest('e2e-cluster-1-15-7') } }
+        stage('Unprivileged: 1.15.7')  { steps { runUnprivilegedE2ETest('e2e-cluster-1-15-7') } }
       }
     }
   }
@@ -146,4 +124,32 @@ def imageName(image, branch) {
 
 def tagName(branch) {
   return branch.replace("/", "_")
+}
+
+def runPrivilegedE2ETest(clusterName) {
+    // We lock the e2e build execution in order to run this step only once at a time.
+    lock(resource: "k8s_cluster_${clusterName}", inversePrecedence: true) {
+      build job: 'k8s-integration-e2e-concurrent', parameters: [
+        string(name: 'CLUSTER_NAME', value: clusterName),
+        string(name: 'INTEGRATION_IMAGE_TAG', value: "${DOCKER_TAG}"),
+        string(name: 'RBAC', value: 'true'),
+        string(name: 'UNPRIVILEGED', value: 'false'),
+        string(name: 'VERBOSE', value: 'true'),
+        string(name: 'E2E_DOCKER_IMAGE_TAG', value: "${DOCKER_TAG}")
+      ]
+  }
+}
+
+def runUnprivilegedE2ETest(clusterName) {
+    // We lock the e2e build execution in order to run this step only once at a time.
+    lock(resource: "k8s_cluster_${clusterName}", inversePrecedence: true) {
+      build job: 'k8s-integration-e2e-concurrent', parameters: [
+        string(name: 'CLUSTER_NAME', value: clusterName),
+        string(name: 'INTEGRATION_IMAGE_TAG', value: "${DOCKER_TAG}_unprivileged"),
+        string(name: 'RBAC', value: 'true'),
+        string(name: 'UNPRIVILEGED', value: 'true'),
+        string(name: 'VERBOSE', value: 'true'),
+        string(name: 'E2E_DOCKER_IMAGE_TAG', value: "${DOCKER_TAG}")
+      ]
+    }
 }

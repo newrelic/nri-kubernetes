@@ -28,9 +28,9 @@ spec:
       {{- if semverCompare ">=1.6.0" .Capabilities.KubeVersion.GitVersion }}
       hostNetwork: true # This option is a requirement for the Infrastructure Agent to report the proper hostname in New Relic.
       dnsPolicy: ClusterFirstWithHostNet
-      #imagePullSecrets:
-      #  - name: quay_image_pull_secrets
       {{- end }}
+      #imagePullSecrets:
+      #  - name: nr-quay-secret
       containers:
         - name: {{ .Values.daemonset.name }}
           image: "{{ .Values.daemonset.image.repository }}:{{ .Values.daemonset.image.tag }}"

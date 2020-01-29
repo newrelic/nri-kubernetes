@@ -30,17 +30,18 @@ import (
 
 type argumentList struct {
 	sdkArgs.DefaultArgumentList
-	Timeout                  int    `default:"5000" help:"timeout in milliseconds for calling metrics sources"`
-	ClusterName              string `help:"Identifier of your cluster. You could use it later to filter data in your New Relic account"`
-	DiscoveryCacheDir        string `default:"/var/cache/nr-kubernetes" help:"The location of the cached values for discovered endpoints. Obsolete, use CacheDir instead."`
-	CacheDir                 string `default:"/var/cache/nr-kubernetes" help:"The location where to store various cached data."`
-	DiscoveryCacheTTL        string `default:"1h" help:"Duration since the discovered endpoints are stored in the cache until they expire. Valid time units: 'ns', 'us', 'ms', 's', 'm', 'h'"`
-	APIServerCacheTTL        string `default:"5m" help:"Duration to cache responses from the API Server. Valid time units: 'ns', 'us', 'ms', 's', 'm', 'h'. Set to 0s to disable"`
-	KubeStateMetricsURL      string `help:"kube-state-metrics URL. If it is not provided, it will be discovered."`
-	EtcdTLSSecretName        string `help:"Name of the secret that stores your ETCD TLS configuration"`
-	EtcdTLSSecretNamespace   string `default:"default" help:"Namespace in which the ETCD TLS secret lives"`
-	KubeStateMetricsPodLabel string `help:"discover KSM using Kubernetes Labels."`
-	APIServerSecurePort      string `default:"" help:"Set to query the API Server over a secure port. Disabled by default"`
+	Timeout                     int    `default:"5000" help:"timeout in milliseconds for calling metrics sources"`
+	ClusterName                 string `help:"Identifier of your cluster. You could use it later to filter data in your New Relic account"`
+	DiscoveryCacheDir           string `default:"/var/cache/nr-kubernetes" help:"The location of the cached values for discovered endpoints. Obsolete, use CacheDir instead."`
+	CacheDir                    string `default:"/var/cache/nr-kubernetes" help:"The location where to store various cached data."`
+	DiscoveryCacheTTL           string `default:"1h" help:"Duration since the discovered endpoints are stored in the cache until they expire. Valid time units: 'ns', 'us', 'ms', 's', 'm', 'h'"`
+	APIServerCacheTTL           string `default:"5m" help:"Duration to cache responses from the API Server. Valid time units: 'ns', 'us', 'ms', 's', 'm', 'h'. Set to 0s to disable"`
+	KubeStateMetricsURL         string `help:"kube-state-metrics URL. If it is not provided, it will be discovered."`
+	EtcdTLSSecretName           string `help:"Name of the secret that stores your ETCD TLS configuration"`
+	EtcdTLSSecretNamespace      string `default:"default" help:"Namespace in which the ETCD TLS secret lives"`
+	KubeStateMetricsPodLabel    string `help:"discover KSM using Kubernetes Labels."`
+	APIServerSecurePort         string `default:"" help:"Set to query the API Server over a secure port. Disabled by default"`
+	DistributedKubeStateMetrics bool   `default:"false" help:"Set to enable distributed KSM discovery. Requires that KubeStateMetricsPodLabel is set. Disabled by default."`
 }
 
 const (
@@ -146,6 +147,7 @@ func controlPlaneJobs(
 
 func main() {
 	integration, err := sdk.NewIntegrationProtocol2(integrationName, integrationVersion, &args)
+	var jobs []*scrape.Job
 	exitLog := fmt.Sprintf("Integration %q exited", integrationName)
 	if err != nil {
 		defer log.Debug(exitLog)
@@ -201,18 +203,39 @@ func main() {
 	kubeletNodeIP := kubeletClient.NodeIP()
 	logger.Debugf("Kubelet node IP = %s", kubeletNodeIP)
 
-	innerKSMDiscoverer, err := getKSMDiscoverer(logger)
-
-	if err != nil {
-		logger.Panic(err)
+	var ksmClients []client.HTTPClient
+	var ksmNodeIP string
+	if args.DistributedKubeStateMetrics {
+		ksmDiscoverer, err := getMultiKSMDiscoverer(kubeletNodeIP, logger)
+		if err != nil {
+			logger.Panic(err)
+		}
+		ksmDiscoveryCache := clientKsm.NewDistributedDiscoveryCacher(ksmDiscoverer, cacheStorage, ttl, logger)
+		ksmClients, err = ksmDiscoveryCache.Discover(timeout)
+		logger.Debugf("found %d KSM clients:", len(ksmClients))
+		for _, c := range ksmClients {
+			logger.Debugf("- node IP: %s", c.NodeIP())
+		}
+		if err != nil {
+			logger.Panic(err)
+		}
+		ksmNodeIP = kubeletNodeIP
+	} else {
+		innerKSMDiscoverer, err := getKSMDiscoverer(logger)
+		if err != nil {
+			logger.Panic(err)
+		}
+		ksmDiscoverer := clientKsm.NewDiscoveryCacher(innerKSMDiscoverer, cacheStorage, ttl, logger)
+		ksmClient, err := ksmDiscoverer.Discover(timeout)
+		if err != nil {
+			logger.Panic(err)
+		}
+		ksmNodeIP = ksmClient.NodeIP()
+		// we only scrape KSM when we are on the same Node as KSM
+		if kubeletNodeIP == ksmNodeIP {
+			ksmClients = append(ksmClients, ksmClient)
+		}
 	}
-
-	ksmDiscoverer := clientKsm.NewDiscoveryCacher(innerKSMDiscoverer, cacheStorage, ttl, logger)
-	ksmClient, err := ksmDiscoverer.Discover(timeout)
-	if err != nil {
-		logger.Panic(err)
-	}
-	ksmNodeIP := ksmClient.NodeIP()
 	logger.Debugf("KSM Node = %s", ksmNodeIP)
 
 	ttlAPIServerCache, err := time.ParseDuration(args.APIServerCacheTTL)
@@ -225,6 +248,11 @@ func main() {
 		logger.Panic(err)
 	}
 
+	for _, ksmClient := range ksmClients {
+		ksmGrouper := ksm.NewGrouper(ksmClient, metric.KSMQueries, logger, k8s)
+		jobs = append(jobs, scrape.NewScrapeJob("kube-state-metrics", ksmGrouper, metric.KSMSpecs))
+	}
+
 	apiServerClient := apiserver.NewClient(k8s)
 
 	if ttlAPIServerCache != time.Duration(0) {
@@ -234,7 +262,6 @@ func main() {
 	}
 
 	podsFetcher := metric2.NewPodsFetcher(logger, kubeletClient).FetchFuncWithCache()
-	var jobs []*scrape.Job
 	cpJobs, err := controlPlaneJobs(
 		logger,
 		apiServerClient,
@@ -260,16 +287,13 @@ func main() {
 		metric2.CadvisorFetchFunc(kubeletClient, metric.CadvisorQueries))
 	jobs = append(jobs, scrape.NewScrapeJob("kubelet", kubeletGrouper, metric.KubeletSpecs))
 
-	// we only scrape KSM when we are on the same Node as KSM
-	if kubeletNodeIP == ksmNodeIP {
-		ksmGrouper := ksm.NewGrouper(ksmClient, metric.KSMQueries, logger, k8s)
-		jobs = append(jobs, scrape.NewScrapeJob("kube-state-metrics", ksmGrouper, metric.KSMSpecs))
-	}
-
 	successfulJobs := 0
 	for _, job := range jobs {
 		logger.Debugf("Running job: %s", job.Name)
+		start := time.Now()
 		result := job.Populate(integration, args.ClusterName, logger)
+		measured := time.Now().Sub(start)
+		logger.Debugf("Job %s took %s", job.Name, measured.Round(time.Millisecond))
 
 		if result.Populated {
 			successfulJobs++
@@ -287,7 +311,6 @@ func main() {
 	if err := integration.Publish(); err != nil {
 		logger.Panic(err)
 	}
-
 }
 
 func getKSMDiscoverer(logger *logrus.Logger) (client.Discoverer, error) {
@@ -315,4 +338,18 @@ func getKSMDiscoverer(logger *logrus.Logger) (client.Discoverer, error) {
 
 	logger.Debugf("Discovering KSM using DNS / k8s ApiServer (default)")
 	return clientKsm.NewDiscoverer(logger, k8sClient), nil
+}
+
+func getMultiKSMDiscoverer(nodeIP string, logger *logrus.Logger) (client.MultiDiscoverer, error) {
+	k8sClient, err := client.NewKubernetes( /* tryLocalKubeconfig */ false)
+	if err != nil {
+		return nil, err
+	}
+
+	if args.KubeStateMetricsPodLabel == "" {
+		return nil, errors.New("multi KSM discovery set without a KUBE_STATE_METRICS_POD_LABEL")
+	}
+
+	logger.Debugf("Discovering distributed KSMs using pod labels from KUBE_STATE_METRICS_POD_LABEL")
+	return clientKsm.NewDistributedPodLabelDiscoverer(args.KubeStateMetricsPodLabel, nodeIP, logger, k8sClient), nil
 }

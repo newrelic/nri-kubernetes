@@ -12,8 +12,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-var errNoKSMPodsFound = errors.New("no KSM pods found")
-
 type podLabelDiscoverer struct {
 	ksmPodLabel string
 	logger      *logrus.Logger

@@ -7,9 +7,10 @@ import (
 	"testing"
 	"time"
 
+	v1 "k8s.io/api/core/v1"
+
 	"github.com/newrelic/nri-kubernetes/src/client"
 	"github.com/newrelic/nri-kubernetes/src/storage"
-	v1 "k8s.io/api/core/v1"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -177,5 +178,146 @@ func TestDiscover_CacheTTLExpiry(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("%s:%v", ksmQualifiedName, 11223), ksmClient.(*ksm).endpoint.Host)
 	assert.Equal(t, "http", ksmClient.(*ksm).endpoint.Scheme)
 	assert.Equal(t, "6.7.8.9", caClient.NodeIP())
+}
 
+func TestMultiDiscover_Cache(t *testing.T) {
+	// Temporary directory to store the cache.
+	tmpDir, err := ioutil.TempDir("", "test_multi_discover")
+	assert.NoError(t, err)
+
+	// Mock out the access to the Kubernetes API when looking up pods by label.
+	c := new(client.MockedKubernetes)
+	c.On("FindPodsByLabel", mock.Anything, mock.Anything).
+		Return(&v1.PodList{Items: []v1.Pod{
+			{Status: v1.PodStatus{HostIP: "6.7.8.9", PodIP: "1.2.3.4"}},
+			{Status: v1.PodStatus{HostIP: "6.7.8.9", PodIP: "1.2.3.5"}},
+			{Status: v1.PodStatus{HostIP: "6.7.8.10", PodIP: "1.2.3.6"}},
+		}}, nil)
+
+	// Cache storage.
+	cacheStore := storage.NewJSONDiskStorage(tmpDir)
+
+	// Creates a distribute discovery with cache.
+	wrappedDiscoverer := distributedPodLabelDiscoverer{
+		ownNodeIP: "6.7.8.9",
+		k8sClient: c,
+		logger:    logger,
+	}
+	cacher := NewDistributedDiscoveryCacher(&wrappedDiscoverer, &cacheStore, time.Hour, logger)
+
+	clients, err := cacher.Discover(timeout)
+	assert.Len(t, clients, 2)
+	assert.NoError(t, err)
+
+	cachedClients, err := cacher.Discover(timeout)
+	assert.Len(t, clients, 2)
+	assert.NoError(t, err)
+
+	assert.ElementsMatch(t, cachedClients, clients)
+}
+
+func TestMultiDiscover_CacheWithError(t *testing.T) {
+	// Temporary directory to store the cache.
+	tmpDir, err := ioutil.TempDir("", "test_multi_discover")
+	assert.NoError(t, err)
+
+	// Mock out the access to the Kubernetes API when looking up pods by label.
+	c := new(client.MockedKubernetes)
+	c.On("FindPodsByLabel", mock.Anything, mock.Anything).
+		Return(&v1.PodList{}, fmt.Errorf("error invoking Kubernetes API"))
+
+	// Cache storage.
+	cacheStore := storage.NewJSONDiskStorage(tmpDir)
+
+	// Creates a distribute discovery with cache.
+	wrappedDiscoverer := distributedPodLabelDiscoverer{
+		ownNodeIP: "6.7.8.9",
+		k8sClient: c,
+		logger:    logger,
+	}
+	cacher := NewDistributedDiscoveryCacher(&wrappedDiscoverer, &cacheStore, time.Hour, logger)
+
+	clients, err := cacher.Discover(timeout)
+	assert.Error(t, err)
+	assert.Nil(t, clients)
+
+	cachedClients, err := cacher.Discover(timeout)
+	assert.Error(t, err)
+	assert.Nil(t, cachedClients)
+}
+
+func TestMultiDiscover_CacheCorrupted(t *testing.T) {
+	// Temporary directory to store the cache.
+	tmpDir, err := ioutil.TempDir("", "test_multi_discover")
+	assert.NoError(t, err)
+
+	// Mock out the access to the Kubernetes API when looking up pods by label.
+	pod1 := v1.Pod{Status: v1.PodStatus{HostIP: "6.7.8.9", PodIP: "1.2.3.4"}}
+	pod2 := v1.Pod{Status: v1.PodStatus{HostIP: "6.7.8.9", PodIP: "1.2.3.5"}}
+	pod3 := v1.Pod{Status: v1.PodStatus{HostIP: "6.7.8.10", PodIP: "1.2.3.6"}}
+	c := new(client.MockedKubernetes)
+	c.On("FindPodsByLabel", mock.Anything, mock.Anything).
+		Return(&v1.PodList{Items: []v1.Pod{
+			pod1, pod2, pod3,
+		}}, nil)
+
+	// Cache storage.
+	cacheStore := storage.NewJSONDiskStorage(tmpDir)
+
+	// Creates a distribute discovery with cache.
+	wrappedDiscoverer := distributedPodLabelDiscoverer{
+		ownNodeIP: "6.7.8.9",
+		k8sClient: c,
+		logger:    logger,
+	}
+	cacher := NewDistributedDiscoveryCacher(&wrappedDiscoverer, &cacheStore, time.Hour, logger)
+
+	assert.Nil(t, cacheStore.Write(cachedKey, "corrupt-data"))
+	clients, err := cacher.Discover(timeout)
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(clients))
+}
+
+func TestMultiDiscover_CacheTTL(t *testing.T) {
+	// Temporary directory to store the cache.
+	tmpDir, err := ioutil.TempDir("", "test_multi_discover")
+	// Cache storage.
+	cacheStore := storage.NewJSONDiskStorage(tmpDir)
+	assert.NoError(t, err)
+
+	// Mock out the access to the Kubernetes API when looking up pods by label.
+	c := new(client.MockedKubernetes)
+	outdatedURL, _ := url.Parse("http://1.2.3.4")
+	c.On("FindPodsByLabel", mock.Anything, mock.Anything).
+		Return(&v1.PodList{Items: []v1.Pod{
+			{Status: v1.PodStatus{HostIP: "6.7.8.9", PodIP: outdatedURL.Host}},
+		}}, nil).Once()
+
+	c.On("FindPodsByLabel", mock.Anything, mock.Anything).
+		Return(&v1.PodList{Items: []v1.Pod{
+			{Status: v1.PodStatus{HostIP: "6.7.8.9", PodIP: "1.2.3.4"}},
+			{Status: v1.PodStatus{HostIP: "6.7.8.9", PodIP: "1.2.3.5"}},
+			{Status: v1.PodStatus{HostIP: "6.7.8.10", PodIP: "1.2.3.6"}},
+		}}, nil).Once()
+
+	// Creates a distribute discovery with cache.
+	wrappedDiscoverer := distributedPodLabelDiscoverer{
+		ownNodeIP: "6.7.8.9",
+		k8sClient: c,
+		logger:    logger,
+	}
+	cacher := NewDistributedDiscoveryCacher(&wrappedDiscoverer, &cacheStore, -time.Hour, logger)
+
+	clients, err := cacher.Discover(timeout)
+	assert.Len(t, clients, 1)
+	assert.NoError(t, err)
+
+	cachedClients, err := cacher.Discover(timeout)
+	assert.Len(t, cachedClients, 2)
+	assert.NoError(t, err)
+
+	// We should not see the outdated host's URL anymore.
+	for _, cachedClient := range cachedClients {
+		assert.NotEqual(t, cachedClient.(*ksm).endpoint, outdatedURL.Host)
+	}
 }

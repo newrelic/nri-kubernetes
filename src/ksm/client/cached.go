@@ -55,3 +55,57 @@ func NewDiscoveryCacher(discoverer client.Discoverer, storage storage.Storage, t
 		Decompose:     decompose,
 	}
 }
+
+// multiCache holds the data to be cached for many KSM clients.
+// Its fields must be public to make them visible for the JSON Marshaller.
+type multiCache struct {
+	Endpoints []url.URL
+	NodeIP    string
+}
+
+// multiCompose implements the MultiComposer function signature
+func multiCompose(source interface{}, cacher *client.MultiDiscoveryCacher, timeout time.Duration) ([]client.HTTPClient, error) {
+	cached := source.(*multiCache)
+	var ksmClients []client.HTTPClient
+	for _, endpoint := range cached.Endpoints {
+		ksmClient := &ksm{
+			nodeIP:   cached.NodeIP,
+			endpoint: endpoint,
+			httpClient: &http.Client{
+				Timeout: timeout,
+			},
+			logger: cacher.Logger,
+		}
+		ksmClients = append(ksmClients, ksmClient)
+	}
+	return ksmClients, nil
+}
+
+// multiDecompose implements the MultiDecomposer function signature
+func multiDecompose(sources []client.HTTPClient) (interface{}, error) {
+	ksmCache := &multiCache{}
+	for _, source := range sources {
+		ksm := source.(*ksm)
+		ksmCache.Endpoints = append(ksmCache.Endpoints, ksm.endpoint)
+		if ksmCache.NodeIP == "" {
+			ksmCache.NodeIP = ksm.nodeIP
+		}
+	}
+	return ksmCache, nil
+}
+
+// NewDistributedDiscoveryCacher initializes a client.MultiDiscoveryCacher with the given parameters.
+// This should be the only way to create instances of client.MultiDiscoveryCacher, as it guarantees the cached data
+// pointer is initialized.
+func NewDistributedDiscoveryCacher(innerDiscoverer client.MultiDiscoverer, storage storage.Storage, ttl time.Duration, logger *logrus.Logger) client.MultiDiscoverer {
+	return &client.MultiDiscoveryCacher{
+		Discoverer:    innerDiscoverer,
+		CachedDataPtr: &multiCache{},
+		StorageKey:    cachedKey,
+		Storage:       storage,
+		TTL:           ttl,
+		Logger:        logger,
+		Compose:       multiCompose,
+		Decompose:     multiDecompose,
+	}
+}

@@ -19,6 +19,7 @@ import (
 )
 
 var ksmAppLabelNames = []string{"k8s-app", "app", "app.kubernetes.io/name"}
+var errNoKSMPodsFound = errors.New("no KSM pods found")
 
 const (
 	ksmAppLabelValue = "kube-state-metrics"
