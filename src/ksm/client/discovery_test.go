@@ -19,6 +19,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/rest"
 )
 
 func fakeLookupSRV(service, proto, name string) (cname string, addrs []*net.SRV, err error) {
@@ -51,6 +52,9 @@ func TestDiscover_portThroughDNS(t *testing.T) {
 		Return(&v1.PodList{Items: []v1.Pod{{
 			Status: v1.PodStatus{HostIP: "6.7.8.9"},
 		}}}, nil)
+	c.On("Config").Return(
+		&rest.Config{BearerToken: "foobar"},
+	)
 	// And an Discoverer implementation
 	d := discoverer{
 		lookupSRV: fakeLookupSRV,
@@ -78,6 +82,9 @@ func TestDiscover_portThroughDNSAndGuessedNodeIPFromMultiplePods(t *testing.T) {
 			{Status: v1.PodStatus{HostIP: "162.178.1.1"}},
 			{Status: v1.PodStatus{HostIP: "4.3.2.1"}},
 		}}, nil)
+	c.On("Config").Return(
+		&rest.Config{BearerToken: "foobar"},
+	)
 
 	// and an Discoverer implementation
 	d := discoverer{
@@ -129,6 +136,9 @@ func TestDiscover_metricsPortThroughAPIWhenDNSEmptyResponse(t *testing.T) {
 				}}}, nil)
 			c.On("FindPodsByLabel", mock.Anything, mock.Anything).
 				Return(&v1.PodList{}, nil)
+			c.On("Config").Return(
+				&rest.Config{BearerToken: "foobar"},
+			)
 
 			// and an Discoverer implementation whose DNS returns empty response
 			d := discoverer{
@@ -169,6 +179,9 @@ func TestDiscover_metricsPortThroughAPIWhenDNSError(t *testing.T) {
 		Return(&v1.PodList{Items: []v1.Pod{{
 			Status: v1.PodStatus{HostIP: "6.7.8.9"},
 		}}}, nil)
+	c.On("Config").Return(
+		&rest.Config{BearerToken: "foobar"},
+	)
 
 	// and an Discoverer implementation whose DNS returns an error
 	d := discoverer{
@@ -209,6 +222,9 @@ func TestDiscover_guessedTCPPortThroughAPIWhenDNSEmptyResponse(t *testing.T) {
 		Return(&v1.PodList{Items: []v1.Pod{{
 			Status: v1.PodStatus{HostIP: "6.7.8.9"},
 		}}}, nil)
+	c.On("Config").Return(
+		&rest.Config{BearerToken: "foobar"},
+	)
 
 	// and an Discoverer implementation whose DNS returns empty response
 	d := discoverer{
@@ -238,6 +254,9 @@ func TestDiscover_errorRetrievingPortWhenDNSAndAPIResponsesEmpty(t *testing.T) {
 		Return(&v1.PodList{Items: []v1.Pod{{
 			Status: v1.PodStatus{HostIP: "6.7.8.9"},
 		}}}, nil)
+	c.On("Config").Return(
+		&rest.Config{BearerToken: "foobar"},
+	)
 
 	// and an Discoverer implementation whose DNS returns empty response
 	d := discoverer{
@@ -265,6 +284,9 @@ func TestDiscover_errorRetrievingPortWhenDNSAndAPIErrors(t *testing.T) {
 		Return(&v1.PodList{Items: []v1.Pod{{
 			Status: v1.PodStatus{HostIP: "6.7.8.9"},
 		}}}, nil)
+	c.On("Config").Return(
+		&rest.Config{BearerToken: "foobar"},
+	)
 
 	// and an Discoverer implementation whose DNS returns an error
 	d := discoverer{
@@ -287,6 +309,10 @@ func TestDiscover_errorRetrievingNodeIPWhenPodListEmpty(t *testing.T) {
 	// And FindPodsByLabel returns empty list
 	c.On("FindPodsByLabel", mock.Anything, mock.Anything).
 		Return(&v1.PodList{}, nil)
+	c.On("Config").Return(
+		&rest.Config{BearerToken: "foobar"},
+	)
+
 	// And an Discoverer implementation
 	d := discoverer{
 		lookupSRV: fakeLookupSRV,
@@ -309,6 +335,10 @@ func TestDiscover_errorRetrievingNodeIPWhenErrorFindingPod(t *testing.T) {
 	// And FindPodsByLabel returns error
 	c.On("FindPodsByLabel", mock.Anything, mock.Anything).
 		Return(&v1.PodList{}, errors.New("failure"))
+	c.On("Config").Return(
+		&rest.Config{BearerToken: "foobar"},
+	)
+
 	// And an Discoverer implementation
 	d := discoverer{
 		lookupSRV: fakeLookupSRV,

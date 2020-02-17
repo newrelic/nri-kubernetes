@@ -2,20 +2,22 @@ package client
 
 import (
 	"fmt"
-	"net/http"
 	"net/url"
 	"time"
 
-	"github.com/newrelic/nri-kubernetes/src/client"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
+
+	"github.com/newrelic/nri-kubernetes/src/client"
 )
 
 type podLabelDiscoverer struct {
 	ksmPodLabel string
 	logger      *logrus.Logger
 	k8sClient   client.Kubernetes
+	ksmPodPort  int
+	ksmScheme   string
 }
 
 func (p *podLabelDiscoverer) findSingleKSMPodByLabel() (*v1.Pod, error) {
@@ -55,25 +57,27 @@ func (p *podLabelDiscoverer) Discover(timeout time.Duration) (client.HTTPClient,
 	}
 
 	endpoint := url.URL{
-		Scheme: "http",
-		Host:   fmt.Sprintf("%s:8080", pod.Status.PodIP),
+		Scheme: p.ksmScheme,
+		Host:   fmt.Sprintf("%s:%d", pod.Status.PodIP, p.ksmPodPort),
 	}
 
-	return &ksm{
-		nodeIP:   pod.Status.HostIP,
-		endpoint: endpoint,
-		httpClient: &http.Client{
-			Timeout: timeout,
-		},
-		logger: p.logger,
-	}, nil
+	ksmClient := newKSMClient(
+		timeout,
+		pod.Status.HostIP,
+		endpoint,
+		p.logger,
+		p.k8sClient,
+	)
+	return ksmClient, nil
 }
 
 // NewPodLabelDiscoverer creates a new KSM discoverer that will find KSM pods using k8s labels
-func NewPodLabelDiscoverer(ksmPodLabel string, logger *logrus.Logger, k8sClient client.Kubernetes) client.Discoverer {
+func NewPodLabelDiscoverer(ksmPodLabel string, ksmPodPort int, ksmScheme string, logger *logrus.Logger, k8sClient client.Kubernetes) client.Discoverer {
 	return &podLabelDiscoverer{
 		logger:      logger,
 		k8sClient:   k8sClient,
 		ksmPodLabel: ksmPodLabel,
+		ksmPodPort:  ksmPodPort,
+		ksmScheme:   ksmScheme,
 	}
 }

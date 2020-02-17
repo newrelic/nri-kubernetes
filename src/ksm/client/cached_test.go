@@ -8,6 +8,7 @@ import (
 	"time"
 
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/rest"
 
 	"github.com/newrelic/nri-kubernetes/src/client"
 	"github.com/newrelic/nri-kubernetes/src/storage"
@@ -27,6 +28,9 @@ func TestDiscover_Cache(t *testing.T) {
 		Return(&v1.PodList{Items: []v1.Pod{{
 			Status: v1.PodStatus{HostIP: "6.7.8.9"},
 		}}}, nil)
+	c.On("Config").Return(
+		&rest.Config{BearerToken: "foobar"},
+	)
 
 	// Setup storage
 	store := storage.NewJSONDiskStorage(tmpDir)
@@ -95,6 +99,9 @@ func TestDiscover_LoadCacheFail(t *testing.T) {
 		Return(&v1.PodList{Items: []v1.Pod{{
 			Status: v1.PodStatus{HostIP: "6.7.8.9"},
 		}}}, nil)
+	c.On("Config").Return(
+		&rest.Config{BearerToken: "foobar"},
+	)
 
 	// Setup storage
 	store := storage.NewJSONDiskStorage(tmpDir)
@@ -136,6 +143,9 @@ func TestDiscover_CacheTTLExpiry(t *testing.T) {
 		Return(&v1.PodList{Items: []v1.Pod{{
 			Status: v1.PodStatus{HostIP: "6.7.8.9"},
 		}}}, nil)
+	c.On("Config").Return(
+		&rest.Config{BearerToken: "foobar"},
+	)
 
 	// Setup storage
 	store := storage.NewJSONDiskStorage(tmpDir)
@@ -193,6 +203,9 @@ func TestMultiDiscover_Cache(t *testing.T) {
 			{Status: v1.PodStatus{HostIP: "6.7.8.9", PodIP: "1.2.3.5"}},
 			{Status: v1.PodStatus{HostIP: "6.7.8.10", PodIP: "1.2.3.6"}},
 		}}, nil)
+	c.On("Config").Return(
+		&rest.Config{BearerToken: "foobar"},
+	)
 
 	// Cache storage.
 	cacheStore := storage.NewJSONDiskStorage(tmpDir)
@@ -213,7 +226,17 @@ func TestMultiDiscover_Cache(t *testing.T) {
 	assert.Len(t, clients, 2)
 	assert.NoError(t, err)
 
-	assert.ElementsMatch(t, cachedClients, clients)
+	assert.ElementsMatch(t, assertableKSMClients(cachedClients), assertableKSMClients(clients))
+}
+
+func assertableKSMClients(clients []client.HTTPClient) []*ksm {
+	ksms := make([]*ksm, len(clients))
+	for i, client := range clients {
+		ksmClient, _ := client.(*ksm)
+		ksmClient.httpClient.Transport = nil
+		ksms[i] = ksmClient
+	}
+	return ksms
 }
 
 func TestMultiDiscover_CacheWithError(t *testing.T) {
@@ -260,6 +283,9 @@ func TestMultiDiscover_CacheCorrupted(t *testing.T) {
 		Return(&v1.PodList{Items: []v1.Pod{
 			pod1, pod2, pod3,
 		}}, nil)
+	c.On("Config").Return(
+		&rest.Config{BearerToken: "foobar"},
+	)
 
 	// Cache storage.
 	cacheStore := storage.NewJSONDiskStorage(tmpDir)
@@ -292,6 +318,9 @@ func TestMultiDiscover_CacheTTL(t *testing.T) {
 		Return(&v1.PodList{Items: []v1.Pod{
 			{Status: v1.PodStatus{HostIP: "6.7.8.9", PodIP: outdatedURL.Host}},
 		}}, nil).Once()
+	c.On("Config").Return(
+		&rest.Config{BearerToken: "foobar"},
+	)
 
 	c.On("FindPodsByLabel", mock.Anything, mock.Anything).
 		Return(&v1.PodList{Items: []v1.Pod{

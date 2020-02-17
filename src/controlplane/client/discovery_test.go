@@ -123,3 +123,139 @@ func TestDiscover(t *testing.T) {
 		})
 	}
 }
+
+func TestDiscover_ShouldSetNoAuth_WhenBothAuthFalse(t *testing.T) {
+
+	component := controlplane.BuildComponentList()[0]
+	component.UseServiceAccountAuthentication = false
+	component.UseMTLSAuthentication = false
+	podName := "scheduler"
+
+	var podsFetcher data.FetchFunc = func() (definition.RawGroups, error) {
+		return definition.RawGroups{
+			podEntityType: map[string]definition.RawMetrics{
+				"kube-system_kube-scheduler-minikube": {
+					"namespace": "kube-system",
+					"podName":   podName,
+					"nodeName":  "minikube",
+					"nodeIP":    "10.0.2.15",
+					"startTime": time.Now(),
+					"labels": map[string]string{
+						"k8s-app":     "kube-scheduler",
+						"extra-label": "iluvetests",
+						"tier":        "control-plane",
+					},
+				},
+			},
+		}, nil
+	}
+
+	// Given a client
+	nodeIP := "6.7.8.9"
+
+	// And a Discoverer implementation
+	d := discoverer{
+		logger:      logger,
+		nodeIP:      nodeIP,
+		component:   component,
+		podsFetcher: podsFetcher,
+	}
+
+	// When retrieving the KSM client
+	cl, err := d.Discover(0)
+
+	assert.Nil(t, err)
+
+	cpC := cl.(*ControlPlaneComponentClient)
+	assert.Equal(t, none, cpC.authenticationMethod)
+}
+
+func TestDiscover_ShouldSetSAAuth_WhenUseSAAuthIsTrue(t *testing.T) {
+
+	component := controlplane.BuildComponentList()[0]
+	component.UseServiceAccountAuthentication = true
+	podName := "scheduler"
+
+	var podsFetcher data.FetchFunc = func() (definition.RawGroups, error) {
+		return definition.RawGroups{
+			podEntityType: map[string]definition.RawMetrics{
+				"kube-system_kube-scheduler-minikube": {
+					"namespace": "kube-system",
+					"podName":   podName,
+					"nodeName":  "minikube",
+					"nodeIP":    "10.0.2.15",
+					"startTime": time.Now(),
+					"labels": map[string]string{
+						"k8s-app":     "kube-scheduler",
+						"extra-label": "iluvetests",
+						"tier":        "control-plane",
+					},
+				},
+			},
+		}, nil
+	}
+
+	// Given a client
+	nodeIP := "6.7.8.9"
+
+	// And a Discoverer implementation
+	d := discoverer{
+		logger:      logger,
+		nodeIP:      nodeIP,
+		component:   component,
+		podsFetcher: podsFetcher,
+	}
+
+	// When retrieving the KSM client
+	cl, err := d.Discover(0)
+
+	assert.Nil(t, err)
+
+	cpC := cl.(*ControlPlaneComponentClient)
+	assert.Equal(t, serviceAccount, cpC.authenticationMethod)
+}
+
+func TestDiscover_ShouldSetMTLSAuth_WhenUseMTLSAuthIsTrue(t *testing.T) {
+
+	component := controlplane.BuildComponentList()[0]
+	component.UseMTLSAuthentication = true
+	podName := "scheduler"
+
+	var podsFetcher data.FetchFunc = func() (definition.RawGroups, error) {
+		return definition.RawGroups{
+			podEntityType: map[string]definition.RawMetrics{
+				"kube-system_kube-scheduler-minikube": {
+					"namespace": "kube-system",
+					"podName":   podName,
+					"nodeName":  "minikube",
+					"nodeIP":    "10.0.2.15",
+					"startTime": time.Now(),
+					"labels": map[string]string{
+						"k8s-app":     "kube-scheduler",
+						"extra-label": "iluvetests",
+						"tier":        "control-plane",
+					},
+				},
+			},
+		}, nil
+	}
+
+	// Given a client
+	nodeIP := "6.7.8.9"
+
+	// And a Discoverer implementation
+	d := discoverer{
+		logger:      logger,
+		nodeIP:      nodeIP,
+		component:   component,
+		podsFetcher: podsFetcher,
+	}
+
+	// When retrieving the KSM client
+	cl, err := d.Discover(0)
+
+	assert.Nil(t, err)
+
+	cpC := cl.(*ControlPlaneComponentClient)
+	assert.Equal(t, mTLS, cpC.authenticationMethod)
+}

@@ -1,8 +1,10 @@
-ARG IMAGE_NAME=newrelic/infrastructure
-ARG IMAGE_TAG=1.9.0-bundle
+ARG IMAGE_NAME=newrelic/infrastructure-bundle
+ARG IMAGE_TAG=1.2.0
 ARG MODE=normal
 
 FROM $IMAGE_NAME:$IMAGE_TAG AS base
+# ensure there is no default integration enabled
+RUN rm -rf /etc/newrelic-infra/integrations.d/*
 ADD nri-kubernetes-definition.yml /var/db/newrelic-infra/newrelic-integrations/
 ADD bin/nri-kubernetes /var/db/newrelic-infra/newrelic-integrations/bin/
 # Warning: First, Edit sample file to suit your needs and rename it to

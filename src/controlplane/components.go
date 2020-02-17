@@ -3,6 +3,7 @@ package controlplane
 import (
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/newrelic/nri-kubernetes/src/metric"
 
@@ -21,6 +22,7 @@ type Component struct {
 	TLSSecretNamespace              string
 	Endpoint                        url.URL
 	UseServiceAccountAuthentication bool
+	UseMTLSAuthentication           bool
 	Specs                           definition.SpecGroups
 	Queries                         []prometheus.Query
 	Labels                          []labels
@@ -58,6 +60,7 @@ func WithEtcdTLSConfig(etcdTLSSecretName, etcdTLSSecretNamespace string) Compone
 
 		etcd.TLSSecretName = etcdTLSSecretName
 		etcd.TLSSecretNamespace = etcdTLSSecretNamespace
+		etcd.UseMTLSAuthentication = true
 	}
 }
 
@@ -75,6 +78,25 @@ func WithAPIServerSecurePort(port string) ComponentOption {
 			Scheme: "https",
 			Host:   fmt.Sprintf("localhost:%s", port),
 		}
+	}
+}
+
+// WithEndpointURL configures the component to be use a specific endpoint URL and enables
+// Service Account token as authentication
+func WithEndpointURL(name ComponentName, endpointURL string) ComponentOption {
+	return func(components []Component) {
+		component := findComponentByName(name, components)
+		if component == nil {
+			panic(fmt.Sprintf("expected component %s in list of components, but not found", string(name)))
+		}
+
+		url, err := url.Parse(endpointURL)
+		if err != nil {
+			panic(fmt.Sprintf("Endpoint URL %s for component %s is not a valid URL", endpointURL, string(name)))
+		}
+
+		component.UseServiceAccountAuthentication = (strings.ToLower(url.Scheme) == "https")
+		component.Endpoint = *url
 	}
 }
 
@@ -97,8 +119,11 @@ func BuildComponentList(options ...ComponentOption) []Component {
 		{
 			Name: Scheduler,
 			Labels: []labels{
+				// Kops / Kubeadm / ClusterAPI
 				{"k8s-app": "kube-scheduler"},
 				{"tier": "control-plane", "component": "kube-scheduler"},
+				// OpenShift
+				{"app": "openshift-kube-scheduler", "scheduler": "true"},
 			},
 			Queries: metric.SchedulerQueries,
 			Specs:   metric.SchedulerSpecs,
@@ -110,8 +135,11 @@ func BuildComponentList(options ...ComponentOption) []Component {
 		{
 			Name: Etcd,
 			Labels: []labels{
+				// Kops / Kubeadm / ClusterAPI
 				{"k8s-app": "etcd-manager-main"},
 				{"tier": "control-plane", "component": "etcd"},
+				// OpenShift
+				{"k8s-app": "etcd"},
 			},
 			Queries: metric.EtcdQueries,
 			Specs:   metric.EtcdSpecs,
@@ -123,8 +151,11 @@ func BuildComponentList(options ...ComponentOption) []Component {
 		{
 			Name: ControllerManager,
 			Labels: []labels{
+				// Kops / Kubeadm / ClusterAPI
 				{"k8s-app": "kube-controller-manager"},
 				{"tier": "control-plane", "component": "kube-controller-manager"},
+				// OpenShift
+				{"app": "kube-controller-manager", "kube-controller-manager": "true"},
 			},
 			Queries: metric.ControllerManagerQueries,
 			Specs:   metric.ControllerManagerSpecs,
@@ -136,8 +167,11 @@ func BuildComponentList(options ...ComponentOption) []Component {
 		{
 			Name: APIServer,
 			Labels: []labels{
+				// Kops / Kubeadm / ClusterAPI
 				{"k8s-app": "kube-apiserver"},
 				{"tier": "control-plane", "component": "kube-apiserver"},
+				// OpenShift
+				{"app": "openshift-kube-apiserver", "apiserver": "true"},
 			},
 			Queries: metric.APIServerQueries,
 			Specs:   metric.APIServerSpecs,

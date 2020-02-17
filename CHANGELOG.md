@@ -5,20 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+
+## 1.15.0
+
+### Added
+ - Support for querying Kube State Metrics instances behind [kube-rbac-proxy](https://github.com/brancz/kube-rbac-proxy).
+   It **ONLY works when the label-based KSM discovery is enabled through the `KUBE_STATE_METRICS_POD_LABEL` environment variable**.
+   2 new configuration environment variables are added:
+   - KUBE_STATE_METRICS_SCHEME: defaults to `http`. Valid values are `http` and `https`.
+   - KUBE_STATE_METRICS_PORT: defaults to `8080`. On a standard setup of **kube-rbac-proxy** this should be set to `8443`.
+ - OpenShift Control Plane components are now automatically discovered.
+ - Added 4 new environment variables to explicitly set the Control Plane components URLs:
+   - SCHEDULER_ENDPOINT_URL
+   - ETCD_ENDPOINT_URL
+   - CONTROLLER_MANAGER_ENDPOINT_URL
+   - API_SERVER_ENDPOINT_URL
+
+### Fixed
+ - Fix a bug that was preventing `selector.<key>` type attributes to not be
+  added to some of the `K8sServiceSample`.
+ - The integration now uses `newrelic/infrastructure-bundle` as the base image. The version used
+   is `1.2.0`, for more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.2.0).
+
 ## 1.13.2
-### Changed 
+### Changed
  - The integration now uses the infrastructure agent v1.9.0-bundle. For more
    information refer to the [infrastructure agent release notes](https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/)
    between versions v1.8.32 and v1.9.0.
 
-## 1.13.1 
+## 1.13.1
 ### Added
  - Added daemonsetName field to the K8sDaemonsetSample
 
-## 1.13.0 
+## 1.13.0
 ### Added
  - Added samples for Statefulsets, Daemonsets, Endpoints and Services.
- - API Server metrics can now be queried using the secure port. Configure the port using the `API_SERVER_SECURE_PORT` environment variable. The ClusterRole has been updated to allow this query to happen. 
+ - API Server metrics can now be queried using the secure port. Configure the port using the `API_SERVER_SECURE_PORT` environment variable. The ClusterRole has been updated to allow this query to happen.
  - The integration now uses the infrastructure agent v1.8.32-bundle. For more
    information refer to the [infrastructure agent release notes](https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/)
    between versions v1.8.23 and v1.8.32.
@@ -33,7 +56,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
  - The integration now uses the infrastructure agent v1.8.23. For more
    information refer to the [infrastructure agent release notes](https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/)
    between versions v1.5.75 and v1.8.23.
-  
+
 ## 1.11.0
 ### Changed
  - The old way of determining Leader/Follower status has been switched to a
@@ -69,16 +92,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
  - The e2e test package has been updated to work with this refactor.
 ### Added
  - Control Plane Monitoring: the integration will automatically detect if it's running on a master node using
-   its Kubernetes pod's labels, which are retrieved from the API Server. If it finds itself running on a master 
-   node, these additional jobs will run: 
-     - ETCD 
+   its Kubernetes pod's labels, which are retrieved from the API Server. If it finds itself running on a master
+   node, these additional jobs will run:
+     - ETCD
      - API Server
      - Controller Manager
      - Scheduler
-   
+
    All jobs, except ETCD, will work out of the box with no further configuration needed.
    ETCD exposes its metrics using Mutual TLS, which can be configured as follows.
-    
+
    First, create a secret containing the following fields:
    ```
    key: <private_key_data, PEM format>
@@ -93,28 +116,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
    Then, configure the integration to use this secret using these environment variables.
    ```
    ETCD_TLS_SECRET_NAME: etcd-server-tls
-   ETCD_TLS_SECRET_NAMESPACE: default 
+   ETCD_TLS_SECRET_NAMESPACE: default
    ```
-   
+
    If everything is configured properly the integration should start collecting ETCD metrics.
  - A new command, called kubernetes-static has been added, which enables the
    integration to be run locally on your machine, without deploying it to k8s.
    It uses a static set of exports from kubelet & KSM.
  - A new way to query a specific Kube State Metrics (KSM) pod  when running multiple redundant pods: by Label Selector.
-   If you want to target a certain KSM instance, you can now use the `KUBE_STATE_METRICS_POD_LABEL` environment variable. 
+   If you want to target a certain KSM instance, you can now use the `KUBE_STATE_METRICS_POD_LABEL` environment variable.
    If this variable has been set (and KUBE_STATE_METRICS_URL is unset) the integration will find the KSM pod by this variable.
-   
+
    For example:
       ```shell script
       # Label a specific KSM pod. Always set the value to the string "true".
       kubectl label pod kube-state-metrics please-use-this-ksm-pod=true
       ```
    Configure `nri-kubernetes` to use this KSM pod:
-    
+
    ```yaml
     env:
     - name: KUBE_STATE_METRICS_POD_LABEL
-      value: please-use-this-ksm-pod 
+      value: please-use-this-ksm-pod
     ```
 
 ## 1.10.2

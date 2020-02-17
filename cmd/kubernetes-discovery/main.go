@@ -40,7 +40,7 @@ func main() {
 var ksmPodLabel = flag.String("ksm_pod_label", "my-custom-ksm", "[ksm_pod_label] The label to search for")
 
 func runKSMPodLabel(kubernetes k8sclient.Kubernetes) {
-	discoverer := client.NewPodLabelDiscoverer(*ksmPodLabel, logger, kubernetes)
+	discoverer := client.NewPodLabelDiscoverer(*ksmPodLabel, 8080, "http", logger, kubernetes)
 	ksm, err := discoverer.Discover(time.Second * 5)
 	if err != nil {
 		logrus.Fatal(err)

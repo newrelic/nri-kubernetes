@@ -2,7 +2,6 @@ package client
 
 import (
 	"fmt"
-	"net/http"
 	"net/url"
 	"time"
 
@@ -58,14 +57,13 @@ func (p *distributedPodLabelDiscoverer) Discover(timeout time.Duration) ([]clien
 			Scheme: "http",
 			Host:   fmt.Sprintf("%s:8080", pod.Status.PodIP),
 		}
-		ksmClient := &ksm{
-			nodeIP:   pod.Status.HostIP,
-			endpoint: endpoint,
-			httpClient: &http.Client{
-				Timeout: timeout,
-			},
-			logger: p.logger,
-		}
+		ksmClient := newKSMClient(
+			timeout,
+			pod.Status.HostIP,
+			endpoint,
+			p.logger,
+			p.k8sClient,
+		)
 		clients = append(clients, ksmClient)
 	}
 	return clients, nil

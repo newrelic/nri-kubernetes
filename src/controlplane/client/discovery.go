@@ -201,11 +201,12 @@ func (sd *discoverer) Discover(timeout time.Duration) (client.HTTPClient, error)
 
 	var authMethod authenticationMethod
 
+	// Let mTLS take precedence over service account
 	switch {
+	case sd.component.UseMTLSAuthentication:
+		authMethod = mTLS
 	case sd.component.UseServiceAccountAuthentication:
 		authMethod = serviceAccount
-	case sd.component.TLSSecretName != "":
-		authMethod = mTLS
 	default:
 		authMethod = none
 	}

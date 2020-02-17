@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/rest"
 )
 
 func TestDistributedDiscoverKSMWithPodLabel(t *testing.T) {
@@ -17,6 +18,9 @@ func TestDistributedDiscoverKSMWithPodLabel(t *testing.T) {
 			{Status: v1.PodStatus{HostIP: "4.3.2.1"}},
 			{Status: v1.PodStatus{HostIP: "4.3.2.2"}},
 		}}, nil)
+	c.On("Config").Return(
+		&rest.Config{BearerToken: "foobar"},
+	)
 
 	d := distributedPodLabelDiscoverer{
 		k8sClient:   c,

@@ -30,18 +30,24 @@ import (
 
 type argumentList struct {
 	sdkArgs.DefaultArgumentList
-	Timeout                     int    `default:"5000" help:"timeout in milliseconds for calling metrics sources"`
-	ClusterName                 string `help:"Identifier of your cluster. You could use it later to filter data in your New Relic account"`
-	DiscoveryCacheDir           string `default:"/var/cache/nr-kubernetes" help:"The location of the cached values for discovered endpoints. Obsolete, use CacheDir instead."`
-	CacheDir                    string `default:"/var/cache/nr-kubernetes" help:"The location where to store various cached data."`
-	DiscoveryCacheTTL           string `default:"1h" help:"Duration since the discovered endpoints are stored in the cache until they expire. Valid time units: 'ns', 'us', 'ms', 's', 'm', 'h'"`
-	APIServerCacheTTL           string `default:"5m" help:"Duration to cache responses from the API Server. Valid time units: 'ns', 'us', 'ms', 's', 'm', 'h'. Set to 0s to disable"`
-	KubeStateMetricsURL         string `help:"kube-state-metrics URL. If it is not provided, it will be discovered."`
-	EtcdTLSSecretName           string `help:"Name of the secret that stores your ETCD TLS configuration"`
-	EtcdTLSSecretNamespace      string `default:"default" help:"Namespace in which the ETCD TLS secret lives"`
-	KubeStateMetricsPodLabel    string `help:"discover KSM using Kubernetes Labels."`
-	APIServerSecurePort         string `default:"" help:"Set to query the API Server over a secure port. Disabled by default"`
-	DistributedKubeStateMetrics bool   `default:"false" help:"Set to enable distributed KSM discovery. Requires that KubeStateMetricsPodLabel is set. Disabled by default."`
+	Timeout                      int    `default:"5000" help:"timeout in milliseconds for calling metrics sources"`
+	ClusterName                  string `help:"Identifier of your cluster. You could use it later to filter data in your New Relic account"`
+	DiscoveryCacheDir            string `default:"/var/cache/nr-kubernetes" help:"The location of the cached values for discovered endpoints. Obsolete, use CacheDir instead."`
+	CacheDir                     string `default:"/var/cache/nr-kubernetes" help:"The location where to store various cached data."`
+	DiscoveryCacheTTL            string `default:"1h" help:"Duration since the discovered endpoints are stored in the cache until they expire. Valid time units: 'ns', 'us', 'ms', 's', 'm', 'h'"`
+	APIServerCacheTTL            string `default:"5m" help:"Duration to cache responses from the API Server. Valid time units: 'ns', 'us', 'ms', 's', 'm', 'h'. Set to 0s to disable"`
+	KubeStateMetricsURL          string `help:"kube-state-metrics URL. If it is not provided, it will be discovered."`
+	EtcdTLSSecretName            string `help:"Name of the secret that stores your ETCD TLS configuration"`
+	EtcdTLSSecretNamespace       string `default:"default" help:"Namespace in which the ETCD TLS secret lives"`
+	KubeStateMetricsPodLabel     string `help:"discover KSM using Kubernetes Labels."`
+	KubeStateMetricsPort         int    `default:"8080" help:"port to query the KSM pod. Only works together with the pod label discovery"`
+	KubeStateMetricsScheme       string `default:"http" help:"scheme to query the KSM pod ('http' or 'https'). Only works together with the pod label discovery"`
+	APIServerSecurePort          string `default:"" help:"Set to query the API Server over a secure port. Disabled by default"`
+	DistributedKubeStateMetrics  bool   `default:"false" help:"Set to enable distributed KSM discovery. Requires that KubeStateMetricsPodLabel is set. Disabled by default."`
+	SchedulerEndpointURL         string `help:"Set a custom endpoint URL for the kube-scheduler endpoint."`
+	EtcdEndpointURL              string `help:"Set a custom endpoint URL for the Etcd endpoint."`
+	ControllerManagerEndpointURL string `help:"Set a custom endpoint URL for the kube-controller-manager endpoint."`
+	APIServerEndpointURL         string `help:"Set a custom endpoint URL for the API server endpoint."`
 }
 
 const (
@@ -57,7 +63,7 @@ const (
 	defaultDiscoveryCacheTTL = time.Hour
 
 	integrationName    = "com.newrelic.kubernetes"
-	integrationVersion = "1.13.2"
+	integrationVersion = "1.15.0"
 	nodeNameEnvVar     = "NRK8S_NODE_NAME"
 )
 
@@ -85,6 +91,10 @@ func controlPlaneJobs(
 	etcdTLSSecretName string,
 	etcdTLSSecretNamespace string,
 	apiServerSecurePort string,
+	schedulerEndpointURL string,
+	etcdEndpointURL string,
+	controllerManagerEndpointURL string,
+	apiServerEndpointURL string,
 ) ([]*scrape.Job, error) {
 
 	nodeInfo, err := apiServerClient.GetNodeInfo(nodeName)
@@ -101,8 +111,25 @@ func controlPlaneJobs(
 		opts = append(opts, controlplane.WithEtcdTLSConfig(etcdTLSSecretName, etcdTLSSecretNamespace))
 	}
 
-	if apiServerSecurePort != "" {
+	// Make sure API Server Secure port is used first for backwards compatibility.
+	if apiServerSecurePort != "" && apiServerEndpointURL != "" {
+		return nil, fmt.Errorf("api server secure port and api server endpoint URL can not both be set")
+	} else if apiServerSecurePort != "" {
 		opts = append(opts, controlplane.WithAPIServerSecurePort(apiServerSecurePort))
+	} else if apiServerEndpointURL != "" {
+		opts = append(opts, controlplane.WithEndpointURL(controlplane.APIServer, apiServerEndpointURL))
+	}
+
+	if schedulerEndpointURL != "" {
+		opts = append(opts, controlplane.WithEndpointURL(controlplane.Scheduler, schedulerEndpointURL))
+	}
+
+	if etcdEndpointURL != "" {
+		opts = append(opts, controlplane.WithEndpointURL(controlplane.Etcd, etcdEndpointURL))
+	}
+
+	if controllerManagerEndpointURL != "" {
+		opts = append(opts, controlplane.WithEndpointURL(controlplane.ControllerManager, controllerManagerEndpointURL))
 	}
 
 	var jobs []*scrape.Job
@@ -273,6 +300,10 @@ func main() {
 		args.EtcdTLSSecretName,
 		args.EtcdTLSSecretNamespace,
 		args.APIServerSecurePort,
+		args.SchedulerEndpointURL,
+		args.EtcdEndpointURL,
+		args.ControllerManagerEndpointURL,
+		args.APIServerEndpointURL,
 	)
 
 	if err != nil {
@@ -333,7 +364,7 @@ func getKSMDiscoverer(logger *logrus.Logger) (client.Discoverer, error) {
 
 	if args.KubeStateMetricsPodLabel != "" {
 		logger.Debugf("Discovering KSM using Pod Label (KUBE_STATE_METRICS_POD_LABEL)")
-		return clientKsm.NewPodLabelDiscoverer(args.KubeStateMetricsPodLabel, logger, k8sClient), nil
+		return clientKsm.NewPodLabelDiscoverer(args.KubeStateMetricsPodLabel, args.KubeStateMetricsPort, args.KubeStateMetricsScheme, logger, k8sClient), nil
 	}
 
 	logger.Debugf("Discovering KSM using DNS / k8s ApiServer (default)")

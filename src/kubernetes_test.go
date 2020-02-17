@@ -73,6 +73,10 @@ func TestControlPlaneJobs(t *testing.T) {
 		"test",
 		"",
 		"",
+		"",
+		"",
+		"",
+		"",
 	)
 	assert.Equal(t, len(components), len(cpJobs))
 

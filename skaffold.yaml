@@ -36,3 +36,17 @@ profiles:
     kubectl:
       manifests:
         - deploy/local-unprivileged.yaml
+- name: openshift
+  build:
+    tagPolicy:
+      sha256: {}
+    artifacts:
+    - image: default-route-openshift-image-registry.apps-crc.testing/default/infrastructure-k8s-dev
+      context: .
+      docker:
+        dockerfile: Dockerfile
+    local: {}
+  deploy:
+    kubectl:
+      manifests:
+        - deploy/local-openshift.yaml

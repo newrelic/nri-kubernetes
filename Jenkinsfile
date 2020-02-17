@@ -100,11 +100,13 @@ pipeline {
 
     stage('Running e2e tests') {
       parallel {
-        stage('Privileged: 1.13.12')   { steps { runPrivilegedE2ETest('e2e-cluster-1-13-12') } }
-        stage('Unprivileged: 1.13.12') { steps { runUnprivilegedE2ETest('e2e-cluster-1-13-12') } }
+        // Temporarilly skip these other 2 versions because of a concurrency issue in the Jenkins job for e2e tests.
+        // They should be put back as soon as this is fixed.
+        // stage('Privileged: 1.13.12')   { steps { runPrivilegedE2ETest('e2e-cluster-1-13-12') } }
+        // stage('Unprivileged: 1.13.12') { steps { runUnprivilegedE2ETest('e2e-cluster-1-13-12') } }
 
-        stage('Privileged: 1.14.6')    { steps { runPrivilegedE2ETest('e2e-cluster-1-14-6') } }
-        stage('Unprivileged: 1.14.6')  { steps { runUnprivilegedE2ETest('e2e-cluster-1-14-6') } }
+        // stage('Privileged: 1.14.6')    { steps { runPrivilegedE2ETest('e2e-cluster-1-14-6') } }
+        // stage('Unprivileged: 1.14.6')  { steps { runUnprivilegedE2ETest('e2e-cluster-1-14-6') } }
 
         stage('Privileged: 1.15.7')    { steps { runPrivilegedE2ETest('e2e-cluster-1-15-7') } }
         stage('Unprivileged: 1.15.7')  { steps { runUnprivilegedE2ETest('e2e-cluster-1-15-7') } }

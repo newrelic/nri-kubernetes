@@ -524,6 +524,38 @@ func getRandomMetric(metrics definition.RawMetrics) (metricKey string, value def
 	return
 }
 
+// metricContainsLabels returns true is the metric contains the given labels,
+// false otherwise.
+func metricContainsLabels(m Metric, labels ...string) bool {
+	for _, k := range labels {
+		if _, ok := m.Labels[k]; !ok {
+			return false
+		}
+	}
+	return true
+}
+
+// getRandomMetricWithLabels returns the first metric that contains the given
+// labels.
+func getRandomMetricWithLabels(metrics definition.RawMetrics, labels ...string) (metricKey string, value definition.RawValue, err error) {
+	found := false
+	for metricKey, value = range metrics {
+		m, ok := value.(Metric)
+		if !ok {
+			continue
+		}
+
+		if metricContainsLabels(m, labels...) {
+			found = true
+			break
+		}
+	}
+	if !found {
+		err = fmt.Errorf("metric with the labels %v not found", labels)
+	}
+	return
+}
+
 func fetchMetric(metricKey string) definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 
@@ -633,21 +665,35 @@ func getRawEntityID(parentGroupLabel, groupLabel, entityID string, groups defini
 	if !ok {
 		return "", fmt.Errorf("metrics not found for %v with entity ID: %v", groupLabel, entityID)
 	}
-	metricKey, r := getRandomMetric(group)
-	m, ok := r.(Metric)
-
-	if !ok {
-		return "", fmt.Errorf("incompatible metric type. Expected: Metric. Got: %T", r)
-	}
 
 	var rawEntityID string
 	switch parentGroupLabel {
 	case "node", "namespace":
+		metricKey, r := getRandomMetric(group)
+		m, ok := r.(Metric)
+
+		if !ok {
+			return "", fmt.Errorf("incompatible metric type. Expected: Metric. Got: %T", r)
+		}
+
 		rawEntityID, ok = m.Labels[parentGroupLabel]
+
 		if !ok {
 			return "", fmt.Errorf("label not found. Label: '%s', Metric: %s", parentGroupLabel, metricKey)
 		}
 	default:
+		metricKey, r, err := getRandomMetricWithLabels(group, "namespace", parentGroupLabel)
+
+		if err != nil {
+			return "", err
+		}
+
+		m, ok := r.(Metric)
+
+		if !ok {
+			return "", fmt.Errorf("incompatible metric type. Expected: Metric. Got: %T", r)
+		}
+
 		namespaceID, ok := m.Labels["namespace"]
 		if !ok {
 			return "", fmt.Errorf("label not found. Label: 'namespace', Metric: %s", metricKey)

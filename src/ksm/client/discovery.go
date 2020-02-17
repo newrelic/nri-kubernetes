@@ -1,21 +1,22 @@
 package client
 
 import (
+	"crypto/tls"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"path/filepath"
+	"strings"
 	"time"
 
-	"net"
-
-	"strings"
-
-	"github.com/newrelic/nri-kubernetes/src/client"
-	"github.com/newrelic/nri-kubernetes/src/prometheus"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/transport"
+
+	"github.com/newrelic/nri-kubernetes/src/client"
+	"github.com/newrelic/nri-kubernetes/src/prometheus"
 )
 
 var ksmAppLabelNames = []string{"k8s-app", "app", "app.kubernetes.io/name"}
@@ -74,14 +75,28 @@ func (sd *discoverer) Discover(timeout time.Duration) (client.HTTPClient, error)
 		return nil, fmt.Errorf("failed to discover nodeIP with kube-state-metrics, got error: %s", err)
 	}
 
+	return newKSMClient(timeout, nodeIP, endpoint, sd.logger, sd.apiClient), nil
+}
+
+func newKSMClient(timeout time.Duration, nodeIP string, endpoint url.URL, logger *logrus.Logger, k8s client.Kubernetes) *ksm {
+	bearer := k8s.Config().BearerToken
+	rt := newBearerRoundTripper(bearer)
+
 	return &ksm{
 		nodeIP:   nodeIP,
 		endpoint: endpoint,
 		httpClient: &http.Client{
-			Timeout: timeout,
+			Timeout:   timeout,
+			Transport: rt,
 		},
-		logger: sd.logger,
-	}, nil
+		logger: logger,
+	}
+}
+
+func newBearerRoundTripper(bearer string) http.RoundTripper {
+	baseTransport := http.DefaultTransport.(*http.Transport).Clone()
+	baseTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	return transport.NewBearerAuthRoundTripper(bearer, baseTransport)
 }
 
 func (c *ksm) NodeIP() string {

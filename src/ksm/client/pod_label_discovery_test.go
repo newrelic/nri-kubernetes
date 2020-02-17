@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/rest"
 )
 
 func TestDiscoverKSMWithPodLabel(t *testing.T) {
@@ -16,6 +17,9 @@ func TestDiscoverKSMWithPodLabel(t *testing.T) {
 		Return(&v1.PodList{Items: []v1.Pod{
 			{Status: v1.PodStatus{HostIP: "4.3.2.1"}},
 		}}, nil)
+	c.On("Config").Return(
+		&rest.Config{BearerToken: "foobar"},
+	)
 
 	// and an Discoverer implementation
 	d := podLabelDiscoverer{
@@ -45,6 +49,9 @@ func TestPodLabelDiscovererSelectsSamePod(t *testing.T) {
 			{Status: v1.PodStatus{HostIP: "4.3.2.4"}},
 			{Status: v1.PodStatus{HostIP: "4.3.2.5"}},
 		}}, nil)
+	c.On("Config").Return(
+		&rest.Config{BearerToken: "foobar"},
+	)
 
 	// and an Discoverer implementation
 	d := podLabelDiscoverer{
