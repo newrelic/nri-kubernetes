@@ -36,14 +36,15 @@ type argumentList struct {
 	CacheDir                     string `default:"/var/cache/nr-kubernetes" help:"The location where to store various cached data."`
 	DiscoveryCacheTTL            string `default:"1h" help:"Duration since the discovered endpoints are stored in the cache until they expire. Valid time units: 'ns', 'us', 'ms', 's', 'm', 'h'"`
 	APIServerCacheTTL            string `default:"5m" help:"Duration to cache responses from the API Server. Valid time units: 'ns', 'us', 'ms', 's', 'm', 'h'. Set to 0s to disable"`
-	KubeStateMetricsURL          string `help:"kube-state-metrics URL. If it is not provided, it will be discovered."`
 	EtcdTLSSecretName            string `help:"Name of the secret that stores your ETCD TLS configuration"`
 	EtcdTLSSecretNamespace       string `default:"default" help:"Namespace in which the ETCD TLS secret lives"`
+	DisableKubeStateMetrics      bool   `default:"false" help:"Used to disable KSM data fetching. Defaults to 'false''"`
+	KubeStateMetricsURL          string `help:"kube-state-metrics URL. If it is not provided, it will be discovered."`
 	KubeStateMetricsPodLabel     string `help:"discover KSM using Kubernetes Labels."`
 	KubeStateMetricsPort         int    `default:"8080" help:"port to query the KSM pod. Only works together with the pod label discovery"`
 	KubeStateMetricsScheme       string `default:"http" help:"scheme to query the KSM pod ('http' or 'https'). Only works together with the pod label discovery"`
-	APIServerSecurePort          string `default:"" help:"Set to query the API Server over a secure port. Disabled by default"`
 	DistributedKubeStateMetrics  bool   `default:"false" help:"Set to enable distributed KSM discovery. Requires that KubeStateMetricsPodLabel is set. Disabled by default."`
+	APIServerSecurePort          string `default:"" help:"Set to query the API Server over a secure port. Disabled by default"`
 	SchedulerEndpointURL         string `help:"Set a custom endpoint URL for the kube-scheduler endpoint."`
 	EtcdEndpointURL              string `help:"Set a custom endpoint URL for the Etcd endpoint."`
 	ControllerManagerEndpointURL string `help:"Set a custom endpoint URL for the kube-controller-manager endpoint."`
@@ -63,7 +64,7 @@ const (
 	defaultDiscoveryCacheTTL = time.Hour
 
 	integrationName    = "com.newrelic.kubernetes"
-	integrationVersion = "1.15.0"
+	integrationVersion = "1.16.0"
 	nodeNameEnvVar     = "NRK8S_NODE_NAME"
 )
 
@@ -230,56 +231,57 @@ func main() {
 	kubeletNodeIP := kubeletClient.NodeIP()
 	logger.Debugf("Kubelet node IP = %s", kubeletNodeIP)
 
-	var ksmClients []client.HTTPClient
-	var ksmNodeIP string
-	if args.DistributedKubeStateMetrics {
-		ksmDiscoverer, err := getMultiKSMDiscoverer(kubeletNodeIP, logger)
-		if err != nil {
-			logger.Panic(err)
+	k8s, err := client.NewKubernetes(false)
+	if err != nil {
+		logger.Panic(err)
+	}
+
+	if !args.DisableKubeStateMetrics {
+		var ksmClients []client.HTTPClient
+		var ksmNodeIP string
+		if args.DistributedKubeStateMetrics {
+			ksmDiscoverer, err := getMultiKSMDiscoverer(kubeletNodeIP, logger)
+			if err != nil {
+				logger.Panic(err)
+			}
+			ksmDiscoveryCache := clientKsm.NewDistributedDiscoveryCacher(ksmDiscoverer, cacheStorage, ttl, logger)
+			ksmClients, err = ksmDiscoveryCache.Discover(timeout)
+			logger.Debugf("found %d KSM clients:", len(ksmClients))
+			for _, c := range ksmClients {
+				logger.Debugf("- node IP: %s", c.NodeIP())
+			}
+			if err != nil {
+				logger.Panic(err)
+			}
+			ksmNodeIP = kubeletNodeIP
+		} else {
+			innerKSMDiscoverer, err := getKSMDiscoverer(logger)
+			if err != nil {
+				logger.Panic(err)
+			}
+			ksmDiscoverer := clientKsm.NewDiscoveryCacher(innerKSMDiscoverer, cacheStorage, ttl, logger)
+			ksmClient, err := ksmDiscoverer.Discover(timeout)
+			if err != nil {
+				logger.Panic(err)
+			}
+			ksmNodeIP = ksmClient.NodeIP()
+			// we only scrape KSM when we are on the same Node as KSM
+			if kubeletNodeIP == ksmNodeIP {
+				ksmClients = append(ksmClients, ksmClient)
+			}
 		}
-		ksmDiscoveryCache := clientKsm.NewDistributedDiscoveryCacher(ksmDiscoverer, cacheStorage, ttl, logger)
-		ksmClients, err = ksmDiscoveryCache.Discover(timeout)
-		logger.Debugf("found %d KSM clients:", len(ksmClients))
-		for _, c := range ksmClients {
-			logger.Debugf("- node IP: %s", c.NodeIP())
-		}
-		if err != nil {
-			logger.Panic(err)
-		}
-		ksmNodeIP = kubeletNodeIP
-	} else {
-		innerKSMDiscoverer, err := getKSMDiscoverer(logger)
-		if err != nil {
-			logger.Panic(err)
-		}
-		ksmDiscoverer := clientKsm.NewDiscoveryCacher(innerKSMDiscoverer, cacheStorage, ttl, logger)
-		ksmClient, err := ksmDiscoverer.Discover(timeout)
-		if err != nil {
-			logger.Panic(err)
-		}
-		ksmNodeIP = ksmClient.NodeIP()
-		// we only scrape KSM when we are on the same Node as KSM
-		if kubeletNodeIP == ksmNodeIP {
-			ksmClients = append(ksmClients, ksmClient)
+		logger.Debugf("KSM Node = %s", ksmNodeIP)
+		for _, ksmClient := range ksmClients {
+			ksmGrouper := ksm.NewGrouper(ksmClient, metric.KSMQueries, logger, k8s)
+			jobs = append(jobs, scrape.NewScrapeJob("kube-state-metrics", ksmGrouper, metric.KSMSpecs))
 		}
 	}
-	logger.Debugf("KSM Node = %s", ksmNodeIP)
 
 	ttlAPIServerCache, err := time.ParseDuration(args.APIServerCacheTTL)
 	if err != nil {
 		logger.WithError(err).Errorf("while parsing the api server cache TTL value. Defaulting to %s", ttlAPIServerCache)
 		ttlAPIServerCache = defaultAPIServerCacheTTL
 	}
-	k8s, err := client.NewKubernetes(false)
-	if err != nil {
-		logger.Panic(err)
-	}
-
-	for _, ksmClient := range ksmClients {
-		ksmGrouper := ksm.NewGrouper(ksmClient, metric.KSMQueries, logger, k8s)
-		jobs = append(jobs, scrape.NewScrapeJob("kube-state-metrics", ksmGrouper, metric.KSMSpecs))
-	}
-
 	apiServerClient := apiserver.NewClient(k8s)
 
 	if ttlAPIServerCache != time.Duration(0) {

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## 1.16.0
+
+### Added
+ - Support for completely avoid querying Kube State Metrics. It's behind the `DISABLE_KUBE_STATE_METRICS` environment variable
+   and its default value is `false`. Note that disabling this will imply in missing metrics that are collected from KSM
+   and possibly missing features in the Kubernetes Cluster Explorer. Please, refer to our [official documentation on this
+   configuration option](https://docs.newrelic.com/docs/integrations/kubernetes-integration/installation/kubernetes-installation-configuration#disable-kube-state-metrics) for more information.
+
 ## 1.15.0
 
 ### Added

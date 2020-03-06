@@ -27,6 +27,12 @@ pipeline {
   }
 
   stages {
+    stage('Cancelling previously running builds') {
+      steps {
+        cancelPreviousBuilds()
+      }
+    }
+
     stage('Dependencies') {
       steps {
         withCredentials([string(credentialsId: 'KOPS_AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'KOPS_AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')]) {
@@ -98,17 +104,22 @@ pipeline {
       }
     }
 
-    stage('Running e2e tests') {
+    stage('Privileged e2e tests') {
       parallel {
-        // Temporarilly skip these other 2 versions because of a concurrency issue in the Jenkins job for e2e tests.
-        // They should be put back as soon as this is fixed.
-        // stage('Privileged: 1.13.12')   { steps { runPrivilegedE2ETest('e2e-cluster-1-13-12') } }
-        // stage('Unprivileged: 1.13.12') { steps { runUnprivilegedE2ETest('e2e-cluster-1-13-12') } }
+        stage('Privileged: 1.13.12')   { steps { runPrivilegedE2ETest('e2e-cluster-1-13-12') } }
 
-        // stage('Privileged: 1.14.6')    { steps { runPrivilegedE2ETest('e2e-cluster-1-14-6') } }
-        // stage('Unprivileged: 1.14.6')  { steps { runUnprivilegedE2ETest('e2e-cluster-1-14-6') } }
+        stage('Privileged: 1.14.6')    { steps { runPrivilegedE2ETest('e2e-cluster-1-14-6') } }
 
         stage('Privileged: 1.15.7')    { steps { runPrivilegedE2ETest('e2e-cluster-1-15-7') } }
+      }
+    }
+
+    stage('Unprivileged e2e tests') {
+      parallel {
+        stage('Unprivileged: 1.13.12') { steps { runUnprivilegedE2ETest('e2e-cluster-1-13-12') } }
+
+        stage('Unprivileged: 1.14.6')  { steps { runUnprivilegedE2ETest('e2e-cluster-1-14-6') } }
+
         stage('Unprivileged: 1.15.7')  { steps { runUnprivilegedE2ETest('e2e-cluster-1-15-7') } }
       }
     }
@@ -130,7 +141,7 @@ def tagName(branch) {
 
 def runPrivilegedE2ETest(clusterName) {
     // We lock the e2e build execution in order to run this step only once at a time.
-    lock(resource: "k8s_cluster_${clusterName}", inversePrecedence: true) {
+    lock(resource: "k8s_cluster_${clusterName}") {
       build job: 'k8s-integration-e2e-concurrent', parameters: [
         string(name: 'CLUSTER_NAME', value: clusterName),
         string(name: 'INTEGRATION_IMAGE_TAG', value: "${DOCKER_TAG}"),
@@ -144,7 +155,7 @@ def runPrivilegedE2ETest(clusterName) {
 
 def runUnprivilegedE2ETest(clusterName) {
     // We lock the e2e build execution in order to run this step only once at a time.
-    lock(resource: "k8s_cluster_${clusterName}", inversePrecedence: true) {
+    lock(resource: "k8s_cluster_${clusterName}") {
       build job: 'k8s-integration-e2e-concurrent', parameters: [
         string(name: 'CLUSTER_NAME', value: clusterName),
         string(name: 'INTEGRATION_IMAGE_TAG', value: "${DOCKER_TAG}_unprivileged"),
@@ -154,4 +165,19 @@ def runUnprivilegedE2ETest(clusterName) {
         string(name: 'E2E_DOCKER_IMAGE_TAG', value: "${DOCKER_TAG}")
       ]
     }
+}
+
+def cancelPreviousBuilds() {
+   // Check for other instances of this particular build, cancel any that are older than the current one
+   def jobName = env.JOB_NAME
+   def currentBuildNumber = env.BUILD_NUMBER.toInteger()
+   def currentJob = Jenkins.instance.getItemByFullName(jobName)
+
+   // Loop through all instances of this particular job/branch
+   for (def build : currentJob.builds) {
+     if (build.isBuilding() && (build.number.toInteger() < currentBuildNumber)) {
+       echo "Older build still queued. Sending kill signal to build number: ${build.number}"
+       build.doStop()
+     }
+   }
 }
