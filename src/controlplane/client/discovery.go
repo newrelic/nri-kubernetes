@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"path/filepath"
+	"path"
 	"strings"
 	"time"
 
@@ -54,9 +54,9 @@ type ControlPlaneComponentClient struct {
 	PodName                  string
 }
 
-func (c *ControlPlaneComponentClient) Do(method, path string) (*http.Response, error) {
+func (c *ControlPlaneComponentClient) Do(method, urlPath string) (*http.Response, error) {
 	e := c.endpoint
-	e.Path = filepath.Join(c.endpoint.Path, path)
+	e.Path = path.Join(c.endpoint.Path, urlPath)
 
 	r, err := prometheus.NewRequest(method, e.String())
 	if err != nil {

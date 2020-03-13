@@ -64,7 +64,7 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: newrelic-infra
-          image: newrelic/infrastructure-k8s:1.17.0
+          image: newrelic/infrastructure-k8s:1.16.0
           securityContext:
             privileged: true
           resources:
@@ -147,6 +147,72 @@ spec:
           effect: "NoSchedule"
         - operator: "Exists"
           effect: "NoExecute"
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: newrelic-infra-windows
+  namespace: default
+  labels:
+    app: newrelic-infra
+    kubernetes.io/os: windows
+spec:
+  selector:
+    matchLabels:
+      name: newrelic-infra
+      kubernetes.io/os: windows
+  updateStrategy:
+      type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: newrelic-infra
+        kubernetes.io/os: windows
+    spec:
+      serviceAccountName: newrelic
+      nodeSelector:
+        kubernetes.io/os: windows
+      containers:
+        - name: newrelic-infra
+          image: "newrelic/infrastructure-k8s:1.16.0-windows-1809-beta"
+          resources:
+            limits:
+              memory: 300M
+            requests:
+              cpu: 100m
+              memory: 100M
+          env:
+            - name: "TIMEOUT"
+              value: "10000"
+            - name: "CLUSTER_NAME"
+              value: "<YOUR_CLUSTER_NAME>"
+            - name: "NRIA_LICENSE_KEY"
+              value: "<YOUR_LICENSE_KEY>"
+            - name: "NRIA_VERBOSE"
+              value: "0"
+            - name: "NRIA_DISPLAY_NAME"
+              valueFrom:
+                fieldRef:
+                  apiVersion: "v1"
+                  fieldPath: "spec.nodeName"
+            - name: "NRK8S_NODE_NAME"
+              valueFrom:
+                fieldRef:
+                  apiVersion: "v1"
+                  fieldPath: "spec.nodeName"
+            - name: "NRIA_CUSTOM_ATTRIBUTES"
+              value: '{"clusterName":"$(CLUSTER_NAME)"}'
+            - name: "NRIA_PASSTHROUGH_ENVIRONMENT"
+              value: "KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,CLUSTER_NAME,CADVISOR_PORT,NRK8S_NODE_NAME,KUBE_STATE_METRICS_URL,ETCD_TLS_SECRET_NAME,ETCD_TLS_SECRET_NAMESPACE,API_SERVER_SECURE_PORT,NRIA_CACHE_PATH,TIMEOUT"
+      tolerations:
+        - operator: "Exists"
+          effect: "NoSchedule"
+        - operator: "Exists"
+          effect: "NoExecute"
+        - key: "node.kubernetes.io/os"
+          operator: "Equal"
+          value: "windows"
+          effect: "NoSchedule"
 ---
 apiVersion: v1
 kind: ConfigMap

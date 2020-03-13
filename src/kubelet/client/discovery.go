@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path/filepath"
+	"path"
 	"time"
 
 	"github.com/newrelic/nri-kubernetes/src/client"
@@ -55,22 +55,22 @@ type connectionParams struct {
 	httpType int // httpBasic, httpInsecure, httpSecure
 }
 
-type connectionChecker func(client *http.Client, URL url.URL, path, token string) error
+type connectionChecker func(client *http.Client, URL url.URL, urlPath, token string) error
 
 func (c *kubelet) NodeIP() string {
 	return c.nodeIP
 }
 
 // Do method calls discovered kubelet endpoint with specified method and path, i.e. "/stats/summary
-func (c *kubelet) Do(method, path string) (*http.Response, error) {
+func (c *kubelet) Do(method, urlPath string) (*http.Response, error) {
 	e := c.endpoint
-	e.Path = filepath.Join(c.endpoint.Path, path)
+	e.Path = path.Join(c.endpoint.Path, urlPath)
 
 	var r *http.Request
 	var err error
 
 	// TODO Create a new discoverer and client for cadvisor
-	if path == metric.KubeletCAdvisorMetricsPath {
+	if urlPath == metric.KubeletCAdvisorMetricsPath {
 		if port := os.Getenv("CADVISOR_PORT"); port != "" {
 			// We force to call the standalone cadvisor because k8s < 1.7.6 do not have /metrics/cadvisor kubelet endpoint.
 			e.Scheme = "http"
@@ -222,8 +222,8 @@ func (sd *discoverer) connectionAPIHTTPS(nodeName string, timeout time.Duration)
 	}, nil
 }
 
-func checkCall(client *http.Client, URL url.URL, path, token string) error {
-	URL.Path = filepath.Join(URL.Path, path)
+func checkCall(client *http.Client, URL url.URL, urlPath, token string) error {
+	URL.Path = path.Join(URL.Path, urlPath)
 
 	r, err := http.NewRequest(http.MethodGet, URL.String(), nil)
 	if err != nil {

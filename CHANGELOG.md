@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## 1.17.0
+
+### Added
+ - Added the necesary files for building a windows image of the integration.
+   The windows image needs to be manually created and it's still not in our 
+   CI/CD pipeline. We have the files for building it but we are not publishing
+   it. The latest supported image for Windows, at the time of writing, is 
+   1.16.0.
+ - Upgraded Docker base image `newrelic/infrastructure-bundle` to v1.3.0.
+   For more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.3.0).
+
 ## 1.16.0
 
 ### Added

@@ -1,0 +1,13 @@
+ARG IMAGE_NAME=newrelic/infrastructure
+ARG IMAGE_TAG=1.10.36-windows-1809
+FROM $IMAGE_NAME:$IMAGE_TAG
+
+ENV NRIA_IS_SECURE_FORWARD_ONLY true
+ENV NRIA_CACHE_PATH "c:\var\cache\nr-kubernetes\infra-sdk-cache.json"
+ENV NRIA_DISABLE_WIN_SHARED_WMI true
+
+COPY ["nri-kubernetes-definition-windows.yml", "c:/Program Files/New Relic/newrelic-infra/newrelic-integrations/nri-kubernetes-definition.yml"]
+COPY ["bin/nri-kubernetes.exe", "c:/Program Files/New Relic/newrelic-infra/newrelic-integrations/bin/nri-kubernetes.exe"]
+COPY ["nri-kubernetes-config.yml.sample", "c:/Program Files/New Relic/newrelic-infra/integrations.d/nri-kubernetes-config.yml"]
+
+ENTRYPOINT ["c:\\Program Files\\New Relic\\newrelic-infra\\newrelic-infra.exe"]

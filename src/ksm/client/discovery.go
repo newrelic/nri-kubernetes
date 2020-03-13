@@ -6,7 +6,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"path/filepath"
+	"path"
 	"strings"
 	"time"
 
@@ -103,9 +103,9 @@ func (c *ksm) NodeIP() string {
 	return c.nodeIP
 }
 
-func (c *ksm) Do(method, path string) (*http.Response, error) {
+func (c *ksm) Do(method, urlPath string) (*http.Response, error) {
 	e := c.endpoint
-	e.Path = filepath.Join(c.endpoint.Path, path)
+	e.Path = path.Join(c.endpoint.Path, urlPath)
 
 	r, err := prometheus.NewRequest(method, e.String())
 	if err != nil {
