@@ -156,6 +156,7 @@ func BuildComponentList(options ...ComponentOption) []Component {
 				{"tier": "control-plane", "component": "kube-controller-manager"},
 				// OpenShift
 				{"app": "kube-controller-manager", "kube-controller-manager": "true"},
+				{"app": "controller-manager", "controller-manager": "true"},
 			},
 			Queries: metric.ControllerManagerQueries,
 			Specs:   metric.ControllerManagerSpecs,
