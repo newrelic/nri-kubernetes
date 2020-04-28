@@ -19,6 +19,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/src/scrape"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/version"
 )
 
 const (
@@ -58,7 +59,7 @@ func main() {
 
 	// Kubelet
 	kubeletClient := newBasicHTTPClient(endpoint + "/kubelet")
-	podsFetcher := metric2.NewPodsFetcher(logger, kubeletClient)
+	podsFetcher := metric2.NewPodsFetcher(logger, kubeletClient, true)
 	kubeletGrouper := kubelet.NewGrouper(kubeletClient, logger, apiServerClient,
 		podsFetcher.FetchFuncWithCache(),
 		metric2.CadvisorFetchFunc(kubeletClient, metric.CadvisorQueries))
@@ -109,10 +110,13 @@ func main() {
 		)
 	}
 
+	k8sVersion := &version.Info{GitVersion: "v1.15.42"}
+
 	for _, job := range jobs {
 
 		logrus.Infof("Starting job: %s", job.Name)
-		result := job.Populate(integration, "test-cluster", logger)
+
+		result := job.Populate(integration, "test-cluster", logger, k8sVersion)
 
 		if result.Populated {
 			logrus.Infof("Successfully populated job: %s", job.Name)

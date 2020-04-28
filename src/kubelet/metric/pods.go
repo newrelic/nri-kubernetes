@@ -30,15 +30,16 @@ const KubeletPodsPath = "/pods"
 // results and avoid querying the kubelet multiple times in the same
 // integration execution.
 type PodsFetcher struct {
-	once       sync.Once
-	cached     bool
-	cachedPods definition.RawGroups
-	fetchError error
-	logger     *logrus.Logger
-	client     client.HTTPClient
+	once                   sync.Once
+	cached                 bool
+	cachedPods             definition.RawGroups
+	fetchError             error
+	logger                 *logrus.Logger
+	client                 client.HTTPClient
+	enableStaticPodsStatus bool
 }
 
-func doPodsFetch(logger *logrus.Logger, c client.HTTPClient) (definition.RawGroups, error) {
+func doPodsFetch(logger *logrus.Logger, c client.HTTPClient, enableStaticPodsStatus bool) (definition.RawGroups, error) {
 	r, err := c.Do(http.MethodGet, KubeletPodsPath)
 	if err != nil {
 		return nil, err
@@ -81,7 +82,7 @@ func doPodsFetch(logger *logrus.Logger, c client.HTTPClient) (definition.RawGrou
 
 	for _, p := range pods.Items {
 		id := podID(&p)
-		raw["pod"][id] = fetchPodData(logger, &p)
+		raw["pod"][id] = fetchPodData(logger, &p, enableStaticPodsStatus)
 
 		if _, ok := raw["pod"][id]["nodeIP"]; ok && nodeIP == "" {
 			nodeIP = raw["pod"][id]["nodeIP"].(string)
@@ -93,7 +94,7 @@ func doPodsFetch(logger *logrus.Logger, c client.HTTPClient) (definition.RawGrou
 			raw["pod"][id]["nodeIP"] = nodeIP
 		}
 
-		containers := fetchContainersData(logger, &p)
+		containers := fetchContainersData(logger, &p, enableStaticPodsStatus)
 		for id, c := range containers {
 			raw["container"][id] = c
 
@@ -126,23 +127,24 @@ func doPodsFetch(logger *logrus.Logger, c client.HTTPClient) (definition.RawGrou
 func (f *PodsFetcher) FetchFuncWithCache() data.FetchFunc {
 	return func() (definition.RawGroups, error) {
 		f.once.Do(func() {
-			f.cachedPods, f.fetchError = doPodsFetch(f.logger, f.client)
+			f.cachedPods, f.fetchError = doPodsFetch(f.logger, f.client, f.enableStaticPodsStatus)
 		})
 		return f.cachedPods, f.fetchError
 	}
 }
 
 // NewPodsFetcher returns a new PodsFetcher.
-func NewPodsFetcher(l *logrus.Logger, c client.HTTPClient) *PodsFetcher {
+func NewPodsFetcher(l *logrus.Logger, c client.HTTPClient, enableStaticPodsStatus bool) *PodsFetcher {
 	return &PodsFetcher{
-		logger: l,
-		client: c,
+		logger:                 l,
+		client:                 c,
+		enableStaticPodsStatus: enableStaticPodsStatus,
 	}
 }
 
-func fetchContainersData(logger *logrus.Logger, pod *v1.Pod) map[string]definition.RawMetrics {
+func fetchContainersData(logger *logrus.Logger, pod *v1.Pod, enableStaticPodsStatus bool) map[string]definition.RawMetrics {
 	statuses := make(map[string]definition.RawMetrics)
-	if !isStaticPod(pod) {
+	if enableStaticPodsStatus || !isStaticPod(pod) {
 		fillContainerStatuses(pod, statuses)
 	} else {
 		logger.Debugf("static pod found. Skip fetching containers status for pod %q", podID(pod))
@@ -254,14 +256,14 @@ func isFakePendingPod(s v1.PodStatus) bool {
 }
 
 // TODO handle errors and missing data
-func fetchPodData(logger *logrus.Logger, pod *v1.Pod) definition.RawMetrics {
+func fetchPodData(logger *logrus.Logger, pod *v1.Pod, staticPodsStatusSupport bool) definition.RawMetrics {
 	metrics := definition.RawMetrics{
 		"namespace": pod.GetObjectMeta().GetNamespace(),
 		"podName":   pod.GetObjectMeta().GetName(),
 		"nodeName":  pod.Spec.NodeName,
 	}
 
-	if !isStaticPod(pod) {
+	if staticPodsStatusSupport || !isStaticPod(pod) {
 		fillPodStatus(logger, metrics, pod)
 	} else {
 		logger.Debugf("Static pod found. Skip fetching pod status for pod %q", podID(pod))
@@ -358,7 +360,7 @@ func OneMetricPerLabel(rawLabels definition.FetchedValue) (definition.FetchedVal
 		return rawLabels, errors.New("error on creating kubelet label metrics")
 	}
 
-	modified := make(definition.FetchedValues)
+	modified := make(definition.FetchedValues, len(labels))
 	for k, v := range labels {
 		modified[fmt.Sprintf("label.%v", k)] = v
 	}

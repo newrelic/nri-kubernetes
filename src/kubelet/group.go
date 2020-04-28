@@ -52,7 +52,6 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 
 	fillGroupsAndMergeNonExistent(rawGroups, resources)
 
-	//TODO: should this be here? We need to know the NodeName before we can query NodeInfo
 	nodeInfo, err := r.apiServer.GetNodeInfo(response.Node.NodeName)
 	if err != nil {
 		return nil, &data.ErrorGroup{
@@ -62,7 +61,9 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 	}
 	g := definition.RawGroups{"node": {}}
 	g["node"][response.Node.NodeName] = definition.RawMetrics{
-		"labels": nodeInfo.Labels,
+		"labels":      nodeInfo.Labels,
+		"allocatable": nodeInfo.Allocatable,
+		"capacity":    nodeInfo.Capacity,
 	}
 
 	fillGroupsAndMergeNonExistent(rawGroups, g)

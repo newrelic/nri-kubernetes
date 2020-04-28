@@ -11,6 +11,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -38,11 +39,17 @@ type Kubernetes interface {
 	SecureHTTPClient(time.Duration) (*http.Client, error)
 	// FindSecret returns the secret with the given name, if any
 	FindSecret(name, namespace string) (*v1.Secret, error)
+	// ServerVersion returns the kubernetes server version.
+	ServerVersion() (*version.Info, error)
 }
 
 type goClientImpl struct {
 	client *kubernetes.Clientset
 	config *rest.Config
+}
+
+func (ka *goClientImpl) ServerVersion() (*version.Info, error) {
+	return ka.client.ServerVersion()
 }
 
 func (ka *goClientImpl) Config() *rest.Config {

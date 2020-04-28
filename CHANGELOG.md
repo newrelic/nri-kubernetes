@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## 1.21.0
+
+### Added
+ - Resources allocatable and capacity are retrieved from the apiserver and
+   added to the `K8sNodeSample` as `capacity<ResourceName>` and
+   `allocatable<ResourceName>`.
+ - The Kubernetes server version is retrieved from the apiserver and cached
+   with the `APIServerCacheK8SVersionTTL` config option. The Kubernetes version
+   is added to the `K8sClusterSample` as `clusterK8sVersion` and to inventory.
+ - Add support for static pods status for Kubernetes server versions 1.15 or
+   newer.
+
+### Changed
+ - Upgraded Docker base image `newrelic/infrastructure-bundle` to v1.3.8.
+   For more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.3.8).
+
 ## 1.20.0
 
 ### Changed

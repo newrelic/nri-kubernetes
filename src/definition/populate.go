@@ -5,6 +5,7 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/metric"
 	"github.com/newrelic/infra-integrations-sdk/sdk"
+	"k8s.io/apimachinery/pkg/version"
 )
 
 // GuessFunc guesses from data.
@@ -16,18 +17,32 @@ type PopulateFunc func(RawGroups, SpecGroups) (bool, []error)
 // MetricSetManipulator manipulates the MetricSet for a given entity and clusterName
 type MetricSetManipulator func(ms metric.MetricSet, entity sdk.Entity, clusterName string) error
 
-func populateCluster(i *sdk.IntegrationProtocol2, clusterName string) error {
+func populateCluster(i *sdk.IntegrationProtocol2, clusterName string, k8sVersion *version.Info) error {
 	e, err := i.Entity(clusterName, "k8s:cluster")
 	if err != nil {
 		return err
 	}
-	e.Inventory.SetItem("cluster", "name", clusterName)
 	ms := e.NewMetricSet("K8sClusterSample")
-	return ms.SetMetric("clusterName", clusterName, metric.ATTRIBUTE)
+
+	e.Inventory.SetItem("cluster", "name", clusterName)
+	err = ms.SetMetric("clusterName", clusterName, metric.ATTRIBUTE)
+	if err != nil {
+		return err
+	}
+
+	k8sVersionStr := k8sVersion.String()
+	e.Inventory.SetItem("cluster", "k8sVersion", k8sVersionStr)
+	return ms.SetMetric("clusterK8sVersion", k8sVersionStr, metric.ATTRIBUTE)
 }
 
 // IntegrationProtocol2PopulateFunc populates an integration protocol v2 with the given metrics and definition.
-func IntegrationProtocol2PopulateFunc(i *sdk.IntegrationProtocol2, clusterName string, msTypeGuesser GuessFunc, msManipulators ...MetricSetManipulator) PopulateFunc {
+func IntegrationProtocol2PopulateFunc(
+	i *sdk.IntegrationProtocol2,
+	clusterName string,
+	k8sVersion *version.Info,
+	msTypeGuesser GuessFunc,
+	msManipulators ...MetricSetManipulator,
+) PopulateFunc {
 	return func(groups RawGroups, specs SpecGroups) (bool, []error) {
 		var populated bool
 		var errs []error
@@ -93,7 +108,7 @@ func IntegrationProtocol2PopulateFunc(i *sdk.IntegrationProtocol2, clusterName s
 			}
 		}
 		if populated {
-			err := populateCluster(i, clusterName)
+			err := populateCluster(i, clusterName, k8sVersion)
 			if err != nil {
 				errs = append(errs, err)
 			}

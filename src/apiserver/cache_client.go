@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/newrelic/nri-kubernetes/src/storage"
+	"k8s.io/apimachinery/pkg/version"
 )
 
 // Option is a func that configures the fileCacheClient
@@ -101,4 +102,20 @@ func (f *fileCacheClient) GetNodeInfo(nodeName string) (*NodeInfo, error) {
 	}
 
 	return n, f.store(n, n.NodeName)
+}
+
+func (f *fileCacheClient) GetServerVersion() (*version.Info, error) {
+	const key = "k8sVersion"
+	k8sVersion := &version.Info{}
+
+	if f.load(k8sVersion, key) {
+		return k8sVersion, nil
+	}
+
+	k8sVersion, err := f.client.GetServerVersion()
+	if err != nil {
+		return nil, err
+	}
+
+	return k8sVersion, f.store(k8sVersion, key)
 }

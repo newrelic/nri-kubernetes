@@ -6,6 +6,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/src/definition"
 	"github.com/newrelic/nri-kubernetes/src/metric"
 	"github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/version"
 )
 
 // NewScrapeJob creates a new Scrape Job with the given attributes
@@ -25,7 +26,12 @@ type Job struct {
 }
 
 // Populate will get the data using the given Group, transform it, and push it to the given Integration
-func (s *Job) Populate(integration *sdk.IntegrationProtocol2, clusterName string, logger *logrus.Logger) data.PopulateResult {
+func (s *Job) Populate(
+	integration *sdk.IntegrationProtocol2,
+	clusterName string,
+	logger *logrus.Logger,
+	k8sVersion *version.Info,
+) data.PopulateResult {
 	groups, errs := s.Grouper.Group(s.Specs)
 	if errs != nil && len(errs.Errors) > 0 {
 		if !errs.Recoverable {
@@ -38,5 +44,5 @@ func (s *Job) Populate(integration *sdk.IntegrationProtocol2, clusterName string
 		logger.Warnf("%s", errs)
 	}
 
-	return metric.NewK8sPopulator().Populate(groups, s.Specs, integration, clusterName)
+	return metric.NewK8sPopulator().Populate(groups, s.Specs, integration, clusterName, k8sVersion)
 }

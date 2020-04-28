@@ -12,6 +12,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/src/definition"
 	"github.com/newrelic/nri-kubernetes/src/kubelet/metric/testdata"
 	"github.com/stretchr/testify/assert"
+	"k8s.io/apimachinery/pkg/version"
 )
 
 func parseTime(raw string) time.Time {
@@ -28,9 +29,10 @@ var expectedMetrics = []*sdk.EntityData{
 		},
 		Metrics: []sdkMetric.MetricSet{
 			{
-				"entityName":  "k8s:cluster:test-cluster",
-				"event_type":  "K8sClusterSample",
-				"clusterName": "test-cluster",
+				"entityName":        "k8s:cluster:test-cluster",
+				"event_type":        "K8sClusterSample",
+				"clusterName":       "test-cluster",
+				"clusterK8sVersion": "v1.15.42",
 			},
 		},
 		Inventory: sdk.Inventory{},
@@ -139,7 +141,9 @@ func TestPopulateK8s(t *testing.T) {
 			"kube-system_newrelic-infra-rz225_newrelic-infra": testdata.ExpectedGroupData["container"]["kube-system_newrelic-infra-rz225_newrelic-infra"],
 		},
 	}
-	err = p.Populate(foo, kubeletSpecs, i, "test-cluster")
+
+	k8sVersion := &version.Info{GitVersion: "v1.15.42"}
+	err = p.Populate(foo, kubeletSpecs, i, "test-cluster", k8sVersion)
 	assert.Error(t, err)
 
 	// Expected errs (missing data)
@@ -155,6 +159,7 @@ func TestPopulateK8s(t *testing.T) {
 	assert.ElementsMatch(t, expectedErrs, err.(data.PopulateResult).Errors)
 	expectedInventory := sdk.Inventory{}
 	expectedInventory.SetItem("cluster", "name", expectedMetrics[0].Entity.Name)
+	expectedInventory.SetItem("cluster", "k8sVersion", k8sVersion.String())
 	expectedMetrics[0].Inventory = expectedInventory
 	assert.ElementsMatch(t, expectedMetrics, i.Data)
 }

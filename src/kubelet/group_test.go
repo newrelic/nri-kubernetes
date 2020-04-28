@@ -8,6 +8,9 @@ import (
 	"testing"
 
 	"github.com/newrelic/nri-kubernetes/src/apiserver"
+	"github.com/newrelic/nri-kubernetes/src/definition"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/newrelic/nri-kubernetes/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/src/kubelet/metric/testdata"
@@ -79,6 +82,18 @@ func TestGroup(t *testing.T) {
 				"kubernetes.io/os":               "linux",
 				"node-role.kubernetes.io/master": "",
 			},
+			Allocatable: v1.ResourceList{
+				v1.ResourceCPU:              *resource.NewQuantity(2, resource.DecimalSI),
+				v1.ResourcePods:             *resource.NewQuantity(110, resource.DecimalSI),
+				v1.ResourceEphemeralStorage: *resource.NewQuantity(18211580000, resource.BinarySI),
+				v1.ResourceMemory:           *resource.NewQuantity(2033280000, resource.BinarySI),
+			},
+			Capacity: v1.ResourceList{
+				v1.ResourceCPU:              *resource.NewQuantity(2, resource.DecimalSI),
+				v1.ResourcePods:             *resource.NewQuantity(110, resource.DecimalSI),
+				v1.ResourceEphemeralStorage: *resource.NewQuantity(18211586048, resource.BinarySI),
+				v1.ResourceMemory:           *resource.NewQuantity(2033283072, resource.BinarySI),
+			},
 		},
 	}}
 	queries := []prometheus.Query{
@@ -93,10 +108,41 @@ func TestGroup(t *testing.T) {
 		},
 	}
 
-	podsFetcher := metric.NewPodsFetcher(logrus.StandardLogger(), &c)
-	grouper := NewGrouper(&c, logrus.StandardLogger(), a, podsFetcher.FetchFuncWithCache(), metric.CadvisorFetchFunc(&c, queries))
-	r, errGroup := grouper.Group(nil)
+	testCases := []struct {
+		name                  string
+		enableStaticPodStatus bool
+		expected              definition.RawGroups
+	}{
+		{
+			name:                  "with kubernetes support for static pod status",
+			enableStaticPodStatus: true,
+			expected:              testdata.ExpectedGroupData,
+		},
+		{
+			name:                  "without kubernetes support for static pod status",
+			enableStaticPodStatus: false,
+			expected:              testdata.ExpectedGroupDataWithoutStaticPodsStatus,
+		},
+	}
 
-	assert.Nil(t, errGroup)
-	assert.Equal(t, testdata.ExpectedGroupData, r)
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			podsFetcher := metric.NewPodsFetcher(
+				logrus.StandardLogger(),
+				&c,
+				testCase.enableStaticPodStatus,
+			)
+			grouper := NewGrouper(
+				&c,
+				logrus.StandardLogger(),
+				a,
+				podsFetcher.FetchFuncWithCache(),
+				metric.CadvisorFetchFunc(&c, queries),
+			)
+			r, errGroup := grouper.Group(nil)
+
+			assert.Nil(t, errGroup)
+			assert.Equal(t, testCase.expected, r)
+		})
+	}
 }

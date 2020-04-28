@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/mock"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/rest"
 )
 
@@ -18,6 +19,12 @@ type MockedKubernetes struct {
 func (m *MockedKubernetes) Config() *rest.Config {
 	args := m.Called()
 	return args.Get(0).(*rest.Config)
+}
+
+// ServerVersion mocks Kubernetes ServerVersion
+func (m *MockedKubernetes) ServerVersion() (*version.Info, error) {
+	args := m.Called()
+	return args.Get(0).(*version.Info), args.Error(1)
 }
 
 // SecureHTTPClient mocks Kubernetes SecureHTTPClient

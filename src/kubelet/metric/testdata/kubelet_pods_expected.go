@@ -9,6 +9,17 @@ import (
 // ExpectedRawData is the expectation for main fetch_test tests.
 var ExpectedRawData = definition.RawGroups{
 	"pod": {
+		"kube-system_kube-controller-manager-minikube": {
+			"nodeName":    "minikube",
+			"isReady":     "True",
+			"isScheduled": "True",
+			"nodeIP":      "192.168.99.100",
+			"labels":      map[string]string{"k8s-app": "kube-controller-manager", "component": "kube-controller-manager", "tier": "control-plane"},
+			"namespace":   "kube-system",
+			"podName":     "kube-controller-manager-minikube",
+			"status":      "Running",
+			"startTime":   parseTime("2019-10-23T17:10:48Z"),
+		},
 		"kube-system_newrelic-infra-rz225": {
 			"createdKind": "DaemonSet",
 			"createdBy":   "newrelic-infra",
@@ -140,6 +151,25 @@ var ExpectedRawData = definition.RawGroups{
 				"pod-template-hash": "3751220431",
 				"run":               "sh",
 			},
+		},
+
+		"kube-system_kube-controller-manager-minikube_kube-controller-manager": {
+			"nodeName": "minikube",
+			"isReady":  bool(true),
+			"labels": map[string]string{
+				"tier":      "control-plane",
+				"k8s-app":   "kube-controller-manager",
+				"component": "kube-controller-manager",
+			},
+			"podName":           "kube-controller-manager-minikube",
+			"containerImage":    "k8s.gcr.io/kube-controller-manager:v1.16.0",
+			"namespace":         "kube-system",
+			"nodeIP":            "192.168.99.100",
+			"cpuRequestedCores": int64(200),
+			"status":            "Running",
+			"startedAt":         parseTime("2019-10-23T17:10:49Z"),
+			"restartCount":      int32(1),
+			"containerName":     "kube-controller-manager",
 		},
 	},
 }

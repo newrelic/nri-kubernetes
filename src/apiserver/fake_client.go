@@ -1,6 +1,10 @@
 package apiserver
 
-import "fmt"
+import (
+	"fmt"
+
+	"k8s.io/apimachinery/pkg/version"
+)
 
 // TestAPIServer is for testing purposes. It implements the apiserver.Client interface with an in-memory list of objects
 type TestAPIServer struct {
@@ -14,4 +18,8 @@ func (t TestAPIServer) GetNodeInfo(nodeName string) (*NodeInfo, error) {
 	}
 
 	return node, nil
+}
+
+func (t TestAPIServer) GetServerVersion() (*version.Info, error) {
+	return &version.Info{}, nil
 }

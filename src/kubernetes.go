@@ -18,6 +18,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/src/controlplane"
 	clientControlPlane "github.com/newrelic/nri-kubernetes/src/controlplane/client"
 	"github.com/newrelic/nri-kubernetes/src/data"
+	"github.com/newrelic/nri-kubernetes/src/featureflag"
 	"github.com/newrelic/nri-kubernetes/src/ksm"
 	clientKsm "github.com/newrelic/nri-kubernetes/src/ksm/client"
 	"github.com/newrelic/nri-kubernetes/src/kubelet"
@@ -36,6 +37,7 @@ type argumentList struct {
 	CacheDir                     string `default:"/var/cache/nr-kubernetes" help:"The location where to store various cached data."`
 	DiscoveryCacheTTL            string `default:"1h" help:"Duration since the discovered endpoints are stored in the cache until they expire. Valid time units: 'ns', 'us', 'ms', 's', 'm', 'h'"`
 	APIServerCacheTTL            string `default:"5m" help:"Duration to cache responses from the API Server. Valid time units: 'ns', 'us', 'ms', 's', 'm', 'h'. Set to 0s to disable"`
+	APIServerCacheK8SVersionTTL  string `default:"3h" help:"Duration to cache the kubernetes version responses from the API Server. Valid time units: 'ns', 'us', 'ms', 's', 'm', 'h'. Set to 0s to disable"`
 	EtcdTLSSecretName            string `help:"Name of the secret that stores your ETCD TLS configuration"`
 	EtcdTLSSecretNamespace       string `default:"default" help:"Namespace in which the ETCD TLS secret lives"`
 	DisableKubeStateMetrics      bool   `default:"false" help:"Used to disable KSM data fetching. Defaults to 'false''"`
@@ -56,15 +58,17 @@ const (
 	// '/var/cache/nri-kubernetes' due to the fact that this would break
 	// customers setup when running unprivileged mode. Changing this value
 	// would mean clients would have to update their manifest file.
-	defaultCacheDir   = "/var/cache/nr-kubernetes"
-	discoveryCacheDir = "discovery"
-	apiserverCacheDir = "apiserver"
+	defaultCacheDir             = "/var/cache/nr-kubernetes"
+	discoveryCacheDir           = "discovery"
+	apiserverCacheDir           = "apiserver"
+	apiserverCacheDirK8sVersion = "apiserverK8SVersion"
 
-	defaultAPIServerCacheTTL = time.Minute * 5
-	defaultDiscoveryCacheTTL = time.Hour
+	defaultAPIServerCacheTTL           = time.Minute * 5
+	defaultAPIServerCacheK8SVersionTTL = time.Hour * 3
+	defaultDiscoveryCacheTTL           = time.Hour
 
 	integrationName    = "com.newrelic.kubernetes"
-	integrationVersion = "1.20.0"
+	integrationVersion = "1.21.0"
 	nodeNameEnvVar     = "NRK8S_NODE_NAME"
 )
 
@@ -277,12 +281,39 @@ func main() {
 		}
 	}
 
+	apiServerClient := apiserver.NewClient(k8s)
+
+	ttlAPIServerCacheK8SVersion, err := time.ParseDuration(args.APIServerCacheK8SVersionTTL)
+
+	if err != nil {
+		logger.WithError(err).Errorf(
+			"while parsing the api server cache TTL value for the kubernetes server version. Defaulting to %s",
+			defaultAPIServerCacheK8SVersionTTL,
+		)
+		ttlAPIServerCacheK8SVersion = defaultAPIServerCacheK8SVersionTTL
+	}
+
+	var apiServerClientK8sVersion apiserver.Client
+	if ttlAPIServerCacheK8SVersion != time.Duration(0) {
+		apiServerClientK8sVersion = apiserver.NewFileCacheClientWrapper(
+			apiServerClient,
+			getCacheDir(apiserverCacheDirK8sVersion),
+			ttlAPIServerCacheK8SVersion,
+		)
+	} else {
+		apiServerClientK8sVersion = apiServerClient
+	}
+	k8sVersion, err := apiServerClientK8sVersion.GetServerVersion()
+	if err != nil {
+		logger.WithError(err).Errorf("getting the kubernetes server version")
+	}
+	enableStaticPodsStatus := featureflag.StaticPodsStatus(k8sVersion)
+
 	ttlAPIServerCache, err := time.ParseDuration(args.APIServerCacheTTL)
 	if err != nil {
-		logger.WithError(err).Errorf("while parsing the api server cache TTL value. Defaulting to %s", ttlAPIServerCache)
+		logger.WithError(err).Errorf("while parsing the api server cache TTL value. Defaulting to %s", defaultAPIServerCacheTTL)
 		ttlAPIServerCache = defaultAPIServerCacheTTL
 	}
-	apiServerClient := apiserver.NewClient(k8s)
 
 	if ttlAPIServerCache != time.Duration(0) {
 		apiServerClient = apiserver.NewFileCacheClientWrapper(apiServerClient,
@@ -290,7 +321,7 @@ func main() {
 			ttlAPIServerCache)
 	}
 
-	podsFetcher := metric2.NewPodsFetcher(logger, kubeletClient).FetchFuncWithCache()
+	podsFetcher := metric2.NewPodsFetcher(logger, kubeletClient, enableStaticPodsStatus).FetchFuncWithCache()
 	cpJobs, err := controlPlaneJobs(
 		logger,
 		apiServerClient,
@@ -315,16 +346,20 @@ func main() {
 	}
 
 	// Kubelet is always scraped, on each node
-	kubeletGrouper := kubelet.NewGrouper(kubeletClient, logger, apiServerClient,
+	kubeletGrouper := kubelet.NewGrouper(
+		kubeletClient,
+		logger,
+		apiServerClient,
 		podsFetcher,
-		metric2.CadvisorFetchFunc(kubeletClient, metric.CadvisorQueries))
+		metric2.CadvisorFetchFunc(kubeletClient, metric.CadvisorQueries),
+	)
 	jobs = append(jobs, scrape.NewScrapeJob("kubelet", kubeletGrouper, metric.KubeletSpecs))
 
 	successfulJobs := 0
 	for _, job := range jobs {
 		logger.Debugf("Running job: %s", job.Name)
 		start := time.Now()
-		result := job.Populate(integration, args.ClusterName, logger)
+		result := job.Populate(integration, args.ClusterName, logger, k8sVersion)
 		measured := time.Now().Sub(start)
 		logger.Debugf("Job %s took %s", job.Name, measured.Round(time.Millisecond))
 
