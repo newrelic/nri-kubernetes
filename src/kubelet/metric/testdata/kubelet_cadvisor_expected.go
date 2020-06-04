@@ -2,6 +2,7 @@ package testdata
 
 import (
 	"github.com/newrelic/nri-kubernetes/src/definition"
+	"github.com/newrelic/nri-kubernetes/src/prometheus"
 )
 
 // ExpectedCadvisorRawData ...
@@ -36,12 +37,18 @@ var ExpectedCadvisorRawData = definition.RawGroups{
 			"containerImageID": "sha256:fed89e8b4248a788655d528d96fe644aff012879c782784cd486ff6894ef89f6",
 		},
 		"kube-system_kube-state-metrics-57f4659995-6n2qq_addon-resizer": {
-			"containerID":      "3328c17bfd22f1a82fcdf8707c2f8f040c462e548c24780079bba95d276d93e1",
-			"containerImageID": "gcr.io/google_containers/addon-resizer@sha256:e77acf80697a70386c04ae3ab494a7b13917cb30de2326dcf1a10a5118eddabe",
+			"containerID":                               "3328c17bfd22f1a82fcdf8707c2f8f040c462e548c24780079bba95d276d93e1",
+			"containerImageID":                          "gcr.io/google_containers/addon-resizer@sha256:e77acf80697a70386c04ae3ab494a7b13917cb30de2326dcf1a10a5118eddabe",
+			"container_cpu_cfs_periods_total":           prometheus.CounterValue(8495),
+			"container_cpu_cfs_throttled_periods_total": prometheus.CounterValue(2507),
+			"container_cpu_cfs_throttled_seconds_total": prometheus.CounterValue(287.965920749),
 		},
 		"kube-system_kube-state-metrics-57f4659995-6n2qq_kube-state-metrics": {
-			"containerID":      "c452821fcf6c5f594d4f98a1426e7a2c51febb65d5d50d92903f9dfb367bfba7",
-			"containerImageID": "quay.io/coreos/kube-state-metrics@sha256:52a2c47355c873709bb4e37e990d417e9188c2a778a0c38ed4c09776ddc54efb",
+			"containerID":                               "c452821fcf6c5f594d4f98a1426e7a2c51febb65d5d50d92903f9dfb367bfba7",
+			"containerImageID":                          "quay.io/coreos/kube-state-metrics@sha256:52a2c47355c873709bb4e37e990d417e9188c2a778a0c38ed4c09776ddc54efb",
+			"container_cpu_cfs_periods_total":           prometheus.CounterValue(13781),
+			"container_cpu_cfs_throttled_periods_total": prometheus.CounterValue(3964),
+			"container_cpu_cfs_throttled_seconds_total": prometheus.CounterValue(271.443742526),
 		},
 		"kube-system_kubernetes-dashboard-77d8b98585-mtjld_kubernetes-dashboard": {
 			"containerID":      "413bbcacdd1ea51fd3471beac717af55cd771f08993ce7b5fe66803835dc8421",

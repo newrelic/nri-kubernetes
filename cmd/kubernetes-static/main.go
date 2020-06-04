@@ -25,6 +25,9 @@ import (
 const (
 	integrationName    = "kubernetes-static"
 	integrationVersion = "static-local"
+
+	// set to false to use Kubernetes 1.15 metrics (cAdvisor changes)
+	useKubernetes1_16 = false
 )
 
 type argumentList struct {
@@ -52,7 +55,7 @@ func main() {
 		"minikube": {
 			NodeName: "minikube",
 			Labels: map[string]string{
-				"app.kubernetes.io/master": "true",
+				"node-role.kubernetes.io/master": "",
 			},
 		},
 	}}
@@ -143,7 +146,13 @@ func startStaticMetricsServer() string {
 	fmt.Println("Hosting Mock Metrics data on:", endpoint)
 
 	mux := http.NewServeMux()
-	mux.Handle("/", http.FileServer(http.Dir("./data")))
+
+	dataDir := "./data/1_15"
+	if useKubernetes1_16 {
+		dataDir = "./data/1_16"
+	}
+
+	mux.Handle("/", http.FileServer(http.Dir(dataDir)))
 	go func() {
 		logrus.Fatal(http.Serve(listener, mux))
 	}()

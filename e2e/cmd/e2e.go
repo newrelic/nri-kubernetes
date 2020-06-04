@@ -47,7 +47,7 @@ const (
 	nrLabel     = "name=newrelic-infra"
 	namespace   = "default"
 	nrContainer = "newrelic-infra"
-	ksmLabel    = "app=kube-state-metrics"
+	ksmLabel    = "app.kubernetes.io/name=kube-state-metrics"
 )
 
 type eventTypeSchemasPerEntity map[entityID]jsonschema.EventTypeToSchemaFilename
@@ -70,17 +70,13 @@ func (e entityID) split() []string {
 
 func scenarios(integrationImageRepository string, integrationImageTag string, rbac bool, unprivileged bool) []string {
 	return []string{
-		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.4.0", false),
-		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.4.0", true),
-		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.5.0", false),
-		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.5.0", true),
-		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.6.0", false),
-		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.6.0", true),
-		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.7.0", false),
-		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.7.0", true),
+		// 4 latest versions, single KSM instance
+		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.7.1", false),
 		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.8.0", false),
-		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.8.0", true),
 		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.9.0", false),
+
+		// the behaviour for multiple KSMs only has to be tested for one version, because it's testing our logic,
+		// not the logic of KSM. This might change if KSM sharding becomes enabled by default.
 		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.9.0", true),
 	}
 }
@@ -267,10 +263,10 @@ func determineMinikubeHost(logger *logrus.Logger) string {
 	err := cmd.Run()
 	if err != nil {
 		logger.Infof("Could not determine Minikube host: %v", err)
-		return ""
+		return "https://this-will-never-be-the-minikube-host.com"
 	}
 
-	return fmt.Sprintf("https://%s:8443", strings.TrimSpace(out.String()))
+	return strings.TrimSpace(out.String())
 }
 
 func waitForKSM(c *k8s.Client, logger *logrus.Logger) (*v1.Pod, error) {
@@ -355,7 +351,7 @@ func executeTests(c *k8s.Client, ksmPod *v1.Pod, releaseName string, logger *log
 	}
 
 	minikubeHost := determineMinikubeHost(logger)
-	if c.Config.Host == minikubeHost {
+	if strings.Contains(c.Config.Host, minikubeHost) {
 		logger.Info("Skipping `testSpecificEntities` because you're running them in Minikube (persistent volumes don't work well in Minikube)")
 	} else {
 		logger.Info("checking if specific entities match our JSON schemas")

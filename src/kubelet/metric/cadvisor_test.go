@@ -26,6 +26,10 @@ var cadvisorQueries = []prometheus.Query{
 			},
 		},
 	},
+	{MetricName: "container_cpu_cfs_periods_total"},
+	{MetricName: "container_cpu_cfs_throttled_periods_total"},
+	{MetricName: "container_cpu_cfs_throttled_seconds_total"},
+	{MetricName: "container_memory_mapped_file"},
 }
 
 func readerToHandler(r io.Reader) http.HandlerFunc {
@@ -33,13 +37,11 @@ func readerToHandler(r io.Reader) http.HandlerFunc {
 		io.Copy(w, r) // nolint: errcheck
 	}
 }
-
-func TestCadvisorFetchFunc(t *testing.T) {
-	f, err := os.Open("testdata/kubelet_metrics_cadvisor_payload_plain.txt")
+func runCAdvisorFetchFunc(t *testing.T, file string) {
+	f, err := os.Open(file)
 	if err != nil {
 		panic(err)
 	}
-
 	defer f.Close()
 
 	c := testClient{
@@ -50,6 +52,14 @@ func TestCadvisorFetchFunc(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, testdata.ExpectedCadvisorRawData, g)
+}
+func TestCadvisorFetchFunc(t *testing.T) {
+	t.Run("Kubernetes version 1.15", func(t *testing.T) {
+		runCAdvisorFetchFunc(t, "./testdata/k8s_v1_15_kubelet_metrics_cadvisor_payload_plain.txt")
+	})
+	t.Run("Kubernetes version 1.16", func(t *testing.T) {
+		runCAdvisorFetchFunc(t, "./testdata/k8s_v1_16_kubelet_metrics_cadvisor_payload_plain.txt")
+	})
 }
 
 func TestCadvisorFetchFunc_MissingLabels(t *testing.T) {
@@ -69,11 +79,11 @@ container_memory_usage_bytes{container_name="influxdb",id="/kubepods/besteffort/
 	assert.Error(t, err)
 
 	expectedErrs := []error{
-		errors.New("container name not found in cadvisor metrics"),
-		errors.New("namespace not found in cadvisor metrics"),
-		errors.New("pod name not found in cadvisor metrics"),
-		errors.New("container id not found in cadvisor metrics"),
-		errors.New("container image not found in cadvisor metrics"),
+		errors.New("container name not found in cAdvisor metrics"),
+		errors.New("namespace not found in cAdvisor metrics"),
+		errors.New("pod name not found in cAdvisor metrics"),
+		errors.New("container id not found in cAdvisor metrics"),
+		errors.New("container image not found in cAdvisor metrics"),
 	}
 
 	assert.ElementsMatch(t, expectedErrs, err.(data.ErrorGroup).Errors)

@@ -749,6 +749,10 @@ var CadvisorQueries = []prometheus.Query{
 			},
 		},
 	},
+	{MetricName: "container_cpu_cfs_periods_total"},
+	{MetricName: "container_cpu_cfs_throttled_periods_total"},
+	{MetricName: "container_cpu_cfs_throttled_seconds_total"},
+	{MetricName: "container_memory_mapped_file"},
 }
 
 // KubeletSpecs are the metric specifications we want to collect from Kubelet.
@@ -800,6 +804,13 @@ var KubeletSpecs = definition.SpecGroups{
 			// /metrics/cadvisor endpoint
 			{Name: "containerID", ValueFunc: definition.FromRaw("containerID"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "containerImageID", ValueFunc: definition.FromRaw("containerImageID"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "containerCpuCfsPeriodsDelta", ValueFunc: definition.FromRaw("container_cpu_cfs_periods_total"), Type: sdkMetric.DELTA, Optional: true},
+			{Name: "containerCpuCfsThrottledPeriodsDelta", ValueFunc: definition.FromRaw("container_cpu_cfs_throttled_periods_total"), Type: sdkMetric.DELTA, Optional: true},
+			{Name: "containerCpuCfsThrottledSecondsDelta", ValueFunc: definition.FromRaw("container_cpu_cfs_throttled_seconds_total"), Type: sdkMetric.DELTA, Optional: true},
+			{Name: "containerCpuCfsPeriodsTotal", ValueFunc: definition.FromRaw("container_cpu_cfs_periods_total"), Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "containerCpuCfsThrottledPeriodsTotal", ValueFunc: definition.FromRaw("container_cpu_cfs_throttled_periods_total"), Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "containerCpuCfsThrottledSecondsTotal", ValueFunc: definition.FromRaw("container_cpu_cfs_throttled_seconds_total"), Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "containerMemoryMappedFileBytes", ValueFunc: definition.FromRaw("container_memory_mapped_file"), Type: sdkMetric.GAUGE, Optional: true},
 
 			// /pods endpoint
 			{Name: "containerName", ValueFunc: definition.FromRaw("containerName"), Type: sdkMetric.ATTRIBUTE},

@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.23.0
+
+### Added
+ - Kubernetes 1.16 is now officially supported.
+    - The minimum supported version of kube-state-metrics for this release is 1.9.5, according to the [KSM compatibility matrix](https://github.com/kubernetes/kube-state-metrics#compatibility-matrix) 
+ - Added container throttling metrics to the K8sContainerSample:
+   - `containerCpuCfsPeriodsDelta`: Delta change of elapsed enforcement period intervals.
+   - `containerCpuCfsThrottledPeriodsDelta`: Delta change of throttled period intervals.
+   - `containerCpuCfsThrottledSecondsDelta`:  Delta change of duration the container has been throttled.
+   - `containerCpuCfsPeriodsTotal`: Number of elapsed enforcement period intervals.
+   - `containerCpuCfsThrottledPeriodsTotal`: Number of throttled period intervals.
+   - `containerCpuCfsThrottledSecondsTotal`: Total time duration the container has been throttled.
+ - Added container mmap byte usage metrics to the K8sContainerSample:
+   - `containerMemoryMappedFileBytes`: Size of memory mapped files in bytes.
+
 ## 1.22.0 
 
 ### Changed
