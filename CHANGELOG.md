@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+
+## 1.23.1
+
+### Fixed
+- Bug that swapped values of node allocatable resources with node capacity 
+  resources.
+
 ## 1.23.0
 
 ### Added

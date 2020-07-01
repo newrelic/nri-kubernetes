@@ -33,13 +33,14 @@ pipeline {
       }
     }
 
-    stage('Dependencies') {
-      steps {
-        withCredentials([string(credentialsId: 'KOPS_AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'KOPS_AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')]) {
-          sh 'aws s3 sync s3://nr-vendor-cache-fsi/vendor ./vendor --quiet'
+    stage('Snyk') {
+        steps {
+            withCredentials([string(credentialsId: 'SNYK_LICENSE_KEY', variable: 'SNYK_TOKEN')]) {
+                sh '''
+                    docker run --rm -v $(pwd):/src -e "SNYK_TOKEN=$SNYK_TOKEN" -w /src snyk/snyk:golang "snyk test"
+                '''
+            }
         }
-        sh 'make deps'
-      }
     }
     stage('CI') {
       parallel {
