@@ -1,0 +1,383 @@
+# HELP kube_deployment_labels Kubernetes labels converted to Prometheus labels.
+# TYPE kube_deployment_labels gauge
+kube_deployment_labels{deployment="ksm",label_run="ksm",namespace="default"} 1
+kube_deployment_labels{deployment="smoya-ghtop",label_run="smoya-ghtop",namespace="default"} 1
+kube_deployment_labels{deployment="kube-dns",label_addonmanager_kubernetes_io_mode="Reconcile",label_k8s_app="kube-dns",label_version="v20",namespace="kube-system"} 1
+# HELP kube_deployment_metadata_generation Sequence number representing a specific generation of the desired state.
+# TYPE kube_deployment_metadata_generation gauge
+kube_deployment_metadata_generation{deployment="ksm",namespace="default"} 1
+kube_deployment_metadata_generation{deployment="kube-dns",namespace="kube-system"} 1
+kube_deployment_metadata_generation{deployment="smoya-ghtop",namespace="default"} 3
+# HELP kube_deployment_spec_paused Whether the deployment is paused and will not be processed by the deployment controller.
+# TYPE kube_deployment_spec_paused gauge
+kube_deployment_spec_paused{deployment="ksm",namespace="default"} 0
+kube_deployment_spec_paused{deployment="kube-dns",namespace="kube-system"} 0
+kube_deployment_spec_paused{deployment="smoya-ghtop",namespace="default"} 0
+# HELP kube_deployment_spec_replicas Number of desired pods for a deployment.
+# TYPE kube_deployment_spec_replicas gauge
+kube_deployment_spec_replicas{deployment="ksm",namespace="default"} 1
+kube_deployment_spec_replicas{deployment="kube-dns",namespace="kube-system"} 1
+kube_deployment_spec_replicas{deployment="smoya-ghtop",namespace="default"} 4
+# HELP kube_deployment_spec_strategy_rollingupdate_max_unavailable Maximum number of unavailable replicas during a rolling update of a deployment.
+# TYPE kube_deployment_spec_strategy_rollingupdate_max_unavailable gauge
+kube_deployment_spec_strategy_rollingupdate_max_unavailable{deployment="ksm",namespace="default"} 1
+kube_deployment_spec_strategy_rollingupdate_max_unavailable{deployment="kube-dns",namespace="kube-system"} 1
+kube_deployment_spec_strategy_rollingupdate_max_unavailable{deployment="smoya-ghtop",namespace="default"} 1
+# HELP kube_deployment_status_observed_generation The generation observed by the deployment controller.
+# TYPE kube_deployment_status_observed_generation gauge
+kube_deployment_status_observed_generation{deployment="ksm",namespace="default"} 1
+kube_deployment_status_observed_generation{deployment="kube-dns",namespace="kube-system"} 1
+kube_deployment_status_observed_generation{deployment="smoya-ghtop",namespace="default"} 3
+# HELP kube_deployment_status_replicas The number of replicas per deployment.
+# TYPE kube_deployment_status_replicas gauge
+kube_deployment_status_replicas{deployment="ksm",namespace="default"} 1
+kube_deployment_status_replicas{deployment="kube-dns",namespace="kube-system"} 1
+kube_deployment_status_replicas{deployment="smoya-ghtop",namespace="default"} 4
+# HELP kube_deployment_status_replicas_available The number of available replicas per deployment.
+# TYPE kube_deployment_status_replicas_available gauge
+kube_deployment_status_replicas_available{deployment="ksm",namespace="default"} 1
+kube_deployment_status_replicas_available{deployment="kube-dns",namespace="kube-system"} 1
+kube_deployment_status_replicas_available{deployment="smoya-ghtop",namespace="default"} 4
+# HELP kube_deployment_status_replicas_unavailable The number of unavailable replicas per deployment.
+# TYPE kube_deployment_status_replicas_unavailable gauge
+kube_deployment_status_replicas_unavailable{deployment="ksm",namespace="default"} 0
+kube_deployment_status_replicas_unavailable{deployment="kube-dns",namespace="kube-system"} 0
+kube_deployment_status_replicas_unavailable{deployment="smoya-ghtop",namespace="default"} 0
+# HELP kube_deployment_status_replicas_updated The number of updated replicas per deployment.
+# TYPE kube_deployment_status_replicas_updated gauge
+kube_deployment_status_replicas_updated{deployment="ksm",namespace="default"} 1
+kube_deployment_status_replicas_updated{deployment="kube-dns",namespace="kube-system"} 1
+kube_deployment_status_replicas_updated{deployment="smoya-ghtop",namespace="default"} 4
+# HELP kube_node_info Information about a cluster node.
+# TYPE kube_node_info gauge
+kube_node_info{container_runtime_version="docker://Unknown",kernel_version="4.9.13",kubelet_version="v1.8.0",kubeproxy_version="v1.8.0",node="minikube",os_image="Buildroot 2017.02",provider_id=""} 1
+# HELP kube_node_labels Kubernetes labels converted to Prometheus labels.
+# TYPE kube_node_labels gauge
+kube_node_labels{label_beta_kubernetes_io_arch="amd64",label_beta_kubernetes_io_os="linux",label_kubernetes_io_hostname="minikube",node="minikube"} 1
+# HELP kube_node_spec_unschedulable Whether a node can schedule new pods.
+# TYPE kube_node_spec_unschedulable gauge
+kube_node_spec_unschedulable{node="minikube"} 0
+# HELP kube_node_status_allocatable_cpu_cores The CPU resources of a node that are available for scheduling.
+# TYPE kube_node_status_allocatable_cpu_cores gauge
+kube_node_status_allocatable_cpu_cores{node="minikube"} 2
+# HELP kube_node_status_allocatable_memory_bytes The memory resources of a node that are available for scheduling.
+# TYPE kube_node_status_allocatable_memory_bytes gauge
+kube_node_status_allocatable_memory_bytes{node="minikube"} 1.992372224e+09
+# HELP kube_node_status_allocatable_pods The pod resources of a node that are available for scheduling.
+# TYPE kube_node_status_allocatable_pods gauge
+kube_node_status_allocatable_pods{node="minikube"} 110
+# HELP kube_node_status_capacity_cpu_cores The total CPU resources of the node.
+# TYPE kube_node_status_capacity_cpu_cores gauge
+kube_node_status_capacity_cpu_cores{node="minikube"} 2
+# HELP kube_node_status_capacity_memory_bytes The total memory resources of the node.
+# TYPE kube_node_status_capacity_memory_bytes gauge
+kube_node_status_capacity_memory_bytes{node="minikube"} 2.097229824e+09
+# HELP kube_node_status_capacity_pods The total pod resources of the node.
+# TYPE kube_node_status_capacity_pods gauge
+kube_node_status_capacity_pods{node="minikube"} 110
+# HELP kube_node_status_condition The condition of a cluster node.
+# TYPE kube_node_status_condition gauge
+kube_node_status_condition{condition="DiskPressure",node="minikube",status="false"} 1
+kube_node_status_condition{condition="DiskPressure",node="minikube",status="true"} 0
+kube_node_status_condition{condition="DiskPressure",node="minikube",status="unknown"} 0
+kube_node_status_condition{condition="MemoryPressure",node="minikube",status="false"} 1
+kube_node_status_condition{condition="MemoryPressure",node="minikube",status="true"} 0
+kube_node_status_condition{condition="MemoryPressure",node="minikube",status="unknown"} 0
+kube_node_status_condition{condition="OutOfDisk",node="minikube",status="false"} 1
+kube_node_status_condition{condition="OutOfDisk",node="minikube",status="true"} 0
+kube_node_status_condition{condition="OutOfDisk",node="minikube",status="unknown"} 0
+kube_node_status_condition{condition="Ready",node="minikube",status="false"} 0
+kube_node_status_condition{condition="Ready",node="minikube",status="true"} 1
+kube_node_status_condition{condition="Ready",node="minikube",status="unknown"} 0
+# HELP kube_pod_container_info Information about a container in a pod.
+# TYPE kube_pod_container_info gauge
+kube_pod_container_info{container="dnsmasq",container_id="docker://84a409bfd8dbfa09b500ee96d54f497a02f510d4d1fccd0db7167de3b5f44252",image="gcr.io/google_containers/k8s-dns-dnsmasq-nanny-amd64:1.14.5",image_id="docker://sha256:459944ce8cc4f08ebade5c05bb884e4da053d73e61ec6afe82a0b1687317254c",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 1
+kube_pod_container_info{container="ksm",container_id="docker://349879d55cd8bf4c7c47d5047d594253a6d9b5d59125fc32b486b49f437f3305",image="quay.io/coreos/kube-state-metrics:v1.0.1",image_id="docker-pullable://quay.io/coreos/kube-state-metrics@sha256:36c2bba862fcc7d9cfcefc7df08c484d8f95f30aad5c411bb872cd67b07cc6da",namespace="default",pod="ksm-c5d69ff4c-sz2nn"} 1
+kube_pod_container_info{container="kube-addon-manager",container_id="docker://1406699ae8eb632af61ccd8f69bcc30f89086f3daff65477e0e40e97bbf8b066",image="gcr.io/google-containers/kube-addon-manager:v6.4-beta.2",image_id="docker://sha256:0a951668696f914e15e5fd2ef876fe7ea09596b4056f236eded5f5d8fc0bc395",namespace="kube-system",pod="kube-addon-manager-minikube"} 1
+kube_pod_container_info{container="kubedns",container_id="docker://137e525ea0c4805b55b78371cbdec42c9b50917f00cf345762fecd8664d9db1c",image="gcr.io/google_containers/k8s-dns-kube-dns-amd64:1.14.5",image_id="docker://sha256:512cd7425a731bee1f2a3e4c825fc1cfe516c8b7905874f24bee6da12801d663",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 1
+kube_pod_container_info{container="kubernetes-dashboard",container_id="docker://01ddbb52049eb06d921efcdff3b8ba1997bb97dd0b9296226e7dea88208f7624",image="gcr.io/google_containers/kubernetes-dashboard-amd64:v1.7.0",image_id="docker-pullable://gcr.io/google_containers/kubernetes-dashboard-amd64@sha256:c94b57ce6849365033203a00ef5cfaaf92319bd5ff311a62b17cd9f6a3b69d83",namespace="kube-system",pod="kubernetes-dashboard-72jx6"} 1
+kube_pod_container_info{container="sidecar",container_id="docker://35fd9e60727ff634079dd7eeb39a0a27f32f3f8e32fc6c3dd92453b290956221",image="gcr.io/google_containers/k8s-dns-sidecar-amd64:1.14.5",image_id="docker://sha256:fed89e8b4248a788655d528d96fe644aff012879c782784cd486ff6894ef89f6",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 1
+kube_pod_container_info{container="smoya-ghtop",container_id="docker://1a32c7887609364a695572ff1f69c9785c33a83fa4cf52182fca00cf864b8802",image="smoya/ghtop:latest",image_id="docker-pullable://smoya/ghtop@sha256:73f33128f0a7f9906a1e1f15bae90daf439da5ce0a4dba79140094121a498bfd",namespace="default",pod="smoya-ghtop-6878dbdcc4-nzj6b"} 1
+kube_pod_container_info{container="smoya-ghtop",container_id="docker://4afb6891b5789562fd021ed21a40df0494f52f111a855b306023a063fa58db55",image="smoya/ghtop:latest",image_id="docker-pullable://smoya/ghtop@sha256:73f33128f0a7f9906a1e1f15bae90daf439da5ce0a4dba79140094121a498bfd",namespace="default",pod="smoya-ghtop-6878dbdcc4-2r4l5"} 1
+kube_pod_container_info{container="smoya-ghtop",container_id="docker://e3cbedc9a78e2148c6b37438bef57c26879485a48f6354354d7748e1e4ca2e7f",image="smoya/ghtop:latest",image_id="docker-pullable://smoya/ghtop@sha256:73f33128f0a7f9906a1e1f15bae90daf439da5ce0a4dba79140094121a498bfd",namespace="default",pod="smoya-ghtop-6878dbdcc4-x2c5f"} 1
+kube_pod_container_info{container="smoya-ghtop",container_id="docker://e7f434d351a94305945995606a533f3d571c14f4ad29ac30b373a191a014250d",image="smoya/ghtop:latest",image_id="docker-pullable://smoya/ghtop@sha256:73f33128f0a7f9906a1e1f15bae90daf439da5ce0a4dba79140094121a498bfd",namespace="default",pod="smoya-ghtop-6878dbdcc4-k8pk7"} 1
+# HELP kube_pod_container_resource_limits_memory_bytes The limit on memory to be used by a container in bytes.
+# TYPE kube_pod_container_resource_limits_memory_bytes gauge
+kube_pod_container_resource_limits_memory_bytes{container="kubedns",namespace="kube-system",node="minikube",pod="kube-dns-6fc954457d-mlphc"} 1.7825792e+08
+# HELP kube_pod_container_resource_requests_cpu_cores The number of requested cpu cores by a container.
+# TYPE kube_pod_container_resource_requests_cpu_cores gauge
+kube_pod_container_resource_requests_cpu_cores{container="dnsmasq",namespace="kube-system",node="minikube",pod="kube-dns-6fc954457d-mlphc"} 0.15
+kube_pod_container_resource_requests_cpu_cores{container="kube-addon-manager",namespace="kube-system",node="minikube",pod="kube-addon-manager-minikube"} 0.005
+kube_pod_container_resource_requests_cpu_cores{container="kubedns",namespace="kube-system",node="minikube",pod="kube-dns-6fc954457d-mlphc"} 0.1
+kube_pod_container_resource_requests_cpu_cores{container="sidecar",namespace="kube-system",node="minikube",pod="kube-dns-6fc954457d-mlphc"} 0.01
+# HELP kube_pod_container_resource_requests_memory_bytes The number of requested memory bytes  by a container.
+# TYPE kube_pod_container_resource_requests_memory_bytes gauge
+kube_pod_container_resource_requests_memory_bytes{container="dnsmasq",namespace="kube-system",node="minikube",pod="kube-dns-6fc954457d-mlphc"} 2.097152e+07
+kube_pod_container_resource_requests_memory_bytes{container="kube-addon-manager",namespace="kube-system",node="minikube",pod="kube-addon-manager-minikube"} 5.24288e+07
+kube_pod_container_resource_requests_memory_bytes{container="kubedns",namespace="kube-system",node="minikube",pod="kube-dns-6fc954457d-mlphc"} 7.340032e+07
+kube_pod_container_resource_requests_memory_bytes{container="sidecar",namespace="kube-system",node="minikube",pod="kube-dns-6fc954457d-mlphc"} 2.097152e+07
+# HELP kube_pod_container_status_ready Describes whether the containers readiness check succeeded.
+# TYPE kube_pod_container_status_ready gauge
+kube_pod_container_status_ready{container="dnsmasq",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 1
+kube_pod_container_status_ready{container="ksm",namespace="default",pod="ksm-c5d69ff4c-sz2nn"} 1
+kube_pod_container_status_ready{container="kube-addon-manager",namespace="kube-system",pod="kube-addon-manager-minikube"} 1
+kube_pod_container_status_ready{container="kubedns",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 1
+kube_pod_container_status_ready{container="kubernetes-dashboard",namespace="kube-system",pod="kubernetes-dashboard-72jx6"} 1
+kube_pod_container_status_ready{container="sidecar",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 1
+kube_pod_container_status_ready{container="smoya-ghtop",namespace="default",pod="smoya-ghtop-6878dbdcc4-2r4l5"} 1
+kube_pod_container_status_ready{container="smoya-ghtop",namespace="default",pod="smoya-ghtop-6878dbdcc4-k8pk7"} 1
+kube_pod_container_status_ready{container="smoya-ghtop",namespace="default",pod="smoya-ghtop-6878dbdcc4-nzj6b"} 1
+kube_pod_container_status_ready{container="smoya-ghtop",namespace="default",pod="smoya-ghtop-6878dbdcc4-x2c5f"} 1
+# HELP kube_pod_container_status_restarts The number of container restarts per container.
+# TYPE kube_pod_container_status_restarts counter
+kube_pod_container_status_restarts{container="dnsmasq",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 0
+kube_pod_container_status_restarts{container="ksm",namespace="default",pod="ksm-c5d69ff4c-sz2nn"} 0
+kube_pod_container_status_restarts{container="kube-addon-manager",namespace="kube-system",pod="kube-addon-manager-minikube"} 0
+kube_pod_container_status_restarts{container="kubedns",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 0
+kube_pod_container_status_restarts{container="kubernetes-dashboard",namespace="kube-system",pod="kubernetes-dashboard-72jx6"} 0
+kube_pod_container_status_restarts{container="sidecar",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 0
+kube_pod_container_status_restarts{container="smoya-ghtop",namespace="default",pod="smoya-ghtop-6878dbdcc4-2r4l5"} 0
+kube_pod_container_status_restarts{container="smoya-ghtop",namespace="default",pod="smoya-ghtop-6878dbdcc4-k8pk7"} 0
+kube_pod_container_status_restarts{container="smoya-ghtop",namespace="default",pod="smoya-ghtop-6878dbdcc4-nzj6b"} 0
+kube_pod_container_status_restarts{container="smoya-ghtop",namespace="default",pod="smoya-ghtop-6878dbdcc4-x2c5f"} 0
+# HELP kube_pod_container_status_running Describes whether the container is currently in running state.
+# TYPE kube_pod_container_status_running gauge
+kube_pod_container_status_running{container="dnsmasq",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 1
+kube_pod_container_status_running{container="ksm",namespace="default",pod="ksm-c5d69ff4c-sz2nn"} 1
+kube_pod_container_status_running{container="kube-addon-manager",namespace="kube-system",pod="kube-addon-manager-minikube"} 1
+kube_pod_container_status_running{container="kubedns",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 1
+kube_pod_container_status_running{container="kubernetes-dashboard",namespace="kube-system",pod="kubernetes-dashboard-72jx6"} 1
+kube_pod_container_status_running{container="sidecar",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 1
+kube_pod_container_status_running{container="smoya-ghtop",namespace="default",pod="smoya-ghtop-6878dbdcc4-2r4l5"} 1
+kube_pod_container_status_running{container="smoya-ghtop",namespace="default",pod="smoya-ghtop-6878dbdcc4-k8pk7"} 1
+kube_pod_container_status_running{container="smoya-ghtop",namespace="default",pod="smoya-ghtop-6878dbdcc4-nzj6b"} 1
+kube_pod_container_status_running{container="smoya-ghtop",namespace="default",pod="smoya-ghtop-6878dbdcc4-x2c5f"} 1
+# HELP kube_pod_container_status_terminated Describes whether the container is currently in terminated state.
+# TYPE kube_pod_container_status_terminated gauge
+kube_pod_container_status_terminated{container="dnsmasq",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 0
+kube_pod_container_status_terminated{container="ksm",namespace="default",pod="ksm-c5d69ff4c-sz2nn"} 0
+kube_pod_container_status_terminated{container="kube-addon-manager",namespace="kube-system",pod="kube-addon-manager-minikube"} 0
+kube_pod_container_status_terminated{container="kubedns",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 0
+kube_pod_container_status_terminated{container="kubernetes-dashboard",namespace="kube-system",pod="kubernetes-dashboard-72jx6"} 0
+kube_pod_container_status_terminated{container="sidecar",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 0
+kube_pod_container_status_terminated{container="smoya-ghtop",namespace="default",pod="smoya-ghtop-6878dbdcc4-2r4l5"} 0
+kube_pod_container_status_terminated{container="smoya-ghtop",namespace="default",pod="smoya-ghtop-6878dbdcc4-k8pk7"} 0
+kube_pod_container_status_terminated{container="smoya-ghtop",namespace="default",pod="smoya-ghtop-6878dbdcc4-nzj6b"} 0
+kube_pod_container_status_terminated{container="smoya-ghtop",namespace="default",pod="smoya-ghtop-6878dbdcc4-x2c5f"} 0
+# HELP kube_pod_container_status_waiting Describes whether the container is currently in waiting state.
+# TYPE kube_pod_container_status_waiting gauge
+kube_pod_container_status_waiting{container="dnsmasq",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 0
+kube_pod_container_status_waiting{container="ksm",namespace="default",pod="ksm-c5d69ff4c-sz2nn"} 0
+kube_pod_container_status_waiting{container="kube-addon-manager",namespace="kube-system",pod="kube-addon-manager-minikube"} 0
+kube_pod_container_status_waiting{container="kubedns",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 0
+kube_pod_container_status_waiting{container="kubernetes-dashboard",namespace="kube-system",pod="kubernetes-dashboard-72jx6"} 0
+kube_pod_container_status_waiting{container="sidecar",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 0
+kube_pod_container_status_waiting{container="smoya-ghtop",namespace="default",pod="smoya-ghtop-6878dbdcc4-2r4l5"} 0
+kube_pod_container_status_waiting{container="smoya-ghtop",namespace="default",pod="smoya-ghtop-6878dbdcc4-k8pk7"} 0
+kube_pod_container_status_waiting{container="smoya-ghtop",namespace="default",pod="smoya-ghtop-6878dbdcc4-nzj6b"} 0
+kube_pod_container_status_waiting{container="smoya-ghtop",namespace="default",pod="smoya-ghtop-6878dbdcc4-x2c5f"} 0
+# HELP kube_pod_info Information about pod.
+# TYPE kube_pod_info gauge
+kube_pod_info{created_by_kind="<none>",created_by_name="<none>",host_ip="192.168.99.100",namespace="kube-system",node="minikube",pod="kube-addon-manager-minikube",pod_ip="192.168.99.100"} 1
+kube_pod_info{created_by_kind="ReplicaSet",created_by_name="ksm-c5d69ff4c",host_ip="192.168.99.100",namespace="default",node="minikube",pod="ksm-c5d69ff4c-sz2nn",pod_ip="172.17.0.5"} 1
+kube_pod_info{created_by_kind="ReplicaSet",created_by_name="kube-dns-6fc954457d",host_ip="192.168.99.100",namespace="kube-system",node="minikube",pod="kube-dns-6fc954457d-mlphc",pod_ip="172.17.0.3"} 1
+kube_pod_info{created_by_kind="ReplicaSet",created_by_name="smoya-ghtop-6878dbdcc4",host_ip="192.168.99.100",namespace="default",node="minikube",pod="smoya-ghtop-6878dbdcc4-2r4l5",pod_ip="172.17.0.6"} 1
+kube_pod_info{created_by_kind="ReplicaSet",created_by_name="smoya-ghtop-6878dbdcc4",host_ip="192.168.99.100",namespace="default",node="minikube",pod="smoya-ghtop-6878dbdcc4-k8pk7",pod_ip="172.17.0.8"} 1
+kube_pod_info{created_by_kind="ReplicaSet",created_by_name="smoya-ghtop-6878dbdcc4",host_ip="192.168.99.100",namespace="default",node="minikube",pod="smoya-ghtop-6878dbdcc4-nzj6b",pod_ip="172.17.0.7"} 1
+kube_pod_info{created_by_kind="ReplicaSet",created_by_name="smoya-ghtop-6878dbdcc4",host_ip="192.168.99.100",namespace="default",node="minikube",pod="smoya-ghtop-6878dbdcc4-x2c5f",pod_ip="172.17.0.4"} 1
+kube_pod_info{created_by_kind="ReplicationController",created_by_name="kubernetes-dashboard",host_ip="192.168.99.100",namespace="kube-system",node="minikube",pod="kubernetes-dashboard-72jx6",pod_ip="172.17.0.2"} 1
+# HELP kube_pod_labels Kubernetes labels converted to Prometheus labels.
+# TYPE kube_pod_labels gauge
+kube_pod_labels{label_pod_template_hash="2434868770",label_run="smoya-ghtop",namespace="default",pod="smoya-ghtop-6878dbdcc4-2r4l5"} 1
+kube_pod_labels{label_pod_template_hash="2434868770",label_run="smoya-ghtop",namespace="default",pod="smoya-ghtop-6878dbdcc4-k8pk7"} 1
+kube_pod_labels{label_pod_template_hash="2434868770",label_run="smoya-ghtop",namespace="default",pod="smoya-ghtop-6878dbdcc4-nzj6b"} 1
+kube_pod_labels{label_pod_template_hash="2434868770",label_run="smoya-ghtop",namespace="default",pod="smoya-ghtop-6878dbdcc4-x2c5f"} 1
+kube_pod_labels{label_pod_template_hash="718259907",label_run="ksm",namespace="default",pod="ksm-c5d69ff4c-sz2nn"} 1
+kube_pod_labels{label_k8s_app="kube-dns",label_pod_template_hash="2975100138",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 1
+kube_pod_labels{label_addonmanager_kubernetes_io_mode="Reconcile",label_app="kubernetes-dashboard",label_version="v1.7.0",namespace="kube-system",pod="kubernetes-dashboard-72jx6"} 1
+kube_pod_labels{label_component="kube-addon-manager",label_kubernetes_io_minikube_addons="addon-manager",label_version="v6.4",namespace="kube-system",pod="kube-addon-manager-minikube"} 1
+# HELP kube_pod_owner Information about the Pod's owner.
+# TYPE kube_pod_owner gauge
+kube_pod_owner{namespace="default",owner_is_controller="true",owner_kind="ReplicaSet",owner_name="ksm-c5d69ff4c",pod="ksm-c5d69ff4c-sz2nn"} 1
+kube_pod_owner{namespace="default",owner_is_controller="true",owner_kind="ReplicaSet",owner_name="smoya-ghtop-6878dbdcc4",pod="smoya-ghtop-6878dbdcc4-2r4l5"} 1
+kube_pod_owner{namespace="default",owner_is_controller="true",owner_kind="ReplicaSet",owner_name="smoya-ghtop-6878dbdcc4",pod="smoya-ghtop-6878dbdcc4-k8pk7"} 1
+kube_pod_owner{namespace="default",owner_is_controller="true",owner_kind="ReplicaSet",owner_name="smoya-ghtop-6878dbdcc4",pod="smoya-ghtop-6878dbdcc4-nzj6b"} 1
+kube_pod_owner{namespace="default",owner_is_controller="true",owner_kind="ReplicaSet",owner_name="smoya-ghtop-6878dbdcc4",pod="smoya-ghtop-6878dbdcc4-x2c5f"} 1
+kube_pod_owner{namespace="kube-system",owner_is_controller="<none>",owner_kind="<none>",owner_name="<none>",pod="kube-addon-manager-minikube"} 1
+kube_pod_owner{namespace="kube-system",owner_is_controller="true",owner_kind="ReplicaSet",owner_name="kube-dns-6fc954457d",pod="kube-dns-6fc954457d-mlphc"} 1
+kube_pod_owner{namespace="kube-system",owner_is_controller="true",owner_kind="ReplicationController",owner_name="kubernetes-dashboard",pod="kubernetes-dashboard-72jx6"} 1
+# HELP kube_pod_start_time Start time in unix timestamp for a pod.
+# TYPE kube_pod_start_time gauge
+kube_pod_start_time{namespace="default",pod="ksm-c5d69ff4c-sz2nn"} 1.510054195e+09
+kube_pod_start_time{namespace="default",pod="smoya-ghtop-6878dbdcc4-2r4l5"} 1.510155537e+09
+kube_pod_start_time{namespace="default",pod="smoya-ghtop-6878dbdcc4-k8pk7"} 1.510155471e+09
+kube_pod_start_time{namespace="default",pod="smoya-ghtop-6878dbdcc4-nzj6b"} 1.51005402e+09
+kube_pod_start_time{namespace="default",pod="smoya-ghtop-6878dbdcc4-x2c5f"} 1.510054012e+09
+kube_pod_start_time{namespace="kube-system",pod="kube-addon-manager-minikube"} 1.509987002e+09
+kube_pod_start_time{namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 1.509987008e+09
+kube_pod_start_time{namespace="kube-system",pod="kubernetes-dashboard-72jx6"} 1.509987008e+09
+# HELP kube_pod_status_phase The pods current phase.
+# TYPE kube_pod_status_phase gauge
+kube_pod_status_phase{namespace="default",phase="Failed",pod="ksm-c5d69ff4c-sz2nn"} 0
+kube_pod_status_phase{namespace="default",phase="Failed",pod="smoya-ghtop-6878dbdcc4-2r4l5"} 0
+kube_pod_status_phase{namespace="default",phase="Failed",pod="smoya-ghtop-6878dbdcc4-k8pk7"} 0
+kube_pod_status_phase{namespace="default",phase="Failed",pod="smoya-ghtop-6878dbdcc4-nzj6b"} 0
+kube_pod_status_phase{namespace="default",phase="Failed",pod="smoya-ghtop-6878dbdcc4-x2c5f"} 0
+kube_pod_status_phase{namespace="default",phase="Pending",pod="ksm-c5d69ff4c-sz2nn"} 0
+kube_pod_status_phase{namespace="default",phase="Pending",pod="smoya-ghtop-6878dbdcc4-2r4l5"} 0
+kube_pod_status_phase{namespace="default",phase="Pending",pod="smoya-ghtop-6878dbdcc4-k8pk7"} 0
+kube_pod_status_phase{namespace="default",phase="Pending",pod="smoya-ghtop-6878dbdcc4-nzj6b"} 0
+kube_pod_status_phase{namespace="default",phase="Pending",pod="smoya-ghtop-6878dbdcc4-x2c5f"} 0
+kube_pod_status_phase{namespace="default",phase="Running",pod="ksm-c5d69ff4c-sz2nn"} 1
+kube_pod_status_phase{namespace="default",phase="Running",pod="smoya-ghtop-6878dbdcc4-2r4l5"} 1
+kube_pod_status_phase{namespace="default",phase="Running",pod="smoya-ghtop-6878dbdcc4-k8pk7"} 1
+kube_pod_status_phase{namespace="default",phase="Running",pod="smoya-ghtop-6878dbdcc4-nzj6b"} 1
+kube_pod_status_phase{namespace="default",phase="Running",pod="smoya-ghtop-6878dbdcc4-x2c5f"} 1
+kube_pod_status_phase{namespace="default",phase="Succeeded",pod="ksm-c5d69ff4c-sz2nn"} 0
+kube_pod_status_phase{namespace="default",phase="Succeeded",pod="smoya-ghtop-6878dbdcc4-2r4l5"} 0
+kube_pod_status_phase{namespace="default",phase="Succeeded",pod="smoya-ghtop-6878dbdcc4-k8pk7"} 0
+kube_pod_status_phase{namespace="default",phase="Succeeded",pod="smoya-ghtop-6878dbdcc4-nzj6b"} 0
+kube_pod_status_phase{namespace="default",phase="Succeeded",pod="smoya-ghtop-6878dbdcc4-x2c5f"} 0
+kube_pod_status_phase{namespace="default",phase="Unknown",pod="ksm-c5d69ff4c-sz2nn"} 0
+kube_pod_status_phase{namespace="default",phase="Unknown",pod="smoya-ghtop-6878dbdcc4-2r4l5"} 0
+kube_pod_status_phase{namespace="default",phase="Unknown",pod="smoya-ghtop-6878dbdcc4-k8pk7"} 0
+kube_pod_status_phase{namespace="default",phase="Unknown",pod="smoya-ghtop-6878dbdcc4-nzj6b"} 0
+kube_pod_status_phase{namespace="default",phase="Unknown",pod="smoya-ghtop-6878dbdcc4-x2c5f"} 0
+kube_pod_status_phase{namespace="kube-system",phase="Failed",pod="kube-addon-manager-minikube"} 0
+kube_pod_status_phase{namespace="kube-system",phase="Failed",pod="kube-dns-6fc954457d-mlphc"} 0
+kube_pod_status_phase{namespace="kube-system",phase="Failed",pod="kubernetes-dashboard-72jx6"} 0
+kube_pod_status_phase{namespace="kube-system",phase="Pending",pod="kube-addon-manager-minikube"} 0
+kube_pod_status_phase{namespace="kube-system",phase="Pending",pod="kube-dns-6fc954457d-mlphc"} 0
+kube_pod_status_phase{namespace="kube-system",phase="Pending",pod="kubernetes-dashboard-72jx6"} 0
+kube_pod_status_phase{namespace="kube-system",phase="Running",pod="kube-addon-manager-minikube"} 1
+kube_pod_status_phase{namespace="kube-system",phase="Running",pod="kube-dns-6fc954457d-mlphc"} 1
+kube_pod_status_phase{namespace="kube-system",phase="Running",pod="kubernetes-dashboard-72jx6"} 1
+kube_pod_status_phase{namespace="kube-system",phase="Succeeded",pod="kube-addon-manager-minikube"} 0
+kube_pod_status_phase{namespace="kube-system",phase="Succeeded",pod="kube-dns-6fc954457d-mlphc"} 0
+kube_pod_status_phase{namespace="kube-system",phase="Succeeded",pod="kubernetes-dashboard-72jx6"} 0
+kube_pod_status_phase{namespace="kube-system",phase="Unknown",pod="kube-addon-manager-minikube"} 0
+kube_pod_status_phase{namespace="kube-system",phase="Unknown",pod="kube-dns-6fc954457d-mlphc"} 0
+kube_pod_status_phase{namespace="kube-system",phase="Unknown",pod="kubernetes-dashboard-72jx6"} 0
+# HELP kube_pod_status_ready Describes whether the pod is ready to serve requests.
+# TYPE kube_pod_status_ready gauge
+kube_pod_status_ready{condition="false",namespace="default",pod="ksm-c5d69ff4c-sz2nn"} 0
+kube_pod_status_ready{condition="false",namespace="default",pod="smoya-ghtop-6878dbdcc4-2r4l5"} 0
+kube_pod_status_ready{condition="false",namespace="default",pod="smoya-ghtop-6878dbdcc4-k8pk7"} 0
+kube_pod_status_ready{condition="false",namespace="default",pod="smoya-ghtop-6878dbdcc4-nzj6b"} 0
+kube_pod_status_ready{condition="false",namespace="default",pod="smoya-ghtop-6878dbdcc4-x2c5f"} 0
+kube_pod_status_ready{condition="false",namespace="kube-system",pod="kube-addon-manager-minikube"} 0
+kube_pod_status_ready{condition="false",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 0
+kube_pod_status_ready{condition="false",namespace="kube-system",pod="kubernetes-dashboard-72jx6"} 0
+kube_pod_status_ready{condition="true",namespace="default",pod="ksm-c5d69ff4c-sz2nn"} 1
+kube_pod_status_ready{condition="true",namespace="default",pod="smoya-ghtop-6878dbdcc4-2r4l5"} 1
+kube_pod_status_ready{condition="true",namespace="default",pod="smoya-ghtop-6878dbdcc4-k8pk7"} 1
+kube_pod_status_ready{condition="true",namespace="default",pod="smoya-ghtop-6878dbdcc4-nzj6b"} 1
+kube_pod_status_ready{condition="true",namespace="default",pod="smoya-ghtop-6878dbdcc4-x2c5f"} 1
+kube_pod_status_ready{condition="true",namespace="kube-system",pod="kube-addon-manager-minikube"} 1
+kube_pod_status_ready{condition="true",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 1
+kube_pod_status_ready{condition="true",namespace="kube-system",pod="kubernetes-dashboard-72jx6"} 1
+kube_pod_status_ready{condition="unknown",namespace="default",pod="ksm-c5d69ff4c-sz2nn"} 0
+kube_pod_status_ready{condition="unknown",namespace="default",pod="smoya-ghtop-6878dbdcc4-2r4l5"} 0
+kube_pod_status_ready{condition="unknown",namespace="default",pod="smoya-ghtop-6878dbdcc4-k8pk7"} 0
+kube_pod_status_ready{condition="unknown",namespace="default",pod="smoya-ghtop-6878dbdcc4-nzj6b"} 0
+kube_pod_status_ready{condition="unknown",namespace="default",pod="smoya-ghtop-6878dbdcc4-x2c5f"} 0
+kube_pod_status_ready{condition="unknown",namespace="kube-system",pod="kube-addon-manager-minikube"} 0
+kube_pod_status_ready{condition="unknown",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 0
+kube_pod_status_ready{condition="unknown",namespace="kube-system",pod="kubernetes-dashboard-72jx6"} 0
+# HELP kube_pod_status_scheduled Describes the status of the scheduling process for the pod.
+# TYPE kube_pod_status_scheduled gauge
+kube_pod_status_scheduled{condition="false",namespace="default",pod="ksm-c5d69ff4c-sz2nn"} 0
+kube_pod_status_scheduled{condition="false",namespace="default",pod="smoya-ghtop-6878dbdcc4-2r4l5"} 0
+kube_pod_status_scheduled{condition="false",namespace="default",pod="smoya-ghtop-6878dbdcc4-k8pk7"} 0
+kube_pod_status_scheduled{condition="false",namespace="default",pod="smoya-ghtop-6878dbdcc4-nzj6b"} 0
+kube_pod_status_scheduled{condition="false",namespace="default",pod="smoya-ghtop-6878dbdcc4-x2c5f"} 0
+kube_pod_status_scheduled{condition="false",namespace="kube-system",pod="kube-addon-manager-minikube"} 0
+kube_pod_status_scheduled{condition="false",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 0
+kube_pod_status_scheduled{condition="false",namespace="kube-system",pod="kubernetes-dashboard-72jx6"} 0
+kube_pod_status_scheduled{condition="true",namespace="default",pod="ksm-c5d69ff4c-sz2nn"} 1
+kube_pod_status_scheduled{condition="true",namespace="default",pod="smoya-ghtop-6878dbdcc4-2r4l5"} 1
+kube_pod_status_scheduled{condition="true",namespace="default",pod="smoya-ghtop-6878dbdcc4-k8pk7"} 1
+kube_pod_status_scheduled{condition="true",namespace="default",pod="smoya-ghtop-6878dbdcc4-nzj6b"} 1
+kube_pod_status_scheduled{condition="true",namespace="default",pod="smoya-ghtop-6878dbdcc4-x2c5f"} 1
+kube_pod_status_scheduled{condition="true",namespace="kube-system",pod="kube-addon-manager-minikube"} 1
+kube_pod_status_scheduled{condition="true",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 1
+kube_pod_status_scheduled{condition="true",namespace="kube-system",pod="kubernetes-dashboard-72jx6"} 1
+kube_pod_status_scheduled{condition="unknown",namespace="default",pod="ksm-c5d69ff4c-sz2nn"} 0
+kube_pod_status_scheduled{condition="unknown",namespace="default",pod="smoya-ghtop-6878dbdcc4-2r4l5"} 0
+kube_pod_status_scheduled{condition="unknown",namespace="default",pod="smoya-ghtop-6878dbdcc4-k8pk7"} 0
+kube_pod_status_scheduled{condition="unknown",namespace="default",pod="smoya-ghtop-6878dbdcc4-nzj6b"} 0
+kube_pod_status_scheduled{condition="unknown",namespace="default",pod="smoya-ghtop-6878dbdcc4-x2c5f"} 0
+kube_pod_status_scheduled{condition="unknown",namespace="kube-system",pod="kube-addon-manager-minikube"} 0
+kube_pod_status_scheduled{condition="unknown",namespace="kube-system",pod="kube-dns-6fc954457d-mlphc"} 0
+kube_pod_status_scheduled{condition="unknown",namespace="kube-system",pod="kubernetes-dashboard-72jx6"} 0
+# HELP kube_replicaset_metadata_generation Sequence number representing a specific generation of the desired state.
+# TYPE kube_replicaset_metadata_generation gauge
+kube_replicaset_metadata_generation{namespace="default",replicaset="ksm-c5d69ff4c"} 1
+kube_replicaset_metadata_generation{namespace="default",replicaset="smoya-ghtop-6878dbdcc4"} 4
+kube_replicaset_metadata_generation{namespace="default",replicaset="smoya-ghtop-6b6c847b8c"} 6
+kube_replicaset_metadata_generation{namespace="kube-system",replicaset="kube-dns-6fc954457d"} 1
+# HELP kube_replicaset_spec_replicas Number of desired pods for a ReplicaSet.
+# TYPE kube_replicaset_spec_replicas gauge
+kube_replicaset_spec_replicas{namespace="default",replicaset="ksm-c5d69ff4c"} 1
+kube_replicaset_spec_replicas{namespace="default",replicaset="smoya-ghtop-6878dbdcc4"} 4
+kube_replicaset_spec_replicas{namespace="default",replicaset="smoya-ghtop-6b6c847b8c"} 0
+kube_replicaset_spec_replicas{namespace="kube-system",replicaset="kube-dns-6fc954457d"} 1
+# HELP kube_replicaset_status_fully_labeled_replicas The number of fully labeled replicas per ReplicaSet.
+# TYPE kube_replicaset_status_fully_labeled_replicas gauge
+kube_replicaset_status_fully_labeled_replicas{namespace="default",replicaset="ksm-c5d69ff4c"} 1
+kube_replicaset_status_fully_labeled_replicas{namespace="default",replicaset="smoya-ghtop-6878dbdcc4"} 4
+kube_replicaset_status_fully_labeled_replicas{namespace="default",replicaset="smoya-ghtop-6b6c847b8c"} 0
+kube_replicaset_status_fully_labeled_replicas{namespace="kube-system",replicaset="kube-dns-6fc954457d"} 1
+# HELP kube_replicaset_status_observed_generation The generation observed by the ReplicaSet controller.
+# TYPE kube_replicaset_status_observed_generation gauge
+kube_replicaset_status_observed_generation{namespace="default",replicaset="ksm-c5d69ff4c"} 1
+kube_replicaset_status_observed_generation{namespace="default",replicaset="smoya-ghtop-6878dbdcc4"} 4
+kube_replicaset_status_observed_generation{namespace="default",replicaset="smoya-ghtop-6b6c847b8c"} 6
+kube_replicaset_status_observed_generation{namespace="kube-system",replicaset="kube-dns-6fc954457d"} 1
+# HELP kube_replicaset_status_ready_replicas The number of ready replicas per ReplicaSet.
+# TYPE kube_replicaset_status_ready_replicas gauge
+kube_replicaset_status_ready_replicas{namespace="default",replicaset="ksm-c5d69ff4c"} 1
+kube_replicaset_status_ready_replicas{namespace="default",replicaset="smoya-ghtop-6878dbdcc4"} 4
+kube_replicaset_status_ready_replicas{namespace="default",replicaset="smoya-ghtop-6b6c847b8c"} 0
+kube_replicaset_status_ready_replicas{namespace="kube-system",replicaset="kube-dns-6fc954457d"} 1
+# HELP kube_replicaset_status_replicas The number of replicas per ReplicaSet.
+# TYPE kube_replicaset_status_replicas gauge
+kube_replicaset_status_replicas{namespace="default",replicaset="ksm-c5d69ff4c"} 1
+kube_replicaset_status_replicas{namespace="default",replicaset="smoya-ghtop-6878dbdcc4"} 4
+kube_replicaset_status_replicas{namespace="default",replicaset="smoya-ghtop-6b6c847b8c"} 0
+kube_replicaset_status_replicas{namespace="kube-system",replicaset="kube-dns-6fc954457d"} 1
+# HELP kube_replicationcontroller_metadata_generation Sequence number representing a specific generation of the desired state.
+# TYPE kube_replicationcontroller_metadata_generation gauge
+kube_replicationcontroller_metadata_generation{namespace="kube-system",replicationcontroller="kubernetes-dashboard"} 1
+# HELP kube_replicationcontroller_spec_replicas Number of desired pods for a ReplicationController.
+# TYPE kube_replicationcontroller_spec_replicas gauge
+kube_replicationcontroller_spec_replicas{namespace="kube-system",replicationcontroller="kubernetes-dashboard"} 1
+# HELP kube_replicationcontroller_status_available_replicas The number of available replicas per ReplicationController.
+# TYPE kube_replicationcontroller_status_available_replicas gauge
+kube_replicationcontroller_status_available_replicas{namespace="kube-system",replicationcontroller="kubernetes-dashboard"} 1
+# HELP kube_replicationcontroller_status_fully_labeled_replicas The number of fully labeled replicas per ReplicationController.
+# TYPE kube_replicationcontroller_status_fully_labeled_replicas gauge
+kube_replicationcontroller_status_fully_labeled_replicas{namespace="kube-system",replicationcontroller="kubernetes-dashboard"} 1
+# HELP kube_replicationcontroller_status_observed_generation The generation observed by the ReplicationController controller.
+# TYPE kube_replicationcontroller_status_observed_generation gauge
+kube_replicationcontroller_status_observed_generation{namespace="kube-system",replicationcontroller="kubernetes-dashboard"} 1
+# HELP kube_replicationcontroller_status_ready_replicas The number of ready replicas per ReplicationController.
+# TYPE kube_replicationcontroller_status_ready_replicas gauge
+kube_replicationcontroller_status_ready_replicas{namespace="kube-system",replicationcontroller="kubernetes-dashboard"} 1
+# HELP kube_replicationcontroller_status_replicas The number of replicas per ReplicationController.
+# TYPE kube_replicationcontroller_status_replicas gauge
+kube_replicationcontroller_status_replicas{namespace="kube-system",replicationcontroller="kubernetes-dashboard"} 1
+# HELP kube_service_info Information about service.
+# TYPE kube_service_info gauge
+kube_service_info{namespace="default",service="ksm"} 1
+kube_service_info{namespace="default",service="kubernetes"} 1
+kube_service_info{namespace="default",service="smoya-ghtop"} 1
+kube_service_info{namespace="kube-system",service="kube-dns"} 1
+kube_service_info{namespace="kube-system",service="kubernetes-dashboard"} 1
+# HELP kube_service_labels Kubernetes labels converted to Prometheus labels.
+# TYPE kube_service_labels gauge
+kube_service_labels{label_run="ksm",namespace="default",service="ksm"} 1
+kube_service_labels{label_run="smoya-ghtop",namespace="default",service="smoya-ghtop"} 1
+kube_service_labels{label_component="apiserver",label_provider="kubernetes",namespace="default",service="kubernetes"} 1
+kube_service_labels{label_addonmanager_kubernetes_io_mode="Reconcile",label_k8s_app="kube-dns",label_kubernetes_io_name="KubeDNS",namespace="kube-system",service="kube-dns"} 1
+kube_service_labels{label_addonmanager_kubernetes_io_mode="Reconcile",label_app="kubernetes-dashboard",label_kubernetes_io_minikube_addons="dashboard",label_kubernetes_io_minikube_addons_endpoint="dashboard",namespace="kube-system",service="kubernetes-dashboard"} 1

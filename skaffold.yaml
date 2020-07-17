@@ -1,0 +1,14 @@
+apiVersion: skaffold/v1alpha5
+kind: Config
+build:
+  artifacts:
+  # When you're using minikube context, this image will be pushed to your local
+  # docker daemon. If you're using a non-minikube context, the image will be
+  # pushed to a private quay.io repository.
+  - image: quay.io/newrelic/infrastructure-k8s-dev
+    context: .
+  local: {}
+deploy:
+  kubectl:
+    manifests:
+    - deploy/local.yaml

@@ -1,0 +1,102 @@
+daemonset:
+  name: newrelic-infra
+  namespace: default
+  image:
+    repository: newrelic/infrastructure-k8s
+    tag: 1.0.0
+  resources:
+    limits:
+      memory: 150M
+    requests:
+      cpu: 100m
+      memory: 30M
+
+serviceAccount:
+  name: newrelic
+  namespace: default
+  automountServiceAccountToken: true
+
+clusterRole:
+  name: newrelic
+
+integration:
+  k8sClusterName: "<YOUR_CLUSTER_NAME>"
+  newRelicLicenseKey: "<YOUR_LICENSE_KEY>"
+  verbose: "0"
+  collectorURL: "https://staging-infra-api.newrelic.com"
+  cadvisor:
+    port: "4194"
+#  ksm:
+#    url: "http://172.17.0.3:8080"
+
+#########################################
+######## DO NOT MODIFY FROM HERE ########
+#########################################
+
+rbac: false
+
+ksm-instance-one:
+  nameOverride: kube-state-metrics
+  rbac:
+    create: false
+  image:
+    tag: v1.1.0
+  collectors:
+    deployments: true
+    namespaces: true
+    replicasets: true
+    pods: true
+
+    nodes: false
+    replicationcontrollers: false
+    resourcequotas: false
+    cronjobs: false
+    daemonsets: false
+    endpoints: false
+    horizontalpodautoscalers: false
+    jobs: false
+    limitranges: false
+    persistentvolumeclaims: false
+    persistentvolumes: false
+    services: false
+    statefulsets: false
+
+ksm-instance-two:
+  rbac:
+    create: false
+  image:
+    tag: v1.1.0
+  collectors:
+    deployments: true
+    namespaces: true
+    replicasets: true
+    pods: true
+
+    nodes: false
+    replicationcontrollers: false
+    resourcequotas: false
+    cronjobs: false
+    daemonsets: false
+    endpoints: false
+    horizontalpodautoscalers: false
+    jobs: false
+    limitranges: false
+    persistentvolumeclaims: false
+    persistentvolumes: false
+    services: false
+    statefulsets: false
+
+alpine-pending-scheduled:
+  pod:
+    scheduled: true
+    name: alpine-pending-scheduled
+
+alpine-pending-non-scheduled:
+  pod:
+    scheduled: false
+    name: alpine-pending-non-scheduled
+
+tags:
+  one-ksm-instance: true
+  two-ksm-instances: false
+  with-pending-pods: false

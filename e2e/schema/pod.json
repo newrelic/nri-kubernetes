@@ -1,0 +1,115 @@
+{
+  "$id": "http://newrelic.com/k8s-integration-pod.json",
+  "type": "object",
+  "properties": {
+    "clusterName": {
+      "$id": "/properties/clusterName",
+      "type": "string",
+      "minLength": 1
+    },
+    "createdAt": {
+      "$id": "/properties/createdAt",
+      "type": "integer"
+    },
+    "createdBy": {
+      "$id": "/properties/createdBy",
+      "type": "string",
+      "minLength": 1
+    },
+    "createdKind": {
+      "$id": "/properties/createdKind",
+      "type": "string",
+      "minLength": 1
+    },
+    "displayName": {
+      "$id": "/properties/displayName",
+      "type": "string",
+      "minLength": 1
+    },
+    "deploymentName": {
+      "$id": "/properties/deploymentName",
+      "type": "string",
+      "minLength": 1
+    },
+    "entityName": {
+      "$id": "/properties/entityName",
+      "type": "string",
+      "minLength": 1
+    },
+    "event_type": {
+      "$id": "/properties/event_type",
+      "type": "string",
+      "minLength": 1
+    },
+    "isReady": {
+      "$id": "/properties/isReady",
+      "type": "integer",
+      "enum": [1, 0]
+    },
+    "isScheduled": {
+      "$id": "/properties/isScheduled",
+      "type": "integer",
+      "enum": [1, 0]
+    },
+    "namespace": {
+      "$id": "/properties/namespace",
+      "type": "string",
+      "minLength": 1
+    },
+    "namespaceName": {
+      "$id": "/properties/namespaceName",
+      "type": "string",
+      "minLength": 1
+    },
+    "net.errorsPerSecond": {
+      "$id": "/properties/net.errorsPerSecond",
+      "type": "integer"
+    },
+    "net.rxBytesPerSecond": {
+      "$id": "/properties/net.rxBytesPerSecond",
+      "type": "number"
+    },
+    "net.txBytesPerSecond": {
+      "$id": "/properties/net.txBytesPerSecond",
+      "type": "number"
+    },
+    "nodeIP": {
+      "$id": "/properties/nodeIP",
+      "type": "string",
+      "minLength": 1
+    },
+    "nodeName": {
+      "$id": "/properties/nodeName",
+      "type": "string",
+      "minLength": 1
+    },
+    "podName": {
+      "$id": "/properties/podName",
+      "type": "string",
+      "minLength": 1
+    },
+    "startTime": {
+      "$id": "/properties/startTime",
+      "type": "integer"
+    },
+    "status": {
+      "$id": "/properties/status",
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "clusterName",
+    "displayName",
+    "entityName",
+    "event_type",
+    "namespace",
+    "namespaceName",
+    "net.errorsPerSecond",
+    "net.rxBytesPerSecond",
+    "net.txBytesPerSecond",
+    "nodeIP",
+    "nodeName",
+    "podName"
+  ]
+}

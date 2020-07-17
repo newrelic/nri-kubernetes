@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: busybox-{{ .Release.Name }}
+  labels:
+    app: busybox
+spec:
+  containers:
+  - image: busybox
+    command:
+      - sleep
+      - "3600"
+    imagePullPolicy: IfNotPresent
+    name: busybox
+    volumeMounts:
+      - name: busybox-persistent-storage
+        mountPath: /e2e-storage
+  volumes:
+    - name: busybox-persistent-storage
+      persistentVolumeClaim:
+        claimName: e2e-tests-pv-claim-{{ .Release.Name }}
+  restartPolicy: Always
+

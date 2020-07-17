@@ -1,0 +1,104 @@
+{
+  "$id": "http://newrelic.com/k8s-integration-persistentvolume.json",
+  "type": "object",
+  "required": [
+    "clusterName",
+    "displayName",
+    "entityName",
+    "event_type",
+    "fsAvailableBytes",
+    "fsCapacityBytes",
+    "fsInodes",
+    "fsInodesFree",
+    "fsInodesUsed",
+    "fsUsedBytes",
+    "fsUsedPercent",
+    "namespace",
+    "namespaceName",
+    "persistent",
+    "podName",
+    "pvcName",
+    "volumeName"
+  ],
+  "properties": {
+    "clusterName": {
+      "$id": "#/properties/clusterName",
+      "type": "string",
+      "minLength": 1
+    },
+    "displayName": {
+      "$id": "#/properties/displayName",
+      "type": "string",
+      "minLength": 1
+    },
+    "entityName": {
+      "$id": "#/properties/entityName",
+      "type": "string",
+      "minLength": 1
+    },
+    "event_type": {
+      "$id": "#/properties/event_type",
+      "type": "string",
+      "minLength": 1
+    },
+    "fsAvailableBytes": {
+      "$id": "#/properties/fsAvailableBytes",
+      "type": "integer"
+    },
+    "fsCapacityBytes": {
+      "$id": "#/properties/fsCapacityBytes",
+      "type": "integer"
+    },
+    "fsInodes": {
+      "$id": "#/properties/fsInodes",
+      "type": "integer"
+    },
+    "fsInodesFree": {
+      "$id": "#/properties/fsInodesFree",
+      "type": "integer"
+    },
+    "fsInodesUsed": {
+      "$id": "#/properties/fsInodesUsed",
+      "type": "integer"
+    },
+    "fsUsedBytes": {
+      "$id": "#/properties/fsUsedBytes",
+      "type": "integer"
+    },
+    "fsUsedPercent": {
+      "$id": "#/properties/fsUsedPercent",
+      "type": "number"
+    },
+    "namespace": {
+      "$id": "#/properties/namespace",
+      "type": "string",
+      "minLength": 1
+    },
+    "namespaceName": {
+      "$id": "/properties/namespaceName",
+      "type": "string",
+      "minLength": 1
+    },
+    "podName": {
+      "$id": "#/properties/podName",
+      "type": "string",
+      "minLength": 1
+    },
+    "persistent": {
+      "$id": "#/properties/persistent",
+      "type": "string",
+      "minLength": 1,
+      "enum": ["true"]
+    },
+    "volumeName": {
+      "$id": "#/properties/volumeName",
+      "type": "string",
+      "minLength": 1
+    },
+    "pvcName": {
+      "$id": "#/properties/pvcName",
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

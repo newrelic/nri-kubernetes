@@ -1,0 +1,88 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: {{ .Values.daemonset.name }}
+  namespace: {{ .Values.daemonset.namespace }}
+  labels:
+    app: {{ .Values.daemonset.name }}
+spec:
+  selector:
+    matchLabels:
+      name: {{ .Values.daemonset.name }}
+  {{- if semverCompare ">=1.6.0" .Capabilities.KubeVersion.GitVersion }}
+  updateStrategy:
+      type: RollingUpdate # Only supported in Kubernetes version 1.6 or later.
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        name: {{ .Values.daemonset.name }}
+      {{- if semverCompare ">=1.6.0" .Capabilities.KubeVersion.GitVersion }}
+      annotations:
+        # Needed for Kubernetes versions prior to 1.6.0, where tolerations were set via annotations.
+        scheduler.alpha.kubernetes.io/tolerations: |
+          [{"operator": "Exists", "effect": "NoSchedule"},{"operator": "Exists", "effect": "NoExecute"}]
+      {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      {{- if semverCompare ">=1.6.0" .Capabilities.KubeVersion.GitVersion }}
+      hostNetwork: true # This option is a requirement for the Infrastructure Agent to report the proper hostname in New Relic.
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- end }}
+      containers:
+        - name: {{ .Values.daemonset.name }}
+          image: "{{ .Values.daemonset.image.repository }}:{{ .Values.daemonset.image.tag }}"
+          imagePullPolicy: Always
+          resources:
+{{ toYaml .Values.daemonset.resources | indent 12 }}
+          volumeMounts:
+            - mountPath: /host
+              name: host-volume
+              readOnly: true
+            - mountPath: /var/run/docker.sock
+              name: host-docker-socket
+          env:
+            - name: "CLUSTER_NAME"
+              value: {{ .Values.integration.k8sClusterName | quote }}
+            - name: "NRIA_LICENSE_KEY"
+              value: {{ .Values.integration.newRelicLicenseKey | quote }}
+            - name: "NRIA_VERBOSE"
+              value: {{ .Values.integration.verbose | int | toString | quote }}
+            {{- if .Values.integration.collectorURL }}
+            - name: "NRIA_COLLECTOR_URL"
+              value: {{ .Values.integration.collectorURL }}
+            {{- end }}
+            {{- if (semverCompare "<1.7.6" .Capabilities.KubeVersion.GitVersion) and (.Values.integration.cadvisor) }}
+            - name: "CADVISOR_PORT" # Enable direct connection to cAdvisor by specifying the port. Needed for Kubernetes versions prior to 1.7.6.
+              value: {{ .Values.integration.cadvisor.port | quote }}
+            {{- end }}
+            {{- if .Values.integration.ksm }}
+            - name: "KUBE_STATE_METRICS_URL" # If this value is specified then discovery process for kube-state-metrics endpoint won't be triggered.
+              value: {{ .Values.integration.ksm.url | quote}} # This is example value. Only HTTP request is accepted.
+            {{- end }}
+            - name: "NRIA_DISPLAY_NAME"
+              valueFrom:
+                fieldRef:
+                  apiVersion: "v1"
+                  fieldPath: "spec.nodeName"
+            - name: "NRK8S_NODE_NAME"
+              valueFrom:
+                fieldRef:
+                  apiVersion: "v1"
+                  fieldPath: "spec.nodeName"
+            - name: "NRIA_PASSTHROUGH_ENVIRONMENT"
+              value: "KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,CLUSTER_NAME,CADVISOR_PORT,NRK8S_NODE_NAME,KUBE_STATE_METRICS_URL"
+      volumes:
+        - name: host-volume
+          hostPath:
+            path: /
+        - name: host-docker-socket
+          hostPath:
+            path: /var/run/docker.sock
+      {{- if semverCompare ">=1.6.0" .Capabilities.KubeVersion.GitVersion }}
+      tolerations:
+        - operator: "Exists"
+          effect: "NoSchedule"
+        - operator: "Exists"
+          effect: "NoExecute"
+      {{- end }}
