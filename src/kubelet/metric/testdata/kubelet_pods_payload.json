@@ -1,0 +1,651 @@
+{
+  "kind":"PodList",
+  "apiVersion":"v1",
+  "metadata":{},
+  "items":[
+    {
+      "metadata":{
+        "name":"newrelic-infra-rz225",
+        "generateName":"newrelic-infra-",
+        "namespace":"kube-system",
+        "selfLink":"/api/v1/namespaces/kube-system/pods/newrelic-infra-rz225",
+        "uid":"d2026c86-11a3-11e8-a084-080027352a02",
+        "resourceVersion":"76602",
+        "creationTimestamp":"2018-02-14T16:26:33Z",
+        "labels":{
+          "controller-revision-hash":"3887482659",
+          "name":"newrelic-infra",
+          "pod-template-generation":"1"
+        },
+        "annotations":{
+          "kubernetes.io/config.seen":"2018-02-27T15:21:31.663551743Z",
+          "kubernetes.io/config.source":"api",
+          "scheduler.alpha.kubernetes.io/tolerations":"[{\"operator\": \"Exists\", \"effect\": \"NoSchedule\"}]\n"
+        },
+        "ownerReferences":[
+          {
+            "apiVersion":"extensions/v1beta1",
+            "kind":"DaemonSet",
+            "name":"newrelic-infra",
+            "uid":"d2010127-11a3-11e8-a084-080027352a02",
+            "controller":true,
+            "blockOwnerDeletion":true
+          }
+        ]
+      },
+      "spec":{
+        "volumes":[
+          {
+            "name":"host-volume",
+            "hostPath":{
+              "path":"/",
+              "type":""
+            }
+          },
+          {
+            "name":"host-docker-socket",
+            "hostPath":{
+              "path":"/var/run/docker.sock",
+              "type":""
+            }
+          },
+          {
+            "name":"default-token-mmlq2",
+            "secret":{
+              "secretName":"default-token-mmlq2",
+              "defaultMode":420
+            }
+          }
+        ],
+        "containers":[
+          {
+            "name":"newrelic-infra",
+            "image":"newrelic/ohaik:1.0.0-beta3",
+            "env":[
+              {
+                "name":"CLUSTER_NAME",
+                "value":"sergio-ksm-test"
+              },
+              {
+                "name":"NRIA_COLLECTOR_URL",
+                "value":"https://staging-infra-api.newrelic.com"
+              },
+              {
+                "name":"NRIA_DISPLAY_NAME",
+                "valueFrom":{
+                  "fieldRef":{
+                    "apiVersion":"v1",
+                    "fieldPath":"spec.nodeName"
+                  }
+                }
+              },
+              {
+                "name":"NRIA_PASSTHROUGH_ENVIRONMENT",
+                "value":"KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,CLUSTER_NAME"
+              }
+            ],
+            "resources":{
+              "limits":{
+                "memory":"100Mi"
+              },
+              "requests":{
+                "cpu":"100m",
+                "memory":"100Mi"
+              }
+            },
+            "volumeMounts":[
+              {
+                "name":"host-volume",
+                "readOnly":true,
+                "mountPath":"/host"
+              },
+              {
+                "name":"host-docker-socket",
+                "mountPath":"/var/run/docker.sock"
+              },
+              {
+                "name":"default-token-mmlq2",
+                "readOnly":true,
+                "mountPath":"/var/run/secrets/kubernetes.io/serviceaccount"
+              }
+            ],
+            "terminationMessagePath":"/dev/termination-log",
+            "terminationMessagePolicy":"File",
+            "imagePullPolicy":"IfNotPresent"
+          }
+        ],
+        "restartPolicy":"Always",
+        "terminationGracePeriodSeconds":30,
+        "dnsPolicy":"ClusterFirst",
+        "serviceAccountName":"default",
+        "serviceAccount":"default",
+        "nodeName":"minikube",
+        "securityContext":{
+
+        },
+        "schedulerName":"default-scheduler",
+        "tolerations":[
+          {
+            "operator":"Exists",
+            "effect":"NoSchedule"
+          },
+          {
+            "key":"node.kubernetes.io/not-ready",
+            "operator":"Exists",
+            "effect":"NoExecute"
+          },
+          {
+            "key":"node.kubernetes.io/unreachable",
+            "operator":"Exists",
+            "effect":"NoExecute"
+          },
+          {
+            "key":"node.kubernetes.io/disk-pressure",
+            "operator":"Exists",
+            "effect":"NoSchedule"
+          },
+          {
+            "key":"node.kubernetes.io/memory-pressure",
+            "operator":"Exists",
+            "effect":"NoSchedule"
+          }
+        ]
+      },
+      "status":{
+        "phase":"Running",
+        "conditions":[
+          {
+            "type":"Initialized",
+            "status":"True",
+            "lastProbeTime":null,
+            "lastTransitionTime":"2018-02-14T16:26:33Z"
+          },
+          {
+            "type":"Ready",
+            "status":"True",
+            "lastProbeTime":null,
+            "lastTransitionTime":"2018-02-27T15:21:18Z"
+          },
+          {
+            "type":"PodScheduled",
+            "status":"True",
+            "lastProbeTime":null,
+            "lastTransitionTime":"2018-02-14T16:27:00Z"
+          }
+        ],
+        "hostIP":"192.168.99.100",
+        "podIP":"172.17.0.3",
+        "startTime":"2018-02-14T16:26:33Z",
+        "containerStatuses":[
+          {
+            "name":"newrelic-infra",
+            "state":{
+              "running":{
+                "startedAt":"2018-02-27T15:21:16Z"
+              }
+            },
+            "lastState":{
+              "terminated":{
+                "exitCode":0,
+                "reason":"Completed",
+                "startedAt":"2018-02-22T16:54:44Z",
+                "finishedAt":"2018-02-27T15:21:10Z",
+                "containerID":"docker://8bec4b5486eebab95f35471e56676f7170c3dfd04c1c8fa4046f391f9d286b8d"
+              }
+            },
+            "ready":true,
+            "restartCount":6,
+            "image":"newrelic/ohaik:1.0.0-beta3",
+            "imageID":"docker-pullable://newrelic/ohaik@sha256:115eb17a8242c02bf698259f6c883c9ad5e9e020517156881a4017fd88295444",
+            "containerID":"docker://69d7203a8f2d2d027ffa51d61002eac63357f22a17403363ef79e66d1c3146b2"
+          }
+        ],
+        "qosClass":"Burstable"
+      }
+    },
+    {
+      "metadata":{
+        "name":"kube-state-metrics-57f4659995-6n2qq",
+        "generateName":"kube-state-metrics-57f4659995-",
+        "namespace":"kube-system",
+        "selfLink":"/api/v1/namespaces/kube-system/pods/kube-state-metrics-57f4659995-6n2qq",
+        "uid":"f89b6c09-11a3-11e8-a084-080027352a02",
+        "resourceVersion":"76581",
+        "creationTimestamp":"2018-02-14T16:27:38Z",
+        "labels":{
+          "k8s-app":"kube-state-metrics",
+          "pod-template-hash":"1390215551"
+        },
+        "annotations":{
+          "kubernetes.io/config.seen":"2018-02-27T15:21:31.663544832Z",
+          "kubernetes.io/config.source":"api"
+        },
+        "ownerReferences":[
+          {
+            "apiVersion":"extensions/v1beta1",
+            "kind":"ReplicaSet",
+            "name":"kube-state-metrics-57f4659995",
+            "uid":"f899321d-11a3-11e8-a084-080027352a02",
+            "controller":true,
+            "blockOwnerDeletion":true
+          }
+        ]
+      },
+      "spec":{
+        "volumes":[
+          {
+            "name":"kube-state-metrics-token-rl9b8",
+            "secret":{
+              "secretName":"kube-state-metrics-token-rl9b8",
+              "defaultMode":420
+            }
+          }
+        ],
+        "containers":[
+          {
+            "name":"kube-state-metrics",
+            "image":"quay.io/coreos/kube-state-metrics:v1.1.0",
+            "ports":[
+              {
+                "name":"http-metrics",
+                "containerPort":8080,
+                "protocol":"TCP"
+              }
+            ],
+            "resources":{
+              "limits":{
+                "cpu":"101m",
+                "memory":"102Mi"
+              },
+              "requests":{
+                "cpu":"101m",
+                "memory":"102Mi"
+              }
+            },
+            "volumeMounts":[
+              {
+                "name":"kube-state-metrics-token-rl9b8",
+                "readOnly":true,
+                "mountPath":"/var/run/secrets/kubernetes.io/serviceaccount"
+              }
+            ],
+            "readinessProbe":{
+              "httpGet":{
+                "path":"/healthz",
+                "port":8080,
+                "scheme":"HTTP"
+              },
+              "initialDelaySeconds":5,
+              "timeoutSeconds":5,
+              "periodSeconds":10,
+              "successThreshold":1,
+              "failureThreshold":3
+            },
+            "terminationMessagePath":"/dev/termination-log",
+            "terminationMessagePolicy":"File",
+            "imagePullPolicy":"IfNotPresent"
+          },
+          {
+            "name":"addon-resizer",
+            "image":"gcr.io/google_containers/addon-resizer:1.0",
+            "command":[
+              "/pod_nanny",
+              "--container=kube-state-metrics",
+              "--cpu=100m",
+              "--extra-cpu=1m",
+              "--memory=100Mi",
+              "--extra-memory=2Mi",
+              "--threshold=5",
+              "--deployment=kube-state-metrics"
+            ],
+            "env":[
+              {
+                "name":"MY_POD_NAME",
+                "valueFrom":{
+                  "fieldRef":{
+                    "apiVersion":"v1",
+                    "fieldPath":"metadata.name"
+                  }
+                }
+              },
+              {
+                "name":"MY_POD_NAMESPACE",
+                "valueFrom":{
+                  "fieldRef":{
+                    "apiVersion":"v1",
+                    "fieldPath":"metadata.namespace"
+                  }
+                }
+              }
+            ],
+            "resources":{
+              "limits":{
+                "cpu":"100m",
+                "memory":"30Mi"
+              },
+              "requests":{
+                "cpu":"100m",
+                "memory":"30Mi"
+              }
+            },
+            "volumeMounts":[
+              {
+                "name":"kube-state-metrics-token-rl9b8",
+                "readOnly":true,
+                "mountPath":"/var/run/secrets/kubernetes.io/serviceaccount"
+              }
+            ],
+            "terminationMessagePath":"/dev/termination-log",
+            "terminationMessagePolicy":"File",
+            "imagePullPolicy":"IfNotPresent"
+          }
+        ],
+        "restartPolicy":"Always",
+        "terminationGracePeriodSeconds":30,
+        "dnsPolicy":"ClusterFirst",
+        "serviceAccountName":"kube-state-metrics",
+        "serviceAccount":"kube-state-metrics",
+        "nodeName":"minikube",
+        "securityContext":{
+
+        },
+        "schedulerName":"default-scheduler"
+      },
+      "status": {
+        "phase": "Pending",
+        "conditions": [
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2018-02-14T16:26:31Z"
+          }
+        ]
+      }
+    },
+    {
+      "metadata": {
+        "name": "sh-7c95664875-4btqh",
+        "generateName": "sh-7c95664875-",
+        "namespace": "default",
+        "selfLink": "/api/v1/namespaces/default/pods/sh-7c95664875-4btqh",
+        "uid": "dc378485-4565-11e9-822c-080027ecada5",
+        "resourceVersion": "36255",
+        "creationTimestamp": "2019-03-13T07:59:00Z",
+        "labels": {
+          "pod-template-hash": "3751220431",
+          "run": "sh"
+        },
+        "annotations": {
+          "kubernetes.io/config.seen": "2019-03-13T08:03:01.880958599Z",
+          "kubernetes.io/config.source": "api"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "extensions/v1beta1",
+            "kind": "ReplicaSet",
+            "name": "sh-7c95664875",
+            "uid": "dc355f75-4565-11e9-822c-080027ecada5",
+            "controller": true,
+            "blockOwnerDeletion": true
+          }
+        ]
+      },
+      "spec": {
+        "volumes": [
+          {
+            "name": "default-token-kgz8j",
+            "secret": {
+              "secretName": "default-token-kgz8j",
+              "defaultMode": 420
+            }
+          }
+        ],
+        "containers": [
+          {
+            "name": "sh",
+            "image": "python",
+            "args": [
+              "sh"
+            ],
+            "resources": {},
+            "volumeMounts": [
+              {
+                "name": "default-token-kgz8j",
+                "readOnly": true,
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount"
+              }
+            ],
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "imagePullPolicy": "Always",
+            "stdin": true,
+            "tty": true
+          }
+        ],
+        "restartPolicy": "Always",
+        "terminationGracePeriodSeconds": 30,
+        "dnsPolicy": "ClusterFirst",
+        "serviceAccountName": "default",
+        "serviceAccount": "default",
+        "nodeName": "minikube",
+        "securityContext": {},
+        "schedulerName": "default-scheduler",
+        "tolerations": [
+          {
+            "key": "node.kubernetes.io/not-ready",
+            "operator": "Exists",
+            "effect": "NoExecute",
+            "tolerationSeconds": 300
+          },
+          {
+            "key": "node.kubernetes.io/unreachable",
+            "operator": "Exists",
+            "effect": "NoExecute",
+            "tolerationSeconds": 300
+          }
+        ]
+      },
+      "status": {
+        "phase": "Failed",
+        "message": "The node was low on resource: memory.",
+        "reason": "Evicted",
+        "startTime": "2019-03-13T07:59:00Z"
+      }
+    },
+    {
+      "metadata": {
+        "name": "kube-controller-manager-minikube",
+        "namespace": "kube-system",
+        "selfLink": "/api/v1/namespaces/kube-system/pods/kube-controller-manager-minikube",
+        "uid": "38d78cbd438e068d417c11c848b26f09",
+        "creationTimestamp": null,
+        "labels": {
+          "k8s-app": "kube-controller-manager",
+          "component": "kube-controller-manager",
+          "tier": "control-plane"
+        },
+        "annotations": {
+          "kubernetes.io/config.hash": "38d78cbd438e068d417c11c848b26f09",
+          "kubernetes.io/config.seen": "2019-10-23T17:10:43.500021033Z",
+          "kubernetes.io/config.source": "file"
+        }
+      },
+      "spec": {
+        "volumes": [
+          {
+            "name": "ca-certs",
+            "hostPath": {
+              "path": "/etc/ssl/certs",
+              "type": "DirectoryOrCreate"
+            }
+          },
+          {
+            "name": "k8s-certs",
+            "hostPath": {
+              "path": "/var/lib/minikube/certs",
+              "type": "DirectoryOrCreate"
+            }
+          },
+          {
+            "name": "kubeconfig",
+            "hostPath": {
+              "path": "/etc/kubernetes/controller-manager.conf",
+              "type": "FileOrCreate"
+            }
+          },
+          {
+            "name": "usr-share-ca-certificates",
+            "hostPath": {
+              "path": "/usr/share/ca-certificates",
+              "type": "DirectoryOrCreate"
+            }
+          }
+        ],
+        "containers": [
+          {
+            "name": "kube-controller-manager",
+            "image": "k8s.gcr.io/kube-controller-manager:v1.16.0",
+            "command": [
+              "kube-controller-manager",
+              "--authentication-kubeconfig=/etc/kubernetes/controller-manager.conf",
+              "--authorization-kubeconfig=/etc/kubernetes/controller-manager.conf",
+              "--bind-address=127.0.0.1",
+              "--client-ca-file=/var/lib/minikube/certs/ca.crt",
+              "--cluster-signing-cert-file=/var/lib/minikube/certs/ca.crt",
+              "--cluster-signing-key-file=/var/lib/minikube/certs/ca.key",
+              "--controllers=*,bootstrapsigner,tokencleaner",
+              "--kubeconfig=/etc/kubernetes/controller-manager.conf",
+              "--leader-elect=true",
+              "--requestheader-client-ca-file=/var/lib/minikube/certs/front-proxy-ca.crt",
+              "--root-ca-file=/var/lib/minikube/certs/ca.crt",
+              "--service-account-private-key-file=/var/lib/minikube/certs/sa.key",
+              "--use-service-account-credentials=true"
+            ],
+            "resources": {
+              "requests": {
+                "cpu": "200m"
+              }
+            },
+            "volumeMounts": [
+              {
+                "name": "ca-certs",
+                "readOnly": true,
+                "mountPath": "/etc/ssl/certs"
+              },
+              {
+                "name": "k8s-certs",
+                "readOnly": true,
+                "mountPath": "/var/lib/minikube/certs"
+              },
+              {
+                "name": "kubeconfig",
+                "readOnly": true,
+                "mountPath": "/etc/kubernetes/controller-manager.conf"
+              },
+              {
+                "name": "usr-share-ca-certificates",
+                "readOnly": true,
+                "mountPath": "/usr/share/ca-certificates"
+              }
+            ],
+            "livenessProbe": {
+              "httpGet": {
+                "path": "/healthz",
+                "port": 10252,
+                "host": "127.0.0.1",
+                "scheme": "HTTP"
+              },
+              "initialDelaySeconds": 15,
+              "timeoutSeconds": 15,
+              "periodSeconds": 10,
+              "successThreshold": 1,
+              "failureThreshold": 8
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "imagePullPolicy": "IfNotPresent"
+          }
+        ],
+        "restartPolicy": "Always",
+        "terminationGracePeriodSeconds": 30,
+        "dnsPolicy": "ClusterFirst",
+        "nodeName": "minikube",
+        "hostNetwork": true,
+        "securityContext": {},
+        "schedulerName": "default-scheduler",
+        "tolerations": [
+          {
+            "operator": "Exists",
+            "effect": "NoExecute"
+          }
+        ],
+        "priorityClassName": "system-cluster-critical",
+        "enableServiceLinks": true
+      },
+      "status": {
+        "phase": "Running",
+        "conditions": [
+          {
+            "type": "Initialized",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2019-10-23T17:10:48Z"
+          },
+          {
+            "type": "Ready",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2019-10-23T17:10:49Z"
+          },
+          {
+            "type": "ContainersReady",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2019-10-23T17:10:49Z"
+          },
+          {
+            "type": "PodScheduled",
+            "status": "True",
+            "lastProbeTime": null,
+            "lastTransitionTime": "2019-10-23T17:10:48Z"
+          }
+        ],
+        "hostIP": "10.0.2.15",
+        "podIP": "10.0.2.15",
+        "podIPs": [
+          {
+            "ip": "10.0.2.15"
+          }
+        ],
+        "startTime": "2019-10-23T17:10:48Z",
+        "containerStatuses": [
+          {
+            "name": "kube-controller-manager",
+            "state": {
+              "running": {
+                "startedAt": "2019-10-23T17:10:49Z"
+              }
+            },
+            "lastState": {
+              "terminated": {
+                "exitCode": 255,
+                "reason": "Error",
+                "startedAt": "2019-10-21T14:30:43Z",
+                "finishedAt": "2019-10-23T17:10:25Z",
+                "containerID": "docker://692dd9f0012c3c86d283f2ac2c6799d9d8321edca8bd6edd7944ef85130cdec0"
+              }
+            },
+            "ready": true,
+            "restartCount": 1,
+            "image": "k8s.gcr.io/kube-controller-manager:v1.16.0",
+            "imageID": "docker-pullable://k8s.gcr.io/kube-controller-manager@sha256:c156a05ee9d40e3ca2ebf9337f38a10558c1fc6c9124006f128a82e6c38cdf3e",
+            "containerID": "docker://4c3ce07424670ccd46561eb1498a2759de4da4a7c2cd460fef147afefe4db150",
+            "started": true
+          }
+        ],
+        "qosClass": "Burstable"
+      }
+    }
+  ]
+}

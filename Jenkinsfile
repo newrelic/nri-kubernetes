@@ -32,16 +32,6 @@ pipeline {
         cancelPreviousBuilds()
       }
     }
-
-    stage('Snyk') {
-        steps {
-            withCredentials([string(credentialsId: 'SNYK_LICENSE_KEY', variable: 'SNYK_TOKEN')]) {
-                sh '''
-                    docker run --rm -v $(pwd):/src -e "SNYK_TOKEN=$SNYK_TOKEN" -w /src snyk/snyk:golang "snyk test"
-                '''
-            }
-        }
-    }
     stage('CI') {
       parallel {
         stage('Linting and Validation') {
