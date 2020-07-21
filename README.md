@@ -189,7 +189,7 @@ oc apply -f deploy/local-openshift.yaml
 
 New Relic hosts and moderates an online forum where customers can interact with New Relic employees as well as other customers to get help and share best practices. Like all official New Relic open source projects, there's a related Community topic in the New Relic Explorers Hub. You can find this project's topic/threads here:
 
->Add the url for the support thread here
+https://discuss.newrelic.com/t/new-relic-kubernetes-open-source-integration/109093
 
 ## Contributing
 We encourage your contributions to improve the New Relic Integration for Kubernetes! Keep in mind when you submit your pull request, you'll need to sign the CLA via the click-through using CLA-Assistant. You only have to sign the CLA one time per project.
