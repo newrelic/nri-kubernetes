@@ -1,6 +1,6 @@
 [![Community Project header](https://github.com/newrelic/opensource-website/raw/master/src/images/categories/Community_Project.png)](https://opensource.newrelic.com/oss-category/#community-project)
 
-# New Relic Integration for Kubernetes
+# New Relic integration for Kubernetes
 
 New Relic Integration for Kubernetes instruments the container orchestration layer by reporting metrics from Kubernetes objects. It gives you visibility about Kubernetes namespaces, deployments, replica sets, nodes, pods, and containers. Metrics are collected from different sources.
 * [kube-state-metrics service](https://github.com/kubernetes/kube-state-metrics) provides information about state of Kubernetes objects like namespace, replicaset, deployments and pods (when they are not in running state)
@@ -11,9 +11,9 @@ New Relic Integration for Kubernetes instruments the container orchestration lay
 
 Check [documentation](https://docs.newrelic.com/docs/kubernetes-integration-new-relic-infrastructure) in order to find out more how to install and configure the integration, learn what metrics are captured and how to view them.
 
-## Table of Contents
+## Table of contents
 
-- [Table of Contents](#table-of-contents)
+- [Table of contents](#table-of-contents)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Running the integration against a static data set](#running-the-integration-against-a-static-data-set)
@@ -22,12 +22,12 @@ Check [documentation](https://docs.newrelic.com/docs/kubernetes-integration-new-
   - [Configuration](#configuration)
   - [Run](#run)
   - [Tests](#tests)
-- [Running OpenShift Locally Using CodeReady Containers](#running-openshift-locally-using-codeready-containers)
+- [Running OpenShift locally using CodeReady Containers](#running-openshift-locally-using-codeready-containers)
   - [Using CodeReady Containers](#using-codeready-containers)
-  - [Accessing and Exposing the Internal Openshift Image Registry](#accessing-and-exposing-the-internal-openshift-image-registry)
-  - [CRC Configuration](#crc-configuration)
-  - [Skaffold Deployment](#skaffold-deployment)
-  - [Manual Deployment](#manual-deployment)
+  - [Accessing and exposing the internal Openshift image registry](#accessing-and-exposing-the-internal-openshift-image-registry)
+  - [CRC configuration](#crc-configuration)
+  - [Skaffold deployment](#skaffold-deployment)
+  - [Manual deployment](#manual-deployment)
   - [Tips](#tips)
 - [Support](#support)
 - [Contributing](#contributing)
@@ -35,13 +35,13 @@ Check [documentation](https://docs.newrelic.com/docs/kubernetes-integration-new-
 
 ## Installation
 
-Firstly check [compatibility and requirements](https://docs.newrelic.com/docs/kubernetes-monitoring-integration#compatibility) and then follow the
+Firstly check [compatibility and requirements](https://docs.newrelic.com/docs/integrations/kubernetes-integration/get-started/kubernetes-integration-compatibility-requirements) and then follow the
 [installation steps](https://docs.newrelic.com/docs/kubernetes-monitoring-integration#install).
 For troubleshooting help, see [Not seeing data](https://docs.newrelic.com/docs/integrations/host-integrations/troubleshooting/kubernetes-integration-troubleshooting-not-seeing-data), or [Error messages](https://docs.newrelic.com/docs/integrations/host-integrations/troubleshooting/kubernetes-integration-troubleshooting-error-messages).
 
 ## Usage
 
-Check how to [find and use data](https://docs.newrelic.com/docs/kubernetes-monitoring-integration#view-data) and description of all [captured data](https://docs.newrelic.com/docs/kubernetes-monitoring-integration#metrics).
+Check how to [find and use data](https://docs.newrelic.com/docs/integrations/kubernetes-integration/understand-use-data/understand-use-data) and description of all [captured data](https://docs.newrelic.com/docs/integrations/kubernetes-integration/understand-use-data/understand-use-data#event-types).
 
 ## Running the integration against a static data set
 
@@ -50,9 +50,9 @@ See [cmd/kubernetes-static/readme.md](./cmd/kubernetes-static/readme.md) for mor
 ## In cluster development
 
 ### Prerequisites
-For in cluster development process [Minikube](https://kubernetes.io/docs/getting-started-guides/minikube) and [Skaffold](https://github.com/GoogleCloudPlatform/skaffold) tools are used.
+For in cluster development process [Minikube](https://kubernetes.io/docs/setup/learning-environment/minikube/) and [Skaffold](https://skaffold.dev/) tools are used.
 * [Install Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/).
-* [Install Skaffold](https://github.com/GoogleCloudPlatform/skaffold#installation).
+* [Install Skaffold](https://skaffold.dev/docs/install/).
 
 ### Configuration
 
@@ -118,7 +118,7 @@ CLUSTER_NAME=<your-cluster-name> NR_LICENSE_KEY=<your-license-key>  make e2e
 This make target is executing `go run e2e/cmd/e2e.go`. You could execute that
 command with `--help` flag to see all the available options.
 
-## Running OpenShift Locally Using CodeReady Containers
+## Running OpenShift locally using CodeReady Containers
 
 For running and testing locally with OpenShift 4.x and above, [CodeReady Containers](https://developers.redhat.com/products/codeready-containers/overview) can be used. Instructions are provided below.  For running and testing locally with Openshift 3.x and prior, [minishift](https://github.com/minishift/minishift) can be used.
 
@@ -129,14 +129,14 @@ For running and testing locally with OpenShift 4.x and above, [CodeReady Contain
 1. When you get to the `crc start` command, if you encounter errors related to timeouts when attempting to check DNS resolution from within the guest VM, proceed to stop the VM (`crc stop`) and then restart it with `crc start -n 8.8.8.8`.
 1. Make sure to follow the steps for accessing the `oc` command via the `CLI` including running the `crc oc-env` command and using the `oc login ...` command to login to the cluster.
 
-### Accessing and Exposing the Internal Openshift Image Registry
+### Accessing and exposing the internal Openshift image registry
 
 The local CRC development flow depends on the Openshift image registry being exposed outside the cluster and being accessible to a valid Openshift user. To achieve this, perform the following steps.
 
 1. Follow [these steps](https://docs.openshift.com/container-platform/4.1/registry/accessing-the-registry.html) to add the `registry-viewer` and `registry-editor` role to the `developer` user.
 1. Follow [these steps](https://docs.openshift.com/container-platform/4.1/registry/securing-exposing-registry.html) to expose the registry outside the cluster _using the default route_.
 
-### CRC Configuration
+### CRC configuration
 
 Configuration is generally the same as above with the following differences.
 
@@ -152,11 +152,11 @@ Configuration is generally the same as above with the following differences.
    1. Rename `metric-ca.crt` to `cacert`
    1. Carry on with the steps in our documentation.
 
-### Skaffold Deployment
+### Skaffold deployment
 
 To deploy the integration to CRC via `skaffold`, run `skaffold run -p openshift`.
 
-### Manual Deployment
+### Manual deployment
 
 The `skaffold` deployment doesn't always seem to work reliably. In case you need to deploy manually, perform the following steps.
 
