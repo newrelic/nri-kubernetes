@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## 1.24.0
+
+### Changed
+ - Upgraded Docker base image `newrelic/infrastructure-bundle` to v1.4.0.
+   For more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.4.0).
+
 ## 1.23.1
 
 ### Fixed
