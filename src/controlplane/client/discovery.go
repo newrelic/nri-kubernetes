@@ -57,7 +57,7 @@ type ControlPlaneComponentClient struct {
 }
 
 func (c *ControlPlaneComponentClient) Do(method, urlPath string) (*http.Response, error) {
-	// Use the secure endpoint by default. If it's empty, fallback to the insecure one.
+	// Use the secure endpoint by default. If this component doesn't support it yet, fallback to the insecure one.
 	var e url.URL
 	var usingSecureEndpoint = true
 	e = c.secureEndpoint
@@ -82,7 +82,7 @@ func (c *ControlPlaneComponentClient) Do(method, urlPath string) (*http.Response
 	// If there is an error, we're using the secure endpoint and insecure fallback is on, we retry using the insecure
 	// endpoint.
 	if err != nil && usingSecureEndpoint && c.InsecureFallback {
-		c.logger.Debugf("Error wen calling secure endpoint, falling back to insecure.")
+		c.logger.Debugf("Error when calling secure endpoint, falling back to insecure.")
 		e = c.endpoint
 		r, err := c.buildPrometheusRequest(method, e, urlPath)
 		if err != nil {
