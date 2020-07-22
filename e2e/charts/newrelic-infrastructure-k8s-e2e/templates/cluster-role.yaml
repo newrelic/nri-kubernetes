@@ -4,13 +4,16 @@ kind: ClusterRole
 metadata:
   name: {{ .Values.clusterRole.name }}
 rules:
-- apiGroups: [""]
-  resources:
-    - "nodes"
-    - "nodes/metrics"
-    - "nodes/stats"
-    - "nodes/proxy"
-    - "pods"
-    - "services"
-  verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources:
+      - "nodes"
+      - "nodes/metrics"
+      - "nodes/stats"
+      - "nodes/proxy"
+      - "pods"
+      - "secrets"
+      - "services"
+    verbs: ["get", "list"]
+  - nonResourceURLs: ["/metrics"]
+    verbs: ["get"]
 {{- end }}
