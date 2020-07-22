@@ -54,8 +54,6 @@ spec:
               value: {{ .Values.integration.newRelicLicenseKey | quote }}
             - name: "NRIA_VERBOSE"
               value: {{ .Values.integration.verbose | int | toString | quote }}
-            - name: "API_SERVER_ENDPOINT_URL"
-              value: "https://localhost:443"
             {{- if .Values.integration.collectorURL }}
             - name: "NRIA_COLLECTOR_URL"
               value: {{ .Values.integration.collectorURL }}
@@ -81,7 +79,7 @@ spec:
                   apiVersion: "v1"
                   fieldPath: "spec.nodeName"
             - name: "NRIA_PASSTHROUGH_ENVIRONMENT"
-              value: "KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,CLUSTER_NAME,CADVISOR_PORT,NRK8S_NODE_NAME,KUBE_STATE_METRICS_URL,DISCOVERY_CACHE_DIR,DISCOVERY_CACHE_TTL,API_SERVER_ENDPOINT_URL"
+              value: "KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,CLUSTER_NAME,CADVISOR_PORT,NRK8S_NODE_NAME,KUBE_STATE_METRICS_URL,DISCOVERY_CACHE_DIR,DISCOVERY_CACHE_TTL"
       volumes:
         {{- if .Values.daemonset.unprivileged }}
         - name: tmpfs-data
