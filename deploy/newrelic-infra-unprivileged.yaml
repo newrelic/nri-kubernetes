@@ -48,16 +48,12 @@ spec:
     matchLabels:
       name: newrelic-infra
   updateStrategy:
-      type: RollingUpdate # Only supported in Kubernetes version 1.6 or later.
+      type: RollingUpdate
   template:
     metadata:
       labels:
         name: newrelic-infra
         mode: unprivileged
-      annotations:
-        # Needed for Kubernetes versions prior to 1.6.0, where tolerations were set via annotations.
-        scheduler.alpha.kubernetes.io/tolerations: |
-          [{"operator": "Exists", "effect": "NoSchedule"},{"operator": "Exists", "effect": "NoExecute"}]
     spec:
       serviceAccountName: newrelic
       containers:
