@@ -19,8 +19,8 @@ spec:
       serviceAccountName: {{ .Values.serviceAccount.name }}
       hostNetwork: true # This option is a requirement for the Infrastructure Agent to report the proper hostname in New Relic.
       dnsPolicy: ClusterFirstWithHostNet
-      imagePullSecrets:
-        - name: nr-quay-secret
+      #imagePullSecrets:
+      #  - name: nr-quay-secret
       containers:
         - name: {{ .Values.daemonset.name }}
           image: "{{ .Values.daemonset.image.repository }}:{{ .Values.daemonset.image.tag }}"
