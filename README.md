@@ -197,3 +197,4 @@ If you have any questions, or to execute our corporate CLA, required if your con
 
 ## License
 New Relic Integration for Kubernetes is licensed under the [Apache 2.0](http://apache.org/licenses/LICENSE-2.0.txt) License.
+
