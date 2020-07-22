@@ -82,6 +82,7 @@ func (c *ControlPlaneComponentClient) Do(method, urlPath string) (*http.Response
 	// If there is an error, we're using the secure endpoint and insecure fallback is on, we retry using the insecure
 	// endpoint.
 	if err != nil && usingSecureEndpoint && c.InsecureFallback {
+		c.logger.Debugf("Error wen calling secure endpoint, falling back to insecure.")
 		e = c.endpoint
 		r, err := c.buildPrometheusRequest(method, e, urlPath)
 		if err != nil {
@@ -243,6 +244,7 @@ func (sd *discoverer) Discover(timeout time.Duration) (client.HTTPClient, error)
 
 	return &ControlPlaneComponentClient{
 		endpoint:                 sd.component.Endpoint,
+		secureEndpoint:           sd.component.SecureEndpoint,
 		tlsSecretName:            sd.component.TLSSecretName,
 		tlsSecretNamespace:       sd.component.TLSSecretNamespace,
 		InsecureFallback:         sd.component.InsecureFallback,
