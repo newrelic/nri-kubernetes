@@ -9,28 +9,18 @@ spec:
   selector:
     matchLabels:
       name: {{ .Values.daemonset.name }}
-  {{- if semverCompare ">=1.6.0" .Capabilities.KubeVersion.GitVersion }}
   updateStrategy:
       type: RollingUpdate # Only supported in Kubernetes version 1.6 or later.
-  {{- end }}
   template:
     metadata:
       labels:
         name: {{ .Values.daemonset.name }}
-      {{- if semverCompare ">=1.6.0" .Capabilities.KubeVersion.GitVersion }}
-      annotations:
-        # Needed for Kubernetes versions prior to 1.6.0, where tolerations were set via annotations.
-        scheduler.alpha.kubernetes.io/tolerations: |
-          [{"operator": "Exists", "effect": "NoSchedule"},{"operator": "Exists", "effect": "NoExecute"}]
-      {{- end }}
     spec:
       serviceAccountName: {{ .Values.serviceAccount.name }}
-      {{- if semverCompare ">=1.6.0" .Capabilities.KubeVersion.GitVersion }}
       hostNetwork: true # This option is a requirement for the Infrastructure Agent to report the proper hostname in New Relic.
       dnsPolicy: ClusterFirstWithHostNet
-      {{- end }}
-      #imagePullSecrets:
-      #  - name: nr-quay-secret
+      imagePullSecrets:
+        - name: nr-quay-secret
       containers:
         - name: {{ .Values.daemonset.name }}
           image: "{{ .Values.daemonset.image.repository }}:{{ .Values.daemonset.image.tag }}"
@@ -64,13 +54,11 @@ spec:
               value: {{ .Values.integration.newRelicLicenseKey | quote }}
             - name: "NRIA_VERBOSE"
               value: {{ .Values.integration.verbose | int | toString | quote }}
+            - name: "API_SERVER_ENDPOINT_URL"
+              value: "https://localhost:443"
             {{- if .Values.integration.collectorURL }}
             - name: "NRIA_COLLECTOR_URL"
               value: {{ .Values.integration.collectorURL }}
-            {{- end }}
-            {{- if (semverCompare "<1.7.6" .Capabilities.KubeVersion.GitVersion) and (.Values.integration.cadvisor) }}
-            - name: "CADVISOR_PORT" # Enable direct connection to cAdvisor by specifying the port. Needed for Kubernetes versions prior to 1.7.6.
-              value: {{ .Values.integration.cadvisor.port | quote }}
             {{- end }}
             {{- if .Values.integration.ksm }}
             - name: "KUBE_STATE_METRICS_URL" # If this value is specified then discovery process for kube-state-metrics endpoint won't be triggered.
@@ -93,7 +81,7 @@ spec:
                   apiVersion: "v1"
                   fieldPath: "spec.nodeName"
             - name: "NRIA_PASSTHROUGH_ENVIRONMENT"
-              value: "KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,CLUSTER_NAME,CADVISOR_PORT,NRK8S_NODE_NAME,KUBE_STATE_METRICS_URL,DISCOVERY_CACHE_DIR,DISCOVERY_CACHE_TTL"
+              value: "KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,CLUSTER_NAME,CADVISOR_PORT,NRK8S_NODE_NAME,KUBE_STATE_METRICS_URL,DISCOVERY_CACHE_DIR,DISCOVERY_CACHE_TTL,API_SERVER_ENDPOINT_URL"
       volumes:
         {{- if .Values.daemonset.unprivileged }}
         - name: tmpfs-data
@@ -110,10 +98,8 @@ spec:
           hostPath:
             path: /var/run/docker.sock
         {{- end }}
-      {{- if semverCompare ">=1.6.0" .Capabilities.KubeVersion.GitVersion }}
       tolerations:
         - operator: "Exists"
           effect: "NoSchedule"
         - operator: "Exists"
           effect: "NoExecute"
-      {{- end }}
