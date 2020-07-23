@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+### Added
+- Support for Kubernetes v1.17.x.
+
+### Changed
+- The API server is queried by default on the Secure Port using the service account's bearer authentication.
+  If the query on the Secure Port fails, it will fallback automatically to the non-secure one. This should preserve
+  the same behavior as previous versions.
 
 ## 1.24.0
 

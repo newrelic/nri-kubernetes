@@ -21,6 +21,8 @@ type Component struct {
 	TLSSecretName                   string
 	TLSSecretNamespace              string
 	Endpoint                        url.URL
+	SecureEndpoint                  url.URL
+	InsecureFallback                bool
 	UseServiceAccountAuthentication bool
 	UseMTLSAuthentication           bool
 	Specs                           definition.SpecGroups
@@ -174,11 +176,17 @@ func BuildComponentList(options ...ComponentOption) []Component {
 				// OpenShift
 				{"app": "openshift-kube-apiserver", "apiserver": "true"},
 			},
-			Queries: metric.APIServerQueries,
-			Specs:   metric.APIServerSpecs,
+			Queries:                         metric.APIServerQueries,
+			Specs:                           metric.APIServerSpecs,
+			UseServiceAccountAuthentication: true,
+			InsecureFallback:                true,
 			Endpoint: url.URL{
 				Scheme: "http",
 				Host:   "localhost:8080",
+			},
+			SecureEndpoint: url.URL{
+				Scheme: "https",
+				Host:   "localhost:443",
 			},
 		},
 	}

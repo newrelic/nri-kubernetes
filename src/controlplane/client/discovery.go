@@ -50,17 +50,24 @@ type ControlPlaneComponentClient struct {
 	IsComponentRunningOnNode bool
 	k8sClient                client.Kubernetes
 	endpoint                 url.URL
+	secureEndpoint           url.URL
 	nodeIP                   string
 	PodName                  string
+	InsecureFallback         bool
 }
 
 func (c *ControlPlaneComponentClient) Do(method, urlPath string) (*http.Response, error) {
-	e := c.endpoint
-	e.Path = path.Join(c.endpoint.Path, urlPath)
+	// Use the secure endpoint by default. If this component doesn't support it yet, fallback to the insecure one.
+	e := c.secureEndpoint
+	usingSecureEndpoint := true
+	if e.String() == "" {
+		e = c.endpoint
+		usingSecureEndpoint = false
+	}
 
-	r, err := prometheus.NewRequest(method, e.String())
+	r, err := c.buildPrometheusRequest(method, e, urlPath)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating %s request to: %s. Got error: %v ", method, e.String(), err)
+		return nil, err
 	}
 
 	if err = c.configureAuthentication(); err != nil {
@@ -69,7 +76,31 @@ func (c *ControlPlaneComponentClient) Do(method, urlPath string) (*http.Response
 
 	c.logger.Debugf("Calling endpoint: %s, authentication method: %s", r.URL.String(), string(c.authenticationMethod))
 
-	return c.httpClient.Do(r)
+	resp, err := c.httpClient.Do(r)
+
+	// If there is an error, we're using the secure endpoint and insecure fallback is on, we retry using the insecure
+	// endpoint.
+	if err != nil && usingSecureEndpoint && c.InsecureFallback {
+		c.logger.Debugf("Error when calling secure endpoint: %s", err.Error())
+		c.logger.Debugf("Falling back to insecure endpoint")
+		e = c.endpoint
+		r, err := c.buildPrometheusRequest(method, e, urlPath)
+		if err != nil {
+			return nil, err
+		}
+		return c.httpClient.Do(r)
+	}
+
+	return resp, err
+}
+
+func (c *ControlPlaneComponentClient) buildPrometheusRequest(method string, e url.URL, urlPath string) (*http.Request, error) {
+	e.Path = path.Join(e.Path, urlPath)
+	r, err := prometheus.NewRequest(method, e.String())
+	if err != nil {
+		return nil, fmt.Errorf("Error creating %s request to: %s. Got error: %v ", method, e.String(), err)
+	}
+	return r, err
 }
 
 func (c *ControlPlaneComponentClient) configureAuthentication() error {
@@ -213,8 +244,10 @@ func (sd *discoverer) Discover(timeout time.Duration) (client.HTTPClient, error)
 
 	return &ControlPlaneComponentClient{
 		endpoint:                 sd.component.Endpoint,
+		secureEndpoint:           sd.component.SecureEndpoint,
 		tlsSecretName:            sd.component.TLSSecretName,
 		tlsSecretNamespace:       sd.component.TLSSecretNamespace,
+		InsecureFallback:         sd.component.InsecureFallback,
 		IsComponentRunningOnNode: isComponentRunningOnNode,
 		PodName:                  podName,
 		authenticationMethod:     authMethod,
