@@ -66,7 +66,7 @@ pipeline {
             }
             stage('push latest') {
               when {
-                branch 'master'
+                branch 'main'
               }
               steps {
                 script {
