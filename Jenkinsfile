@@ -32,20 +32,6 @@ pipeline {
         cancelPreviousBuilds()
       }
     }
-    stage('CI') {
-      parallel {
-        stage('Linting and Validation') {
-          steps {
-            sh 'make lint'
-          }
-        }
-        stage('Unit Tests') {
-          steps {
-            sh 'make test'
-          }
-        }
-      }
-    }
     stage('Building and pushing docker images') {
       parallel {
         stage('Integration') {
