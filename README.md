@@ -36,7 +36,7 @@ Check [documentation](https://docs.newrelic.com/docs/kubernetes-integration-new-
 ## Installation
 
 Firstly check [compatibility and requirements](https://docs.newrelic.com/docs/integrations/kubernetes-integration/get-started/kubernetes-integration-compatibility-requirements) and then follow the
-[installation steps](https://docs.newrelic.com/docs/kubernetes-monitoring-integration#install).
+[installation steps](https://docs.newrelic.com/docs/kubernetes-monitoring-integration).
 For troubleshooting help, see [Not seeing data](https://docs.newrelic.com/docs/integrations/host-integrations/troubleshooting/kubernetes-integration-troubleshooting-not-seeing-data), or [Error messages](https://docs.newrelic.com/docs/integrations/host-integrations/troubleshooting/kubernetes-integration-troubleshooting-error-messages).
 
 ## Usage
