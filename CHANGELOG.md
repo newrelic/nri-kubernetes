@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Support for Kubernetes v1.17.x.
 
 ### Changed
+- Upgraded Docker base image `newrelic/infrastructure-bundle` to v1.4.1.
+  For more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.4.1).
 - The API server is queried by default on the Secure Port using the service account's bearer authentication.
   If the query on the Secure Port fails, it will fallback automatically to the non-secure one. This should preserve
   the same behavior as previous versions.
