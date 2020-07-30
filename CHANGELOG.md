@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 1.25.0
 
+### Added
+- Support for Kubernetes versions 1.17.X and 1.18.X
+
 ### Changed
 - Upgraded Docker base image `newrelic/infrastructure-bundle` to v1.4.1.
   For more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.4.1).
