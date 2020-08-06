@@ -51,6 +51,7 @@ type argumentList struct {
 	EtcdEndpointURL              string `help:"Set a custom endpoint URL for the Etcd endpoint."`
 	ControllerManagerEndpointURL string `help:"Set a custom endpoint URL for the kube-controller-manager endpoint."`
 	APIServerEndpointURL         string `help:"Set a custom endpoint URL for the API server endpoint."`
+	NetworkRouteFile             string `help:"Route file to get the default interface from. If left empty on Linux /proc/net/route will be used by default"`
 }
 
 const (
@@ -226,6 +227,8 @@ func main() {
 		logger.Panicf("error during Kubelet auto discovering process. %s", err)
 	}
 	cacheStorage := storage.NewJSONDiskStorage(getCacheDir(discoveryCacheDir))
+
+	defaultInterface := interfaces.CaCachedDefaultInterface(logger, args.NetworkRouteFile)
 	kubeletDiscoverer := clientKubelet.NewDiscoveryCacher(innerKubeletDiscoverer, cacheStorage, ttl, logger)
 
 	kubeletClient, err := kubeletDiscoverer.Discover(timeout)
