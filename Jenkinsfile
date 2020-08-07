@@ -86,6 +86,7 @@ pipeline {
         stage('Privileged: 1.15.7')    { steps { runPrivilegedE2ETest('e2e-cluster-1-15-7-medium') } }
         stage('Privileged: 1.16.7')    { steps { runPrivilegedE2ETest('e2e-cluster-1-16-7') } }
         stage('Privileged: 1.17.9')    { steps { runPrivilegedE2ETest('e2e-cluster-1-17-9-medium') } }
+        stage('Privileged: 1.18.6')    { steps { runPrivilegedE2ETest('e2e-cluster-1-18-6') } }
       }
     }
 
@@ -94,6 +95,7 @@ pipeline {
         stage('Unprivileged: 1.15.7')  { steps { runUnprivilegedE2ETest('e2e-cluster-1-15-7-medium') } }
         stage('Unprivileged: 1.16.7')  { steps { runUnprivilegedE2ETest('e2e-cluster-1-16-7') } }
         stage('Unprivileged: 1.17.9')  { steps { runUnprivilegedE2ETest('e2e-cluster-1-17-9-medium') } }
+        stage('Unprivileged: 1.18.6')  { steps { runUnprivilegedE2ETest('e2e-cluster-1-18-6') } }
       }
     }
   }

@@ -85,3 +85,7 @@ e2e-compile-only:
 	@echo "[compile E2E binary] Building $(E2E_BINARY_NAME)"
 	# CGO_ENABLED=0 is needed since the binary is compiled in a non alpine linux.
 	@GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o $(BIN_DIR)/$(E2E_BINARY_NAME) ./e2e/cmd/e2e.go
+
+.PHONY: run-static
+run-static:
+	@go run cmd/kubernetes-static/main.go cmd/kubernetes-static/basic_http_client.go
