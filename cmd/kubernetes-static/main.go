@@ -1,9 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
+	"path/filepath"
 	"time"
 
 	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
@@ -28,6 +30,7 @@ const (
 
 	// set to false to use Kubernetes 1.15 metrics (cAdvisor changes)
 	useKubernetes1_16 = false
+	useKubernetes1_18 = true
 )
 
 type argumentList struct {
@@ -63,7 +66,11 @@ func main() {
 	// Kubelet
 	kubeletClient := newBasicHTTPClient(endpoint + "/kubelet")
 	podsFetcher := metric2.NewPodsFetcher(logger, kubeletClient, true)
-	kubeletGrouper := kubelet.NewGrouper(kubeletClient, logger, apiServerClient,
+	kubeletGrouper := kubelet.NewGrouper(
+		kubeletClient,
+		logger,
+		apiServerClient,
+		"ens5",
 		podsFetcher.FetchFuncWithCache(),
 		metric2.CadvisorFetchFunc(kubeletClient, metric.CadvisorQueries))
 	// KSM
@@ -147,12 +154,20 @@ func startStaticMetricsServer() string {
 
 	mux := http.NewServeMux()
 
-	dataDir := "./data/1_15"
+	dataDir := "./cmd/kubernetes-static/data/1_15"
 	if useKubernetes1_16 {
-		dataDir = "./data/1_16"
+		dataDir = "./cmd/kubernetes-static/data/1_16"
+	}
+	if useKubernetes1_18 {
+		dataDir = "./cmd/kubernetes-static/data/1_18"
 	}
 
-	mux.Handle("/", http.FileServer(http.Dir(dataDir)))
+	path, err := filepath.Abs(dataDir)
+	if err != nil {
+		log.Fatal(errors.New("cannot start server"))
+	}
+
+	mux.Handle("/", http.FileServer(http.Dir(path)))
 	go func() {
 		logrus.Fatal(http.Serve(listener, mux))
 	}()

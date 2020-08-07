@@ -25,6 +25,7 @@ import (
 	clientKubelet "github.com/newrelic/nri-kubernetes/src/kubelet/client"
 	metric2 "github.com/newrelic/nri-kubernetes/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/src/metric"
+	"github.com/newrelic/nri-kubernetes/src/network"
 	"github.com/newrelic/nri-kubernetes/src/scrape"
 	"github.com/newrelic/nri-kubernetes/src/storage"
 )
@@ -228,7 +229,11 @@ func main() {
 	}
 	cacheStorage := storage.NewJSONDiskStorage(getCacheDir(discoveryCacheDir))
 
-	defaultInterface := interfaces.CaCachedDefaultInterface(logger, args.NetworkRouteFile)
+	defaultNetworkInterface, err := network.CachedDefaultInterface(
+		logger, args.NetworkRouteFile, cacheStorage, ttl)
+	if err != nil {
+		logger.Warn(err)
+	}
 	kubeletDiscoverer := clientKubelet.NewDiscoveryCacher(innerKubeletDiscoverer, cacheStorage, ttl, logger)
 
 	kubeletClient, err := kubeletDiscoverer.Discover(timeout)
@@ -353,6 +358,7 @@ func main() {
 		kubeletClient,
 		logger,
 		apiServerClient,
+		defaultNetworkInterface,
 		podsFetcher,
 		metric2.CadvisorFetchFunc(kubeletClient, metric.CadvisorQueries),
 	)

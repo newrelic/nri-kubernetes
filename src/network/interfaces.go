@@ -11,6 +11,7 @@ const storageKey = "defaultNetworkInterface"
 
 type defaultInterfaceFunc func(string) (string, error)
 
+// DefaultInterface returns the default interface named used by the OS.
 func DefaultInterface(routeFile string) (string, error) {
 	return getDefaultInterface(routeFile)
 }
@@ -35,7 +36,7 @@ func doCachedDefaultInterface(
 		if time.Now().Unix() < ts+int64(ttl.Seconds()) {
 			return cached, nil
 		}
-		logger.Debugf("Cached copy of %q expired. Refreshing", cached, storageKey)
+		logger.Debugf("Cached copy of %q expired. Refreshing", storageKey)
 	} else {
 		logger.Debugf("Cached %q not found. Triggering discovery process", storageKey)
 	}
@@ -55,6 +56,8 @@ func doCachedDefaultInterface(
 	return defaultInterface, nil
 }
 
+// CachedDefaultInterface returns the default interface name used by
+// the system. The result is cached and expired based on the given ttl.
 func CachedDefaultInterface(
 	logger *logrus.Logger,
 	routeFile string,

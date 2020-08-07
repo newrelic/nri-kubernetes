@@ -136,6 +136,7 @@ func TestGroup(t *testing.T) {
 				&c,
 				logrus.StandardLogger(),
 				a,
+				"eth0",
 				podsFetcher.FetchFuncWithCache(),
 				metric.CadvisorFetchFunc(&c, queries),
 			)
