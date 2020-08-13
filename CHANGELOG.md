@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+
+## 1.26.0
+
+### Changed
 - When querying the summary endpoint from Kubelet to get the Node or Pod
   network metrics, if the default network interface is not eth0 then summary
   endpoint for Kubelet doesn't return the metrics as we expect them. We rely on
@@ -92,6 +96,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   For Pods, this issue is mainly present when using hostNetwok since they
   shared the same network interfaces with the Node.
 
+- Upgraded Docker base image `newrelic/infrastructure-bundle` to v1.4.2.
+  For more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.4.2).
 ## 1.25.0
 
 ### Added
