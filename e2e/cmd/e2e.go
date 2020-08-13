@@ -18,12 +18,14 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/sdk"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/version"
 
 	_ "github.com/newrelic/nri-kubernetes/e2e/gcp"
 	"github.com/newrelic/nri-kubernetes/e2e/helm"
 	"github.com/newrelic/nri-kubernetes/e2e/jsonschema"
 	"github.com/newrelic/nri-kubernetes/e2e/k8s"
 	"github.com/newrelic/nri-kubernetes/e2e/retry"
+	"github.com/newrelic/nri-kubernetes/e2e/scenario"
 	"github.com/newrelic/nri-kubernetes/e2e/timer"
 )
 
@@ -68,26 +70,23 @@ func (e entityID) split() []string {
 	return strings.Split(string(e), ":")
 }
 
-func scenarios(integrationImageRepository string, integrationImageTag string, rbac bool, unprivileged bool) []string {
-	return []string{
+func generateScenarios(
+	integrationImageRepository string,
+	integrationImageTag string,
+	rbac bool,
+	unprivileged bool,
+	serverInfo *version.Info,
+) []scenario.Scenario {
+	return []scenario.Scenario{
 		// 4 latest versions, single KSM instance
-		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.7.1", false),
-		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.8.0", false),
-		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.9.0", false),
+		scenario.New(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.7.1", false, serverInfo),
+		scenario.New(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.8.0", false, serverInfo),
+		scenario.New(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.9.0", false, serverInfo),
 
 		// the behaviour for multiple KSMs only has to be tested for one version, because it's testing our logic,
 		// not the logic of KSM. This might change if KSM sharding becomes enabled by default.
-		s(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.9.0", true),
+		scenario.New(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.9.0", true, serverInfo),
 	}
-}
-
-func s(rbac bool, unprivileged bool, integrationImageRepository, integrationImageTag, ksmVersion string, twoKSMInstances bool) string {
-	str := fmt.Sprintf("rbac=%v,ksm-instance-one.rbac.create=%v,ksm-instance-one.image.tag=%s,daemonset.unprivileged=%v,daemonset.image.repository=%s,daemonset.image.tag=%s", rbac, rbac, ksmVersion, unprivileged, integrationImageRepository, integrationImageTag)
-	if twoKSMInstances {
-		return fmt.Sprintf("%s,ksm-instance-two.rbac.create=%v,ksm-instance-two.image.tag=%s,two-ksm-instances=true", str, rbac, ksmVersion)
-	}
-
-	return str
 }
 
 type integrationData struct {
@@ -187,7 +186,14 @@ func main() {
 	// TODO
 	var errs []error
 	ctx := context.TODO()
-	for _, s := range scenarios(cliArgs.IntegrationImageRepository, cliArgs.IntegrationImageTag, cliArgs.Rbac, cliArgs.Unprivileged) {
+	scenarios := generateScenarios(
+		cliArgs.IntegrationImageRepository,
+		cliArgs.IntegrationImageTag,
+		cliArgs.Rbac,
+		cliArgs.Unprivileged,
+		c.ServerVersionInfo,
+	)
+	for _, s := range scenarios {
 		logger.Infof("Scenario: %q", s)
 		err := executeScenario(ctx, s, c, logger)
 		if err != nil {
@@ -300,10 +306,15 @@ func waitForKSM(c *k8s.Client, logger *logrus.Logger) (*v1.Pod, error) {
 	return &foundPod, nil
 }
 
-func executeScenario(ctx context.Context, scenario string, c *k8s.Client, logger *logrus.Logger) error {
-	defer timer.Track(time.Now(), fmt.Sprintf("executeScenario func for %s", scenario), logger)
+func executeScenario(
+	ctx context.Context,
+	currentScenario scenario.Scenario,
+	c *k8s.Client,
+	logger *logrus.Logger,
+) error {
+	defer timer.Track(time.Now(), fmt.Sprintf("executeScenario func for %s", currentScenario), logger)
 
-	releaseName, err := installRelease(ctx, scenario, logger)
+	releaseName, err := installRelease(ctx, currentScenario, logger)
 	if err != nil {
 		return err
 	}
@@ -318,10 +329,16 @@ func executeScenario(ctx context.Context, scenario string, c *k8s.Client, logger
 	if err != nil {
 		return err
 	}
-	return executeTests(c, ksmPod, releaseName, logger)
+	return executeTests(c, ksmPod, releaseName, logger, currentScenario)
 }
 
-func executeTests(c *k8s.Client, ksmPod *v1.Pod, releaseName string, logger *logrus.Logger) error {
+func executeTests(
+	c *k8s.Client,
+	ksmPod *v1.Pod,
+	releaseName string,
+	logger *logrus.Logger,
+	currentScenario scenario.Scenario,
+) error {
 	// We're fetching the list of NR pods here just to fetch it once. If for
 	// some reason this list or the contents of it could change during the
 	// execution of these tests, we could move it to `test*` functions.
@@ -379,7 +396,7 @@ func executeTests(c *k8s.Client, ksmPod *v1.Pod, releaseName string, logger *log
 	logger.Info("checking if the metric sets in all integrations match our JSON schemas")
 	err = retry.Do(
 		func() error {
-			err := testEventTypes(output)
+			err := testEventTypes(output, currentScenario)
 			if err != nil {
 				var otherErr error
 				output, otherErr = executeIntegrationForAllPods(c, ksmPod, podsList, logger)
@@ -496,43 +513,13 @@ func testRoles(nodeCount int, integrationOutput map[string]integrationData) erro
 	return nil
 }
 
-var eventTypeSchemas = map[string]jsonschema.EventTypeToSchemaFilename{
-	"kube-state-metrics": {
-		"K8sReplicasetSample":  "replicaset.json",
-		"K8sNamespaceSample":   "namespace.json",
-		"K8sDeploymentSample":  "deployment.json",
-		"K8sDaemonsetSample":   "daemonset.json",
-		"K8sStatefulsetSample": "statefulset.json",
-		"K8sEndpointSample":    "endpoint.json",
-		"K8sServiceSample":     "service.json",
-	},
-	"kubelet": {
-		"K8sPodSample":       "pod.json",
-		"K8sContainerSample": "container.json",
-		"K8sNodeSample":      "node.json",
-		"K8sVolumeSample":    "volume.json",
-		"K8sClusterSample":   "cluster.json",
-	},
-	"scheduler": {
-		"K8sSchedulerSample": "scheduler.json",
-	},
-	"etcd": {
-		"K8sEtcdSample": "etcd.json",
-	},
-	"controller-manager": {
-		"K8sControllerManagerSample": "controller-manager.json",
-	},
-	"api-server": {
-		"K8sApiServerSample": "apiserver.json",
-	},
-}
-
-func testEventTypes(output map[string]integrationData) error {
+func testEventTypes(output map[string]integrationData, s scenario.Scenario) error {
 	for podName, o := range output {
 		schemasToMatch := make(map[string]jsonschema.EventTypeToSchemaFilename)
 		for _, expectedJob := range o.expectedJobs {
-			logrus.Printf("Job: %s, types: %#v", expectedJob, eventTypeSchemas[string(expectedJob)])
-			schemasToMatch[string(expectedJob)] = eventTypeSchemas[string(expectedJob)]
+			expectedSchema := s.GetSchemasForJob(string(expectedJob))
+			logrus.Printf("Job: %s, types: %#v", expectedJob, expectedSchema)
+			schemasToMatch[string(expectedJob)] = expectedSchema
 		}
 
 		i := sdk.IntegrationProtocol2{}
@@ -553,13 +540,13 @@ func testEventTypes(output map[string]integrationData) error {
 	return nil
 }
 
-func installRelease(_ context.Context, scenario string, logger *logrus.Logger) (string, error) {
+func installRelease(_ context.Context, s scenario.Scenario, logger *logrus.Logger) (string, error) {
 	dir, err := os.Getwd()
 	if err != nil {
 		return "", err
 	}
 
-	options := strings.Split(scenario, ",")
+	options := strings.Split(s.String(), ",")
 	options = append(options,
 		fmt.Sprintf("integration.k8sClusterName=%s", cliArgs.ClusterName),
 		fmt.Sprintf("integration.newRelicLicenseKey=%s", cliArgs.NrLicenseKey),

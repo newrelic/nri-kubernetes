@@ -1,9 +1,12 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 
 	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
@@ -25,9 +28,6 @@ import (
 const (
 	integrationName    = "kubernetes-static"
 	integrationVersion = "static-local"
-
-	// set to false to use Kubernetes 1.15 metrics (cAdvisor changes)
-	useKubernetes1_16 = false
 )
 
 type argumentList struct {
@@ -38,7 +38,14 @@ var args argumentList
 
 func main() {
 
-	endpoint := startStaticMetricsServer()
+	// Determines which subdirectory of cmd/kubernetes-static/ to use
+	// for serving the static metrics
+	k8sMetricsVersion := os.Getenv("K8S_METRICS_VERSION")
+	if k8sMetricsVersion == "" {
+		k8sMetricsVersion = "1_18"
+	}
+	endpoint := startStaticMetricsServer(k8sMetricsVersion)
+
 	// let the http server start...
 	time.Sleep(time.Millisecond * 100)
 
@@ -63,7 +70,11 @@ func main() {
 	// Kubelet
 	kubeletClient := newBasicHTTPClient(endpoint + "/kubelet")
 	podsFetcher := metric2.NewPodsFetcher(logger, kubeletClient, true)
-	kubeletGrouper := kubelet.NewGrouper(kubeletClient, logger, apiServerClient,
+	kubeletGrouper := kubelet.NewGrouper(
+		kubeletClient,
+		logger,
+		apiServerClient,
+		"ens5",
 		podsFetcher.FetchFuncWithCache(),
 		metric2.CadvisorFetchFunc(kubeletClient, metric.CadvisorQueries))
 	// KSM
@@ -135,7 +146,7 @@ func main() {
 	}
 }
 
-func startStaticMetricsServer() string {
+func startStaticMetricsServer(k8sMetricsVersion string) string {
 	// This will allocate a random port
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
@@ -147,12 +158,14 @@ func startStaticMetricsServer() string {
 
 	mux := http.NewServeMux()
 
-	dataDir := "./data/1_15"
-	if useKubernetes1_16 {
-		dataDir = "./data/1_16"
+	dataDir := fmt.Sprintf("./cmd/kubernetes-static/data/%s", k8sMetricsVersion)
+
+	path, err := filepath.Abs(dataDir)
+	if err != nil {
+		log.Fatal(errors.New("cannot start server"))
 	}
 
-	mux.Handle("/", http.FileServer(http.Dir(dataDir)))
+	mux.Handle("/", http.FileServer(http.Dir(path)))
 	go func() {
 		logrus.Fatal(http.Serve(listener, mux))
 	}()

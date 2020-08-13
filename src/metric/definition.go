@@ -762,9 +762,9 @@ var KubeletSpecs = definition.SpecGroups{
 		TypeGenerator: kubeletMetric.FromRawGroupsEntityTypeGenerator,
 		Specs: []definition.Spec{
 			// /stats/summary endpoint
-			{Name: "net.rxBytesPerSecond", ValueFunc: definition.FromRaw("rxBytes"), Type: sdkMetric.RATE},
-			{Name: "net.txBytesPerSecond", ValueFunc: definition.FromRaw("txBytes"), Type: sdkMetric.RATE},
-			{Name: "net.errorsPerSecond", ValueFunc: definition.FromRaw("errors"), Type: sdkMetric.RATE},
+			{Name: "net.rxBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("rxBytes"), Type: sdkMetric.RATE},
+			{Name: "net.txBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("txBytes"), Type: sdkMetric.RATE},
+			{Name: "net.errorsPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("errors"), Type: sdkMetric.RATE},
 
 			// /pods endpoint
 			{Name: "createdAt", ValueFunc: definition.Transform(definition.FromRaw("createdAt"), toTimestamp), Type: sdkMetric.GAUGE},
@@ -846,9 +846,9 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "memoryRssBytes", ValueFunc: definition.FromRaw("memoryRssBytes"), Type: sdkMetric.GAUGE},
 			{Name: "memoryPageFaults", ValueFunc: definition.FromRaw("memoryPageFaults"), Type: sdkMetric.GAUGE},
 			{Name: "memoryMajorPageFaultsPerSecond", ValueFunc: definition.FromRaw("memoryMajorPageFaults"), Type: sdkMetric.RATE},
-			{Name: "net.rxBytesPerSecond", ValueFunc: definition.FromRaw("rxBytes"), Type: sdkMetric.RATE},
-			{Name: "net.txBytesPerSecond", ValueFunc: definition.FromRaw("txBytes"), Type: sdkMetric.RATE},
-			{Name: "net.errorsPerSecond", ValueFunc: definition.FromRaw("errors"), Type: sdkMetric.RATE},
+			{Name: "net.rxBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("rxBytes"), Type: sdkMetric.RATE},
+			{Name: "net.txBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("txBytes"), Type: sdkMetric.RATE},
+			{Name: "net.errorsPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("errors"), Type: sdkMetric.RATE},
 			{Name: "fsAvailableBytes", ValueFunc: definition.FromRaw("fsAvailableBytes"), Type: sdkMetric.GAUGE},
 			{Name: "fsCapacityBytes", ValueFunc: definition.FromRaw("fsCapacityBytes"), Type: sdkMetric.GAUGE},
 			{Name: "fsUsedBytes", ValueFunc: definition.FromRaw("fsUsedBytes"), Type: sdkMetric.GAUGE},

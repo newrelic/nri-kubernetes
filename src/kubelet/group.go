@@ -13,14 +13,21 @@ import (
 )
 
 type kubelet struct {
-	apiServer apiserver.Client
-	client    client.HTTPClient
-	fetchers  []data.FetchFunc
-	logger    *logrus.Logger
+	apiServer               apiserver.Client
+	client                  client.HTTPClient
+	fetchers                []data.FetchFunc
+	logger                  *logrus.Logger
+	defaultNetworkInterface string
 }
 
 func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.ErrorGroup) {
-	rawGroups := make(definition.RawGroups)
+	rawGroups := definition.RawGroups{
+		"network": {
+			"interfaces": definition.RawMetrics{
+				"default": r.defaultNetworkInterface,
+			},
+		},
+	}
 	for _, f := range r.fetchers {
 		g, err := f()
 		if err != nil {
@@ -59,25 +66,28 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 			Errors:      []error{fmt.Errorf("error querying ApiServer: %v", err)},
 		}
 	}
-	g := definition.RawGroups{"node": {}}
-	g["node"][response.Node.NodeName] = definition.RawMetrics{
-		"labels":      nodeInfo.Labels,
-		"allocatable": nodeInfo.Allocatable,
-		"capacity":    nodeInfo.Capacity,
+	g := definition.RawGroups{
+		"node": {
+			response.Node.NodeName: definition.RawMetrics{
+				"labels":      nodeInfo.Labels,
+				"allocatable": nodeInfo.Allocatable,
+				"capacity":    nodeInfo.Capacity,
+			},
+		},
 	}
-
 	fillGroupsAndMergeNonExistent(rawGroups, g)
 
 	return rawGroups, nil
 }
 
 // NewGrouper creates a grouper aware of Kubelet raw metrics.
-func NewGrouper(c client.HTTPClient, logger *logrus.Logger, apiServer apiserver.Client, fetchers ...data.FetchFunc) data.Grouper {
+func NewGrouper(c client.HTTPClient, logger *logrus.Logger, apiServer apiserver.Client, defaultNetworkInterface string, fetchers ...data.FetchFunc) data.Grouper {
 	return &kubelet{
-		apiServer: apiServer,
-		client:    c,
-		logger:    logger,
-		fetchers:  fetchers,
+		apiServer:               apiServer,
+		client:                  c,
+		logger:                  logger,
+		fetchers:                fetchers,
+		defaultNetworkInterface: defaultNetworkInterface,
 	}
 }
 

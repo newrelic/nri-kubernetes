@@ -23,9 +23,9 @@ import (
 
 // Client is a simple k8s api client for testing purposes.
 type Client struct {
-	Clientset     *kubernetes.Clientset
-	Config        *rest.Config
-	serverVersion *version.Info
+	Clientset         *kubernetes.Clientset
+	Config            *rest.Config
+	ServerVersionInfo *version.Info
 }
 
 // NewClient returns a k8s api client.
@@ -64,9 +64,9 @@ func NewClient(context string) (*Client, error) {
 	}
 
 	return &Client{
-		Clientset:     cs,
-		Config:        c,
-		serverVersion: sv,
+		Clientset:         cs,
+		Config:            c,
+		ServerVersionInfo: sv,
 	}, nil
 }
 
@@ -78,7 +78,7 @@ type ReqOutput struct {
 
 // ServerVersion returns the k8s server version.
 func (c Client) ServerVersion() string {
-	return c.serverVersion.String()
+	return c.ServerVersionInfo.String()
 }
 
 // NodesList list nodes.

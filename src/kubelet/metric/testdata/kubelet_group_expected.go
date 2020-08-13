@@ -8,6 +8,11 @@ import (
 
 // ExpectedGroupData is the expectation for main group_test tests.
 var ExpectedGroupData = definition.RawGroups{
+	"network": {
+		"interfaces": {
+			"default": "eth0",
+		},
+	},
 	"pod": {
 		"kube-system_newrelic-infra-rz225": {
 			"createdKind": "DaemonSet",
@@ -29,6 +34,18 @@ var ExpectedGroupData = definition.RawGroups{
 			"errors":  uint64(0),
 			"rxBytes": uint64(106175985),
 			"txBytes": uint64(35714359),
+			"interfaces": map[string]definition.RawMetrics{
+				"eth0": {
+					"rxBytes": uint64(106175985),
+					"txBytes": uint64(35714359),
+					"errors":  uint64(0),
+				},
+				"sit0": {
+					"rxBytes": uint64(0),
+					"txBytes": uint64(0),
+					"errors":  uint64(0),
+				},
+			},
 		},
 		"kube-system_kube-state-metrics-57f4659995-6n2qq": {
 			"createdKind":    "ReplicaSet",
@@ -49,6 +66,18 @@ var ExpectedGroupData = definition.RawGroups{
 			"errors":  uint64(0),
 			"rxBytes": uint64(32575098),
 			"txBytes": uint64(27840584),
+			"interfaces": map[string]definition.RawMetrics{
+				"eth0": {
+					"rxBytes": uint64(32575098),
+					"txBytes": uint64(27840584),
+					"errors":  uint64(0),
+				},
+				"sit0": {
+					"rxBytes": uint64(0),
+					"txBytes": uint64(0),
+					"errors":  uint64(0),
+				},
+			},
 		},
 		"default_sh-7c95664875-4btqh": {
 			"createdKind":    "ReplicaSet",
@@ -256,6 +285,23 @@ var ExpectedGroupData = definition.RawGroups{
 				v1.ResourceEphemeralStorage: *resource.NewQuantity(18211586048, resource.BinarySI),
 				v1.ResourceMemory:           *resource.NewQuantity(2033283072, resource.BinarySI),
 			},
+			"interfaces": map[string]definition.RawMetrics{
+				"eth0": {
+					"rxBytes": uint64(1507694406),
+					"txBytes": uint64(120789968),
+					"errors":  uint64(0),
+				},
+				"eth1": {
+					"rxBytes": uint64(5354431),
+					"txBytes": uint64(302062791),
+					"errors":  uint64(42),
+				},
+				"sit0": {
+					"rxBytes": uint64(0),
+					"txBytes": uint64(0),
+					"errors":  uint64(0),
+				},
+			},
 		},
 	},
 	"volume": {
@@ -365,6 +411,11 @@ var ExpectedGroupData = definition.RawGroups{
 // group_test tests when the kubernetes version doesn't support status
 // for static pods.
 var ExpectedGroupDataWithoutStaticPodsStatus = definition.RawGroups{
+	"network": {
+		"interfaces": {
+			"default": "eth0",
+		},
+	},
 	"pod": {
 		"kube-system_newrelic-infra-rz225": {
 			"createdKind": "DaemonSet",
@@ -386,6 +437,18 @@ var ExpectedGroupDataWithoutStaticPodsStatus = definition.RawGroups{
 			"errors":  uint64(0),
 			"rxBytes": uint64(106175985),
 			"txBytes": uint64(35714359),
+			"interfaces": map[string]definition.RawMetrics{
+				"eth0": {
+					"rxBytes": uint64(106175985),
+					"txBytes": uint64(35714359),
+					"errors":  uint64(0),
+				},
+				"sit0": {
+					"rxBytes": uint64(0),
+					"txBytes": uint64(0),
+					"errors":  uint64(0),
+				},
+			},
 		},
 		"kube-system_kube-state-metrics-57f4659995-6n2qq": {
 			"createdKind":    "ReplicaSet",
@@ -406,6 +469,18 @@ var ExpectedGroupDataWithoutStaticPodsStatus = definition.RawGroups{
 			"errors":  uint64(0),
 			"rxBytes": uint64(32575098),
 			"txBytes": uint64(27840584),
+			"interfaces": map[string]definition.RawMetrics{
+				"eth0": {
+					"rxBytes": uint64(32575098),
+					"txBytes": uint64(27840584),
+					"errors":  uint64(0),
+				},
+				"sit0": {
+					"rxBytes": uint64(0),
+					"txBytes": uint64(0),
+					"errors":  uint64(0),
+				},
+			},
 		},
 		"default_sh-7c95664875-4btqh": {
 			"createdKind":    "ReplicaSet",
@@ -605,6 +680,23 @@ var ExpectedGroupDataWithoutStaticPodsStatus = definition.RawGroups{
 				v1.ResourcePods:             *resource.NewQuantity(110, resource.DecimalSI),
 				v1.ResourceEphemeralStorage: *resource.NewQuantity(18211586048, resource.BinarySI),
 				v1.ResourceMemory:           *resource.NewQuantity(2033283072, resource.BinarySI),
+			},
+			"interfaces": map[string]definition.RawMetrics{
+				"eth0": {
+					"rxBytes": uint64(1507694406),
+					"txBytes": uint64(120789968),
+					"errors":  uint64(0),
+				},
+				"eth1": {
+					"rxBytes": uint64(5354431),
+					"txBytes": uint64(302062791),
+					"errors":  uint64(42),
+				},
+				"sit0": {
+					"rxBytes": uint64(0),
+					"txBytes": uint64(0),
+					"errors":  uint64(0),
+				},
 			},
 		},
 	},

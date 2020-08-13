@@ -73,6 +73,18 @@ func fetchNodeStats(n v1.NodeStats) (definition.RawMetrics, string, error) {
 		if n.Network.RxErrors != nil && n.Network.TxErrors != nil {
 			r["errors"] = *n.Network.RxErrors + *n.Network.TxErrors
 		}
+
+		interfaces := make(map[string]definition.RawMetrics)
+		for _, i := range n.Network.Interfaces {
+			interfaceMetrics := make(definition.RawMetrics)
+			AddUint64RawMetric(interfaceMetrics, "rxBytes", i.RxBytes)
+			AddUint64RawMetric(interfaceMetrics, "txBytes", i.TxBytes)
+			if i.RxErrors != nil && i.TxErrors != nil {
+				interfaceMetrics["errors"] = *i.RxErrors + *i.TxErrors
+			}
+			interfaces[i.Name] = interfaceMetrics
+		}
+		r["interfaces"] = interfaces
 	}
 
 	if n.Fs != nil {
@@ -111,6 +123,17 @@ func fetchPodStats(pod v1.PodStats) (definition.RawMetrics, string, error) {
 		if pod.Network.RxErrors != nil && pod.Network.TxErrors != nil {
 			r["errors"] = *pod.Network.RxErrors + *pod.Network.TxErrors
 		}
+		interfaces := make(map[string]definition.RawMetrics)
+		for _, i := range pod.Network.Interfaces {
+			interfaceMetrics := make(definition.RawMetrics)
+			AddUint64RawMetric(interfaceMetrics, "rxBytes", i.RxBytes)
+			AddUint64RawMetric(interfaceMetrics, "txBytes", i.TxBytes)
+			if i.RxErrors != nil && i.TxErrors != nil {
+				interfaceMetrics["errors"] = *i.RxErrors + *i.TxErrors
+			}
+			interfaces[i.Name] = interfaceMetrics
+		}
+		r["interfaces"] = interfaces
 	}
 
 	rawEntityID := fmt.Sprintf("%s_%s", r["namespace"], r["podName"])

@@ -25,6 +25,7 @@ import (
 	clientKubelet "github.com/newrelic/nri-kubernetes/src/kubelet/client"
 	metric2 "github.com/newrelic/nri-kubernetes/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/src/metric"
+	"github.com/newrelic/nri-kubernetes/src/network"
 	"github.com/newrelic/nri-kubernetes/src/scrape"
 	"github.com/newrelic/nri-kubernetes/src/storage"
 )
@@ -51,6 +52,7 @@ type argumentList struct {
 	EtcdEndpointURL              string `help:"Set a custom endpoint URL for the Etcd endpoint."`
 	ControllerManagerEndpointURL string `help:"Set a custom endpoint URL for the kube-controller-manager endpoint."`
 	APIServerEndpointURL         string `help:"Set a custom endpoint URL for the API server endpoint."`
+	NetworkRouteFile             string `help:"Route file to get the default interface from. If left empty on Linux /proc/net/route will be used by default"`
 }
 
 const (
@@ -226,6 +228,12 @@ func main() {
 		logger.Panicf("error during Kubelet auto discovering process. %s", err)
 	}
 	cacheStorage := storage.NewJSONDiskStorage(getCacheDir(discoveryCacheDir))
+
+	defaultNetworkInterface, err := network.CachedDefaultInterface(
+		logger, args.NetworkRouteFile, cacheStorage, ttl)
+	if err != nil {
+		logger.Warn(err)
+	}
 	kubeletDiscoverer := clientKubelet.NewDiscoveryCacher(innerKubeletDiscoverer, cacheStorage, ttl, logger)
 
 	kubeletClient, err := kubeletDiscoverer.Discover(timeout)
@@ -350,6 +358,7 @@ func main() {
 		kubeletClient,
 		logger,
 		apiServerClient,
+		defaultNetworkInterface,
 		podsFetcher,
 		metric2.CadvisorFetchFunc(kubeletClient, metric.CadvisorQueries),
 	)
