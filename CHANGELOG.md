@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+
+## 1.26.0
+
+### Changed
 - When querying the summary endpoint from Kubelet to get the Node or Pod
   network metrics, if the default network interface is not eth0 then summary
   endpoint for Kubelet doesn't return the metrics as we expect them. We rely on
