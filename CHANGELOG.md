@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## 1.26.2
+
 ### Changed
 
+- Upgrade Docker image to use Tini entrypoint solving:
+  - reaps orphaned zombie process attached to PID 1
+  - correctly forwards signals to CMD process
+  Read for more details: https://blog.phusion.nl/2015/01/20/docker-and-the-pid-1-zombie-reaping-problem/
 - Upgraded Docker base image `newrelic/infrastructure-bundle` to v1.5.1.
   For more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.5.1).
 
