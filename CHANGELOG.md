@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## 1.26.4
+
+### Added
+
+- Added `restartCount` to containers in the `wainting` state
+  - In case the container is in a crash loop the restart count would not be shown
+  
 ## 1.26.3
 
 ### Added
