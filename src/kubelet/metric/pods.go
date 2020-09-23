@@ -221,6 +221,7 @@ func fillContainerStatuses(pod *v1.Pod, dest map[string]definition.RawMetrics) {
 		case c.State.Terminated != nil:
 			dest[id]["status"] = "Terminated"
 			dest[id]["reason"] = c.State.Terminated.Reason
+			dest[id]["restartCount"] = c.RestartCount
 			dest[id]["startedAt"] = c.State.Terminated.StartedAt.Time.In(time.UTC) // TODO WE DO NOT REPORT THAT METRIC
 		default:
 			dest[id]["status"] = "Unknown"
