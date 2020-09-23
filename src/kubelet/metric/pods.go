@@ -218,6 +218,7 @@ func fillContainerStatuses(pod *v1.Pod, dest map[string]definition.RawMetrics) {
 		case c.State.Waiting != nil:
 			dest[id]["status"] = "Waiting"
 			dest[id]["reason"] = c.State.Waiting.Reason
+			dest[id]["restartCount"] = c.RestartCount
 		case c.State.Terminated != nil:
 			dest[id]["status"] = "Terminated"
 			dest[id]["reason"] = c.State.Terminated.Reason
