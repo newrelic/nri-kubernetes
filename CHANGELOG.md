@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 - Added `restartCount` to containers in the `terminated` state
-  - In case the container is in a crash loop the restart count would not be shown
+  - In cases where a container is in a crash loop the restart count would not be shown
 
 ## 1.26.2
 
