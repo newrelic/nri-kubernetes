@@ -3,6 +3,7 @@ package metric
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/newrelic/nri-kubernetes/src/client"
@@ -17,6 +18,12 @@ const (
 
 	// StandaloneCAdvisorMetricsPath is the path where standalone cadvisor serves information.
 	StandaloneCAdvisorMetricsPath = "/metrics"
+)
+
+var (
+	dockerNativeWithoutSystemD = regexp.MustCompile("^.*([0-9a-f]+)$")
+	dockerNativeWithSystemD    = regexp.MustCompile("^.*\\w+-([0-9a-f]+)\\.scope$")
+	dockerGeneric              = regexp.MustCompile("^([0-9a-f]+)$")
 )
 
 // getLabel returns the first label it finds by the given names
@@ -129,6 +136,21 @@ func createRawEntityID(m prometheus.Metric) (string, error) {
 }
 
 // /kubepods/besteffort/podba8b34d7-11a3-11e8-a084-080027352a02/a949bd136c1397b9f52905538ee11450427be33648abe38db06be2e5cfbeca49
+// /docker/ae17ce6dcd2f27905cedf80609044290eccd98115b4e1ded08fcf6852cf939ae/kubepods.slice/kubepods-besteffort.slice/kubepods-besteffort-pod13118b761000f8fe2c4662d5f32d9532.slice/crio-ebccdd64bb3ef5dfa9d9b167cb5e30f9b696c2694fb7e0783af5575c28be3d1b.scope
+// /docker/d44b560aba016229fd4f87a33bf81e8eaf6c81932a0623530456e8f80f9675ad/kubepods/besteffort/pod6edbcc6c66e4b5af53005f91bf0bc1fd/7588a02459ef3166ba043c5a605c9ce65e4dd250d7ee40428a28d806c4116e97
 func extractContainerID(v string) string {
-	return v[strings.LastIndex(v, "/")+1:]
+	containerId := v[strings.LastIndex(v, "/")+1:]
+	matches := dockerNativeWithSystemD.FindStringSubmatch(containerId)
+	if len(matches) > 0 {
+		return matches[1]
+	}
+	matches = dockerNativeWithoutSystemD.FindStringSubmatch(containerId)
+	if len(matches) > 0 {
+		return matches[0]
+	}
+	matches = dockerGeneric.FindStringSubmatch(containerId)
+	if len(matches) > 0 {
+		return matches[0]
+	}
+	return containerId
 }

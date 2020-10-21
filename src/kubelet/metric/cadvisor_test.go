@@ -88,3 +88,36 @@ container_memory_usage_bytes{container_name="influxdb",id="/kubepods/besteffort/
 
 	assert.ElementsMatch(t, expectedErrs, err.(data.ErrorGroup).Errors)
 }
+
+func TestExtractContainerIdWithoutSystemD_ReturnsCorrectId(t *testing.T) {
+	// given
+	fullContainerId := "/docker/d44b560aba016229fd4f87a33bf81e8eaf6c81932a0623530456e8f80f9675ad/kubepods/besteffort/pod6edbcc6c66e4b5af53005f91bf0bc1fd/7588a02459ef3166ba043c5a605c9ce65e4dd250d7ee40428a28d806c4116e97"
+	expected := "7588a02459ef3166ba043c5a605c9ce65e4dd250d7ee40428a28d806c4116e97"
+
+	// when
+	actual := extractContainerID(fullContainerId)
+
+	assert.Equal(t, expected, actual)
+}
+
+func TestExtractContainerIdWithSystemD_ReturnsCorrectId(t *testing.T) {
+	// given
+	fullContainerId := "/docker/ae17ce6dcd2f27905cedf80609044290eccd98115b4e1ded08fcf6852cf939ae/kubepods.slice/kubepods-besteffort.slice/kubepods-besteffort-pod13118b761000f8fe2c4662d5f32d9532.slice/crio-ebccdd64bb3ef5dfa9d9b167cb5e30f9b696c2694fb7e0783af5575c28be3d1b.scope"
+	expected := "ebccdd64bb3ef5dfa9d9b167cb5e30f9b696c2694fb7e0783af5575c28be3d1b"
+
+	// when
+	actual := extractContainerID(fullContainerId)
+
+	assert.Equal(t, expected, actual)
+}
+
+func TestExtractContainerIdDockerGeneric_ReturnsCorrectId(t *testing.T) {
+	// given
+	fullContainerId := "docker://5a4eefc5b30f6f12402665bd920ee8e889ba9e14bdcc623e2865a79d40f58412"
+	expected := "5a4eefc5b30f6f12402665bd920ee8e889ba9e14bdcc623e2865a79d40f58412"
+
+	// when
+	actual := extractContainerID(fullContainerId)
+
+	assert.Equal(t, expected, actual)
+}
