@@ -139,18 +139,18 @@ func createRawEntityID(m prometheus.Metric) (string, error) {
 // /docker/ae17ce6dcd2f27905cedf80609044290eccd98115b4e1ded08fcf6852cf939ae/kubepods.slice/kubepods-besteffort.slice/kubepods-besteffort-pod13118b761000f8fe2c4662d5f32d9532.slice/crio-ebccdd64bb3ef5dfa9d9b167cb5e30f9b696c2694fb7e0783af5575c28be3d1b.scope
 // /docker/d44b560aba016229fd4f87a33bf81e8eaf6c81932a0623530456e8f80f9675ad/kubepods/besteffort/pod6edbcc6c66e4b5af53005f91bf0bc1fd/7588a02459ef3166ba043c5a605c9ce65e4dd250d7ee40428a28d806c4116e97
 func extractContainerID(v string) string {
-	containerId := v[strings.LastIndex(v, "/")+1:]
-	matches := dockerNativeWithSystemD.FindStringSubmatch(containerId)
+	containerID := v[strings.LastIndex(v, "/")+1:]
+	matches := dockerNativeWithSystemD.FindStringSubmatch(containerID)
 	if len(matches) > 0 {
 		return matches[1]
 	}
-	matches = dockerNativeWithoutSystemD.FindStringSubmatch(containerId)
+	matches = dockerNativeWithoutSystemD.FindStringSubmatch(containerID)
 	if len(matches) > 0 {
 		return matches[0]
 	}
-	matches = dockerGeneric.FindStringSubmatch(containerId)
+	matches = dockerGeneric.FindStringSubmatch(containerID)
 	if len(matches) > 0 {
 		return matches[0]
 	}
-	return containerId
+	return containerID
 }
