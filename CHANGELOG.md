@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## 1.26.5
+
+### Fixed
+
+- Container id's are correctly parsed when using system driver
+
 ## 1.26.4
 
 ### Added
