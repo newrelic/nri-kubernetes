@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 1.26.5
 
-- Container id parsing when using systemd docker driver
-
 ### Fixed
+
+- Container id's are correctly parsed when using system driver
 
 ## 1.26.4
 
