@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## 1.26.5
+
+- Container id parsing when using systemd docker driver
+
+### Fixed
+
 ## 1.26.4
 
 ### Added
