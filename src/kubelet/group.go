@@ -66,12 +66,26 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 			Errors:      []error{fmt.Errorf("error querying ApiServer: %v", err)},
 		}
 	}
+
+	podsResource, err := metric.GetMetricsPodsData(r.client)
+	var nodeRequestedCPU, nodeRequestedMemory int64 = 0, 0
+	if err != nil {
+		for _, pod := range podsResource.Items {
+			for _, container := range pod.Spec.Containers {
+				nodeRequestedCPU += container.Resources.Requests.Cpu().MilliValue()
+				nodeRequestedMemory += container.Resources.Requests.Memory().MilliValue()
+			}
+		}
+	}
+
 	g := definition.RawGroups{
 		"node": {
 			response.Node.NodeName: definition.RawMetrics{
-				"labels":      nodeInfo.Labels,
-				"allocatable": nodeInfo.Allocatable,
-				"capacity":    nodeInfo.Capacity,
+				"labels":          nodeInfo.Labels,
+				"allocatable":     nodeInfo.Allocatable,
+				"capacity":        nodeInfo.Capacity,
+				"requestedCpu":    nodeRequestedCPU,
+				"requestedMemory": nodeRequestedMemory,
 			},
 		},
 	}

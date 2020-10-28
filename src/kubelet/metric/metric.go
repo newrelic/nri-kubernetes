@@ -12,10 +12,15 @@ import (
 
 	"github.com/newrelic/nri-kubernetes/src/client"
 	"github.com/newrelic/nri-kubernetes/src/definition"
+
+	kv1 "k8s.io/api/core/v1"
 )
 
 // StatsSummaryPath is the path where kubelet serves a summary with several information.
 const StatsSummaryPath = "/stats/summary"
+
+// StatsPodsPath is the path where kubelet serves a pod list with several information.
+const StatsPodsPath = "/pods"
 
 // GetMetricsData calls kubelet /stats/summary endpoint and returns unmarshalled response
 func GetMetricsData(c client.HTTPClient) (v1.Summary, error) {
@@ -41,6 +46,28 @@ func GetMetricsData(c client.HTTPClient) (v1.Summary, error) {
 
 	return *summary, nil
 
+}
+
+// GetMetricsPodsData calls kubelet /pods endpoint and returns unmarshalled response
+func GetMetricsPodsData(c client.HTTPClient) (kv1.PodList, error) {
+	resp, err := c.Do(http.MethodGet, StatsPodsPath)
+	if err != nil {
+		return kv1.PodList{}, err
+	}
+	defer resp.Body.Close() // nolint: errcheck
+	if resp.StatusCode != http.StatusOK {
+		return kv1.PodList{}, fmt.Errorf("error calling kubelet pods endpoint. Got status code: %d", resp.StatusCode)
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return kv1.PodList{}, fmt.Errorf("error reading the response body of kubelet pods endpoint. Got error: %v", err.Error())
+	}
+	var podStats = new(kv1.PodList)
+	err = json.Unmarshal(body, podStats)
+	if err != nil {
+		return kv1.PodList{}, fmt.Errorf("error unmarshaling the response body. Got error: %v", err.Error())
+	}
+	return *podStats, nil
 }
 
 func fetchNodeStats(n v1.NodeStats) (definition.RawMetrics, string, error) {
