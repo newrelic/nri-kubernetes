@@ -244,6 +244,8 @@ var ExpectedGroupData = definition.RawGroups{
 	"node": {
 		"minikube": {
 			"nodeName":              "minikube",
+			"requestedCpu":			int64(0),
+			"requestedMemory":		int64(0),
 			"errors":                uint64(0),
 			"fsAvailableBytes":      uint64(14924988416),
 			"fsCapacityBytes":       uint64(17293533184),
@@ -640,6 +642,8 @@ var ExpectedGroupDataWithoutStaticPodsStatus = definition.RawGroups{
 	"node": {
 		"minikube": {
 			"nodeName":              "minikube",
+			"requestedCpu":			int64(0),
+			"requestedMemory":		int64(0),
 			"errors":                uint64(0),
 			"fsAvailableBytes":      uint64(14924988416),
 			"fsCapacityBytes":       uint64(17293533184),
