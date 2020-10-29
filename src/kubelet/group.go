@@ -76,6 +76,8 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 				nodeRequestedMemory += container.Resources.Requests.Memory().MilliValue()
 			}
 		}
+	} else {
+		logrus.Warning("Could not retrieve nodeRequestedCPU and nodeRequestedMemory")
 	}
 
 	g := definition.RawGroups{
