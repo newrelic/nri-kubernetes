@@ -111,7 +111,7 @@ func TestDiscover_portThroughDNSAndGuessedNodeIPFromMultiplePods(t *testing.T) {
 }
 func TestDiscover_metricsPortThroughAPIWhenDNSFails(t *testing.T) {
 	tt := []struct {
-		label string
+		label     string
 		srvLookup lookupSRVFunc
 	}{
 		{"k8s-app", emptyLookupSRV},
