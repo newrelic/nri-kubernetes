@@ -30,6 +30,12 @@ func emptyLookupSRV(service, proto, name string) (cname string, addrs []*net.SRV
 	return "cname", []*net.SRV{}, nil
 }
 
+func noneLookupSRV(service, proto, name string) (cname string, addrs []*net.SRV, err error) {
+	return "cname", []*net.SRV{{
+		Target: "None",
+	}}, nil
+}
+
 func failingLookupSRV(service, proto, name string) (cname string, addrs []*net.SRV, err error) {
 	return "cname", nil, fmt.Errorf("patapum")
 }
@@ -103,13 +109,17 @@ func TestDiscover_portThroughDNSAndGuessedNodeIPFromMultiplePods(t *testing.T) {
 	// And the nodeIP is correctly returned
 	assert.Equal(t, "162.178.1.1", ksmClient.(*ksm).nodeIP)
 }
-func TestDiscover_metricsPortThroughAPIWhenDNSEmptyResponse(t *testing.T) {
+func TestDiscover_metricsPortThroughAPIWhenDNSFails(t *testing.T) {
 	tt := []struct {
-		label string
+		label     string
+		srvLookup lookupSRVFunc
 	}{
-		{"k8s-app"},
-		{"app"},
-		{"app.kubernetes.io/name"},
+		{"k8s-app", emptyLookupSRV},
+		{"app", emptyLookupSRV},
+		{"app.kubernetes.io/name", emptyLookupSRV},
+		{"k8s-app", noneLookupSRV},
+		{"app", noneLookupSRV},
+		{"app.kubernetes.io/name", noneLookupSRV},
 	}
 
 	for _, entry := range tt {

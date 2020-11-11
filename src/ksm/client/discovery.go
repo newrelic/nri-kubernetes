@@ -23,17 +23,20 @@ var ksmAppLabelNames = []string{"k8s-app", "app", "app.kubernetes.io/name"}
 var errNoKSMPodsFound = errors.New("no KSM pods found")
 
 const (
-	ksmAppLabelValue = "kube-state-metrics"
-	ksmPortName      = "http-metrics"
-	k8sTCP           = "TCP"
-	ksmQualifiedName = "kube-state-metrics.kube-system.svc.cluster.local"
-	ksmDNSService    = "http-metrics"
-	ksmDNSProto      = "tcp"
+	ksmAppLabelValue         = "kube-state-metrics"
+	ksmPortName              = "http-metrics"
+	k8sTCP                   = "TCP"
+	ksmQualifiedName         = "kube-state-metrics.kube-system.svc.cluster.local"
+	ksmDNSService            = "http-metrics"
+	ksmDNSProto              = "tcp"
+	headlessServiceClusterIP = "None"
 )
+
+type lookupSRVFunc func(service, proto, name string) (cname string, addrs []*net.SRV, err error)
 
 // discoverer implements Discoverer interface by using official Kubernetes' Go client
 type discoverer struct {
-	lookupSRV         func(service, proto, name string) (cname string, addrs []*net.SRV, err error)
+	lookupSRV         lookupSRVFunc
 	apiClient         client.Kubernetes
 	logger            *logrus.Logger
 	overridenEndpoint string
@@ -123,6 +126,9 @@ func (sd *discoverer) dnsDiscover() (url.URL, error) {
 	_, addrs, err := sd.lookupSRV(ksmDNSService, ksmDNSProto, ksmQualifiedName)
 	if err == nil {
 		for _, addr := range addrs {
+			if addr.Target == headlessServiceClusterIP {
+				continue
+			}
 			endpoint.Host = fmt.Sprintf("%v:%v", ksmQualifiedName, addr.Port)
 			return endpoint, nil
 		}
