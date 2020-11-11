@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-## Unreleased
+## 1.26.6
 
-### 1.26.6
+### Fixed 
 
 - When discovering kube-state-metrics behind a headless service, the
   DNS discovery will return an error. Before it would be considered
