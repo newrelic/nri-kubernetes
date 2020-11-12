@@ -103,7 +103,7 @@ func TestWithEndpointURL(t *testing.T) {
 			endpointURL: "http://localhost:8080",
 		},
 		{
-			name: "It should set endpoint URL and service account auth with valid https URL",
+			name: "It should set a secure endpoint URL and service account auth with valid https URL",
 			components: []Component{
 				{
 					Name: Etcd,
@@ -113,7 +113,7 @@ func TestWithEndpointURL(t *testing.T) {
 					},
 					Queries: metric.EtcdQueries,
 					Specs:   metric.EtcdSpecs,
-					Endpoint: url.URL{
+					SecureEndpoint: url.URL{
 						Scheme: "https",
 						Host:   "127.0.0.1:4001",
 					},
@@ -123,7 +123,7 @@ func TestWithEndpointURL(t *testing.T) {
 				assert.Fail(t, "WithEndpointURL should not have panic'ed!")
 			},
 			assertShouldSucceed: func(component Component, endpointURL string) {
-				assert.Equal(t, endpointURL, component.Endpoint.String())
+				assert.Equal(t, endpointURL, component.SecureEndpoint.String())
 				assert.True(t, component.UseServiceAccountAuthentication)
 			},
 			endpointURL: "https://localhost:8080",
