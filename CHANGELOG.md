@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## 1.26.7
+
+### Fixed 
+
+- When configuring API_SERVER_ENDPOINT_URL with https endpoint, the
+  api-server component will use that that instead of the default.
+  More info at issue #41
+
 ## 1.26.6
 
 ### Fixed 
