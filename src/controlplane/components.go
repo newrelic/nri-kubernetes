@@ -97,8 +97,13 @@ func WithEndpointURL(name ComponentName, endpointURL string) ComponentOption {
 			panic(fmt.Sprintf("Endpoint URL %s for component %s is not a valid URL", endpointURL, string(name)))
 		}
 
-		component.UseServiceAccountAuthentication = (strings.ToLower(url.Scheme) == "https")
-		component.Endpoint = *url
+		component.UseServiceAccountAuthentication = strings.ToLower(url.Scheme) == "https"
+		if component.UseServiceAccountAuthentication {
+			component.SecureEndpoint = *url
+		} else {
+			component.Endpoint = *url
+		}
+
 	}
 }
 
