@@ -16,7 +16,7 @@ import (
 // Helm v2 is used, and with the release of helm v3 the helm command no longer links to v2.
 // Set the path to helm v2 here, for example:
 //const _helmBinary = "/usr/local/bin/helm2"
-const _helmBinary = "helm"
+const _helmBinary = "linux-amd64/helm"
 
 // InstallRelease installs a chart release
 func InstallRelease(path, context string, logger *logrus.Logger, config ...string) ([]byte, error) {
