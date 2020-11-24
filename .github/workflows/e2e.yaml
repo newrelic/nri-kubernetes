@@ -20,13 +20,10 @@ jobs:
       uses: actions/setup-go@v2
       with:
         go-version: '^1.14.4'
-    - uses: azure/setup-helm@v1
-      with:
-        version: '2.17.0'
     - name: Setup Helm and Socat
       run: |
-        # curl https://get.helm.sh/helm-v2.17.0-linux-amd64.tar.gz --output helm.tar.gz
-        # tar -zxvf helm.tar.gz
+        curl https://get.helm.sh/helm-v2.17.0-linux-amd64.tar.gz --output helm.tar.gz
+        tar -zxvf helm.tar.gz
         sudo apt-get update -y
         sudo apt-get install -y socat
     - name: Setup Minikube
@@ -34,6 +31,7 @@ jobs:
       with:
         minikube version: 'v1.14.2'
         kubernetes version: '${{ matrix.k8sVersion }}'
+        driver: docker
     - name: Compile and Build Image
       run: |
         make compile
