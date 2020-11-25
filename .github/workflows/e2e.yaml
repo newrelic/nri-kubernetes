@@ -2,6 +2,8 @@ name: E2E over minikube
 
 on:
   push:
+    branches:
+      - "main"
   pull_request:
 
 jobs:
@@ -12,7 +14,7 @@ jobs:
         ## we could run priviledgeMode this in serie instead of in //
         ## PRO less total time, less expensive CONTRA slower to get results
         priviledgeMode: [ "normal", "unprivileged" ]
-        k8sVersion: [ "v1.15.7", "v1.16.7", "v1.17.9", "v1.18.6", "v1.19.2" ]
+        k8sVersion: [ "v1.15.12", "v1.16.16", "v1.17.14", "v1.18.12", "v1.19.4" ]
     steps:
     - name: Checkout Code
       uses: actions/checkout@v2.3.4
@@ -31,7 +33,7 @@ jobs:
     - name: Setup Minikube
       uses: manusa/actions-setup-minikube@v2.0.1
       with:
-        minikube version: 'v1.14.2'
+        minikube version: 'v1.15.1'
         kubernetes version: '${{ matrix.k8sVersion }}'
         driver: docker
     - name: Compile and Build Image
@@ -43,8 +45,8 @@ jobs:
     - name: Interact with the cluster
       run: |
         if [ "${{ matrix.priviledgeMode }}" = "unprivileged" ]; then
-          UNPRIVILEDGE=true
+          UNPRIVILEGED=true
         else
-          UNPRIVILEDGE=false
+          UNPRIVILEGED=false
         fi
-        go run e2e/cmd/e2e.go --verbose --cluster_name=e2e --nr_license_key="fakeLicense" --rbac=true --integration_image_tag=test --integration_image_repository=test_image_${{ matrix.priviledgeMode }} --k8s_version=${{ matrix.k8sVersion }} --unprivileged=$UNPRIVILEDGE
+        go run e2e/cmd/e2e.go --verbose --cluster_name=e2e --nr_license_key="fakeLicense" --rbac=true --integration_image_tag=test --integration_image_repository=test_image_${{ matrix.priviledgeMode }} --k8s_version=${{ matrix.k8sVersion }} --unprivileged=$UNPRIVILEGED
