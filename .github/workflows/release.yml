@@ -1,0 +1,66 @@
+name: Release
+
+on:
+  release:
+    types: [prereleased, released]
+
+jobs:
+  release:
+    name: Release docker images and config
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_IMAGE_NAME: newrelic/infrastructure-k8s
+      S3_PATH: s3://nr-downloads-main/infrastructure_agent
+    steps:
+      - name: Generate docker image version from git tag
+        run: |
+          echo "${{ github.event.release.tag_name }}" | grep -E '^v[0-9.]*[0-9]$'
+          DOCKER_IMAGE_TAG=$(echo "${{ github.event.release.tag_name }}" | sed 's/^v//')
+          echo "$DOCKER_IMAGE_TAG" | grep -E '^[0-9.]*[0-9]$'
+          echo "DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG" >> $GITHUB_ENV
+
+      - if: ${{ github.event.release.prerelease }}
+        run: |
+          echo "DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG-pre" >> $GITHUB_ENV
+          echo "S3_PATH=$S3_PATH/test" >> $GITHUB_ENV
+
+      - uses: actions/checkout@v2
+
+      - name: Build docker images
+        run: |
+          make compile
+          docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG .
+          docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged --build-arg 'MODE=unprivileged' .
+          DOCKER_PRIVILEGED_SHA256=$(docker inspect --format='{{index (split (index .RepoDigests 0) "@sha256:") 1}}' $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG)
+          DOCKER_UNPRIVILEGED_SHA256=$(docker inspect --format='{{index (split (index .RepoDigests 0) "@sha256:") 1}}' $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged)
+          test "$DOCKER_PRIVILEGED_SHA256" != "$DOCKER_UNPRIVILEGED_SHA256"
+
+      - uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Upload images
+        run: |
+          docker push $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
+          docker push $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged
+
+#      - name: Tag and push docker :latest images
+#        if: ${{ ! github.event.release.prerelease }}
+#        run: |
+#          docker tag $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG $DOCKER_IMAGE_NAME:latest
+#          docker tag $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged $DOCKER_IMAGE_NAME:latest-unprivileged
+#          docker push $DOCKER_IMAGE_NAME:latest
+#          docker push $DOCKER_IMAGE_NAME:latest-unprivileged
+
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Upload configuration files to https://download.newrelic.com
+        run: |
+          aws s3 cp deploy/newrelic-infra.yaml $S3_PATH/integrations/kubernetes/newrelic-infrastructure-k8s-$DOCKER_IMAGE_TAG.yaml
+          aws s3 cp deploy/newrelic-infra.yaml $S3_PATH/integrations/kubernetes/newrelic-infrastructure-k8s-latest.yaml
+          aws s3 cp deploy/newrelic-infra-unprivileged.yaml $S3_PATH/integrations/kubernetes/newrelic-infrastructure-k8s-unprivileged-$DOCKER_IMAGE_TAG.yaml
+          aws s3 cp deploy/newrelic-infra-unprivileged.yaml $S3_PATH/integrations/kubernetes/newrelic-infrastructure-k8s-unprivileged-latest.yaml
