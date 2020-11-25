@@ -31,16 +31,11 @@ jobs:
           make compile
           docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG .
           docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged --build-arg 'MODE=unprivileged' .
-          DOCKER_PRIVILEGED_SHA256=$(docker inspect --format='{{index (split (index .RepoDigests 0) "@sha256:") 1}}' $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG)
-          DOCKER_UNPRIVILEGED_SHA256=$(docker inspect --format='{{index (split (index .RepoDigests 0) "@sha256:") 1}}' $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged)
-          test "$DOCKER_PRIVILEGED_SHA256" != "$DOCKER_UNPRIVILEGED_SHA256"
-
       - uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Upload images
+      - name: Upload docker images
         run: |
           docker push $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
           docker push $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged
