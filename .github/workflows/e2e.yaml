@@ -11,9 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ## we could run priviledgeMode this in serie instead of in //
+        ## we could run priviledgedMode this in serie instead of in //
         ## PRO less total time, less expensive CONTRA slower to get results
-        priviledgeMode: [ "normal", "unprivileged" ]
+        privilegedMode: [ "normal", "unprivileged" ]
         k8sVersion: [ "v1.15.12", "v1.16.15", "v1.17.14", "v1.18.12", "v1.19.4" ]
     steps:
     - name: Checkout Code
@@ -40,13 +40,13 @@ jobs:
       run: |
         make compile
         eval $(minikube docker-env)
-        docker build -t test_image_${{ matrix.priviledgeMode }}:test --build-arg 'MODE=${{ matrix.priviledgeMode }}' .
-        docker  run --rm -i test_image_${{ matrix.priviledgeMode }}:test whoami
+        docker build -t test_image_${{ matrix.privilegedMode }}:test --build-arg 'MODE=${{ matrix.privilegedMode }}' .
+        docker  run --rm -i test_image_${{ matrix.privilegedMode }}:test whoami
     - name: Interact with the cluster
       run: |
-        if [ "${{ matrix.priviledgeMode }}" = "unprivileged" ]; then
+        if [ "${{ matrix.privilegedMode }}" = "unprivileged" ]; then
           UNPRIVILEGED=true
         else
           UNPRIVILEGED=false
         fi
-        go run e2e/cmd/e2e.go --verbose --cluster_name=e2e --nr_license_key="fakeLicense" --rbac=true --integration_image_tag=test --integration_image_repository=test_image_${{ matrix.priviledgeMode }} --k8s_version=${{ matrix.k8sVersion }} --unprivileged=$UNPRIVILEGED
+        go run e2e/cmd/e2e.go --verbose --cluster_name=e2e --nr_license_key="fakeLicense" --rbac=true --integration_image_tag=test --integration_image_repository=test_image_${{ matrix.privilegedMode }} --k8s_version=${{ matrix.k8sVersion }} --unprivileged=$UNPRIVILEGED
