@@ -136,7 +136,7 @@ func execIntegration(pod v1.Pod, ksmPod *v1.Pod, dataChannel chan integrationDat
 		podName: pod.Name,
 	}
 
-	output, err := c.PodExec(namespace, pod.Name, nrContainer, "/var/db/newrelic-infra/newrelic-integrations/bin/nri-kubernetes", "-timeout=15000", "-verbose")
+	output, err := c.PodExec(namespace, pod.Name, nrContainer, "/var/db/newrelic-infra/newrelic-integrations/bin/nri-kubernetes", "-timeout=30000", "-verbose")
 	if err != nil {
 		d.err = err
 		logger.Debugf("Error detecting running pod exec: %s", d.err.Error())
