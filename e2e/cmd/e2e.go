@@ -314,6 +314,8 @@ func waitForKSM(c *k8s.Client, logger *logrus.Logger) (*v1.Pod, error) {
 		retry.OnRetry(func(err error) {
 			logger.Debugf("Retrying due to: %s", err)
 		}),
+		retry.Delay(5 * time.Second),
+		retry.Timeout(3 * time.Minute),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("kube-state-metrics pod is not ready: %s", err)
