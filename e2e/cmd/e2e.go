@@ -43,13 +43,16 @@ var cliArgs = struct {
 	CleanBeforeRun             bool   `default:"true" help:"Clean the cluster before running the tests"`
 	FailFast                   bool   `default:"false" help:"Fail the whole suit on the first failure"`
 	Unprivileged               bool   `default:"false" help:"Deploy and run the integration in unprivileged mode"`
+	K8sVersion                 string `default:"v1.19.3" help:"SetK8s version, currently used for endpoints"`
 }{}
 
 const (
-	nrLabel     = "name=newrelic-infra"
-	namespace   = "default"
-	nrContainer = "newrelic-infra"
-	ksmLabel    = "app.kubernetes.io/name=kube-state-metrics"
+	nrLabel        = "name=newrelic-infra"
+	namespace      = "default"
+	nrContainer    = "newrelic-infra"
+	ksmLabel       = "app.kubernetes.io/name=kube-state-metrics"
+	minikubeFlavor = "Minikube"
+	unknownFlavor  = "Unknown"
 )
 
 type eventTypeSchemasPerEntity map[entityID]jsonschema.EventTypeToSchemaFilename
@@ -76,16 +79,18 @@ func generateScenarios(
 	rbac bool,
 	unprivileged bool,
 	serverInfo *version.Info,
+	clusterFlavor string,
+	k8sVersion string,
 ) []scenario.Scenario {
 	return []scenario.Scenario{
 		// 4 latest versions, single KSM instance
-		scenario.New(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.7.1", false, serverInfo),
-		scenario.New(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.8.0", false, serverInfo),
-		scenario.New(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.9.0", false, serverInfo),
+		scenario.New(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.7.1", false, serverInfo, clusterFlavor, k8sVersion),
+		scenario.New(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.8.0", false, serverInfo, clusterFlavor, k8sVersion),
+		scenario.New(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.9.0", false, serverInfo, clusterFlavor, k8sVersion),
 
 		// the behaviour for multiple KSMs only has to be tested for one version, because it's testing our logic,
 		// not the logic of KSM. This might change if KSM sharding becomes enabled by default.
-		scenario.New(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.9.0", true, serverInfo),
+		scenario.New(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.9.0", true, serverInfo, clusterFlavor, k8sVersion),
 	}
 }
 
@@ -131,9 +136,10 @@ func execIntegration(pod v1.Pod, ksmPod *v1.Pod, dataChannel chan integrationDat
 		podName: pod.Name,
 	}
 
-	output, err := c.PodExec(namespace, pod.Name, nrContainer, "/var/db/newrelic-infra/newrelic-integrations/bin/nri-kubernetes", "-timeout=15000", "-verbose")
+	output, err := c.PodExec(namespace, pod.Name, nrContainer, "/var/db/newrelic-infra/newrelic-integrations/bin/nri-kubernetes", "-timeout=30000", "-verbose")
 	if err != nil {
 		d.err = err
+		logger.Debugf("Error detecting running pod exec: %s", d.err.Error())
 		dataChannel <- d
 		return
 	}
@@ -183,6 +189,12 @@ func main() {
 		}
 	}
 
+	minikubeHost := determineMinikubeHost(logger)
+	clusterFlavor := unknownFlavor
+	if strings.Contains(c.Config.Host, minikubeHost) {
+		clusterFlavor = minikubeFlavor
+	}
+
 	// TODO
 	var errs []error
 	ctx := context.TODO()
@@ -192,6 +204,8 @@ func main() {
 		cliArgs.Rbac,
 		cliArgs.Unprivileged,
 		c.ServerVersionInfo,
+		clusterFlavor,
+		cliArgs.K8sVersion,
 	)
 	for _, s := range scenarios {
 		logger.Infof("Scenario: %q", s)
@@ -212,6 +226,7 @@ func main() {
 		for _, err := range errs {
 			logger.Errorf(err.Error())
 		}
+		logger.Fatal("Error Detected")
 	} else {
 		logger.Infof("OK")
 	}
@@ -367,8 +382,7 @@ func executeTests(
 		execErr.errs = append(execErr.errs, err)
 	}
 
-	minikubeHost := determineMinikubeHost(logger)
-	if strings.Contains(c.Config.Host, minikubeHost) {
+	if currentScenario.ClusterFlavor == minikubeFlavor {
 		logger.Info("Skipping `testSpecificEntities` because you're running them in Minikube (persistent volumes don't work well in Minikube)")
 	} else {
 		logger.Info("checking if specific entities match our JSON schemas")
@@ -546,12 +560,16 @@ func installRelease(_ context.Context, s scenario.Scenario, logger *logrus.Logge
 		return "", err
 	}
 
+	versionSplitted := strings.Split(s.K8sVersion, ".")
+
 	options := strings.Split(s.String(), ",")
 	options = append(options,
 		fmt.Sprintf("integration.k8sClusterName=%s", cliArgs.ClusterName),
 		fmt.Sprintf("integration.newRelicLicenseKey=%s", cliArgs.NrLicenseKey),
 		"integration.verbose=true",
 		fmt.Sprintf("integration.collectorURL=%s", cliArgs.CollectorURL),
+		fmt.Sprintf("daemonset.clusterFlavor=%s", s.ClusterFlavor),
+		fmt.Sprintf("daemonset.clusterVersion=%s.%s.x", versionSplitted[0], versionSplitted[1]),
 	)
 
 	o, err := helm.InstallRelease(filepath.Join(dir, cliArgs.NrChartPath), cliArgs.Context, logger, options...)

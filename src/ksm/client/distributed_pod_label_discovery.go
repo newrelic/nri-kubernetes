@@ -69,7 +69,7 @@ func (p *distributedPodLabelDiscoverer) Discover(timeout time.Duration) ([]clien
 	return clients, nil
 }
 
-// NewPodLabelDiscoverer creates a new KSM discoverer that will find KSM pods using k8s labels
+// NewDistributedPodLabelDiscoverer creates a new KSM discoverer that will find KSM pods using k8s labels
 func NewDistributedPodLabelDiscoverer(ksmPodLabel string, nodeIP string, logger *logrus.Logger, k8sClient client.Kubernetes) client.MultiDiscoverer {
 	return &distributedPodLabelDiscoverer{
 		logger:      logger,

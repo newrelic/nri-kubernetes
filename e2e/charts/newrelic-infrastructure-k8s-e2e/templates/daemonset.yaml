@@ -24,7 +24,11 @@ spec:
       containers:
         - name: {{ .Values.daemonset.name }}
           image: "{{ .Values.daemonset.image.repository }}:{{ .Values.daemonset.image.tag }}"
+          {{- if eq .Values.daemonset.clusterFlavor "Minikube" }}
+          imagePullPolicy: Never
+          {{- else }}
           imagePullPolicy: Always
+          {{- end }}
           resources:
 {{ toYaml .Values.daemonset.resources | indent 12 }}
           {{- if .Values.daemonset.unprivileged }}
@@ -48,6 +52,18 @@ spec:
               name: host-docker-socket
             {{- end }}
           env:
+            {{- if eq .Values.daemonset.clusterFlavor "Minikube" }}
+              {{- if and (ne .Values.daemonset.clusterVersion "v1.15.x") (ne .Values.daemonset.clusterVersion "v1.14.x") (ne .Values.daemonset.clusterVersion "v1.13.x") }}
+            - name: "SCHEDULER_ENDPOINT_URL"
+              value: "https://localhost:10259"
+              {{- end }}
+            {{- end }}
+            {{- if eq .Values.daemonset.clusterFlavor "Minikube" }}
+            - name: "API_SERVER_ENDPOINT_URL"
+              value: "https://localhost:8443"
+            - name: "CONTROLLER_MANAGER_ENDPOINT_URL"
+              value: "https://localhost:10257"
+            {{- end }}
             - name: "CLUSTER_NAME"
               value: {{ .Values.integration.k8sClusterName | quote }}
             - name: "NRIA_LICENSE_KEY"
