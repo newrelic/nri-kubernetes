@@ -26,6 +26,12 @@ jobs:
 
       - uses: actions/checkout@v2
 
+      - name: Check consistency of deployment yamls
+        if: ${{ ! github.event.release.prerelease }} # On pre-releases, the -pre tag is added making this more complex
+        run: |
+          grep -e "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG" deploy/newrelic-infra.yaml
+          grep -e "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG" deploy/newrelic-infra-unprivileged.yaml
+
       - name: Build docker images
         run: |
           make compile
