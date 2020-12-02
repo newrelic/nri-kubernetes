@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## 1.26.9
+
+### Changed
+
+- Added release pipeline to Github Actions.
+
 ## 1.26.8
 
 ### Changed
