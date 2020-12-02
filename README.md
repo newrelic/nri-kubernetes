@@ -111,14 +111,25 @@ For running unit tests, use
 make test
 ```
 
-For running e2e tests locally, use:
+You can run e2e tests locally having different configuration, to test:
+ - UNPRIVILEGED=false
+ - k8s_version=v1.15.7
+ - RBAC enabled
+ - KSM v1.7.1 v1.8.0 v1.9.0
+
+Run:
 
 ```bash
-CLUSTER_NAME=<your-cluster-name> NR_LICENSE_KEY=<your-license-key>  make e2e
+GOOS=linux make compile
+eval $(minikube docker-env)
+docker build -t test_image_normal:test  .
+go run e2e/cmd/e2e.go --verbose --cluster_name=e2e --nr_license_key="fakeLicense" --rbac=true --integration_image_tag=test --integration_image_repository=test_image_normal --unprivileged=false --k8s_version=v1.15.7
 ```
 
-This make target is executing `go run e2e/cmd/e2e.go`. You could execute that
-command with `--help` flag to see all the available options.
+
+You could execute that command with `--help` flag to see all the available options.
+
+Notice that you might need to change in helm.go `const _helmBinary` to point to a helmv2 installation
 
 ## Running OpenShift locally using CodeReady Containers
 
