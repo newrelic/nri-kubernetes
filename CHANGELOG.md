@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## 2.0.0
+
+### Changed
+
+- The base image of `newrelic/infrastructure-k8s` has been updated to `2.0.0`. 
+  That base image is bundling the integration `nri-nginx` `3.0.2` that contains a breaking change. 
+  More info regarding all the integration upgraded can be found in the [release notes of the base image](https://github.com/newrelic/infrastructure-bundle/releases/tag/2.0.0).
+
+
 ## 1.26.9
 
 ### Changed
