@@ -11,6 +11,8 @@ The New Relic integration for Kubernetes instruments the container orchestration
 
 Check out our [documentation](https://docs.newrelic.com/docs/kubernetes-integration-new-relic-infrastructure) in order to find out more how to install and configure the integration, learn what metrics are captured and how to view them.
 
+Note that `nri-kubernetes` is released both as separate integration and as a part of the `infrastructure-k8s` image, which is [available in DockerHub](https://hub.docker.com/r/newrelic/infrastructure-k8s/tags?page=1&ordering=last_updated). Said image uses [`infrastructure-bundle`](https://github.com/newrelic/infrastructure-bundle) as a base, which additionaly includes the infrastructure agent and most of the available integrations used to send data to newrelic.
+
 ## Table of contents
 
 - [Table of contents](#table-of-contents)
