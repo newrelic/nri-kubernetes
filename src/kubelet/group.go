@@ -66,12 +66,31 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 			Errors:      []error{fmt.Errorf("error querying ApiServer: %v", err)},
 		}
 	}
+
+	var requestedCPUMillis, requestedMemoryBytes int64
+
+	if _, ok := rawGroups["container"]; ok {
+		for _, container := range rawGroups["container"] {
+			if containerMemoryRequestedBytes, ok := container["memoryRequestedBytes"]; ok {
+				// if this map key exist, it's Quantity.MilliValue() (int64)
+				requestedMemoryBytes += containerMemoryRequestedBytes.(int64)
+			}
+
+			if containerCPURequestedCores, ok := container["cpuRequestedCores"]; ok {
+				// if this map key exist, it's Quantity.MilliValue() (int64)
+				requestedCPUMillis += containerCPURequestedCores.(int64)
+			}
+		}
+	}
+
 	g := definition.RawGroups{
 		"node": {
 			response.Node.NodeName: definition.RawMetrics{
-				"labels":      nodeInfo.Labels,
-				"allocatable": nodeInfo.Allocatable,
-				"capacity":    nodeInfo.Capacity,
+				"labels":               nodeInfo.Labels,
+				"allocatable":          nodeInfo.Allocatable,
+				"capacity":             nodeInfo.Capacity,
+				"memoryRequestedBytes": requestedMemoryBytes,
+				"cpuRequestedCores":    requestedCPUMillis,
 			},
 		},
 	}

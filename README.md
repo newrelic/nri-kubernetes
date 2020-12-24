@@ -61,12 +61,12 @@ For in cluster development process [Minikube](https://kubernetes.io/docs/setup/l
 ### Configuration
 
 * Copy the daemonset file `deploy/newrelic-infra.yaml` to `deploy/local.yaml`.
-* Edit the file and set the following value as container image: `newrelic/infrastructure-k8s-dev`.
+* Edit the file and set the following value as container image: `quay.io/newrelic/infrastructure-k8s-dev`.
 
 ```yaml
   containers:
     - name: newrelic-infra
-      image: newrelic/infrastructure-k8s-dev
+      image: quay.io/newrelic/infrastructure-k8s-dev
       resources:
 ```
 

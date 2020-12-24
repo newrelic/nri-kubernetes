@@ -254,6 +254,7 @@ var ExpectedGroupData = definition.RawGroups{
 			"memoryAvailableBytes":  uint64(791736320),
 			"memoryMajorPageFaults": uint64(0),
 			"memoryPageFaults":      uint64(113947),
+			"memoryRequestedBytes":  int64(243269632),
 			"memoryRssBytes":        uint64(660684800),
 			"memoryUsageBytes":      uint64(1843650560),
 			"memoryWorkingSetBytes": uint64(1305468928),
@@ -273,6 +274,7 @@ var ExpectedGroupData = definition.RawGroups{
 				"kubernetes.io/os":               "linux",
 				"node-role.kubernetes.io/master": "",
 			},
+			"cpuRequestedCores": int64(501),
 			"allocatable": v1.ResourceList{
 				v1.ResourceCPU:              *resource.NewQuantity(2, resource.DecimalSI),
 				v1.ResourcePods:             *resource.NewQuantity(110, resource.DecimalSI),
@@ -641,6 +643,7 @@ var ExpectedGroupDataWithoutStaticPodsStatus = definition.RawGroups{
 		"minikube": {
 			"nodeName":              "minikube",
 			"errors":                uint64(0),
+			"memoryRequestedBytes":  int64(243269632),
 			"fsAvailableBytes":      uint64(14924988416),
 			"fsCapacityBytes":       uint64(17293533184),
 			"fsInodes":              uint64(9732096),
@@ -663,6 +666,7 @@ var ExpectedGroupDataWithoutStaticPodsStatus = definition.RawGroups{
 			"txBytes":               uint64(120789968),
 			"usageCoreNanoSeconds":  uint64(22332102208229),
 			"usageNanoCores":        uint64(228759290),
+			"cpuRequestedCores": int64(501),
 			"labels": map[string]string{
 				"kubernetes.io/arch":             "amd64",
 				"kubernetes.io/hostname":         "minikube",
