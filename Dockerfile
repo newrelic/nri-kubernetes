@@ -1,5 +1,5 @@
 ARG IMAGE_NAME=newrelic/infrastructure-bundle
-ARG IMAGE_TAG=2.1.2
+ARG IMAGE_TAG=2.2.0
 ARG MODE=normal
 
 FROM $IMAGE_NAME:$IMAGE_TAG AS base
