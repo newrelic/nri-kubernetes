@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - The base image of `newrelic/infrastructure-k8s` has been updated to `2.2.1`. 
   This base image has fixed an issue where `nrjmx` was not properly running due to the bundled java version.
-  More info regarding all the integration upgraded can be found in the [release notes of the base image](https://github.com/newrelic/infrastructure-bundle/releases/tag/2.2.0).
+  More info regarding all the integration upgraded can be found in the [release notes of the base image](https://github.com/newrelic/infrastructure-bundle/releases/tag/2.2.1).
 
 ## 2.0.0
 
