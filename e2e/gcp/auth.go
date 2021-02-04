@@ -286,7 +286,7 @@ func (c *commandTokenSource) Token() (*oauth2.Token, error) {
 	cmd.Stderr = &stderr
 	output, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("error executing access token command %q: err=%v output=%s stderr=%s", fullCmd, err, output, string(stderr.Bytes()))
+		return nil, fmt.Errorf("error executing access token command %q: err=%v output=%s stderr=%s", fullCmd, err, output, stderr.String())
 	}
 	token, err := c.parseTokenCmdOutput(output)
 	if err != nil {
@@ -360,7 +360,7 @@ func (t *conditionalTransport) RoundTrip(req *http.Request) (*http.Response, err
 	if res.StatusCode == 401 {
 		log.Printf("The credentials that were supplied are invalid for the target cluster")
 		emptyCache := make(map[string]string)
-		t.persister.Persist(emptyCache) // nolint: errcheck
+		_ = t.persister.Persist(emptyCache) // nolint: errcheck
 	}
 
 	return res, nil

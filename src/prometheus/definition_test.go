@@ -1029,6 +1029,7 @@ func TestFromLabelsValueEntityIDGeneratorForPendingPods(t *testing.T) {
 func TestFromLabelsValueEntityIDGeneratorForPendingPods_ErrorScheduledAsTrue(t *testing.T) {
 	fetchedValue, err := FromLabelsValueEntityIDGeneratorForPendingPods()("pod", "kubernetes-dashboard-77d8b98585-c8s22", rawGroups)
 	assert.Empty(t, fetchedValue)
+	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "ignoring pending pod")
 }
 
@@ -1379,7 +1380,7 @@ func TestInheritAllLabelsFrom_LabelNotFound(t *testing.T) {
 
 	fetchedValue, err := InheritAllLabelsFrom("deployment", "kube_deployment_labels")("pod", podRawEntityID, raw)
 	assert.Nil(t, fetchedValue)
-	assert.EqualError(t, err, fmt.Sprintf("cannot retrieve the entity ID of metrics to inherit labels from, got error: metric with the labels [namespace deployment] not found"))
+	assert.EqualError(t, err, "cannot retrieve the entity ID of metrics to inherit labels from, got error: metric with the labels [namespace deployment] not found")
 }
 
 func TestInheritAllLabelsFrom_RelatedMetricNotFound(t *testing.T) {

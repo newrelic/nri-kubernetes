@@ -5,7 +5,6 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/metric"
 	"github.com/newrelic/infra-integrations-sdk/sdk"
-	"k8s.io/apimachinery/pkg/version"
 )
 
 // GuessFunc guesses from data.
@@ -17,7 +16,7 @@ type PopulateFunc func(RawGroups, SpecGroups) (bool, []error)
 // MetricSetManipulator manipulates the MetricSet for a given entity and clusterName
 type MetricSetManipulator func(ms metric.MetricSet, entity sdk.Entity, clusterName string) error
 
-func populateCluster(i *sdk.IntegrationProtocol2, clusterName string, k8sVersion *version.Info) error {
+func populateCluster(i *sdk.IntegrationProtocol2, clusterName string, k8sVersion fmt.Stringer) error {
 	e, err := i.Entity(clusterName, "k8s:cluster")
 	if err != nil {
 		return err
@@ -39,7 +38,7 @@ func populateCluster(i *sdk.IntegrationProtocol2, clusterName string, k8sVersion
 func IntegrationProtocol2PopulateFunc(
 	i *sdk.IntegrationProtocol2,
 	clusterName string,
-	k8sVersion *version.Info,
+	k8sVersion fmt.Stringer,
 	msTypeGuesser GuessFunc,
 	msManipulators ...MetricSetManipulator,
 ) PopulateFunc {
