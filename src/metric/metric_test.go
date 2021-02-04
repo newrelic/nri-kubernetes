@@ -3,6 +3,8 @@ package metric
 import (
 	"testing"
 
+	"github.com/newrelic/nri-kubernetes/src/definition"
+
 	"github.com/newrelic/infra-integrations-sdk/metric"
 	"github.com/newrelic/infra-integrations-sdk/sdk"
 	"github.com/stretchr/testify/assert"
@@ -80,4 +82,21 @@ func TestK8sEntityMetricsManipulator(t *testing.T) {
 		"clusterName":       "playground",
 	}
 	assert.Equal(t, expectedMetricSet, metricSet)
+}
+
+func TestSubtractorFunc(t *testing.T) {
+	// given 2 FetchFunc
+	var left definition.FetchFunc
+	var right definition.FetchFunc
+	left = func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
+		return float64(10), nil
+	}
+	right = func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
+		return float64(5), nil
+	}
+
+	sub := Subtract(left, right)
+	result, err := sub("", "", nil)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(5), result)
 }

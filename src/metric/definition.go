@@ -476,6 +476,11 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_replicaset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_replicaset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "deploymentName", ValueFunc: ksmMetric.GetDeploymentNameForReplicaSet(), Type: sdkMetric.ATTRIBUTE},
+			//calculated
+			{Name: "podsMissing", ValueFunc: Subtract(
+				prometheus.FromValue("kube_replicaset_spec_replicas"),
+				prometheus.FromValue("kube_replicaset_status_ready_replicas")),
+				Type: sdkMetric.GAUGE},
 		},
 	},
 	"statefulset": {
@@ -495,6 +500,11 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "statefulsetName", ValueFunc: prometheus.FromLabelValue("kube_statefulset_created", "statefulset"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_statefulset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("statefulset", "kube_statefulset_labels"), Type: sdkMetric.ATTRIBUTE},
+			//calculated
+			{Name: "podsMissing", ValueFunc: Subtract(
+				prometheus.FromValue("kube_statefulset_replicas"),
+				prometheus.FromValue("kube_statefulset_status_replicas_ready")),
+				Type: sdkMetric.GAUGE},
 		},
 	},
 	"daemonset": {
@@ -513,6 +523,11 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_daemonset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "daemonsetName", ValueFunc: prometheus.FromLabelValue("kube_daemonset_created", "daemonset"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("daemonset", "kube_daemonset_labels"), Type: sdkMetric.ATTRIBUTE},
+			//calculated
+			{Name: "podsMissing", ValueFunc: Subtract(
+				prometheus.FromValue("kube_daemonset_status_desired_number_scheduled"),
+				prometheus.FromValue("kube_daemonset_status_number_ready")),
+				Type: sdkMetric.GAUGE},
 		},
 	},
 	"namespace": {
@@ -542,6 +557,11 @@ var KSMSpecs = definition.SpecGroups{
 			// Important: The order of these lines is important: we could have the same label in different entities, and we would like to keep the value closer to deployment
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("namespace", "kube_namespace_labels"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("deployment", "kube_deployment_labels"), Type: sdkMetric.ATTRIBUTE},
+			//calculated
+			{Name: "podsMissing", ValueFunc: Subtract(
+				prometheus.FromValue("kube_deployment_spec_replicas"),
+				prometheus.FromValue("kube_deployment_status_replicas")),
+				Type: sdkMetric.GAUGE},
 		},
 	},
 	"service": {

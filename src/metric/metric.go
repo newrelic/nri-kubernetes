@@ -29,3 +29,18 @@ func K8sClusterMetricsManipulator(ms metric.MetricSet, _ sdk.Entity, clusterName
 func K8sEntityMetricsManipulator(ms metric.MetricSet, entity sdk.Entity, _ string) error {
 	return ms.SetMetric("displayName", entity.Name, metric.ATTRIBUTE)
 }
+
+func Subtract(left definition.FetchFunc, right definition.FetchFunc) definition.FetchFunc {
+	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
+		leftValue, err := left(groupLabel, entityID, groups)
+		if err != nil {
+			return nil, err
+		}
+		rightValue, err := right(groupLabel, entityID, groups)
+		if err != nil {
+			return nil, err
+		}
+
+		return leftValue.(float64) - rightValue.(float64), nil
+	}
+}
