@@ -1,7 +1,9 @@
 package metric
 
 import (
+	"errors"
 	"fmt"
+	"github.com/newrelic/nri-kubernetes/src/prometheus"
 	"strings"
 
 	"github.com/newrelic/infra-integrations-sdk/metric"
@@ -41,6 +43,13 @@ func Subtract(left definition.FetchFunc, right definition.FetchFunc) definition.
 			return nil, err
 		}
 
-		return leftValue.(float64) - rightValue.(float64), nil
+		switch leftValue.(type) {
+		case prometheus.GaugeValue:
+			return float64(leftValue.(prometheus.GaugeValue)) - float64(rightValue.(prometheus.GaugeValue)), nil
+		case prometheus.CounterValue:
+			return float64(leftValue.(prometheus.CounterValue)) - float64(rightValue.(prometheus.CounterValue)), nil
+		}
+		return nil, errors.New("invalid types. cannot substract")
 	}
 }
+
