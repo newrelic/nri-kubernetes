@@ -5,8 +5,7 @@ TOOLS_DIR := $(BIN_DIR)/dev-tools
 BINARY_NAME = nri-kubernetes
 E2E_BINARY_NAME := $(BINARY_NAME)-e2e
 
-GOVENDOR_VERSION = 1.0.8
-GOLANGCILINT_VERSION = 1.31.0
+GOLANGCILINT_VERSION = 1.36.0
 
 .PHONY: all
 all: build
@@ -34,7 +33,7 @@ lint: $(TOOLS_DIR)/golangci-lint
 .PHONY: lint-all
 lint-all: $(TOOLS_DIR)/golangci-lint
 	@echo "[validate] Validating source code running golangci-lint"
-	@$(TOOLS_DIR)/golangci-lint run --enable=interfacer --enable=gosimple
+	@$(TOOLS_DIR)/golangci-lint run
 
 .PHONY: compile
 compile:
