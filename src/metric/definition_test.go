@@ -1,9 +1,10 @@
 package metric
 
 import (
+	"testing"
+
 	"github.com/newrelic/nri-kubernetes/src/definition"
 	"github.com/newrelic/nri-kubernetes/src/prometheus"
-	"testing"
 
 	"time"
 

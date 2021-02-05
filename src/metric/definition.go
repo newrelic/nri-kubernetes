@@ -900,9 +900,8 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "cpuRequestedCores", ValueFunc: definition.FromRaw("cpuRequestedCores"), Type: sdkMetric.GAUGE},
 			//TODO computed
 			{Name: "fsCapacityUtilization", ValueFunc: toUtilization("fsUsedBytes", "fsCapacityBytes"), Type: sdkMetric.GAUGE},
-			//{Name: "allocatableCpuCoresUtilization", ValueFunc:
-			//    //Name: "allocatableCpuCores" ValueFunc: definition.Transform(definition.FromRaw("allocatable"), kubeletMetric.OneAttributePerCapacity)
-			//	toUtilization("cpuUsedCores", "allocatableCpuCores"), Type: sdkMetric.GAUGE},
+			{Name: "allocatableCpuCoresUtilization", ValueFunc: toUtilization("cpuUsedCores", "allocatableCpuCores"), Type: sdkMetric.GAUGE},
+			{Name: "allocatableMemoryUtilization", ValueFunc: toUtilization("memoryWorkingSetBytes", "allocatableMemoryBytes"), Type: sdkMetric.GAUGE},
 		},
 	},
 	"volume": {
@@ -964,9 +963,14 @@ func toComplementPercentage(desiredMetric, complementMetric string) definition.F
 
 func toUtilization(dividendMetric, divisorMetric string) definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
-		dividend, _ := definition.FromRaw(dividendMetric)(groupLabel, entityID, groups)
-		divisor, _ := definition.FromRaw(divisorMetric)(groupLabel, entityID, groups)
-
+		dividend, err := definition.FromRaw(dividendMetric)(groupLabel, entityID, groups)
+		if err != nil {
+			return nil, fmt.Errorf("'%s' is nil, cannot proceed", dividendMetric)
+		}
+		divisor, err := definition.FromRaw(divisorMetric)(groupLabel, entityID, groups)
+		if err != nil {
+			return nil, fmt.Errorf("'%s' is nil, cannot proceed", divisorMetric)
+		}
 		return computePercentage(dividend.(uint64), divisor.(uint64))
 	}
 }
