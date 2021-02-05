@@ -478,8 +478,8 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "deploymentName", ValueFunc: ksmMetric.GetDeploymentNameForReplicaSet(), Type: sdkMetric.ATTRIBUTE},
 			//calculated
 			{Name: "podsMissing", ValueFunc: Subtract(
-				prometheus.FromValue("kube_replicaset_spec_replicas"),
-				prometheus.FromValue("kube_replicaset_status_ready_replicas")),
+				definition.Transform(prometheus.FromValue("kube_replicaset_spec_replicas"), fromPrometheusNumeric),
+				definition.Transform(prometheus.FromValue("kube_replicaset_status_ready_replicas"), fromPrometheusNumeric)),
 				Type: sdkMetric.GAUGE},
 		},
 	},
@@ -502,8 +502,8 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("statefulset", "kube_statefulset_labels"), Type: sdkMetric.ATTRIBUTE},
 			//calculated
 			{Name: "podsMissing", ValueFunc: Subtract(
-				prometheus.FromValue("kube_statefulset_replicas"),
-				prometheus.FromValue("kube_statefulset_status_replicas_ready")),
+				definition.Transform(prometheus.FromValue("kube_statefulset_replicas"), fromPrometheusNumeric),
+				definition.Transform(prometheus.FromValue("kube_statefulset_status_replicas_ready"), fromPrometheusNumeric)),
 				Type: sdkMetric.GAUGE},
 		},
 	},
@@ -525,8 +525,8 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("daemonset", "kube_daemonset_labels"), Type: sdkMetric.ATTRIBUTE},
 			//calculated
 			{Name: "podsMissing", ValueFunc: Subtract(
-				prometheus.FromValue("kube_daemonset_status_desired_number_scheduled"),
-				prometheus.FromValue("kube_daemonset_status_number_ready")),
+				definition.Transform(prometheus.FromValue("kube_daemonset_status_desired_number_scheduled"), fromPrometheusNumeric),
+				definition.Transform(prometheus.FromValue("kube_daemonset_status_number_ready"), fromPrometheusNumeric)),
 				Type: sdkMetric.GAUGE},
 		},
 	},
@@ -559,8 +559,8 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("deployment", "kube_deployment_labels"), Type: sdkMetric.ATTRIBUTE},
 			//calculated
 			{Name: "podsMissing", ValueFunc: Subtract(
-				prometheus.FromValue("kube_deployment_spec_replicas"),
-				prometheus.FromValue("kube_deployment_status_replicas")),
+				definition.Transform(prometheus.FromValue("kube_deployment_spec_replicas"), fromPrometheusNumeric),
+				definition.Transform(prometheus.FromValue("kube_deployment_status_replicas"), fromPrometheusNumeric)),
 				Type: sdkMetric.GAUGE},
 		},
 	},
@@ -992,5 +992,31 @@ func toCores(value definition.FetchedValue) (definition.FetchedValue, error) {
 		return float64(v) / 1000, nil
 	default:
 		return nil, errors.New("error transforming to cores")
+	}
+}
+
+func fromPrometheusNumeric(value definition.FetchedValue) (definition.FetchedValue, error) {
+	switch v := value.(type) {
+	case prometheus.GaugeValue:
+	case prometheus.CounterValue:
+		return float64(v), nil
+	}
+	return nil, fmt.Errorf("invalid type value '%v'. Expected 'gauge' or 'counter', got '%T'", value, value)
+}
+
+// Subtract returns a new FetchFunc that subtracts 2 values. It expects that the values are float64
+func Subtract(left definition.FetchFunc, right definition.FetchFunc) definition.FetchFunc {
+	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
+		leftValue, err := left(groupLabel, entityID, groups)
+		if err != nil {
+			return nil, err
+		}
+		rightValue, err := right(groupLabel, entityID, groups)
+		if err != nil {
+			return nil, err
+		}
+
+		result := leftValue.(float64) - rightValue.(float64)
+		return result, nil
 	}
 }

@@ -1,9 +1,7 @@
 package metric
 
 import (
-	"errors"
 	"fmt"
-	"github.com/newrelic/nri-kubernetes/src/prometheus"
 	"strings"
 
 	"github.com/newrelic/infra-integrations-sdk/metric"
@@ -31,25 +29,3 @@ func K8sClusterMetricsManipulator(ms metric.MetricSet, _ sdk.Entity, clusterName
 func K8sEntityMetricsManipulator(ms metric.MetricSet, entity sdk.Entity, _ string) error {
 	return ms.SetMetric("displayName", entity.Name, metric.ATTRIBUTE)
 }
-
-func Subtract(left definition.FetchFunc, right definition.FetchFunc) definition.FetchFunc {
-	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
-		leftValue, err := left(groupLabel, entityID, groups)
-		if err != nil {
-			return nil, err
-		}
-		rightValue, err := right(groupLabel, entityID, groups)
-		if err != nil {
-			return nil, err
-		}
-
-		switch leftValue.(type) {
-		case prometheus.GaugeValue:
-			return float64(leftValue.(prometheus.GaugeValue)) - float64(rightValue.(prometheus.GaugeValue)), nil
-		case prometheus.CounterValue:
-			return float64(leftValue.(prometheus.CounterValue)) - float64(rightValue.(prometheus.CounterValue)), nil
-		}
-		return nil, errors.New("invalid types. cannot substract")
-	}
-}
-
