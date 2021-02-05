@@ -405,6 +405,12 @@ var EtcdSpecs = definition.SpecGroups{
 				ValueFunc: prometheus.FromValueWithOverriddenName("go_goroutines", "goGoroutines"),
 				Type:      sdkMetric.GAUGE,
 			},
+			// computed
+			{
+				Name:      "processFdsUtilization",
+				ValueFunc: toUtilization("processOpenFds", "processMaxFds"),
+				Type:      sdkMetric.GAUGE,
+			},
 		},
 	},
 }
@@ -892,6 +898,11 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "capacity.*", ValueFunc: definition.Transform(definition.FromRaw("capacity"), kubeletMetric.OneAttributePerCapacity), Type: sdkMetric.GAUGE},
 			{Name: "memoryRequestedBytes", ValueFunc: definition.FromRaw("memoryRequestedBytes"), Type: sdkMetric.GAUGE},
 			{Name: "cpuRequestedCores", ValueFunc: definition.FromRaw("cpuRequestedCores"), Type: sdkMetric.GAUGE},
+			//TODO computed
+			{Name: "fsCapacityUtilization", ValueFunc: toUtilization("fsUsedBytes", "fsCapacityBytes"), Type: sdkMetric.GAUGE},
+			//{Name: "allocatableCpuCoresUtilization", ValueFunc:
+			//    //Name: "allocatableCpuCores" ValueFunc: definition.Transform(definition.FromRaw("allocatable"), kubeletMetric.OneAttributePerCapacity)
+			//	toUtilization("cpuUsedCores", "allocatableCpuCores"), Type: sdkMetric.GAUGE},
 		},
 	},
 	"volume": {
