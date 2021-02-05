@@ -852,6 +852,12 @@ var KubeletSpecs = definition.SpecGroups{
 
 			// Inherit from pod
 			{Name: "label.*", ValueFunc: definition.Transform(definition.FromRaw("labels"), kubeletMetric.OneMetricPerLabel), Type: sdkMetric.ATTRIBUTE},
+
+			// computed
+			{Name: "cpuCoresUtilization", ValueFunc: toUtilization("cpuUsedCores", "cpuLimitCores"), Type: sdkMetric.GAUGE},
+			{Name: "requestedCpuCoresUtilization", ValueFunc: toUtilization("cpuUsedCores", "cpuRequestedCores"), Type: sdkMetric.GAUGE},
+			{Name: "memoryUtilization", ValueFunc: toUtilization("memoryUsedBytes", "memoryLimitBytes"), Type: sdkMetric.GAUGE},
+			{Name: "requestedMemoryUtilization", ValueFunc: toUtilization("memoryUsedBytes", "memoryRequestedBytes"), Type: sdkMetric.GAUGE},
 		},
 	},
 	"node": {
@@ -924,7 +930,7 @@ func computePercentage(current, all uint64) (definition.FetchedValue, error) {
 	if all == uint64(0) {
 		return nil, errors.New("division by zero")
 	}
-	return ((float64(current) / float64(all)) * 100), nil
+	return (float64(current) / float64(all)) * 100, nil
 }
 
 func toComplementPercentage(desiredMetric, complementMetric string) definition.FetchFunc {
@@ -942,6 +948,15 @@ func toComplementPercentage(desiredMetric, complementMetric string) definition.F
 			return nil, fmt.Errorf("error computing percentage for %s & %s: %s", desiredMetric, complementMetric, err)
 		}
 		return v, nil
+	}
+}
+
+func toUtilization(dividendMetric, divisorMetric string) definition.FetchFunc {
+	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
+		dividend, _ := definition.FromRaw(dividendMetric)(groupLabel, entityID, groups)
+		divisor, _ := definition.FromRaw(divisorMetric)(groupLabel, entityID, groups)
+
+		return computePercentage(dividend.(uint64), divisor.(uint64))
 	}
 }
 
@@ -998,9 +1013,11 @@ func toCores(value definition.FetchedValue) (definition.FetchedValue, error) {
 func fromPrometheusNumeric(value definition.FetchedValue) (definition.FetchedValue, error) {
 	switch v := value.(type) {
 	case prometheus.GaugeValue:
+		return float64(v), nil
 	case prometheus.CounterValue:
 		return float64(v), nil
 	}
+
 	return nil, fmt.Errorf("invalid type value '%v'. Expected 'gauge' or 'counter', got '%T'", value, value)
 }
 
