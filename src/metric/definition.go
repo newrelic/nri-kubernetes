@@ -701,6 +701,9 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "desiredReplicas", ValueFunc: prometheus.FromValue("kube_hpa_status_desired_replicas"), Type: sdkMetric.GAUGE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_hpa_status_condition", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("hpa", "kube_hpa_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "isActive", ValueFunc: prometheus.FromValue("kube_hpa_status_condition_active")},
+			{Name: "isAble", ValueFunc: prometheus.FromValue("kube_hpa_status_condition_able")},
+			{Name: "isLimited", ValueFunc: prometheus.FromValue("kube_hpa_status_condition_limited")},
 		},
 	},
 }
@@ -786,7 +789,21 @@ var KSMQueries = []prometheus.Query{
 	{MetricName: "kube_hpa_spec_max_replicas"},
 	{MetricName: "kube_hpa_spec_min_replicas"},
 	{MetricName: "kube_hpa_spec_target_metric"},
-	{MetricName: "kube_hpa_status_condition"},
+	{MetricName: "kube_hpa_status_condition", CustomName: "kube_hpa_status_condition_active",
+		Labels: prometheus.QueryLabels{
+			Labels:   prometheus.Labels{"condition": "ScalingActive", "status": "true"},
+			Operator: prometheus.QueryOpAnd,
+		}},
+	{MetricName: "kube_hpa_status_condition", CustomName: "kube_hpa_status_condition_able",
+		Labels: prometheus.QueryLabels{
+			Labels:   prometheus.Labels{"condition": "AbleToScale", "status": "true"},
+			Operator: prometheus.QueryOpAnd,
+		}},
+	{MetricName: "kube_hpa_status_condition", CustomName: "kube_hpa_status_condition_limited",
+		Labels: prometheus.QueryLabels{
+			Labels:   prometheus.Labels{"condition": "ScalingLimited", "status": "true"},
+			Operator: prometheus.QueryOpAnd,
+		}},
 	{MetricName: "kube_hpa_status_current_replicas"},
 	{MetricName: "kube_hpa_status_desired_replicas"},
 }
