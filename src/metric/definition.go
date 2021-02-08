@@ -685,6 +685,24 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("pod", "kube_pod_labels"), Type: sdkMetric.ATTRIBUTE},
 		},
 	},
+	"hpa": {
+		IDGenerator:   prometheus.FromLabelValueEntityIDGenerator("kube_hpa_labels", "hpa"),
+		TypeGenerator: prometheus.FromLabelValueEntityTypeGenerator("kube_hpa_labels"),
+		Specs: []definition.Spec{
+			// Kubernetes labels converted to Prometheus labels. not sure if interesting to get
+			{Name: "labels", ValueFunc: prometheus.FromValue("kube_hpa_labels"), Type: sdkMetric.GAUGE},
+			// The generation observed by the HorizontalPodAutoscaler controller. not sure if interesting to get
+			{Name: "metadataGeneration", ValueFunc: prometheus.FromValue("kube_hpa_metadata_generation"), Type: sdkMetric.GAUGE},
+			{Name: "maxReplicas", ValueFunc: prometheus.FromValue("kube_hpa_spec_max_replicas"), Type: sdkMetric.GAUGE},
+			{Name: "minReplicas", ValueFunc: prometheus.FromValue("kube_hpa_spec_min_replicas"), Type: sdkMetric.GAUGE},
+			//TODO this metric has a couple of dimensions (metric_name, target_type) that are useful
+			{Name: "targetMetric", ValueFunc: prometheus.FromValue("kube_hpa_spec_target_metric"), Type: sdkMetric.GAUGE},
+			{Name: "currentReplicas", ValueFunc: prometheus.FromValue("kube_hpa_status_current_replicas"), Type: sdkMetric.GAUGE},
+			{Name: "desiredReplicas", ValueFunc: prometheus.FromValue("kube_hpa_status_desired_replicas"), Type: sdkMetric.GAUGE},
+			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_hpa_status_condition", "namespace"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("hpa", "kube_hpa_labels"), Type: sdkMetric.ATTRIBUTE},
+		},
+	},
 }
 
 // KSMQueries are the queries we will do to KSM in order to fetch all the raw metrics.
@@ -762,6 +780,15 @@ var KSMQueries = []prometheus.Query{
 	{MetricName: "kube_endpoint_labels"},
 	{MetricName: "kube_endpoint_address_not_ready"},
 	{MetricName: "kube_endpoint_address_available"},
+	//hpa
+	{MetricName: "kube_hpa_labels"},
+	{MetricName: "kube_hpa_metadata_generation"},
+	{MetricName: "kube_hpa_spec_max_replicas"},
+	{MetricName: "kube_hpa_spec_min_replicas"},
+	{MetricName: "kube_hpa_spec_target_metric"},
+	{MetricName: "kube_hpa_status_condition"},
+	{MetricName: "kube_hpa_status_current_replicas"},
+	{MetricName: "kube_hpa_status_desired_replicas"},
 }
 
 // CadvisorQueries are the queries we will do to the kubelet metrics cadvisor endpoint in order to fetch all the raw metrics.
@@ -898,7 +925,7 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "capacity.*", ValueFunc: definition.Transform(definition.FromRaw("capacity"), kubeletMetric.OneAttributePerCapacity), Type: sdkMetric.GAUGE},
 			{Name: "memoryRequestedBytes", ValueFunc: definition.FromRaw("memoryRequestedBytes"), Type: sdkMetric.GAUGE},
 			{Name: "cpuRequestedCores", ValueFunc: definition.FromRaw("cpuRequestedCores"), Type: sdkMetric.GAUGE},
-			//TODO computed
+			// computed
 			{Name: "fsCapacityUtilization", ValueFunc: toUtilization("fsUsedBytes", "fsCapacityBytes"), Type: sdkMetric.GAUGE},
 			{Name: "allocatableCpuCoresUtilization", ValueFunc: toUtilization("cpuUsedCores", "allocatableCpuCores"), Type: sdkMetric.GAUGE},
 			{Name: "allocatableMemoryUtilization", ValueFunc: toUtilization("memoryWorkingSetBytes", "allocatableMemoryBytes"), Type: sdkMetric.GAUGE},
@@ -965,11 +992,11 @@ func toUtilization(dividendMetric, divisorMetric string) definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 		dividend, err := definition.FromRaw(dividendMetric)(groupLabel, entityID, groups)
 		if err != nil {
-			return nil, fmt.Errorf("'%s' is nil, cannot proceed", dividendMetric)
+			return nil, fmt.Errorf("'%s' is nil", dividendMetric)
 		}
 		divisor, err := definition.FromRaw(divisorMetric)(groupLabel, entityID, groups)
 		if err != nil {
-			return nil, fmt.Errorf("'%s' is nil, cannot proceed", divisorMetric)
+			return nil, fmt.Errorf("'%s' is nil", divisorMetric)
 		}
 		return computePercentage(dividend.(uint64), divisor.(uint64))
 	}
