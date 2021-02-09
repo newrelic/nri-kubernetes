@@ -86,7 +86,7 @@ func MatchEntities(data []*sdk.EntityData, schemaFileByJobByType map[string]Even
 	}
 
 	if len(missingSchemas) > 0 {
-		e := fmt.Sprint("some types were not validated because no schema was found: ")
+		e := "some types were not validated because no schema was found: "
 		for t := range missingSchemas {
 			e = fmt.Sprintf("%s%s, ", e, t)
 		}

@@ -3,6 +3,9 @@ package metric
 import (
 	"testing"
 
+	"github.com/newrelic/nri-kubernetes/src/definition"
+	"github.com/newrelic/nri-kubernetes/src/prometheus"
+
 	"time"
 
 	"github.com/stretchr/testify/assert"
@@ -103,4 +106,37 @@ func TestComputePercentage(t *testing.T) {
 
 	v, err = computePercentage(3, 0)
 	assert.EqualError(t, err, "division by zero")
+}
+
+func TestSubtract(t *testing.T) {
+
+	left := definition.FetchFunc(func(_, _ string, _ definition.RawGroups) (definition.FetchedValue, error) {
+		return prometheus.GaugeValue(10), nil
+	})
+
+	right := definition.FetchFunc(func(_, _ string, _ definition.RawGroups) (definition.FetchedValue, error) {
+		return prometheus.GaugeValue(5), nil
+	})
+
+	sub := Subtract(definition.Transform(left, fromPrometheusNumeric), definition.Transform(right, fromPrometheusNumeric))
+	result, err := sub("", "", nil)
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, result, float64(5))
+}
+
+func TestUtilization(t *testing.T) {
+	raw := definition.RawGroups{
+		"group1": {
+			"entity1": {
+				"dividend": uint64(10),
+				"divisor":  uint64(20),
+			},
+		},
+	}
+
+	value, err := toUtilization("dividend", "divisor")("group1", "entity1", raw)
+	assert.NoError(t, err)
+	assert.NotNil(t, value)
+	assert.Equal(t, float64(50), value)
 }

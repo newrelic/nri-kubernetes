@@ -21,9 +21,9 @@ const (
 )
 
 var (
-	dockerNativeWithoutSystemD = regexp.MustCompile("^.*([0-9a-f]+)$")
-	dockerNativeWithSystemD    = regexp.MustCompile("^.*\\w+-([0-9a-f]+)\\.scope$")
-	dockerGeneric              = regexp.MustCompile("^([0-9a-f]+)$")
+	dockerNativeWithoutSystemD = regexp.MustCompile(`^.*([0-9a-f]+)$`)
+	dockerNativeWithSystemD    = regexp.MustCompile(`^.*\w+-([0-9a-f]+)\.scope$`)
+	dockerGeneric              = regexp.MustCompile(`^([0-9a-f]+)$`)
 )
 
 // getLabel returns the first label it finds by the given names

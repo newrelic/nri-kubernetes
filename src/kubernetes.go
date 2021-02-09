@@ -369,7 +369,7 @@ func main() {
 		logger.Debugf("Running job: %s", job.Name)
 		start := time.Now()
 		result := job.Populate(integration, args.ClusterName, logger, k8sVersion)
-		measured := time.Now().Sub(start)
+		measured := time.Since(start)
 		logger.Debugf("Job %s took %s", job.Name, measured.Round(time.Millisecond))
 
 		if result.Populated {
