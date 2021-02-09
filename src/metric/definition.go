@@ -482,7 +482,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_replicaset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_replicaset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "deploymentName", ValueFunc: ksmMetric.GetDeploymentNameForReplicaSet(), Type: sdkMetric.ATTRIBUTE},
-			//calculated
+			//computed
 			{Name: "podsMissing", ValueFunc: Subtract(
 				definition.Transform(prometheus.FromValue("kube_replicaset_spec_replicas"), fromPrometheusNumeric),
 				definition.Transform(prometheus.FromValue("kube_replicaset_status_ready_replicas"), fromPrometheusNumeric)),
@@ -506,7 +506,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "statefulsetName", ValueFunc: prometheus.FromLabelValue("kube_statefulset_created", "statefulset"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_statefulset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("statefulset", "kube_statefulset_labels"), Type: sdkMetric.ATTRIBUTE},
-			//calculated
+			//computed
 			{Name: "podsMissing", ValueFunc: Subtract(
 				definition.Transform(prometheus.FromValue("kube_statefulset_replicas"), fromPrometheusNumeric),
 				definition.Transform(prometheus.FromValue("kube_statefulset_status_replicas_ready"), fromPrometheusNumeric)),
@@ -529,7 +529,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_daemonset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "daemonsetName", ValueFunc: prometheus.FromLabelValue("kube_daemonset_created", "daemonset"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("daemonset", "kube_daemonset_labels"), Type: sdkMetric.ATTRIBUTE},
-			//calculated
+			//computed
 			{Name: "podsMissing", ValueFunc: Subtract(
 				definition.Transform(prometheus.FromValue("kube_daemonset_status_desired_number_scheduled"), fromPrometheusNumeric),
 				definition.Transform(prometheus.FromValue("kube_daemonset_status_number_ready"), fromPrometheusNumeric)),
@@ -563,7 +563,7 @@ var KSMSpecs = definition.SpecGroups{
 			// Important: The order of these lines is important: we could have the same label in different entities, and we would like to keep the value closer to deployment
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("namespace", "kube_namespace_labels"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("deployment", "kube_deployment_labels"), Type: sdkMetric.ATTRIBUTE},
-			//calculated
+			//computed
 			{Name: "podsMissing", ValueFunc: Subtract(
 				definition.Transform(prometheus.FromValue("kube_deployment_spec_replicas"), fromPrometheusNumeric),
 				definition.Transform(prometheus.FromValue("kube_deployment_status_replicas"), fromPrometheusNumeric)),
@@ -695,7 +695,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "metadataGeneration", ValueFunc: prometheus.FromValue("kube_hpa_metadata_generation"), Type: sdkMetric.GAUGE},
 			{Name: "maxReplicas", ValueFunc: prometheus.FromValue("kube_hpa_spec_max_replicas"), Type: sdkMetric.GAUGE},
 			{Name: "minReplicas", ValueFunc: prometheus.FromValue("kube_hpa_spec_min_replicas"), Type: sdkMetric.GAUGE},
-			//TODO this metric has a couple of dimensions (metric_name, target_type) that are useful
+			//TODO this metric has a couple of dimensions (metric_name, target_type) that might be useful to add
 			{Name: "targetMetric", ValueFunc: prometheus.FromValue("kube_hpa_spec_target_metric"), Type: sdkMetric.GAUGE},
 			{Name: "currentReplicas", ValueFunc: prometheus.FromValue("kube_hpa_status_current_replicas"), Type: sdkMetric.GAUGE},
 			{Name: "desiredReplicas", ValueFunc: prometheus.FromValue("kube_hpa_status_desired_replicas"), Type: sdkMetric.GAUGE},
