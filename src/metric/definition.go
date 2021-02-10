@@ -1009,13 +1009,17 @@ func toUtilization(dividendMetric, divisorMetric string) definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 		dividend, err := definition.FromRaw(dividendMetric)(groupLabel, entityID, groups)
 		if err != nil {
-			return nil, fmt.Errorf("'%s' is nil", dividendMetric)
+			return nil, definition.FailedFetchMetricErr{MetricName: dividendMetric, Err: err}
 		}
 		divisor, err := definition.FromRaw(divisorMetric)(groupLabel, entityID, groups)
 		if err != nil {
-			return nil, fmt.Errorf("'%s' is nil", divisorMetric)
+			return nil, definition.FailedFetchMetricErr{MetricName: divisorMetric, Err: err}
 		}
-		return computePercentage(dividend.(uint64), divisor.(uint64))
+		v, err := computePercentage(dividend.(uint64), divisor.(uint64))
+		if err != nil {
+			return nil, definition.FailedComputeMetricValueErr{Err: err}
+		}
+		return v, nil
 	}
 }
 

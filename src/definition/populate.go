@@ -2,7 +2,6 @@ package definition
 
 import (
 	"fmt"
-
 	"github.com/newrelic/infra-integrations-sdk/metric"
 	"github.com/newrelic/infra-integrations-sdk/sdk"
 )
@@ -97,7 +96,7 @@ func IntegrationProtocol2PopulateFunc(
 				wasPopulated, populateErrs := metricSetPopulateFunc(ms, groupLabel, entityID)(groups, specs)
 				if len(populateErrs) != 0 {
 					for _, err := range populateErrs {
-						errs = append(errs, fmt.Errorf("error populating metric for entity ID %s: %s", entityID, err))
+						errs = append(errs, PopulateErr{EntityID: entityID, Err: err})
 					}
 				}
 
@@ -122,7 +121,7 @@ func metricSetPopulateFunc(ms metric.MetricSet, groupLabel, entityID string) Pop
 			val, err := ex.ValueFunc(groupLabel, entityID, groups)
 			if err != nil {
 				if !ex.Optional {
-					errs = append(errs, fmt.Errorf("cannot fetch value for metric %s, %s", ex.Name, err))
+					errs = append(errs, FailedFetchMetricErr{MetricName: ex.Name, Err: err})
 				}
 				continue
 			}
