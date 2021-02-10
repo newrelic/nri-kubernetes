@@ -1033,11 +1033,11 @@ func toUtilization(dividend definition.FetchFunc, divisor definition.FetchFunc) 
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 		dividendValue, err := dividend(groupLabel, entityID, groups)
 		if err != nil {
-			return nil, err //definition.FailedFetchMetricErr{MetricName: dividendMetric, Err: err}
+			return nil, err
 		}
 		divisorValue, err := divisor(groupLabel, entityID, groups)
 		if err != nil {
-			return nil, err //definition.FailedFetchMetricErr{MetricName: divisorMetric, Err: err}
+			return nil, err
 		}
 		v, err := computePercentage(dividendValue.(uint64), divisorValue.(uint64))
 		if err != nil {
