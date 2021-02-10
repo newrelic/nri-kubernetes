@@ -4,6 +4,8 @@ import (
 	"errors"
 	"testing"
 
+	"k8s.io/apimachinery/pkg/version"
+
 	"time"
 
 	sdkMetric "github.com/newrelic/infra-integrations-sdk/metric"
@@ -12,7 +14,6 @@ import (
 	"github.com/newrelic/nri-kubernetes/src/definition"
 	"github.com/newrelic/nri-kubernetes/src/kubelet/metric/testdata"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/apimachinery/pkg/version"
 )
 
 func parseTime(raw string) time.Time {

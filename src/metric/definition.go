@@ -408,7 +408,7 @@ var EtcdSpecs = definition.SpecGroups{
 			// computed
 			{
 				Name:      "processFdsUtilization",
-				ValueFunc: toUtilization("processOpenFds", "processMaxFds"),
+				ValueFunc: toUtilization(definition.FromRaw("processOpenFds"), definition.FromRaw("processMaxFds")),
 				Type:      sdkMetric.GAUGE,
 			},
 		},
@@ -530,9 +530,10 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "daemonsetName", ValueFunc: prometheus.FromLabelValue("kube_daemonset_created", "daemonset"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("daemonset", "kube_daemonset_labels"), Type: sdkMetric.ATTRIBUTE},
 			//computed
-			{Name: "podsMissing", ValueFunc: Subtract(
-				definition.Transform(prometheus.FromValue("kube_daemonset_status_desired_number_scheduled"), fromPrometheusNumeric),
-				definition.Transform(prometheus.FromValue("kube_daemonset_status_number_ready"), fromPrometheusNumeric)),
+			{Name: "podsMissing",
+				ValueFunc: Subtract(
+					definition.Transform(prometheus.FromValue("kube_daemonset_status_desired_number_scheduled"), fromPrometheusNumeric),
+					definition.Transform(prometheus.FromValue("kube_daemonset_status_number_ready"), fromPrometheusNumeric)),
 				Type: sdkMetric.GAUGE},
 		},
 	},
@@ -905,10 +906,22 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "label.*", ValueFunc: definition.Transform(definition.FromRaw("labels"), kubeletMetric.OneMetricPerLabel), Type: sdkMetric.ATTRIBUTE},
 
 			// computed
-			{Name: "cpuCoresUtilization", ValueFunc: toUtilization("cpuUsedCores", "cpuLimitCores"), Type: sdkMetric.GAUGE},
-			{Name: "requestedCpuCoresUtilization", ValueFunc: toUtilization("cpuUsedCores", "cpuRequestedCores"), Type: sdkMetric.GAUGE},
-			{Name: "memoryUtilization", ValueFunc: toUtilization("memoryUsedBytes", "memoryLimitBytes"), Type: sdkMetric.GAUGE},
-			{Name: "requestedMemoryUtilization", ValueFunc: toUtilization("memoryUsedBytes", "memoryRequestedBytes"), Type: sdkMetric.GAUGE},
+			{
+				Name:      "cpuCoresUtilization",
+				ValueFunc: toUtilization(definition.FromRaw("cpuUsedCores"), definition.FromRaw("cpuLimitCores")),
+				Type:      sdkMetric.GAUGE},
+			{
+				Name:      "requestedCpuCoresUtilization",
+				ValueFunc: toUtilization(definition.FromRaw("cpuUsedCores"), definition.FromRaw("cpuRequestedCores")),
+				Type:      sdkMetric.GAUGE},
+			{
+				Name:      "memoryUtilization",
+				ValueFunc: toUtilization(definition.FromRaw("memoryUsedBytes"), definition.FromRaw("memoryLimitBytes")),
+				Type:      sdkMetric.GAUGE},
+			{
+				Name:      "requestedMemoryUtilization",
+				ValueFunc: toUtilization(definition.FromRaw("memoryUsedBytes"), definition.FromRaw("memoryRequestedBytes")),
+				Type:      sdkMetric.GAUGE},
 		},
 	},
 	"node": {
@@ -944,9 +957,19 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "memoryRequestedBytes", ValueFunc: definition.FromRaw("memoryRequestedBytes"), Type: sdkMetric.GAUGE},
 			{Name: "cpuRequestedCores", ValueFunc: definition.Transform(definition.FromRaw("cpuRequestedCores"), toCores), Type: sdkMetric.GAUGE},
 			// computed
-			{Name: "fsCapacityUtilization", ValueFunc: toUtilization("fsUsedBytes", "fsCapacityBytes"), Type: sdkMetric.GAUGE},
-			{Name: "allocatableCpuCoresUtilization", ValueFunc: toUtilization("cpuUsedCores", "allocatableCpuCores"), Type: sdkMetric.GAUGE},
-			{Name: "allocatableMemoryUtilization", ValueFunc: toUtilization("memoryWorkingSetBytes", "allocatableMemoryBytes"), Type: sdkMetric.GAUGE},
+			{
+				Name:      "fsCapacityUtilization",
+				ValueFunc: toUtilization(definition.FromRaw("fsUsedBytes"), definition.FromRaw("fsCapacityBytes")),
+				Type:      sdkMetric.GAUGE,
+			},
+			{
+				Name: "allocatableCpuCoresUtilization", ValueFunc: toUtilization(definition.FromRaw("cpuUsedCores"), definition.FromRaw("allocatableCpuCores")),
+				Type: sdkMetric.GAUGE,
+			},
+			{
+				Name: "allocatableMemoryUtilization", ValueFunc: toUtilization(definition.FromRaw("memoryWorkingSetBytes"), definition.FromRaw("allocatableMemoryBytes")),
+				Type: sdkMetric.GAUGE,
+			},
 		},
 	},
 	"volume": {
@@ -1006,17 +1029,21 @@ func toComplementPercentage(desiredMetric, complementMetric string) definition.F
 	}
 }
 
-func toUtilization(dividendMetric, divisorMetric string) definition.FetchFunc {
+func toUtilization(dividend definition.FetchFunc, divisor definition.FetchFunc) definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
-		dividend, err := definition.FromRaw(dividendMetric)(groupLabel, entityID, groups)
+		dividendValue, err := dividend(groupLabel, entityID, groups)
 		if err != nil {
-			return nil, fmt.Errorf("'%s' is nil", dividendMetric)
+			return nil, err //definition.FailedFetchMetricErr{MetricName: dividendMetric, Err: err}
 		}
-		divisor, err := definition.FromRaw(divisorMetric)(groupLabel, entityID, groups)
+		divisorValue, err := divisor(groupLabel, entityID, groups)
 		if err != nil {
-			return nil, fmt.Errorf("'%s' is nil", divisorMetric)
+			return nil, err //definition.FailedFetchMetricErr{MetricName: divisorMetric, Err: err}
 		}
-		return computePercentage(dividend.(uint64), divisor.(uint64))
+		v, err := computePercentage(dividendValue.(uint64), divisorValue.(uint64))
+		if err != nil {
+			return nil, err
+		}
+		return v, nil
 	}
 }
 
