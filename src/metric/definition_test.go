@@ -135,7 +135,9 @@ func TestUtilization(t *testing.T) {
 		},
 	}
 
-	value, err := toUtilization("dividend", "divisor")("group1", "entity1", raw)
+	value, err := toUtilization(
+		definition.FromRaw("dividend"),
+		definition.FromRaw("divisor"))("group1", "entity1", raw)
 	assert.NoError(t, err)
 	assert.NotNil(t, value)
 	assert.Equal(t, float64(50), value)
