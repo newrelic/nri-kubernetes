@@ -23,6 +23,7 @@ jobs:
       - name: Upload artifact for docker build step
         uses: actions/upload-artifact@v2
         with:
+          retention-days: 1
           name: nri-kubernetes-${{ matrix.goos }}-${{ matrix.goarch }}
           path: bin/nri-kubernetes-${{ matrix.goos }}-${{ matrix.goarch }}
 
