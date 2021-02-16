@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    name: Build integration for multiple platforms
+    name: Build integration for
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -28,6 +28,7 @@ jobs:
 
   release:
     name: Release docker images and config
+    needs: [ build ]
     runs-on: ubuntu-latest
     env:
       DOCKER_IMAGE_NAME: roobre/nri-kubernetes-gha # TODO: Change this back
