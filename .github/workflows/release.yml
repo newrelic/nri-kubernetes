@@ -33,7 +33,7 @@ jobs:
     env:
       DOCKER_IMAGE_NAME: roobre/nri-kubernetes-gha # TODO TODO CHANGEME CHANGEME
       S3_PATH: s3://nr-downloads-main/infrastructure_agent
-      DOCKER_PLATFORMS: "linux/amd64,linux/arm64" # Must be consistent with the matrix from the job above
+      DOCKER_PLATFORMS: "linux/amd64,linux/arm64,linux/arm" # Must be consistent with the matrix from the job above
     steps:
       - name: Generate docker image version from git tag
         run: |
@@ -73,14 +73,14 @@ jobs:
 
       - name: Build and push versioned images
         run: |
-          docker buildx build --load --platform=$DOCKER_PLATFORMS -f Multiarch.dockerfile \
+          docker buildx build --push --platform=$DOCKER_PLATFORMS -f Multiarch.dockerfile \
             -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG \
             .
-          docker buildx build --load --platform=$DOCKER_PLATFORMS -f Multiarch.dockerfile \
+          docker buildx build --push --platform=$DOCKER_PLATFORMS -f Multiarch.dockerfile \
             -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged \
             --build-arg 'MODE=unprivileged' \
             .
-      - name: Build and push :latest docker images
+      - name: Build and push latest docker images
         if: ${{ ! github.event.release.prerelease }}
         run: |
           docker buildx build --load --platform=$DOCKER_PLATFORMS -f Multiarch.dockerfile \
