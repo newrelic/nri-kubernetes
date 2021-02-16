@@ -5,6 +5,18 @@ TOOLS_DIR := $(BIN_DIR)/dev-tools
 BINARY_NAME = nri-kubernetes
 E2E_BINARY_NAME := $(BINARY_NAME)-e2e
 
+# GOOS and GOARCH will likely come from env
+GOOS ?=
+GOARCH ?=
+
+ifneq ('', $(strip $(GOOS)))
+BINARY_NAME := $(BINARY_NAME)-$(GOOS)
+endif
+
+ifneq ($(strip $(GOARCH)), '')
+BINARY_NAME := $(BINARY_NAME)-$(GOARCH)
+endif
+
 GOLANGCILINT_VERSION = 1.36.0
 
 .PHONY: all
