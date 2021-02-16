@@ -8,7 +8,10 @@ ARG MODE=normal
 
 FROM $IMAGE_NAME:$IMAGE_TAG AS base
 
-# Set by docker buildx automatically
+# Set by docker automatically
+# If building with `docker build`, make sure to set GOOS/GOARCH explicitly when calling make:
+# `make compile GOOS=something GOARCH=something`
+# Otherwise the makefile will not append them to the binary name and docker build wil fail.
 ARG TARGETOS
 ARG TARGETARCH
 
