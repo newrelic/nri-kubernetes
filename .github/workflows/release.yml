@@ -74,20 +74,20 @@ jobs:
       - name: Build docker images
         run: |
           docker buildx build --platform=$DOCKER_PLATFORMS -f Multiarch.dockerfile \
-            -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
+            -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG \
             .
           docker buildx build --platform=$DOCKER_PLATFORMS -f Multiarch.dockerfile \
             --build-arg 'MODE=unprivileged' \
-            -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged
+            -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged \
             .
       - name: Push versioned images
         run: |
           docker buildx build --push --platform=$DOCKER_PLATFORMS -f Multiarch.dockerfile \
-            -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
+            -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG \
             .
           docker buildx build --push --platform=$DOCKER_PLATFORMS -f Multiarch.dockerfile \
             --build-arg 'MODE=unprivileged' \
-            -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged
+            -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged \
             .
       - name: Push :latest images
         if: ${{ ! github.event.release.prerelease }}
