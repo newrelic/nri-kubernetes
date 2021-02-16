@@ -1,14 +1,28 @@
 name: lint and test code
 on:
   push:
-    tags:
-      - v*
     branches:
       - main
   pull_request:
 jobs:
+  build:
+    name: Build integration for multiple platforms
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [ linux ]
+        goarch: [ amd64, arm64 ]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build integration
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          make compile
   test:
     name: Unit tests
+    needs: [ build ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
