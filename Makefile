@@ -9,11 +9,11 @@ E2E_BINARY_NAME := $(BINARY_NAME)-e2e
 GOOS ?=
 GOARCH ?=
 
-ifneq ('', $(strip $(GOOS)))
+ifneq ($(strip $(GOOS)), )
 BINARY_NAME := $(BINARY_NAME)-$(GOOS)
 endif
 
-ifneq ($(strip $(GOARCH)), '')
+ifneq ($(strip $(GOARCH)), )
 BINARY_NAME := $(BINARY_NAME)-$(GOARCH)
 endif
 
