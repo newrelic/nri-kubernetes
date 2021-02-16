@@ -30,7 +30,7 @@ jobs:
     name: Release docker images and config
     runs-on: ubuntu-latest
     env:
-      DOCKER_IMAGE_NAME: roobre/nri-kubernetes # TODO: Change this back
+      DOCKER_IMAGE_NAME: roobre/nri-kubernetes-gha # TODO: Change this back
       S3_PATH: s3://nr-downloads-main/infrastructure_agent
       DOCKER_PLATFORMS: "linux/amd64,linux/arm64" # Must be consistent with the matrix from the job above
     steps:
@@ -48,7 +48,7 @@ jobs:
 
       - uses: actions/checkout@v2
 
-#     -pre suffix is stripped from safety checks. This will not be necessary when we automate the yaml generation.
+      # -pre suffix is stripped from safety checks. This will not be necessary when we automate the yaml generation.
       - name: Check consistency of deployment yamls
         run: |
           grep -e "$DOCKER_IMAGE_NAME:${DOCKER_IMAGE_TAG/-pre}" deploy/newrelic-infra.yaml
@@ -56,14 +56,12 @@ jobs:
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: Download binaries from previous job
+      - name: Download all artifacts from build job
         uses: actions/download-artifact@v2
         with:
-          # No name specified, will download all artifacts
           path: bin
 
       - name: Build docker images
@@ -75,20 +73,24 @@ jobs:
             -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged -t $DOCKER_IMAGE_NAME:latest-unprivileged \
             --build-arg 'MODE=unprivileged' \
             .
-      - uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.FSI_DOCKERHUB_USERNAME }}
-          password: ${{ secrets.FSI_DOCKERHUB_TOKEN }}
-      - name: Push versioned docker images
+      - name: TEST STEP LIST IMAGES
         run: |
-          docker push $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
-          docker push $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged
-      - name: Push :latest docker images
-        if: ${{ ! github.event.release.prerelease }}
-        run: |
-          docker push $DOCKER_IMAGE_NAME:latest
-          docker push $DOCKER_IMAGE_NAME:latest-unprivileged
-
+          docker images | grep $DOCKER_IMAGE_NAME
+          docker manifest inspect $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
+#      - uses: docker/login-action@v1
+#        with:
+#          username: ${{ secrets.FSI_DOCKERHUB_USERNAME }}
+#          password: ${{ secrets.FSI_DOCKERHUB_TOKEN }}
+#      - name: Push versioned docker images
+#        run: |
+#          docker push $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
+#          docker push $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged
+#      - name: Push :latest docker images
+#        if: ${{ ! github.event.release.prerelease }}
+#        run: |
+#          docker push $DOCKER_IMAGE_NAME:latest
+#          docker push $DOCKER_IMAGE_NAME:latest-unprivileged
+#
 #      - uses: aws-actions/configure-aws-credentials@v1
 #        with:
 #          aws-access-key-id: ${{ secrets.COREINT_AWS_ACCESS_KEY_ID }}
