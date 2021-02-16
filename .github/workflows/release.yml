@@ -68,10 +68,10 @@ jobs:
 
       - name: Build docker images
         run: |
-          docker buildx build --load --platform=$DOCKER_PLATFORMS -f Multiarch.dockerfile \
+          docker buildx build --platform=$DOCKER_PLATFORMS -f Multiarch.dockerfile \
             -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG -t $DOCKER_IMAGE_NAME:latest \
             .
-          docker buildx build --load --platform=$DOCKER_PLATFORMS -f Multiarch.dockerfile \
+          docker buildx build --platform=$DOCKER_PLATFORMS -f Multiarch.dockerfile \
             -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged -t $DOCKER_IMAGE_NAME:latest-unprivileged \
             --build-arg 'MODE=unprivileged' \
             .
