@@ -35,5 +35,4 @@ ENV NRIA_OVERRIDE_HOST_ROOT ""
 ENV NRIA_IS_SECURE_FORWARD_ONLY true
 
 FROM branch-${MODE}
-ENTRYPOINT ["/sbin/tini", "--"]
-CMD ["/usr/bin/newrelic-infra"]
+ENTRYPOINT ["/sbin/tini", "--", "/usr/bin/newrelic-infra"]
