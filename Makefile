@@ -8,6 +8,7 @@ E2E_BINARY_NAME := $(BINARY_NAME)-e2e
 # GOOS and GOARCH will likely come from env
 GOOS ?=
 GOARCH ?=
+CGO_ENABLED ?= 0
 
 ifneq ($(strip $(GOOS)), )
 BINARY_NAME := $(BINARY_NAME)-$(GOOS)
@@ -50,7 +51,7 @@ lint-all: $(TOOLS_DIR)/golangci-lint
 .PHONY: compile
 compile:
 	@echo "[compile] Building $(BINARY_NAME)"
-	@go build -o $(BIN_DIR)/$(BINARY_NAME) ./src
+	CGO_ENABLED=$(CGO_ENABLED) go build -o $(BIN_DIR)/$(BINARY_NAME) ./src
 
 .PHONY: compile-dev
 compile-dev:
