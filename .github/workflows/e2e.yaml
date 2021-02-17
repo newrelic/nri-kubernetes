@@ -43,7 +43,7 @@ jobs:
         GOOS=linux GOARCH=amd64 make compile # Set GOOS and GOARCH explicitly since Dockerfile expects them in the binary name
         eval $(minikube docker-env)
         # TARGETOS and TARGETARCH should get populated automatically, but for some reason they are not.
-        docker build -t test_image_${{ matrix.privilegedMode }}:test --build-arg 'MODE=${{ matrix.privilegedMode }}' .
+        DOCKER_BUILDKIT=1 docker build -t test_image_${{ matrix.privilegedMode }}:test --build-arg 'MODE=${{ matrix.privilegedMode }}' .
         docker run --rm -i test_image_${{ matrix.privilegedMode }}:test whoami
     - name: Interact with the cluster
       run: |
