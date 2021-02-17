@@ -44,7 +44,6 @@ jobs:
         eval $(minikube docker-env)
         # TARGETOS and TARGETARCH should get populated automatically, but for some reason they are not.
         DOCKER_BUILDKIT=1 docker build -t test_image_${{ matrix.privilegedMode }}:test --build-arg 'MODE=${{ matrix.privilegedMode }}' .
-        docker run --rm -i --entrypoint /bin/sh test_image_${{ matrix.privilegedMode }}:test whoami
     - name: Interact with the cluster
       run: |
         if [ "${{ matrix.privilegedMode }}" = "unprivileged" ]; then
