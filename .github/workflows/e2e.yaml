@@ -10,6 +10,8 @@ jobs:
   e2eTests:
     runs-on: ubuntu-18.04
     strategy:
+      fail-fast: false
+      max-parallel: 4 # Arbitrary but apparently reasonable default
       matrix:
         ## we could run priviledgedMode this in serie instead of in //
         ## PRO less total time, less expensive CONTRA slower to get results
