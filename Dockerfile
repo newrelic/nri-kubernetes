@@ -4,9 +4,8 @@
 # infrastructure-bundle is not multiarch yet, so we use as a base
 ARG IMAGE_NAME=carlosroman/nri-test
 ARG IMAGE_TAG=latest
-ARG MODE=normal
 
-FROM $IMAGE_NAME:$IMAGE_TAG AS base
+ARG MODE=normal
 
 # Set by docker automatically
 # If building with `docker build`, make sure to set GOOS/GOARCH explicitly when calling make:
@@ -14,6 +13,8 @@ FROM $IMAGE_NAME:$IMAGE_TAG AS base
 # Otherwise the makefile will not append them to the binary name and docker build wil fail.
 ARG TARGETOS
 ARG TARGETARCH
+
+FROM $IMAGE_NAME:$IMAGE_TAG AS base
 
 # ensure there is no default integration enabled
 RUN rm -rf /etc/newrelic-infra/integrations.d/*
