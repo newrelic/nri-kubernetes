@@ -17,8 +17,6 @@ jobs:
         ## PRO less total time, less expensive CONTRA slower to get results
         privilegedMode: [ "normal", "unprivileged" ]
         k8sVersion: [ "v1.15.12", "v1.16.15", "v1.17.14", "v1.18.12", "v1.19.4" ]
-    env:
-      DOCKER_BUILDKIT: '1' # Needed for docker to populate TARGETOS/TARGETARCH
     steps:
     - name: Checkout Code
       uses: actions/checkout@v2.3.4
@@ -39,12 +37,12 @@ jobs:
       with:
         minikube version: 'v1.17.1'
         kubernetes version: '${{ matrix.k8sVersion }}'
-        driver: none # required for nri-kubernetes e2e tests
+        driver: none # required for nri-kubernetes, as metrics gathered for the host are tested as well
     - name: Compile and Build Image
       run: |
         GOOS=linux GOARCH=amd64 make compile # Set GOOS and GOARCH explicitly since Dockerfile expects them in the binary name
-        # TARGETOS and TARGETARCH should get populated automatically, but for some reason they are not.
-        docker build -t test_image_${{ matrix.privilegedMode }}:test --build-arg 'MODE=${{ matrix.privilegedMode }}' .
+        # Setting DOCKER_BUILDKIT=1 ensures TARGETOS and TARGETARCH are populated
+        DOCKER_BUILDKIT=1 docker build -t test_image_${{ matrix.privilegedMode }}:test --build-arg 'MODE=${{ matrix.privilegedMode }}' .
     - name: Interact with the cluster
       run: |
         if [ "${{ matrix.privilegedMode }}" = "unprivileged" ]; then
