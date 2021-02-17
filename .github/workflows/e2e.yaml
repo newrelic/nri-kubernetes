@@ -39,11 +39,10 @@ jobs:
       with:
         minikube version: 'v1.17.1'
         kubernetes version: '${{ matrix.k8sVersion }}'
-        driver: docker
+        driver: none # required for nri-kubernetes e2e tests
     - name: Compile and Build Image
       run: |
         GOOS=linux GOARCH=amd64 make compile # Set GOOS and GOARCH explicitly since Dockerfile expects them in the binary name
-        eval $(minikube docker-env)
         # TARGETOS and TARGETARCH should get populated automatically, but for some reason they are not.
         docker build -t test_image_${{ matrix.privilegedMode }}:test --build-arg 'MODE=${{ matrix.privilegedMode }}' .
     - name: Interact with the cluster
