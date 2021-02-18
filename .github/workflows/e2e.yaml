@@ -17,6 +17,8 @@ jobs:
         ## PRO less total time, less expensive CONTRA slower to get results
         privilegedMode: [ "normal", "unprivileged" ]
         k8sVersion: [ "v1.15.12", "v1.16.15", "v1.17.14", "v1.18.12", "v1.19.4" ]
+    env:
+      DOCKER_BUILDKIT: '1' # Setting DOCKER_BUILDKIT=1 ensures TARGETOS and TARGETARCH are populated
     steps:
     - name: Checkout Code
       uses: actions/checkout@v2.3.4
@@ -41,8 +43,7 @@ jobs:
     - name: Compile and Build Image
       run: |
         GOOS=linux GOARCH=amd64 make compile # Set GOOS and GOARCH explicitly since Dockerfile expects them in the binary name
-        # Setting DOCKER_BUILDKIT=1 ensures TARGETOS and TARGETARCH are populated
-        DOCKER_BUILDKIT=1 docker build -t test_image_${{ matrix.privilegedMode }}:test --build-arg 'MODE=${{ matrix.privilegedMode }}' .
+        docker build -t test_image_${{ matrix.privilegedMode }}:test --build-arg 'MODE=${{ matrix.privilegedMode }}' .
     - name: Interact with the cluster
       run: |
         if [ "${{ matrix.privilegedMode }}" = "unprivileged" ]; then
