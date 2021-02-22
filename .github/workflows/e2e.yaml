@@ -10,13 +10,12 @@ jobs:
   e2eTests:
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
-      max-parallel: 5
+      max-parallel: 6
       matrix:
         ## we could run priviledgedMode this in serie instead of in //
         ## PRO less total time, less expensive CONTRA slower to get results
         privilegedMode: [ "normal", "unprivileged" ]
-        k8sVersion: [ "v1.15.12", "v1.16.15", "v1.17.14", "v1.18.12", "v1.19.4" ]
+        k8sVersion: [ "v1.15.12", "v1.16.15", "v1.17.14", "v1.18.12", "v1.19.4", "v1.20.0" ]
     env:
       DOCKER_BUILDKIT: '1' # Setting DOCKER_BUILDKIT=1 ensures TARGETOS and TARGETARCH are populated
     steps:
@@ -43,6 +42,7 @@ jobs:
           GOOS=linux GOARCH=amd64 make compile # Set GOOS and GOARCH explicitly since Dockerfile expects them in the binary name
           docker build -t test_image_${{ matrix.privilegedMode }}:test --build-arg 'MODE=${{ matrix.privilegedMode }}' .
       - name: Interact with the cluster
+        continue-on-error: ${{ contains(matrix.k8sVersion, "1.20") }}
         run: |
           if [ "${{ matrix.privilegedMode }}" = "unprivileged" ]; then
             UNPRIVILEGED=true
