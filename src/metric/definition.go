@@ -591,7 +591,7 @@ var KSMSpecs = definition.SpecGroups{
 			},
 			{
 				Name:      "loadBalancerIP",
-				ValueFunc: prometheus.FromLabelValue("kube_service_info", "load_balancer_ip"),
+				ValueFunc: prometheus.FromLabelValue("kube_service_status_load_balancer_ingress", "ip"),
 				Type:      sdkMetric.ATTRIBUTE,
 				Optional:  true,
 			},
