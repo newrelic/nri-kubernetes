@@ -776,6 +776,7 @@ var KSMQueries = []prometheus.Query{
 	{MetricName: "kube_service_created"},
 	{MetricName: "kube_service_labels"},
 	{MetricName: "kube_service_info"},
+	{MetricName: "kube_service_status_load_balancer_ingress"},
 	{MetricName: "kube_service_spec_type", Value: prometheus.QueryValue{
 		Value: prometheus.GaugeValue(1),
 	}},
