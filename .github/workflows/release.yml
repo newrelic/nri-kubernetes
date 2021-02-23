@@ -47,7 +47,7 @@ jobs:
 
       - if: ${{ github.event.release.prerelease }}
         run: |
-          echo "DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG-pre" >> $GITHUB_ENV
+          echo "DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG}-pre" >> $GITHUB_ENV
           echo "S3_PATH=$S3_PATH/test" >> $GITHUB_ENV
 
       - uses: actions/checkout@v2
