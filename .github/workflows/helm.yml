@@ -6,13 +6,21 @@ on:
 jobs:
   create_helm_chart_pr:
     runs-on: ubuntu-latest
+    env:
+      CHART_NAME: newrelic-infrastructure
+      APP_VERSION: ${{ github.event.release.tag_name }}
     steps:
       - name: Create PR using Version Bump
         run: |
-          appVersion=${{ github.event.release.tag_name }}
-          chartName=newrelic-infrastructure
           curl -H "Accept: application/vnd.github.everest-preview+json" \
           -H "Authorization: token ${{ secrets.VERSION_BUMP_TOKEN }}" \
-          --request POST \
-          --data '{"event_type": "bump-chart-version", "client_payload": { "chart_name": "${chartName}", "chart_version": "", "app_version": "${appVersion:1}"}}' \
-          https://api.github.com/repos/newrelic/helm-charts/dispatches
+          -d @- https://api.github.com/repos/newrelic/helm-charts/dispatches <<EOF
+          {
+            "event_type":"bump-chart-version",
+            "client_payload":{
+              "chart_name":"${CHART_NAME}",
+              "chart_version":"",
+              "app_version":"${APP_VERSION:1}"
+            }
+          }
+          EOF
