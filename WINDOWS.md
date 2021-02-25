@@ -17,7 +17,7 @@
   ./build/win_build_container.ps1 -baseImageTag <WINDOWS VERSION TARGET> -agentVersion <AGENT VERSION>
   ```
 ### Build nri-kubernetes image
-* Clone integration repo and checkout latest version.
+* Clone this repo and checkout latest version.
   ```
   git@github.com:newrelic/nri-kubernetes.git
   cd nri-kubernetes
