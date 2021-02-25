@@ -18,11 +18,36 @@ rules:
     - "nodes/stats"
     - "nodes/proxy"
     - "pods"
-    - "secrets"
     - "services"
   verbs: ["get", "list"]
 - nonResourceURLs: ["/metrics"]
   verbs: ["get"]
+## Notice that you need to uncomment this snipped of code if control plane monitoring is enabled and either ETCD_TLS_SECRET_NAMESPACE
+## or ETCD_TLS_SECRET_NAME is set
+#  ---
+#  apiVersion: rbac.authorization.k8s.io/v1
+#  kind: ClusterRole
+#  metadata:
+#    name: newrelic-secrets
+#  rules:
+#    - apiGroups: [""]
+#      resources:
+#        - "secrets"
+#      verbs: ["get", "list"]
+#  ---
+#  apiVersion: rbac.authorization.k8s.io/v1
+#  kind: RoleBinding
+#  metadata:
+#    name: newrelic-secrets-secrets
+#    namespace: # default #CHANGE THIS VALUE FOR the content of ETCD_TLS_SECRET_NAMESPACE or set it to "default"
+#  roleRef:
+#    apiGroup: rbac.authorization.k8s.io
+#    kind: ClusterRole
+#    name: newrelic-secrets
+#  subjects:
+#    - kind: ServiceAccount
+#      name: newrelic
+#      namespace: default
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -96,9 +121,9 @@ spec:
            #   value: "4194"
            # - name: "KUBE_STATE_METRICS_URL" # If this value is specified then discovery process for kube-state-metrics endpoint won't be triggered.
            #   value: "http://172.17.0.3:8080" # This is example value. Only HTTP request is accepted.
-           # - name: "ETCD_TLS_SECRET_NAME" # Name of the secret containing the cacert, cert and key used for setting the mTLS config for retrieving metrics from ETCD.
+           # - name: "ETCD_TLS_SECRET_NAME" # Name of the secret containing the cacert, cert and key used for setting the mTLS config for retrieving metrics from ETCD. In case this is set uncomment the secret cluster role and the rolebinding.
            #   value: "newrelic-infra-etcd-tls-secret"
-           # - name: "ETCD_TLS_SECRET_NAMESPACE" # Namespace where the the secret specified in ETCD_TLS_SECRET_NAME was created.
+           # - name: "ETCD_TLS_SECRET_NAMESPACE" # Namespace where the the secret specified in ETCD_TLS_SECRET_NAME was created. In case this is set uncomment the secret cluster role and the rolebinding.
            #   value: "default"
            # Note: Usage of API_SERVER_SECURE_PORT has been deprecated in favor of API_SERVER_ENDPOINT_URL.
            # - name: API_SERVER_SECURE_PORT
