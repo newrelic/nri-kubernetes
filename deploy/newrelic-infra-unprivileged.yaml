@@ -18,9 +18,34 @@ rules:
     - "nodes/stats"
     - "nodes/proxy"
     - "pods"
-    - "secrets"
     - "services"
   verbs: ["get", "list"]
+## Notice that you need to uncomment this snipped of code if control plane monitoring is enabled and either ETCD_TLS_SECRET_NAMESPACE
+## or ETCD_TLS_SECRET_NAME is set
+#  ---
+#  apiVersion: rbac.authorization.k8s.io/v1
+#  kind: ClusterRole
+#  metadata:
+#    name: newrelic-secrets
+#  rules:
+#    - apiGroups: [""]
+#      resources:
+#        - "secrets"
+#      verbs: ["get", "list"]
+#  ---
+#  apiVersion: rbac.authorization.k8s.io/v1
+#  kind: RoleBinding
+#  metadata:
+#    name: newrelic-secrets-secrets
+#    namespace: # default # CHANGE THIS VALUE FOR the content of ETCD_TLS_SECRET_NAMESPACE or set it to "default"
+#  roleRef:
+#    apiGroup: rbac.authorization.k8s.io
+#    kind: ClusterRole
+#    name: newrelic-secrets
+#  subjects:
+#    - kind: ServiceAccount
+#      name: newrelic
+#      namespace: default
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -89,12 +114,12 @@ spec:
               value: "<YOUR_LICENSE_KEY>"
             - name: "NRIA_VERBOSE"
               value: "0"
-            # - name: "KUBE_STATE_METRICS_POD_LABEL" # Enables discovery of the KSM pod via a label. The value of the label needs to be "true".
-            #   value: "<YOUR_LABEL>" # Remember to replace this placeholder with the label name of your choice.
-            # - name: "KUBE_STATE_METRICS_PORT" # If the KUBE_STATE_METRICS_POD_LABEL is present, it changes the port queried in the pod.
-            #   value: "8080"
-            # - name: "KUBE_STATE_METRICS_SCHEME" # If the KUBE_STATE_METRICS_POD_LABEL is present, it changes the scheme used to send to request to the pod.
-            #   value: "http"
+           # - name: "KUBE_STATE_METRICS_POD_LABEL" # Enables discovery of the KSM pod via a label. The value of the label needs to be "true".
+           #   value: "<YOUR_LABEL>" # Remember to replace this placeholder with the label name of your choice.
+           # - name: "KUBE_STATE_METRICS_PORT" # If the KUBE_STATE_METRICS_POD_LABEL is present, it changes the port queried in the pod.
+           #   value: "8080"
+           # - name: "KUBE_STATE_METRICS_SCHEME" # If the KUBE_STATE_METRICS_POD_LABEL is present, it changes the scheme used to send to request to the pod.
+           #   value: "http"
            # - name: "CADVISOR_PORT" # Enable direct connection to cAdvisor by specifying the port. Needed for Kubernetes versions prior to 1.7.6.
            #   value: "4194"
            # - name: "KUBE_STATE_METRICS_URL" # If this value is specified then discovery process for kube-state-metrics endpoint won't be triggered.
