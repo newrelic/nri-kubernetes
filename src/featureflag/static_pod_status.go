@@ -17,7 +17,7 @@ import (
 
 // StaticPodsStatus checks that the kubernetes server version
 // is greater that 1.14 which is when the kubelete started to sync the status
-// for static points.
+// for static pods.
 // https://github.com/kubernetes/kubernetes/pull/77661
 func StaticPodsStatus(v *version.Info) bool {
 	if v == nil {
