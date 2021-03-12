@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - The base image of `newrelic/infrastructure-k8s` has been updated to `2.2.3`. 
   More info regarding all the integrations upgraded can be found in the [release notes of the base image](https://github.com/newrelic/infrastructure-bundle/releases/tag/2.2.3).
+- Changed scale of node `cpuRequestedCores` to cores from millis
   
 ### Added
 
