@@ -10,6 +10,7 @@ into a more robust and flexible implementation.
 package featureflag
 
 import (
+	"regexp"
 	"strconv"
 
 	"k8s.io/apimachinery/pkg/version"
@@ -23,14 +24,16 @@ func StaticPodsStatus(v *version.Info) bool {
 	if v == nil {
 		return false
 	}
-	major, err := strconv.Atoi(v.Major)
+	// this regex is used to strip any symbol from the version and take the first left match after
+	r := regexp.MustCompile("([0-9]+)")
+	major, err := strconv.Atoi(r.FindString(v.Major))
 	if err != nil {
 		return false
 	}
 	if major > 1 {
 		return true
 	}
-	minor, err := strconv.Atoi(v.Minor)
+	minor, err := strconv.Atoi(r.FindString(v.Minor))
 	if err != nil {
 		return false
 	}
