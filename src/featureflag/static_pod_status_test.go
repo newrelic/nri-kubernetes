@@ -33,6 +33,21 @@ func TestStaticPodStatus(t *testing.T) {
 			version:  &version.Info{Major: "1", Minor: "14"},
 			expected: false,
 		},
+		{
+			name:     "major is the same and minor has symbol",
+			version:  &version.Info{Major: "1", Minor: "18+"},
+			expected: true,
+		},
+		{
+			name:     "major is the same and minor has patch",
+			version:  &version.Info{Major: "1", Minor: "18.12"},
+			expected: true,
+		},
+		{
+			name:     "major is the same and minor has patch less than supported",
+			version:  &version.Info{Major: "1", Minor: "13.12"},
+			expected: false,
+		},
 	}
 
 	for _, testCase := range testCases {
