@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ---
+## 2.3.1
+
+### Fixed
+
+- Correctly identifing k8s server version with characters (#81)
+
 ## 2.3.0
 
 ### Changed
