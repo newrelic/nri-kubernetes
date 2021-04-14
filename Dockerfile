@@ -1,9 +1,6 @@
-# TODO TODO TODO TODO
-# TODO: CHANGE THIS
-# TODO TODO TODO TODO
-# infrastructure-bundle is not multiarch yet, so we use as a base
-ARG IMAGE_NAME=carlosroman/nri-test
-ARG IMAGE_TAG=latest
+ARG IMAGE_NAME=newrelic/infrastructure-bundle
+# TODO: switch to non-rc
+ARG IMAGE_TAG=2.4.1-rc
 
 ARG MODE=normal
 
