@@ -70,7 +70,7 @@ const (
 	defaultDiscoveryCacheTTL           = time.Hour
 
 	integrationName    = "com.newrelic.kubernetes"
-	integrationVersion = "2.3.1"
+	integrationVersion = "2.4.0"
 	nodeNameEnvVar     = "NRK8S_NODE_NAME"
 )
 

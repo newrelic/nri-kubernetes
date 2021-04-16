@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ---
+
+## 2.4.0
+
+### Added
+
+- Support for multiarch docker images
+
 ## 2.3.1
 
 ### Fixed

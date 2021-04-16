@@ -5,62 +5,114 @@ on:
     types: [prereleased, released]
 
 jobs:
+  build:
+    name: Build integration for
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [ linux ]
+        goarch: [ amd64, arm64, arm ]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.16'
+      - name: Build integration
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          make compile
+      - name: Upload artifact for docker build step
+        uses: actions/upload-artifact@v2
+        with:
+          retention-days: 1
+          name: nri-kubernetes-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: bin/nri-kubernetes-${{ matrix.goos }}-${{ matrix.goarch }}
+
   release:
     name: Release docker images and config
+    needs: [ build ]
     runs-on: ubuntu-latest
     env:
       DOCKER_IMAGE_NAME: newrelic/infrastructure-k8s
+      DOCKER_PLATFORMS: "linux/amd64,linux/arm64,linux/arm" # Must be consistent with the matrix from the job above
       S3_PATH: s3://nr-downloads-main/infrastructure_agent
     steps:
       - name: Generate docker image version from git tag
         run: |
           echo "${{ github.event.release.tag_name }}" | grep -E '^v[0-9.]*[0-9]$'
           DOCKER_IMAGE_TAG=$(echo "${{ github.event.release.tag_name }}" | sed 's/^v//')
-          echo "$DOCKER_IMAGE_TAG" | grep -E '^[0-9.]*[0-9]$'
           echo "DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG" >> $GITHUB_ENV
 
       - if: ${{ github.event.release.prerelease }}
         run: |
-          echo "DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG-pre" >> $GITHUB_ENV
+          echo "DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG}-pre" >> $GITHUB_ENV
           echo "S3_PATH=$S3_PATH/test" >> $GITHUB_ENV
 
       - uses: actions/checkout@v2
 
-#     -pre suffix is stripped from safety checks. This will not be necessary when we automate the yaml generation.
+      # -pre suffix is stripped from yaml consistency check
       - name: Check consistency of deployment yamls
         run: |
           grep -e "$DOCKER_IMAGE_NAME:${DOCKER_IMAGE_TAG/-pre}" deploy/newrelic-infra.yaml
           grep -e "$DOCKER_IMAGE_NAME:${DOCKER_IMAGE_TAG/-pre}" deploy/newrelic-infra-unprivileged.yaml
 
-      - name: Build docker images
-        run: |
-          make compile
-          docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG .
-          docker build -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged --build-arg 'MODE=unprivileged' .
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Download all artifacts from build job
+        uses: actions/download-artifact@v2
+        with:
+          path: bin
+
       - uses: docker/login-action@v1
         with:
           username: ${{ secrets.FSI_DOCKERHUB_USERNAME }}
           password: ${{ secrets.FSI_DOCKERHUB_TOKEN }}
-      - name: Upload docker images
+
+      - name: Build docker images
         run: |
-          docker push $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
-          docker push $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged
-      - name: Tag and push docker :latest images
+          docker buildx build --platform=$DOCKER_PLATFORMS \
+            -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG \
+            .
+          docker buildx build --platform=$DOCKER_PLATFORMS \
+            --build-arg 'MODE=unprivileged' \
+            -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged \
+            .
+      - name: Push versioned images
+        run: |
+          docker buildx build --push --platform=$DOCKER_PLATFORMS \
+            -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG \
+            .
+          docker buildx build --push --platform=$DOCKER_PLATFORMS \
+            --build-arg 'MODE=unprivileged' \
+            -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged \
+            .
+      - name: Push :latest images
         if: ${{ ! github.event.release.prerelease }}
         run: |
-          docker tag $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG $DOCKER_IMAGE_NAME:latest
-          docker tag $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged $DOCKER_IMAGE_NAME:latest-unprivileged
-          docker push $DOCKER_IMAGE_NAME:latest
-          docker push $DOCKER_IMAGE_NAME:latest-unprivileged
+          docker buildx build --push --platform=$DOCKER_PLATFORMS \
+            -t $DOCKER_IMAGE_NAME:latest \
+            .
+          docker buildx build --push --platform=$DOCKER_PLATFORMS \
+            --build-arg 'MODE=unprivileged' \
+            -t $DOCKER_IMAGE_NAME:latest-unprivileged \
+            .
 
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.COREINT_AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.COREINT_AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-      - name: Upload configuration files to https://download.newrelic.com
+      - name: Upload versioned manifests to S3
         run: |
-          aws s3 cp deploy/newrelic-infra.yaml $S3_PATH/integrations/kubernetes/newrelic-infrastructure-k8s-$DOCKER_IMAGE_TAG.yaml
+          aws s3 cp deploy/newrelic-infra.yaml $S3_PATH/integrations/kubernetes/newrelic-infrastructure-k8s-${DOCKER_IMAGE_TAG}.yaml
+          aws s3 cp deploy/newrelic-infra-unprivileged.yaml $S3_PATH/integrations/kubernetes/newrelic-infrastructure-k8s-unprivileged-${DOCKER_IMAGE_TAG}.yaml
+      - name: Upload latest manifests to S3
+        if: ${{ ! github.event.release.prerelease }}
+        run: |
           aws s3 cp deploy/newrelic-infra.yaml $S3_PATH/integrations/kubernetes/newrelic-infrastructure-k8s-latest.yaml
-          aws s3 cp deploy/newrelic-infra-unprivileged.yaml $S3_PATH/integrations/kubernetes/newrelic-infrastructure-k8s-unprivileged-$DOCKER_IMAGE_TAG.yaml
           aws s3 cp deploy/newrelic-infra-unprivileged.yaml $S3_PATH/integrations/kubernetes/newrelic-infrastructure-k8s-unprivileged-latest.yaml
