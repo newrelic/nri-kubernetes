@@ -1,6 +1,5 @@
 ARG IMAGE_NAME=newrelic/infrastructure-bundle
-# TODO: switch to non-rc
-ARG IMAGE_TAG=2.4.1-rc
+ARG IMAGE_TAG=2.4.1
 
 ARG MODE=normal
 
