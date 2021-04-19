@@ -26,7 +26,6 @@ const (
 	ksmAppLabelValue         = "kube-state-metrics"
 	k8sTCP                   = "TCP"
 	ksmQualifiedName         = "kube-state-metrics.kube-system.svc.cluster.local"
-	ksmDNSService            = "http-metrics"
 	ksmDNSProto              = "tcp"
 	headlessServiceClusterIP = "None"
 )
