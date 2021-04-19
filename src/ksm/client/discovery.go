@@ -24,13 +24,15 @@ var errNoKSMPodsFound = errors.New("no KSM pods found")
 
 const (
 	ksmAppLabelValue         = "kube-state-metrics"
-	ksmPortName              = "http-metrics"
 	k8sTCP                   = "TCP"
 	ksmQualifiedName         = "kube-state-metrics.kube-system.svc.cluster.local"
 	ksmDNSService            = "http-metrics"
 	ksmDNSProto              = "tcp"
 	headlessServiceClusterIP = "None"
 )
+
+// Common port names for KSM
+var ksmPortNames = []string{"http-metrics", "http"}
 
 type lookupSRVFunc func(service, proto, name string) (cname string, addrs []*net.SRV, err error)
 
@@ -121,9 +123,20 @@ func (c *ksm) Do(method, urlPath string) (*http.Response, error) {
 }
 
 // dnsDiscover uses DNS to discover KSM
-func (sd *discoverer) dnsDiscover() (url.URL, error) {
+func (sd *discoverer) dnsDiscover() (url url.URL, err error) {
+	for _, name := range ksmPortNames {
+		url, err = sd.dnsDiscoverName(name)
+		if err == nil {
+			return
+		}
+	}
+	return
+}
+
+// dnsDiscover uses DNS to discover KSM
+func (sd *discoverer) dnsDiscoverName(portName string) (url.URL, error) {
 	var endpoint url.URL
-	_, addrs, err := sd.lookupSRV(ksmDNSService, ksmDNSProto, ksmQualifiedName)
+	_, addrs, err := sd.lookupSRV(portName, ksmDNSProto, ksmQualifiedName)
 	if err == nil {
 		for _, addr := range addrs {
 			if addr.Target == headlessServiceClusterIP {
@@ -160,7 +173,7 @@ func (sd *discoverer) apiDiscover() (url.URL, error) {
 		if service.Spec.ClusterIP != "" && len(service.Spec.Ports) > 0 {
 			// Look for a port called "http-metrics"
 			for _, port := range service.Spec.Ports {
-				if port.Name == ksmPortName {
+				if port.Name == ksmPortNames[0] {
 					endpoint.Host = fmt.Sprintf("%v:%v", service.Spec.ClusterIP, port.Port)
 					return endpoint, nil
 				}

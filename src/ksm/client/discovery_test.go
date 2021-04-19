@@ -131,7 +131,7 @@ func TestDiscover_metricsPortThroughAPIWhenDNSFails(t *testing.T) {
 					Spec: v1.ServiceSpec{
 						ClusterIP: "1.2.3.4",
 						Ports: []v1.ServicePort{{
-							Name: ksmPortName,
+							Name: ksmPortNames[0],
 							Port: 8888,
 						}},
 					},
@@ -179,7 +179,7 @@ func TestDiscover_metricsPortThroughAPIWhenDNSError(t *testing.T) {
 			Spec: v1.ServiceSpec{
 				ClusterIP: "1.2.3.4",
 				Ports: []v1.ServicePort{{
-					Name: ksmPortName,
+					Name: ksmPortNames[0],
 					Port: 8888,
 				}},
 			},
