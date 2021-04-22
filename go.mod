@@ -20,7 +20,7 @@ require (
 	github.com/prometheus/client_model v0.0.0-20180712105110-5c3871d89910
 	github.com/prometheus/prom2json v1.1.1-0.20190107153843-47e3ee600b5a
 	github.com/segmentio/go-camelcase v0.0.0-20160726192923-7085f1e3c734
-	github.com/sirupsen/logrus v1.2.0
+	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/pflag v1.0.1-0.20171106142849-4c012f6dcd95 // indirect
 	github.com/stretchr/testify v1.2.2
 	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f // indirect
