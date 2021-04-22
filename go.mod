@@ -16,7 +16,7 @@ require (
 	github.com/imdario/mergo v0.3.5-0.20180523075049-7045960c0518 // indirect
 	github.com/json-iterator/go v0.0.0-20171223025217-96fcb84835b0 // indirect
 	github.com/newrelic/infra-integrations-sdk v2.0.1-0.20180410150501-14a5386f9150+incompatible
-	github.com/pkg/errors v0.8.0
+	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_model v0.0.0-20180712105110-5c3871d89910
 	github.com/prometheus/prom2json v1.1.1-0.20190107153843-47e3ee600b5a
 	github.com/segmentio/go-camelcase v0.0.0-20160726192923-7085f1e3c734
