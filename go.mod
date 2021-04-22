@@ -9,7 +9,7 @@ require (
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gogo/protobuf v0.0.0-20171213104750-35b81a066e52 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
-	github.com/golang/protobuf v1.2.0
+	github.com/golang/protobuf v1.5.2
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
 	github.com/googleapis/gnostic v0.1.1-0.20171211024024-933c109c13ce // indirect
 	github.com/howeyc/gopass v0.0.0-20170109162249-bf9dde6d0d2c // indirect
