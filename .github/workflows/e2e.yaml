@@ -42,7 +42,8 @@ jobs:
           GOOS=linux GOARCH=amd64 make compile # Set GOOS and GOARCH explicitly since Dockerfile expects them in the binary name
           docker build -t test_image_${{ matrix.privilegedMode }}:test --build-arg 'MODE=${{ matrix.privilegedMode }}' .
       - name: Interact with the cluster
-        continue-on-error: ${{ contains(matrix.k8sVersion, 'v1.22') }} # Mark best-effort (but unsupported) minors here
+        # Best-effort (but unsupported) minors can be marked as non-blocking as follows:
+        # continue-on-error: ${{ contains(matrix.k8sVersion, 'v1.22') }}
         run: |
           if [ "${{ matrix.privilegedMode }}" = "unprivileged" ]; then
             UNPRIVILEGED=true
