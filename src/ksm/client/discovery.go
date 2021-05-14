@@ -19,7 +19,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/src/prometheus"
 )
 
-var ksmAppLabelNames = []string{"k8s-app", "app", "app.kubernetes.io/name"}
+var ksmAppLabelNames = []string{"app.kubernetes.io/name", "k8s-app", "app"}
 var errNoKSMPodsFound = errors.New("no KSM pods found")
 
 const (

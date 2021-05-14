@@ -399,12 +399,10 @@ func getKSMDiscoverer(logger *logrus.Logger) (client.Discoverer, error) {
 
 	// It's important this one is before the NodeLabel selector, for backwards compatibility.
 	if args.KubeStateMetricsURL != "" {
-		// checking to see if KubeStateMetricsURL contains the /metrics path already.
-		if strings.Contains(args.KubeStateMetricsURL, "/metrics") {
-			args.KubeStateMetricsURL = strings.Trim(args.KubeStateMetricsURL, "/metrics")
-		}
+		// Remove /metrics suffix if present
+		args.KubeStateMetricsURL = strings.TrimSuffix(args.KubeStateMetricsURL, "/metrics")
 
-		logger.Debugf("Discovering KSM using static endpoint (KUBE_STATE_METRICS_URL)")
+		logger.Debugf("Discovering KSM using static endpoint (KUBE_STATE_METRICS_URL=%s)", args.KubeStateMetricsURL)
 		return clientKsm.NewStaticEndpointDiscoverer(args.KubeStateMetricsURL, logger, k8sClient), nil
 	}
 

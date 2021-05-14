@@ -278,7 +278,7 @@ func TestDiscover_errorRetrievingPortWhenDNSAndAPIResponsesEmpty(t *testing.T) {
 	// When retrieving the KSM client
 	ksmClient, err := d.Discover(timeout)
 	// The call returns the error
-	assert.EqualError(t, err, "failed to discover kube-state-metrics endpoint, got error: no services found by any of labels [k8s-app app app.kubernetes.io/name] with value kube-state-metrics")
+	assert.EqualError(t, err, "failed to discover kube-state-metrics endpoint, got error: no services found by any of labels [app.kubernetes.io/name k8s-app app] with value kube-state-metrics")
 
 	// And the KSM client is not returned
 	assert.Nil(t, ksmClient)
@@ -333,7 +333,7 @@ func TestDiscover_errorRetrievingNodeIPWhenPodListEmpty(t *testing.T) {
 	// When retrieving the KSM client
 	ksmClient, err := d.Discover(timeout)
 	// The call returns the error
-	assert.EqualError(t, err, "failed to discover nodeIP with kube-state-metrics, got error: no pods found by any of labels [k8s-app app app.kubernetes.io/name] with value kube-state-metrics")
+	assert.EqualError(t, err, "failed to discover nodeIP with kube-state-metrics, got error: no pods found by any of labels [app.kubernetes.io/name k8s-app app] with value kube-state-metrics")
 
 	// And the KSM client is not returned
 	assert.Nil(t, ksmClient)
