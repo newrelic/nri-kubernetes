@@ -24,7 +24,7 @@ GOLANGCILINT_VERSION = 1.36.0
 all: build
 
 .PHONY: build
-build: clean lint  test compile
+build: clean lint test compile
 
 .PHONY: clean
 clean:
@@ -52,6 +52,12 @@ lint-all: $(TOOLS_DIR)/golangci-lint
 compile:
 	@echo "[compile] Building $(BINARY_NAME)"
 	CGO_ENABLED=$(CGO_ENABLED) go build -o $(BIN_DIR)/$(BINARY_NAME) ./src
+
+.PHONY: compile-multiarch
+compile-multiarch:
+	$(MAKE) compile GOOS=linux GOARCH=amd64
+	$(MAKE) compile GOOS=linux GOARCH=arm64
+	$(MAKE) compile GOOS=linux GOARCH=arm
 
 .PHONY: compile-dev
 compile-dev:
