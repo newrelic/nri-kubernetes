@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	v1 "k8s.io/kubernetes/pkg/kubelet/apis/stats/v1alpha1"
+	v1 "k8s.io/kubelet/pkg/apis/stats/v1alpha1"
 
 	"github.com/newrelic/nri-kubernetes/src/client"
 	"github.com/newrelic/nri-kubernetes/src/definition"

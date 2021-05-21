@@ -11,6 +11,13 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
+const (
+	// Copied from old version of k8s.io/api/core/v1.
+	//
+	// NVIDIA GPU, in devices. Alpha, might change: although fractional and allowing values >1, only one whole device per node is assigned.
+	resourceNvidiaGPU v1.ResourceName = "alpha.kubernetes.io/nvidia-gpu"
+)
+
 func TestOneAttributePerResource(t *testing.T) {
 	testCases := []struct {
 		resourceType  resourceType
@@ -32,7 +39,7 @@ func TestOneAttributePerResource(t *testing.T) {
 		v1.ResourceEphemeralStorage: *resource.NewQuantity(18211580000, resource.BinarySI),
 		v1.ResourceStorage:          *resource.NewQuantity(18211580000, resource.BinarySI),
 		v1.ResourceMemory:           *resource.NewQuantity(2033280000, resource.BinarySI),
-		v1.ResourceNvidiaGPU:        *resource.NewQuantity(42, resource.DecimalSI),
+		resourceNvidiaGPU:           *resource.NewQuantity(42, resource.DecimalSI),
 	}
 
 	for _, testCase := range testCases {
