@@ -1,31 +1,49 @@
 {
-  "$id": "http://newrelic.com/k8s-integration-node.json",
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://example.com/example.json",
   "type": "object",
   "properties": {
-    "clusterName": {
-      "$id": "/properties/clusterName",
-      "type": "string",
-      "minLength": 1
-    },
     "clusterK8sVersion": {
-      "$id": "/properties/clusterK8sVersion",
+      "$id": "#/properties/clusterK8sVersion",
       "type": "string",
-      "minLength": 1
+      "minLength": 6,
+      "examples": [
+        "v1.19.11"
+      ]
+    },
+    "clusterName": {
+      "$id": "#/properties/clusterName",
+      "type": "string",
+      "minLength": 1,
+      "examples": [
+        "test"
+      ]
     },
     "entityName": {
-      "$id": "/properties/entityName",
+      "$id": "#/properties/entityName",
       "type": "string",
-      "minLength": 1
+      "minLength": 4,
+      "examples": [
+        "k8s:cluster:test"
+      ]
     },
     "event_type": {
-      "$id": "/properties/event_type",
+      "$id": "#/properties/event_type",
       "type": "string",
-      "minLength": 1
+      "const": "K8sClusterSample"
     }
   },
+  "examples": [
+    {
+      "clusterK8sVersion": "v1.19.11",
+      "clusterName": "test",
+      "entityName": "k8s:cluster:test",
+      "event_type": "K8sClusterSample"
+    }
+  ],
   "required": [
-    "clusterName",
     "clusterK8sVersion",
+    "clusterName",
     "entityName",
     "event_type"
   ]

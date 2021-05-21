@@ -1,66 +1,108 @@
 {
-  "$id": "http://newrelic.com/k8s-integration-service.json",
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://example.com/example.json",
   "type": "object",
   "properties": {
-    "clusterName": {
-      "$id": "/properties/clusterName",
+    "clusterIP": {
+      "$id": "#/properties/clusterIP",
       "type": "string",
-      "minLength": 1
+      "format": "ipv4",
+      "examples": [
+        "10.96.0.1"
+      ]
+    },
+    "clusterName": {
+      "$id": "#/properties/clusterName",
+      "type": "string",
+      "minLength": 1,
+      "examples": [
+        "test"
+      ]
     },
     "createdAt": {
-      "$id": "/properties/createdAt",
-      "type": "integer"
-    },
-    "serviceName": {
-      "$id": "/properties/serviceName",
-      "type": "string",
-      "minLength": 1
+      "$id": "#/properties/createdAt",
+      "type": "integer",
+      "minimum": 1600000000,
+      "examples": [
+        1621608424
+      ]
     },
     "displayName": {
-      "$id": "/properties/displayName",
+      "$id": "#/properties/displayName",
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "examples": [
+        "kubernetes"
+      ]
     },
     "entityName": {
-      "$id": "/properties/entityName",
+      "$id": "#/properties/entityName",
       "type": "string",
-      "minLength": 1
+      "minLength": 4,
+      "examples": [
+        "k8s:test:default:service:kubernetes"
+      ]
     },
-    "event_type": { "$id": "/properties/event_type",
+    "event_type": {
+      "$id": "#/properties/event_type",
       "type": "string",
-      "minLength": 1
-    },
-    "namespaceName": {
-      "$id": "/properties/namespaceName",
-      "type": "string",
-      "minLength": 1
-    },
-    "loadBalancerIP": {
-      "$id": "/properties/loadBalancerIP",
-      "type": "string"
+      "const": "K8sServiceSample"
     },
     "externalName": {
-      "$id": "/properties/externalName",
-      "type": "string"
+      "$id": "#/properties/externalName",
+      "type": "string",
+      "examples": [
+        ""
+      ]
     },
-    "clusterIP": {
-      "$id": "/properties/clusterIP",
-      "type": "string"
+    "namespaceName": {
+      "$id": "#/properties/namespaceName",
+      "type": "string",
+      "examples": [
+        "default"
+      ]
+    },
+    "serviceName": {
+      "$id": "#/properties/serviceName",
+      "type": "string",
+      "minLength": 1,
+      "examples": [
+        "kubernetes"
+      ]
     },
     "specType": {
-      "$id": "/properties/specType",
+      "$id": "#/properties/specType",
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "examples": [
+        "ClusterIP"
+      ]
     }
   },
+  "examples": [
+    {
+      "clusterIP": "10.96.0.1",
+      "clusterName": "test",
+      "createdAt": 1621608423,
+      "displayName": "kubernetes",
+      "entityName": "k8s:test:default:service:kubernetes",
+      "event_type": "K8sServiceSample",
+      "externalName": "",
+      "namespaceName": "default",
+      "serviceName": "kubernetes",
+      "specType": "ClusterIP"
+    }
+  ],
   "required": [
+    "clusterIP",
     "clusterName",
     "createdAt",
-    "serviceName",
     "displayName",
     "entityName",
     "event_type",
+    "externalName",
     "namespaceName",
+    "serviceName",
     "specType"
   ]
 }
