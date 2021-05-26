@@ -1,11 +1,11 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -531,18 +531,25 @@ func installRelease(_ context.Context, s scenario.Scenario, logger *logrus.Logge
 		fmt.Sprintf("daemonset.clusterVersion=%s.%s.x", versionSplitted[0], versionSplitted[1]),
 	)
 
-	o, err := helm.InstallRelease(filepath.Join(dir, cliArgs.NrChartPath), cliArgs.Context, logger, options...)
+	releaseName := randString(5)
+	err = helm.InstallRelease(releaseName, filepath.Join(dir, cliArgs.NrChartPath), cliArgs.Context, logger, options...)
 	if err != nil {
 		return "", err
 	}
 
-	r := bufio.NewReader(bytes.NewReader(o))
-	v, _, err := r.ReadLine()
-	if err != nil {
-		return "", err
+	return releaseName, nil
+}
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
+var letterRunes = []rune("abcdefghijklmnopqrstuvwxyz")
+
+func randString(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letterRunes[rand.Intn(len(letterRunes))]
 	}
-
-	releaseName := bytes.TrimPrefix(v, []byte("NAME: "))
-
-	return string(releaseName), nil
+	return string(b)
 }

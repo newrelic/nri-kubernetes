@@ -15,11 +15,11 @@ import (
 const _helmBinary = "helm"
 
 // InstallRelease installs a chart release
-func InstallRelease(path, context string, logger *logrus.Logger, config ...string) ([]byte, error) {
+func InstallRelease(releaseName, path, context string, logger *logrus.Logger, config ...string) error {
 	defer timer.Track(time.Now(), "Helm InstallRelease", logger)
 	args := []string{
 		"install",
-		"--generate-name",
+		releaseName,
 		path,
 		"--wait",
 	}
@@ -33,12 +33,11 @@ func InstallRelease(path, context string, logger *logrus.Logger, config ...strin
 	}
 
 	c := exec.Command(_helmBinary, args...)
-	o, err := c.Output()
+	o, err := c.CombinedOutput()
 	if err != nil {
-		// First we check the combined output.
-		return nil, fmt.Errorf("%s - %s", err, string(o))
+		return fmt.Errorf("%s - %s", err, string(o))
 	}
-	return o, nil
+	return nil
 }
 
 // DeleteRelease deletes a chart release
