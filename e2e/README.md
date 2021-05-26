@@ -1,34 +1,20 @@
 # E2E tests
 
-## Setup E2E server
-
-You might have to run the following command, to make sure Tiller has the right privileges.
-
-```shell script
-cat << EOF | kubectl apply -f - 
-kind: ServiceAccount
-apiVersion: v1
-metadata:
-  name: tiller
-  namespace: kube-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: tiller
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
-subjects:
-  - kind: ServiceAccount
-    name: tiller
-    namespace: kube-system
-EOF
+In order to run it locally you can do the following
+```shell
+eval $(minikube -p minikube docker-env)
 ```
-```
-helm init --service-account tiller
 
-# or if you installed Helm2 using Brew
-/usr/local/opt/helm@2/bin/helm init --service-account tiller
+Then you need to build the binary and the image. Notice that the Dockerfile is currently multiarch.
+Depending on your environment the easiest thing to do can be to manually modify the Dockerfile adding
+manually the values for TARGETARCH and TARGETOS
+```shell
+GOOS=linux GOARCH=amd64 make compile
+docker build -t test_image_normal:test  .
+```
+
+Then you can run manually any scenario you are interested into
+```shell
+helm dependencies update ./e2e/charts/newrelic-infrastructure-k8s-e2e
+go run e2e/cmd/e2e.go --verbose --cluster_name=e2e --nr_license_key="fakeLicense" --rbac=true --integration_image_tag=test --integration_image_repository=test_image_normal  --k8s_version=v1.19.4
 ```

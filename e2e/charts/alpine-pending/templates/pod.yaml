@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: {{ default .Chart.Name .Values.pod.name }}
+  name: {{ default .Chart.Name .Values.pod.name }}-{{ .Release.Name }}
 spec:
   containers:
   - name: alpine

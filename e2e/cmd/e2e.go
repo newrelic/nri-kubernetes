@@ -175,11 +175,6 @@ func main() {
 	}
 	logger.Infof("Executing tests in %q cluster. K8s version: %s", c.Config.Host, c.ServerVersion())
 
-	err = initHelm(c, cliArgs.Rbac, logger)
-	if err != nil {
-		panic(err.Error())
-	}
-
 	if cliArgs.CleanBeforeRun {
 		logger.Infof("Cleaning cluster")
 		err := helm.DeleteAllReleases(cliArgs.Context, logger)
@@ -207,7 +202,10 @@ func main() {
 		cliArgs.K8sVersion,
 	)
 	for _, s := range scenarios {
+		logger.Infof("#####################")
 		logger.Infof("Scenario: %q", s)
+		logger.Infof("#####################")
+
 		err := executeScenario(ctx, s, c, logger)
 		if err != nil {
 			if cliArgs.FailFast {
@@ -229,50 +227,6 @@ func main() {
 	} else {
 		logger.Infof("OK")
 	}
-}
-
-func initHelm(c *k8s.Client, rbac bool, logger *logrus.Logger) error {
-
-	if helm.IsRunningHelm3(logger) {
-		logger.Fatal("You're running Helm3, which is not supported. Please configure the helm._helmBinary to point to Helm2")
-	}
-
-	var initArgs []string
-	if rbac {
-		ns := "kube-system"
-		n := "tiller"
-		sa, err := c.ServiceAccount(ns, n)
-		if err != nil {
-			sa, err = c.CreateServiceAccount(ns, n)
-			if err != nil {
-				return err
-			}
-		}
-		_, err = c.ClusterRoleBinding(n)
-		if err != nil {
-			cr, err := c.ClusterRole("cluster-admin")
-			if err != nil {
-				return err
-			}
-			_, err = c.CreateClusterRoleBinding(n, sa, cr)
-			if err != nil {
-				return err
-			}
-		}
-		initArgs = []string{"--service-account", n}
-	}
-
-	err := helm.Init(
-		cliArgs.Context,
-		logger,
-		initArgs...,
-	)
-
-	if err != nil {
-		return err
-	}
-
-	return helm.DependencyBuild(cliArgs.Context, cliArgs.NrChartPath, logger)
 }
 
 func determineMinikubeHost(logger *logrus.Logger) string {
@@ -334,7 +288,11 @@ func executeScenario(
 	}
 
 	defer func() {
-		_ = helm.DeleteRelease(releaseName, cliArgs.Context, logger)
+		logger.Infof("deleting release %s", releaseName)
+		err = helm.DeleteRelease(releaseName, cliArgs.Context, logger)
+		if err != nil {
+			logger.Errorf("error while deleting release %q", err)
+		}
 	}()
 
 	// At least one of kube-state-metrics pods needs to be ready to enter to the newrelic-infra pod and execute the integration.
@@ -514,7 +472,7 @@ func testRoles(nodeCount int, integrationOutput map[string]integrationData) erro
 
 	count, ok := jobRunCount[jobKSM]
 	if !ok || count != 1 {
-		return fmt.Errorf("expected exactly 1 KSM job to run, foud %d", count)
+		return fmt.Errorf("expected exactly 1 KSM job to run, found %d", count)
 	}
 
 	count, ok = jobRunCount[jobKubelet]
@@ -584,7 +542,7 @@ func installRelease(_ context.Context, s scenario.Scenario, logger *logrus.Logge
 		return "", err
 	}
 
-	releaseName := bytes.TrimPrefix(v, []byte("NAME:   "))
+	releaseName := bytes.TrimPrefix(v, []byte("NAME: "))
 
 	return string(releaseName), nil
 }

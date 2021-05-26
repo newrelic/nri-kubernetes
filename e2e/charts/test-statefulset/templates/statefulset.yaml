@@ -1,29 +1,29 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: test-statefulset
+  name: statefulset-{{ .Release.Name }}
   labels:
-    app: test-statefulset
+    app: statefulset
 spec:
   selector:
-    app: test-statefulset
+    app: statefulset
   ports:
     - port: 8089
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: test-statefulset
+  name: test-{{ .Release.Name }}
 spec:
-  serviceName: test-statefulset
+  serviceName: statefulset
   replicas: 2
   selector:
     matchLabels:
-      app: test-statefulset
+      app: statefulset
   template:
     metadata:
       labels:
-        app: test-statefulset
+        app: statefulset
     spec:
       containers:
       - name: busybox
