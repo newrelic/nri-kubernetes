@@ -400,7 +400,7 @@ func executeTests(
 				return nil
 			},
 			retry.OnRetry(func(err error) {
-				logger.Debugf("Retrying since the error might be cause by the environment not being ready yet")
+				logger.Debugf("Retrying since the error might be caused by the environment not being ready yet")
 			}),
 		)
 		if err != nil {
@@ -423,7 +423,7 @@ func executeTests(
 			return nil
 		},
 		retry.OnRetry(func(err error) {
-			logger.Debugf("Retrying since the error might be cause by the environment not being ready yet")
+			logger.Debugf("Retrying since the error might be caused by the environment not being ready yet")
 		}),
 	)
 	if err != nil {
