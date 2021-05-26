@@ -30,7 +30,6 @@ jobs:
           minikube version: v1.3.1 # Last to support 1.10
           kubernetes version: ${{ matrix.k8sVersion }}
           driver: none # required for nri-kubernetes, as metrics gathered for the host are tested as well
-          start args: --force
       - name: Compile and Build Image
         run: |
           GOOS=linux GOARCH=amd64 make compile # Set GOOS and GOARCH explicitly since Dockerfile expects them in the binary name
@@ -81,7 +80,6 @@ jobs:
           minikube version: v1.9.2 # Last to support 1.11
           kubernetes version: ${{ matrix.k8sVersion }}
           driver: none # required for nri-kubernetes, as metrics gathered for the host are tested as well
-          start args: --force
       - name: Compile and Build Image
         run: |
           GOOS=linux GOARCH=amd64 make compile # Set GOOS and GOARCH explicitly since Dockerfile expects them in the binary name
