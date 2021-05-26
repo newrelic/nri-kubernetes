@@ -83,14 +83,13 @@ func generateScenarios(
 	k8sVersion string,
 ) []scenario.Scenario {
 	return []scenario.Scenario{
-		// 4 latest versions, single KSM instance
-		scenario.New(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.7.1", false, serverInfo, clusterFlavor, k8sVersion),
-		scenario.New(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.8.0", false, serverInfo, clusterFlavor, k8sVersion),
-		scenario.New(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.9.0", false, serverInfo, clusterFlavor, k8sVersion),
+		// 2 latest versions, single KSM instance
+		scenario.New(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.9.7", false, serverInfo, clusterFlavor, k8sVersion),
+		scenario.New(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.9.8", false, serverInfo, clusterFlavor, k8sVersion),
 
 		// the behaviour for multiple KSMs only has to be tested for one version, because it's testing our logic,
 		// not the logic of KSM. This might change if KSM sharding becomes enabled by default.
-		scenario.New(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.9.0", true, serverInfo, clusterFlavor, k8sVersion),
+		scenario.New(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.9.8", true, serverInfo, clusterFlavor, k8sVersion),
 	}
 }
 
@@ -397,10 +396,11 @@ func executeTests(
 					}
 					return err
 				}
+				logger.Debugf("The test 'checking if specific entities match our JSON schemas' succeeded")
 				return nil
 			},
 			retry.OnRetry(func(err error) {
-				logger.Debugf("Retrying due to: %s", err)
+				logger.Debugf("Retrying, the error might be caused by a not ready environment. Scenario: %s", currentScenario)
 			}),
 		)
 		if err != nil {
@@ -419,10 +419,11 @@ func executeTests(
 				}
 				return err
 			}
+			logger.Debugf("Retrying, the error might be caused by a not ready environment. Scenario: %s", currentScenario)
 			return nil
 		},
 		retry.OnRetry(func(err error) {
-			logger.Debugf("Retrying due to: %s", err)
+			logger.Debugf("Retrying since the error might be caused by the environment not being ready yet")
 		}),
 	)
 	if err != nil {

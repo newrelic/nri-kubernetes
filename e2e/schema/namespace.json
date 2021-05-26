@@ -1,55 +1,90 @@
 {
-  "$id": "http://newrelic.com/k8s-integration-namespace.json",
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://example.com/example.json",
   "type": "object",
   "properties": {
     "clusterName": {
-      "$id": "/properties/clusterName",
+      "$id": "#/properties/clusterName",
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "examples": [
+        "test"
+      ]
     },
     "createdAt": {
-      "$id": "/properties/createdAt",
-      "type": "integer"
+      "$id": "#/properties/createdAt",
+      "type": "integer",
+      "minimum": 1600000000,
+      "examples": [
+        1621608424
+      ]
     },
     "displayName": {
-      "$id": "/properties/displayName",
+      "$id": "#/properties/displayName",
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "examples": [
+        "kubernetes"
+      ]
     },
     "entityName": {
-      "$id": "/properties/entityName",
+      "$id": "#/properties/entityName",
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "examples": [
+        "k8s:test:namespace:kube-system"
+      ]
     },
     "event_type": {
-      "$id": "/properties/event_type",
+      "$id": "#/properties/event_type",
       "type": "string",
-      "minLength": 1
+      "const": "K8sNamespaceSample"
     },
     "namespace": {
-      "$id": "/properties/namespace",
+      "$id": "#/properties/namespace",
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "examples": [
+        "kube-system"
+      ]
     },
     "namespaceName": {
-      "$id": "/properties/namespaceName",
+      "$id": "#/properties/namespaceName",
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "examples": [
+        "kube-system"
+      ]
     },
     "status": {
-      "$id": "/properties/status",
+      "$id": "#/properties/status",
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "examples": [
+        "Active"
+      ]
     }
   },
+  "examples": [
+    {
+      "clusterName": "test",
+      "createdAt": 1621608421,
+      "displayName": "kube-system",
+      "entityName": "k8s:test:namespace:kube-system",
+      "event_type": "K8sNamespaceSample",
+      "namespace": "kube-system",
+      "namespaceName": "kube-system",
+      "status": "Active"
+    }
+  ],
   "required": [
     "clusterName",
+    "createdAt",
     "displayName",
     "entityName",
     "event_type",
     "namespace",
     "namespaceName",
-    "status",
-    "createdAt"
+    "status"
   ]
 }

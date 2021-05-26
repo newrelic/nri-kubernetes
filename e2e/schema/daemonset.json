@@ -1,67 +1,160 @@
 {
-  "$id": "http://newrelic.com/k8s-integration-daemonset.json",
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://example.com/example.json",
   "type": "object",
   "properties": {
     "clusterName": {
-      "$id": "/properties/clusterName",
+      "$id": "#/properties/clusterName",
       "type": "string",
-      "minLength": 1
-    },
-    "entityName": {
-      "$id": "/properties/entityName",
-      "type": "string",
-      "minLength": 1
-    },
-    "event_type": {
-      "$id": "/properties/event_type",
-      "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "examples": [
+        "test"
+      ]
     },
     "createdAt": {
-      "$id": "/properties/createdAt",
-      "type": "integer"
-    },
-    "podsDesired": {
-      "$id": "/properties/podsDesired",
-      "type": "integer"
-    },
-    "podsScheduled": {
-      "$id": "/properties/podsScheduled",
-      "type": "integer"
-    },
-    "podsAvailable": {
-      "$id": "/properties/podsAvailable",
-      "type": "integer"
-    },
-    "podsReady": {
-      "$id": "/properties/podsReady",
-      "type": "integer"
-    },
-    "podsUnavailable": {
-      "$id": "/properties/podsUnavailable",
-      "type": "integer"
-    },
-    "podsMisscheduled": {
-      "$id": "/properties/podsMisscheduled",
-      "type": "integer"
-    },
-    "podsUpdatedScheduled": {
-      "$id": "/properties/podsUpdatedScheduled",
-      "type": "integer"
-    },
-    "metadataGeneration": {
-      "$id": "/properties/podsUpdatedScheduled",
-      "type": "integer"
-    },
-    "namespaceName": {
-      "$id": "/properties/namespaceName",
-      "type": "string",
-      "minLength": 1
+      "$id": "#/properties/createdAt",
+      "type": "integer",
+      "minimum": 1600000000,
+      "examples": [
+        1621608513
+      ]
     },
     "daemonsetName": {
-      "$id": "/properties/daemonsetName",
+      "$id": "#/properties/daemonsetName",
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "examples": [
+        "nr-newrelic-infrastructure"
+      ]
+    },
+    "displayName": {
+      "$id": "#/properties/displayName",
+      "type": "string",
+      "minLength": 1,
+      "examples": [
+        "nr-newrelic-infrastructure"
+      ]
+    },
+    "entityName": {
+      "$id": "#/properties/entityName",
+      "type": "string",
+      "minLength": 4,
+      "examples": [
+        "k8s:test:nr:daemonset:nr-newrelic-infrastructure"
+      ]
+    },
+    "event_type": {
+      "$id": "#/properties/event_type",
+      "type": "string",
+      "const": "K8sDaemonsetSample"
+    },
+    "metadataGeneration": {
+      "$id": "#/properties/metadataGeneration",
+      "type": "integer",
+      "examples": [
+        1
+      ]
+    },
+    "namespaceName": {
+      "$id": "#/properties/namespaceName",
+      "type": "string",
+      "examples": [
+        "nr"
+      ]
+    },
+    "podsAvailable": {
+      "$id": "#/properties/podsAvailable",
+      "type": "integer",
+      "examples": [
+        1
+      ]
+    },
+    "podsDesired": {
+      "$id": "#/properties/podsDesired",
+      "type": "integer",
+      "examples": [
+        1
+      ]
+    },
+    "podsMisscheduled": {
+      "$id": "#/properties/podsMisscheduled",
+      "type": "integer",
+      "examples": [
+        0
+      ]
+    },
+    "podsMissing": {
+      "$id": "#/properties/podsMissing",
+      "type": "integer",
+      "examples": [
+        0
+      ]
+    },
+    "podsReady": {
+      "$id": "#/properties/podsReady",
+      "type": "integer",
+      "examples": [
+        1
+      ]
+    },
+    "podsScheduled": {
+      "$id": "#/properties/podsScheduled",
+      "type": "integer",
+      "examples": [
+        1
+      ]
+    },
+    "podsUnavailable": {
+      "$id": "#/properties/podsUnavailable",
+      "type": "integer",
+      "examples": [
+        0
+      ]
+    },
+    "podsUpdatedScheduled": {
+      "$id": "#/properties/podsUpdatedScheduled",
+      "type": "integer",
+      "examples": [
+        1
+      ]
     }
-  }
+  },
+  "examples": [
+    {
+      "clusterName": "test",
+      "createdAt": 1621608513,
+      "daemonsetName": "nr-newrelic-infrastructure",
+      "displayName": "nr-newrelic-infrastructure",
+      "entityName": "k8s:test:nr:daemonset:nr-newrelic-infrastructure",
+      "event_type": "K8sDaemonsetSample",
+      "metadataGeneration": 1,
+      "namespaceName": "nr",
+      "podsAvailable": 1,
+      "podsDesired": 1,
+      "podsMisscheduled": 0,
+      "podsMissing": 0,
+      "podsReady": 1,
+      "podsScheduled": 1,
+      "podsUnavailable": 0,
+      "podsUpdatedScheduled": 1
+    }
+  ],
+  "required": [
+    "clusterName",
+    "createdAt",
+    "daemonsetName",
+    "displayName",
+    "entityName",
+    "event_type",
+    "metadataGeneration",
+    "namespaceName",
+    "podsAvailable",
+    "podsDesired",
+    "podsMisscheduled",
+    "podsMissing",
+    "podsReady",
+    "podsScheduled",
+    "podsUnavailable",
+    "podsUpdatedScheduled"
+  ]
 }

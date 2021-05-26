@@ -1,106 +1,129 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema",
   "$id": "http://example.com/example.json",
   "type": "object",
-  "definitions": {},
-  "$schema": "http://json-schema.org/draft-07/schema#",
   "properties": {
     "clusterName": {
-      "$id": "/properties/clusterName",
+      "$id": "#/properties/clusterName",
       "type": "string",
       "examples": [
-        "ohai-k8s-dev"
+        "test"
       ]
     },
     "createdAt": {
-      "$id": "/properties/createdAt",
+      "$id": "#/properties/createdAt",
       "type": "integer",
+      "minimum": 1600000000,
       "examples": [
-        1519221397
+        1621608501
       ]
     },
     "deploymentName": {
-      "$id": "/properties/deploymentName",
+      "$id": "#/properties/deploymentName",
       "type": "string",
+      "minLength": 1,
       "examples": [
-        "dns-controller"
+        "ksm-kube-state-metrics"
       ]
     },
     "displayName": {
-      "$id": "/properties/displayName",
+      "$id": "#/properties/displayName",
       "type": "string",
+      "minLength": 1,
       "examples": [
-        "dns-controller-6c864dbb6f"
+        "ksm-kube-state-metrics-6b8c5674b6"
       ]
     },
     "entityName": {
-      "$id": "/properties/entityName",
+      "$id": "#/properties/entityName",
       "type": "string",
+      "minLength": 4,
       "examples": [
-        "k8s:ohai-k8s-dev:kube-system:replicaset:dns-controller-6c864dbb6f"
+        "k8s:test:nr:replicaset:ksm-kube-state-metrics-6b8c5674b6"
       ]
     },
     "event_type": {
-      "$id": "/properties/event_type",
+      "$id": "#/properties/event_type",
       "type": "string",
-      "examples": [
-        "K8sReplicasetSample"
-      ]
+      "const": "K8sReplicasetSample"
     },
     "namespace": {
-      "$id": "/properties/namespace",
+      "$id": "#/properties/namespace",
       "type": "string",
+      "minLength": 1,
       "examples": [
-        "kube-system"
+        "nr"
       ]
     },
     "namespaceName": {
-      "$id": "/properties/namespaceName",
+      "$id": "#/properties/namespaceName",
       "type": "string",
-      "minLength": 1
-    },
-    "observedGeneration": {
-      "$id": "/properties/observedGeneration",
-      "type": "integer",
       "examples": [
-        1
+        "nr"
       ]
     },
     "podsDesired": {
-      "$id": "/properties/podsDesired",
+      "$id": "#/properties/podsDesired",
       "type": "integer",
       "examples": [
         1
       ]
     },
     "podsFullyLabeled": {
-      "$id": "/properties/podsFullyLabeled",
+      "$id": "#/properties/podsFullyLabeled",
       "type": "integer",
       "examples": [
         1
       ]
     },
+    "podsMissing": {
+      "$id": "#/properties/podsMissing",
+      "type": "integer",
+      "examples": [
+        0
+      ]
+    },
     "podsReady": {
-      "$id": "/properties/podsReady",
+      "$id": "#/properties/podsReady",
       "type": "integer",
       "examples": [
         1
       ]
     },
     "podsTotal": {
-      "$id": "/properties/podsTotal",
+      "$id": "#/properties/podsTotal",
       "type": "integer",
       "examples": [
         1
       ]
     },
     "replicasetName": {
-      "$id": "/properties/replicasetName",
+      "$id": "#/properties/replicasetName",
       "type": "string",
+      "minLength": 1,
       "examples": [
-        "dns-controller-6c864dbb6f"
+        "ksm-kube-state-metrics-6b8c5674b6"
       ]
     }
   },
+  "examples": [
+    {
+      "clusterName": "test",
+      "createdAt": 1621608501,
+      "deploymentName": "ksm-kube-state-metrics",
+      "displayName": "ksm-kube-state-metrics-6b8c5674b6",
+      "entityName": "k8s:test:nr:replicaset:ksm-kube-state-metrics-6b8c5674b6",
+      "event_type": "K8sReplicasetSample",
+      "namespace": "nr",
+      "namespaceName": "nr",
+      "podsDesired": 1,
+      "podsFullyLabeled": 1,
+      "podsMissing": 0,
+      "podsReady": 1,
+      "podsTotal": 1,
+      "replicasetName": "ksm-kube-state-metrics-6b8c5674b6"
+    }
+  ],
   "required": [
     "clusterName",
     "createdAt",
@@ -113,6 +136,7 @@
     "observedGeneration",
     "podsDesired",
     "podsFullyLabeled",
+    "podsMissing",
     "podsReady",
     "podsTotal",
     "replicasetName"

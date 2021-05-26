@@ -1,154 +1,279 @@
 {
-  "$id": "http://newrelic.com/on-host-integration.json",
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://example.com/example.json",
   "type": "object",
-  "definitions": {},
-  "$schema": "http://json-schema.org/draft-07/schema#",
   "properties": {
     "clusterName": {
-      "$id": "/properties/clusterName",
+      "$id": "#/properties/clusterName",
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "examples": [
+        "test"
+      ]
     },
     "containerID": {
-      "$id": "/properties/containerID",
-      "type": "string"
+      "$id": "#/properties/containerID",
+      "type": "string",
+      "minLength": 8,
+      "examples": [
+        "37aabc306d85fac17a22f510c13eea753607a2baf14fdded488ecca5babf9de3"
+      ]
     },
     "containerImage": {
-      "$id": "/properties/containerImage",
-      "type": "string"
+      "$id": "#/properties/containerImage",
+      "type": "string",
+      "minLength": 1,
+      "examples": [
+        "k8s.gcr.io/kube-state-metrics/kube-state-metrics:v1.9.8"
+      ]
     },
     "containerImageID": {
-      "$id": "/properties/containerImageID",
-      "type": "string"
-    },
-    "containerName": {
-      "$id": "/properties/containerName",
-      "type": "string"
-    },
-    "cpuLimitCores": {
-      "$id": "/properties/cpuLimitCores",
-      "type": "number"
-    },
-    "cpuRequestedCores": {
-      "$id": "/properties/cpuRequestedCores",
-      "type": "number"
-    },
-    "cpuUsedCores": {
-      "$id": "/properties/cpuUsedCores",
-      "type": "number"
-    },
-    "deploymentName": {
-      "$id": "/properties/deploymentName",
-      "type": "string"
-    },
-    "displayName": {
-      "$id": "/properties/displayName",
+      "$id": "#/properties/containerImageID",
       "type": "string",
-      "minLength": 1
-    },
-    "entityName": {
-      "$id": "/properties/entityName",
-      "type": "string",
-      "minLength": 1
-    },
-    "event_type": {
-      "$id": "/properties/event_type",
-      "type": "string",
-      "minLength": 1
-    },
-    "isReady": {
-      "$id": "/properties/isReady",
-      "type": "integer"
-    },
-    "memoryLimitBytes": {
-      "$id": "/properties/memoryLimitBytes",
-      "type": "integer"
-    },
-    "memoryRequestedBytes": {
-      "$id": "/properties/memoryRequestedBytes",
-      "type": "integer"
-    },
-    "memoryUsedBytes": {
-      "$id": "/properties/memoryUsedBytes",
-      "type": "integer"
-    },
-    "namespace": {
-      "$id": "/properties/namespace",
-      "type": "string"
-    },
-    "namespaceName": {
-      "$id": "/properties/namespaceName",
-      "type": "string",
-      "minLength": 1
-    },
-    "nodeIP": {
-      "$id": "/properties/nodeIP",
-      "type": "string"
-    },
-    "nodeName": {
-      "$id": "/properties/nodeName",
-      "type": "string"
-    },
-    "podName": {
-      "$id": "/properties/podName",
-      "type": "string"
-    },
-    "reason": {
-      "$id": "/properties/reason",
-      "type": "string"
-    },
-    "restartCount": {
-      "$id": "/properties/restartCount",
-      "type": "integer"
-    },
-    "status": {
-      "$id": "/properties/status",
-      "type": "string"
-    },
-    "containerCpuCfsPeriodsDelta": {
-      "$id": "/properties/containerCpuCfsPeriodsDelta",
-      "type": "number"
-    },
-    "containerCpuCfsThrottledPeriodsDelta": {
-      "$id": "/properties/containerCpuCfsThrottledPeriodsDelta",
-      "type": "number"
-    },
-    "containerCpuCfsThrottledSecondsDelta": {
-      "$id": "/properties/containerCpuCfsThrottledSecondsDelta",
-      "type": "number"
-    },
-    "containerCpuCfsPeriodsTotal": {
-      "$id": "/properties/containerCpuCfsPeriodsTotal",
-      "type": "number"
-    },
-    "containerCpuCfsThrottledPeriodsTotal": {
-      "$id": "/properties/containerCpuCfsThrottledPeriodsTotal",
-      "type": "number"
-    },
-    "containerCpuCfsThrottledSecondsTotal": {
-      "$id": "/properties/containerCpuCfsThrottledSecondsTotal",
-      "type": "number"
+      "minLength": 1,
+      "examples": [
+        "k8s.gcr.io/kube-state-metrics/kube-state-metrics@sha256:47d3a12d9da6699a9d95df8aaff235305229ef08203fae3fc1f1d47b2a409f89"
+      ]
     },
     "containerMemoryMappedFileBytes": {
-      "$id": "/properties/containerMemoryMappedFileBytes",
-      "type": "integer"
+      "$id": "#/properties/containerMemoryMappedFileBytes",
+      "type": "integer",
+      "examples": [
+        0
+      ]
+    },
+    "containerName": {
+      "$id": "#/properties/containerName",
+      "type": "string",
+      "minLength": 1,
+      "examples": [
+        "kube-state-metrics"
+      ]
+    },
+    "cpuUsedCores": {
+      "$id": "#/properties/cpuUsedCores",
+      "type": "number",
+      "examples": [
+        0.000703763
+      ]
+    },
+    "deploymentName": {
+      "$id": "#/properties/deploymentName",
+      "type": "string",
+      "minLength": 1,
+      "examples": [
+        "ksm-kube-state-metrics"
+      ]
+    },
+    "displayName": {
+      "$id": "#/properties/displayName",
+      "type": "string",
+      "minLength": 1,
+      "examples": [
+        "kube-state-metrics"
+      ]
+    },
+    "entityName": {
+      "$id": "#/properties/entityName",
+      "type": "string",
+      "minLength": 8,
+      "examples": [
+        "k8s:test:nr:ksm-kube-state-metrics-6b8c5674b6-9r24j:container:kube-state-metrics"
+      ]
+    },
+    "event_type": {
+      "$id": "#/properties/event_type",
+      "type": "string",
+      "const": "K8sContainerSample"
+    },
+    "fsAvailableBytes": {
+      "$id": "#/properties/fsAvailableBytes",
+      "type": "integer",
+      "examples": [
+        23645712384
+      ]
+    },
+    "fsCapacityBytes": {
+      "$id": "#/properties/fsCapacityBytes",
+      "type": "integer",
+      "examples": [
+        50461298688
+      ]
+    },
+    "fsInodes": {
+      "$id": "#/properties/fsInodes",
+      "type": "integer",
+      "examples": [
+        3145728
+      ]
+    },
+    "fsInodesFree": {
+      "$id": "#/properties/fsInodesFree",
+      "type": "integer",
+      "examples": [
+        2875132
+      ]
+    },
+    "fsInodesUsed": {
+      "$id": "#/properties/fsInodesUsed",
+      "type": "integer",
+      "examples": [
+        6
+      ]
+    },
+    "fsUsedBytes": {
+      "$id": "#/properties/fsUsedBytes",
+      "type": "integer",
+      "examples": [
+        28672
+      ]
+    },
+    "fsUsedPercent": {
+      "$id": "#/properties/fsUsedPercent",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "examples": [
+        0.00012125650844309068
+      ]
+    },
+    "isReady": {
+      "$id": "#/properties/isReady",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1,
+      "examples": [
+        1
+      ]
+    },
+    "memoryUsedBytes": {
+      "$id": "#/properties/memoryUsedBytes",
+      "type": "integer",
+      "examples": [
+        10129408
+      ]
+    },
+    "memoryWorkingSetBytes": {
+      "$id": "#/properties/memoryWorkingSetBytes",
+      "type": "integer",
+      "examples": [
+        8912896
+      ]
+    },
+    "namespace": {
+      "$id": "#/properties/namespace",
+      "type": "string",
+      "minLength": 1,
+      "examples": [
+        "nr"
+      ]
+    },
+    "namespaceName": {
+      "$id": "#/properties/namespaceName",
+      "type": "string",
+      "minLength": 1,
+      "examples": [
+        "nr"
+      ]
+    },
+    "nodeIP": {
+      "$id": "#/properties/nodeIP",
+      "type": "string",
+      "format": "ipv4",
+      "examples": [
+        "192.168.49.2"
+      ]
+    },
+    "nodeName": {
+      "$id": "#/properties/nodeName",
+      "type": "string",
+      "minLength": 1,
+      "examples": [
+        "minikube"
+      ]
+    },
+    "podName": {
+      "$id": "#/properties/podName",
+      "type": "string",
+      "minLength": 1,
+      "examples": [
+        "ksm-kube-state-metrics-6b8c5674b6-9r24j"
+      ]
+    },
+    "restartCount": {
+      "$id": "#/properties/restartCount",
+      "type": "integer",
+      "examples": [
+        0
+      ]
+    },
+    "status": {
+      "$id": "#/properties/status",
+      "type": "string",
+      "examples": [
+        "Running"
+      ]
     }
   },
+  "examples": [
+    {
+      "clusterName": "test",
+      "containerID": "37aabc306d85fac17a22f510c13eea753607a2baf14fdded488ecca5babf9de3",
+      "containerImage": "k8s.gcr.io/kube-state-metrics/kube-state-metrics:v1.9.8",
+      "containerImageID": "k8s.gcr.io/kube-state-metrics/kube-state-metrics@sha256:47d3a12d9da6699a9d95df8aaff235305229ef08203fae3fc1f1d47b2a409f89",
+      "containerMemoryMappedFileBytes": 0,
+      "containerName": "kube-state-metrics",
+      "cpuUsedCores": 0.000703763,
+      "deploymentName": "ksm-kube-state-metrics",
+      "displayName": "kube-state-metrics",
+      "entityName": "k8s:test:nr:ksm-kube-state-metrics-6b8c5674b6-9r24j:container:kube-state-metrics",
+      "event_type": "K8sContainerSample",
+      "fsAvailableBytes": 23645712384,
+      "fsCapacityBytes": 50461298688,
+      "fsInodes": 3145728,
+      "fsInodesFree": 2875132,
+      "fsInodesUsed": 6,
+      "fsUsedBytes": 28672,
+      "fsUsedPercent": 0.00012125650844309068,
+      "isReady": 1,
+      "memoryUsedBytes": 10129408,
+      "memoryWorkingSetBytes": 8912896,
+      "namespace": "nr",
+      "namespaceName": "nr",
+      "nodeIP": "192.168.49.2",
+      "nodeName": "minikube",
+      "podName": "ksm-kube-state-metrics-6b8c5674b6-9r24j",
+      "restartCount": 0,
+      "status": "Running"
+    }
+  ],
   "required": [
     "clusterName",
     "containerID",
     "containerImage",
     "containerImageID",
+    "containerMemoryMappedFileBytes",
     "containerName",
     "cpuUsedCores",
     "displayName",
     "entityName",
     "event_type",
+    "fsAvailableBytes",
+    "fsCapacityBytes",
+    "fsInodes",
+    "fsInodesFree",
+    "fsInodesUsed",
+    "fsUsedBytes",
+    "fsUsedPercent",
+    "isReady",
     "memoryUsedBytes",
+    "memoryWorkingSetBytes",
     "namespace",
     "namespaceName",
     "nodeIP",
     "nodeName",
-    "podName"
+    "podName",
+    "restartCount",
+    "status"
   ]
 }
