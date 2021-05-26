@@ -400,7 +400,7 @@ func executeTests(
 				return nil
 			},
 			retry.OnRetry(func(err error) {
-				logger.Debugf("Retrying since the error might be caused by the environment not being ready yet")
+				logger.Debugf("Retrying, the error might be caused by a not ready environment. Scenario: %s", currentScenario)
 			}),
 		)
 		if err != nil {
@@ -419,7 +419,7 @@ func executeTests(
 				}
 				return err
 			}
-			logger.Debugf("The test 'checking if the metric sets in all integrations match our JSON schemas' succeeded")
+			logger.Debugf("Retrying, the error might be caused by a not ready environment. Scenario: %s", currentScenario)
 			return nil
 		},
 		retry.OnRetry(func(err error) {
