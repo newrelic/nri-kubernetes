@@ -396,10 +396,11 @@ func executeTests(
 					}
 					return err
 				}
+				logger.Debugf("The test 'checking if specific entities match our JSON schemas' succeeded")
 				return nil
 			},
 			retry.OnRetry(func(err error) {
-				logger.Debugf("Retrying due to: %s", err)
+				logger.Debugf("Retrying since the error might be cause by the environment not being ready yet")
 			}),
 		)
 		if err != nil {
@@ -418,10 +419,11 @@ func executeTests(
 				}
 				return err
 			}
+			logger.Debugf("The test 'checking if the metric sets in all integrations match our JSON schemas' succeeded")
 			return nil
 		},
 		retry.OnRetry(func(err error) {
-			logger.Debugf("Retrying due to: %s", err)
+			logger.Debugf("Retrying since the error might be cause by the environment not being ready yet")
 		}),
 	)
 	if err != nil {
