@@ -8,7 +8,7 @@ on:
 
 jobs:
   e2eTests-1-10:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-18.04
     timeout-minutes: 15
     strategy:
       max-parallel: 7 # len(k8sVersion) is a good number to have here
@@ -54,8 +54,8 @@ jobs:
           go run e2e/cmd/e2e.go --verbose --cluster_name=e2e --nr_license_key="fakeLicense" --rbac=true --integration_image_tag=test --integration_image_repository=test_image_${{ matrix.privilegedMode }} --k8s_version=${{ matrix.k8sVersion }} --unprivileged=$UNPRIVILEGED
           kill %1
 
-  e2eTests:
-    runs-on: ubuntu-20.04
+  e2eTests-old:
+    runs-on: ubuntu-18.04
     timeout-minutes: 15
     strategy:
       max-parallel: 7 # len(k8sVersion) is a good number to have here
@@ -64,7 +64,7 @@ jobs:
         privilegedMode: [ normal ]
         # Latest patch version can be found in https://github.com/kubernetes/sig-release/blob/master/releases/patch-releases.md
         # Some versions might not be available yet in https://storage.googleapis.com/kubernetes-release/release/v1.X.Y/bin/linux/amd64/kubelet
-        k8sVersion: [ 1.11.10, 1.12.10, 1.13.12, 1.14.10, 1.15.12 ]
+        k8sVersion: [ 1.11.10, 1.12.10, 1.13.12 ]
     env:
       DOCKER_BUILDKIT: '1' # Setting DOCKER_BUILDKIT=1 ensures TARGETOS and TARGETARCH are populated
     steps:
@@ -82,6 +82,50 @@ jobs:
         uses: manusa/actions-setup-minikube@v2.4.0
         with:
           minikube version: v1.9.2 # Last to support 1.11
+          kubernetes version: ${{ matrix.k8sVersion }}
+          driver: none # required for nri-kubernetes, as metrics gathered for the host are tested as well
+      - name: Setup Helm
+        run: |
+          chmod go-r /home/runner/.kube/config
+          helm repo add stable https://charts.helm.sh/stable
+          helm dependencies update ./e2e/charts/newrelic-infrastructure-k8s-e2e
+      - name: Compile and Build Image
+        run: |
+          GOOS=linux GOARCH=amd64 make compile # Set GOOS and GOARCH explicitly since Dockerfile expects them in the binary name
+          docker build -t test_image_${{ matrix.privilegedMode }}:test --build-arg 'MODE=${{ matrix.privilegedMode }}' .
+      - name: Interact with the cluster
+        # Best-effort (but unsupported) minors can be marked as non-blocking as follows:
+        # continue-on-error: ${{ contains(matrix.k8sVersion, 'v1.22') }}
+        run: |
+          if [ "${{ matrix.privilegedMode }}" = "unprivileged" ]; then
+            UNPRIVILEGED=true
+          else
+            UNPRIVILEGED=false
+          fi
+          go run e2e/cmd/e2e.go --verbose --cluster_name=e2e --nr_license_key="fakeLicense" --rbac=true --integration_image_tag=test --integration_image_repository=test_image_${{ matrix.privilegedMode }} --k8s_version=${{ matrix.k8sVersion }} --unprivileged=$UNPRIVILEGED
+
+  e2eTests:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 15
+    strategy:
+      max-parallel: 7 # len(k8sVersion) is a good number to have here
+      fail-fast: false
+      matrix:
+        privilegedMode: [ normal ]
+        # Latest patch version can be found in https://github.com/kubernetes/sig-release/blob/master/releases/patch-releases.md
+        # Some versions might not be available yet in https://storage.googleapis.com/kubernetes-release/release/v1.X.Y/bin/linux/amd64/kubelet
+        k8sVersion: [ 1.14.10, 1.15.12 ]
+    env:
+      DOCKER_BUILDKIT: '1' # Setting DOCKER_BUILDKIT=1 ensures TARGETOS and TARGETARCH are populated
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.16'
+      - name: Setup Minikube
+        uses: manusa/actions-setup-minikube@v2.4.0
+        with:
+          minikube version: v1.20.0 # Last to support 1.11
           kubernetes version: ${{ matrix.k8sVersion }}
           driver: none # required for nri-kubernetes, as metrics gathered for the host are tested as well
       - name: Setup Helm
