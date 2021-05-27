@@ -311,10 +311,12 @@ func executeTests(
 	logger *logrus.Logger,
 	currentScenario scenario.Scenario,
 ) error {
+
+	releaseLabel := fmt.Sprintf("releaseName=%s", releaseName)
 	// We're fetching the list of NR pods here just to fetch it once. If for
 	// some reason this list or the contents of it could change during the
 	// execution of these tests, we could move it to `test*` functions.
-	podsList, err := c.PodsListByLabels(namespace, []string{nrLabel})
+	podsList, err := c.PodsListByLabels(namespace, []string{nrLabel, releaseLabel})
 	if err != nil {
 		return err
 	}
