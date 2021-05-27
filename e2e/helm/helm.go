@@ -35,7 +35,7 @@ func InstallRelease(releaseName, path, context string, logger *logrus.Logger, co
 	c := exec.Command(_helmBinary, args...)
 	o, err := c.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("%s - %s", err, string(o))
+		return fmt.Errorf("%w - %s", err, string(o))
 	}
 	return nil
 }
@@ -55,7 +55,7 @@ func DeleteRelease(release, context string, logger *logrus.Logger) error {
 	c := exec.Command(_helmBinary, args...)
 	o, err := c.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("%s - %s", err, string(o))
+		return fmt.Errorf("%w - %s", err, string(o))
 	}
 
 	return nil
@@ -76,7 +76,7 @@ func DeleteAllReleases(context string, logger *logrus.Logger) error {
 	c := exec.Command(_helmBinary, args...)
 	o, err := c.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("%s - %s", err, string(o))
+		return fmt.Errorf("%w - %s", err, string(o))
 	}
 
 	scanner := bufio.NewScanner(bytes.NewReader(o))
@@ -106,7 +106,7 @@ func DependencyBuild(context, chart string, logger *logrus.Logger) error {
 	c := exec.Command(_helmBinary, args...)
 	o, err := c.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("%s - %s", err, string(o))
+		return fmt.Errorf("%w - %s", err, string(o))
 	}
 
 	return nil

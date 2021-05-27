@@ -5,9 +5,9 @@ In order to run it locally you can do the following
 eval $(minikube -p minikube docker-env)
 ```
 
-Then you need to build the binary and the image. Notice that the Dockerfile is currently multiarch.
-Depending on your environment the easiest thing to do can be to manually modify the Dockerfile adding
-manually the values for TARGETARCH and TARGETOS
+Then you need to build the binary and the image. Notice that  since the Dockerfile includes multiarch
+support, you may need to set `DOCKER_BUILDKIT=1` when running `docker build` for the `TARGETARCH`
+and `TARGETOS` args to be populated.
 ```shell
 GOOS=linux GOARCH=amd64 make compile
 docker build -t test_image_normal:test  .
