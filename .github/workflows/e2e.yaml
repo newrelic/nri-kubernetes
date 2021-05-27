@@ -44,12 +44,14 @@ jobs:
         # continue-on-error: ${{ contains(matrix.k8sVersion, 'v1.22') }}
         # We are changing the group of .kube/config due to "WARNING: Kubernetes configuration file is group-readable."
         run: |
+          watch -n 30 kubectl get pods -A -o wide &
           if [ "${{ matrix.privilegedMode }}" = "unprivileged" ]; then
             UNPRIVILEGED=true
           else
             UNPRIVILEGED=false
           fi
           go run e2e/cmd/e2e.go --verbose --cluster_name=e2e --nr_license_key="fakeLicense" --rbac=true --integration_image_tag=test --integration_image_repository=test_image_${{ matrix.privilegedMode }} --k8s_version=${{ matrix.k8sVersion }} --unprivileged=$UNPRIVILEGED
+          kill %1
 
   e2eTests:
     runs-on: ubuntu-20.04
