@@ -15,6 +15,7 @@ spec:
     metadata:
       labels:
         name: {{ .Values.daemonset.name }}
+        releaseName: {{ .Release.Name }}
     spec:
       serviceAccountName: {{ .Values.serviceAccount.name }}-{{ .Release.Name }}
       hostNetwork: true # This option is a requirement for the Infrastructure Agent to report the proper hostname in New Relic.
