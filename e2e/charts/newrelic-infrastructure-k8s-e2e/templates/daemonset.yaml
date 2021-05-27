@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: {{ .Values.daemonset.name }}
+  name: {{ .Values.daemonset.name }}-{{ .Release.Name }}
   namespace: {{ .Values.daemonset.namespace }}
   labels:
     app: {{ .Values.daemonset.name }}
@@ -16,7 +16,7 @@ spec:
       labels:
         name: {{ .Values.daemonset.name }}
     spec:
-      serviceAccountName: {{ .Values.serviceAccount.name }}
+      serviceAccountName: {{ .Values.serviceAccount.name }}-{{ .Release.Name }}
       hostNetwork: true # This option is a requirement for the Infrastructure Agent to report the proper hostname in New Relic.
       dnsPolicy: ClusterFirstWithHostNet
       #imagePullSecrets:
