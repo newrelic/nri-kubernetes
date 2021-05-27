@@ -5,9 +5,10 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/newrelic/nri-kubernetes/src/client"
-	"github.com/newrelic/nri-kubernetes/src/storage"
 	"github.com/sirupsen/logrus"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/storage"
 )
 
 const cachedKey = "ksm-client"

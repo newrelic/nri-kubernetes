@@ -1,14 +1,13 @@
 package k8s
 
 import (
+	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
-
-	"bytes"
-
 	"strings"
+	"time"
 
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -83,34 +82,34 @@ func (c Client) ServerVersion() string {
 
 // NodesList list nodes.
 func (c Client) NodesList() (*v1.NodeList, error) {
-	return c.Clientset.CoreV1().Nodes().List(metav1.ListOptions{})
+	return c.Clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 }
 
 // ServiceAccount finds a serviceaccount into the namespace a service account with the given name
 func (c Client) ServiceAccount(namespace, name string) (*v1.ServiceAccount, error) {
-	return c.Clientset.CoreV1().ServiceAccounts(namespace).Get(name, metav1.GetOptions{})
+	return c.Clientset.CoreV1().ServiceAccounts(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 }
 
 // CreateServiceAccount creates a serviceaccount into the namespace a service account with the given name
 func (c Client) CreateServiceAccount(namespace, name string) (*v1.ServiceAccount, error) {
-	return c.Clientset.CoreV1().ServiceAccounts(namespace).Create(&v1.ServiceAccount{
+	return c.Clientset.CoreV1().ServiceAccounts(namespace).Create(context.TODO(), &v1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{Name: name},
-	})
+	}, metav1.CreateOptions{})
 }
 
 // ClusterRoleBinding finds a clusterrolebinding with the given name
 func (c Client) ClusterRoleBinding(name string) (*rbacv1.ClusterRoleBinding, error) {
-	return c.Clientset.RbacV1().ClusterRoleBindings().Get(name, metav1.GetOptions{})
+	return c.Clientset.RbacV1().ClusterRoleBindings().Get(context.TODO(), name, metav1.GetOptions{})
 }
 
 // ClusterRole finds a clusterrole with the given name
 func (c Client) ClusterRole(name string) (*rbacv1.ClusterRole, error) {
-	return c.Clientset.RbacV1().ClusterRoles().Get(name, metav1.GetOptions{})
+	return c.Clientset.RbacV1().ClusterRoles().Get(context.TODO(), name, metav1.GetOptions{})
 }
 
 // CreateClusterRoleBinding creates a clusterrolebinding with the given name and links it with the serviceaccount
 func (c Client) CreateClusterRoleBinding(name string, sa *v1.ServiceAccount, cr *rbacv1.ClusterRole) (*rbacv1.ClusterRoleBinding, error) {
-	return c.Clientset.RbacV1().ClusterRoleBindings().Create(&rbacv1.ClusterRoleBinding{
+	return c.Clientset.RbacV1().ClusterRoleBindings().Create(context.TODO(), &rbacv1.ClusterRoleBinding{
 		ObjectMeta: metav1.ObjectMeta{Name: name},
 		Subjects: []rbacv1.Subject{
 			{
@@ -123,14 +122,14 @@ func (c Client) CreateClusterRoleBinding(name string, sa *v1.ServiceAccount, cr 
 			Name: cr.Name,
 			Kind: "ClusterRole",
 		},
-	})
+	}, metav1.CreateOptions{})
 }
 
 // PodsListByLabels list pods filtered by labels.
 func (c Client) PodsListByLabels(namespace string, labels []string) (*v1.PodList, error) {
 	labelStr := strings.Join(labels, ",")
 
-	pods, err := c.Clientset.CoreV1().Pods(namespace).List(metav1.ListOptions{
+	pods, err := c.Clientset.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: labelStr,
 	})
 	if err != nil {

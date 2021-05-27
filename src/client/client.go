@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net/http"
@@ -57,35 +58,35 @@ func (ka *goClientImpl) Config() *rest.Config {
 }
 
 func (ka *goClientImpl) FindNode(name string) (*v1.Node, error) {
-	return ka.client.CoreV1().Nodes().Get(name, metav1.GetOptions{})
+	return ka.client.CoreV1().Nodes().Get(context.TODO(), name, metav1.GetOptions{})
 }
 
 func (ka *goClientImpl) FindPodsByLabel(name, value string) (*v1.PodList, error) {
-	return ka.client.CoreV1().Pods("").List(metav1.ListOptions{
+	return ka.client.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("%s=%s", name, value),
 	})
 }
 
 func (ka *goClientImpl) FindPodByName(name string) (*v1.PodList, error) {
-	return ka.client.CoreV1().Pods("").List(metav1.ListOptions{
+	return ka.client.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{
 		FieldSelector: fmt.Sprintf("metadata.name=%s", name),
 	})
 }
 
 func (ka *goClientImpl) FindPodsByHostname(hostname string) (*v1.PodList, error) {
-	return ka.client.CoreV1().Pods("").List(metav1.ListOptions{
+	return ka.client.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{
 		FieldSelector: fmt.Sprintf("spec.hostname=%s", hostname),
 	})
 }
 
 func (ka *goClientImpl) FindServicesByLabel(name, value string) (*v1.ServiceList, error) {
-	return ka.client.CoreV1().Services("").List(metav1.ListOptions{
+	return ka.client.CoreV1().Services("").List(context.TODO(), metav1.ListOptions{
 		LabelSelector: fmt.Sprintf("%s=%s", name, value),
 	})
 }
 
 func (ka *goClientImpl) ListServices() (*v1.ServiceList, error) {
-	return ka.client.CoreV1().Services("").List(metav1.ListOptions{})
+	return ka.client.CoreV1().Services("").List(context.TODO(), metav1.ListOptions{})
 }
 
 func (ka *goClientImpl) SecureHTTPClient(t time.Duration) (*http.Client, error) {
@@ -97,7 +98,7 @@ func (ka *goClientImpl) SecureHTTPClient(t time.Duration) (*http.Client, error) 
 }
 
 func (ka *goClientImpl) FindSecret(name, namespace string) (*v1.Secret, error) {
-	return ka.client.CoreV1().Secrets(namespace).Get(name, metav1.GetOptions{})
+	return ka.client.CoreV1().Secrets(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 }
 
 // BasicHTTPClient returns http.Client configured with timeout

@@ -4,15 +4,13 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"os"
+	"strings"
 	"testing"
 
-	"os"
-
-	"strings"
-
-	"github.com/newrelic/nri-kubernetes/src/data"
-	"github.com/newrelic/nri-kubernetes/src/kubelet/metric/testdata"
-	"github.com/newrelic/nri-kubernetes/src/prometheus"
+	"github.com/newrelic/nri-kubernetes/v2/src/data"
+	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric/testdata"
+	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -4,8 +4,9 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/newrelic/nri-kubernetes/src/metric"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/metric"
 )
 
 func TestSetEtcdTLSComponentOption(t *testing.T) {

@@ -8,8 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/newrelic/nri-kubernetes/src/definition"
 	model "github.com/prometheus/client_model/go"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 )
 
 // ControlPlaneComponentTypeGenerator generates the entity type of a

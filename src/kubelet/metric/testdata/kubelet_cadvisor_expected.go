@@ -1,8 +1,8 @@
 package testdata
 
 import (
-	"github.com/newrelic/nri-kubernetes/src/definition"
-	"github.com/newrelic/nri-kubernetes/src/prometheus"
+	"github.com/newrelic/nri-kubernetes/v2/src/definition"
+	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
 
 // ExpectedCadvisorRawData ...

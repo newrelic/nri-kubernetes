@@ -3,11 +3,12 @@ package client
 import (
 	"testing"
 
-	"github.com/newrelic/nri-kubernetes/src/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/client"
 )
 
 func TestDistributedDiscoverKSMWithPodLabel(t *testing.T) {

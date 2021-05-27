@@ -1,7 +1,7 @@
 package testdata
 
 import (
-	"github.com/newrelic/nri-kubernetes/src/definition"
+	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
@@ -666,7 +666,7 @@ var ExpectedGroupDataWithoutStaticPodsStatus = definition.RawGroups{
 			"txBytes":               uint64(120789968),
 			"usageCoreNanoSeconds":  uint64(22332102208229),
 			"usageNanoCores":        uint64(228759290),
-			"cpuRequestedCores": int64(501),
+			"cpuRequestedCores":     int64(501),
 			"labels": map[string]string{
 				"kubernetes.io/arch":             "amd64",
 				"kubernetes.io/hostname":         "minikube",

@@ -3,8 +3,9 @@ package network
 import (
 	"time"
 
-	"github.com/newrelic/nri-kubernetes/src/storage"
 	"github.com/sirupsen/logrus"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/storage"
 )
 
 const storageKey = "defaultNetworkInterface"

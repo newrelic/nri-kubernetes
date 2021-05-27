@@ -2,13 +2,12 @@ package metric
 
 import (
 	"testing"
-
-	"github.com/newrelic/nri-kubernetes/src/definition"
-	"github.com/newrelic/nri-kubernetes/src/prometheus"
-
 	"time"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/definition"
+	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
 
 func TestFromNano(t *testing.T) {

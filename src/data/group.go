@@ -5,8 +5,9 @@ import (
 	"strings"
 
 	"github.com/newrelic/infra-integrations-sdk/sdk"
-	"github.com/newrelic/nri-kubernetes/src/definition"
 	"k8s.io/apimachinery/pkg/version"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 )
 
 // Grouper groups raw data by any desired label such object (pod, container...).

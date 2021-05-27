@@ -7,10 +7,11 @@ import (
 	"testing"
 
 	"github.com/newrelic/infra-integrations-sdk/metric"
-	"github.com/newrelic/nri-kubernetes/src/definition"
 	model "github.com/prometheus/client_model/go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 )
 
 var mFamily = []MetricFamily{

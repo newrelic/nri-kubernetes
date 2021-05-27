@@ -3,11 +3,11 @@ package metric
 import (
 	"testing"
 
-	"github.com/newrelic/nri-kubernetes/src/definition"
-
 	"github.com/newrelic/infra-integrations-sdk/metric"
 	"github.com/newrelic/infra-integrations-sdk/sdk"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 )
 
 func TestK8sClusterMetricsManipulator(t *testing.T) {

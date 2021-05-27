@@ -15,8 +15,8 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/transport"
 
-	"github.com/newrelic/nri-kubernetes/src/client"
-	"github.com/newrelic/nri-kubernetes/src/prometheus"
+	"github.com/newrelic/nri-kubernetes/v2/src/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
 
 var ksmAppLabelNames = []string{"app.kubernetes.io/name", "k8s-app", "app"}

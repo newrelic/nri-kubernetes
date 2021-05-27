@@ -2,13 +2,13 @@ package jsonschema
 
 import (
 	"fmt"
-
 	"path/filepath"
 
 	"github.com/newrelic/infra-integrations-sdk/sdk"
-	"github.com/newrelic/nri-kubernetes/e2e/jsonschema/schema"
 	"github.com/pkg/errors"
 	"github.com/xeipuuv/gojsonschema"
+
+	"github.com/newrelic/nri-kubernetes/v2/e2e/jsonschema/schema"
 )
 
 // EventTypeToSchemaFilename maps event types with their json schema.

@@ -4,9 +4,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/newrelic/nri-kubernetes/src/storage"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/storage"
 )
 
 // DiscoveryCacher implements the Discoverer API to read endpoints from a cache storage. It also wraps another

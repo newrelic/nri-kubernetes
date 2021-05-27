@@ -3,12 +3,13 @@ package ksm
 import (
 	"fmt"
 
-	"github.com/newrelic/nri-kubernetes/src/client"
-	"github.com/newrelic/nri-kubernetes/src/data"
-	"github.com/newrelic/nri-kubernetes/src/definition"
-	"github.com/newrelic/nri-kubernetes/src/ksm/metric"
-	"github.com/newrelic/nri-kubernetes/src/prometheus"
 	"github.com/sirupsen/logrus"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/data"
+	"github.com/newrelic/nri-kubernetes/v2/src/definition"
+	"github.com/newrelic/nri-kubernetes/v2/src/ksm/metric"
+	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
 
 type ksmGrouper struct {

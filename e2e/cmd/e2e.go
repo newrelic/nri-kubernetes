@@ -20,13 +20,13 @@ import (
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/apimachinery/pkg/version"
 
-	_ "github.com/newrelic/nri-kubernetes/e2e/gcp"
-	"github.com/newrelic/nri-kubernetes/e2e/helm"
-	"github.com/newrelic/nri-kubernetes/e2e/jsonschema"
-	"github.com/newrelic/nri-kubernetes/e2e/k8s"
-	"github.com/newrelic/nri-kubernetes/e2e/retry"
-	"github.com/newrelic/nri-kubernetes/e2e/scenario"
-	"github.com/newrelic/nri-kubernetes/e2e/timer"
+	_ "github.com/newrelic/nri-kubernetes/v2/e2e/gcp"
+	"github.com/newrelic/nri-kubernetes/v2/e2e/helm"
+	"github.com/newrelic/nri-kubernetes/v2/e2e/jsonschema"
+	"github.com/newrelic/nri-kubernetes/v2/e2e/k8s"
+	"github.com/newrelic/nri-kubernetes/v2/e2e/retry"
+	"github.com/newrelic/nri-kubernetes/v2/e2e/scenario"
+	"github.com/newrelic/nri-kubernetes/v2/e2e/timer"
 )
 
 var cliArgs = struct {

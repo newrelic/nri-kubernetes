@@ -12,17 +12,18 @@ import (
 	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/infra-integrations-sdk/sdk"
-	"github.com/newrelic/nri-kubernetes/src/apiserver"
-	"github.com/newrelic/nri-kubernetes/src/client"
-	"github.com/newrelic/nri-kubernetes/src/controlplane"
-	"github.com/newrelic/nri-kubernetes/src/ksm"
-	"github.com/newrelic/nri-kubernetes/src/kubelet"
-	metric2 "github.com/newrelic/nri-kubernetes/src/kubelet/metric"
-	"github.com/newrelic/nri-kubernetes/src/metric"
-	"github.com/newrelic/nri-kubernetes/src/scrape"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/version"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/apiserver"
+	"github.com/newrelic/nri-kubernetes/v2/src/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
+	"github.com/newrelic/nri-kubernetes/v2/src/ksm"
+	"github.com/newrelic/nri-kubernetes/v2/src/kubelet"
+	metric2 "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
+	"github.com/newrelic/nri-kubernetes/v2/src/metric"
+	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
 )
 
 const (

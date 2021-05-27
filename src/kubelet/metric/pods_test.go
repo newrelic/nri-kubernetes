@@ -2,19 +2,17 @@ package metric
 
 import (
 	"fmt"
+	"io"
 	"net/http"
+	"net/http/httptest"
+	"os"
 	"testing"
 
-	"os"
-
-	"net/http/httptest"
-
-	"io"
-
-	"github.com/newrelic/nri-kubernetes/src/definition"
-	"github.com/newrelic/nri-kubernetes/src/kubelet/metric/testdata"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/definition"
+	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric/testdata"
 )
 
 type testClient struct {

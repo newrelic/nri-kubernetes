@@ -5,8 +5,9 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/newrelic/nri-kubernetes/src/storage"
 	"k8s.io/apimachinery/pkg/version"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/storage"
 )
 
 // Option is a func that configures the fileCacheClient

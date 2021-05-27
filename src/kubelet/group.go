@@ -3,13 +3,13 @@ package kubelet
 import (
 	"fmt"
 
-	"github.com/newrelic/nri-kubernetes/src/apiserver"
-
-	"github.com/newrelic/nri-kubernetes/src/client"
-	"github.com/newrelic/nri-kubernetes/src/data"
-	"github.com/newrelic/nri-kubernetes/src/definition"
-	"github.com/newrelic/nri-kubernetes/src/kubelet/metric"
 	"github.com/sirupsen/logrus"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/apiserver"
+	"github.com/newrelic/nri-kubernetes/v2/src/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/data"
+	"github.com/newrelic/nri-kubernetes/v2/src/definition"
+	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 )
 
 type kubelet struct {

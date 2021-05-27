@@ -5,11 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/newrelic/nri-kubernetes/src/apiserver"
-	"github.com/newrelic/nri-kubernetes/src/controlplane"
-	"github.com/newrelic/nri-kubernetes/src/definition"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/apiserver"
+	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
+	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 )
 
 var logger = logrus.StandardLogger()

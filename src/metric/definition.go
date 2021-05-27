@@ -6,10 +6,11 @@ import (
 	"time"
 
 	sdkMetric "github.com/newrelic/infra-integrations-sdk/metric"
-	"github.com/newrelic/nri-kubernetes/src/definition"
-	ksmMetric "github.com/newrelic/nri-kubernetes/src/ksm/metric"
-	kubeletMetric "github.com/newrelic/nri-kubernetes/src/kubelet/metric"
-	"github.com/newrelic/nri-kubernetes/src/prometheus"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/definition"
+	ksmMetric "github.com/newrelic/nri-kubernetes/v2/src/ksm/metric"
+	kubeletMetric "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
+	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
 
 // APIServerSpecs are the metric specifications we want to collect

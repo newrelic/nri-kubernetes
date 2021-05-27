@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/newrelic/nri-kubernetes/src/definition"
 	camelcase "github.com/segmentio/go-camelcase"
 	v1 "k8s.io/api/core/v1"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 )
 
 type resourceType string
