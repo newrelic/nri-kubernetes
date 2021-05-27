@@ -9,6 +9,7 @@ on:
 jobs:
   e2eTests-1-10:
     runs-on: ubuntu-20.04
+    timeout-minutes: 15
     strategy:
       max-parallel: 7 # len(k8sVersion) is a good number to have here
       fail-fast: false
@@ -55,6 +56,7 @@ jobs:
 
   e2eTests:
     runs-on: ubuntu-20.04
+    timeout-minutes: 15
     strategy:
       max-parallel: 7 # len(k8sVersion) is a good number to have here
       fail-fast: false
