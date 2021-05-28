@@ -1,5 +1,5 @@
 ARG IMAGE_NAME=newrelic/infrastructure-bundle
-ARG IMAGE_TAG=2.4.1
+ARG IMAGE_TAG=2.5.0
 
 ARG MODE=normal
 
