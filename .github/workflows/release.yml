@@ -83,10 +83,16 @@ jobs:
             -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged \
             .
 
+      - name: Buld and load x64 image for security scanning
+        # We need to build a single-arch image again to be able to --load it into the host
+        run: |
+          docker buildx build --load --platform=linux/amd64 \
+            -t $DOCKER_IMAGE_NAME:ci-scan \
+            .
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.0.18
         with:
-          image-ref: 'docker.io/${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_IMAGE_TAG }}'
+          image-ref: '${{ env.DOCKER_IMAGE_NAME }}:ci-scan'
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
