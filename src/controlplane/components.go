@@ -5,10 +5,9 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/newrelic/nri-kubernetes/src/metric"
-
-	"github.com/newrelic/nri-kubernetes/src/definition"
-	"github.com/newrelic/nri-kubernetes/src/prometheus"
+	"github.com/newrelic/nri-kubernetes/v2/src/definition"
+	"github.com/newrelic/nri-kubernetes/v2/src/metric"
+	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
 
 // Component represents a control plane component from which the

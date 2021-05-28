@@ -1,10 +1,11 @@
 package apiserver
 
 import (
-	"github.com/newrelic/nri-kubernetes/src/client"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/version"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/client"
 )
 
 // Client an interface for querying the k8s API server

@@ -8,8 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/newrelic/nri-kubernetes/e2e/timer"
 	"github.com/sirupsen/logrus"
+
+	"github.com/newrelic/nri-kubernetes/v2/e2e/timer"
 )
 
 const _helmBinary = "helm"

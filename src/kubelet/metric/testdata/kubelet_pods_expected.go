@@ -3,7 +3,7 @@ package testdata
 import (
 	"time"
 
-	"github.com/newrelic/nri-kubernetes/src/definition"
+	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 )
 
 // ExpectedRawData is the expectation for main fetch_test tests.

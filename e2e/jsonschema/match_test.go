@@ -77,7 +77,7 @@ func TestErrorValidatingTestNode(t *testing.T) {
 
 	err = MatchEntities(i.Data, s, "testdata")
 	assert.Contains(t, err.Error(), "test-node:node1-dsn.compute.internal TestNodeSample")
-	assert.Contains(t, err.Error(), "capacity: capacity is required")
+	assert.Contains(t, err.Error(), "(root): capacity is required")
 	assert.Contains(t, err.Error(), "test-node:node2-dsn.compute.internal TestNodeSample")
 	assert.Contains(t, err.Error(), "cpuUsedCores: Invalid type. Expected: number, given: string")
 }

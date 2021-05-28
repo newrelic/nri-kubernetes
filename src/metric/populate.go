@@ -2,13 +2,13 @@ package metric
 
 import (
 	"errors"
-
 	"fmt"
 
 	"github.com/newrelic/infra-integrations-sdk/sdk"
-	"github.com/newrelic/nri-kubernetes/src/data"
-	"github.com/newrelic/nri-kubernetes/src/definition"
 	"k8s.io/apimachinery/pkg/version"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/data"
+	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 )
 
 type k8sPopulator struct {

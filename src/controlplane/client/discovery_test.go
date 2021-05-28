@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/newrelic/nri-kubernetes/src/controlplane"
-	"github.com/newrelic/nri-kubernetes/src/data"
-	"github.com/newrelic/nri-kubernetes/src/definition"
+	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
+	"github.com/newrelic/nri-kubernetes/v2/src/data"
+	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )

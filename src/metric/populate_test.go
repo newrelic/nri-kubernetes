@@ -3,16 +3,16 @@ package metric
 import (
 	"errors"
 	"testing"
-
 	"time"
 
 	sdkMetric "github.com/newrelic/infra-integrations-sdk/metric"
 	"github.com/newrelic/infra-integrations-sdk/sdk"
-	"github.com/newrelic/nri-kubernetes/src/data"
-	"github.com/newrelic/nri-kubernetes/src/definition"
-	"github.com/newrelic/nri-kubernetes/src/kubelet/metric/testdata"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/version"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/data"
+	"github.com/newrelic/nri-kubernetes/v2/src/definition"
+	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric/testdata"
 )
 
 func parseTime(raw string) time.Time {

@@ -3,9 +3,10 @@ package metric
 import (
 	"testing"
 
-	"github.com/newrelic/nri-kubernetes/src/definition"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 )
 
 func TestFromRawWithFallbackToDefaultInterface_UsesRaw(t *testing.T) {

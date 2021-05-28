@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/newrelic/nri-kubernetes/src/definition"
-	"github.com/newrelic/nri-kubernetes/src/prometheus"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/definition"
+	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
 
 var rawGroups = definition.RawGroups{

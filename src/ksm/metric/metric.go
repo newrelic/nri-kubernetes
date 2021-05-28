@@ -3,11 +3,10 @@ package metric
 import (
 	"errors"
 	"fmt"
-
 	"strings"
 
-	"github.com/newrelic/nri-kubernetes/src/definition"
-	"github.com/newrelic/nri-kubernetes/src/prometheus"
+	"github.com/newrelic/nri-kubernetes/v2/src/definition"
+	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
 
 // PrometheusMetricsPath is the KSM prometheus metrics endpoint.

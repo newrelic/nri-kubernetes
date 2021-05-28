@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/newrelic/nri-kubernetes/e2e/jsonschema"
 	"k8s.io/apimachinery/pkg/version"
+
+	"github.com/newrelic/nri-kubernetes/v2/e2e/jsonschema"
 )
 
 // Scenario defines the environment that will be used for testing
