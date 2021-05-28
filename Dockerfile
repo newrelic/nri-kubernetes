@@ -1,9 +1,6 @@
-ARG IMAGE_NAME=newrelic/infrastructure-bundle
-ARG IMAGE_TAG=2.5.0
-
 ARG MODE=normal
 
-FROM $IMAGE_NAME:$IMAGE_TAG AS base
+FROM newrelic/infrastructure-bundle:2.5.0 AS base
 
 # Set by docker automatically
 # If building with `docker build`, make sure to set GOOS/GOARCH explicitly when calling make:
