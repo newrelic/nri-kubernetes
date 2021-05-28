@@ -82,6 +82,16 @@ jobs:
             --build-arg 'MODE=unprivileged' \
             -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged \
             .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@v0.0.18
+        with:
+          image-ref: 'docker.io/${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_IMAGE_TAG }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+
       - name: Push versioned images
         run: |
           docker buildx build --push --platform=$DOCKER_PLATFORMS \
