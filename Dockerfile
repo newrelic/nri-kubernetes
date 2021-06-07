@@ -1,6 +1,6 @@
 ARG MODE=normal
 
-FROM newrelic/infrastructure-bundle:2.5.0 AS base
+FROM newrelic/infrastructure-bundle:2.6.0 AS base
 
 # Set by docker automatically
 # If building with `docker build`, make sure to set GOOS/GOARCH explicitly when calling make:
