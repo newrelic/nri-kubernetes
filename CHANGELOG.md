@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ---
 
+## 2.6.0
+
+### Changed
+
+* Upgrade infrastructure-bundle to 2.6.0 (#123)
+  - See https://github.com/newrelic/infrastructure-bundle/releases/tag/2.6.0 for more details about the upgraded integrations in this release of the infrastructure-bundle
+
+## 2.5.0
+
+### Changed
+
+- Bumped all dependencies and moved to /v2 in go.mod https://github.com/newrelic/nri-kubernetes/pull/111
+- Improved e2e tests with more coverage and support for Helm3 and k8s 1.20-1.21 https://github.com/newrelic/nri-kubernetes/pull/110 https://github.com/newrelic/nri-kubernetes/pull/108
+- Improved KSM discovery logic https://github.com/newrelic/nri-kubernetes/pull/104
+
 ## 2.4.0
 
 ### Added
