@@ -1,4 +1,4 @@
-name: lint and test code
+name: static-analysis and test code
 on:
   push:
     branches:
@@ -34,12 +34,19 @@ jobs:
           go-version: '1.16'
       - name: Run unit tests
         run: make test
-  lint:
-    name: Linter
+
+  static-analysis:
+    name: Run all static analysis checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: newrelic/newrelic-infra-checkers@v1
+      - name: Semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          auditOn: push
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v2
+        continue-on-error: ${{ github.event_name != 'pull_request' }}
         with:
-          version: v1.29
+          only-new-issues: true
