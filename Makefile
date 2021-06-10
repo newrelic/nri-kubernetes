@@ -4,6 +4,8 @@ BIN_DIR = ./bin
 TOOLS_DIR := $(BIN_DIR)/dev-tools
 BINARY_NAME = nri-kubernetes
 E2E_BINARY_NAME := $(BINARY_NAME)-e2e
+GOFLAGS = -mod=readonly
+GOLANGCI_LINT = github.com/golangci/golangci-lint/cmd/golangci-lint
 
 # GOOS and GOARCH will likely come from env
 GOOS ?=
@@ -18,37 +20,27 @@ ifneq ($(strip $(GOARCH)), )
 BINARY_NAME := $(BINARY_NAME)-$(GOARCH)
 endif
 
-GOLANGCILINT_VERSION = 1.36.0
-
 .PHONY: all
 all: build
 
 .PHONY: build
-build: clean lint test compile
+build: clean validate test compile
 
 .PHONY: clean
 clean:
 	@echo "[clean] Removing integration binaries"
 	@rm -rf $(BIN_DIR)/$(BINARY_NAME) $(BIN_DIR)/$(E2E_BINARY_NAME)
 
-$(TOOLS_DIR):
-	@mkdir -p $@
+.PHONY: validate
 
-$(TOOLS_DIR)/golangci-lint: $(TOOLS_DIR)
-	@echo "[tools] Downloading 'golangci-lint'"
-	@wget -O - -q https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | BINDIR=$(@D) sh -s v$(GOLANGCILINT_VERSION) &> /dev/null
-
-.PHONY: lint
-lint: $(TOOLS_DIR)/golangci-lint
-	@echo "[validate] Validating source code running golangci-lint"
-	@$(TOOLS_DIR)/golangci-lint run
-
-.PHONY: lint-all
-lint-all: $(TOOLS_DIR)/golangci-lint
-	@echo "[validate] Validating source code running golangci-lint"
-	@$(TOOLS_DIR)/golangci-lint run
+validate:
+	@echo "[validate] Validating source code running golangci-lint & semgrep... "
+	@go run  $(GOFLAGS) $(GOLANGCI_LINT) run --verbose
+	@[ -f .semgrep.yml ] && semgrep_config=".semgrep.yml" || semgrep_config="p/golang" ; \
+	docker run --rm -v "${PWD}:/src:ro" --workdir /src returntocorp/semgrep -c "$$semgrep_config"
 
 .PHONY: compile
+
 compile:
 	@echo "[compile] Building $(BINARY_NAME)"
 	CGO_ENABLED=$(CGO_ENABLED) go build -o $(BIN_DIR)/$(BINARY_NAME) ./src
