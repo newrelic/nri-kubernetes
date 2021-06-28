@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ---
+## 2.6.1
+
+### Fixed
+
+- Integration version shown in the samples.
 
 ## 2.6.0
 
