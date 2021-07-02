@@ -63,12 +63,12 @@ jobs:
       - name: Build docker images
         run: |
           docker buildx build --platform=$DOCKER_PLATFORMS \
-            --build-arg 'BASE_IMAGE=newrelic/infrastructure-bundle-nightly' \
+            --build-arg 'BASE_IMAGE=newrelic/infrastructure-bundle:nightly' \
             -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG \
             .
           docker buildx build --platform=$DOCKER_PLATFORMS \
             --build-arg 'MODE=unprivileged' \
-            --build-arg 'BASE_IMAGE=newrelic/infrastructure-bundle-nightly' \
+            --build-arg 'BASE_IMAGE=newrelic/infrastructure-bundle:nightly' \
             -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged \
             .
 
