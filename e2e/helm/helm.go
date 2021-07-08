@@ -23,6 +23,7 @@ func InstallRelease(releaseName, path, context string, logger *logrus.Logger, co
 		releaseName,
 		path,
 		"--wait",
+		"--debug",
 	}
 
 	if len(config) > 0 {
