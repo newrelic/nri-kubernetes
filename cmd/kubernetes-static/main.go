@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"time"
 
 	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
 	"github.com/newrelic/infra-integrations-sdk/log"
@@ -52,9 +51,6 @@ func main() {
 	}
 
 	endpoint := startStaticMetricsServer(content, k8sMetricsVersion)
-
-	// let the http server start...
-	time.Sleep(time.Millisecond * 100)
 
 	integration, err := sdk.NewIntegrationProtocol2(integrationName, integrationVersion, &args)
 	if err != nil {
