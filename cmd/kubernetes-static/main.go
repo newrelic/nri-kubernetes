@@ -86,7 +86,8 @@ func main() {
 		metric2.CadvisorFetchFunc(kubeletClient, metric.CadvisorQueries))
 	// KSM
 	ksmClient := newBasicHTTPClient(endpoint + "/ksm")
-	k8sClient := new(client.MockedKubernetes)
+	k8sClient := &client.MockedKubernetes{}
+
 	serviceList := &v1.ServiceList{
 		Items: []v1.Service{
 			{
