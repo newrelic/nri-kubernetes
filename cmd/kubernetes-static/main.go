@@ -167,7 +167,7 @@ func startStaticMetricsServer(content embed.FS, k8sMetricsVersion string) string
 		logrus.Fatalf("Error listening on %q: %v", listenAddress, err)
 	}
 
-	endpoint := fmt.Sprintf("http://localhost:%d", listener.Addr().(*net.TCPAddr).Port)
+	endpoint := fmt.Sprintf("http://%s", listener.Addr())
 	fmt.Println("Hosting Mock Metrics data on:", endpoint)
 
 	mux := http.NewServeMux()
