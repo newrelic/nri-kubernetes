@@ -99,6 +99,66 @@ func main() {
 					},
 				},
 			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "cockroachdb",
+					Namespace: "default",
+				},
+				Spec: v1.ServiceSpec{
+					Selector: map[string]string{
+						"l1": "v1",
+						"l2": "v2",
+					},
+				},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "metrics-server",
+					Namespace: "kube-system",
+				},
+				Spec: v1.ServiceSpec{
+					Selector: map[string]string{
+						"l1": "v1",
+						"l2": "v2",
+					},
+				},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "kubernetes",
+					Namespace: "default",
+				},
+				Spec: v1.ServiceSpec{
+					Selector: map[string]string{
+						"l1": "v1",
+						"l2": "v2",
+					},
+				},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "kube-dns",
+					Namespace: "kube-system",
+				},
+				Spec: v1.ServiceSpec{
+					Selector: map[string]string{
+						"l1": "v1",
+						"l2": "v2",
+					},
+				},
+			},
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "cockroachdb-public",
+					Namespace: "default",
+				},
+				Spec: v1.ServiceSpec{
+					Selector: map[string]string{
+						"l1": "v1",
+						"l2": "v2",
+					},
+				},
+			},
 		},
 	}
 
