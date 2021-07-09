@@ -145,6 +145,8 @@ func main() {
 	if err := integration.Publish(); err != nil {
 		logrus.Fatalf("Error while publishing: %v", err)
 	}
+
+	fmt.Println()
 }
 
 func startStaticMetricsServer(k8sMetricsVersion string) string {
