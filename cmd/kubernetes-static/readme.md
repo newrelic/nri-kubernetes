@@ -11,7 +11,7 @@ The program wil start a temporary HTTP server and serve these files. The grouper
 
 From within root of this repository, run the following command in your terminal
 ```shell script
-go run cmd/kubernetes-static/main.go cmd/kubernetes-static/basic_http_client.go
+go run cmd/kubernetes-static/main.go
 ```
 
 This is not sending any data to an agent, but outputs the JSON to stdout.
