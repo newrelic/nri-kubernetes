@@ -15,6 +15,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/sdk"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/version"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/apiserver"
@@ -89,6 +90,10 @@ func main() {
 	serviceList := &v1.ServiceList{
 		Items: []v1.Service{
 			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "kube-state-metrics",
+					Namespace: "kube-system",
+				},
 				Spec: v1.ServiceSpec{
 					Selector: map[string]string{
 						"l1": "v1",
@@ -98,8 +103,7 @@ func main() {
 			},
 		},
 	}
-	serviceList.Items[0].Namespace = "kube-system"
-	serviceList.Items[0].Name = "kube-state-metrics"
+
 	k8sClient.On("ListServices").Return(serviceList, nil)
 	ksmGrouper := ksm.NewGrouper(ksmClient, metric.KSMQueries, logger, k8sClient)
 
