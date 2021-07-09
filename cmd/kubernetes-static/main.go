@@ -22,7 +22,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
 	"github.com/newrelic/nri-kubernetes/v2/src/ksm"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet"
-	metric2 "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
+	kubeletmetric "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
 )
@@ -72,14 +72,14 @@ func main() {
 
 	// Kubelet
 	kubeletClient := newBasicHTTPClient(endpoint + "/kubelet")
-	podsFetcher := metric2.NewPodsFetcher(logger, kubeletClient, true)
+	podsFetcher := kubeletmetric.NewPodsFetcher(logger, kubeletClient, true)
 	kubeletGrouper := kubelet.NewGrouper(
 		kubeletClient,
 		logger,
 		apiServerClient,
 		"ens5",
 		podsFetcher.FetchFuncWithCache(),
-		metric2.CadvisorFetchFunc(kubeletClient, metric.CadvisorQueries))
+		kubeletmetric.CadvisorFetchFunc(kubeletClient, metric.CadvisorQueries))
 	// KSM
 	ksmClient := newBasicHTTPClient(endpoint + "/ksm")
 	k8sClient := &client.MockedKubernetes{}
