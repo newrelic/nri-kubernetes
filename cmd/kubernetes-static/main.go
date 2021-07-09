@@ -1,8 +1,9 @@
 package main
 
 import (
-	"errors"
+	"embed"
 	"fmt"
+	"io/fs"
 	"net"
 	"net/http"
 	"os"
@@ -37,15 +38,19 @@ type argumentList struct {
 
 var args argumentList
 
-func main() {
+// Embed static metrics into binary.
+//go:embed data
+var content embed.FS
 
+func main() {
 	// Determines which subdirectory of cmd/kubernetes-static/ to use
 	// for serving the static metrics
 	k8sMetricsVersion := os.Getenv("K8S_METRICS_VERSION")
 	if k8sMetricsVersion == "" {
 		k8sMetricsVersion = "1_18"
 	}
-	endpoint := startStaticMetricsServer(k8sMetricsVersion)
+
+	endpoint := startStaticMetricsServer(content, k8sMetricsVersion)
 
 	// let the http server start...
 	time.Sleep(time.Millisecond * 100)
@@ -149,11 +154,12 @@ func main() {
 	fmt.Println()
 }
 
-func startStaticMetricsServer(k8sMetricsVersion string) string {
+func startStaticMetricsServer(content embed.FS, k8sMetricsVersion string) string {
+	listenAddress := "127.0.0.1:0"
 	// This will allocate a random port
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	listener, err := net.Listen("tcp", listenAddress)
 	if err != nil {
-		panic(err)
+		logrus.Fatalf("Error listening on %q: %v", listenAddress, err)
 	}
 
 	endpoint := fmt.Sprintf("http://localhost:%d", listener.Addr().(*net.TCPAddr).Port)
@@ -161,14 +167,13 @@ func startStaticMetricsServer(k8sMetricsVersion string) string {
 
 	mux := http.NewServeMux()
 
-	dataDir := fmt.Sprintf("./cmd/kubernetes-static/data/%s", k8sMetricsVersion)
-
-	path, err := filepath.Abs(dataDir)
+	path := filepath.Join("data", k8sMetricsVersion)
+	k8sContent, err := fs.Sub(content, path)
 	if err != nil {
-		log.Fatal(errors.New("cannot start server"))
+		logrus.Fatalf("Error taking a %q subtree of embedded data: %v", path, err)
 	}
 
-	mux.Handle("/", http.FileServer(http.Dir(path)))
+	mux.Handle("/", http.FileServer(http.FS(k8sContent)))
 	go func() {
 		logrus.Fatal(http.Serve(listener, mux))
 	}()

@@ -15,14 +15,3 @@ go run cmd/kubernetes-static/main.go cmd/kubernetes-static/basic_http_client.go
 ```
 
 This is not sending any data to an agent, but outputs the JSON to stdout.
-
-## Configuring your IDE
-
-It's import that the working directory is set to root of the repository, because it expects the `data` folder to be
-in the `cmd/kubernetes-static` directory relative to the working directory.
-
-Some IDE's/editor use a temporary folder as the working directory.
-
-Example configuration for GoLand:
-![Goland configuration example](./config_example.png)
-
