@@ -108,7 +108,6 @@ func TestComputePercentage(t *testing.T) {
 }
 
 func TestSubtract(t *testing.T) {
-
 	left := definition.FetchFunc(func(_, _ string, _ definition.RawGroups) (definition.FetchedValue, error) {
 		return prometheus.GaugeValue(10), nil
 	})
