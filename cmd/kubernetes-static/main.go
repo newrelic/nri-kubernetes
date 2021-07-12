@@ -176,7 +176,7 @@ func main() {
 		"scheduler":          "kube-scheduler-minikube",
 		"etcd":               "etcd-minikube",
 		"controller-manager": "kube-controller-manager-minikube",
-		"apiserver":          "kube-apiserver-minikube",
+		"api-server":         "kube-apiserver-minikube",
 	}
 
 	for _, component := range controlplane.BuildComponentList() {
