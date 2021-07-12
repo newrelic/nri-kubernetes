@@ -173,10 +173,10 @@ func main() {
 	// controlPlaneComponentPods maps component.Name to the pod name
 	// found in the file `cmd/kubernetes-static/data/kubelet/pods`
 	controlPlaneComponentPods := map[controlplane.ComponentName]string{
-		"scheduler":          "kube-scheduler-minikube",
-		"etcd":               "etcd-minikube",
-		"controller-manager": "kube-controller-manager-minikube",
-		"api-server":         "kube-apiserver-minikube",
+		controlplane.Scheduler:         "kube-scheduler-minikube",
+		controlplane.Etcd:              "etcd-minikube",
+		controlplane.ControllerManager: "kube-controller-manager-minikube",
+		controlplane.APIServer:         "kube-apiserver-minikube",
 	}
 
 	for _, component := range controlplane.BuildComponentList() {
