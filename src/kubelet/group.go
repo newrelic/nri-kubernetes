@@ -38,7 +38,6 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 					Errors:      []error{fmt.Errorf("error querying Kubelet. %s", err)},
 				}
 			}
-
 		}
 		fillGroupsAndMergeNonExistent(rawGroups, g)
 	}
