@@ -192,7 +192,7 @@ func main() {
 		)
 	}
 
-	k8sVersion := &version.Info{GitVersion: "v1.15.42"}
+	k8sVersion := &version.Info{GitVersion: "v1.18.19"}
 
 	for _, job := range jobs {
 
