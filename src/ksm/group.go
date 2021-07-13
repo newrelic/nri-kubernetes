@@ -24,7 +24,7 @@ type ksmGrouper struct {
 func (r *ksmGrouper) addServiceSpecSelectorToGroup(serviceGroup map[string]definition.RawMetrics) error {
 	services, err := r.k8sClient.ListServices()
 	if err != nil {
-		return err
+		return fmt.Errorf("listing services: %w", err)
 	}
 	for _, s := range services.Items {
 		serviceRawMetrics, ok := serviceGroup[fmt.Sprintf("%s_%s", s.Namespace, s.Name)]
@@ -48,7 +48,7 @@ func (r *ksmGrouper) Group(specGroups definition.SpecGroups) (definition.RawGrou
 	if err != nil {
 		return nil, &data.ErrorGroup{
 			Recoverable: false,
-			Errors:      []error{fmt.Errorf("error querying KSM. %s", err)},
+			Errors:      []error{fmt.Errorf("querying KSM: %w", err)},
 		}
 	}
 
@@ -56,7 +56,7 @@ func (r *ksmGrouper) Group(specGroups definition.SpecGroups) (definition.RawGrou
 	if servicesGroup, ok := groups["service"]; ok {
 		err = r.addServiceSpecSelectorToGroup(servicesGroup)
 		if err != nil {
-			errs = append(errs, err)
+			errs = append(errs, fmt.Errorf("adding service spec selector to group: %w", err))
 		}
 	}
 	if len(errs) == 0 {
