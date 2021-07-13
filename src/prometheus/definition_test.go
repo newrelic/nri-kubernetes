@@ -733,7 +733,7 @@ func TestFetchFunc_RawMetricNotFound(t *testing.T) {
 				testCase.rawGroups,
 			)
 			assert.Nil(t, fetchedValue)
-			assert.EqualError(t, err, "metric not found")
+			assert.EqualError(t, err, "metric \"nope\" not found")
 		})
 	}
 }
@@ -831,7 +831,7 @@ func TestFromRawValue_CorrectValue(t *testing.T) {
 func TestFromRawValue_RawMetricNotFound(t *testing.T) {
 	fetchedValue, err := FromValue("foo")("pod", "fluentd-elasticsearch-jnqb7", rawGroups)
 	assert.Nil(t, fetchedValue)
-	assert.EqualError(t, err, "metric not found")
+	assert.EqualError(t, err, "metric \"foo\" not found")
 }
 
 func TestFromRawValue_IncompatibleType(t *testing.T) {
@@ -859,7 +859,7 @@ func TestFromRawLabelValue_CorrectValue(t *testing.T) {
 func TestFromRawLabelValue_RawMetricNotFound(t *testing.T) {
 	fetchedValue, err := FromLabelValue("foo", "namespace")("pod", "fluentd-elasticsearch-jnqb7", rawGroups)
 	assert.Nil(t, fetchedValue)
-	assert.EqualError(t, err, "metric not found")
+	assert.EqualError(t, err, "metric \"foo\" not found")
 }
 
 func TestFromRawLabelValue_IncompatibleType(t *testing.T) {
@@ -948,7 +948,7 @@ func TestFromLabelValueEntityTypeGenerator_NotFound(t *testing.T) {
 	}
 
 	generatedValue, err := FromLabelValueEntityTypeGenerator("kube_replicaset_created")("replicaset", "kube-state-metrics-4044341274", raw, "clusterName")
-	assert.EqualError(t, err, "cannot fetch label namespace for metric kube_replicaset_created, label not found in prometheus metric")
+	assert.EqualError(t, err, "cannot fetch label \"namespace\" for metric \"kube_replicaset_created\": label not found in prometheus metric")
 	assert.Equal(t, "", generatedValue)
 }
 
@@ -1005,7 +1005,7 @@ func TestFromLabelValueEntityIDGenerator(t *testing.T) {
 func TestFromLabelValueEntityIDGenerator_NotFound(t *testing.T) {
 	fetchedValue, err := FromLabelValueEntityIDGenerator("non-existent-metric-key", "pod")("pod", "fluentd-elasticsearch-jnqb7", rawGroups)
 	assert.Empty(t, fetchedValue)
-	assert.EqualError(t, err, "cannot fetch label pod for metric non-existent-metric-key, metric not found")
+	assert.EqualError(t, err, "cannot fetch label \"pod\" for metric \"non-existent-metric-key\": metric \"non-existent-metric-key\" not found")
 }
 
 // --------------- FromLabelsValueEntityIDGeneratorForPendingPods ---------------

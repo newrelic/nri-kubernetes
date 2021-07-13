@@ -77,15 +77,15 @@ func getLabels(groupLabel, rawEntityID, key string, groups definition.RawGroups,
 	for _, label := range labels {
 		v, err := FromLabelValue(key, label)(groupLabel, rawEntityID, groups)
 		if err != nil {
-			return s, fmt.Errorf("cannot fetch label %s for metric %s, %s", label, key, err)
+			return s, fmt.Errorf("cannot fetch label %q for metric %q: %w", label, key, err)
 		}
 		if v == nil {
-			return s, fmt.Errorf("label %s not found for metric %s", label, key)
+			return s, fmt.Errorf("label %q not found for metric %q", label, key)
 		}
 
 		val, ok := v.(string)
 		if !ok {
-			return s, fmt.Errorf("incorrect type of label %s for metric %s", label, key)
+			return s, fmt.Errorf("unexpected type %T of label %q for metric %q", v, label, key)
 		}
 		s = append(s, val)
 	}
@@ -98,16 +98,16 @@ func FromLabelValueEntityIDGenerator(key, label string) definition.EntityIDGener
 	return func(groupLabel string, rawEntityID string, g definition.RawGroups) (string, error) {
 		v, err := FromLabelValue(key, label)(groupLabel, rawEntityID, g)
 		if err != nil {
-			return "", fmt.Errorf("cannot fetch label %s for metric %s, %s", label, key, err)
+			return "", fmt.Errorf("cannot fetch label %q for metric %q: %w", label, key, err)
 		}
 
 		if v == nil {
-			return "", fmt.Errorf("incorrect value of fetched data for metric %s", key)
+			return "", fmt.Errorf("unexpected nil value of fetched data for metric %q", key)
 		}
 
 		val, ok := v.(string)
 		if !ok {
-			return "", fmt.Errorf("incorrect type of fetched data for metric %s", key)
+			return "", fmt.Errorf("incorrect type %T of fetched data for metric %q", v, key)
 		}
 
 		return val, err
