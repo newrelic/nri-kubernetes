@@ -31,10 +31,13 @@ func (r *ksmGrouper) addServiceSpecSelectorToGroup(serviceGroup map[string]defin
 		if !ok {
 			continue
 		}
-		labels := make(prometheus.Labels)
+
+		labels := prometheus.Labels{}
+
 		for key, value := range s.Spec.Selector {
 			labels[fmt.Sprintf("selector_%s", key)] = value
 		}
+
 		serviceRawMetrics["apiserver_kube_service_spec_selectors"] = prometheus.Metric{
 			Labels: labels,
 			Value:  nil,
@@ -54,14 +57,15 @@ func (r *ksmGrouper) Group(specGroups definition.SpecGroups) (definition.RawGrou
 
 	groups, errs := prometheus.GroupMetricsBySpec(specGroups, mFamily)
 	if servicesGroup, ok := groups["service"]; ok {
-		err = r.addServiceSpecSelectorToGroup(servicesGroup)
-		if err != nil {
+		if err := r.addServiceSpecSelectorToGroup(servicesGroup); err != nil {
 			errs = append(errs, fmt.Errorf("adding service spec selector to group: %w", err))
 		}
 	}
+
 	if len(errs) == 0 {
 		return groups, nil
 	}
+
 	return groups, &data.ErrorGroup{Recoverable: true, Errors: errs}
 }
 
