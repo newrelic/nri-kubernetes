@@ -297,8 +297,8 @@ func TestIntegrationProtocol2PopulateFunc_MetricsSetsNotPopulated_OnlyEntity(t *
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
 
-	assert.Contains(t, errs, errors.New("error populating metric for entity ID entity_id_1: cannot fetch value for metric useless, metric not found"))
-	assert.Contains(t, errs, errors.New("error populating metric for entity ID entity_id_2: cannot fetch value for metric useless, metric not found"))
+	assert.Contains(t, errs, errors.New("error populating metric for entity ID entity_id_1: cannot fetch value for metric useless, metric \"nonExistentMetric\" not found"))
+	assert.Contains(t, errs, errors.New("error populating metric for entity ID entity_id_2: cannot fetch value for metric useless, metric \"nonExistentMetric\" not found"))
 	assert.Contains(t, integration.Data, &expectedEntityData1)
 	assert.Contains(t, integration.Data, &expectedEntityData2)
 }

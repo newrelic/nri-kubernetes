@@ -44,15 +44,15 @@ func TestFromRawErrorsOnNotFound(t *testing.T) {
 	}
 
 	v, err := FromRaw("metric_name_3")("nonExistingGroup", "entity2", raw)
-	assert.EqualError(t, err, "group not found")
+	assert.EqualError(t, err, "group \"nonExistingGroup\" not found")
 	assert.Nil(t, v)
 
 	v, err = FromRaw("metric_name_3")("group1", "nonExistingEntity", raw)
-	assert.EqualError(t, err, "entity not found")
+	assert.EqualError(t, err, "entity \"nonExistingEntity\" not found")
 	assert.Nil(t, v)
 
 	v, err = FromRaw("non_existing_metric")("group1", "entity2", raw)
-	assert.EqualError(t, err, "metric not found")
+	assert.EqualError(t, err, "metric \"non_existing_metric\" not found")
 	assert.Nil(t, v)
 }
 
@@ -99,14 +99,14 @@ func TestTransformBypassesError(t *testing.T) {
 	}
 
 	v, err := Transform(FromRaw("metric_name_3"), transformFunc)("nonExistingGroup", "entity2", raw)
-	assert.EqualError(t, err, "group not found")
+	assert.EqualError(t, err, "group \"nonExistingGroup\" not found")
 	assert.Nil(t, v)
 
 	v, err = Transform(FromRaw("metric_name_3"), transformFunc)("group1", "nonExistingEntity", raw)
-	assert.EqualError(t, err, "entity not found")
+	assert.EqualError(t, err, "entity \"nonExistingEntity\" not found")
 	assert.Nil(t, v)
 
 	v, err = Transform(FromRaw("non_existing_metric"), transformFunc)("group1", "entity2", raw)
-	assert.EqualError(t, err, "metric not found")
+	assert.EqualError(t, err, "metric \"non_existing_metric\" not found")
 	assert.Nil(t, v)
 }
