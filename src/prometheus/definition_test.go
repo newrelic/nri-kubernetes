@@ -1656,3 +1656,127 @@ func TestControlPlaneComponentTypeGenerator(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "k8s:myCluster:controlplane:my-component", generatedType)
 }
+
+func TestFromLabelValueWithLabelInName(t *testing.T) {
+	t.Parallel()
+
+	raw := rawGroupsWithNodeStatusConditionMetric()
+
+	t.Run("returns_error_when_given_raw_metric", func(t *testing.T) {
+		t.Parallel()
+
+		t.Run("is_not_found", func(t *testing.T) {
+			t.Parallel()
+
+			fetchF := FromLabelValueWithLabelInName("non_existing_metric", "condition", "foo.%s", "status")
+			values, err := fetchF("node", "minikube", raw)
+
+			require.Error(t, err)
+			require.Empty(t, values)
+		})
+
+		t.Run("has_unexpected_format", func(t *testing.T) {
+			t.Parallel()
+
+			raw := rawGroupsWithNodeStatusConditionMetric()
+			raw["node"]["minikube"]["kube_node_status_condition"] = struct{}{}
+
+			fetchF := FromLabelValueWithLabelInName("kube_node_status_condition", "condition", "f.%s", "status")
+			values, err := fetchF("node", "minikube", raw)
+
+			require.Error(t, err)
+			require.Empty(t, values)
+		})
+
+		t.Run("has_no_requested_name_label", func(t *testing.T) {
+			t.Parallel()
+
+			fetchF := FromLabelValueWithLabelInName("kube_node_status_condition", "non_existing_label", "f.%s", "status")
+			values, err := fetchF("node", "minikube", raw)
+
+			require.Error(t, err)
+			require.Empty(t, values)
+		})
+
+		t.Run("has_no_requested_value_label", func(t *testing.T) {
+			t.Parallel()
+
+			fetchF := FromLabelValueWithLabelInName("kube_node_status_condition", "condition", "f.%s", "non_existing_label")
+			values, err := fetchF("node", "minikube", raw)
+
+			require.Error(t, err)
+			require.Empty(t, values)
+		})
+	})
+
+	t.Run("returns_values_with_name_label_value_in_metric_name_and_value_from_value_label", func(t *testing.T) {
+		t.Parallel()
+
+		fetchF := FromLabelValueWithLabelInName("kube_node_status_condition", "condition", "f.%s", "status")
+		valuesRaw, err := fetchF("node", "minikube", raw)
+
+		require.NoError(t, err)
+		require.NotEmpty(t, valuesRaw)
+
+		expectedValue := definition.FetchedValues{"f.DiskPressure": "true"}
+		require.Equal(t, expectedValue, valuesRaw)
+	})
+
+	t.Run("returns_values_for_all_raw_metrics_found", func(t *testing.T) {
+		t.Parallel()
+
+		raw := rawGroupsWithNodeStatusConditionMetric()
+		raw["node"]["minikube"]["kube_node_status_condition"] = []Metric{
+			{
+				Labels: map[string]string{
+					"node":      "minikube",
+					"condition": "DiskPressure",
+					"status":    "true",
+				},
+			},
+			{
+				Labels: map[string]string{
+					"node":      "minikube",
+					"condition": "PIDPressure",
+					"status":    "false",
+				},
+			},
+			{
+				Labels: map[string]string{
+					"node":      "minikube",
+					"condition": "MemoryPressure",
+					"status":    "unknown",
+				},
+			},
+		}
+
+		fetchF := FromLabelValueWithLabelInName("kube_node_status_condition", "condition", "f.%s", "status")
+		valuesRaw, err := fetchF("node", "minikube", raw)
+
+		require.NoError(t, err)
+		require.NotEmpty(t, valuesRaw)
+
+		expectedValue := definition.FetchedValues{
+			"f.DiskPressure":   "true",
+			"f.PIDPressure":    "false",
+			"f.MemoryPressure": "unknown",
+		}
+		require.Equal(t, expectedValue, valuesRaw)
+	})
+}
+
+func rawGroupsWithNodeStatusConditionMetric() definition.RawGroups {
+	return definition.RawGroups{
+		"node": {
+			"minikube": definition.RawMetrics{
+				"kube_node_status_condition": Metric{
+					Labels: map[string]string{
+						"node":      "minikube",
+						"condition": "DiskPressure",
+						"status":    "true",
+					},
+				},
+			},
+		},
+	}
+}
