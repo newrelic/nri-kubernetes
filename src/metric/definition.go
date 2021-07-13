@@ -1025,11 +1025,11 @@ func toUtilization(dividendMetric, divisorMetric string) definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 		dividend, err := definition.FromRaw(dividendMetric)(groupLabel, entityID, groups)
 		if err != nil {
-			return nil, fmt.Errorf("'%s' is nil", dividendMetric)
+			return nil, fmt.Errorf("getting divident metric %q: %w", dividendMetric, err)
 		}
 		divisor, err := definition.FromRaw(divisorMetric)(groupLabel, entityID, groups)
 		if err != nil {
-			return nil, fmt.Errorf("'%s' is nil", divisorMetric)
+			return nil, fmt.Errorf("getting divisor metric %q: %w", divisorMetric, err)
 		}
 		return computePercentage(dividend.(uint64), divisor.(uint64))
 	}
