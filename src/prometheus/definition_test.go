@@ -625,6 +625,126 @@ func TestGroupMetricsBySpec_EmptyMetricFamily(t *testing.T) {
 	assert.Empty(t, metricGroup)
 }
 
+// To preserve old behavior.
+func TestGroupMetricsBySpec_returns_single_metric_with_one_metric_in_metric_family(t *testing.T) {
+	groupLabel := "node"
+	metricName := "metricName"
+	rawMetricName := "rawMetricName"
+	entityName := "entityName"
+
+	spec := definition.SpecGroups{
+		groupLabel: definition.SpecGroup{
+			Specs: []definition.Spec{
+				{
+					Name:      metricName,
+					ValueFunc: FromValue(rawMetricName),
+					Type:      metric.GAUGE,
+				},
+			},
+		},
+	}
+
+	metricFamily := []MetricFamily{
+		{
+			Name: rawMetricName,
+			Metrics: []Metric{
+				{
+					Value: GaugeValue(1),
+					Labels: map[string]string{
+						groupLabel: entityName,
+					},
+				},
+			},
+		},
+	}
+
+	expectedRawGroups := definition.RawGroups{
+		groupLabel: {
+			entityName: definition.RawMetrics{
+				rawMetricName: Metric{
+					Value: GaugeValue(1),
+					Labels: map[string]string{
+						groupLabel: entityName,
+					},
+				},
+			},
+		},
+	}
+
+	metricGroup, errs := GroupMetricsBySpec(spec, metricFamily)
+	assert.Empty(t, errs)
+	assert.Equal(t, expectedRawGroups, metricGroup)
+}
+
+// To be able to process multiple metrics of the same type, like 'kube_node_status_condition'.
+func TestGroupMetricsBySpec_does_not_override_metric_when_there_is_more_than_one_in_metric_family(t *testing.T) {
+	groupLabel := "node"
+	metricName := "metricName"
+	rawMetricName := "rawMetricName"
+	entityName := "entityName"
+
+	spec := definition.SpecGroups{
+		groupLabel: definition.SpecGroup{
+			Specs: []definition.Spec{
+				{
+					Name:      metricName,
+					ValueFunc: FromValue(rawMetricName),
+					Type:      metric.GAUGE,
+				},
+			},
+		},
+	}
+
+	metricFamily := []MetricFamily{
+		{
+			Name: rawMetricName,
+			Metrics: []Metric{
+				{
+					Value: GaugeValue(1),
+					Labels: map[string]string{
+						groupLabel:  entityName,
+						"condition": "DiskPressure",
+					},
+				},
+				{
+					Value: GaugeValue(1),
+					Labels: map[string]string{
+						groupLabel:  entityName,
+						"condition": "MemoryPressure",
+					},
+				},
+			},
+		},
+	}
+
+	expectedRawGroups := definition.RawGroups{
+		groupLabel: {
+			entityName: definition.RawMetrics{
+				rawMetricName: []Metric{
+					{
+						Value: GaugeValue(1),
+						Labels: map[string]string{
+							groupLabel:  entityName,
+							"condition": "DiskPressure",
+						},
+					},
+					{
+						Value: GaugeValue(1),
+						Labels: map[string]string{
+							groupLabel:  entityName,
+							"condition": "MemoryPressure",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	metricGroup, errs := GroupMetricsBySpec(spec, metricFamily)
+	assert.Empty(t, errs)
+	assert.Equal(t, expectedRawGroups, metricGroup)
+}
+
 func TestGroupEntityMetricsBySpec_CorrectValue(t *testing.T) {
 	metricGroup, errs := GroupEntityMetricsBySpec(
 		summarySpec,

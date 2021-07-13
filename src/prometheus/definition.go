@@ -236,6 +236,16 @@ func GroupMetricsBySpec(specs definition.SpecGroups, families []MetricFamily) (g
 					g[groupLabel][rawEntityID] = make(definition.RawMetrics)
 				}
 
+				if v, ok := g[groupLabel][rawEntityID][f.Name]; ok {
+					if oldMetric, ok := v.(Metric); ok {
+						g[groupLabel][rawEntityID][f.Name] = []Metric{oldMetric}
+					}
+
+					g[groupLabel][rawEntityID][f.Name] = append(g[groupLabel][rawEntityID][f.Name].([]Metric), m)
+
+					continue
+				}
+
 				g[groupLabel][rawEntityID][f.Name] = m
 			}
 		}
