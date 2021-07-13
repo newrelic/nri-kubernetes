@@ -484,6 +484,138 @@ func TestGroupMetricsBySpec_CorrectValue_ContainersWithTheSameName(t *testing.T)
 	assert.Equal(t, expectedMetricGroup, metricGroup)
 }
 
+func Test_GroupMetricsBySpec_does_not_add_unrelated_entity_metrics(t *testing.T) {
+	groupLabelMetricName := "groupLabelMetricName"
+	groupLabelRawMetricName := "groupLabelRawMetricName"
+	groupLabelEntityName := "groupLabelEntityName"
+
+	unrelatedMetricName := "unrelatedMetricName"
+	unrelatedRawMetricName := "unrelatedRawMetricName"
+	unreleatedEntityName := "unreleatedEntityName"
+
+	cases := map[string]struct {
+		groupLabel          string
+		unrelatedLabel      string
+		unrelatedMetricName string
+	}{
+		"from_daemonset_to_namespace": {
+			groupLabel:          "namespace",
+			unrelatedLabel:      "daemonset",
+			unrelatedMetricName: fmt.Sprintf("%s_%s", groupLabelEntityName, unreleatedEntityName),
+		},
+		"from_pod_to_namespace": {
+			groupLabel:          "namespace",
+			unrelatedLabel:      "pod",
+			unrelatedMetricName: fmt.Sprintf("%s_%s", groupLabelEntityName, unreleatedEntityName),
+		},
+		"from_endpoint_to_namespace": {
+			groupLabel:          "namespace",
+			unrelatedLabel:      "endpoint",
+			unrelatedMetricName: fmt.Sprintf("%s_%s", groupLabelEntityName, unreleatedEntityName),
+		},
+		"from_service_to_namespace": {
+			groupLabel:          "namespace",
+			unrelatedLabel:      "service",
+			unrelatedMetricName: fmt.Sprintf("%s_%s", groupLabelEntityName, unreleatedEntityName),
+		},
+		"from_deployment_to_namespace": {
+			groupLabel:          "namespace",
+			unrelatedLabel:      "deployment",
+			unrelatedMetricName: fmt.Sprintf("%s_%s", groupLabelEntityName, unreleatedEntityName),
+		},
+		"from_replicaset_to_namespace": {
+			groupLabel:          "namespace",
+			unrelatedLabel:      "replicaset",
+			unrelatedMetricName: fmt.Sprintf("%s_%s", groupLabelEntityName, unreleatedEntityName),
+		},
+		"from_pod_to_node": {
+			groupLabel:          "node",
+			unrelatedLabel:      "pod",
+			unrelatedMetricName: fmt.Sprintf("_%s", unreleatedEntityName),
+		},
+	}
+
+	for caseName, c := range cases {
+		c := c
+		t.Run(caseName, func(t *testing.T) {
+			spec := definition.SpecGroups{
+				c.groupLabel: definition.SpecGroup{
+					Specs: []definition.Spec{
+						{
+							Name:      groupLabelMetricName,
+							ValueFunc: FromValue(groupLabelRawMetricName),
+							Type:      metric.GAUGE,
+						},
+					},
+				},
+				c.unrelatedLabel: definition.SpecGroup{
+					Specs: []definition.Spec{
+						{
+							Name:      unrelatedMetricName,
+							ValueFunc: FromValue(unrelatedRawMetricName),
+							Type:      metric.GAUGE,
+						},
+					},
+				},
+			}
+
+			metricFamily := []MetricFamily{
+				{
+					Name: groupLabelRawMetricName,
+					Metrics: []Metric{
+						{
+							Value: GaugeValue(1),
+							Labels: map[string]string{
+								c.groupLabel: groupLabelEntityName,
+							},
+						},
+					},
+				},
+				{
+					Name: unrelatedRawMetricName,
+					Metrics: []Metric{
+						{
+							Value: GaugeValue(1),
+							Labels: map[string]string{
+								c.groupLabel:     groupLabelEntityName,
+								c.unrelatedLabel: unreleatedEntityName,
+							},
+						},
+					},
+				},
+			}
+
+			expectedRawGroups := definition.RawGroups{
+				c.groupLabel: {
+					groupLabelEntityName: definition.RawMetrics{
+						groupLabelRawMetricName: Metric{
+							Value: GaugeValue(1),
+							Labels: map[string]string{
+								c.groupLabel: groupLabelEntityName,
+							},
+						},
+					},
+				},
+				c.unrelatedLabel: {
+					c.unrelatedMetricName: definition.RawMetrics{
+						unrelatedRawMetricName: Metric{
+							Value: GaugeValue(1),
+							Labels: map[string]string{
+								c.groupLabel:     groupLabelEntityName,
+								c.unrelatedLabel: unreleatedEntityName,
+							},
+						},
+					},
+				},
+			}
+
+			metricGroup, errs := GroupMetricsBySpec(spec, metricFamily)
+			assert.Empty(t, errs)
+			assert.Equal(t, expectedRawGroups, metricGroup)
+		})
+	}
+}
+
 func TestGroupMetricsBySpec_EmptyMetricFamily(t *testing.T) {
 	var emptyMetricFamily []MetricFamily
 

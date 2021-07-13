@@ -204,6 +204,21 @@ func GroupMetricsBySpec(specs definition.SpecGroups, families []MetricFamily) (g
 
 				rawEntityID := ""
 
+				// Skip adding too specific metrics for higher level groups. E.g. don't add Pod metrics to Node group,
+				// as there will be 1 to many relationship between them and those metrics will be overwritten anyway,
+				// as we use namespace name or node name as a key.
+				if groupLabel == "node" && m.Labels.Has("pod") {
+					continue
+				}
+
+				if groupLabel == "namespace" && (m.Labels.Has("daemonset") ||
+					m.Labels.Has("pod") ||
+					m.Labels.Has("endpoint") ||
+					m.Labels.Has("service") ||
+					m.Labels.Has("deployment") || m.Labels.Has("replicaset")) {
+					continue
+				}
+
 				switch groupLabel {
 				case "namespace", "node":
 					rawEntityID = m.Labels[groupLabel]
