@@ -32,17 +32,17 @@ type TransformFunc func(FetchedValue) (FetchedValue, error)
 // FromRaw fetches metrics from raw metrics. Is the most simple use case.
 func FromRaw(metricKey string) FetchFunc {
 	return func(groupLabel, entityID string, groups RawGroups) (FetchedValue, error) {
-		g, ok := groups[groupLabel]
+		group, ok := groups[groupLabel]
 		if !ok {
 			return nil, errors.New("group not found")
 		}
 
-		e, ok := g[entityID]
+		entity, ok := group[entityID]
 		if !ok {
 			return nil, errors.New("entity not found")
 		}
 
-		value, ok := e[metricKey]
+		value, ok := entity[metricKey]
 		if !ok {
 			return nil, errors.New("metric not found")
 		}
