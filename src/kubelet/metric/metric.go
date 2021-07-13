@@ -211,20 +211,19 @@ func GroupStatsSummary(statsSummary v1.Summary) (definition.RawGroups, []error) 
 		return g, errs
 	}
 
-PodListLoop:
 	for _, pod := range statsSummary.Pods {
 		rawPodMetrics, rawEntityID, err := fetchPodStats(pod)
 		if err != nil {
 			errs = append(errs, err)
-			continue PodListLoop
+			continue
 		}
+
 		g["pod"][rawEntityID] = rawPodMetrics
-	VolumeListLoop:
 		for _, volume := range pod.VolumeStats {
 			rawVolumeMetrics, err := fetchVolumeStats(volume)
 			if err != nil {
 				errs = append(errs, err)
-				continue VolumeListLoop
+				continue
 			}
 			rawVolumeMetrics["podName"] = rawPodMetrics["podName"]
 			rawVolumeMetrics["namespace"] = rawPodMetrics["namespace"]
@@ -232,17 +231,11 @@ PodListLoop:
 			g["volume"][rawEntityID] = rawVolumeMetrics
 		}
 
-		if pod.Containers == nil {
-			// Some pods could have no containers yet or containers could be in a back-off pulling image status.
-			continue PodListLoop
-		}
-
-	ContainerListLoop:
 		for _, container := range pod.Containers {
 			rawContainerMetrics, err := fetchContainerStats(container)
 			if err != nil {
 				errs = append(errs, err)
-				continue ContainerListLoop
+				continue
 			}
 			rawContainerMetrics["podName"] = rawPodMetrics["podName"]
 			rawContainerMetrics["namespace"] = rawPodMetrics["namespace"]
