@@ -259,6 +259,7 @@ var summarySpec = definition.SpecGroups{
 func float64Ptr(f float64) *float64 {
 	return &f
 }
+
 func uint64Ptr(u uint64) *uint64 {
 	return &u
 }
@@ -493,7 +494,6 @@ func TestGroupMetricsBySpec_EmptyMetricFamily(t *testing.T) {
 }
 
 func TestGroupEntityMetricsBySpec_CorrectValue(t *testing.T) {
-
 	metricGroup, errs := GroupEntityMetricsBySpec(
 		summarySpec,
 		summaryMetricFamily,
@@ -517,7 +517,6 @@ func TestGroupEntityMetricsBySpec_NoMatch(t *testing.T) {
 }
 
 func TestFetchFuncs_CorrectValue(t *testing.T) {
-
 	testCases := []struct {
 		name                 string
 		rawGroups            definition.RawGroups
@@ -697,7 +696,6 @@ func TestFetchFuncs_CorrectValue(t *testing.T) {
 }
 
 func TestFetchFunc_RawMetricNotFound(t *testing.T) {
-
 	testCases := []struct {
 		name                 string
 		rawGroups            definition.RawGroups
@@ -729,7 +727,6 @@ func TestFetchFunc_RawMetricNotFound(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-
 			fetchedValue, err := testCase.fetchFunc(
 				"scheduler",
 				"kube-scheduler-minikube",
@@ -742,7 +739,6 @@ func TestFetchFunc_RawMetricNotFound(t *testing.T) {
 }
 
 func TestFetchFunc_IncompatibleType(t *testing.T) {
-
 	testCases := []struct {
 		name                 string
 		rawGroups            definition.RawGroups
@@ -803,7 +799,6 @@ func TestFetchFunc_IncompatibleType(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-
 			fetchedValue, err := testCase.fetchFunc(
 				"scheduler",
 				"kube-scheduler-minikube",
@@ -834,14 +829,12 @@ func TestFromRawValue_CorrectValue(t *testing.T) {
 }
 
 func TestFromRawValue_RawMetricNotFound(t *testing.T) {
-
 	fetchedValue, err := FromValue("foo")("pod", "fluentd-elasticsearch-jnqb7", rawGroups)
 	assert.Nil(t, fetchedValue)
 	assert.EqualError(t, err, "metric not found")
 }
 
 func TestFromRawValue_IncompatibleType(t *testing.T) {
-
 	fetchedValue, err := FromValue("kube_pod_start_time")("pod", "fluentd-elasticsearch-jnqb7", rawGroupsIncompatibleType)
 	assert.Nil(t, fetchedValue)
 	assert.EqualError(
@@ -864,21 +857,18 @@ func TestFromRawLabelValue_CorrectValue(t *testing.T) {
 }
 
 func TestFromRawLabelValue_RawMetricNotFound(t *testing.T) {
-
 	fetchedValue, err := FromLabelValue("foo", "namespace")("pod", "fluentd-elasticsearch-jnqb7", rawGroups)
 	assert.Nil(t, fetchedValue)
 	assert.EqualError(t, err, "metric not found")
 }
 
 func TestFromRawLabelValue_IncompatibleType(t *testing.T) {
-
 	fetchedValue, err := FromLabelValue("kube_pod_start_time", "namespace")("pod", "fluentd-elasticsearch-jnqb7", rawGroupsIncompatibleType)
 	assert.Nil(t, fetchedValue)
 	assert.EqualError(t, err, "incompatible metric type. Expected: Metric. Got: string")
 }
 
 func TestFromRawLabelValue_LabelNotFoundInRawMetric(t *testing.T) {
-
 	fetchedValue, err := FromLabelValue("kube_pod_start_time", "foo")("pod", "fluentd-elasticsearch-jnqb7", rawGroups)
 	assert.Nil(t, fetchedValue)
 	assert.EqualError(t, err, "label not found in prometheus metric")
@@ -900,7 +890,7 @@ func TestFromLabelValueEntityTypeGenerator_CorrectValueNamespace(t *testing.T) {
 }
 
 func TestFromLabelValueEntityTypeGenerator_CorrectValueReplicaset(t *testing.T) {
-	var raw = definition.RawGroups{
+	raw := definition.RawGroups{
 		"replicaset": {
 			"kube-state-metrics-4044341274": definition.RawMetrics{
 				"kube_replicaset_created": Metric{
@@ -921,7 +911,7 @@ func TestFromLabelValueEntityTypeGenerator_CorrectValueReplicaset(t *testing.T) 
 }
 
 func TestFromLabelValueEntityTypeGenerator_CorrectValueContainer(t *testing.T) {
-	var raw = definition.RawGroups{
+	raw := definition.RawGroups{
 		"container": {
 			"kube-system_fluentd-elasticsearch-jnqb7_kube-state-metrics": definition.RawMetrics{
 				"kube_pod_container_info": Metric{
@@ -944,7 +934,7 @@ func TestFromLabelValueEntityTypeGenerator_CorrectValueContainer(t *testing.T) {
 }
 
 func TestFromLabelValueEntityTypeGenerator_NotFound(t *testing.T) {
-	var raw = definition.RawGroups{
+	raw := definition.RawGroups{
 		"replicaset": {
 			"kube-state-metrics-4044341274": definition.RawMetrics{
 				"kube_replicaset_created": Metric{
@@ -963,7 +953,7 @@ func TestFromLabelValueEntityTypeGenerator_NotFound(t *testing.T) {
 }
 
 func TestFromLabelValueEntityTypeGenerator_EmptyPodNameForContainer(t *testing.T) {
-	var raw = definition.RawGroups{
+	raw := definition.RawGroups{
 		"container": {
 			"kube-system_fluentd-elasticsearch-jnqb7_kube-state-metrics": definition.RawMetrics{
 				"kube_pod_container_info": Metric{
@@ -985,7 +975,7 @@ func TestFromLabelValueEntityTypeGenerator_EmptyPodNameForContainer(t *testing.T
 }
 
 func TestFromLabelValueEntityTypeGenerator_EmptyNamespace(t *testing.T) {
-	var raw = definition.RawGroups{
+	raw := definition.RawGroups{
 		"pod": {
 			"kube-system_fluentd-elasticsearch-jnqb7": definition.RawMetrics{
 				"kube_pod_start_time": Metric{
@@ -1105,6 +1095,7 @@ func TestInheritSpecificLabelsFrom_Namespace(t *testing.T) {
 	expectedValue := definition.FetchedValues{"inherited-namespace": "kube-system"}
 	assert.Equal(t, expectedValue, fetchedValue)
 }
+
 func TestInheritSpecificLabelValuesFrom_RelatedMetricNotFound(t *testing.T) {
 	containerRawEntityID := "kube-system_kube-addon-manager-minikube_kube-addon-manager"
 	raw := definition.RawGroups{
@@ -1350,6 +1341,7 @@ func TestInheritAllLabelsFrom_FromTheSameLabelGroup(t *testing.T) {
 	expectedValue := definition.FetchedValues{"label.deployment": "newrelic-infra-monitoring", "label.namespace": "kube-public", "label.app": "newrelic-infra-monitoring"}
 	assert.Equal(t, expectedValue, fetchedValue)
 }
+
 func TestInheritAllLabelsFrom_LabelNotFound(t *testing.T) {
 	podRawEntityID := "kube-system_kube-addon-manager-minikube"
 	raw := definition.RawGroups{
