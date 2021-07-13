@@ -122,7 +122,7 @@ func metricSetPopulateFunc(ms metric.MetricSet, groupLabel, entityID string) Pop
 			val, err := ex.ValueFunc(groupLabel, entityID, groups)
 			if err != nil {
 				if !ex.Optional {
-					errs = append(errs, fmt.Errorf("cannot fetch value for metric %s, %s", ex.Name, err))
+					errs = append(errs, fmt.Errorf("cannot fetch value for metric %q: %w", ex.Name, err))
 				}
 				continue
 			}
