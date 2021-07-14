@@ -12,6 +12,11 @@ GOOS ?=
 GOARCH ?=
 CGO_ENABLED ?= 0
 
+TAG ?= dev
+COMMIT ?= $(shell git rev-parse HEAD || echo "unknown")
+
+LDFLAGS ?= -ldflags="-X 'main.integrationVersion=$(TAG)' -X 'main.integrationCommitHash=$(COMMIT)'"
+
 ifneq ($(strip $(GOOS)), )
 BINARY_NAME := $(BINARY_NAME)-$(GOOS)
 endif
@@ -43,7 +48,7 @@ validate:
 
 compile:
 	@echo "[compile] Building $(BINARY_NAME)"
-	CGO_ENABLED=$(CGO_ENABLED) go build -o $(BIN_DIR)/$(BINARY_NAME) ./src
+	CGO_ENABLED=$(CGO_ENABLED) go build $(LDFLAGS) -o $(BIN_DIR)/$(BINARY_NAME) ./src
 
 .PHONY: compile-multiarch
 compile-multiarch:
@@ -54,7 +59,7 @@ compile-multiarch:
 .PHONY: compile-dev
 compile-dev:
 	@echo "[compile-dev] Building $(BINARY_NAME) for development environment"
-	@GOOS=linux GOARCH=amd64 go build -o $(BIN_DIR)/$(BINARY_NAME) ./src
+	@GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(BIN_DIR)/$(BINARY_NAME) ./src
 
 .PHONY: deploy-dev
 deploy-dev: compile-dev

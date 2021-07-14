@@ -69,9 +69,13 @@ const (
 	defaultAPIServerCacheK8SVersionTTL = time.Hour * 3
 	defaultDiscoveryCacheTTL           = time.Hour
 
-	integrationName    = "com.newrelic.kubernetes"
-	integrationVersion = "2.6.1"
-	nodeNameEnvVar     = "NRK8S_NODE_NAME"
+	integrationName = "com.newrelic.kubernetes"
+	nodeNameEnvVar  = "NRK8S_NODE_NAME"
+)
+
+var (
+	integrationVersion    = "dev"
+	integrationCommitHash = "unknown"
 )
 
 var args argumentList
@@ -201,7 +205,7 @@ func main() {
 	}()
 
 	defer logger.Debug(exitLog)
-	logger.Debugf("Integration %q with version %s started", integrationName, integrationVersion)
+	logger.Debugf("Integration %q ver. %s (git %s) started", integrationName, integrationVersion, integrationCommitHash)
 	if args.ClusterName == "" {
 		logger.Panic(errors.New("cluster_name argument is mandatory"))
 	}
