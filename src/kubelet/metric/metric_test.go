@@ -2,7 +2,6 @@ package metric
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"testing"
 
@@ -13,20 +12,24 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 )
 
-var responseContainerWithTheSameName = `{ "pods": [ { "podRef": { "name": "newrelic-infra-monitoring-pjp0v", "namespace": "kube-system", "uid": "b5a9c98f-d34f-11e7-95fe-62d16fb0cc7f" }, "startTime": "2017-11-30T09:12:37Z", "containers": [ { "name": "kube-state-metrics", "startTime": "2017-11-30T09:12:51Z", "cpu": { "time": "2017-11-30T14:48:10Z", "usageNanoCores": 184087, "usageCoreNanoSeconds": 4284675040 }, "memory": { "time": "2017-11-30T14:48:10Z", "usageBytes": 22552576, "workingSetBytes": 15196160, "rssBytes": 7352320, "pageFaults": 4683, "majorPageFaults": 152 }, "rootfs": { "time": "2017-11-30T14:48:10Z", "availableBytes": 6911750144, "capacityBytes": 17293533184, "usedBytes": 35000320, "inodesFree": 9574871, "inodes": 9732096, "inodesUsed": 24 }, "logs": { "time": "2017-11-30T14:48:10Z", "availableBytes": 6911750144, "capacityBytes": 17293533184, "usedBytes": 20480, "inodesFree": 9574871, "inodes": 9732096, "inodesUsed": 157225 }, "userDefinedMetrics": null }, { "name": "newrelic-infra", "startTime": "2017-11-30T09:12:44Z", "cpu": { "time": "2017-11-30T14:48:12Z", "usageNanoCores": 13046199, "usageCoreNanoSeconds": 303855795298 }, "memory": { "time": "2017-11-30T14:48:12Z", "usageBytes": 243638272, "workingSetBytes": 38313984, "rssBytes": 15785984, "pageFaults": 10304448, "majorPageFaults": 217 }, "rootfs": { "time": "2017-11-30T14:48:12Z", "availableBytes": 6911750144, "capacityBytes": 17293533184, "usedBytes": 1305837568, "inodesFree": 9574871, "inodes": 9732096, "inodesUsed": 52 }, "logs": { "time": "2017-11-30T14:48:12Z", "availableBytes": 6911750144, "capacityBytes": 17293533184, "usedBytes": 657747968, "inodesFree": 9574871, "inodes": 9732096, "inodesUsed": 157225 }, "userDefinedMetrics": null } ], "network": { "time": "2017-11-30T14:48:12Z", "rxBytes": 15741653, "rxErrors": 0, "txBytes": 19551073, "txErrors": 0 }, "volume": [ { "time": "2017-11-30T09:13:29Z", "availableBytes": 1048637440, "capacityBytes": 1048649728, "usedBytes": 12288, "inodesFree": 256009, "inodes": 256018, "inodesUsed": 9, "name": "default-token-7cg8m" } ] }, { "podRef": { "name": "kube-dns-910330662-pflkj", "namespace": "kube-system", "uid": "a6f2130b-a21e-11e7-8db6-62d16fb0cc7f" }, "startTime": "2017-11-30T09:12:36Z", "containers": [ { "name": "kube-state-metrics", "startTime": "2017-11-30T09:12:51Z", "cpu": { "time": "2017-11-30T14:48:10Z", "usageNanoCores": 184087, "usageCoreNanoSeconds": 4284675040 }, "memory": { "time": "2017-11-30T14:48:10Z", "usageBytes": 22552576, "workingSetBytes": 15196160, "rssBytes": 7352320, "pageFaults": 4683, "majorPageFaults": 152 }, "rootfs": { "time": "2017-11-30T14:48:10Z", "availableBytes": 6911750144, "capacityBytes": 17293533184, "usedBytes": 35000320, "inodesFree": 9574871, "inodes": 9732096, "inodesUsed": 24 }, "logs": { "time": "2017-11-30T14:48:10Z", "availableBytes": 6911750144, "capacityBytes": 17293533184, "usedBytes": 20480, "inodesFree": 9574871, "inodes": 9732096, "inodesUsed": 157225 }, "userDefinedMetrics": null }, { "name": "dnsmasq", "startTime": "2017-11-30T09:12:43Z", "cpu": { "time": "2017-11-30T14:48:07Z", "usageNanoCores": 208374, "usageCoreNanoSeconds": 3653471654 }, "memory": { "time": "2017-11-30T14:48:07Z", "usageBytes": 19812352, "workingSetBytes": 12828672, "rssBytes": 5201920, "pageFaults": 3376, "majorPageFaults": 139 }, "rootfs": { "time": "2017-11-30T14:48:07Z", "availableBytes": 6911750144, "capacityBytes": 17293533184, "usedBytes": 42041344, "inodesFree": 9574871, "inodes": 9732096, "inodesUsed": 20 }, "logs": { "time": "2017-11-30T14:48:07Z", "availableBytes": 6911750144, "capacityBytes": 17293533184, "usedBytes": 20480, "inodesFree": 9574871, "inodes": 9732096, "inodesUsed": 157225 }, "userDefinedMetrics": null } ], "network": { "time": "2017-11-30T14:48:07Z", "rxBytes": 14447980, "rxErrors": 0, "txBytes": 15557657, "txErrors": 0 }, "volume": [ { "time": "2017-11-30T09:13:29Z", "availableBytes": 1048637440, "capacityBytes": 1048649728, "usedBytes": 12288, "inodesFree": 256009, "inodes": 256018, "inodesUsed": 9, "name": "default-token-7cg8m" } ] } ] }`
-var responseMissingContainerName = `{ "pods": [ { "podRef": { "name": "newrelic-infra-monitoring-pjp0v", "namespace": "kube-system", "uid": "b5a9c98f-d34f-11e7-95fe-62d16fb0cc7f" }, "startTime": "2017-11-30T09:12:37Z", "containers": [ { "startTime": "2017-11-30T09:12:51Z", "cpu": { "time": "2017-11-30T14:48:10Z", "usageNanoCores": 184087, "usageCoreNanoSeconds": 4284675040 }, "memory": { "time": "2017-11-30T14:48:10Z", "usageBytes": 22552576, "workingSetBytes": 15196160, "rssBytes": 7352320, "pageFaults": 4683, "majorPageFaults": 152 } } ], "network": { "time": "2017-11-30T14:48:12Z", "rxBytes": 15741653, "txBytes": 52463212, "rxErrors": 0,  "txErrors": 0 } } ] }`
-var responseMissingPodName = `{ "pods": [ { "podRef": { "namespace": "kube-system", "uid": "b5a9c98f-d34f-11e7-95fe-62d16fb0cc7f" }, "startTime": "2017-11-30T09:12:37Z", "containers": [ { "name": "kube-state-metrics", "startTime": "2017-11-30T09:12:51Z", "cpu": { "time": "2017-11-30T14:48:10Z", "usageNanoCores": 184087, "usageCoreNanoSeconds": 4284675040 }, "memory": { "time": "2017-11-30T14:48:10Z", "usageBytes": 22552576, "workingSetBytes": 15196160, "rssBytes": 7352320, "pageFaults": 4683, "majorPageFaults": 152 } } ], "network": { "time": "2017-11-30T14:48:12Z", "rxBytes": 15741653, "txBytes": 52463212, "rxErrors": 0,  "txErrors": 0 } } ] }`
-var responseMissingRxBytesForPod = `{ "pods": [ { "podRef": { "name": "newrelic-infra-monitoring-pjp0v", "namespace": "kube-system", "uid": "b5a9c98f-d34f-11e7-95fe-62d16fb0cc7f" }, "startTime": "2017-11-30T09:12:37Z", "containers": [ { "name": "kube-state-metrics", "startTime": "2017-11-30T09:12:51Z", "cpu": { "time": "2017-11-30T14:48:10Z", "usageNanoCores": 184087, "usageCoreNanoSeconds": 4284675040 }, "memory": { "time": "2017-11-30T14:48:10Z", "usageBytes": 22552576, "workingSetBytes": 15196160, "rssBytes": 7352320, "pageFaults": 4683, "majorPageFaults": 152 } } ], "network": { "time": "2017-11-30T14:48:12Z", "txBytes": 52463212, "rxErrors": 0,  "txErrors": 0 } } ] }`
+var (
+	responseContainerWithTheSameName = `{ "pods": [ { "podRef": { "name": "newrelic-infra-monitoring-pjp0v", "namespace": "kube-system", "uid": "b5a9c98f-d34f-11e7-95fe-62d16fb0cc7f" }, "startTime": "2017-11-30T09:12:37Z", "containers": [ { "name": "kube-state-metrics", "startTime": "2017-11-30T09:12:51Z", "cpu": { "time": "2017-11-30T14:48:10Z", "usageNanoCores": 184087, "usageCoreNanoSeconds": 4284675040 }, "memory": { "time": "2017-11-30T14:48:10Z", "usageBytes": 22552576, "workingSetBytes": 15196160, "rssBytes": 7352320, "pageFaults": 4683, "majorPageFaults": 152 }, "rootfs": { "time": "2017-11-30T14:48:10Z", "availableBytes": 6911750144, "capacityBytes": 17293533184, "usedBytes": 35000320, "inodesFree": 9574871, "inodes": 9732096, "inodesUsed": 24 }, "logs": { "time": "2017-11-30T14:48:10Z", "availableBytes": 6911750144, "capacityBytes": 17293533184, "usedBytes": 20480, "inodesFree": 9574871, "inodes": 9732096, "inodesUsed": 157225 }, "userDefinedMetrics": null }, { "name": "newrelic-infra", "startTime": "2017-11-30T09:12:44Z", "cpu": { "time": "2017-11-30T14:48:12Z", "usageNanoCores": 13046199, "usageCoreNanoSeconds": 303855795298 }, "memory": { "time": "2017-11-30T14:48:12Z", "usageBytes": 243638272, "workingSetBytes": 38313984, "rssBytes": 15785984, "pageFaults": 10304448, "majorPageFaults": 217 }, "rootfs": { "time": "2017-11-30T14:48:12Z", "availableBytes": 6911750144, "capacityBytes": 17293533184, "usedBytes": 1305837568, "inodesFree": 9574871, "inodes": 9732096, "inodesUsed": 52 }, "logs": { "time": "2017-11-30T14:48:12Z", "availableBytes": 6911750144, "capacityBytes": 17293533184, "usedBytes": 657747968, "inodesFree": 9574871, "inodes": 9732096, "inodesUsed": 157225 }, "userDefinedMetrics": null } ], "network": { "time": "2017-11-30T14:48:12Z", "rxBytes": 15741653, "rxErrors": 0, "txBytes": 19551073, "txErrors": 0 }, "volume": [ { "time": "2017-11-30T09:13:29Z", "availableBytes": 1048637440, "capacityBytes": 1048649728, "usedBytes": 12288, "inodesFree": 256009, "inodes": 256018, "inodesUsed": 9, "name": "default-token-7cg8m" } ] }, { "podRef": { "name": "kube-dns-910330662-pflkj", "namespace": "kube-system", "uid": "a6f2130b-a21e-11e7-8db6-62d16fb0cc7f" }, "startTime": "2017-11-30T09:12:36Z", "containers": [ { "name": "kube-state-metrics", "startTime": "2017-11-30T09:12:51Z", "cpu": { "time": "2017-11-30T14:48:10Z", "usageNanoCores": 184087, "usageCoreNanoSeconds": 4284675040 }, "memory": { "time": "2017-11-30T14:48:10Z", "usageBytes": 22552576, "workingSetBytes": 15196160, "rssBytes": 7352320, "pageFaults": 4683, "majorPageFaults": 152 }, "rootfs": { "time": "2017-11-30T14:48:10Z", "availableBytes": 6911750144, "capacityBytes": 17293533184, "usedBytes": 35000320, "inodesFree": 9574871, "inodes": 9732096, "inodesUsed": 24 }, "logs": { "time": "2017-11-30T14:48:10Z", "availableBytes": 6911750144, "capacityBytes": 17293533184, "usedBytes": 20480, "inodesFree": 9574871, "inodes": 9732096, "inodesUsed": 157225 }, "userDefinedMetrics": null }, { "name": "dnsmasq", "startTime": "2017-11-30T09:12:43Z", "cpu": { "time": "2017-11-30T14:48:07Z", "usageNanoCores": 208374, "usageCoreNanoSeconds": 3653471654 }, "memory": { "time": "2017-11-30T14:48:07Z", "usageBytes": 19812352, "workingSetBytes": 12828672, "rssBytes": 5201920, "pageFaults": 3376, "majorPageFaults": 139 }, "rootfs": { "time": "2017-11-30T14:48:07Z", "availableBytes": 6911750144, "capacityBytes": 17293533184, "usedBytes": 42041344, "inodesFree": 9574871, "inodes": 9732096, "inodesUsed": 20 }, "logs": { "time": "2017-11-30T14:48:07Z", "availableBytes": 6911750144, "capacityBytes": 17293533184, "usedBytes": 20480, "inodesFree": 9574871, "inodes": 9732096, "inodesUsed": 157225 }, "userDefinedMetrics": null } ], "network": { "time": "2017-11-30T14:48:07Z", "rxBytes": 14447980, "rxErrors": 0, "txBytes": 15557657, "txErrors": 0 }, "volume": [ { "time": "2017-11-30T09:13:29Z", "availableBytes": 1048637440, "capacityBytes": 1048649728, "usedBytes": 12288, "inodesFree": 256009, "inodes": 256018, "inodesUsed": 9, "name": "default-token-7cg8m" } ] } ] }`
+	responseMissingContainerName     = `{ "pods": [ { "podRef": { "name": "newrelic-infra-monitoring-pjp0v", "namespace": "kube-system", "uid": "b5a9c98f-d34f-11e7-95fe-62d16fb0cc7f" }, "startTime": "2017-11-30T09:12:37Z", "containers": [ { "startTime": "2017-11-30T09:12:51Z", "cpu": { "time": "2017-11-30T14:48:10Z", "usageNanoCores": 184087, "usageCoreNanoSeconds": 4284675040 }, "memory": { "time": "2017-11-30T14:48:10Z", "usageBytes": 22552576, "workingSetBytes": 15196160, "rssBytes": 7352320, "pageFaults": 4683, "majorPageFaults": 152 } } ], "network": { "time": "2017-11-30T14:48:12Z", "rxBytes": 15741653, "txBytes": 52463212, "rxErrors": 0,  "txErrors": 0 } } ] }`
+	responseMissingPodName           = `{ "pods": [ { "podRef": { "namespace": "kube-system", "uid": "b5a9c98f-d34f-11e7-95fe-62d16fb0cc7f" }, "startTime": "2017-11-30T09:12:37Z", "containers": [ { "name": "kube-state-metrics", "startTime": "2017-11-30T09:12:51Z", "cpu": { "time": "2017-11-30T14:48:10Z", "usageNanoCores": 184087, "usageCoreNanoSeconds": 4284675040 }, "memory": { "time": "2017-11-30T14:48:10Z", "usageBytes": 22552576, "workingSetBytes": 15196160, "rssBytes": 7352320, "pageFaults": 4683, "majorPageFaults": 152 } } ], "network": { "time": "2017-11-30T14:48:12Z", "rxBytes": 15741653, "txBytes": 52463212, "rxErrors": 0,  "txErrors": 0 } } ] }`
+	responseMissingRxBytesForPod     = `{ "pods": [ { "podRef": { "name": "newrelic-infra-monitoring-pjp0v", "namespace": "kube-system", "uid": "b5a9c98f-d34f-11e7-95fe-62d16fb0cc7f" }, "startTime": "2017-11-30T09:12:37Z", "containers": [ { "name": "kube-state-metrics", "startTime": "2017-11-30T09:12:51Z", "cpu": { "time": "2017-11-30T14:48:10Z", "usageNanoCores": 184087, "usageCoreNanoSeconds": 4284675040 }, "memory": { "time": "2017-11-30T14:48:10Z", "usageBytes": 22552576, "workingSetBytes": 15196160, "rssBytes": 7352320, "pageFaults": 4683, "majorPageFaults": 152 } } ], "network": { "time": "2017-11-30T14:48:12Z", "txBytes": 52463212, "rxErrors": 0,  "txErrors": 0 } } ] }`
+)
 
 var nodeSampleMissingImageFs = `{ "node": { "nodeName": "fooNode", "startTime": "2018-01-22T06:52:15Z", "cpu": { "time": "2018-01-24T16:40:00Z", "usageNanoCores": 64124211, "usageCoreNanoSeconds": 353998913059080 }, "memory": { "time": "2018-01-24T16:40:00Z", "availableBytes": 502603776, "usageBytes": 687067136, "workingSetBytes": 540618752, "rssBytes": 150396928, "pageFaults": 3067606235, "majorPageFaults": 517653 }, "network": { "time": "2018-01-24T16:40:00Z", "rxBytes": 51419684038, "rxErrors": 0, "txBytes": 25630208577, "txErrors": 0, "interfaces": [ { "name": "ens5", "rxBytes": 51419684038, "rxErrors": 0, "txBytes": 25630208577, "txErrors": 0 }, { "name": "ip6tnl0", "rxBytes": 0, "rxErrors": 0, "txBytes": 0, "txErrors": 0 } ] }, "fs": { "time": "2018-01-24T16:40:00Z", "availableBytes": 92795400192, "capacityBytes": 128701009920, "usedBytes": 30305800192, "inodesFree": 32999604, "inodes": 33554432, "inodesUsed": 554828 }, "runtime": { } } }`
 
-func toSummary(response string) (v1.Summary, error) {
-	var summary = new(v1.Summary)
-	err := json.Unmarshal([]byte(response), summary)
-	if err != nil {
-		return v1.Summary{}, fmt.Errorf("Error unmarshaling the response body. Got error: %v", err.Error())
+func toSummary(t *testing.T, response string) *v1.Summary {
+	t.Helper()
+
+	summary := &v1.Summary{}
+	if err := json.Unmarshal([]byte(response), summary); err != nil {
+		t.Fatalf("unmarshaling the response body: %v", err)
 	}
-	return *summary, nil
+
+	return summary
 }
 
 func TestGroupStatsSummary_CorrectValue(t *testing.T) {
@@ -178,8 +181,7 @@ func TestGroupStatsSummary_CorrectValue(t *testing.T) {
 
 	responseOkDataSample, err := ioutil.ReadFile("testdata/kubelet_summary_response_ok.json")
 	require.NoError(t, err)
-	summary, err := toSummary(string(responseOkDataSample))
-	assert.NoError(t, err)
+	summary := toSummary(t, string(responseOkDataSample))
 
 	rawData, errs := GroupStatsSummary(summary)
 	assert.Empty(t, errs)
@@ -290,8 +292,7 @@ func TestGroupStatsSummary_MissingNodeData_ContainerWithTheSameName(t *testing.T
 		},
 		"node": {},
 	}
-	summary, err := toSummary(responseContainerWithTheSameName)
-	assert.NoError(t, err)
+	summary := toSummary(t, responseContainerWithTheSameName)
 
 	rawData, errs := GroupStatsSummary(summary)
 	assert.EqualError(t, errs[0], "empty node identifier, possible data error in /stats/summary response")
@@ -315,8 +316,7 @@ func TestGroupStatsSummary_IncompleteStatsSummaryMessage_MissingNodeData_Missing
 		"node":      {},
 	}
 
-	summary, err := toSummary(responseMissingContainerName)
-	assert.NoError(t, err)
+	summary := toSummary(t, responseMissingContainerName)
 
 	rawData, errs := GroupStatsSummary(summary)
 	assert.Len(t, errs, 2, "Not expected length of errors")
@@ -331,8 +331,7 @@ func TestGroupStatsSummary_IncompleteStatsSummaryMessage_MissingNodeData_Missing
 		"node":      {},
 	}
 
-	summary, err := toSummary(responseMissingPodName)
-	assert.NoError(t, err)
+	summary := toSummary(t, responseMissingPodName)
 
 	rawData, errs := GroupStatsSummary(summary)
 	assert.Len(t, errs, 2, "Not expected length of errors")
@@ -369,8 +368,7 @@ func TestGroupStatsSummary_IncompleteStatsSummaryMessage_MissingNodeData_NoRxByt
 		"node":   {},
 	}
 
-	summary, err := toSummary(responseMissingRxBytesForPod)
-	assert.NoError(t, err)
+	summary := toSummary(t, responseMissingRxBytesForPod)
 
 	rawData, errs := GroupStatsSummary(summary)
 	assert.Len(t, errs, 1, "Not expected length of errors")
@@ -378,9 +376,9 @@ func TestGroupStatsSummary_IncompleteStatsSummaryMessage_MissingNodeData_NoRxByt
 }
 
 func TestGroupStatsSummary_EmptyStatsSummaryMessage(t *testing.T) {
-	var summary = new(v1.Summary)
+	summary := &v1.Summary{}
 
-	rawData, errs := GroupStatsSummary(*summary)
+	rawData, errs := GroupStatsSummary(summary)
 
 	assert.Len(t, errs, 2, "Not expected length of errors")
 	assert.Len(t, rawData, 4, "Not expected length of rawData for pods and containers")
@@ -388,6 +386,13 @@ func TestGroupStatsSummary_EmptyStatsSummaryMessage(t *testing.T) {
 	assert.Empty(t, rawData["container"])
 	assert.Empty(t, rawData["node"])
 	assert.Empty(t, rawData["volume"])
+}
+
+func Test_GroupStatsSummary_return_error_when_nil_summary_is_given(t *testing.T) {
+	rawData, errs := GroupStatsSummary(nil)
+
+	assert.Len(t, errs, 1)
+	assert.Nil(t, rawData)
 }
 
 func TestAddUint64RawMetric(t *testing.T) {
@@ -400,8 +405,7 @@ func TestAddUint64RawMetric(t *testing.T) {
 		"foo":      uint64(353998913059080),
 	}
 
-	summary, err := toSummary(`{ "node": { "cpu": { "usageCoreNanoSeconds": 353998913059080 } } }`)
-	assert.NoError(t, err)
+	summary := toSummary(t, `{ "node": { "cpu": { "usageCoreNanoSeconds": 353998913059080 } } }`)
 
 	AddUint64RawMetric(r, "foo", summary.Node.CPU.UsageCoreNanoSeconds)
 	assert.Equal(t, expected, r)
@@ -444,10 +448,9 @@ func TestFetchNodeStats_MissingImageFs(t *testing.T) {
 		"fsInodes":         uint64(33554432),
 		"fsInodesUsed":     uint64(554828),
 	}
-	s, err := toSummary(nodeSampleMissingImageFs)
-	assert.NoError(t, err)
+	summary := toSummary(t, nodeSampleMissingImageFs)
 
-	rawData, ID, errs := fetchNodeStats(s.Node)
+	rawData, ID, errs := fetchNodeStats(summary.Node)
 	assert.Empty(t, errs)
 	assert.Equal(t, "fooNode", ID)
 	assert.Equal(t, expectedRawData, rawData)

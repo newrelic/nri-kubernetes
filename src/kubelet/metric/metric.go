@@ -18,27 +18,32 @@ import (
 const StatsSummaryPath = "/stats/summary"
 
 // GetMetricsData calls kubelet /stats/summary endpoint and returns unmarshalled response
-func GetMetricsData(c client.HTTPClient) (v1.Summary, error) {
+func GetMetricsData(c client.HTTPClient) (*v1.Summary, error) {
 	resp, err := c.Do(http.MethodGet, StatsSummaryPath)
 	if err != nil {
-		return v1.Summary{}, err
+		return nil, fmt.Errorf("performing GET request to kubelet endpoint %q: %w", StatsSummaryPath, err)
 	}
 	defer resp.Body.Close() // nolint: errcheck
-	if resp.StatusCode != http.StatusOK {
-		return v1.Summary{}, fmt.Errorf("error calling kubelet endpoint. Got status code: %d", resp.StatusCode)
-	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return v1.Summary{}, fmt.Errorf("error reading the response body of kubelet endpoint. Got error: %v", err.Error())
+	if resp.StatusCode != http.StatusOK {
+		body, err := ioutil.ReadAll(resp.Body)
+
+		bodyErr := fmt.Errorf("response body: %s", string(body))
+
+		if err != nil {
+			bodyErr = fmt.Errorf("reading response body: %w", err)
+		}
+
+		return nil, fmt.Errorf("received non-OK response code from kubelet: %d: %w", resp.StatusCode, bodyErr)
 	}
 
 	summary := &v1.Summary{}
-	if err := json.Unmarshal(body, summary); err != nil {
-		return v1.Summary{}, fmt.Errorf("error unmarshaling the response body. Got error: %v", err.Error())
+
+	if err := json.NewDecoder(resp.Body).Decode(summary); err != nil {
+		return nil, fmt.Errorf("unmarshaling the response body into kubelet stats Summary: %w", err)
 	}
 
-	return *summary, nil
+	return summary, nil
 }
 
 func fetchNodeStats(n v1.NodeStats) (definition.RawMetrics, string, error) {
@@ -189,7 +194,11 @@ func fetchVolumeStats(v v1.VolumeStats) (definition.RawMetrics, error) {
 }
 
 // GroupStatsSummary groups specific data for pods, containers and node
-func GroupStatsSummary(statsSummary v1.Summary) (definition.RawGroups, []error) {
+func GroupStatsSummary(statsSummary *v1.Summary) (definition.RawGroups, []error) {
+	if statsSummary == nil {
+		return nil, []error{fmt.Errorf("got nil stats summary")}
+	}
+
 	var errs []error
 	var rawEntityID string
 	g := definition.RawGroups{
