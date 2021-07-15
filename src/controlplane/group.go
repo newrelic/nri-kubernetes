@@ -2,8 +2,7 @@ package controlplane
 
 import (
 	"fmt"
-
-	"github.com/sirupsen/logrus"
+	"github.com/newrelic/infra-integrations-sdk/log"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
@@ -18,7 +17,7 @@ const prometheusMetricsPath = "/metrics"
 type componentGrouper struct {
 	queries []prometheus.Query
 	client  client.HTTPClient
-	logger  *logrus.Logger
+	logger  log.Logger
 	podName string
 }
 
@@ -45,7 +44,7 @@ func (r *componentGrouper) Group(specGroups definition.SpecGroups) (definition.R
 func NewComponentGrouper(
 	c client.HTTPClient,
 	queries []prometheus.Query,
-	logger *logrus.Logger,
+	logger log.Logger,
 	podName string,
 ) data.Grouper {
 	return &componentGrouper{

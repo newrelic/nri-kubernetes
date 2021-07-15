@@ -2,8 +2,7 @@ package kubelet
 
 import (
 	"fmt"
-
-	"github.com/sirupsen/logrus"
+	"github.com/newrelic/infra-integrations-sdk/log"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/apiserver"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
@@ -16,7 +15,7 @@ type kubelet struct {
 	apiServer               apiserver.Client
 	client                  client.HTTPClient
 	fetchers                []data.FetchFunc
-	logger                  *logrus.Logger
+	logger                  log.Logger
 	defaultNetworkInterface string
 }
 
@@ -99,7 +98,7 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 }
 
 // NewGrouper creates a grouper aware of Kubelet raw metrics.
-func NewGrouper(c client.HTTPClient, logger *logrus.Logger, apiServer apiserver.Client, defaultNetworkInterface string, fetchers ...data.FetchFunc) data.Grouper {
+func NewGrouper(c client.HTTPClient, logger log.Logger, apiServer apiserver.Client, defaultNetworkInterface string, fetchers ...data.FetchFunc) data.Grouper {
 	return &kubelet{
 		apiServer:               apiServer,
 		client:                  c,

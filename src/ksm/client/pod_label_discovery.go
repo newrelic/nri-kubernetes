@@ -2,11 +2,11 @@ package client
 
 import (
 	"fmt"
+	"github.com/newrelic/infra-integrations-sdk/log"
 	"net/url"
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
@@ -14,7 +14,7 @@ import (
 
 type podLabelDiscoverer struct {
 	ksmPodLabel string
-	logger      *logrus.Logger
+	logger      log.Logger
 	k8sClient   client.Kubernetes
 	ksmPodPort  int
 	ksmScheme   string
@@ -72,7 +72,7 @@ func (p *podLabelDiscoverer) Discover(timeout time.Duration) (client.HTTPClient,
 }
 
 // NewPodLabelDiscoverer creates a new KSM discoverer that will find KSM pods using k8s labels
-func NewPodLabelDiscoverer(ksmPodLabel string, ksmPodPort int, ksmScheme string, logger *logrus.Logger, k8sClient client.Kubernetes) client.Discoverer {
+func NewPodLabelDiscoverer(ksmPodLabel string, ksmPodPort int, ksmScheme string, logger log.Logger, k8sClient client.Kubernetes) client.Discoverer {
 	return &podLabelDiscoverer{
 		logger:      logger,
 		k8sClient:   k8sClient,

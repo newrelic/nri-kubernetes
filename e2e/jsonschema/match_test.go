@@ -8,7 +8,7 @@ import (
 
 	"io/ioutil"
 
-	"github.com/newrelic/infra-integrations-sdk/sdk"
+	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,7 +21,7 @@ var s = map[string]EventTypeToSchemaFilename{
 
 func TestNoError(t *testing.T) {
 	c := readTestInput(t, "testdata/input-complete.json")
-	i := sdk.IntegrationProtocol2{}
+	i := integration.Integration{}
 	err := json.Unmarshal(c, &i)
 	if err != nil {
 		t.Fatal(err)
@@ -29,13 +29,13 @@ func TestNoError(t *testing.T) {
 
 	err = MatchIntegration(&i)
 	assert.NoError(t, err)
-	err = MatchEntities(i.Data, s, "testdata")
+	err = MatchEntities(i.Entities, s, "testdata")
 	assert.NoError(t, err)
 }
 
 func TestErrorValidatingInputWithNoData(t *testing.T) {
 	c := readTestInput(t, "testdata/input-invalid-nodata.json")
-	i := sdk.IntegrationProtocol2{}
+	i := integration.Integration{}
 	err := json.Unmarshal(c, &i)
 	if err != nil {
 		t.Fatal(err)
@@ -47,7 +47,7 @@ func TestErrorValidatingInputWithNoData(t *testing.T) {
 
 func TestErrorValidatingEventTypes(t *testing.T) {
 	c := readTestInput(t, "testdata/input-missing-event-type.json")
-	i := sdk.IntegrationProtocol2{}
+	i := integration.Integration{}
 	err := json.Unmarshal(c, &i)
 	if err != nil {
 		t.Fatal(err)
@@ -60,7 +60,7 @@ func TestErrorValidatingEventTypes(t *testing.T) {
 			"TestPodSample":     "testdata/schema-testpod.json", // this file doesn't exist, I just want to test with 2 missing types
 		},
 	}
-	err = MatchEntities(i.Data, jobMetrics, "testdata")
+	err = MatchEntities(i.Entities, jobMetrics, "testdata")
 
 	assert.Contains(t, err.Error(), "mandatory types were not found: ")
 	assert.Contains(t, err.Error(), "TestServiceSample, ")
@@ -69,13 +69,13 @@ func TestErrorValidatingEventTypes(t *testing.T) {
 
 func TestErrorValidatingTestNode(t *testing.T) {
 	c := readTestInput(t, "testdata/input-invalid-testnode.json")
-	i := sdk.IntegrationProtocol2{}
+	i := integration.Integration{}
 	err := json.Unmarshal(c, &i)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = MatchEntities(i.Data, s, "testdata")
+	err = MatchEntities(i.Entities, s, "testdata")
 	assert.Contains(t, err.Error(), "test-node:node1-dsn.compute.internal TestNodeSample")
 	assert.Contains(t, err.Error(), "(root): capacity is required")
 	assert.Contains(t, err.Error(), "test-node:node2-dsn.compute.internal TestNodeSample")

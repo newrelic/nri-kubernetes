@@ -1,9 +1,8 @@
 package network
 
 import (
+	"github.com/newrelic/infra-integrations-sdk/log"
 	"time"
-
-	"github.com/sirupsen/logrus"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/storage"
 )
@@ -18,7 +17,7 @@ func DefaultInterface(routeFile string) (string, error) {
 }
 
 func doCachedDefaultInterface(
-	logger *logrus.Logger,
+	logger log.Logger,
 	f defaultInterfaceFunc,
 	routeFile string,
 	storage storage.Storage,
@@ -51,7 +50,7 @@ func doCachedDefaultInterface(
 		"Caching default network interface '%s' using key %q", defaultInterface, storageKey)
 	err = storage.Write(storageKey, defaultInterface)
 	if err != nil {
-		logger.WithError(err).Warnf("while storing %q in the cache", storageKey)
+		logger.Warnf("while storing %q in the cache: %v", storageKey, err)
 	}
 
 	return defaultInterface, nil
@@ -60,7 +59,7 @@ func doCachedDefaultInterface(
 // CachedDefaultInterface returns the default interface name used by
 // the system. The result is cached and expired based on the given ttl.
 func CachedDefaultInterface(
-	logger *logrus.Logger,
+	logger log.Logger,
 	routeFile string,
 	storage storage.Storage,
 	ttl time.Duration,

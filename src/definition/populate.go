@@ -2,9 +2,9 @@ package definition
 
 import (
 	"fmt"
+	"github.com/newrelic/infra-integrations-sdk/data/metric"
 
-	"github.com/newrelic/infra-integrations-sdk/metric"
-	"github.com/newrelic/infra-integrations-sdk/sdk"
+	"github.com/newrelic/infra-integrations-sdk/integration"
 )
 
 // GuessFunc guesses from data.
@@ -14,9 +14,9 @@ type GuessFunc func(clusterName, groupLabel, entityID string, groups RawGroups) 
 type PopulateFunc func(RawGroups, SpecGroups) (bool, []error)
 
 // MetricSetManipulator manipulates the MetricSet for a given entity and clusterName
-type MetricSetManipulator func(ms metric.MetricSet, entity sdk.Entity, clusterName string) error
+type MetricSetManipulator func(ms *metric.Set, entityMeta *integration.EntityMetadata, clusterName string) error
 
-func populateCluster(i *sdk.IntegrationProtocol2, clusterName string, k8sVersion fmt.Stringer) error {
+func populateCluster(i *integration.Integration, clusterName string, k8sVersion fmt.Stringer) error {
 	e, err := i.Entity(clusterName, "k8s:cluster")
 	if err != nil {
 		return err
@@ -36,7 +36,7 @@ func populateCluster(i *sdk.IntegrationProtocol2, clusterName string, k8sVersion
 
 // IntegrationProtocol2PopulateFunc populates an integration protocol v2 with the given metrics and definition.
 func IntegrationProtocol2PopulateFunc(
-	i *sdk.IntegrationProtocol2,
+	i *integration.Integration,
 	clusterName string,
 	k8sVersion fmt.Stringer,
 	msTypeGuesser GuessFunc,
@@ -87,7 +87,7 @@ func IntegrationProtocol2PopulateFunc(
 
 				ms := e.NewMetricSet(msType)
 				for _, m := range msManipulators {
-					err = m(ms, e.Entity, clusterName)
+					err = m(ms, e.Metadata, clusterName)
 					if err != nil {
 						errs = append(errs, err)
 						continue
@@ -116,7 +116,7 @@ func IntegrationProtocol2PopulateFunc(
 	}
 }
 
-func metricSetPopulateFunc(ms metric.MetricSet, groupLabel, entityID string) PopulateFunc {
+func metricSetPopulateFunc(ms *metric.Set, groupLabel, entityID string) PopulateFunc {
 	return func(groups RawGroups, specs SpecGroups) (populated bool, errs []error) {
 		for _, ex := range specs[groupLabel].Specs {
 			val, err := ex.ValueFunc(groupLabel, entityID, groups)

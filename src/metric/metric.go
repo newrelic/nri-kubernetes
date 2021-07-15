@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/newrelic/infra-integrations-sdk/metric"
-	"github.com/newrelic/infra-integrations-sdk/sdk"
+	"github.com/newrelic/infra-integrations-sdk/data/metric"
+	"github.com/newrelic/infra-integrations-sdk/integration"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 )
@@ -21,12 +21,12 @@ func K8sMetricSetTypeGuesser(_, groupLabel, _ string, _ definition.RawGroups) (s
 
 // K8sClusterMetricsManipulator adds 'clusterName' metric to the MetricSet 'ms',
 // taking the value from 'clusterName' argument.
-func K8sClusterMetricsManipulator(ms metric.MetricSet, _ sdk.Entity, clusterName string) error {
+func K8sClusterMetricsManipulator(ms *metric.Set, _ *integration.EntityMetadata, clusterName string) error {
 	return ms.SetMetric("clusterName", clusterName, metric.ATTRIBUTE)
 }
 
 // K8sEntityMetricsManipulator adds 'displayName' metric to
 // the MetricSet, taking values from entity.name
-func K8sEntityMetricsManipulator(ms metric.MetricSet, entity sdk.Entity, _ string) error {
+func K8sEntityMetricsManipulator(ms *metric.Set, entity *integration.EntityMetadata, _ string) error {
 	return ms.SetMetric("displayName", entity.Name, metric.ATTRIBUTE)
 }

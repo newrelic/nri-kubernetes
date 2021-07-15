@@ -1,8 +1,8 @@
 package scrape
 
 import (
-	"github.com/newrelic/infra-integrations-sdk/sdk"
-	"github.com/sirupsen/logrus"
+	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/infra-integrations-sdk/log"
 	"k8s.io/apimachinery/pkg/version"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
@@ -28,9 +28,9 @@ type Job struct {
 
 // Populate will get the data using the given Group, transform it, and push it to the given Integration
 func (s *Job) Populate(
-	integration *sdk.IntegrationProtocol2,
+	integration *integration.Integration,
 	clusterName string,
-	logger *logrus.Logger,
+	logger log.Logger,
 	k8sVersion *version.Info,
 ) data.PopulateResult {
 	groups, errs := s.Grouper.Group(s.Specs)

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/newrelic/infra-integrations-sdk/sdk"
+	"github.com/newrelic/infra-integrations-sdk/integration"
 	"k8s.io/apimachinery/pkg/version"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
@@ -35,7 +35,7 @@ func (e MultipleErrs) Error() string {
 func (p *k8sPopulator) Populate(
 	groups definition.RawGroups,
 	specGroups definition.SpecGroups,
-	i *sdk.IntegrationProtocol2,
+	i *integration.Integration,
 	clusterName string,
 	k8sVersion *version.Info,
 ) data.PopulateResult {

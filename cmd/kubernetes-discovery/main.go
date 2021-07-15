@@ -4,7 +4,6 @@ import (
 	"flag"
 	"time"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
 	"github.com/sirupsen/logrus"
 
@@ -13,7 +12,7 @@ import (
 
 var discovery = flag.String("discovery", KSMPodLabel, "Which discovery mechanism to run")
 
-var logger = log.New(true)
+var logger = logrus.New()
 
 const (
 	KSMPodLabel = "ksm_pod_label"

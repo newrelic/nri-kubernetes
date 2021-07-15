@@ -115,7 +115,7 @@ func createClientComponent(endpoint string, cacert, key, cert []byte, insecureSk
 		httpClient:               &http.Client{},
 		tlsSecretName:            secretName,
 		authenticationMethod:     mTLS,
-		logger:                   log.New(true),
+		logger:                   log.NewStdErr(true),
 		IsComponentRunningOnNode: true,
 		k8sClient:                c,
 		endpoint: url.URL{

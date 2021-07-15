@@ -3,8 +3,8 @@ package metric
 import (
 	"testing"
 
-	"github.com/newrelic/infra-integrations-sdk/metric"
-	"github.com/newrelic/infra-integrations-sdk/sdk"
+	"github.com/newrelic/infra-integrations-sdk/data/metric"
+	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
@@ -15,7 +15,7 @@ func TestK8sClusterMetricsManipulator(t *testing.T) {
 	if err != nil {
 		t.Fatal()
 	}
-	metricSet := metric.MetricSet{
+	metricSet := *metric.Set{
 		"event_type":        "K8sPodSample",
 		"podInfo.namespace": "kube-system",
 		"podInfo.pod":       "fluentd-elasticsearch-jnqb7",
@@ -27,7 +27,7 @@ func TestK8sClusterMetricsManipulator(t *testing.T) {
 	err = K8sClusterMetricsManipulator(metricSet, entityData.Entity, "modifiedClusterName")
 	assert.Nil(t, err)
 
-	expectedMetricSet := metric.MetricSet{
+	expectedMetricSet := *metric.Set{
 		"event_type":        "K8sPodSample",
 		"podInfo.namespace": "kube-system",
 		"podInfo.pod":       "fluentd-elasticsearch-jnqb7",
@@ -62,7 +62,7 @@ func TestK8sEntityMetricsManipulator(t *testing.T) {
 	if err != nil {
 		t.Fatal()
 	}
-	metricSet := metric.MetricSet{
+	metricSet := *metric.Set{
 		"event_type":        "K8sPodSample",
 		"podInfo.namespace": "kube-system",
 		"podInfo.pod":       "fluentd-elasticsearch-jnqb7",
@@ -73,7 +73,7 @@ func TestK8sEntityMetricsManipulator(t *testing.T) {
 	err = K8sEntityMetricsManipulator(metricSet, entityData.Entity, "")
 	assert.Nil(t, err)
 
-	expectedMetricSet := metric.MetricSet{
+	expectedMetricSet := *metric.Set{
 		"event_type":        "K8sPodSample",
 		"podInfo.namespace": "kube-system",
 		"podInfo.pod":       "fluentd-elasticsearch-jnqb7",

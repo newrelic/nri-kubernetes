@@ -1,11 +1,10 @@
 package client
 
 import (
+	"github.com/newrelic/infra-integrations-sdk/log"
 	"net/http"
 	"net/url"
 	"time"
-
-	"github.com/sirupsen/logrus"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/storage"
@@ -57,7 +56,7 @@ func decompose(source client.HTTPClient) (interface{}, error) {
 
 // NewDiscoveryCacher creates a new DiscoveryCacher that wraps a discoverer and caches the data into the
 // specified storage
-func NewDiscoveryCacher(discoverer client.Discoverer, storage storage.Storage, ttl time.Duration, logger *logrus.Logger) *client.DiscoveryCacher {
+func NewDiscoveryCacher(discoverer client.Discoverer, storage storage.Storage, ttl time.Duration, logger log.Logger) *client.DiscoveryCacher {
 	return &client.DiscoveryCacher{
 		CachedDataPtr: &cache{},
 		StorageKey:    cachedKey,
