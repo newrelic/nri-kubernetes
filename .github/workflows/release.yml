@@ -21,6 +21,7 @@ jobs:
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
+          TAG: ${{ github.event.release.tag_name }} # Will be picked up by make and used as version
         run: |
           make compile
       - name: Upload artifact for docker build step
