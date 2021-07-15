@@ -1,13 +1,12 @@
 package client
 
 import (
+	"github.com/newrelic/infra-integrations-sdk/log"
 	"net/http"
 	"time"
 
-	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
-
 	"github.com/newrelic/nri-kubernetes/v2/src/storage"
+	"github.com/pkg/errors"
 )
 
 // DiscoveryCacher implements the Discoverer API to read endpoints from a cache storage. It also wraps another
@@ -23,7 +22,7 @@ type DiscoveryCacher struct {
 	// Storage for cached data
 	Storage   storage.Storage
 	TTL       time.Duration
-	Logger    *logrus.Logger
+	Logger    log.Logger
 	Compose   Composer
 	Decompose Decomposer
 }
@@ -70,7 +69,7 @@ func (d *DiscoveryCacher) discoverAndCache(timeout time.Duration) (HTTPClient, e
 		err = d.Storage.Write(d.StorageKey, toCache)
 	}
 	if err != nil {
-		d.Logger.WithError(err).Warnf("while storing %q in the cache", d.StorageKey)
+		d.Logger.Warnf("Could not store %q in the cache: %v", d.StorageKey, err)
 	}
 	return client, nil
 }
@@ -102,7 +101,7 @@ func (c *cacheAwareClient) Do(method, path string) (*http.Response, error) {
 	if err != nil {
 		// If the client can't be rediscovered, it anyway invalidates the cache
 		if err := c.cacher.Storage.Delete(c.cacher.StorageKey); err != nil {
-			c.cacher.Logger.WithError(err).Debugf("while trying to remove %q from the cache", c.cacher.StorageKey)
+			c.cacher.Logger.Debugf("Could not remove %q from the cache: %v", c.cacher.StorageKey, err)
 		}
 		return nil, err
 	}
@@ -129,7 +128,7 @@ type MultiDiscoveryCacher struct {
 	StorageKey    string
 	Storage       storage.Storage
 	TTL           time.Duration
-	Logger        *logrus.Logger
+	Logger        log.Logger
 	Compose       MultiComposer
 	Decompose     MultiDecomposer
 }
@@ -171,7 +170,7 @@ func (d *MultiDiscoveryCacher) discoverAndCache(timeout time.Duration) ([]HTTPCl
 		err = d.Storage.Write(d.StorageKey, toCache)
 	}
 	if err != nil {
-		d.Logger.WithError(err).Warnf("while storing %q in the cache", d.StorageKey)
+		d.Logger.Warnf("Could not store %q in the cache: %v", d.StorageKey, err)
 	}
 	return clients, nil
 }

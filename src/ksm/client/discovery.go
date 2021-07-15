@@ -10,8 +10,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/newrelic/infra-integrations-sdk/log"
+
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/transport"
@@ -41,7 +42,7 @@ type LookupSRVFunc func(service, proto, name string) (cname string, addrs []*net
 type DiscovererConfig struct {
 	LookupSRV         LookupSRVFunc
 	K8sClient         client.Kubernetes
-	Logger            *logrus.Logger
+	Logger            log.Logger
 	OverridenEndpoint string
 	Namespace         string
 }
@@ -74,7 +75,7 @@ func NewDiscoverer(config DiscovererConfig) (client.Discoverer, error) {
 type discoverer struct {
 	lookupSRV         LookupSRVFunc
 	k8sClient         client.Kubernetes
-	logger            *logrus.Logger
+	logger            log.Logger
 	overridenEndpoint string
 	namespace         string
 }
@@ -84,13 +85,13 @@ type ksm struct {
 	httpClient *http.Client
 	endpoint   url.URL
 	nodeIP     string
-	logger     *logrus.Logger
+	logger     log.Logger
 }
 
 func (sd *discoverer) Discover(timeout time.Duration) (client.HTTPClient, error) {
 	var endpoint url.URL
 	if sd.overridenEndpoint != "" {
-		sd.logger.Debug("Using user-defined KSM endpoint " + sd.overridenEndpoint)
+		sd.logger.Debugf("Using user-defined KSM endpoint " + sd.overridenEndpoint)
 		ep, err := url.Parse(sd.overridenEndpoint)
 		if err != nil {
 			return nil, fmt.Errorf("wrong user-provided KSM endpoint: %s", err)
@@ -98,11 +99,11 @@ func (sd *discoverer) Discover(timeout time.Duration) (client.HTTPClient, error)
 		endpoint = *ep
 	} else {
 		var err error
-		sd.logger.Debug("Attempting DNS discovery of KSM endpoint")
+		sd.logger.Debugf("Attempting DNS discovery of KSM endpoint")
 		endpoint, err = sd.dnsDiscover()
 		if err != nil {
 			// if DNS discovery fails, we dig into Kubernetes API to get the service data
-			sd.logger.Debug("Attempting API server discovery of KSM endpoint")
+			sd.logger.Debugf("Attempting API server discovery of KSM endpoint")
 			endpoint, err = sd.apiDiscover()
 			if err != nil {
 				return nil, fmt.Errorf("failed to discover kube-state-metrics endpoint, got error: %s", err)
@@ -121,7 +122,7 @@ func (sd *discoverer) Discover(timeout time.Duration) (client.HTTPClient, error)
 	return newKSMClient(timeout, nodeIP, endpoint, sd.logger, sd.k8sClient), nil
 }
 
-func newKSMClient(timeout time.Duration, nodeIP string, endpoint url.URL, logger *logrus.Logger, k8s client.Kubernetes) *ksm {
+func newKSMClient(timeout time.Duration, nodeIP string, endpoint url.URL, logger log.Logger, k8s client.Kubernetes) *ksm {
 	bearer := k8s.Config().BearerToken
 	rt := newBearerRoundTripper(bearer)
 

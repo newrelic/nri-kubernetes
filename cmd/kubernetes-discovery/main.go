@@ -2,11 +2,13 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
+
 	"github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
-	"github.com/sirupsen/logrus"
 
 	k8sclient "github.com/newrelic/nri-kubernetes/v2/src/client"
 )
@@ -26,24 +28,29 @@ func main() {
 
 	verbose := true
 
-	logger := log.New(verbose)
+	logger := log.NewStdErr(verbose)
 
 	tryLocalKubeconfig := true
 
 	k8sClient, err := k8sclient.NewKubernetes(tryLocalKubeconfig)
 	if err != nil {
-		logger.Fatalf("Could not create Kubernetes client: %v", err)
+		logger.Errorf("Could not create Kubernetes client: %v", err)
+		os.Exit(1)
 	}
 
 	switch *discovery {
 	case KSMPodLabel:
-		runKSMPodLabel(k8sClient, logger)
+		err = runKSMPodLabel(k8sClient, logger)
+		if err != nil {
+			logger.Errorf("Error %v", err)
+			os.Exit(1)
+		}
 	default:
 		logger.Infof("Invalid discovery type: %s", *discovery)
 	}
 }
 
-func runKSMPodLabel(kubernetes k8sclient.Kubernetes, logger *logrus.Logger) {
+func runKSMPodLabel(kubernetes k8sclient.Kubernetes, logger log.Logger) error {
 	config := client.PodLabelDiscovererConfig{
 		KSMPodLabel:  *ksmPodLabel,
 		KSMPodPort:   8080,
@@ -55,13 +62,15 @@ func runKSMPodLabel(kubernetes k8sclient.Kubernetes, logger *logrus.Logger) {
 
 	discoverer, err := client.NewPodLabelDiscoverer(config)
 	if err != nil {
-		logger.Fatalf("Initializing discoverer: %v", err)
+		return fmt.Errorf("initializing discoverer: %w", err)
 	}
 
 	ksm, err := discoverer.Discover(time.Second * 5)
 	if err != nil {
-		logger.Fatalf("Discovering KSM: %v", err)
+		return fmt.Errorf("discovering KSM: %w", err)
 	}
 
 	logger.Infof("Found KSM pod on HostIP: %s", ksm.NodeIP())
+
+	return nil
 }

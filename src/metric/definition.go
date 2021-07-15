@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	sdkMetric "github.com/newrelic/infra-integrations-sdk/metric"
+	sdkMetric "github.com/newrelic/infra-integrations-sdk/data/metric"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 	ksmMetric "github.com/newrelic/nri-kubernetes/v2/src/ksm/metric"

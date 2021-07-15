@@ -11,8 +11,7 @@ import (
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/args"
-	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/infra-integrations-sdk/sdk"
+	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/rand"
@@ -140,7 +139,10 @@ func main() {
 	if cliArgs.NrLicenseKey == "" || cliArgs.ClusterName == "" {
 		panic("license key and cluster name are required args")
 	}
-	logger := log.New(cliArgs.Verbose)
+	logger := logrus.New()
+	if cliArgs.Verbose {
+		logger.SetLevel(logrus.DebugLevel)
+	}
 
 	k8sClient, err := k8s.NewClient(cliArgs.Context)
 	if err != nil {
@@ -440,7 +442,7 @@ func testSpecificEntities(output map[string]*integrationData, releaseName string
 	}
 	foundEntities := make(map[entityID]error)
 	for _, o := range output {
-		var i sdk.IntegrationProtocol2
+		i := integration.Integration{}
 		err := json.Unmarshal(o.stdOut, &i)
 		if err != nil {
 			return err
@@ -454,7 +456,7 @@ func testSpecificEntities(output map[string]*integrationData, releaseName string
 				jobEventTypeSchema := map[string]jsonschema.EventTypeToSchemaFilename{
 					"dummy": s,
 				}
-				foundEntities[eid] = jsonschema.MatchEntities([]*sdk.EntityData{entityData}, jobEventTypeSchema, cliArgs.SchemasDirectory)
+				foundEntities[eid] = jsonschema.MatchEntities([]*integration.Entity{entityData}, jobEventTypeSchema, cliArgs.SchemasDirectory)
 			}
 		}
 	}
@@ -509,7 +511,7 @@ func (se *scenarioEnv) testEventTypes(output map[string]*integrationData) error 
 			schemasToMatch[string(expectedJob)] = expectedSchema
 		}
 
-		i := sdk.IntegrationProtocol2{}
+		i := integration.Integration{}
 		err := json.Unmarshal(o.stdOut, &i)
 		if err != nil {
 			return err
@@ -519,7 +521,7 @@ func (se *scenarioEnv) testEventTypes(output map[string]*integrationData) error 
 			return fmt.Errorf("pod %s failed with: %s", podName, err)
 		}
 
-		err = jsonschema.MatchEntities(i.Data, schemasToMatch, cliArgs.SchemasDirectory)
+		err = jsonschema.MatchEntities(i.Entities, schemasToMatch, cliArgs.SchemasDirectory)
 		if err != nil {
 			return fmt.Errorf("pod %s failed with: %s", podName, err)
 		}

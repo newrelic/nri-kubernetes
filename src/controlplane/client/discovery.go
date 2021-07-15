@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"github.com/newrelic/infra-integrations-sdk/log"
 	"net/http"
 	"net/url"
 	"path"
@@ -11,7 +12,6 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/transport"
 
@@ -46,7 +46,7 @@ type ControlPlaneComponentClient struct {
 	httpClient               *http.Client
 	tlsSecretName            string
 	tlsSecretNamespace       string
-	logger                   *logrus.Logger
+	logger                   log.Logger
 	IsComponentRunningOnNode bool
 	k8sClient                client.Kubernetes
 	endpoint                 url.URL
@@ -142,7 +142,7 @@ func (c *ControlPlaneComponentClient) getTLSConfigFromSecret() (*tls.Config, err
 
 	namespace := c.tlsSecretNamespace
 	if namespace == "" {
-		c.logger.Debug("TLS Secret name configured, but not TLS Secret namespace. Defaulting to `default` namespace.")
+		c.logger.Debugf("TLS Secret name configured, but not TLS Secret namespace. Defaulting to `default` namespace.")
 		namespace = "default"
 	}
 
@@ -216,7 +216,7 @@ func (c *ControlPlaneComponentClient) NodeIP() string {
 // discoverer implements Discoverer interface by using official
 // Kubernetes' Go client.
 type discoverer struct {
-	logger      *logrus.Logger
+	logger      log.Logger
 	component   controlplane.Component
 	nodeIP      string
 	podsFetcher data.FetchFunc
@@ -308,7 +308,7 @@ func (sd *discoverer) findComponentOnNode(nodePods definition.RawGroups) (string
 // control plane components that are running on this node.
 func NewComponentDiscoverer(
 	component controlplane.Component,
-	logger *logrus.Logger,
+	logger log.Logger,
 	nodeIP string,
 	podsFetcher data.FetchFunc,
 	k8sClient client.Kubernetes,

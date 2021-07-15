@@ -1,11 +1,10 @@
 package client
 
 import (
+	"github.com/newrelic/infra-integrations-sdk/log"
 	"net/http"
 	"net/url"
 	"time"
-
-	"github.com/sirupsen/logrus"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/storage"
@@ -44,7 +43,7 @@ func decompose(source client.HTTPClient) (interface{}, error) {
 
 // NewDiscoveryCacher creates a new DiscoveryCacher that wraps a discoverer and caches the data into the
 // specified storage
-func NewDiscoveryCacher(discoverer client.Discoverer, storage storage.Storage, ttl time.Duration, logger *logrus.Logger) client.Discoverer {
+func NewDiscoveryCacher(discoverer client.Discoverer, storage storage.Storage, ttl time.Duration, logger log.Logger) client.Discoverer {
 	return &client.DiscoveryCacher{
 		CachedDataPtr: &cache{},
 		StorageKey:    cachedKey,
@@ -98,7 +97,7 @@ func multiDecompose(sources []client.HTTPClient) (interface{}, error) {
 // NewDistributedDiscoveryCacher initializes a client.MultiDiscoveryCacher with the given parameters.
 // This should be the only way to create instances of client.MultiDiscoveryCacher, as it guarantees the cached data
 // pointer is initialized.
-func NewDistributedDiscoveryCacher(innerDiscoverer client.MultiDiscoverer, storage storage.Storage, ttl time.Duration, logger *logrus.Logger) client.MultiDiscoverer {
+func NewDistributedDiscoveryCacher(innerDiscoverer client.MultiDiscoverer, storage storage.Storage, ttl time.Duration, logger log.Logger) client.MultiDiscoverer {
 	return &client.MultiDiscoveryCacher{
 		Discoverer:    innerDiscoverer,
 		CachedDataPtr: &multiCache{},

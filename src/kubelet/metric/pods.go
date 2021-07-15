@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"github.com/newrelic/infra-integrations-sdk/log"
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
@@ -30,12 +30,12 @@ type PodsFetcher struct {
 	cached                 bool
 	cachedPods             definition.RawGroups
 	fetchError             error
-	logger                 *logrus.Logger
+	logger                 log.Logger
 	client                 client.HTTPClient
 	enableStaticPodsStatus bool
 }
 
-func doPodsFetch(logger *logrus.Logger, c client.HTTPClient, enableStaticPodsStatus bool) (definition.RawGroups, error) {
+func doPodsFetch(logger log.Logger, c client.HTTPClient, enableStaticPodsStatus bool) (definition.RawGroups, error) {
 	r, err := c.Do(http.MethodGet, KubeletPodsPath)
 	if err != nil {
 		return nil, err
@@ -130,7 +130,7 @@ func (f *PodsFetcher) FetchFuncWithCache() data.FetchFunc {
 }
 
 // NewPodsFetcher returns a new PodsFetcher.
-func NewPodsFetcher(l *logrus.Logger, c client.HTTPClient, enableStaticPodsStatus bool) *PodsFetcher {
+func NewPodsFetcher(l log.Logger, c client.HTTPClient, enableStaticPodsStatus bool) *PodsFetcher {
 	return &PodsFetcher{
 		logger:                 l,
 		client:                 c,
@@ -138,7 +138,7 @@ func NewPodsFetcher(l *logrus.Logger, c client.HTTPClient, enableStaticPodsStatu
 	}
 }
 
-func fetchContainersData(logger *logrus.Logger, pod *v1.Pod, enableStaticPodsStatus bool) map[string]definition.RawMetrics {
+func fetchContainersData(logger log.Logger, pod *v1.Pod, enableStaticPodsStatus bool) map[string]definition.RawMetrics {
 	statuses := make(map[string]definition.RawMetrics)
 	if enableStaticPodsStatus || !isStaticPod(pod) {
 		fillContainerStatuses(pod, statuses)
@@ -254,7 +254,7 @@ func isFakePendingPod(s v1.PodStatus) bool {
 }
 
 // TODO handle errors and missing data
-func fetchPodData(logger *logrus.Logger, pod *v1.Pod, staticPodsStatusSupport bool) definition.RawMetrics {
+func fetchPodData(logger log.Logger, pod *v1.Pod, staticPodsStatusSupport bool) definition.RawMetrics {
 	metrics := definition.RawMetrics{
 		"namespace": pod.GetObjectMeta().GetNamespace(),
 		"podName":   pod.GetObjectMeta().GetName(),
@@ -308,7 +308,7 @@ func fetchPodData(logger *logrus.Logger, pod *v1.Pod, staticPodsStatusSupport bo
 	return metrics
 }
 
-func fillPodStatus(logger *logrus.Logger, r definition.RawMetrics, pod *v1.Pod) {
+func fillPodStatus(logger log.Logger, r definition.RawMetrics, pod *v1.Pod) {
 	// TODO Review if those Fake Pending Pods are still an issue
 	if isFakePendingPod(pod.Status) {
 		r["status"] = "Running"

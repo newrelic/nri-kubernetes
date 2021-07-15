@@ -11,8 +11,8 @@ import (
 	"time"
 
 	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
+	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/infra-integrations-sdk/sdk"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -53,12 +53,12 @@ func main() {
 
 	endpoint := startStaticMetricsServer(content, k8sMetricsVersion)
 
-	integration, err := sdk.NewIntegrationProtocol2(integrationName, integrationVersion, &args)
+	integration, err := integration.New(integrationName, integrationVersion, integration.Args(&args))
 	if err != nil {
 		logrus.Fatal(err)
 	}
 
-	logger := log.New(args.Verbose)
+	logger := log.NewStdErr(args.Verbose)
 
 	// ApiServer
 	apiServerClient := apiserver.TestAPIServer{Mem: map[string]*apiserver.NodeInfo{

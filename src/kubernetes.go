@@ -9,8 +9,8 @@ import (
 	"time"
 
 	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
+	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/infra-integrations-sdk/sdk"
 	"github.com/sirupsen/logrus"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/apiserver"
@@ -93,7 +93,7 @@ func getCacheDir(subDirectory string) string {
 }
 
 func controlPlaneJobs(
-	logger *logrus.Logger,
+	logger log.Logger,
 	apiServerClient apiserver.Client,
 	nodeName string,
 	timeout time.Duration,
@@ -184,7 +184,7 @@ func controlPlaneJobs(
 }
 
 func main() {
-	integration, err := sdk.NewIntegrationProtocol2(integrationName, integrationVersion, &args)
+	integration, err := integration.New(integrationName, integrationVersion, integration.Args(&args))
 	var jobs []*scrape.Job
 	exitLog := fmt.Sprintf("Integration %q exited", integrationName)
 	if err != nil {
@@ -192,7 +192,7 @@ func main() {
 		log.Fatal(err) // Global logs used as args processed inside NewIntegrationProtocol2
 	}
 
-	logger := log.New(args.Verbose)
+	logger := log.NewStdErr(args.Verbose)
 	defer func() {
 		if r := recover(); r != nil {
 			recErr, ok := r.(*logrus.Entry)
@@ -204,24 +204,27 @@ func main() {
 		}
 	}()
 
-	defer logger.Debug(exitLog)
+	defer logger.Debugf(exitLog)
 	logger.Debugf("Integration %q ver. %s (git %s) started", integrationName, integrationVersion, integrationCommitHash)
 	if args.ClusterName == "" {
-		logger.Panic(errors.New("cluster_name argument is mandatory"))
+		logger.Errorf("cluster_name argument is mandatory")
+		os.Exit(1)
 	}
 
 	nodeName := os.Getenv(nodeNameEnvVar)
 	if nodeName == "" {
-		logger.Panicf("%s env var should be provided by Kubernetes and is mandatory", nodeNameEnvVar)
+		logger.Errorf("%s env var should be provided by Kubernetes and is mandatory", nodeNameEnvVar)
+		os.Exit(1)
 	}
 
-	if !args.All && !args.Metrics {
-		return
-	}
+	// TODO: Map to v3
+	//if !args.All && !args.Metrics {
+	//	os.Exit(1)
+	//}
 
 	ttl, err := time.ParseDuration(args.DiscoveryCacheTTL)
 	if err != nil {
-		logger.WithError(err).Errorf("while parsing the cache TTL value. Defaulting to %s", defaultDiscoveryCacheTTL)
+		logger.Errorf("Error while parsing the cache TTL value, defaulting to %s: %v", defaultDiscoveryCacheTTL, err)
 		ttl = defaultDiscoveryCacheTTL
 	}
 
@@ -229,27 +232,29 @@ func main() {
 
 	innerKubeletDiscoverer, err := clientKubelet.NewDiscoverer(nodeName, logger)
 	if err != nil {
-		logger.Panicf("error during Kubelet auto discovering process. %s", err)
+		logger.Errorf("Error during Kubelet auto discovering process: %v", err)
 	}
 	cacheStorage := storage.NewJSONDiskStorage(getCacheDir(discoveryCacheDir))
 
 	defaultNetworkInterface, err := network.CachedDefaultInterface(
 		logger, args.NetworkRouteFile, cacheStorage, ttl)
 	if err != nil {
-		logger.Warn(err)
+		logger.Warnf("Error finding default network interface: %v", err)
 	}
 	kubeletDiscoverer := clientKubelet.NewDiscoveryCacher(innerKubeletDiscoverer, cacheStorage, ttl, logger)
 
 	kubeletClient, err := kubeletDiscoverer.Discover(timeout)
 	if err != nil {
-		logger.Panic(err)
+		logger.Errorf("Error discovering kubelet: %v", err)
+		os.Exit(1)
 	}
 	kubeletNodeIP := kubeletClient.NodeIP()
 	logger.Debugf("Kubelet node IP = %s", kubeletNodeIP)
 
 	k8s, err := client.NewKubernetes(false)
 	if err != nil {
-		logger.Panic(err)
+		logger.Errorf("Error building kubernetes client: %v", err)
+		os.Exit(1)
 	}
 
 	if !args.DisableKubeStateMetrics {
@@ -258,7 +263,8 @@ func main() {
 		if args.DistributedKubeStateMetrics {
 			ksmDiscoverer, err := getMultiKSMDiscoverer(kubeletNodeIP, logger)
 			if err != nil {
-				logger.Panic(err)
+				logger.Errorf("Error getting multiKSM discoverer: %v", err)
+				os.Exit(1)
 			}
 			ksmDiscoveryCache := clientKsm.NewDistributedDiscoveryCacher(ksmDiscoverer, cacheStorage, ttl, logger)
 			ksmClients, err = ksmDiscoveryCache.Discover(timeout)
@@ -267,18 +273,21 @@ func main() {
 				logger.Debugf("- node IP: %s", c.NodeIP())
 			}
 			if err != nil {
-				logger.Panic(err)
+				logger.Errorf("Error discovering KSM: %v", err)
+				os.Exit(1)
 			}
 			ksmNodeIP = kubeletNodeIP
 		} else {
 			innerKSMDiscoverer, err := getKSMDiscoverer(logger)
 			if err != nil {
-				logger.Panic(err)
+				logger.Errorf("Error getting KSM discoverer: %v", err)
+				os.Exit(1)
 			}
 			ksmDiscoverer := clientKsm.NewDiscoveryCacher(innerKSMDiscoverer, cacheStorage, ttl, logger)
 			ksmClient, err := ksmDiscoverer.Discover(timeout)
 			if err != nil {
-				logger.Panic(err)
+				logger.Errorf("Error discovering KSM: %v", err)
+				os.Exit(1)
 			}
 			ksmNodeIP = ksmClient.NodeIP()
 			// we only scrape KSM when we are on the same Node as KSM
@@ -297,9 +306,9 @@ func main() {
 
 	ttlAPIServerCacheK8SVersion, err := time.ParseDuration(args.APIServerCacheK8SVersionTTL)
 	if err != nil {
-		logger.WithError(err).Errorf(
-			"while parsing the api server cache TTL value for the kubernetes server version. Defaulting to %s",
-			defaultAPIServerCacheK8SVersionTTL,
+		logger.Errorf(
+			"Error while parsing the api server cache TTL value for the kubernetes server version, defaulting to %s: %v",
+			defaultAPIServerCacheK8SVersionTTL, err,
 		)
 		ttlAPIServerCacheK8SVersion = defaultAPIServerCacheK8SVersionTTL
 	}
@@ -316,13 +325,13 @@ func main() {
 	}
 	k8sVersion, err := apiServerClientK8sVersion.GetServerVersion()
 	if err != nil {
-		logger.WithError(err).Errorf("getting the kubernetes server version")
+		logger.Errorf("Error getting the kubernetes server version: %v", err)
 	}
 	enableStaticPodsStatus := featureflag.StaticPodsStatus(k8sVersion)
 
 	ttlAPIServerCache, err := time.ParseDuration(args.APIServerCacheTTL)
 	if err != nil {
-		logger.WithError(err).Errorf("while parsing the api server cache TTL value. Defaulting to %s", defaultAPIServerCacheTTL)
+		logger.Errorf("while parsing the api server cache TTL value, defaulting to %s: %v", defaultAPIServerCacheTTL, err)
 		ttlAPIServerCache = defaultAPIServerCacheTTL
 	}
 
@@ -380,20 +389,22 @@ func main() {
 		}
 
 		if len(result.Errors) > 0 {
-			logger.WithFields(logrus.Fields{"phase": "populate", "datasource": job.Name}).Debug(result.Error())
+			logger.Infof("Error populating data from %s: %v", job.Name, result.Error())
 		}
 	}
 
 	if successfulJobs == 0 {
-		logger.Panic("No data was populated")
+		logger.Errorf("No data was populated")
+		os.Exit(1)
 	}
 
 	if err := integration.Publish(); err != nil {
-		logger.Panic(err)
+		logger.Errorf("Error rendering integration output: %v", err)
+		os.Exit(1)
 	}
 }
 
-func getKSMDiscoverer(logger *logrus.Logger) (client.Discoverer, error) {
+func getKSMDiscoverer(logger log.Logger) (client.Discoverer, error) {
 	k8sClient, err := client.NewKubernetes( /* tryLocalKubeconfig */ false)
 	if err != nil {
 		return nil, fmt.Errorf("initializing Kubernetes client: %w", err)
@@ -442,7 +453,7 @@ func getKSMDiscoverer(logger *logrus.Logger) (client.Discoverer, error) {
 	return clientKsm.NewDiscoverer(config)
 }
 
-func getMultiKSMDiscoverer(nodeIP string, logger *logrus.Logger) (client.MultiDiscoverer, error) {
+func getMultiKSMDiscoverer(nodeIP string, logger log.Logger) (client.MultiDiscoverer, error) {
 	k8sClient, err := client.NewKubernetes( /* tryLocalKubeconfig */ false)
 	if err != nil {
 		return nil, fmt.Errorf("initializing Kubernetes client: %w", err)
