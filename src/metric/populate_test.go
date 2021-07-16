@@ -1,7 +1,6 @@
 package metric
 
 import (
-	"errors"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/newrelic/infra-integrations-sdk/data/event"
@@ -166,22 +165,6 @@ func TestPopulateK8s(t *testing.T) {
 	require.IsType(t, err, data.PopulateResult{})
 	assert.Empty(t, err.(data.PopulateResult).Errors)
 
-	// Expected errs (missing data)
-	// TODO not good to compare error strings...
-	expectedErrs := []error{
-		errors.New("error populating metric for entity ID kube-system_newrelic-infra-rz225: cannot fetch value for metric deploymentName, metric not found"),
-		errors.New("error populating metric for entity ID kube-system_newrelic-infra-rz225: cannot fetch value for metric reason, metric not found"),
-		errors.New("error populating metric for entity ID kube-system_newrelic-infra-rz225: cannot fetch value for metric message, metric not found"),
-		errors.New("error populating metric for entity ID kube-system_newrelic-infra-rz225_newrelic-infra: cannot fetch value for metric deploymentName, metric not found"),
-		errors.New("error populating metric for entity ID kube-system_newrelic-infra-rz225_newrelic-infra: cannot fetch value for metric cpuLimitCores, metric not found"),
-		errors.New("error populating metric for entity ID kube-system_newrelic-infra-rz225_newrelic-infra: cannot fetch value for metric reason, metric not found"),
-		errors.New("error populating metric for entity ID kube-system_newrelic-infra-rz225_newrelic-infra: cannot fetch value for metric cpuCoresUtilization, 'cpuUsedCores' is nil"),
-		errors.New("error populating metric for entity ID kube-system_newrelic-infra-rz225_newrelic-infra: cannot fetch value for metric requestedCpuCoresUtilization, 'cpuUsedCores' is nil"),
-		errors.New("error populating metric for entity ID kube-system_newrelic-infra-rz225_newrelic-infra: cannot fetch value for metric memoryUtilization, 'memoryUsedBytes' is nil"),
-		errors.New("error populating metric for entity ID kube-system_newrelic-infra-rz225_newrelic-infra: cannot fetch value for metric requestedMemoryUtilization, 'memoryUsedBytes' is nil"),
-	}
-
-	assert.ElementsMatch(t, expectedErrs, err.(data.PopulateResult).Errors)
 	expectedInventory := inventory.New()
 	if err := expectedInventory.SetItem("cluster", "name", expectedEntities[0].Metadata.Name); err != nil {
 		t.Fatal(err)
