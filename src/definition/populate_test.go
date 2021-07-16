@@ -82,12 +82,12 @@ func metricsNamingManipulator(ms *metric.Set, entity *integration.EntityMetadata
 func TestIntegrationProtocol2PopulateFunc_CorrectValue(t *testing.T) {
 	intgr, err := integration.New("nr.test", "1.0.0")
 	if err != nil {
-		t.Fatal()
+		t.Fatal(err)
 	}
 
 	expectedEntityData1, err := intgr.Entity("entity_id_1", "playground:test")
 	if err != nil {
-		t.Fatal()
+		t.Fatal(err)
 	}
 
 	expectedMetricSet1 := &metric.Set{
@@ -106,7 +106,7 @@ func TestIntegrationProtocol2PopulateFunc_CorrectValue(t *testing.T) {
 
 	expectedEntityData2, err := intgr.Entity("entity_id_2", "playground:test")
 	if err != nil {
-		t.Fatal()
+		t.Fatal(err)
 	}
 	expectedMetricSet2 := &metric.Set{Metrics: map[string]interface{}{
 		"event_type":  "TestSample",
@@ -131,8 +131,8 @@ func TestIntegrationProtocol2PopulateFunc_CorrectValue(t *testing.T) {
 	)(rawGroupsSample, specs)
 	assert.True(t, populated)
 	assert.Empty(t, errs)
-	assert.Contains(t, intgr.Entities, &expectedEntityData1)
-	assert.Contains(t, intgr.Entities, &expectedEntityData2)
+	assert.Contains(t, intgr.Entities, expectedEntityData1)
+	assert.Contains(t, intgr.Entities, expectedEntityData2)
 }
 
 func TestIntegrationProtocol2PopulateFunc_PartialResult(t *testing.T) {
@@ -189,8 +189,8 @@ func TestIntegrationProtocol2PopulateFunc_PartialResult(t *testing.T) {
 		clusterMetricsManipulator,
 	)(rawGroupsSample, metricSpecsWithIncompatibleType)
 	assert.True(t, populated)
-	assert.Contains(t, intgr.Entities, &expectedEntityData1)
-	assert.Contains(t, intgr.Entities, &expectedEntityData2)
+	assert.Contains(t, intgr.Entities, expectedEntityData1)
+	assert.Contains(t, intgr.Entities, expectedEntityData2)
 
 	assert.Len(t, errs, 2)
 }
@@ -306,8 +306,8 @@ func TestIntegrationProtocol2PopulateFunc_MetricsSetsNotPopulated_OnlyEntity(t *
 
 	assert.Contains(t, errs, fmt.Errorf("error populating metric for entity ID entity_id_1: cannot fetch value for metric \"useless\": metric \"nonExistentMetric\" not found"))
 	assert.Contains(t, errs, fmt.Errorf("error populating metric for entity ID entity_id_2: cannot fetch value for metric \"useless\": metric \"nonExistentMetric\" not found"))
-	assert.Contains(t, intgr.Entities, &expectedEntityData1)
-	assert.Contains(t, intgr.Entities, &expectedEntityData2)
+	assert.Contains(t, intgr.Entities, expectedEntityData1)
+	assert.Contains(t, intgr.Entities, expectedEntityData2)
 }
 
 func TestIntegrationProtocol2PopulateFunc_EntityIDGenerator(t *testing.T) {
@@ -387,8 +387,8 @@ func TestIntegrationProtocol2PopulateFunc_EntityIDGenerator(t *testing.T) {
 	assert.True(t, populated)
 	assert.Empty(t, errs)
 
-	assert.Contains(t, intgr.Entities, &expectedEntityData1)
-	assert.Contains(t, intgr.Entities, &expectedEntityData2)
+	assert.Contains(t, intgr.Entities, expectedEntityData1)
+	assert.Contains(t, intgr.Entities, expectedEntityData2)
 }
 
 func TestIntegrationProtocol2PopulateFunc_EntityIDGeneratorFuncWithError(t *testing.T) {
@@ -529,9 +529,9 @@ func TestIntegrationProtocol2PopulateFunc_EntityIDGeneratorFuncWithError(t *test
 //	)(groups, withGeneratorSpec)
 //	assert.True(t, populated)
 //	assert.Empty(t, errs)
-//	assert.Contains(t, intgr.Entities, &expectedEntityData1)
-//	assert.Contains(t, intgr.Entities, &expectedEntityData2)
-//	assert.Contains(t, intgr.Entities, &expectedEntityData3)
+//	assert.Contains(t, intgr.Entities, expectedEntityData1)
+//	assert.Contains(t, intgr.Entities, expectedEntityData2)
+//	assert.Contains(t, intgr.Entities, expectedEntityData3)
 //	assert.Len(t, intgr.Entities, 3)
 //}
 
@@ -621,8 +621,8 @@ func TestIntegrationProtocol2PopulateFunc_ManipulatorFuncWithError(t *testing.T)
 	assert.True(t, populated)
 	assert.Len(t, errs, 2)
 	assert.Contains(t, errs, fmt.Errorf("error from manipulator function"))
-	assert.Contains(t, intgr.Entities, &expectedEntityData1)
-	assert.Contains(t, intgr.Entities, &expectedEntityData2)
+	assert.Contains(t, intgr.Entities, expectedEntityData1)
+	assert.Contains(t, intgr.Entities, expectedEntityData2)
 }
 
 func TestIntegrationProtocol2PopulateFunc_msTypeGuesserFuncWithError(t *testing.T) {
@@ -654,6 +654,6 @@ func TestIntegrationProtocol2PopulateFunc_msTypeGuesserFuncWithError(t *testing.
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
 	assert.Contains(t, errs, fmt.Errorf("error setting event type"))
-	assert.Contains(t, intgr.Entities, &expectedEntityData1)
-	assert.Contains(t, intgr.Entities, &expectedEntityData2)
+	assert.Contains(t, intgr.Entities, expectedEntityData1)
+	assert.Contains(t, intgr.Entities, expectedEntityData2)
 }

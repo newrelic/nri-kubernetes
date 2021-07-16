@@ -2,6 +2,11 @@ package metric
 
 import (
 	"errors"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/newrelic/infra-integrations-sdk/data/event"
+	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -23,11 +28,12 @@ func parseTime(raw string) time.Time {
 	return t
 }
 
-var expectedMetrics = []*integration.Entity{
+var expectedEntities = []*integration.Entity{
 	{
 		Metadata: &integration.EntityMetadata{
 			Name:      "test-cluster",
 			Namespace: "k8s:cluster",
+			IDAttrs:   integration.IDAttributes{},
 		},
 		Metrics: []*metric.Set{
 			{
@@ -39,11 +45,14 @@ var expectedMetrics = []*integration.Entity{
 				},
 			},
 		},
+		Inventory: inventory.New(),
+		Events:    []*event.Event{},
 	},
 	{
 		Metadata: &integration.EntityMetadata{
 			Name:      "newrelic-infra-rz225",
 			Namespace: "k8s:test-cluster:kube-system:pod",
+			IDAttrs:   integration.IDAttributes{},
 		},
 		Metrics: []*metric.Set{
 			{
@@ -75,11 +84,14 @@ var expectedMetrics = []*integration.Entity{
 				},
 			},
 		},
+		Inventory: inventory.New(),
+		Events:    []*event.Event{},
 	},
 	{
 		Metadata: &integration.EntityMetadata{
 			Name:      "newrelic-infra",
 			Namespace: "k8s:test-cluster:kube-system:newrelic-infra-rz225:container",
+			IDAttrs:   integration.IDAttributes{},
 		},
 		Metrics: []*metric.Set{
 			{
@@ -121,6 +133,8 @@ var expectedMetrics = []*integration.Entity{
 				},
 			},
 		},
+		Inventory: inventory.New(),
+		Events:    []*event.Event{},
 	},
 }
 
@@ -133,9 +147,9 @@ var kubeletSpecs = definition.SpecGroups{
 func TestPopulateK8s(t *testing.T) {
 	p := NewK8sPopulator()
 
-	i, err := integration.New("test", "test")
+	intgr, err := integration.New("test", "test")
 	assert.NoError(t, err)
-	i.Clear()
+	intgr.Clear()
 
 	// We reduce the test fixtures in order to simplify testing.
 	foo := definition.RawGroups{
@@ -148,7 +162,7 @@ func TestPopulateK8s(t *testing.T) {
 	}
 
 	k8sVersion := &version.Info{GitVersion: "v1.15.42"}
-	err = p.Populate(foo, kubeletSpecs, i, "test-cluster", k8sVersion)
+	err = p.Populate(foo, kubeletSpecs, intgr, "test-cluster", k8sVersion)
 	require.IsType(t, err, data.PopulateResult{})
 	assert.Empty(t, err.(data.PopulateResult).Errors)
 
@@ -168,9 +182,32 @@ func TestPopulateK8s(t *testing.T) {
 	}
 
 	assert.ElementsMatch(t, expectedErrs, err.(data.PopulateResult).Errors)
-	expectedInventory := &inventory.Inventory{}
-	expectedInventory.SetItem("cluster", "name", expectedMetrics[0].Metadata.Name)
+	expectedInventory := inventory.New()
+	expectedInventory.SetItem("cluster", "name", expectedEntities[0].Metadata.Name)
 	expectedInventory.SetItem("cluster", "k8sVersion", k8sVersion.String())
-	expectedMetrics[0].Inventory = expectedInventory
-	assert.ElementsMatch(t, expectedMetrics, i.Entities)
+	expectedEntities[0].Inventory = expectedInventory
+
+	if len(expectedEntities) != len(intgr.Entities) {
+		t.Fatalf("missing required entities")
+	}
+
+	// Sort slices, so we can later diff them one-by-one for decent readability
+	entitySliceLesser := func(entities []*integration.Entity) func(i, j int) bool {
+		return func(i, j int) bool {
+			return strings.Compare(entities[i].Metadata.Name, entities[j].Metadata.Name) < 0
+		}
+	}
+
+	sort.Slice(intgr.Entities, entitySliceLesser(intgr.Entities))
+	sort.Slice(expectedEntities, entitySliceLesser(expectedEntities))
+
+	// Compare entities deeply, one by one, ignoring unexported fields
+	for j := range expectedEntities {
+		compareIgnoreFields := cmpopts.IgnoreUnexported(integration.Entity{}, metric.Set{}, inventory.Inventory{})
+		e := intgr.Entities[j]
+		ee := expectedEntities[j]
+		if !cmp.Equal(e, ee, compareIgnoreFields) {
+			t.Fatalf("Entities[%d] mismatch: %s", j, cmp.Diff(e, ee, compareIgnoreFields))
+		}
+	}
 }
