@@ -34,8 +34,8 @@ func populateCluster(i *integration.Integration, clusterName string, k8sVersion 
 	return ms.SetMetric("clusterK8sVersion", k8sVersionStr, metric.ATTRIBUTE)
 }
 
-// IntegrationProtocol2PopulateFunc populates an integration protocol v2 with the given metrics and definition.
-func IntegrationProtocol2PopulateFunc(
+// IntegrationPopulator populates an integration with the given metrics and definition.
+func IntegrationPopulator(
 	i *integration.Integration,
 	clusterName string,
 	k8sVersion fmt.Stringer,

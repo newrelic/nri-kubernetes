@@ -121,7 +121,7 @@ func TestIntegrationProtocol2PopulateFunc_CorrectValue(t *testing.T) {
 	}
 	expectedEntityData2.Metrics = []*metric.Set{expectedMetricSet2}
 
-	populated, errs := IntegrationProtocol2PopulateFunc(
+	populated, errs := IntegrationPopulator(
 		intgr,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
@@ -180,7 +180,7 @@ func TestIntegrationProtocol2PopulateFunc_PartialResult(t *testing.T) {
 	}
 	expectedEntityData2.Metrics = []*metric.Set{expectedMetricSet2}
 
-	populated, errs := IntegrationProtocol2PopulateFunc(
+	populated, errs := IntegrationPopulator(
 		intgr,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
@@ -204,7 +204,7 @@ func TestIntegrationProtocol2PopulateFunc_EntitiesDataNotPopulated_EmptyMetricGr
 	}
 	expectedData := make([]*integration.Entity, 0)
 
-	populated, errs := IntegrationProtocol2PopulateFunc(
+	populated, errs := IntegrationPopulator(
 		intgr,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
@@ -237,7 +237,7 @@ func TestIntegrationProtocol2PopulateFunc_EntitiesDataNotPopulated_ErrorSettingE
 
 	expectedData := []*integration.Entity{}
 
-	populated, errs := IntegrationProtocol2PopulateFunc(
+	populated, errs := IntegrationPopulator(
 		intgr,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
@@ -293,7 +293,7 @@ func TestIntegrationProtocol2PopulateFunc_MetricsSetsNotPopulated_OnlyEntity(t *
 	}
 	expectedEntityData2.Metrics = []*metric.Set{expectedMetricSet2}
 
-	populated, errs := IntegrationProtocol2PopulateFunc(
+	populated, errs := IntegrationPopulator(
 		intgr,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
@@ -375,7 +375,7 @@ func TestIntegrationProtocol2PopulateFunc_EntityIDGenerator(t *testing.T) {
 	}
 	expectedEntityData2.Metrics = []*metric.Set{expectedMetricSet2}
 
-	populated, errs := IntegrationProtocol2PopulateFunc(
+	populated, errs := IntegrationPopulator(
 		intgr,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
@@ -411,7 +411,7 @@ func TestIntegrationProtocol2PopulateFunc_EntityIDGeneratorFuncWithError(t *test
 		t.Fatal()
 	}
 
-	populated, errs := IntegrationProtocol2PopulateFunc(
+	populated, errs := IntegrationPopulator(
 		intgr,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
@@ -519,7 +519,7 @@ func TestIntegrationProtocol2PopulateFunc_EntityIDGeneratorFuncWithError(t *test
 //	if err != nil {
 //		t.Fatal()
 //	}
-//	populated, errs := IntegrationProtocol2PopulateFunc(
+//	populated, errs := IntegrationPopulator(
 //		integration,
 //		defaultNS,
 //		&version.Info{GitVersion: "v1.15.42"},
@@ -555,7 +555,7 @@ func TestIntegrationProtocol2PopulateFunc_EntityTypeGeneratorFuncWithError(t *te
 		t.Fatal()
 	}
 
-	populated, errs := IntegrationProtocol2PopulateFunc(
+	populated, errs := IntegrationPopulator(
 		intgr,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
@@ -611,7 +611,7 @@ func TestIntegrationProtocol2PopulateFunc_ManipulatorFuncWithError(t *testing.T)
 	}
 	expectedEntityData2.Metrics = []*metric.Set{expectedMetricSet2}
 
-	populated, errs := IntegrationProtocol2PopulateFunc(
+	populated, errs := IntegrationPopulator(
 		intgr,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
@@ -645,7 +645,7 @@ func TestIntegrationProtocol2PopulateFunc_msTypeGuesserFuncWithError(t *testing.
 		t.Fatal()
 	}
 
-	populated, errs := IntegrationProtocol2PopulateFunc(
+	populated, errs := IntegrationPopulator(
 		intgr,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
