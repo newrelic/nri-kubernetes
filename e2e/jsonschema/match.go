@@ -66,7 +66,7 @@ func MatchEntities(data []*integration.Entity, schemaFileByJobByType map[string]
 	}
 
 	for _, entityData := range data {
-		// Merge metricSets from the entity 
+		// Merge metricSets from the entity
 		metric, err := mergeMetricSets(entityData.Metrics)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("merging metricSets for %s: %w", entityData.Metadata.Name, err))

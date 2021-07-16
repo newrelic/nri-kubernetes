@@ -11,29 +11,33 @@ import (
 )
 
 func TestK8sClusterMetricsManipulator(t *testing.T) {
-	entityData, err := sdk.NewEntityData("fluentd-elasticsearch-jnqb7", "k8s:playground:kube-system:pod")
-	if err != nil {
-		t.Fatal()
+	metadata := &integration.EntityMetadata{
+		Name:      "fluentd-elasticsearch-jnqb7",
+		Namespace: "k8s:playground:kube-system:pod",
 	}
-	metricSet := *metric.Set{
-		"event_type":        "K8sPodSample",
-		"podInfo.namespace": "kube-system",
-		"podInfo.pod":       "fluentd-elasticsearch-jnqb7",
-		"displayName":       "fluentd-elasticsearch-jnqb7",
-		"entityName":        "k8s:playground:kube-system:pod:fluentd-elasticsearch-jnqb7",
-		"clusterName":       "playground",
+	metricSet := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":        "K8sPodSample",
+			"podInfo.namespace": "kube-system",
+			"podInfo.pod":       "fluentd-elasticsearch-jnqb7",
+			"displayName":       "fluentd-elasticsearch-jnqb7",
+			"entityName":        "k8s:playground:kube-system:pod:fluentd-elasticsearch-jnqb7",
+			"clusterName":       "playground",
+		},
 	}
 
-	err = K8sClusterMetricsManipulator(metricSet, entityData.Entity, "modifiedClusterName")
+	err := K8sClusterMetricsManipulator(metricSet, metadata, "modifiedClusterName")
 	assert.Nil(t, err)
 
-	expectedMetricSet := *metric.Set{
-		"event_type":        "K8sPodSample",
-		"podInfo.namespace": "kube-system",
-		"podInfo.pod":       "fluentd-elasticsearch-jnqb7",
-		"displayName":       "fluentd-elasticsearch-jnqb7",
-		"entityName":        "k8s:playground:kube-system:pod:fluentd-elasticsearch-jnqb7",
-		"clusterName":       "modifiedClusterName",
+	expectedMetricSet := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":        "K8sPodSample",
+			"podInfo.namespace": "kube-system",
+			"podInfo.pod":       "fluentd-elasticsearch-jnqb7",
+			"displayName":       "fluentd-elasticsearch-jnqb7",
+			"entityName":        "k8s:playground:kube-system:pod:fluentd-elasticsearch-jnqb7",
+			"clusterName":       "modifiedClusterName",
+		},
 	}
 	assert.Equal(t, expectedMetricSet, metricSet)
 }
@@ -58,28 +62,32 @@ func TestK8sMetricSetTypeGuesser(t *testing.T) {
 }
 
 func TestK8sEntityMetricsManipulator(t *testing.T) {
-	entityData, err := sdk.NewEntityData("fluentd-elasticsearch-jnqb7", "k8s:playground:kube-system:pod")
-	if err != nil {
-		t.Fatal()
+	metadata := &integration.EntityMetadata{
+		Name:      "fluentd-elasticsearch-jnqb7",
+		Namespace: "k8s:playground:kube-system:pod",
 	}
-	metricSet := *metric.Set{
-		"event_type":        "K8sPodSample",
-		"podInfo.namespace": "kube-system",
-		"podInfo.pod":       "fluentd-elasticsearch-jnqb7",
-		"entityName":        "fluentd-elasticsearch-jnqb7",
-		"clusterName":       "playground",
+	metricSet := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":        "K8sPodSample",
+			"podInfo.namespace": "kube-system",
+			"podInfo.pod":       "fluentd-elasticsearch-jnqb7",
+			"entityName":        "fluentd-elasticsearch-jnqb7",
+			"clusterName":       "playground",
+		},
 	}
 
-	err = K8sEntityMetricsManipulator(metricSet, entityData.Entity, "")
+	err := K8sEntityMetricsManipulator(metricSet, metadata, "")
 	assert.Nil(t, err)
 
-	expectedMetricSet := *metric.Set{
-		"event_type":        "K8sPodSample",
-		"podInfo.namespace": "kube-system",
-		"podInfo.pod":       "fluentd-elasticsearch-jnqb7",
-		"displayName":       "fluentd-elasticsearch-jnqb7",
-		"entityName":        "fluentd-elasticsearch-jnqb7",
-		"clusterName":       "playground",
+	expectedMetricSet := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":        "K8sPodSample",
+			"podInfo.namespace": "kube-system",
+			"podInfo.pod":       "fluentd-elasticsearch-jnqb7",
+			"displayName":       "fluentd-elasticsearch-jnqb7",
+			"entityName":        "fluentd-elasticsearch-jnqb7",
+			"clusterName":       "playground",
+		},
 	}
 	assert.Equal(t, expectedMetricSet, metricSet)
 }
