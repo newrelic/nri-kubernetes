@@ -35,7 +35,6 @@ var FromRawEntityIDGenerator = func(_, rawEntityID string, _ definition.RawGroup
 // If group label is "container" then pod name is also included.
 func FromLabelValueEntityTypeGenerator(key string) definition.EntityTypeGeneratorFunc {
 	return func(groupLabel string, rawEntityID string, g definition.RawGroups, clusterName string) (string, error) {
-
 		switch groupLabel {
 		case "namespace", "node":
 			return fmt.Sprintf("k8s:%s:%s", clusterName, groupLabel), nil
@@ -78,16 +77,15 @@ func getLabels(groupLabel, rawEntityID, key string, groups definition.RawGroups,
 	for _, label := range labels {
 		v, err := FromLabelValue(key, label)(groupLabel, rawEntityID, groups)
 		if err != nil {
-			return s, fmt.Errorf("cannot fetch label %s for metric %s, %s", label, key, err)
+			return s, fmt.Errorf("cannot fetch label %q for metric %q: %w", label, key, err)
 		}
 		if v == nil {
-			return s, fmt.Errorf("label %s not found for metric %s", label, key)
-
+			return s, fmt.Errorf("label %q not found for metric %q", label, key)
 		}
 
 		val, ok := v.(string)
 		if !ok {
-			return s, fmt.Errorf("incorrect type of label %s for metric %s", label, key)
+			return s, fmt.Errorf("unexpected type %T of label %q for metric %q", v, label, key)
 		}
 		s = append(s, val)
 	}
@@ -100,17 +98,16 @@ func FromLabelValueEntityIDGenerator(key, label string) definition.EntityIDGener
 	return func(groupLabel string, rawEntityID string, g definition.RawGroups) (string, error) {
 		v, err := FromLabelValue(key, label)(groupLabel, rawEntityID, g)
 		if err != nil {
-
-			return "", fmt.Errorf("cannot fetch label %s for metric %s, %s", label, key, err)
+			return "", fmt.Errorf("cannot fetch label %q for metric %q: %w", label, key, err)
 		}
 
 		if v == nil {
-			return "", fmt.Errorf("incorrect value of fetched data for metric %s", key)
+			return "", fmt.Errorf("unexpected nil value of fetched data for metric %q", key)
 		}
 
 		val, ok := v.(string)
 		if !ok {
-			return "", fmt.Errorf("incorrect type of fetched data for metric %s", key)
+			return "", fmt.Errorf("incorrect type %T of fetched data for metric %q", v, key)
 		}
 
 		return val, err
@@ -205,7 +202,8 @@ func GroupMetricsBySpec(specs definition.SpecGroups, families []MetricFamily) (g
 					continue
 				}
 
-				var rawEntityID string
+				rawEntityID := ""
+
 				switch groupLabel {
 				case "namespace", "node":
 					rawEntityID = m.Labels[groupLabel]
@@ -428,7 +426,6 @@ func FromLabelValue(key, label string) definition.FetchFunc {
 // suffixLabelsInOrder takes the given metricName and appends, in alphabetical
 // order, the given labels in the form of <label_key>_<label_value>.
 func suffixLabelsInOrder(metricName string, labels Labels) string {
-
 	orderedLabels := make([]string, 0, len(labels))
 	for labelKey, labelVal := range labels {
 		orderedLabels = append(orderedLabels, fmt.Sprintf("%s_%s", labelKey, labelVal))
@@ -559,7 +556,6 @@ func getRandomMetricWithLabels(metrics definition.RawMetrics, labels ...string) 
 
 func fetchMetric(metricKey string) definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
-
 		value, err := definition.FromRaw(metricKey)(groupLabel, entityID, groups)
 		if err != nil {
 			return nil, err
@@ -639,7 +635,6 @@ func labelsFromMetric(
 	}
 
 	return multiple, nil
-
 }
 
 // InheritAllLabelsFrom gets all the label values from from a related metric.
@@ -684,7 +679,6 @@ func getRawEntityID(parentGroupLabel, groupLabel, entityID string, groups defini
 		}
 	default:
 		metricKey, r, err := getRandomMetricWithLabels(group, "namespace", parentGroupLabel)
-
 		if err != nil {
 			return "", err
 		}

@@ -192,7 +192,7 @@ func TestIntegrationProtocol2PopulateFunc_PartialResult(t *testing.T) {
 }
 
 func TestIntegrationProtocol2PopulateFunc_EntitiesDataNotPopulated_EmptyMetricGroups(t *testing.T) {
-	var metricGroupEmpty = RawGroups{}
+	metricGroupEmpty := RawGroups{}
 
 	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
 	if err != nil {
@@ -246,7 +246,7 @@ func TestIntegrationProtocol2PopulateFunc_EntitiesDataNotPopulated_ErrorSettingE
 }
 
 func TestIntegrationProtocol2PopulateFunc_MetricsSetsNotPopulated_OnlyEntity(t *testing.T) {
-	var metricSpecsIncorrect = SpecGroups{
+	metricSpecsIncorrect := SpecGroups{
 		"test": SpecGroup{
 			TypeGenerator: fromGroupEntityTypeGuessFunc,
 			Specs: []Spec{
@@ -297,8 +297,8 @@ func TestIntegrationProtocol2PopulateFunc_MetricsSetsNotPopulated_OnlyEntity(t *
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
 
-	assert.Contains(t, errs, errors.New("error populating metric for entity ID entity_id_1: cannot fetch value for metric useless, metric not found"))
-	assert.Contains(t, errs, errors.New("error populating metric for entity ID entity_id_2: cannot fetch value for metric useless, metric not found"))
+	assert.Contains(t, errs, errors.New("error populating metric for entity ID entity_id_1: cannot fetch value for metric \"useless\": metric \"nonExistentMetric\" not found"))
+	assert.Contains(t, errs, errors.New("error populating metric for entity ID entity_id_2: cannot fetch value for metric \"useless\": metric \"nonExistentMetric\" not found"))
 	assert.Contains(t, integration.Data, &expectedEntityData1)
 	assert.Contains(t, integration.Data, &expectedEntityData2)
 }
@@ -415,8 +415,8 @@ func TestIntegrationProtocol2PopulateFunc_EntityIDGeneratorFuncWithError(t *test
 	assert.Contains(t, errs, errors.New("error generating entity ID for entity_id_1: error generating entity ID"))
 	assert.Contains(t, errs, errors.New("error generating entity ID for entity_id_2: error generating entity ID"))
 	assert.Equal(t, integration.Data, []*sdk.EntityData{})
-
 }
+
 func TestIntegrationProtocol2PopulateFunc_PopulateOnlySpecifiedGroups(t *testing.T) {
 	generator := func(groupLabel, rawEntityID string, g RawGroups) (string, error) {
 		return fmt.Sprintf("%v-generated", rawEntityID), nil

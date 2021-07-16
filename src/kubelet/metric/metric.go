@@ -18,29 +18,32 @@ import (
 const StatsSummaryPath = "/stats/summary"
 
 // GetMetricsData calls kubelet /stats/summary endpoint and returns unmarshalled response
-func GetMetricsData(c client.HTTPClient) (v1.Summary, error) {
+func GetMetricsData(c client.HTTPClient) (*v1.Summary, error) {
 	resp, err := c.Do(http.MethodGet, StatsSummaryPath)
 	if err != nil {
-		return v1.Summary{}, err
+		return nil, fmt.Errorf("performing GET request to kubelet endpoint %q: %w", StatsSummaryPath, err)
 	}
 	defer resp.Body.Close() // nolint: errcheck
+
 	if resp.StatusCode != http.StatusOK {
-		return v1.Summary{}, fmt.Errorf("error calling kubelet endpoint. Got status code: %d", resp.StatusCode)
+		body, err := ioutil.ReadAll(resp.Body)
+
+		bodyErr := fmt.Errorf("response body: %s", string(body))
+
+		if err != nil {
+			bodyErr = fmt.Errorf("reading response body: %w", err)
+		}
+
+		return nil, fmt.Errorf("received non-OK response code from kubelet: %d: %w", resp.StatusCode, bodyErr)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return v1.Summary{}, fmt.Errorf("error reading the response body of kubelet endpoint. Got error: %v", err.Error())
+	summary := &v1.Summary{}
+
+	if err := json.NewDecoder(resp.Body).Decode(summary); err != nil {
+		return nil, fmt.Errorf("unmarshaling the response body into kubelet stats Summary: %w", err)
 	}
 
-	var summary = new(v1.Summary)
-	err = json.Unmarshal(body, summary)
-	if err != nil {
-		return v1.Summary{}, fmt.Errorf("error unmarshaling the response body. Got error: %v", err.Error())
-	}
-
-	return *summary, nil
-
+	return summary, nil
 }
 
 func fetchNodeStats(n v1.NodeStats) (definition.RawMetrics, string, error) {
@@ -166,7 +169,6 @@ func fetchContainerStats(c v1.ContainerStats) (definition.RawMetrics, error) {
 	}
 
 	return r, nil
-
 }
 
 func fetchVolumeStats(v v1.VolumeStats) (definition.RawMetrics, error) {
@@ -192,7 +194,11 @@ func fetchVolumeStats(v v1.VolumeStats) (definition.RawMetrics, error) {
 }
 
 // GroupStatsSummary groups specific data for pods, containers and node
-func GroupStatsSummary(statsSummary v1.Summary) (definition.RawGroups, []error) {
+func GroupStatsSummary(statsSummary *v1.Summary) (definition.RawGroups, []error) {
+	if statsSummary == nil {
+		return nil, []error{fmt.Errorf("got nil stats summary")}
+	}
+
 	var errs []error
 	var rawEntityID string
 	g := definition.RawGroups{
@@ -214,20 +220,19 @@ func GroupStatsSummary(statsSummary v1.Summary) (definition.RawGroups, []error) 
 		return g, errs
 	}
 
-PodListLoop:
 	for _, pod := range statsSummary.Pods {
 		rawPodMetrics, rawEntityID, err := fetchPodStats(pod)
 		if err != nil {
 			errs = append(errs, err)
-			continue PodListLoop
+			continue
 		}
+
 		g["pod"][rawEntityID] = rawPodMetrics
-	VolumeListLoop:
 		for _, volume := range pod.VolumeStats {
 			rawVolumeMetrics, err := fetchVolumeStats(volume)
 			if err != nil {
 				errs = append(errs, err)
-				continue VolumeListLoop
+				continue
 			}
 			rawVolumeMetrics["podName"] = rawPodMetrics["podName"]
 			rawVolumeMetrics["namespace"] = rawPodMetrics["namespace"]
@@ -235,17 +240,11 @@ PodListLoop:
 			g["volume"][rawEntityID] = rawVolumeMetrics
 		}
 
-		if pod.Containers == nil {
-			// Some pods could have no containers yet or containers could be in a back-off pulling image status.
-			continue PodListLoop
-		}
-
-	ContainerListLoop:
 		for _, container := range pod.Containers {
 			rawContainerMetrics, err := fetchContainerStats(container)
 			if err != nil {
 				errs = append(errs, err)
-				continue ContainerListLoop
+				continue
 			}
 			rawContainerMetrics["podName"] = rawPodMetrics["podName"]
 			rawContainerMetrics["namespace"] = rawPodMetrics["namespace"]
@@ -297,7 +296,6 @@ func FromRawEntityIDGroupEntityIDGenerator(key string) definition.EntityIDGenera
 // If group label is different than "namespace" or "node", then entity type is also composed of namespace.
 // If group label is "container" then pod name is also included.
 func FromRawGroupsEntityTypeGenerator(groupLabel string, rawEntityID string, groups definition.RawGroups, clusterName string) (string, error) {
-
 	switch groupLabel {
 	case "namespace", "node":
 		return fmt.Sprintf("k8s:%s:%s", clusterName, groupLabel), nil
@@ -346,13 +344,11 @@ func getKeys(groupLabel, rawEntityID string, groups definition.RawGroups, keys .
 	for _, key := range keys {
 		v, ok := en[key]
 		if !ok {
-
 			return s, fmt.Errorf("%q not found for %q", key, groupLabel)
 		}
 
 		val, ok := v.(string)
 		if !ok {
-
 			return s, fmt.Errorf("incorrect type of %q for %q", key, groupLabel)
 		}
 

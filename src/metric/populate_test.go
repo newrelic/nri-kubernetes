@@ -1,13 +1,13 @@
 package metric
 
 import (
-	"errors"
 	"testing"
 	"time"
 
 	sdkMetric "github.com/newrelic/infra-integrations-sdk/metric"
 	"github.com/newrelic/infra-integrations-sdk/sdk"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/version"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
@@ -144,24 +144,9 @@ func TestPopulateK8s(t *testing.T) {
 
 	k8sVersion := &version.Info{GitVersion: "v1.15.42"}
 	err = p.Populate(foo, kubeletSpecs, i, "test-cluster", k8sVersion)
-	assert.Error(t, err)
+	require.IsType(t, err, data.PopulateResult{})
+	assert.Empty(t, err.(data.PopulateResult).Errors)
 
-	// Expected errs (missing data)
-	// TODO not good to compare error strings...
-	expectedErrs := []error{
-		errors.New("error populating metric for entity ID kube-system_newrelic-infra-rz225: cannot fetch value for metric deploymentName, metric not found"),
-		errors.New("error populating metric for entity ID kube-system_newrelic-infra-rz225: cannot fetch value for metric reason, metric not found"),
-		errors.New("error populating metric for entity ID kube-system_newrelic-infra-rz225: cannot fetch value for metric message, metric not found"),
-		errors.New("error populating metric for entity ID kube-system_newrelic-infra-rz225_newrelic-infra: cannot fetch value for metric deploymentName, metric not found"),
-		errors.New("error populating metric for entity ID kube-system_newrelic-infra-rz225_newrelic-infra: cannot fetch value for metric cpuLimitCores, metric not found"),
-		errors.New("error populating metric for entity ID kube-system_newrelic-infra-rz225_newrelic-infra: cannot fetch value for metric reason, metric not found"),
-		errors.New("error populating metric for entity ID kube-system_newrelic-infra-rz225_newrelic-infra: cannot fetch value for metric cpuCoresUtilization, 'cpuUsedCores' is nil"),
-		errors.New("error populating metric for entity ID kube-system_newrelic-infra-rz225_newrelic-infra: cannot fetch value for metric requestedCpuCoresUtilization, 'cpuUsedCores' is nil"),
-		errors.New("error populating metric for entity ID kube-system_newrelic-infra-rz225_newrelic-infra: cannot fetch value for metric memoryUtilization, 'memoryUsedBytes' is nil"),
-		errors.New("error populating metric for entity ID kube-system_newrelic-infra-rz225_newrelic-infra: cannot fetch value for metric requestedMemoryUtilization, 'memoryUsedBytes' is nil"),
-	}
-
-	assert.ElementsMatch(t, expectedErrs, err.(data.PopulateResult).Errors)
 	expectedInventory := sdk.Inventory{}
 	expectedInventory.SetItem("cluster", "name", expectedMetrics[0].Entity.Name)
 	expectedInventory.SetItem("cluster", "k8sVersion", k8sVersion.String())

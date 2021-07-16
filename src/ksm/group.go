@@ -24,17 +24,20 @@ type ksmGrouper struct {
 func (r *ksmGrouper) addServiceSpecSelectorToGroup(serviceGroup map[string]definition.RawMetrics) error {
 	services, err := r.k8sClient.ListServices()
 	if err != nil {
-		return err
+		return fmt.Errorf("listing services: %w", err)
 	}
 	for _, s := range services.Items {
 		serviceRawMetrics, ok := serviceGroup[fmt.Sprintf("%s_%s", s.Namespace, s.Name)]
 		if !ok {
 			continue
 		}
-		labels := make(prometheus.Labels)
+
+		labels := prometheus.Labels{}
+
 		for key, value := range s.Spec.Selector {
 			labels[fmt.Sprintf("selector_%s", key)] = value
 		}
+
 		serviceRawMetrics["apiserver_kube_service_spec_selectors"] = prometheus.Metric{
 			Labels: labels,
 			Value:  nil,
@@ -48,20 +51,21 @@ func (r *ksmGrouper) Group(specGroups definition.SpecGroups) (definition.RawGrou
 	if err != nil {
 		return nil, &data.ErrorGroup{
 			Recoverable: false,
-			Errors:      []error{fmt.Errorf("error querying KSM. %s", err)},
+			Errors:      []error{fmt.Errorf("querying KSM: %w", err)},
 		}
 	}
 
 	groups, errs := prometheus.GroupMetricsBySpec(specGroups, mFamily)
 	if servicesGroup, ok := groups["service"]; ok {
-		err = r.addServiceSpecSelectorToGroup(servicesGroup)
-		if err != nil {
-			errs = append(errs, err)
+		if err := r.addServiceSpecSelectorToGroup(servicesGroup); err != nil {
+			errs = append(errs, fmt.Errorf("adding service spec selector to group: %w", err))
 		}
 	}
+
 	if len(errs) == 0 {
 		return groups, nil
 	}
+
 	return groups, &data.ErrorGroup{Recoverable: true, Errors: errs}
 }
 

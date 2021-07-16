@@ -1,7 +1,7 @@
 package definition
 
 import (
-	"errors"
+	"fmt"
 )
 
 // RawValue is just any value from a raw metric.
@@ -32,19 +32,19 @@ type TransformFunc func(FetchedValue) (FetchedValue, error)
 // FromRaw fetches metrics from raw metrics. Is the most simple use case.
 func FromRaw(metricKey string) FetchFunc {
 	return func(groupLabel, entityID string, groups RawGroups) (FetchedValue, error) {
-		g, ok := groups[groupLabel]
+		group, ok := groups[groupLabel]
 		if !ok {
-			return nil, errors.New("group not found")
+			return nil, fmt.Errorf("group %q not found", groupLabel)
 		}
 
-		e, ok := g[entityID]
+		entity, ok := group[entityID]
 		if !ok {
-			return nil, errors.New("entity not found")
+			return nil, fmt.Errorf("entity %q not found", entityID)
 		}
 
-		value, ok := e[metricKey]
+		value, ok := entity[metricKey]
 		if !ok {
-			return nil, errors.New("metric not found")
+			return nil, fmt.Errorf("metric %q not found", metricKey)
 		}
 
 		return value, nil
