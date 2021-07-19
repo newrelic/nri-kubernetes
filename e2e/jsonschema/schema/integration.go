@@ -16,7 +16,7 @@ var IntegrationSchema = `{
     "protocol_version": {
       "$id": "/properties/protocol_version",
       "type": "string",
-      "enum": ["2"]
+      "enum": ["3"]
     },
     "integration_version": {
       "$id": "/properties/integration_version",
