@@ -100,7 +100,6 @@ func TestIntegrationProtocol2PopulateFunc_CorrectValue(t *testing.T) {
 			"metric_2":    "metric_value_2",
 			"multiple_1":  "one",
 			"multiple_2":  "two",
-			"entityName":  "playground:test:entity_id_1",
 			"displayName": "entity_id_1",
 			"clusterName": "playground",
 		},
@@ -117,7 +116,6 @@ func TestIntegrationProtocol2PopulateFunc_CorrectValue(t *testing.T) {
 		"metric_2":    "metric_value_4",
 		"multiple_1":  "one",
 		"multiple_2":  "two",
-		"entityName":  "playground:test:entity_id_2",
 		"displayName": "entity_id_2",
 		"clusterName": "playground",
 	},
@@ -162,7 +160,6 @@ func TestIntegrationProtocol2PopulateFunc_PartialResult(t *testing.T) {
 	expectedMetricSet1 := &metric.Set{Metrics: map[string]interface{}{
 		"event_type":  "TestSample",
 		"metric_1":    1,
-		"entityName":  "playground:test:entity_id_1",
 		"displayName": "entity_id_1",
 		"clusterName": "playground",
 	},
@@ -176,7 +173,6 @@ func TestIntegrationProtocol2PopulateFunc_PartialResult(t *testing.T) {
 	expectedMetricSet2 := &metric.Set{Metrics: map[string]interface{}{
 		"event_type":  "TestSample",
 		"metric_1":    2,
-		"entityName":  "playground:test:entity_id_2",
 		"displayName": "entity_id_2",
 		"clusterName": "playground",
 	},
@@ -275,7 +271,6 @@ func TestIntegrationProtocol2PopulateFunc_MetricsSetsNotPopulated_OnlyEntity(t *
 
 	expectedMetricSet1 := &metric.Set{Metrics: map[string]interface{}{
 		"event_type":  "TestSample",
-		"entityName":  "playground:test:entity_id_1",
 		"displayName": "entity_id_1",
 		"clusterName": "playground",
 	},
@@ -289,7 +284,6 @@ func TestIntegrationProtocol2PopulateFunc_MetricsSetsNotPopulated_OnlyEntity(t *
 
 	expectedMetricSet2 := &metric.Set{Metrics: map[string]interface{}{
 		"event_type":  "TestSample",
-		"entityName":  "playground:test:entity_id_2",
 		"displayName": "entity_id_2",
 		"clusterName": "playground",
 	},
@@ -355,7 +349,6 @@ func TestIntegrationProtocol2PopulateFunc_EntityIDGenerator(t *testing.T) {
 		"event_type":  "TestSample",
 		"metric_1":    1,
 		"metric_2":    2,
-		"entityName":  "playground:test:testEntity1-generated",
 		"displayName": "testEntity1-generated",
 		"clusterName": "playground",
 	},
@@ -371,7 +364,6 @@ func TestIntegrationProtocol2PopulateFunc_EntityIDGenerator(t *testing.T) {
 		"event_type":  "TestSample",
 		"metric_1":    3,
 		"metric_2":    4,
-		"entityName":  "playground:test:testEntity2-generated",
 		"displayName": "testEntity2-generated",
 		"clusterName": "playground",
 	},
@@ -484,7 +476,6 @@ func TestIntegrationProtocol2PopulateFunc_PopulateOnlySpecifiedGroups(t *testing
 		"event_type":  "TestSample",
 		"metric_1":    float64(1),
 		"metric_2":    float64(2),
-		"entityName":  "playground:test:testEntity11-generated",
 		"displayName": "testEntity11-generated",
 		"clusterName": "playground",
 	},
@@ -500,7 +491,6 @@ func TestIntegrationProtocol2PopulateFunc_PopulateOnlySpecifiedGroups(t *testing
 		"event_type":  "TestSample",
 		"metric_1":    float64(3),
 		"metric_2":    float64(4),
-		"entityName":  "playground:test:testEntity12-generated",
 		"displayName": "testEntity12-generated",
 		"clusterName": "playground",
 	},
@@ -513,7 +503,6 @@ func TestIntegrationProtocol2PopulateFunc_PopulateOnlySpecifiedGroups(t *testing
 	}
 	expectedMetricSet3 := &metric.Set{Metrics: map[string]interface{}{
 		"event_type":        "K8sClusterSample",
-		"entityName":        "k8s:cluster:playground",
 		"clusterName":       "playground",
 		"clusterK8sVersion": "v1.15.42",
 	},
@@ -614,7 +603,6 @@ func TestIntegrationProtocol2PopulateFunc_ManipulatorFuncWithError(t *testing.T)
 	}
 
 	expectedMetricSet1 := &metric.Set{Metrics: map[string]interface{}{
-		"entityName": "playground:test:entity_id_1",
 		"event_type": "TestSample",
 		"metric_1":   1,
 		"metric_2":   "metric_value_2",
@@ -629,7 +617,6 @@ func TestIntegrationProtocol2PopulateFunc_ManipulatorFuncWithError(t *testing.T)
 		t.Fatal()
 	}
 	expectedMetricSet2 := &metric.Set{Metrics: map[string]interface{}{
-		"entityName": "playground:test:entity_id_2",
 		"event_type": "TestSample",
 		"metric_1":   2,
 		"metric_2":   "metric_value_4",
