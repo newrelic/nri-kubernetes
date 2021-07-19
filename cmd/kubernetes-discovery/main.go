@@ -4,10 +4,10 @@ import (
 	"flag"
 	"time"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
 	"github.com/sirupsen/logrus"
 
 	k8sclient "github.com/newrelic/nri-kubernetes/v2/src/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
 )
 
 var discovery = flag.String("discovery", KSMPodLabel, "Which discovery mechanism to run")

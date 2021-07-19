@@ -1,12 +1,13 @@
 package client
 
 import (
-	"github.com/newrelic/infra-integrations-sdk/log"
 	"net/http"
 	"time"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/storage"
+	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/pkg/errors"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/storage"
 )
 
 // DiscoveryCacher implements the Discoverer API to read endpoints from a cache storage. It also wraps another

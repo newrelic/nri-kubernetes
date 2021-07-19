@@ -1,8 +1,9 @@
 package network
 
 import (
-	"github.com/newrelic/infra-integrations-sdk/log"
 	"time"
+
+	"github.com/newrelic/infra-integrations-sdk/log"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/storage"
 )

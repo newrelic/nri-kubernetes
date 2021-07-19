@@ -2,7 +2,6 @@ package prometheus
 
 import (
 	"fmt"
-
 	"strconv"
 
 	model "github.com/prometheus/client_model/go"

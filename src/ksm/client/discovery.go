@@ -3,7 +3,6 @@ package client
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/newrelic/infra-integrations-sdk/log"
 	"net"
 	"net/http"
 	"net/url"
@@ -11,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/transport"

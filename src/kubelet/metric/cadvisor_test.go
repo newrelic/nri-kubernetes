@@ -8,10 +8,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric/testdata"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
-	"github.com/stretchr/testify/assert"
 )
 
 var cadvisorQueries = []prometheus.Query{

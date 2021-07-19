@@ -1,10 +1,11 @@
 package client
 
 import (
-	"github.com/newrelic/infra-integrations-sdk/log"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/newrelic/infra-integrations-sdk/log"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/storage"

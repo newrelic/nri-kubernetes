@@ -2,7 +2,9 @@ package ksm
 
 import (
 	"fmt"
+
 	"github.com/newrelic/infra-integrations-sdk/log"
+
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"

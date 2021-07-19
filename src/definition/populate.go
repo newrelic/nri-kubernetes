@@ -2,8 +2,8 @@ package definition
 
 import (
 	"fmt"
-	"github.com/newrelic/infra-integrations-sdk/data/metric"
 
+	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 )
 

@@ -2,10 +2,10 @@ package client
 
 import (
 	"fmt"
-	"github.com/newrelic/infra-integrations-sdk/log"
 	"net/url"
 	"time"
 
+	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 

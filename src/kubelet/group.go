@@ -2,6 +2,7 @@ package kubelet
 
 import (
 	"fmt"
+
 	"github.com/newrelic/infra-integrations-sdk/log"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/apiserver"
