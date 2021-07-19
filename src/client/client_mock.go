@@ -45,18 +45,6 @@ func (m *MockedKubernetes) FindPodsByLabel(name, value string) (*v1.PodList, err
 	return args.Get(0).(*v1.PodList), args.Error(1)
 }
 
-// FindPodByName mocks Kubernetes FindPodByName
-func (m *MockedKubernetes) FindPodByName(name string) (*v1.PodList, error) {
-	args := m.Called(name)
-	return args.Get(0).(*v1.PodList), args.Error(1)
-}
-
-// FindPodsByHostname mocks Kubernetes FindPodsByHostname
-func (m *MockedKubernetes) FindPodsByHostname(hostname string) (*v1.PodList, error) {
-	args := m.Called(hostname)
-	return args.Get(0).(*v1.PodList), args.Error(1)
-}
-
 // FindServicesByLabel mocks Kubernetes FindServicesByLabel
 func (m *MockedKubernetes) FindServicesByLabel(name, value string) (*v1.ServiceList, error) {
 	args := m.Called(name, value)
