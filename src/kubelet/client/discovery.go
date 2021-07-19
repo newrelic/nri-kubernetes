@@ -3,13 +3,13 @@ package client
 import (
 	"errors"
 	"fmt"
-	"github.com/newrelic/infra-integrations-sdk/log"
 	"net/http"
 	"net/url"
 	"os"
 	"path"
 	"time"
 
+	"github.com/newrelic/infra-integrations-sdk/log"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
 
