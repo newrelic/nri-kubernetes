@@ -1100,7 +1100,7 @@ func toNumericBoolean(value definition.FetchedValue) (definition.FetchedValue, e
 	case "unknown":
 		return -1, nil
 	default:
-		return nil, errors.New("value can not be converted to numeric boolean")
+		return nil, fmt.Errorf("value '%v' can not be converted to numeric boolean", value)
 	}
 }
 

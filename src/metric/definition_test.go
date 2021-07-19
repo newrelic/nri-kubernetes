@@ -89,7 +89,7 @@ func TestToNumericBoolean(t *testing.T) {
 
 	v, err = toNumericBoolean("invalid")
 	assert.Nil(t, v)
-	assert.EqualError(t, err, "value can not be converted to numeric boolean")
+	assert.EqualError(t, err, "value 'invalid' can not be converted to numeric boolean")
 }
 
 func TestToCores(t *testing.T) {
