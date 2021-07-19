@@ -37,7 +37,6 @@ var expectedEntities = []*integration.Entity{
 		Metrics: []*metric.Set{
 			{
 				Metrics: map[string]interface{}{
-					"entityName":        "k8s:cluster:test-cluster",
 					"event_type":        "K8sClusterSample",
 					"clusterName":       "test-cluster",
 					"clusterK8sVersion": "v1.15.42",
@@ -56,8 +55,6 @@ var expectedEntities = []*integration.Entity{
 		Metrics: []*metric.Set{
 			{
 				Metrics: map[string]interface{}{
-
-					"entityName":                     "k8s:test-cluster:kube-system:pod:newrelic-infra-rz225",
 					"event_type":                     "K8sPodSample",
 					"net.rxBytesPerSecond":           0., // 106175985, but is RATE
 					"net.txBytesPerSecond":           0., // 35714359, but is RATE
@@ -94,8 +91,6 @@ var expectedEntities = []*integration.Entity{
 		Metrics: []*metric.Set{
 			{
 				Metrics: map[string]interface{}{
-
-					"entityName":            "k8s:test-cluster:kube-system:newrelic-infra-rz225:container:newrelic-infra",
 					"event_type":            "K8sContainerSample",
 					"memoryUsedBytes":       float64(18083840),
 					"memoryWorkingSetBytes": float64(17113088),
