@@ -1069,6 +1069,8 @@ func toNumericBoolean(value definition.FetchedValue) (definition.FetchedValue, e
 		return 1, nil
 	case "false", "False", false, 0:
 		return 0, nil
+	case "unknown":
+		return -1, nil
 	default:
 		return nil, errors.New("value can not be converted to numeric boolean")
 	}
