@@ -729,6 +729,7 @@ var KSMSpecs = definition.SpecGroups{
 				),
 				Type: sdkMetric.GAUGE,
 			},
+			{Name: "unschedulable", ValueFunc: prometheus.FromValue("kube_node_spec_unschedulable"), Type: sdkMetric.GAUGE},
 		},
 	},
 }
@@ -850,6 +851,7 @@ var KSMQueries = []prometheus.Query{
 		// only values which has value 1 for processing.
 		Value: prometheus.GaugeValue(1),
 	}},
+	{MetricName: "kube_node_spec_unschedulable"},
 }
 
 // CadvisorQueries are the queries we will do to the kubelet metrics cadvisor endpoint in order to fetch all the raw metrics.
