@@ -3,6 +3,7 @@ package definition
 import (
 	"fmt"
 
+	"github.com/newrelic/infra-integrations-sdk/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 )
@@ -40,7 +41,6 @@ func IntegrationPopulator(
 	clusterName string,
 	k8sVersion fmt.Stringer,
 	msTypeGuesser GuessFunc,
-	msManipulators ...MetricSetManipulator,
 ) PopulateFunc {
 	return func(groups RawGroups, specs SpecGroups) (bool, []error) {
 		var populated bool
@@ -79,6 +79,13 @@ func IntegrationPopulator(
 					continue
 				}
 
+				// Add entity attributes, which will propagate to all metric.Sets.
+				// This was previously (on sdk v2) done by msManipulators.
+				e.AddAttributes(
+					attribute.Attr("clusterName", clusterName),
+					attribute.Attr("displayName", e.Metadata.Name),
+				)
+
 				msType, err := msTypeGuesser(clusterName, groupLabel, entityID, groups)
 				if err != nil {
 					errs = append(errs, err)
@@ -86,13 +93,6 @@ func IntegrationPopulator(
 				}
 
 				ms := e.NewMetricSet(msType)
-				for _, m := range msManipulators {
-					err = m(ms, e.Metadata, clusterName)
-					if err != nil {
-						errs = append(errs, err)
-						continue
-					}
-				}
 
 				wasPopulated, populateErrs := metricSetPopulateFunc(ms, groupLabel, entityID)(groups, specs)
 				if len(populateErrs) != 0 {

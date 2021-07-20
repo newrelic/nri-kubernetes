@@ -75,14 +75,6 @@ func fromGroupEntityTypeGuessFunc(groupLabel string, _ string, _ RawGroups, pref
 	return fmt.Sprintf("%s:%s", prefix, groupLabel), nil
 }
 
-func clusterMetricsManipulator(ms *metric.Set, entity *integration.EntityMetadata, clusterName string) error {
-	return ms.SetMetric("clusterName", clusterName, metric.ATTRIBUTE)
-}
-
-func metricsNamingManipulator(ms *metric.Set, entity *integration.EntityMetadata, clusterName string) error {
-	return ms.SetMetric("displayName", entity.Name, metric.ATTRIBUTE)
-}
-
 func TestIntegrationProtocol2PopulateFunc_CorrectValue(t *testing.T) {
 	intgr, err := integration.New("nr.test", "1.0.0")
 	require.NoError(t, err)
@@ -124,8 +116,6 @@ func TestIntegrationProtocol2PopulateFunc_CorrectValue(t *testing.T) {
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-		metricsNamingManipulator,
-		clusterMetricsManipulator,
 	)(rawGroupsSample, specs)
 	assert.True(t, populated)
 	assert.Empty(t, errs)
@@ -178,8 +168,6 @@ func TestIntegrationProtocol2PopulateFunc_PartialResult(t *testing.T) {
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-		metricsNamingManipulator,
-		clusterMetricsManipulator,
 	)(rawGroupsSample, metricSpecsWithIncompatibleType)
 	assert.True(t, populated)
 	assert.Contains(t, intgr.Entities, expectedEntityData1)
@@ -201,8 +189,6 @@ func TestIntegrationProtocol2PopulateFunc_EntitiesDataNotPopulated_EmptyMetricGr
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-		metricsNamingManipulator,
-		clusterMetricsManipulator,
 	)(metricGroupEmpty, specs)
 	assert.False(t, populated)
 	assert.Nil(t, errs)
@@ -232,8 +218,6 @@ func TestIntegrationProtocol2PopulateFunc_EntitiesDataNotPopulated_ErrorSettingE
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-		metricsNamingManipulator,
-		clusterMetricsManipulator,
 	)(metricGroupEmptyEntityID, specs)
 	assert.False(t, populated)
 	assert.EqualError(t, errs[0], "entity name and type are required when defining one")
@@ -282,8 +266,6 @@ func TestIntegrationProtocol2PopulateFunc_MetricsSetsNotPopulated_OnlyEntity(t *
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-		metricsNamingManipulator,
-		clusterMetricsManipulator,
 	)(rawGroupsSample, metricSpecsIncorrect)
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
@@ -359,8 +341,6 @@ func TestIntegrationProtocol2PopulateFunc_EntityIDGenerator(t *testing.T) {
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-		metricsNamingManipulator,
-		clusterMetricsManipulator,
 	)(raw, withGeneratorSpec)
 
 	assert.True(t, populated)
@@ -393,8 +373,6 @@ func TestIntegrationProtocol2PopulateFunc_EntityIDGeneratorFuncWithError(t *test
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-		metricsNamingManipulator,
-		clusterMetricsManipulator,
 	)(rawGroupsSample, specsWithGeneratorFuncError)
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
@@ -497,8 +475,6 @@ func TestIntegrationProtocol2PopulateFunc_PopulateOnlySpecifiedGroups(t *testing
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-		metricsNamingManipulator,
-		clusterMetricsManipulator,
 	)(groups, withGeneratorSpec)
 	assert.True(t, populated)
 	assert.Empty(t, errs)
@@ -556,64 +532,12 @@ func TestIntegrationProtocol2PopulateFunc_EntityTypeGeneratorFuncWithError(t *te
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-		metricsNamingManipulator,
-		clusterMetricsManipulator,
 	)(rawGroupsSample, specsWithGeneratorFuncError)
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
 	assert.Contains(t, errs, fmt.Errorf("error generating entity type for entity_id_1: error generating entity type"))
 	assert.Contains(t, errs, fmt.Errorf("error generating entity type for entity_id_2: error generating entity type"))
 	assert.Equal(t, intgr.Entities, []*integration.Entity{})
-}
-
-func TestIntegrationProtocol2PopulateFunc_ManipulatorFuncWithError(t *testing.T) {
-	manipulatorFuncWithError := func(ms *metric.Set, entity *integration.EntityMetadata, clusterName string) error {
-		return fmt.Errorf("error from manipulator function")
-	}
-
-	intgr, err := integration.New("nr.test", "1.0.0")
-	require.NoError(t, err)
-
-	expectedEntityData1, err := intgr.Entity("entity_id_1", "playground:test")
-	require.NoError(t, err)
-
-	expectedMetricSet1 := &metric.Set{
-		Metrics: map[string]interface{}{
-			"event_type": "TestSample",
-			"metric_1":   1,
-			"metric_2":   "metric_value_2",
-			"multiple_1": "one",
-			"multiple_2": "two",
-		},
-	}
-	expectedEntityData1.Metrics = []*metric.Set{expectedMetricSet1}
-
-	expectedEntityData2, err := intgr.Entity("entity_id_2", "playground:test")
-	require.NoError(t, err)
-
-	expectedMetricSet2 := &metric.Set{
-		Metrics: map[string]interface{}{
-			"event_type": "TestSample",
-			"metric_1":   2,
-			"metric_2":   "metric_value_4",
-			"multiple_1": "one",
-			"multiple_2": "two",
-		},
-	}
-	expectedEntityData2.Metrics = []*metric.Set{expectedMetricSet2}
-
-	populated, errs := IntegrationPopulator(
-		intgr,
-		defaultNS,
-		&version.Info{GitVersion: "v1.15.42"},
-		fromGroupMetricSetTypeGuessFunc,
-		manipulatorFuncWithError,
-	)(rawGroupsSample, specs)
-	assert.True(t, populated)
-	assert.Len(t, errs, 2)
-	assert.Contains(t, errs, fmt.Errorf("error from manipulator function"))
-	assert.Contains(t, intgr.Entities, expectedEntityData1)
-	assert.Contains(t, intgr.Entities, expectedEntityData2)
 }
 
 func TestIntegrationProtocol2PopulateFunc_msTypeGuesserFuncWithError(t *testing.T) {

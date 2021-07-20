@@ -39,7 +39,7 @@ func (p *k8sPopulator) Populate(
 	clusterName string,
 	k8sVersion *version.Info,
 ) data.PopulateResult {
-	populatorFunc := definition.IntegrationPopulator(i, clusterName, k8sVersion, K8sMetricSetTypeGuesser, K8sEntityMetricsManipulator, K8sClusterMetricsManipulator)
+	populatorFunc := definition.IntegrationPopulator(i, clusterName, k8sVersion, K8sMetricSetTypeGuesser)
 	ok, errs := populatorFunc(groups, specGroups)
 
 	if len(errs) > 0 {
