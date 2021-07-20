@@ -160,13 +160,13 @@ func TestPopulateK8s(t *testing.T) {
 	assert.Empty(t, err.(data.PopulateResult).Errors)
 
 	expectedInventory := inventory.New()
-	
+
 	err = expectedInventory.SetItem("cluster", "name", expectedEntities[0].Metadata.Name)
 	require.NoError(t, err)
 
 	err = expectedInventory.SetItem("cluster", "k8sVersion", k8sVersion.String())
 	require.NoError(t, err)
-	
+
 	expectedEntities[0].Inventory = expectedInventory
 
 	require.Equal(t, len(expectedEntities), len(intgr.Entities), "Expected and returned entity lists do not have the same length")
@@ -184,7 +184,7 @@ func TestPopulateK8s(t *testing.T) {
 	compareIgnoreFields := cmpopts.IgnoreUnexported(integration.Entity{}, metric.Set{}, inventory.Inventory{})
 	for j := range expectedEntities {
 		if diff := cmp.Diff(intgr.Entities[j], expectedEntities[j], compareIgnoreFields); diff != "" {
-			t.Fatalf("Entities[%d] mismatch: %s", j, diff)
+			t.Errorf("Entities[%d] mismatch: %s", j, diff)
 		}
 	}
 }
