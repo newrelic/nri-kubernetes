@@ -167,9 +167,7 @@ func TestPopulateK8s(t *testing.T) {
 	require.NoError(t, err)
 	expectedEntities[0].Inventory = expectedInventory
 
-	if len(expectedEntities) != len(intgr.Entities) {
-		t.Fatalf("missing required entities")
-	}
+	require.Equal(t, len(expectedEntities), len(intgr.Entities), "Expected and returned entity lists do not have the same length")
 
 	// Sort slices, so we can later diff them one-by-one for decent readability
 	entitySliceLesser := func(entities []*integration.Entity) func(i, j int) bool {
@@ -181,12 +179,9 @@ func TestPopulateK8s(t *testing.T) {
 	sort.Slice(intgr.Entities, entitySliceLesser(intgr.Entities))
 	sort.Slice(expectedEntities, entitySliceLesser(expectedEntities))
 
-	// Compare entities deeply, one by one, ignoring unexported fields
+	compareIgnoreFields := cmpopts.IgnoreUnexported(integration.Entity{}, metric.Set{}, inventory.Inventory{})
 	for j := range expectedEntities {
-		compareIgnoreFields := cmpopts.IgnoreUnexported(integration.Entity{}, metric.Set{}, inventory.Inventory{})
-		e := intgr.Entities[j]
-		ee := expectedEntities[j]
-		if diff := cmp.Diff(e, ee, compareIgnoreFields); diff != "" {
+		if diff := cmp.Diff(intgr.Entities[j], expectedEntities[j], compareIgnoreFields); diff != "" {
 			t.Fatalf("Entities[%d] mismatch: %s", j, diff)
 		}
 	}
