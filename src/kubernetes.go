@@ -49,12 +49,16 @@ var (
 	integrationCommitHash = "unknown"
 )
 
-func run(args *argumentList, logger log.Logger) error {
+func run() error {
+	args := &argumentList{}
+
 	intgr, err := integration.New(integrationName, integrationVersion, integration.Args(args))
 	var jobs []*scrape.Job
 	if err != nil {
 		return fmt.Errorf("creating integration: %w", err)
 	}
+
+	logger := log.NewStdErr(args.Verbose)
 
 	defer func() {
 		if r := recover(); r != nil {
