@@ -66,14 +66,16 @@ func MatchEntities(data []*integration.Entity, schemaFileByJobByType map[string]
 	}
 
 	for _, entityData := range data {
-		// Merge metricSets from the entity
-		metric, err := mergeMetricSets(entityData.Metrics)
+		// For easier integration testing, all the different metricSets for each entity are merged into one, which is
+		// then compared with the JsonSchema.
+		// mergeMetricSets errors if this merge would overwrite attributes so the semantics of the tests don't change.
+		metrics, err := mergeMetricSets(entityData.Metrics)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("merging metricSets for %q: %w", entityData.Metadata.Name, err))
 			continue
 		}
 
-		eventType := metric["event_type"].(string)
+		eventType := metrics["event_type"].(string)
 		_, found := expectedEvents[eventType]
 		if !found {
 			missingSchemas[eventType] = struct{}{}
@@ -89,10 +91,10 @@ func MatchEntities(data []*integration.Entity, schemaFileByJobByType map[string]
 			continue
 		}
 
-		err = validate(gojsonschema.NewReferenceLoader(fp), gojsonschema.NewGoLoader(metric))
+		err = validate(gojsonschema.NewReferenceLoader(fp), gojsonschema.NewGoLoader(metrics))
 		if err != nil {
 			entity := entityData.Metadata
-			errMsg := fmt.Errorf("%s:%s %s:\n%s", entity.Namespace, entity.Name, metric["event_type"], err)
+			errMsg := fmt.Errorf("%s:%s %s:\n%s", entity.Namespace, entity.Name, metrics["event_type"], err)
 			errs = append(errs, errMsg)
 		}
 	}
