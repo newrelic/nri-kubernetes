@@ -106,15 +106,16 @@ func TestIntegrationProtocol2PopulateFunc_CorrectValue(t *testing.T) {
 	expectedEntityData2, err := intgr.Entity("entity_id_2", "playground:test")
 	require.NoError(t, err)
 
-	expectedMetricSet2 := &metric.Set{Metrics: map[string]interface{}{
-		"event_type":  "TestSample",
-		"metric_1":    2,
-		"metric_2":    "metric_value_4",
-		"multiple_1":  "one",
-		"multiple_2":  "two",
-		"displayName": "entity_id_2",
-		"clusterName": "playground",
-	},
+	expectedMetricSet2 := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":  "TestSample",
+			"metric_1":    2,
+			"metric_2":    "metric_value_4",
+			"multiple_1":  "one",
+			"multiple_2":  "two",
+			"displayName": "entity_id_2",
+			"clusterName": "playground",
+		},
 	}
 	expectedEntityData2.Metrics = []*metric.Set{expectedMetricSet2}
 
@@ -149,24 +150,26 @@ func TestIntegrationProtocol2PopulateFunc_PartialResult(t *testing.T) {
 	expectedEntityData1, err := intgr.Entity("entity_id_1", "playground:test")
 	require.NoError(t, err)
 
-	expectedMetricSet1 := &metric.Set{Metrics: map[string]interface{}{
-		"event_type":  "TestSample",
-		"metric_1":    1,
-		"displayName": "entity_id_1",
-		"clusterName": "playground",
-	},
+	expectedMetricSet1 := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":  "TestSample",
+			"metric_1":    1,
+			"displayName": "entity_id_1",
+			"clusterName": "playground",
+		},
 	}
 	expectedEntityData1.Metrics = []*metric.Set{expectedMetricSet1}
 
 	expectedEntityData2, err := intgr.Entity("entity_id_2", "playground:test")
 	require.NoError(t, err)
 
-	expectedMetricSet2 := &metric.Set{Metrics: map[string]interface{}{
-		"event_type":  "TestSample",
-		"metric_1":    2,
-		"displayName": "entity_id_2",
-		"clusterName": "playground",
-	},
+	expectedMetricSet2 := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":  "TestSample",
+			"metric_1":    2,
+			"displayName": "entity_id_2",
+			"clusterName": "playground",
+		},
 	}
 	expectedEntityData2.Metrics = []*metric.Set{expectedMetricSet2}
 
@@ -253,22 +256,24 @@ func TestIntegrationProtocol2PopulateFunc_MetricsSetsNotPopulated_OnlyEntity(t *
 	expectedEntityData1, err := intgr.Entity("entity_id_1", "playground:test")
 	require.NoError(t, err)
 
-	expectedMetricSet1 := &metric.Set{Metrics: map[string]interface{}{
-		"event_type":  "TestSample",
-		"displayName": "entity_id_1",
-		"clusterName": "playground",
-	},
+	expectedMetricSet1 := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":  "TestSample",
+			"displayName": "entity_id_1",
+			"clusterName": "playground",
+		},
 	}
 	expectedEntityData1.Metrics = []*metric.Set{expectedMetricSet1}
 
 	expectedEntityData2, err := intgr.Entity("entity_id_2", "playground:test")
 	require.NoError(t, err)
 
-	expectedMetricSet2 := &metric.Set{Metrics: map[string]interface{}{
-		"event_type":  "TestSample",
-		"displayName": "entity_id_2",
-		"clusterName": "playground",
-	},
+	expectedMetricSet2 := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":  "TestSample",
+			"displayName": "entity_id_2",
+			"clusterName": "playground",
+		},
 	}
 	expectedEntityData2.Metrics = []*metric.Set{expectedMetricSet2}
 
@@ -324,26 +329,28 @@ func TestIntegrationProtocol2PopulateFunc_EntityIDGenerator(t *testing.T) {
 	expectedEntityData1, err := intgr.Entity("testEntity1-generated", "playground:test")
 	require.NoError(t, err)
 
-	expectedMetricSet1 := &metric.Set{Metrics: map[string]interface{}{
-		"event_type":  "TestSample",
-		"metric_1":    1,
-		"metric_2":    2,
-		"displayName": "testEntity1-generated",
-		"clusterName": "playground",
-	},
+	expectedMetricSet1 := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":  "TestSample",
+			"metric_1":    1,
+			"metric_2":    2,
+			"displayName": "testEntity1-generated",
+			"clusterName": "playground",
+		},
 	}
 	expectedEntityData1.Metrics = []*metric.Set{expectedMetricSet1}
 
 	expectedEntityData2, err := intgr.Entity("testEntity2-generated", "playground:test")
 	require.NoError(t, err)
 
-	expectedMetricSet2 := &metric.Set{Metrics: map[string]interface{}{
-		"event_type":  "TestSample",
-		"metric_1":    3,
-		"metric_2":    4,
-		"displayName": "testEntity2-generated",
-		"clusterName": "playground",
-	},
+	expectedMetricSet2 := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":  "TestSample",
+			"metric_1":    3,
+			"metric_2":    4,
+			"displayName": "testEntity2-generated",
+			"clusterName": "playground",
+		},
 	}
 	expectedEntityData2.Metrics = []*metric.Set{expectedMetricSet2}
 
@@ -437,43 +444,46 @@ func TestIntegrationProtocol2PopulateFunc_PopulateOnlySpecifiedGroups(t *testing
 	}
 
 	// Create a dummy integration, used only to create entities easily
-	dummyIntgr, err := integration.New("nr.test", "1.0.0")
+	intgr, err := integration.New("nr.test", "1.0.0")
 	require.NoError(t, err)
 
-	expectedEntityData1, err := dummyIntgr.Entity("testEntity11-generated", "playground:test")
+	expectedEntityData1, err := intgr.Entity("testEntity11-generated", "playground:test")
 	require.NoError(t, err)
 
-	expectedMetricSet1 := &metric.Set{Metrics: map[string]interface{}{
-		"event_type":  "TestSample",
-		"metric_1":    float64(1),
-		"metric_2":    float64(2),
-		"displayName": "testEntity11-generated",
-		"clusterName": "playground",
-	},
+	expectedMetricSet1 := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":  "TestSample",
+			"metric_1":    float64(1),
+			"metric_2":    float64(2),
+			"displayName": "testEntity11-generated",
+			"clusterName": "playground",
+		},
 	}
 	expectedEntityData1.Metrics = []*metric.Set{expectedMetricSet1}
 
-	expectedEntityData2, err := dummyIntgr.Entity("testEntity12-generated", "playground:test")
+	expectedEntityData2, err := intgr.Entity("testEntity12-generated", "playground:test")
 	require.NoError(t, err)
 
-	expectedMetricSet2 := &metric.Set{Metrics: map[string]interface{}{
-		"event_type":  "TestSample",
-		"metric_1":    float64(3),
-		"metric_2":    float64(4),
-		"displayName": "testEntity12-generated",
-		"clusterName": "playground",
-	},
+	expectedMetricSet2 := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":  "TestSample",
+			"metric_1":    float64(3),
+			"metric_2":    float64(4),
+			"displayName": "testEntity12-generated",
+			"clusterName": "playground",
+		},
 	}
 	expectedEntityData2.Metrics = []*metric.Set{expectedMetricSet2}
 
-	expectedEntityData3, err := dummyIntgr.Entity("playground", "k8s:cluster")
+	expectedEntityData3, err := intgr.Entity("playground", "k8s:cluster")
 	require.NoError(t, err)
 
-	expectedMetricSet3 := &metric.Set{Metrics: map[string]interface{}{
-		"event_type":        "K8sClusterSample",
-		"clusterName":       "playground",
-		"clusterK8sVersion": "v1.15.42",
-	},
+	expectedMetricSet3 := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":        "K8sClusterSample",
+			"clusterName":       "playground",
+			"clusterK8sVersion": "v1.15.42",
+		},
 	}
 	expectedEntityData3.Metrics = []*metric.Set{expectedMetricSet3}
 	expectedInventory := inventory.New()
@@ -481,9 +491,9 @@ func TestIntegrationProtocol2PopulateFunc_PopulateOnlySpecifiedGroups(t *testing
 	_ = expectedInventory.SetItem("cluster", "k8sVersion", "v1.15.42")
 	expectedEntityData3.Inventory = expectedInventory
 
-	dummyIntgr.Clear()
+	intgr.Clear()
 	populated, errs := IntegrationPopulator(
-		dummyIntgr,
+		intgr,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
@@ -492,30 +502,33 @@ func TestIntegrationProtocol2PopulateFunc_PopulateOnlySpecifiedGroups(t *testing
 	)(groups, withGeneratorSpec)
 	assert.True(t, populated)
 	assert.Empty(t, errs)
-	assert.Len(t, dummyIntgr.Entities, 3)
-
-	compareIgnoreFields := cmpopts.IgnoreUnexported(integration.Entity{}, metric.Set{}, inventory.Inventory{})
+	assert.Len(t, intgr.Entities, 3)
 
 	// Search for missing entities using cmp
-	for _, ti := range []*integration.Entity{
-		expectedEntityData1, expectedEntityData2, expectedEntityData3,
+	compareIgnoreFields := cmpopts.IgnoreUnexported(integration.Entity{}, metric.Set{}, inventory.Inventory{})
+	for _, expectedEntity := range []*integration.Entity{
+		expectedEntityData1,
+		expectedEntityData2,
+		expectedEntityData3,
 	} {
 		found := false
-		diff := ""
-		for _, presentEntity := range dummyIntgr.Entities {
-			if cmp.Equal(presentEntity, ti, compareIgnoreFields) {
+		closestMatchDiff := ""
+		for _, entity := range intgr.Entities {
+			curDiff := cmp.Diff(entity, expectedEntity, compareIgnoreFields)
+			// If curDiff is empty we got an exact match, return.
+			if curDiff == "" {
 				found = true
 				break
 			}
-			// Store "closest match" for better debuggability
-			curDiff := cmp.Diff(presentEntity, ti, compareIgnoreFields)
-			if len(diff) == 0 || len(curDiff) < len(diff) {
-				diff = curDiff
+
+			// Otherwise, store current diff as closest match if it is smaller than the closestMatch, or if the latter is empty
+			if closestMatchDiff == "" || len(curDiff) < len(closestMatchDiff) {
+				closestMatchDiff = curDiff
 			}
 		}
 
 		if !found {
-			t.Fatalf("Entity list does not contain %s. Closest match: %s", ti.Metadata.Name, diff)
+			t.Fatalf("Entity list does not contain %q. Closest match:\n%s", expectedEntity.Metadata.Name, closestMatchDiff)
 		}
 	}
 }
@@ -564,26 +577,28 @@ func TestIntegrationProtocol2PopulateFunc_ManipulatorFuncWithError(t *testing.T)
 	expectedEntityData1, err := intgr.Entity("entity_id_1", "playground:test")
 	require.NoError(t, err)
 
-	expectedMetricSet1 := &metric.Set{Metrics: map[string]interface{}{
-		"event_type": "TestSample",
-		"metric_1":   1,
-		"metric_2":   "metric_value_2",
-		"multiple_1": "one",
-		"multiple_2": "two",
-	},
+	expectedMetricSet1 := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type": "TestSample",
+			"metric_1":   1,
+			"metric_2":   "metric_value_2",
+			"multiple_1": "one",
+			"multiple_2": "two",
+		},
 	}
 	expectedEntityData1.Metrics = []*metric.Set{expectedMetricSet1}
 
 	expectedEntityData2, err := intgr.Entity("entity_id_2", "playground:test")
 	require.NoError(t, err)
 
-	expectedMetricSet2 := &metric.Set{Metrics: map[string]interface{}{
-		"event_type": "TestSample",
-		"metric_1":   2,
-		"metric_2":   "metric_value_4",
-		"multiple_1": "one",
-		"multiple_2": "two",
-	},
+	expectedMetricSet2 := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type": "TestSample",
+			"metric_1":   2,
+			"metric_2":   "metric_value_4",
+			"multiple_1": "one",
+			"multiple_2": "two",
+		},
 	}
 	expectedEntityData2.Metrics = []*metric.Set{expectedMetricSet2}
 
