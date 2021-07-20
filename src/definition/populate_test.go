@@ -480,7 +480,6 @@ func TestIntegrationProtocol2PopulateFunc_PopulateOnlySpecifiedGroups(t *testing
 	assert.Empty(t, errs)
 	assert.Len(t, intgr.Entities, 3)
 
-	// Search for missing entities using cmp
 	compareIgnoreFields := cmpopts.IgnoreUnexported(integration.Entity{}, metric.Set{}, inventory.Inventory{})
 	for _, expectedEntity := range []*integration.Entity{
 		expectedEntityData1,
