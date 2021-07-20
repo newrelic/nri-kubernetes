@@ -74,8 +74,8 @@ var expectedEntities = []*integration.Entity{
 					"label.controller-revision-hash": "3887482659",
 					"label.name":                     "newrelic-infra",
 					"label.pod-template-generation":  "1",
-					"displayName":                    "newrelic-infra-rz225", // From manipulator
-					"clusterName":                    "test-cluster",         // From manipulator
+					"displayName":                    "newrelic-infra-rz225", // From entity attributes
+					"clusterName":                    "test-cluster",         // From entity attributes
 				},
 			},
 		},
@@ -118,8 +118,8 @@ var expectedEntities = []*integration.Entity{
 					"status":                "Running",
 					"isReady":               float64(1),
 					//"reason":               "",      // TODO ?
-					"displayName":                    "newrelic-infra", // From manipulator
-					"clusterName":                    "test-cluster",   // From manipulator
+					"displayName":                    "newrelic-infra", // From entity attributes
+					"clusterName":                    "test-cluster",   // From entity attributes
 					"label.controller-revision-hash": "3887482659",
 					"label.name":                     "newrelic-infra",
 					"label.pod-template-generation":  "1",
