@@ -161,12 +161,11 @@ func TestPopulateK8s(t *testing.T) {
 	assert.Empty(t, err.(data.PopulateResult).Errors)
 
 	expectedInventory := inventory.New()
-	if err := expectedInventory.SetItem("cluster", "name", expectedEntities[0].Metadata.Name); err != nil {
-		t.Fatal(err)
-	}
-	if err := expectedInventory.SetItem("cluster", "k8sVersion", k8sVersion.String()); err != nil {
-		t.Fatal(err)
-	}
+	err = expectedInventory.SetItem("cluster", "name", expectedEntities[0].Metadata.Name)
+	require.NoError(t, err)
+
+	err = expectedInventory.SetItem("cluster", "k8sVersion", k8sVersion.String())
+	require.NoError(t, err)
 	expectedEntities[0].Inventory = expectedInventory
 
 	if len(expectedEntities) != len(intgr.Entities) {

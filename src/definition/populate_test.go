@@ -11,6 +11,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/version"
 )
 
@@ -84,14 +85,10 @@ func metricsNamingManipulator(ms *metric.Set, entity *integration.EntityMetadata
 
 func TestIntegrationProtocol2PopulateFunc_CorrectValue(t *testing.T) {
 	intgr, err := integration.New("nr.test", "1.0.0")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	expectedEntityData1, err := intgr.Entity("entity_id_1", "playground:test")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet1 := &metric.Set{
 		Metrics: map[string]interface{}{
@@ -107,9 +104,8 @@ func TestIntegrationProtocol2PopulateFunc_CorrectValue(t *testing.T) {
 	expectedEntityData1.Metrics = []*metric.Set{expectedMetricSet1}
 
 	expectedEntityData2, err := intgr.Entity("entity_id_2", "playground:test")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	expectedMetricSet2 := &metric.Set{Metrics: map[string]interface{}{
 		"event_type":  "TestSample",
 		"metric_1":    2,
@@ -148,14 +144,10 @@ func TestIntegrationProtocol2PopulateFunc_PartialResult(t *testing.T) {
 	}
 
 	intgr, err := integration.New("nr.test", "1.0.0")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedEntityData1, err := intgr.Entity("entity_id_1", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet1 := &metric.Set{Metrics: map[string]interface{}{
 		"event_type":  "TestSample",
@@ -167,9 +159,8 @@ func TestIntegrationProtocol2PopulateFunc_PartialResult(t *testing.T) {
 	expectedEntityData1.Metrics = []*metric.Set{expectedMetricSet1}
 
 	expectedEntityData2, err := intgr.Entity("entity_id_2", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
+
 	expectedMetricSet2 := &metric.Set{Metrics: map[string]interface{}{
 		"event_type":  "TestSample",
 		"metric_1":    2,
@@ -198,9 +189,8 @@ func TestIntegrationProtocol2PopulateFunc_EntitiesDataNotPopulated_EmptyMetricGr
 	metricGroupEmpty := RawGroups{}
 
 	intgr, err := integration.New("nr.test", "1.0.0")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
+
 	expectedData := make([]*integration.Entity, 0)
 
 	populated, errs := IntegrationPopulator(
@@ -218,9 +208,7 @@ func TestIntegrationProtocol2PopulateFunc_EntitiesDataNotPopulated_EmptyMetricGr
 
 func TestIntegrationProtocol2PopulateFunc_EntitiesDataNotPopulated_ErrorSettingEntities(t *testing.T) {
 	intgr, err := integration.New("nr.test", "1.0.0")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	metricGroupEmptyEntityID := RawGroups{
 		"test": {
@@ -260,14 +248,10 @@ func TestIntegrationProtocol2PopulateFunc_MetricsSetsNotPopulated_OnlyEntity(t *
 	}
 
 	intgr, err := integration.New("nr.test", "1.0.0")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedEntityData1, err := intgr.Entity("entity_id_1", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet1 := &metric.Set{Metrics: map[string]interface{}{
 		"event_type":  "TestSample",
@@ -278,9 +262,7 @@ func TestIntegrationProtocol2PopulateFunc_MetricsSetsNotPopulated_OnlyEntity(t *
 	expectedEntityData1.Metrics = []*metric.Set{expectedMetricSet1}
 
 	expectedEntityData2, err := intgr.Entity("entity_id_2", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet2 := &metric.Set{Metrics: map[string]interface{}{
 		"event_type":  "TestSample",
@@ -324,9 +306,8 @@ func TestIntegrationProtocol2PopulateFunc_EntityIDGenerator(t *testing.T) {
 	}
 
 	intgr, err := integration.New("nr.test", "1.0.0")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
+
 	raw := RawGroups{
 		"test": {
 			"testEntity1": {
@@ -341,9 +322,7 @@ func TestIntegrationProtocol2PopulateFunc_EntityIDGenerator(t *testing.T) {
 	}
 
 	expectedEntityData1, err := intgr.Entity("testEntity1-generated", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet1 := &metric.Set{Metrics: map[string]interface{}{
 		"event_type":  "TestSample",
@@ -356,9 +335,7 @@ func TestIntegrationProtocol2PopulateFunc_EntityIDGenerator(t *testing.T) {
 	expectedEntityData1.Metrics = []*metric.Set{expectedMetricSet1}
 
 	expectedEntityData2, err := intgr.Entity("testEntity2-generated", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet2 := &metric.Set{Metrics: map[string]interface{}{
 		"event_type":  "TestSample",
@@ -402,9 +379,7 @@ func TestIntegrationProtocol2PopulateFunc_EntityIDGeneratorFuncWithError(t *test
 		},
 	}
 	intgr, err := integration.New("nr.test", "1.0.0")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	populated, errs := IntegrationPopulator(
 		intgr,
@@ -463,14 +438,10 @@ func TestIntegrationProtocol2PopulateFunc_PopulateOnlySpecifiedGroups(t *testing
 
 	// Create a dummy integration, used only to create entities easily
 	dummyIntgr, err := integration.New("nr.test", "1.0.0")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	expectedEntityData1, err := dummyIntgr.Entity("testEntity11-generated", "playground:test")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet1 := &metric.Set{Metrics: map[string]interface{}{
 		"event_type":  "TestSample",
@@ -483,9 +454,7 @@ func TestIntegrationProtocol2PopulateFunc_PopulateOnlySpecifiedGroups(t *testing
 	expectedEntityData1.Metrics = []*metric.Set{expectedMetricSet1}
 
 	expectedEntityData2, err := dummyIntgr.Entity("testEntity12-generated", "playground:test")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet2 := &metric.Set{Metrics: map[string]interface{}{
 		"event_type":  "TestSample",
@@ -498,9 +467,8 @@ func TestIntegrationProtocol2PopulateFunc_PopulateOnlySpecifiedGroups(t *testing
 	expectedEntityData2.Metrics = []*metric.Set{expectedMetricSet2}
 
 	expectedEntityData3, err := dummyIntgr.Entity("playground", "k8s:cluster")
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	expectedMetricSet3 := &metric.Set{Metrics: map[string]interface{}{
 		"event_type":        "K8sClusterSample",
 		"clusterName":       "playground",
@@ -568,9 +536,7 @@ func TestIntegrationProtocol2PopulateFunc_EntityTypeGeneratorFuncWithError(t *te
 	}
 
 	intgr, err := integration.New("nr.test", "1.0.0")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	populated, errs := IntegrationPopulator(
 		intgr,
@@ -593,14 +559,10 @@ func TestIntegrationProtocol2PopulateFunc_ManipulatorFuncWithError(t *testing.T)
 	}
 
 	intgr, err := integration.New("nr.test", "1.0.0")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedEntityData1, err := intgr.Entity("entity_id_1", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet1 := &metric.Set{Metrics: map[string]interface{}{
 		"event_type": "TestSample",
@@ -613,9 +575,8 @@ func TestIntegrationProtocol2PopulateFunc_ManipulatorFuncWithError(t *testing.T)
 	expectedEntityData1.Metrics = []*metric.Set{expectedMetricSet1}
 
 	expectedEntityData2, err := intgr.Entity("entity_id_2", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
+
 	expectedMetricSet2 := &metric.Set{Metrics: map[string]interface{}{
 		"event_type": "TestSample",
 		"metric_1":   2,
@@ -646,19 +607,13 @@ func TestIntegrationProtocol2PopulateFunc_msTypeGuesserFuncWithError(t *testing.
 	}
 
 	intgr, err := integration.New("nr.test", "1.0.0")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedEntityData1, err := intgr.Entity("entity_id_1", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedEntityData2, err := intgr.Entity("entity_id_2", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	populated, errs := IntegrationPopulator(
 		intgr,
