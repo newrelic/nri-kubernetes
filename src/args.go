@@ -7,6 +7,7 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/args"
 	"github.com/newrelic/infra-integrations-sdk/log"
+
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	clientKsm "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
 )
