@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/newrelic/infra-integrations-sdk/args"
+	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	clientKsm "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
 )
@@ -46,7 +47,7 @@ func (args *argumentList) cacheDir(subDirectory string) string {
 	return path.Join(cacheDir, subDirectory)
 }
 
-func (args *argumentList) ksmDiscoverer() (client.Discoverer, error) {
+func (args *argumentList) ksmDiscoverer(logger log.Logger) (client.Discoverer, error) {
 	k8sClient, err := client.NewKubernetes( /* tryLocalKubeconfig */ false)
 	if err != nil {
 		return nil, err
@@ -73,7 +74,7 @@ func (args *argumentList) ksmDiscoverer() (client.Discoverer, error) {
 	return clientKsm.NewDiscoverer(logger, k8sClient), nil
 }
 
-func (args *argumentList) multiKSMDiscoverer(nodeIP string) (client.MultiDiscoverer, error) {
+func (args *argumentList) multiKSMDiscoverer(nodeIP string, logger log.Logger) (client.MultiDiscoverer, error) {
 	k8sClient, err := client.NewKubernetes(false)
 	if err != nil {
 		return nil, err

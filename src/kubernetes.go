@@ -49,7 +49,7 @@ var (
 	integrationCommitHash = "unknown"
 )
 
-func run(args *argumentList) error {
+func run(args *argumentList, logger log.Logger) error {
 	intgr, err := integration.New(integrationName, integrationVersion, integration.Args(args))
 	var jobs []*scrape.Job
 	if err != nil {
@@ -74,7 +74,7 @@ func run(args *argumentList) error {
 
 	nodeName := os.Getenv(nodeNameEnvVar)
 	if nodeName == "" {
-		return fmt.Errorf("coudl not find %q in env, which should have been set by Kubernetes", nodeNameEnvVar)
+		return fmt.Errorf("could not find %q in env, which should have been set by Kubernetes", nodeNameEnvVar)
 	}
 
 	if !args.HasMetrics() {
@@ -91,13 +91,12 @@ func run(args *argumentList) error {
 
 	innerKubeletDiscoverer, err := kubeletclient.NewDiscoverer(nodeName, logger)
 	if err != nil {
-		logger.Errorf("Error during Kubelet auto discovering process: %v", err)
+		return fmt.Errorf("Error during Kubelet auto discovering process: %v", err)
 	}
 
 	cacheStorage := storage.NewJSONDiskStorage(args.cacheDir(discoveryCacheDir))
 
-	defaultNetworkInterface, err := network.CachedDefaultInterface(
-		logger, args.NetworkRouteFile, cacheStorage, ttl)
+	defaultNetworkInterface, err := network.CachedDefaultInterface(logger, args.NetworkRouteFile, cacheStorage, ttl)
 	if err != nil {
 		logger.Warnf("Error finding default network interface: %v", err)
 	}
@@ -121,7 +120,7 @@ func run(args *argumentList) error {
 		var ksmClients []client.HTTPClient
 		var ksmNodeIP string
 		if args.DistributedKubeStateMetrics {
-			ksmDiscoverer, err := args.multiKSMDiscoverer(kubeletNodeIP)
+			ksmDiscoverer, err := args.multiKSMDiscoverer(kubeletNodeIP, logger)
 			if err != nil {
 				return fmt.Errorf("getting multiKSM discoverer: %v", err)
 			}
@@ -129,7 +128,7 @@ func run(args *argumentList) error {
 			ksmDiscoveryCache := ksmclient.NewDistributedDiscoveryCacher(ksmDiscoverer, cacheStorage, ttl, logger)
 			ksmClients, err = ksmDiscoveryCache.Discover(timeout)
 			if err != nil {
-				return fmt.Errorf("discovering KSM: %w", err)
+				return fmt.Errorf("discovering distributed KSM: %w", err)
 			}
 
 			logger.Debugf("found %d KSM clients:", len(ksmClients))
@@ -138,15 +137,15 @@ func run(args *argumentList) error {
 			}
 			ksmNodeIP = kubeletNodeIP
 		} else {
-			innerKSMDiscoverer, err := args.ksmDiscoverer()
+			innerKSMDiscoverer, err := args.ksmDiscoverer(logger)
 			if err != nil {
-				return fmt.Errorf("Error getting KSM discoverer: %v", err)
+				return fmt.Errorf("getting standalone KSM discoverer: %v", err)
 			}
 
 			ksmDiscoverer := ksmclient.NewDiscoveryCacher(innerKSMDiscoverer, cacheStorage, ttl, logger)
 			ksmClient, err := ksmDiscoverer.Discover(timeout)
 			if err != nil {
-				return fmt.Errorf("Error discovering KSM: %v", err)
+				return fmt.Errorf("discovering standalone KSM: %v", err)
 			}
 
 			ksmNodeIP = ksmClient.NodeIP()
@@ -166,7 +165,6 @@ func run(args *argumentList) error {
 	apiServerClient := apiserver.NewClient(k8s)
 
 	ttlAPIServerCacheK8SVersion, err := time.ParseDuration(args.APIServerCacheK8SVersionTTL)
-
 	if err != nil {
 		logger.Errorf(
 			"Error while parsing the api server cache TTL value for the kubernetes server version, defaulting to %s: %v",
@@ -284,7 +282,6 @@ func controlPlaneJobs(
 	controllerManagerEndpointURL string,
 	apiServerEndpointURL string,
 ) ([]*scrape.Job, error) {
-
 	nodeInfo, err := apiServerClient.GetNodeInfo(nodeName)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't query ApiServer server: %v", err)
@@ -333,6 +330,8 @@ func controlPlaneJobs(
 		componentClient, err := componentDiscoverer.Discover(timeout)
 		if err != nil {
 			logger.Errorf("control plane component %s discovery failed: %v", component.Name, err)
+
+			continue
 		}
 
 		c := componentClient.(*controlplaneclient.ControlPlaneComponentClient)
