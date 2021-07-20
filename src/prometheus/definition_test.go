@@ -484,6 +484,138 @@ func TestGroupMetricsBySpec_CorrectValue_ContainersWithTheSameName(t *testing.T)
 	assert.Equal(t, expectedMetricGroup, metricGroup)
 }
 
+func Test_GroupMetricsBySpec_does_not_add_unrelated_entity_metrics(t *testing.T) {
+	groupLabelMetricName := "groupLabelMetricName"
+	groupLabelRawMetricName := "groupLabelRawMetricName"
+	groupLabelEntityName := "groupLabelEntityName"
+
+	unrelatedMetricName := "unrelatedMetricName"
+	unrelatedRawMetricName := "unrelatedRawMetricName"
+	unreleatedEntityName := "unreleatedEntityName"
+
+	cases := map[string]struct {
+		groupLabel          string
+		unrelatedLabel      string
+		unrelatedMetricName string
+	}{
+		"from_daemonset_to_namespace": {
+			groupLabel:          "namespace",
+			unrelatedLabel:      "daemonset",
+			unrelatedMetricName: fmt.Sprintf("%s_%s", groupLabelEntityName, unreleatedEntityName),
+		},
+		"from_pod_to_namespace": {
+			groupLabel:          "namespace",
+			unrelatedLabel:      "pod",
+			unrelatedMetricName: fmt.Sprintf("%s_%s", groupLabelEntityName, unreleatedEntityName),
+		},
+		"from_endpoint_to_namespace": {
+			groupLabel:          "namespace",
+			unrelatedLabel:      "endpoint",
+			unrelatedMetricName: fmt.Sprintf("%s_%s", groupLabelEntityName, unreleatedEntityName),
+		},
+		"from_service_to_namespace": {
+			groupLabel:          "namespace",
+			unrelatedLabel:      "service",
+			unrelatedMetricName: fmt.Sprintf("%s_%s", groupLabelEntityName, unreleatedEntityName),
+		},
+		"from_deployment_to_namespace": {
+			groupLabel:          "namespace",
+			unrelatedLabel:      "deployment",
+			unrelatedMetricName: fmt.Sprintf("%s_%s", groupLabelEntityName, unreleatedEntityName),
+		},
+		"from_replicaset_to_namespace": {
+			groupLabel:          "namespace",
+			unrelatedLabel:      "replicaset",
+			unrelatedMetricName: fmt.Sprintf("%s_%s", groupLabelEntityName, unreleatedEntityName),
+		},
+		"from_pod_to_node": {
+			groupLabel:          "node",
+			unrelatedLabel:      "pod",
+			unrelatedMetricName: fmt.Sprintf("_%s", unreleatedEntityName),
+		},
+	}
+
+	for caseName, c := range cases {
+		c := c
+		t.Run(caseName, func(t *testing.T) {
+			spec := definition.SpecGroups{
+				c.groupLabel: definition.SpecGroup{
+					Specs: []definition.Spec{
+						{
+							Name:      groupLabelMetricName,
+							ValueFunc: FromValue(groupLabelRawMetricName),
+							Type:      metric.GAUGE,
+						},
+					},
+				},
+				c.unrelatedLabel: definition.SpecGroup{
+					Specs: []definition.Spec{
+						{
+							Name:      unrelatedMetricName,
+							ValueFunc: FromValue(unrelatedRawMetricName),
+							Type:      metric.GAUGE,
+						},
+					},
+				},
+			}
+
+			metricFamily := []MetricFamily{
+				{
+					Name: groupLabelRawMetricName,
+					Metrics: []Metric{
+						{
+							Value: GaugeValue(1),
+							Labels: map[string]string{
+								c.groupLabel: groupLabelEntityName,
+							},
+						},
+					},
+				},
+				{
+					Name: unrelatedRawMetricName,
+					Metrics: []Metric{
+						{
+							Value: GaugeValue(1),
+							Labels: map[string]string{
+								c.groupLabel:     groupLabelEntityName,
+								c.unrelatedLabel: unreleatedEntityName,
+							},
+						},
+					},
+				},
+			}
+
+			expectedRawGroups := definition.RawGroups{
+				c.groupLabel: {
+					groupLabelEntityName: definition.RawMetrics{
+						groupLabelRawMetricName: Metric{
+							Value: GaugeValue(1),
+							Labels: map[string]string{
+								c.groupLabel: groupLabelEntityName,
+							},
+						},
+					},
+				},
+				c.unrelatedLabel: {
+					c.unrelatedMetricName: definition.RawMetrics{
+						unrelatedRawMetricName: Metric{
+							Value: GaugeValue(1),
+							Labels: map[string]string{
+								c.groupLabel:     groupLabelEntityName,
+								c.unrelatedLabel: unreleatedEntityName,
+							},
+						},
+					},
+				},
+			}
+
+			metricGroup, errs := GroupMetricsBySpec(spec, metricFamily)
+			assert.Empty(t, errs)
+			assert.Equal(t, expectedRawGroups, metricGroup)
+		})
+	}
+}
+
 func TestGroupMetricsBySpec_EmptyMetricFamily(t *testing.T) {
 	var emptyMetricFamily []MetricFamily
 
@@ -491,6 +623,126 @@ func TestGroupMetricsBySpec_EmptyMetricFamily(t *testing.T) {
 	assert.Len(t, errs, 1)
 	assert.Equal(t, errors.New("no data found for pod object"), errs[0])
 	assert.Empty(t, metricGroup)
+}
+
+// To preserve old behavior.
+func TestGroupMetricsBySpec_returns_single_metric_with_one_metric_in_metric_family(t *testing.T) {
+	groupLabel := "node"
+	metricName := "metricName"
+	rawMetricName := "rawMetricName"
+	entityName := "entityName"
+
+	spec := definition.SpecGroups{
+		groupLabel: definition.SpecGroup{
+			Specs: []definition.Spec{
+				{
+					Name:      metricName,
+					ValueFunc: FromValue(rawMetricName),
+					Type:      metric.GAUGE,
+				},
+			},
+		},
+	}
+
+	metricFamily := []MetricFamily{
+		{
+			Name: rawMetricName,
+			Metrics: []Metric{
+				{
+					Value: GaugeValue(1),
+					Labels: map[string]string{
+						groupLabel: entityName,
+					},
+				},
+			},
+		},
+	}
+
+	expectedRawGroups := definition.RawGroups{
+		groupLabel: {
+			entityName: definition.RawMetrics{
+				rawMetricName: Metric{
+					Value: GaugeValue(1),
+					Labels: map[string]string{
+						groupLabel: entityName,
+					},
+				},
+			},
+		},
+	}
+
+	metricGroup, errs := GroupMetricsBySpec(spec, metricFamily)
+	assert.Empty(t, errs)
+	assert.Equal(t, expectedRawGroups, metricGroup)
+}
+
+// To be able to process multiple metrics of the same type, like 'kube_node_status_condition'.
+func TestGroupMetricsBySpec_does_not_override_metric_when_there_is_more_than_one_in_metric_family(t *testing.T) {
+	groupLabel := "node"
+	metricName := "metricName"
+	rawMetricName := "rawMetricName"
+	entityName := "entityName"
+
+	spec := definition.SpecGroups{
+		groupLabel: definition.SpecGroup{
+			Specs: []definition.Spec{
+				{
+					Name:      metricName,
+					ValueFunc: FromValue(rawMetricName),
+					Type:      metric.GAUGE,
+				},
+			},
+		},
+	}
+
+	metricFamily := []MetricFamily{
+		{
+			Name: rawMetricName,
+			Metrics: []Metric{
+				{
+					Value: GaugeValue(1),
+					Labels: map[string]string{
+						groupLabel:  entityName,
+						"condition": "DiskPressure",
+					},
+				},
+				{
+					Value: GaugeValue(1),
+					Labels: map[string]string{
+						groupLabel:  entityName,
+						"condition": "MemoryPressure",
+					},
+				},
+			},
+		},
+	}
+
+	expectedRawGroups := definition.RawGroups{
+		groupLabel: {
+			entityName: definition.RawMetrics{
+				rawMetricName: []Metric{
+					{
+						Value: GaugeValue(1),
+						Labels: map[string]string{
+							groupLabel:  entityName,
+							"condition": "DiskPressure",
+						},
+					},
+					{
+						Value: GaugeValue(1),
+						Labels: map[string]string{
+							groupLabel:  entityName,
+							"condition": "MemoryPressure",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	metricGroup, errs := GroupMetricsBySpec(spec, metricFamily)
+	assert.Empty(t, errs)
+	assert.Equal(t, expectedRawGroups, metricGroup)
 }
 
 func TestGroupEntityMetricsBySpec_CorrectValue(t *testing.T) {
@@ -1403,4 +1655,128 @@ func TestControlPlaneComponentTypeGenerator(t *testing.T) {
 	generatedType, err := ControlPlaneComponentTypeGenerator("my-component", "", nil, "myCluster")
 	assert.NoError(t, err)
 	assert.Equal(t, "k8s:myCluster:controlplane:my-component", generatedType)
+}
+
+func TestFromLabelValueWithLabelInName(t *testing.T) {
+	t.Parallel()
+
+	raw := rawGroupsWithNodeStatusConditionMetric()
+
+	t.Run("returns_error_when_given_raw_metric", func(t *testing.T) {
+		t.Parallel()
+
+		t.Run("is_not_found", func(t *testing.T) {
+			t.Parallel()
+
+			fetchF := FromLabelValueWithLabelInName("non_existing_metric", "condition", "foo.%s", "status")
+			values, err := fetchF("node", "minikube", raw)
+
+			require.Error(t, err)
+			require.Empty(t, values)
+		})
+
+		t.Run("has_unexpected_format", func(t *testing.T) {
+			t.Parallel()
+
+			raw := rawGroupsWithNodeStatusConditionMetric()
+			raw["node"]["minikube"]["kube_node_status_condition"] = struct{}{}
+
+			fetchF := FromLabelValueWithLabelInName("kube_node_status_condition", "condition", "f.%s", "status")
+			values, err := fetchF("node", "minikube", raw)
+
+			require.Error(t, err)
+			require.Empty(t, values)
+		})
+
+		t.Run("has_no_requested_name_label", func(t *testing.T) {
+			t.Parallel()
+
+			fetchF := FromLabelValueWithLabelInName("kube_node_status_condition", "non_existing_label", "f.%s", "status")
+			values, err := fetchF("node", "minikube", raw)
+
+			require.Error(t, err)
+			require.Empty(t, values)
+		})
+
+		t.Run("has_no_requested_value_label", func(t *testing.T) {
+			t.Parallel()
+
+			fetchF := FromLabelValueWithLabelInName("kube_node_status_condition", "condition", "f.%s", "non_existing_label")
+			values, err := fetchF("node", "minikube", raw)
+
+			require.Error(t, err)
+			require.Empty(t, values)
+		})
+	})
+
+	t.Run("returns_values_with_name_label_value_in_metric_name_and_value_from_value_label", func(t *testing.T) {
+		t.Parallel()
+
+		fetchF := FromLabelValueWithLabelInName("kube_node_status_condition", "condition", "f.%s", "status")
+		valuesRaw, err := fetchF("node", "minikube", raw)
+
+		require.NoError(t, err)
+		require.NotEmpty(t, valuesRaw)
+
+		expectedValue := definition.FetchedValues{"f.DiskPressure": "true"}
+		require.Equal(t, expectedValue, valuesRaw)
+	})
+
+	t.Run("returns_values_for_all_raw_metrics_found", func(t *testing.T) {
+		t.Parallel()
+
+		raw := rawGroupsWithNodeStatusConditionMetric()
+		raw["node"]["minikube"]["kube_node_status_condition"] = []Metric{
+			{
+				Labels: map[string]string{
+					"node":      "minikube",
+					"condition": "DiskPressure",
+					"status":    "true",
+				},
+			},
+			{
+				Labels: map[string]string{
+					"node":      "minikube",
+					"condition": "PIDPressure",
+					"status":    "false",
+				},
+			},
+			{
+				Labels: map[string]string{
+					"node":      "minikube",
+					"condition": "MemoryPressure",
+					"status":    "unknown",
+				},
+			},
+		}
+
+		fetchF := FromLabelValueWithLabelInName("kube_node_status_condition", "condition", "f.%s", "status")
+		valuesRaw, err := fetchF("node", "minikube", raw)
+
+		require.NoError(t, err)
+		require.NotEmpty(t, valuesRaw)
+
+		expectedValue := definition.FetchedValues{
+			"f.DiskPressure":   "true",
+			"f.PIDPressure":    "false",
+			"f.MemoryPressure": "unknown",
+		}
+		require.Equal(t, expectedValue, valuesRaw)
+	})
+}
+
+func rawGroupsWithNodeStatusConditionMetric() definition.RawGroups {
+	return definition.RawGroups{
+		"node": {
+			"minikube": definition.RawMetrics{
+				"kube_node_status_condition": Metric{
+					Labels: map[string]string{
+						"node":      "minikube",
+						"condition": "DiskPressure",
+						"status":    "true",
+					},
+				},
+			},
+		},
+	}
 }

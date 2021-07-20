@@ -715,6 +715,22 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "isLimited", ValueFunc: prometheus.FromValue("kube_hpa_status_condition_limited")},
 		},
 	},
+	"node": {
+		TypeGenerator: kubeletMetric.FromRawGroupsEntityTypeGenerator,
+		Specs: []definition.Spec{
+			{
+				Name: "condition.*",
+				ValueFunc: definition.Transform(
+					// Will produce `condition.whatever = true` metrics from KSM output like
+					// kube_node_status_condition{condition="whatever",status="true"} 1.
+					prometheus.FromLabelValueWithLabelInName("kube_node_status_condition", "condition", "condition.%s", "status"),
+					// Will transform `condition.whatever = true` from previous step to `condition.whatever = 1`.
+					forEachFetchedValue(toNumericBoolean),
+				),
+				Type: sdkMetric.GAUGE,
+			},
+		},
+	},
 }
 
 // KSMQueries are the queries we will do to KSM in order to fetch all the raw metrics.
@@ -822,6 +838,18 @@ var KSMQueries = []prometheus.Query{
 	},
 	{MetricName: "kube_hpa_status_current_replicas"},
 	{MetricName: "kube_hpa_status_desired_replicas"},
+	// Node status condition
+	{MetricName: "kube_node_status_condition", Value: prometheus.QueryValue{
+		// Since we aggregate metrics which look like the following:
+		//
+		// kube_node_status_condition{node="minikube",condition="MemoryPressure",status="true"} 0
+		// kube_node_status_condition{node="minikube",condition="MemoryPressure",status="false"} 1
+		// kube_node_status_condition{node="minikube",condition="MemoryPressure",status="unknown"} 0
+		//
+		// KSM should never produce a positive value for more than one status, so we can simply fetch
+		// only values which has value 1 for processing.
+		Value: prometheus.GaugeValue(1),
+	}},
 }
 
 // CadvisorQueries are the queries we will do to the kubelet metrics cadvisor endpoint in order to fetch all the raw metrics.
@@ -1069,8 +1097,10 @@ func toNumericBoolean(value definition.FetchedValue) (definition.FetchedValue, e
 		return 1, nil
 	case "false", "False", false, 0:
 		return 0, nil
+	case "unknown":
+		return -1, nil
 	default:
-		return nil, errors.New("value can not be converted to numeric boolean")
+		return nil, fmt.Errorf("value '%v' can not be converted to numeric boolean", value)
 	}
 }
 
@@ -1094,6 +1124,26 @@ func fromPrometheusNumeric(value definition.FetchedValue) (definition.FetchedVal
 	}
 
 	return nil, fmt.Errorf("invalid type value '%v'. Expected 'gauge' or 'counter', got '%T'", value, value)
+}
+
+func forEachFetchedValue(tf definition.TransformFunc) definition.TransformFunc {
+	return func(value definition.FetchedValue) (definition.FetchedValue, error) {
+		values, ok := value.(definition.FetchedValues)
+		if !ok {
+			return nil, fmt.Errorf("value of type %T is not a definition.FetchedValues", value)
+		}
+
+		for k, value := range values {
+			newValue, err := tf(value)
+			if err != nil {
+				return nil, fmt.Errorf("converting value %q: %w", k, err)
+			}
+
+			values[k] = newValue
+		}
+
+		return values, nil
+	}
 }
 
 // Subtract returns a new FetchFunc that subtracts 2 values. It expects that the values are float64

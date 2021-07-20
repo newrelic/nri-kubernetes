@@ -204,6 +204,21 @@ func GroupMetricsBySpec(specs definition.SpecGroups, families []MetricFamily) (g
 
 				rawEntityID := ""
 
+				// Skip adding too specific metrics for higher level groups. E.g. don't add Pod metrics to Node group,
+				// as there will be 1 to many relationship between them and those metrics will be overwritten anyway,
+				// as we use namespace name or node name as a key.
+				if groupLabel == "node" && m.Labels.Has("pod") {
+					continue
+				}
+
+				if groupLabel == "namespace" && (m.Labels.Has("daemonset") ||
+					m.Labels.Has("pod") ||
+					m.Labels.Has("endpoint") ||
+					m.Labels.Has("service") ||
+					m.Labels.Has("deployment") || m.Labels.Has("replicaset")) {
+					continue
+				}
+
 				switch groupLabel {
 				case "namespace", "node":
 					rawEntityID = m.Labels[groupLabel]
@@ -219,6 +234,16 @@ func GroupMetricsBySpec(specs definition.SpecGroups, families []MetricFamily) (g
 
 				if _, ok := g[groupLabel][rawEntityID]; !ok {
 					g[groupLabel][rawEntityID] = make(definition.RawMetrics)
+				}
+
+				if v, ok := g[groupLabel][rawEntityID][f.Name]; ok {
+					if oldMetric, ok := v.(Metric); ok {
+						g[groupLabel][rawEntityID][f.Name] = []Metric{oldMetric}
+					}
+
+					g[groupLabel][rawEntityID][f.Name] = append(g[groupLabel][rawEntityID][f.Name].([]Metric), m)
+
+					continue
 				}
 
 				g[groupLabel][rawEntityID][f.Name] = m
@@ -700,4 +725,63 @@ func getRawEntityID(parentGroupLabel, groupLabel, entityID string, groups defini
 		rawEntityID = fmt.Sprintf("%v_%v", namespaceID, relatedMetricID)
 	}
 	return rawEntityID, nil
+}
+
+// FromLabelValueWithLabelInName returns a FetchFunc that returns metrics with a templatizable name based on a label,
+// and whose value is gathered from another label.
+//
+// `format` will be evaluated using the value of the label `label` and result will be used as metric name.
+//
+// The value of the metric will be set to the value of `valueLabel` label.
+//
+// For example, for the following metric:
+//
+// rawMetricName{foo="whatever",bar="false"} 1
+//
+// called as:
+//
+// FromLabelValueWithLabelInName("rawMetricName", "foo", "myMetric.%s", "bar")
+//
+// the function will produce the following metric:
+//
+// myMetric.whatever = "false"
+//
+func FromLabelValueWithLabelInName(rawMetricName, label, format, valueLabel string) definition.FetchFunc {
+	return func(groupLabel, entityID string, rawGroups definition.RawGroups) (definition.FetchedValue, error) {
+		fetchedValues := definition.FetchedValues{}
+
+		metricsRaw, err := definition.FromRaw(rawMetricName)(groupLabel, entityID, rawGroups)
+		if err != nil {
+			return nil, fmt.Errorf("fetching metric %q for entity %q in group %q: %w", rawMetricName, entityID, groupLabel, err)
+		}
+
+		metrics := []Metric{}
+
+		switch m := metricsRaw.(type) {
+		case Metric:
+			metrics = append(metrics, m)
+		case []Metric:
+			metrics = m
+		default:
+			return nil, fmt.Errorf("incompatible metric type for %q. Expected: %T or %T. Got: %T", rawMetricName, metrics, Metric{}, metricsRaw)
+		}
+
+		for _, metric := range metrics {
+			nameLabelValue, ok := metric.Labels[label]
+			if !ok {
+				return nil, fmt.Errorf("label %q for metric name not found in metric %v", label, metric)
+			}
+
+			fetchedValueName := fmt.Sprintf(format, nameLabelValue)
+
+			fetchedValuefromLabel, ok := metric.Labels[valueLabel]
+			if !ok {
+				return nil, fmt.Errorf("label %q for metric value not found in metric %v", valueLabel, metric)
+			}
+
+			fetchedValues[fetchedValueName] = fetchedValuefromLabel
+		}
+
+		return fetchedValues, nil
+	}
 }

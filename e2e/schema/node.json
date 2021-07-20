@@ -95,6 +95,34 @@
         "test"
       ]
     },
+    "condition.DiskPressure": {
+      "$id": "#/properties/condition.DiskPressure",
+      "type": "integer",
+      "examples": [
+        0
+      ]
+    },
+    "condition.MemoryPressure": {
+      "$id": "#/properties/condition.MemoryPressure",
+      "type": "integer",
+      "examples": [
+        0
+      ]
+    },
+    "condition.PIDPressure":  {
+      "$id": "#/properties/condition.PIDPressure",
+      "type": "integer",
+      "examples": [
+        0
+      ]
+    },
+    "condition.Ready":  {
+      "$id": "#/properties/condition.Ready",
+      "type": "integer",
+      "examples": [
+        1
+      ]
+    },
     "cpuRequestedCores": {
       "$id": "#/properties/cpuRequestedCores",
       "type": "number",
@@ -352,7 +380,11 @@
       "runtimeInodes": 3145728,
       "runtimeInodesFree": 2875132,
       "runtimeInodesUsed": 270596,
-      "runtimeUsedBytes": 1449194914
+      "runtimeUsedBytes": 1449194914,
+      "condition.DiskPressure": 0,
+      "condition.MemoryPressure": 0,
+      "condition.PIDPressure": 0,
+      "condition.Ready": 1
     }
   ],
   "required": [
@@ -369,6 +401,10 @@
     "capacityMemoryBytes",
     "capacityPods",
     "clusterName",
+    "condition.DiskPressure",
+    "condition.MemoryPressure",
+    "condition.PIDPressure",
+    "condition.Ready",
     "cpuRequestedCores",
     "cpuUsedCoreMilliseconds",
     "cpuUsedCores",
