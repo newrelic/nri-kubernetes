@@ -332,7 +332,7 @@ func main() {
 
 	ttlAPIServerCache, err := time.ParseDuration(args.APIServerCacheTTL)
 	if err != nil {
-		logger.Errorf("while parsing the api server cache TTL value, defaulting to %s: %v", defaultAPIServerCacheTTL, err)
+		logger.Errorf("Error while parsing the api server cache TTL value, defaulting to %s: %v", defaultAPIServerCacheTTL, err)
 		ttlAPIServerCache = defaultAPIServerCacheTTL
 	}
 

@@ -187,8 +187,8 @@ func TestPopulateK8s(t *testing.T) {
 		compareIgnoreFields := cmpopts.IgnoreUnexported(integration.Entity{}, metric.Set{}, inventory.Inventory{})
 		e := intgr.Entities[j]
 		ee := expectedEntities[j]
-		if !cmp.Equal(e, ee, compareIgnoreFields) {
-			t.Fatalf("Entities[%d] mismatch: %s", j, cmp.Diff(e, ee, compareIgnoreFields))
+		if diff := cmp.Diff(e, ee, compareIgnoreFields); diff != "" {
+			t.Fatalf("Entities[%d] mismatch: %s", j, diff)
 		}
 	}
 }
