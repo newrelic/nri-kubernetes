@@ -161,16 +161,18 @@ func TestPopulateK8s(t *testing.T) {
 	assert.Empty(t, err.(data.PopulateResult).Errors)
 
 	expectedInventory := inventory.New()
+	
 	err = expectedInventory.SetItem("cluster", "name", expectedEntities[0].Metadata.Name)
 	require.NoError(t, err)
 
 	err = expectedInventory.SetItem("cluster", "k8sVersion", k8sVersion.String())
 	require.NoError(t, err)
+	
 	expectedEntities[0].Inventory = expectedInventory
 
 	require.Equal(t, len(expectedEntities), len(intgr.Entities), "Expected and returned entity lists do not have the same length")
 
-	// Sort slices, so we can later diff them one-by-one for decent readability
+	// Sort slices, so we can later diff them one-by-one for decent readability.
 	entitySliceLesser := func(entities []*integration.Entity) func(i, j int) bool {
 		return func(i, j int) bool {
 			return strings.Compare(entities[i].Metadata.Name, entities[j].Metadata.Name) < 0

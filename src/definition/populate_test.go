@@ -421,7 +421,7 @@ func TestIntegrationProtocol2PopulateFunc_PopulateOnlySpecifiedGroups(t *testing
 		},
 	}
 
-	// Create a dummy integration, used only to create entities easily
+	// Create a dummy integration, used only to create entities easily.
 	intgr, err := integration.New("nr.test", "1.0.0")
 	require.NoError(t, err)
 
