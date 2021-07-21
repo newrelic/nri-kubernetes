@@ -55,6 +55,7 @@ var expectedMetrics = []*sdk.EntityData{
 				"createdKind":                    "DaemonSet",
 				"createdBy":                      "newrelic-infra",
 				"nodeIP":                         "192.168.99.100",
+				"podIP":                          "172.17.0.3",
 				"namespace":                      "kube-system",
 				"namespaceName":                  "kube-system",
 				"nodeName":                       "minikube",

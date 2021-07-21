@@ -888,6 +888,7 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "createdKind", ValueFunc: definition.FromRaw("createdKind"), Type: sdkMetric.ATTRIBUTE, Optional: true},
 			{Name: "createdBy", ValueFunc: definition.FromRaw("createdBy"), Type: sdkMetric.ATTRIBUTE, Optional: true},
 			{Name: "nodeIP", ValueFunc: definition.FromRaw("nodeIP"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "podIP", ValueFunc: definition.FromRaw("podIP"), Type: sdkMetric.ATTRIBUTE, Optional: true},
 			{Name: "namespace", ValueFunc: definition.FromRaw("namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: definition.FromRaw("namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "nodeName", ValueFunc: definition.FromRaw("nodeName"), Type: sdkMetric.ATTRIBUTE},
