@@ -442,8 +442,11 @@ func testSpecificEntities(output map[string]*integrationData, releaseName string
 	}
 	foundEntities := make(map[entityID]error)
 	for _, o := range output {
-		i := integration.Integration{}
-		err := json.Unmarshal(o.stdOut, &i)
+		i, err := integration.New("e2e", "0.0.0")
+		if err != nil {
+			return fmt.Errorf("creating integration for unmarshalling: %w", err)
+		}
+		err = json.Unmarshal(o.stdOut, i)
 		if err != nil {
 			return err
 		}
@@ -511,12 +514,15 @@ func (se *scenarioEnv) testEventTypes(output map[string]*integrationData) error 
 			schemasToMatch[string(expectedJob)] = expectedSchema
 		}
 
-		i := integration.Integration{}
-		err := json.Unmarshal(o.stdOut, &i)
+		i, err := integration.New("e2e", "0.0.0")
+		if err != nil {
+			return fmt.Errorf("creating integration for unmarshalling: %w", err)
+		}
+		err = json.Unmarshal(o.stdOut, i)
 		if err != nil {
 			return err
 		}
-		err = jsonschema.MatchIntegration(&i)
+		err = jsonschema.MatchIntegration(i)
 		if err != nil {
 			return fmt.Errorf("pod %s failed with: %s", podName, err)
 		}

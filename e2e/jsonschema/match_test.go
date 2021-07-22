@@ -21,11 +21,12 @@ var s = map[string]EventTypeToSchemaFilename{
 
 func TestNoError(t *testing.T) {
 	c := readTestInput(t, "testdata/input-complete.json")
-	i := integration.Integration{}
-	err := json.Unmarshal(c, &i)
+	i, err := integration.New("e2e", "0.0.0")
+	require.NoError(t, err)
+	err = json.Unmarshal(c, i)
 	require.NoError(t, err)
 
-	err = MatchIntegration(&i)
+	err = MatchIntegration(i)
 	assert.NoError(t, err)
 	err = MatchEntities(i.Entities, s, "testdata")
 	assert.NoError(t, err)
@@ -33,18 +34,21 @@ func TestNoError(t *testing.T) {
 
 func TestErrorValidatingInputWithNoData(t *testing.T) {
 	c := readTestInput(t, "testdata/input-invalid-nodata.json")
-	i := integration.Integration{}
-	err := json.Unmarshal(c, &i)
+	i, err := integration.New("e2e", "0.0.0")
 	require.NoError(t, err)
 
-	err = MatchIntegration(&i)
+	err = json.Unmarshal(c, i)
+	require.NoError(t, err)
+
+	err = MatchIntegration(i)
 	assert.Contains(t, err.Error(), "data: Array must have at least 1 items")
 }
 
 func TestErrorValidatingEventTypes(t *testing.T) {
 	c := readTestInput(t, "testdata/input-missing-event-type.json")
-	i := integration.Integration{}
-	err := json.Unmarshal(c, &i)
+	i, err := integration.New("e2e", "0.0.0")
+	require.NoError(t, err)
+	err = json.Unmarshal(c, i)
 	require.NoError(t, err)
 
 	jobMetrics := map[string]EventTypeToSchemaFilename{
@@ -63,8 +67,9 @@ func TestErrorValidatingEventTypes(t *testing.T) {
 
 func TestErrorValidatingTestNode(t *testing.T) {
 	c := readTestInput(t, "testdata/input-invalid-testnode.json")
-	i := integration.Integration{}
-	err := json.Unmarshal(c, &i)
+	i, err := integration.New("e2e", "0.0.0")
+	require.NoError(t, err)
+	err = json.Unmarshal(c, i)
 	require.NoError(t, err)
 
 	err = MatchEntities(i.Entities, s, "testdata")
