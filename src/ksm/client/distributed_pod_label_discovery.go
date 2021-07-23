@@ -5,7 +5,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 
@@ -21,12 +20,11 @@ type distributedPodLabelDiscoverer struct {
 
 func (p *distributedPodLabelDiscoverer) findAllLabeledPodsRunningOnNode() ([]v1.Pod, error) {
 	pods, err := p.k8sClient.FindPodsByLabel(p.ksmPodLabel, "true")
-
 	if err != nil {
-		return nil, errors.Wrap(err, "could not query api server for pods")
+		return nil, fmt.Errorf("querying API server for pods: %w", err)
 	}
 	if len(pods.Items) == 0 {
-		return nil, errors.Wrapf(errNoKSMPodsFound, "no KSM pod found with label: '%s'", p.ksmPodLabel)
+		return nil, fmt.Errorf("discovering KSM with label %q: %w", p.ksmPodLabel, errNoKSMPodsFound)
 	}
 
 	var foundPods []v1.Pod
@@ -36,7 +34,7 @@ func (p *distributedPodLabelDiscoverer) findAllLabeledPodsRunningOnNode() ([]v1.
 		}
 
 		if pod.Status.HostIP == p.ownNodeIP {
-			p.logger.Debugf("Found KSM pod running on this code, pod IP: %s", pod.Status.PodIP)
+			p.logger.Debugf("Found KSM pod running on this node, pod IP: %s", pod.Status.PodIP)
 			foundPods = append(foundPods, pod)
 		}
 	}

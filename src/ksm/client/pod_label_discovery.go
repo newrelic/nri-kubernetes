@@ -5,7 +5,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 
@@ -21,14 +20,13 @@ type podLabelDiscoverer struct {
 }
 
 func (p *podLabelDiscoverer) findSingleKSMPodByLabel() (*v1.Pod, error) {
-
 	pods, err := p.k8sClient.FindPodsByLabel(p.ksmPodLabel, "true")
-
 	if err != nil {
-		return nil, errors.Wrap(err, "could not query api server for pods")
+		return nil, fmt.Errorf("querying API server for Pods: %w", err)
 	}
+
 	if len(pods.Items) == 0 {
-		return nil, errors.Wrapf(errNoKSMPodsFound, "no KSM pod found with label: '%s'", p.ksmPodLabel)
+		return nil, fmt.Errorf("discovering KSM with label %q: %w", p.ksmPodLabel, errNoKSMPodsFound)
 	}
 
 	// In case there are multiple pods, we must be be sure to deterministically select the same Pod on each node
@@ -50,7 +48,6 @@ func (p *podLabelDiscoverer) findSingleKSMPodByLabel() (*v1.Pod, error) {
 
 // Discover will find a single KSM pod using the provided label.
 func (p *podLabelDiscoverer) Discover(timeout time.Duration) (client.HTTPClient, error) {
-
 	pod, err := p.findSingleKSMPodByLabel()
 	if err != nil {
 		return nil, err

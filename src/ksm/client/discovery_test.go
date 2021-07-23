@@ -15,6 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
 
@@ -109,6 +110,7 @@ func TestDiscover_portThroughDNSAndGuessedNodeIPFromMultiplePods(t *testing.T) {
 	// And the nodeIP is correctly returned
 	assert.Equal(t, "162.178.1.1", ksmClient.(*ksm).nodeIP)
 }
+
 func TestDiscover_metricsPortThroughAPIWhenDNSFails(t *testing.T) {
 	tt := []struct {
 		label     string
@@ -127,15 +129,16 @@ func TestDiscover_metricsPortThroughAPIWhenDNSFails(t *testing.T) {
 			// Given a client
 			c := new(client.MockedKubernetes)
 			c.On("FindServicesByLabel", entry.label, mock.Anything).
-				Return(&v1.ServiceList{Items: []v1.Service{{
-					Spec: v1.ServiceSpec{
-						ClusterIP: "1.2.3.4",
-						Ports: []v1.ServicePort{{
-							Name: ksmPortName,
-							Port: 8888,
-						}},
+				Return(&v1.ServiceList{Items: []v1.Service{
+					{
+						Spec: v1.ServiceSpec{
+							ClusterIP: "1.2.3.4",
+							Ports: []v1.ServicePort{{
+								Name: ksmPortName,
+								Port: 8888,
+							}},
+						},
 					},
-				},
 				}}, nil)
 			c.On("FindServicesByLabel", mock.Anything, mock.Anything).
 				Return(&v1.ServiceList{}, nil)
@@ -161,7 +164,7 @@ func TestDiscover_metricsPortThroughAPIWhenDNSFails(t *testing.T) {
 			ksmClient, err := d.Discover(timeout)
 
 			// The call works correctly
-			assert.Nil(t, err, "should not return error")
+			require.Nil(t, err, "should not return error")
 			// And the discovered host:port of the KSM Service is returned
 			assert.Equal(t, "1.2.3.4:8888", ksmClient.(*ksm).endpoint.Host)
 			assert.Equal(t, "http", ksmClient.(*ksm).endpoint.Scheme)
@@ -175,15 +178,16 @@ func TestDiscover_metricsPortThroughAPIWhenDNSError(t *testing.T) {
 	// Given a client
 	c := new(client.MockedKubernetes)
 	c.On("FindServicesByLabel", mock.Anything, mock.Anything).
-		Return(&v1.ServiceList{Items: []v1.Service{{
-			Spec: v1.ServiceSpec{
-				ClusterIP: "1.2.3.4",
-				Ports: []v1.ServicePort{{
-					Name: ksmPortName,
-					Port: 8888,
-				}},
+		Return(&v1.ServiceList{Items: []v1.Service{
+			{
+				Spec: v1.ServiceSpec{
+					ClusterIP: "1.2.3.4",
+					Ports: []v1.ServicePort{{
+						Name: ksmPortName,
+						Port: 8888,
+					}},
+				},
 			},
-		},
 		}}, nil)
 	c.On("FindPodsByLabel", mock.Anything, mock.Anything).
 		Return(&v1.PodList{Items: []v1.Pod{{
@@ -227,7 +231,8 @@ func TestDiscover_guessedTCPPortThroughAPIWhenDNSEmptyResponse(t *testing.T) {
 					Protocol: "TCP",
 					Port:     8081,
 				}},
-			}}}}, nil)
+			},
+		}}}, nil)
 	c.On("FindPodsByLabel", mock.Anything, mock.Anything).
 		Return(&v1.PodList{Items: []v1.Pod{{
 			Status: v1.PodStatus{HostIP: "6.7.8.9"},
@@ -313,6 +318,7 @@ func TestDiscover_errorRetrievingPortWhenDNSAndAPIErrors(t *testing.T) {
 	// And the KSM client is not returned
 	assert.Nil(t, ksmClient)
 }
+
 func TestDiscover_errorRetrievingNodeIPWhenPodListEmpty(t *testing.T) {
 	// Given a client
 	c := new(client.MockedKubernetes)
@@ -386,13 +392,13 @@ func TestNodeIPForDiscoverer_Error(t *testing.T) {
 // Testing NodeIP() method
 func TestNodeIP(t *testing.T) {
 	// Given a ksm struct initialized
-	var c = ksm{
+	c := ksm{
 		nodeIP:     "1.2.3.4",
 		endpoint:   url.URL{},
 		httpClient: http.DefaultClient,
 		logger:     logger,
 	}
-	var cl = &c
+	cl := &c
 	// When retrieving node IP
 	nodeIP := cl.NodeIP()
 	// The call works correctly
@@ -408,7 +414,7 @@ func TestDo(t *testing.T) {
 		assert.FailNow(t, err.Error())
 	}
 
-	var c = &ksm{
+	c := &ksm{
 		nodeIP:     "1.2.3.4",
 		endpoint:   *endpoint,
 		httpClient: s.Client(),
