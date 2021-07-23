@@ -73,7 +73,6 @@ func (s Scenario) String() string {
 // GetSchemasForJob returns the json schemas that should be use to
 // match the test scenario.
 func (s Scenario) GetSchemasForJob(job string) jsonschema.EventTypeToSchemaFilename {
-
 	eventTypeSchemas := defaultEventTypeToSchemaFilename()
 
 	if s.optionalNetworkSchema {
