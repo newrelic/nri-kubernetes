@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
@@ -128,7 +129,14 @@ func TestDiscover_metricsPortThroughAPIWhenDNSFails(t *testing.T) {
 		t.Run(fmt.Sprintf("KSM test for label %s", entry.label), func(t *testing.T) {
 			// Given a client
 			c := new(client.MockedKubernetes)
-			c.On("FindServicesByLabel", entry.label, mock.Anything).
+
+			labelSelector := metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					entry.label: ksmAppLabelValue,
+				},
+			}
+
+			c.On("FindServicesByLabel", labelSelector).
 				Return(&v1.ServiceList{Items: []v1.Service{
 					{
 						Spec: v1.ServiceSpec{
@@ -143,7 +151,7 @@ func TestDiscover_metricsPortThroughAPIWhenDNSFails(t *testing.T) {
 			c.On("FindServicesByLabel", mock.Anything, mock.Anything).
 				Return(&v1.ServiceList{}, nil)
 
-			c.On("FindPodsByLabel", entry.label, mock.Anything).
+			c.On("FindPodsByLabel", labelSelector).
 				Return(&v1.PodList{Items: []v1.Pod{{
 					Status: v1.PodStatus{HostIP: "6.7.8.9"},
 				}}}, nil)

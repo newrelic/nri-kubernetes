@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/transport"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
@@ -148,7 +149,11 @@ func (sd *discoverer) apiDiscover() (url.URL, error) {
 	var err error
 
 	for _, label := range ksmAppLabelNames {
-		services, err = sd.apiClient.FindServicesByLabel(label, ksmAppLabelValue)
+		services, err = sd.apiClient.FindServicesByLabel(metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				label: ksmAppLabelValue,
+			},
+		})
 		if err == nil && len(services.Items) > 0 {
 			break
 		}
@@ -189,7 +194,11 @@ func (sd *discoverer) nodeIP() (string, error) {
 	var err error
 
 	for _, label := range ksmAppLabelNames {
-		pods, err = sd.apiClient.FindPodsByLabel(label, ksmAppLabelValue)
+		pods, err = sd.apiClient.FindPodsByLabel(metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				label: ksmAppLabelValue,
+			},
+		})
 		if err == nil && len(pods.Items) > 0 {
 			break
 		}

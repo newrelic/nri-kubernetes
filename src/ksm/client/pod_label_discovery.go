@@ -7,6 +7,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 )
@@ -20,7 +21,11 @@ type podLabelDiscoverer struct {
 }
 
 func (p *podLabelDiscoverer) findSingleKSMPodByLabel() (*v1.Pod, error) {
-	pods, err := p.k8sClient.FindPodsByLabel(p.ksmPodLabel, "true")
+	pods, err := p.k8sClient.FindPodsByLabel(metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			p.ksmPodLabel: "true",
+		},
+	})
 	if err != nil {
 		return nil, fmt.Errorf("querying API server for Pods: %w", err)
 	}
