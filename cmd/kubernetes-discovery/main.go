@@ -11,39 +11,43 @@ import (
 	k8sclient "github.com/newrelic/nri-kubernetes/v2/src/client"
 )
 
-var discovery = flag.String("discovery", KSMPodLabel, "Which discovery mechanism to run")
-
-var logger = log.New(true)
-
 const (
 	KSMPodLabel = "ksm_pod_label"
 )
 
-func main() {
+var (
+	discovery   = flag.String("discovery", KSMPodLabel, "Which discovery mechanism to run")
+	ksmPodLabel = flag.String("ksm_pod_label", "my-custom-ksm", "[ksm_pod_label] The label to search for")
+)
 
+func main() {
 	flag.Parse()
 
-	k8sClient, err := k8sclient.NewKubernetes( /* tryLocalKubeconfig */ true)
+	verbose := true
+
+	logger := log.New(verbose)
+
+	tryLocalKubeconfig := true
+
+	k8sClient, err := k8sclient.NewKubernetes(tryLocalKubeconfig)
 	if err != nil {
-		logrus.Fatalf("could not create kubernetes client: %v", err)
+		logger.Fatalf("Could not create Kubernetes client: %v", err)
 	}
 
 	switch *discovery {
 	case KSMPodLabel:
-		runKSMPodLabel(k8sClient)
+		runKSMPodLabel(k8sClient, logger)
 	default:
-		logrus.Infof("Invalid discovery type: %s", *discovery)
+		logger.Infof("Invalid discovery type: %s", *discovery)
 	}
 }
 
-var ksmPodLabel = flag.String("ksm_pod_label", "my-custom-ksm", "[ksm_pod_label] The label to search for")
-
-func runKSMPodLabel(kubernetes k8sclient.Kubernetes) {
+func runKSMPodLabel(kubernetes k8sclient.Kubernetes, logger *logrus.Logger) {
 	discoverer := client.NewPodLabelDiscoverer(*ksmPodLabel, 8080, "http", logger, kubernetes)
 	ksm, err := discoverer.Discover(time.Second * 5)
 	if err != nil {
-		logrus.Fatal(err)
+		logger.Fatalf("Discovering KSM: %v", err)
 	}
 
-	logrus.Infof("found KSM pod on HostIP: %s", ksm.NodeIP())
+	logger.Infof("Found KSM pod on HostIP: %s", ksm.NodeIP())
 }
