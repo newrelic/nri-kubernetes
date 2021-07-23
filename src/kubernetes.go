@@ -107,7 +107,6 @@ func controlPlaneJobs(
 	controllerManagerEndpointURL string,
 	apiServerEndpointURL string,
 ) ([]*scrape.Job, error) {
-
 	nodeInfo, err := apiServerClient.GetNodeInfo(nodeName)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't query ApiServer server: %v", err)
@@ -296,7 +295,6 @@ func main() {
 	apiServerClient := apiserver.NewClient(k8s)
 
 	ttlAPIServerCacheK8SVersion, err := time.ParseDuration(args.APIServerCacheK8SVersionTTL)
-
 	if err != nil {
 		logger.WithError(err).Errorf(
 			"while parsing the api server cache TTL value for the kubernetes server version. Defaulting to %s",
@@ -395,7 +393,6 @@ func main() {
 }
 
 func getKSMDiscoverer(logger *logrus.Logger) (client.Discoverer, error) {
-
 	k8sClient, err := client.NewKubernetes( /* tryLocalKubeconfig */ false)
 	if err != nil {
 		return nil, err
