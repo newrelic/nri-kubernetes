@@ -64,11 +64,14 @@ func TestDiscover_portThroughDNS(t *testing.T) {
 		&rest.Config{BearerToken: "foobar"},
 	)
 	// And an Discoverer implementation
-	d := discoverer{
-		lookupSRV: fakeLookupSRV,
-		apiClient: c,
-		logger:    logger,
+	config := DiscovererConfig{
+		LookupSRV: fakeLookupSRV,
+		APIClient: c,
+		Logger:    logger,
 	}
+
+	d, err := NewDiscoverer(config)
+	require.Nil(t, err, "creating discoverer")
 
 	// When retrieving the KSM client
 	ksmClient, err := d.Discover(timeout)
@@ -95,11 +98,15 @@ func TestDiscover_portThroughDNSAndGuessedNodeIPFromMultiplePods(t *testing.T) {
 	)
 
 	// and an Discoverer implementation
-	d := discoverer{
-		lookupSRV: fakeLookupSRV,
-		apiClient: c,
-		logger:    logger,
+	config := DiscovererConfig{
+		LookupSRV: fakeLookupSRV,
+		APIClient: c,
+		Logger:    logger,
 	}
+
+	d, err := NewDiscoverer(config)
+	require.Nil(t, err, "creating discoverer")
+
 	// When retrieving the KSM client with no port named 'http-metrics'
 	ksmClient, err := d.Discover(timeout)
 
@@ -115,7 +122,7 @@ func TestDiscover_portThroughDNSAndGuessedNodeIPFromMultiplePods(t *testing.T) {
 func TestDiscover_metricsPortThroughAPIWhenDNSFails(t *testing.T) {
 	tt := []struct {
 		label     string
-		srvLookup lookupSRVFunc
+		srvLookup LookupSRVFunc
 	}{
 		{"k8s-app", emptyLookupSRV},
 		{"app", emptyLookupSRV},
@@ -162,11 +169,14 @@ func TestDiscover_metricsPortThroughAPIWhenDNSFails(t *testing.T) {
 			)
 
 			// and an Discoverer implementation whose DNS returns empty response
-			d := discoverer{
-				lookupSRV: emptyLookupSRV,
-				apiClient: c,
-				logger:    logger,
+			config := DiscovererConfig{
+				LookupSRV: emptyLookupSRV,
+				APIClient: c,
+				Logger:    logger,
 			}
+
+			d, err := NewDiscoverer(config)
+			require.Nil(t, err, "creating discoverer")
 
 			// When discovering the KSM client
 			ksmClient, err := d.Discover(timeout)
@@ -206,11 +216,14 @@ func TestDiscover_metricsPortThroughAPIWhenDNSError(t *testing.T) {
 	)
 
 	// and an Discoverer implementation whose DNS returns an error
-	d := discoverer{
-		lookupSRV: failingLookupSRV,
-		apiClient: c,
-		logger:    logger,
+	config := DiscovererConfig{
+		LookupSRV: failingLookupSRV,
+		APIClient: c,
+		Logger:    logger,
 	}
+
+	d, err := NewDiscoverer(config)
+	require.Nil(t, err, "creating discoverer")
 
 	// When retrieving the KSM client
 	ksmClient, err := d.Discover(timeout)
@@ -250,11 +263,15 @@ func TestDiscover_guessedTCPPortThroughAPIWhenDNSEmptyResponse(t *testing.T) {
 	)
 
 	// and an Discoverer implementation whose DNS returns empty response
-	d := discoverer{
-		lookupSRV: emptyLookupSRV,
-		apiClient: c,
-		logger:    logger,
+	config := DiscovererConfig{
+		LookupSRV: emptyLookupSRV,
+		APIClient: c,
+		Logger:    logger,
 	}
+
+	d, err := NewDiscoverer(config)
+	require.Nil(t, err, "creating discoverer")
+
 	// When retrieving the KSM client with no port named 'http-metrics'
 	ksmClient, err := d.Discover(timeout)
 
@@ -282,11 +299,14 @@ func TestDiscover_errorRetrievingPortWhenDNSAndAPIResponsesEmpty(t *testing.T) {
 	)
 
 	// and an Discoverer implementation whose DNS returns empty response
-	d := discoverer{
-		lookupSRV: emptyLookupSRV,
-		apiClient: c,
-		logger:    logger,
+	config := DiscovererConfig{
+		LookupSRV: emptyLookupSRV,
+		APIClient: c,
+		Logger:    logger,
 	}
+
+	d, err := NewDiscoverer(config)
+	require.Nil(t, err, "creating discoverer")
 
 	// When retrieving the KSM client
 	ksmClient, err := d.Discover(timeout)
@@ -312,11 +332,14 @@ func TestDiscover_errorRetrievingPortWhenDNSAndAPIErrors(t *testing.T) {
 	)
 
 	// and an Discoverer implementation whose DNS returns an error
-	d := discoverer{
-		lookupSRV: failingLookupSRV,
-		apiClient: c,
-		logger:    logger,
+	config := DiscovererConfig{
+		LookupSRV: failingLookupSRV,
+		APIClient: c,
+		Logger:    logger,
 	}
+
+	d, err := NewDiscoverer(config)
+	require.Nil(t, err, "creating discoverer")
 
 	// When retrieving the KSM client
 	ksmClient, err := d.Discover(timeout)
@@ -338,11 +361,14 @@ func TestDiscover_errorRetrievingNodeIPWhenPodListEmpty(t *testing.T) {
 	)
 
 	// And an Discoverer implementation
-	d := discoverer{
-		lookupSRV: fakeLookupSRV,
-		apiClient: c,
-		logger:    logger,
+	config := DiscovererConfig{
+		LookupSRV: fakeLookupSRV,
+		APIClient: c,
+		Logger:    logger,
 	}
+
+	d, err := NewDiscoverer(config)
+	require.Nil(t, err, "creating discoverer")
 
 	// When retrieving the KSM client
 	ksmClient, err := d.Discover(timeout)
@@ -364,11 +390,14 @@ func TestDiscover_errorRetrievingNodeIPWhenErrorFindingPod(t *testing.T) {
 	)
 
 	// And an Discoverer implementation
-	d := discoverer{
-		lookupSRV: fakeLookupSRV,
-		apiClient: c,
-		logger:    logger,
+	config := DiscovererConfig{
+		LookupSRV: fakeLookupSRV,
+		APIClient: c,
+		Logger:    logger,
 	}
+
+	d, err := NewDiscoverer(config)
+	require.Nil(t, err, "creating discoverer")
 
 	// When retrieving the KSM client
 	ksmClient, err := d.Discover(timeout)
@@ -385,16 +414,20 @@ func TestNodeIPForDiscoverer_Error(t *testing.T) {
 		Return(&v1.PodList{Items: []v1.Pod{
 			{Status: v1.PodStatus{HostIP: "6.7.8.9"}},
 		}}, errors.New("no label"))
-	d := discoverer{
-		lookupSRV: fakeLookupSRV,
-		apiClient: c,
-		logger:    logger,
+
+	config := DiscovererConfig{
+		LookupSRV: fakeLookupSRV,
+		APIClient: c,
+		Logger:    logger,
 	}
 
-	nodeIP, err := d.nodeIP()
+	d, err := NewDiscoverer(config)
+	require.Nil(t, err, "creating discoverer")
 
-	assert.EqualError(t, err, "no label")
-	assert.Equal(t, "", nodeIP)
+	ksmClient, err := d.Discover(timeout)
+
+	assert.NotNil(t, err, "expected discovery error")
+	assert.Nil(t, ksmClient)
 }
 
 // Testing NodeIP() method
@@ -457,4 +490,28 @@ func TestDo_error(t *testing.T) {
 	assert.NotNil(t, err)
 	// The response was not created
 	assert.Nil(t, resp)
+}
+
+func Test_Creating_discoverer_returns_error_when(t *testing.T) {
+	c := new(client.MockedKubernetes)
+
+	t.Run("API_client_is_not_set", func(t *testing.T) {
+		config := DiscovererConfig{
+			Logger: logger,
+		}
+
+		d, err := NewDiscoverer(config)
+		require.NotNil(t, err)
+		require.Nil(t, d)
+	})
+
+	t.Run("Logger_is_not_set", func(t *testing.T) {
+		config := DiscovererConfig{
+			APIClient: c,
+		}
+
+		d, err := NewDiscoverer(config)
+		require.NotNil(t, err)
+		require.Nil(t, d)
+	})
 }

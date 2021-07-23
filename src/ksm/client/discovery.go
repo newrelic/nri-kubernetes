@@ -35,11 +35,42 @@ const (
 	headlessServiceClusterIP = "None"
 )
 
-type lookupSRVFunc func(service, proto, name string) (cname string, addrs []*net.SRV, err error)
+type LookupSRVFunc func(service, proto, name string) (cname string, addrs []*net.SRV, err error)
+
+// DiscovererConfig holds parameters for creating discoverer.
+type DiscovererConfig struct {
+	LookupSRV         LookupSRVFunc
+	APIClient         client.Kubernetes
+	Logger            *logrus.Logger
+	OverridenEndpoint string
+}
+
+func NewDiscoverer(config DiscovererConfig) (client.Discoverer, error) {
+	if config.APIClient == nil {
+		return nil, fmt.Errorf("API client can't be nil")
+	}
+
+	if config.Logger == nil {
+		return nil, fmt.Errorf("logger can't be nil")
+	}
+
+	sd := &discoverer{
+		lookupSRV:         config.LookupSRV,
+		apiClient:         config.APIClient,
+		logger:            config.Logger,
+		overridenEndpoint: config.OverridenEndpoint,
+	}
+
+	if sd.lookupSRV == nil {
+		sd.lookupSRV = net.LookupSRV
+	}
+
+	return sd, nil
+}
 
 // discoverer implements Discoverer interface by using official Kubernetes' Go client
 type discoverer struct {
-	lookupSRV         lookupSRVFunc
+	lookupSRV         LookupSRVFunc
 	apiClient         client.Kubernetes
 	logger            *logrus.Logger
 	overridenEndpoint string
@@ -223,21 +254,4 @@ func (sd *discoverer) nodeIP() (string, error) {
 		return "", errors.New("no HostIP address found for KSM node")
 	}
 	return nodeIP, nil
-}
-
-// NewDiscoverer instantiates a new Discoverer required for discovering node IP
-// of kube-state-metrics pod and endpoint of kube-state-metrics service
-func NewDiscoverer(logger *logrus.Logger, kubernetes client.Kubernetes) client.Discoverer {
-	return NewStaticEndpointDiscoverer("", logger, kubernetes)
-}
-
-// NewStaticEndpointDiscoverer instantiates a new Discoverer required for discovering only
-// node IP of kube-state-metrics pod
-func NewStaticEndpointDiscoverer(ksmEndpoint string, logger *logrus.Logger, kubernetes client.Kubernetes) client.Discoverer {
-	return &discoverer{
-		lookupSRV:         net.LookupSRV,
-		apiClient:         kubernetes,
-		logger:            logger,
-		overridenEndpoint: ksmEndpoint,
-	}
 }

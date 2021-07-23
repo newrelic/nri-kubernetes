@@ -398,13 +398,21 @@ func getKSMDiscoverer(logger *logrus.Logger) (client.Discoverer, error) {
 		return nil, err
 	}
 
+	config := clientKsm.DiscovererConfig{
+		APIClient: k8sClient,
+		Logger:    logger,
+	}
+
 	// It's important this one is before the NodeLabel selector, for backwards compatibility.
 	if args.KubeStateMetricsURL != "" {
 		// Remove /metrics suffix if present
 		args.KubeStateMetricsURL = strings.TrimSuffix(args.KubeStateMetricsURL, "/metrics")
 
 		logger.Debugf("Discovering KSM using static endpoint (KUBE_STATE_METRICS_URL=%s)", args.KubeStateMetricsURL)
-		return clientKsm.NewStaticEndpointDiscoverer(args.KubeStateMetricsURL, logger, k8sClient), nil
+
+		config.OverridenEndpoint = args.KubeStateMetricsURL
+
+		return clientKsm.NewDiscoverer(config)
 	}
 
 	if args.KubeStateMetricsPodLabel != "" {
@@ -413,7 +421,8 @@ func getKSMDiscoverer(logger *logrus.Logger) (client.Discoverer, error) {
 	}
 
 	logger.Debugf("Discovering KSM using DNS / k8s ApiServer (default)")
-	return clientKsm.NewDiscoverer(logger, k8sClient), nil
+
+	return clientKsm.NewDiscoverer(config)
 }
 
 func getMultiKSMDiscoverer(nodeIP string, logger *logrus.Logger) (client.MultiDiscoverer, error) {
