@@ -23,19 +23,26 @@ import (
 type Kubernetes interface {
 	// FindNode returns a Node reference containing the pod named as the argument, if any
 	FindNode(name string) (*v1.Node, error)
+
 	// FindPodsByLabel returns a PodList reference containing the pods matching the provided name/value label pair
 	FindPodsByLabel(name, value string) (*v1.PodList, error)
+
 	// FindServicesByLabel returns a ServiceList containing the services matching the provided name/value label pair
 	// name/value pairs
 	FindServicesByLabel(name, value string) (*v1.ServiceList, error)
+
 	// ListServices returns a ServiceList containing all the services.
 	ListServices() (*v1.ServiceList, error)
+
 	// Config returns a config of API client
 	Config() *rest.Config
+
 	// SecureHTTPClient returns http.Client configured with timeout and CA Cert
 	SecureHTTPClient(time.Duration) (*http.Client, error)
+
 	// FindSecret returns the secret with the given name, if any
 	FindSecret(name, namespace string) (*v1.Secret, error)
+
 	// ServerVersion returns the kubernetes server version.
 	ServerVersion() (*version.Info, error)
 }
