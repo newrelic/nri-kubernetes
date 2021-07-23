@@ -173,6 +173,19 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
+
+	nodes, err := c.NodesList()
+	if err != nil {
+		panic(err.Error())
+	}
+
+	// If there is more than one node on the cluster, some metrics may not be found, which makes tests to fail.
+	expectedNumberOfNodes := 1
+
+	if nodesCount := len(nodes.Items); nodesCount != expectedNumberOfNodes {
+		logger.Fatalf("e2e tests require %d number of nodes on the cluster, found %d", expectedNumberOfNodes, nodesCount)
+	}
+
 	logger.Infof("Executing tests in %q cluster. K8s version: %s", c.Config.Host, c.ServerVersion())
 
 	if cliArgs.CleanBeforeRun {
