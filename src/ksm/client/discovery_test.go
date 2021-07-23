@@ -15,6 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
 
@@ -163,7 +164,7 @@ func TestDiscover_metricsPortThroughAPIWhenDNSFails(t *testing.T) {
 			ksmClient, err := d.Discover(timeout)
 
 			// The call works correctly
-			assert.Nil(t, err, "should not return error")
+			require.Nil(t, err, "should not return error")
 			// And the discovered host:port of the KSM Service is returned
 			assert.Equal(t, "1.2.3.4:8888", ksmClient.(*ksm).endpoint.Host)
 			assert.Equal(t, "http", ksmClient.(*ksm).endpoint.Scheme)
