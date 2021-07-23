@@ -109,7 +109,7 @@ func TestDiscover_portThroughDNSAndGuessedNodeIPFromMultiplePods(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("%s:%v", ksmQualifiedName, 11223), ksmClient.(*ksm).endpoint.Host)
 	assert.Equal(t, "http", ksmClient.(*ksm).endpoint.Scheme)
 	// And the nodeIP is correctly returned
-	assert.Equal(t, "162.178.1.1", ksmClient.(*ksm).nodeIP)
+	assert.Equal(t, "162.178.1.1", ksmClient.NodeIP())
 }
 
 func TestDiscover_metricsPortThroughAPIWhenDNSFails(t *testing.T) {
@@ -177,7 +177,7 @@ func TestDiscover_metricsPortThroughAPIWhenDNSFails(t *testing.T) {
 			assert.Equal(t, "1.2.3.4:8888", ksmClient.(*ksm).endpoint.Host)
 			assert.Equal(t, "http", ksmClient.(*ksm).endpoint.Scheme)
 			// And the nodeIP is correctly returned
-			assert.Equal(t, "6.7.8.9", ksmClient.(*ksm).nodeIP)
+			assert.Equal(t, "6.7.8.9", ksmClient.NodeIP())
 		})
 	}
 }
@@ -220,7 +220,7 @@ func TestDiscover_metricsPortThroughAPIWhenDNSError(t *testing.T) {
 	assert.Equal(t, "1.2.3.4:8888", ksmClient.(*ksm).endpoint.Host)
 	assert.Equal(t, "http", ksmClient.(*ksm).endpoint.Scheme)
 	// And the nodeIP is correctly returned
-	assert.Equal(t, "6.7.8.9", ksmClient.(*ksm).nodeIP)
+	assert.Equal(t, "6.7.8.9", ksmClient.NodeIP())
 }
 
 func TestDiscover_guessedTCPPortThroughAPIWhenDNSEmptyResponse(t *testing.T) {
@@ -264,7 +264,7 @@ func TestDiscover_guessedTCPPortThroughAPIWhenDNSEmptyResponse(t *testing.T) {
 	assert.Equal(t, "11.22.33.44:8081", ksmClient.(*ksm).endpoint.Host)
 	assert.Equal(t, "http", ksmClient.(*ksm).endpoint.Scheme)
 	// And the nodeIP is correctly returned
-	assert.Equal(t, "6.7.8.9", ksmClient.(*ksm).nodeIP)
+	assert.Equal(t, "6.7.8.9", ksmClient.NodeIP())
 }
 
 func TestDiscover_errorRetrievingPortWhenDNSAndAPIResponsesEmpty(t *testing.T) {
