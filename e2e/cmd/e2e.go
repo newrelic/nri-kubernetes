@@ -311,7 +311,6 @@ func executeTests(
 	logger *logrus.Logger,
 	currentScenario scenario.Scenario,
 ) error {
-
 	releaseLabel := fmt.Sprintf("releaseName=%s", releaseName)
 	// We're fetching the list of NR pods here just to fetch it once. If for
 	// some reason this list or the contents of it could change during the
@@ -342,7 +341,9 @@ func executeTests(
 	}
 
 	if currentScenario.ClusterFlavor == minikubeFlavor {
-		logger.Info("Skipping `testSpecificEntities` because you're running them in Minikube (persistent volumes don't work well in Minikube)")
+		// Minikube use hostPath provisioner for PVCs, which makes kubelet to not report PVC volumes in /stats/summary
+		// See https://github.com/yashbhutwala/kubectl-df-pv/issues/2 for more info.
+		logger.Info("Skipping `testSpecificEntities` because you're running them in Minikube.")
 	} else {
 		logger.Info("checking if specific entities match our JSON schemas")
 		err = retry.Do(
