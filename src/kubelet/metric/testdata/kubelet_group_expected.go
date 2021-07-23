@@ -18,6 +18,7 @@ var ExpectedGroupData = definition.RawGroups{
 			"createdKind": "DaemonSet",
 			"createdBy":   "newrelic-infra",
 			"nodeIP":      "192.168.99.100",
+			"podIP":       "172.17.0.3",
 			"namespace":   "kube-system",
 			"podName":     "newrelic-infra-rz225",
 			"nodeName":    "minikube",
@@ -102,6 +103,7 @@ var ExpectedGroupData = definition.RawGroups{
 			"startTime": parseTime("2019-10-23T17:10:48Z"),
 			"status":    "Running",
 			"nodeIP":    "192.168.99.100",
+			"podIP":     "10.0.2.15",
 			"labels": map[string]string{
 				"tier":      "control-plane",
 				"k8s-app":   "kube-controller-manager",
@@ -423,6 +425,7 @@ var ExpectedGroupDataWithoutStaticPodsStatus = definition.RawGroups{
 			"createdKind": "DaemonSet",
 			"createdBy":   "newrelic-infra",
 			"nodeIP":      "192.168.99.100",
+			"podIP":       "172.17.0.3",
 			"namespace":   "kube-system",
 			"podName":     "newrelic-infra-rz225",
 			"nodeName":    "minikube",
@@ -505,6 +508,7 @@ var ExpectedGroupDataWithoutStaticPodsStatus = definition.RawGroups{
 		"kube-system_kube-controller-manager-minikube": {
 			"startTime": parseTime("2019-10-23T17:10:48Z"),
 			"nodeIP":    "192.168.99.100",
+			"podIP":     "10.0.2.15",
 			"labels": map[string]string{
 				"tier":      "control-plane",
 				"k8s-app":   "kube-controller-manager",

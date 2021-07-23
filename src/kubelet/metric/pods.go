@@ -271,6 +271,11 @@ func fetchPodData(logger *logrus.Logger, pod *v1.Pod, staticPodsStatusSupport bo
 		metrics["nodeIP"] = v
 	}
 
+	// IP address allocated to the pod. Routable at least within the cluster. Empty if not yet allocated.
+	if podIP := pod.Status.PodIP; podIP != "" {
+		metrics["podIP"] = podIP
+	}
+
 	if pod.Status.StartTime != nil {
 		metrics["startTime"] = pod.Status.StartTime.Time.In(time.UTC)
 	}
