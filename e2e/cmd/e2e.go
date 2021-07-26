@@ -537,7 +537,7 @@ func installRelease(_ context.Context, s scenario.Scenario, logger *logrus.Logge
 
 	versionSplitted := strings.Split(s.K8sVersion, ".")
 
-	options := strings.Split(s.String(), ",")
+	options := s.HelmValues()
 	options = append(options,
 		fmt.Sprintf("integration.k8sClusterName=%s", cliArgs.ClusterName),
 		fmt.Sprintf("integration.newRelicLicenseKey=%s", cliArgs.NrLicenseKey),

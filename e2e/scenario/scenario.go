@@ -3,6 +3,7 @@ package scenario
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/version"
 
@@ -47,27 +48,31 @@ func New(
 	}
 }
 
-func (s Scenario) String() string {
-	str := fmt.Sprintf(
-		"rbac=%v,ksm-instance-one.rbac.create=%v,ksm-instance-one.image.tag=%s,daemonset.unprivileged=%v,daemonset.image.repository=%s,daemonset.image.tag=%s,daemonset.clusterFlavor=%s, k8sversion=%s",
-		s.rbac,
-		s.rbac,
-		s.ksmVersion,
-		s.unprivileged,
-		s.integrationImageRepository,
-		s.integrationImageTag,
-		s.ClusterFlavor,
-		s.K8sVersion,
-	)
-	if s.twoKSMInstances {
-		return fmt.Sprintf(
-			"%s,ksm-instance-two.rbac.create=%v,ksm-instance-two.image.tag=%s,two-ksm-instances=true",
-			str,
-			s.rbac,
-			s.ksmVersion,
-		)
+func (s Scenario) HelmValues() []string {
+	base := []string{
+		fmt.Sprintf("rbac=%v", s.rbac),
+		fmt.Sprintf("ksm-instance-one.rbac.create=%v", s.rbac),
+		fmt.Sprintf("ksm-instance-one.image.tag=%s", s.ksmVersion),
+		fmt.Sprintf("daemonset.unprivileged=%v", s.unprivileged),
+		fmt.Sprintf("daemonset.image.repository=%s", s.integrationImageRepository),
+		fmt.Sprintf("daemonset.image.tag=%s", s.integrationImageTag),
+		fmt.Sprintf("daemonset.clusterFlavor=%s", s.ClusterFlavor),
+		fmt.Sprintf("k8sversion=%s", s.K8sVersion),
 	}
-	return str
+
+	if s.twoKSMInstances {
+		base = append(base, []string{
+			fmt.Sprintf("ksm-instance-two.rbac.create=%v", s.rbac),
+			fmt.Sprintf("ksm-instance-two.image.tag=%s", s.ksmVersion),
+			"two-ksm-instances=true",
+		}...)
+	}
+
+	return base
+}
+
+func (s Scenario) String() string {
+	return strings.Join(s.HelmValues(), ",")
 }
 
 // GetSchemasForJob returns the json schemas that should be use to
