@@ -99,14 +99,14 @@ const (
 
 var allJobs = [...]job{jobKSM, jobKubelet, jobScheduler, jobEtcd, jobControllerManager, jobAPIServer}
 
-func execIntegration(pod v1.Pod, ksmPod *v1.Pod, c *k8s.Client, logger *logrus.Logger) (*integrationData, error) {
-	defer timer.Track(time.Now(), fmt.Sprintf("execIntegration func for pod %s", pod.Name), logger)
+func (e *testEnv) execIntegration(pod v1.Pod, ksmPod *v1.Pod) (*integrationData, error) {
+	defer timer.Track(time.Now(), fmt.Sprintf("execIntegration func for pod %s", pod.Name), e.logger)
 
 	d := &integrationData{
 		podName: pod.Name,
 	}
 
-	output, err := c.PodExec(namespace, pod.Name, nrContainer, "/var/db/newrelic-infra/newrelic-integrations/bin/nri-kubernetes", "-timeout=30000", "-verbose")
+	output, err := e.k8sClient.PodExec(namespace, pod.Name, nrContainer, "/var/db/newrelic-infra/newrelic-integrations/bin/nri-kubernetes", "-timeout=30000", "-verbose")
 	if err != nil {
 		return nil, fmt.Errorf("executing command inside pod: %w", err)
 	}
@@ -121,9 +121,14 @@ func execIntegration(pod v1.Pod, ksmPod *v1.Pod, c *k8s.Client, logger *logrus.L
 		}
 	}
 
-	logrus.Printf("Pod: %s, hostIP %s, expected jobs: %#v", pod.Name, pod.Status.HostIP, d.expectedJobs)
+	e.logger.Printf("Pod: %s, hostIP %s, expected jobs: %#v", pod.Name, pod.Status.HostIP, d.expectedJobs)
 
 	return d, nil
+}
+
+type testEnv struct {
+	k8sClient *k8s.Client
+	logger    *logrus.Logger
 }
 
 func main() {
@@ -137,12 +142,17 @@ func main() {
 	}
 	logger := log.New(cliArgs.Verbose)
 
-	c, err := k8s.NewClient(cliArgs.Context)
+	k8sClient, err := k8s.NewClient(cliArgs.Context)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	nodes, err := c.NodesList()
+	testEnv := testEnv{
+		k8sClient: k8sClient,
+		logger:    logger,
+	}
+
+	nodes, err := k8sClient.NodesList()
 	if err != nil {
 		panic(err.Error())
 	}
@@ -151,22 +161,22 @@ func main() {
 	expectedNumberOfNodes := 1
 
 	if nodesCount := len(nodes.Items); nodesCount != expectedNumberOfNodes {
-		logger.Fatalf("e2e tests require %d number of nodes on the cluster, found %d", expectedNumberOfNodes, nodesCount)
+		testEnv.logger.Fatalf("e2e tests require %d number of nodes on the cluster, found %d", expectedNumberOfNodes, nodesCount)
 	}
 
-	logger.Infof("Executing tests in %q cluster. K8s version: %s", c.Config.Host, c.ServerVersion())
+	testEnv.logger.Infof("Executing tests in %q cluster. K8s version: %s", k8sClient.Config.Host, k8sClient.ServerVersion())
 
 	if cliArgs.CleanBeforeRun {
-		logger.Infof("Cleaning cluster")
-		err := helm.DeleteAllReleases(cliArgs.Context, logger)
+		testEnv.logger.Infof("Cleaning cluster")
+		err := helm.DeleteAllReleases(cliArgs.Context, testEnv.logger)
 		if err != nil {
 			panic(err.Error())
 		}
 	}
 
-	minikubeHost := determineMinikubeHost(logger)
+	minikubeHost := testEnv.determineMinikubeHost()
 	clusterFlavor := unknownFlavor
-	if strings.Contains(c.Config.Host, minikubeHost) {
+	if strings.Contains(k8sClient.Config.Host, minikubeHost) {
 		clusterFlavor = minikubeFlavor
 	}
 
@@ -177,63 +187,63 @@ func main() {
 		cliArgs.IntegrationImageTag,
 		cliArgs.Rbac,
 		cliArgs.Unprivileged,
-		c.ServerVersionInfo,
+		k8sClient.ServerVersionInfo,
 		clusterFlavor,
 	)
 	for _, s := range scenarios {
-		logger.Infof("#####################")
-		logger.Infof("Scenario: %q", s)
-		logger.Infof("#####################")
+		testEnv.logger.Infof("#####################")
+		testEnv.logger.Infof("Scenario: %q", s)
+		testEnv.logger.Infof("#####################")
 
-		err := executeScenario(s, c, logger)
+		err := testEnv.executeScenario(s)
 		if err != nil {
 			if cliArgs.FailFast {
-				logger.Info("Finishing execution because 'FailFast' is true")
-				logger.Infof("Ran with the following configuration: %s", s)
+				testEnv.logger.Info("Finishing execution because 'FailFast' is true")
+				testEnv.logger.Infof("Ran with the following configuration: %s", s)
 
-				logger.Fatal(err.Error())
+				testEnv.logger.Fatal(err.Error())
 			}
 			errs = append(errs, err)
 		}
 	}
 
 	if len(errs) > 0 {
-		logger.Debugf("errors collected from all scenarios")
+		testEnv.logger.Debugf("errors collected from all scenarios")
 		for _, err := range errs {
-			logger.Errorf(err.Error())
+			testEnv.logger.Errorf(err.Error())
 		}
-		logger.Fatal("Error Detected")
+		testEnv.logger.Fatal("Error Detected")
 	}
 
-	logger.Infof("OK")
+	testEnv.logger.Infof("OK")
 }
 
-func determineMinikubeHost(logger *logrus.Logger) string {
+func (e *testEnv) determineMinikubeHost() string {
 	cmd := exec.Command("minikube", "ip")
 	var out bytes.Buffer
 
 	cmd.Stdout = &out
 	err := cmd.Run()
 	if err != nil {
-		logger.Infof("Could not determine Minikube host: %v", err)
+		e.logger.Infof("Could not determine Minikube host: %v", err)
 		return "https://this-will-never-be-the-minikube-host.com"
 	}
 
 	return strings.TrimSpace(out.String())
 }
 
-func waitForKSM(c *k8s.Client, logger *logrus.Logger) (*v1.Pod, error) {
-	defer timer.Track(time.Now(), "waitForKSM", logger)
+func (e *testEnv) waitForKSM() (*v1.Pod, error) {
+	defer timer.Track(time.Now(), "waitForKSM", e.logger)
 	var foundPod v1.Pod
 	err := retry.Do(
 		func() error {
-			ksmPodList, err := c.PodsListByLabels(namespace, []string{ksmLabel})
+			ksmPodList, err := e.k8sClient.PodsListByLabels(namespace, []string{ksmLabel})
 			if err != nil {
 				return err
 			}
 			if len(ksmPodList.Items) != 0 && ksmPodList.Items[0].Status.Phase == "Running" {
 				for _, con := range ksmPodList.Items[0].Status.Conditions {
-					logger.Debugf("Waiting for kube-state-metrics pod to be ready, current condition: %s - %s", con.Type, con.Status)
+					e.logger.Debugf("Waiting for kube-state-metrics pod to be ready, current condition: %s - %s", con.Type, con.Status)
 
 					if con.Type == "Ready" && con.Status == "True" {
 						foundPod = ksmPodList.Items[0]
@@ -244,7 +254,7 @@ func waitForKSM(c *k8s.Client, logger *logrus.Logger) (*v1.Pod, error) {
 			return fmt.Errorf("kube-state-metrics is not ready yet")
 		},
 		retry.OnRetry(func(err error) {
-			logger.Debugf("Retrying due to: %s", err)
+			e.logger.Debugf("Retrying due to: %s", err)
 		}),
 	)
 	if err != nil {
@@ -253,62 +263,56 @@ func waitForKSM(c *k8s.Client, logger *logrus.Logger) (*v1.Pod, error) {
 	return &foundPod, nil
 }
 
-func executeScenario(currentScenario scenario.Scenario, c *k8s.Client, logger *logrus.Logger) error {
-	defer timer.Track(time.Now(), fmt.Sprintf("executeScenario func for %s", currentScenario), logger)
+func (e *testEnv) executeScenario(currentScenario scenario.Scenario) error {
+	defer timer.Track(time.Now(), fmt.Sprintf("executeScenario func for %s", currentScenario), e.logger)
 
-	releaseName, err := installRelease(currentScenario, logger)
+	releaseName, err := e.installRelease(currentScenario)
 	if err != nil {
 		return err
 	}
 
 	defer func() {
-		logger.Infof("deleting release %s", releaseName)
-		err = helm.DeleteRelease(releaseName, cliArgs.Context, logger)
+		e.logger.Infof("deleting release %s", releaseName)
+		err = helm.DeleteRelease(releaseName, cliArgs.Context, e.logger)
 		if err != nil {
-			logger.Errorf("error while deleting release %q", err)
+			e.logger.Errorf("error while deleting release %q", err)
 		}
 	}()
 
 	// At least one of kube-state-metrics pods needs to be ready to enter to the newrelic-infra pod and execute the integration.
 	// If the kube-state-metrics pod is not ready, then metrics from replicaset, namespace and deployment will not be populate and JSON schemas will fail.
-	ksmPod, err := waitForKSM(c, logger)
+	ksmPod, err := e.waitForKSM()
 	if err != nil {
 		return err
 	}
-	return executeTests(c, ksmPod, releaseName, logger, currentScenario)
+	return e.executeTests(ksmPod, releaseName, currentScenario)
 }
 
-func executeTests(
-	c *k8s.Client,
-	ksmPod *v1.Pod,
-	releaseName string,
-	logger *logrus.Logger,
-	currentScenario scenario.Scenario,
-) error {
+func (e *testEnv) executeTests(ksmPod *v1.Pod, releaseName string, currentScenario scenario.Scenario) error {
 	releaseLabel := fmt.Sprintf("releaseName=%s", releaseName)
 	// We're fetching the list of NR pods here just to fetch it once. If for
 	// some reason this list or the contents of it could change during the
 	// execution of these tests, we could move it to `test*` functions.
-	podsList, err := c.PodsListByLabels(namespace, []string{nrLabel, releaseLabel})
+	podsList, err := e.k8sClient.PodsListByLabels(namespace, []string{nrLabel, releaseLabel})
 	if err != nil {
 		return err
 	}
 
-	logger.Info("Found the following pods for test execution:")
+	e.logger.Info("Found the following pods for test execution:")
 	for _, pod := range podsList.Items {
-		logger.Infof("[%s] status: %s %s", pod.Name, pod.Status.Message, pod.Status.Reason)
+		e.logger.Infof("[%s] status: %s %s", pod.Name, pod.Status.Message, pod.Status.Reason)
 	}
 
-	nodes, err := c.NodesList()
+	nodes, err := e.k8sClient.NodesList()
 	if err != nil {
 		return fmt.Errorf("error getting the list of nodes in the cluster: %s", err)
 	}
-	output, err := executeIntegrationForAllPods(c, ksmPod, podsList, logger)
+	output, err := e.executeIntegrationForAllPods(ksmPod, podsList)
 	if err != nil {
 		return err
 	}
 	var execErr executionErr
-	logger.Info("checking if the integrations are executed with the proper roles")
+	e.logger.Info("checking if the integrations are executed with the proper roles")
 	err = testRoles(len(nodes.Items), output)
 	if err != nil {
 		execErr.errs = append(execErr.errs, err)
@@ -317,48 +321,48 @@ func executeTests(
 	if currentScenario.ClusterFlavor == minikubeFlavor {
 		// Minikube use hostPath provisioner for PVCs, which makes kubelet to not report PVC volumes in /stats/summary
 		// See https://github.com/yashbhutwala/kubectl-df-pv/issues/2 for more info.
-		logger.Info("Skipping `testSpecificEntities` because you're running them in Minikube.")
+		e.logger.Info("Skipping `testSpecificEntities` because you're running them in Minikube.")
 	} else {
-		logger.Info("checking if specific entities match our JSON schemas")
+		e.logger.Info("checking if specific entities match our JSON schemas")
 		err = retry.Do(
 			func() error {
 				err := testSpecificEntities(output, releaseName)
 				if err != nil {
 					var otherErr error
-					output, otherErr = executeIntegrationForAllPods(c, ksmPod, podsList, logger)
+					output, otherErr = e.executeIntegrationForAllPods(ksmPod, podsList)
 					if otherErr != nil {
 						return otherErr
 					}
 					return err
 				}
-				logger.Debugf("The test 'checking if specific entities match our JSON schemas' succeeded")
+				e.logger.Debugf("The test 'checking if specific entities match our JSON schemas' succeeded")
 				return nil
 			},
 			retry.OnRetry(func(err error) {
-				logger.Debugf("Retrying, the error might be caused by a not ready environment. Scenario: %s", currentScenario)
+				e.logger.Debugf("Retrying, the error might be caused by a not ready environment. Scenario: %s", currentScenario)
 			}),
 		)
 		if err != nil {
 			execErr.errs = append(execErr.errs, err)
 		}
 	}
-	logger.Info("checking if the metric sets in all integrations match our JSON schemas")
+	e.logger.Info("checking if the metric sets in all integrations match our JSON schemas")
 	err = retry.Do(
 		func() error {
 			err := testEventTypes(output, currentScenario)
 			if err != nil {
 				var otherErr error
-				output, otherErr = executeIntegrationForAllPods(c, ksmPod, podsList, logger)
+				output, otherErr = e.executeIntegrationForAllPods(ksmPod, podsList)
 				if otherErr != nil {
 					return otherErr
 				}
 				return err
 			}
-			logger.Debugf("Retrying, the error might be caused by a not ready environment. Scenario: %s", currentScenario)
+			e.logger.Debugf("Retrying, the error might be caused by a not ready environment. Scenario: %s", currentScenario)
 			return nil
 		},
 		retry.OnRetry(func(err error) {
-			logger.Debugf("Retrying since the error might be caused by the environment not being ready yet")
+			e.logger.Debugf("Retrying since the error might be caused by the environment not being ready yet")
 		}),
 	)
 	if err != nil {
@@ -370,13 +374,13 @@ func executeTests(
 	return nil
 }
 
-func executeIntegrationForAllPods(c *k8s.Client, ksmPod *v1.Pod, nrPods *v1.PodList, logger *logrus.Logger) (map[string]*integrationData, error) {
+func (e *testEnv) executeIntegrationForAllPods(ksmPod *v1.Pod, nrPods *v1.PodList) (map[string]*integrationData, error) {
 	output := map[string]*integrationData{}
 
 	for _, p := range nrPods.Items {
-		logger.Debugf("Executing integration inside pod: %s", p.Name)
+		e.logger.Debugf("Executing integration inside pod: %s", p.Name)
 
-		integrationData, err := execIntegration(p, ksmPod, c, logger)
+		integrationData, err := e.execIntegration(p, ksmPod)
 		if err != nil {
 			return output, fmt.Errorf("pod %q: %w", p.Name, err)
 		}
@@ -500,7 +504,7 @@ func testEventTypes(output map[string]*integrationData, s scenario.Scenario) err
 	return nil
 }
 
-func installRelease(s scenario.Scenario, logger *logrus.Logger) (string, error) {
+func (e *testEnv) installRelease(s scenario.Scenario) (string, error) {
 	dir, err := os.Getwd()
 	if err != nil {
 		return "", err
@@ -516,7 +520,7 @@ func installRelease(s scenario.Scenario, logger *logrus.Logger) (string, error) 
 	)
 
 	releaseName := fmt.Sprintf("%s-%s", "release", rand.String(5))
-	err = helm.InstallRelease(releaseName, filepath.Join(dir, cliArgs.NrChartPath), cliArgs.Context, logger, options...)
+	err = helm.InstallRelease(releaseName, filepath.Join(dir, cliArgs.NrChartPath), cliArgs.Context, e.logger, options...)
 	if err != nil {
 		return "", err
 	}
