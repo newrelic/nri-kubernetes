@@ -417,7 +417,21 @@ func getKSMDiscoverer(logger *logrus.Logger) (client.Discoverer, error) {
 
 	if args.KubeStateMetricsPodLabel != "" {
 		logger.Debugf("Discovering KSM using Pod Label (KUBE_STATE_METRICS_POD_LABEL)")
-		return clientKsm.NewPodLabelDiscoverer(args.KubeStateMetricsPodLabel, args.KubeStateMetricsPort, args.KubeStateMetricsScheme, logger, k8sClient), nil
+
+		config := clientKsm.PodLabelDiscovererConfig{
+			KSMPodLabel: args.KubeStateMetricsPodLabel,
+			KSMPodPort:  args.KubeStateMetricsPort,
+			KSMScheme:   args.KubeStateMetricsScheme,
+			Logger:      logger,
+			K8sClient:   k8sClient,
+		}
+
+		discoverer, err := clientKsm.NewPodLabelDiscoverer(config)
+		if err != nil {
+			return nil, fmt.Errorf("creating KSM pod label discoverer: %w", err)
+		}
+
+		return discoverer, nil
 	}
 
 	logger.Debugf("Discovering KSM using DNS / k8s ApiServer (default)")

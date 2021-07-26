@@ -73,13 +73,46 @@ func (p *podLabelDiscoverer) Discover(timeout time.Duration) (client.HTTPClient,
 	return ksmClient, nil
 }
 
-// NewPodLabelDiscoverer creates a new KSM discoverer that will find KSM pods using k8s labels
-func NewPodLabelDiscoverer(ksmPodLabel string, ksmPodPort int, ksmScheme string, logger *logrus.Logger, k8sClient client.Kubernetes) client.Discoverer {
-	return &podLabelDiscoverer{
-		logger:      logger,
-		k8sClient:   k8sClient,
-		ksmPodLabel: ksmPodLabel,
-		ksmPodPort:  ksmPodPort,
-		ksmScheme:   ksmScheme,
+// PodLabelDiscovererConfig holds KSM PodLabelDiscoverer configuration.
+type PodLabelDiscovererConfig struct {
+	KSMPodLabel string
+	KSMPodPort  int
+	KSMScheme   string
+	Logger      *logrus.Logger
+	K8sClient   client.Kubernetes
+}
+
+// NewPodLabelDiscoverer creates a new KSM discoverer that will find KSM pods using k8s labels.
+func NewPodLabelDiscoverer(config PodLabelDiscovererConfig) (client.Discoverer, error) {
+	if config.Logger == nil {
+		return nil, fmt.Errorf("logger must be set")
 	}
+
+	if config.KSMPodLabel == "" {
+		return nil, fmt.Errorf("KSM pod label can't be empty")
+	}
+
+	if config.KSMPodPort == 0 {
+		return nil, fmt.Errorf("KSM pod port can't be zero")
+	}
+
+	if config.K8sClient == nil {
+		return nil, fmt.Errorf("Kubernetes client must be set")
+	}
+
+	if config.KSMScheme == "" {
+		return nil, fmt.Errorf("KMS scheme can't be empty")
+	}
+
+	if config.KSMScheme != "" && config.KSMScheme != "https" && config.KSMScheme != "http" {
+		return nil, fmt.Errorf("unsupported KSM scheme. Expected 'http' or 'https', got %q", config.KSMScheme)
+	}
+
+	return &podLabelDiscoverer{
+		logger:      config.Logger,
+		k8sClient:   config.K8sClient,
+		ksmPodLabel: config.KSMPodLabel,
+		ksmPodPort:  config.KSMPodPort,
+		ksmScheme:   config.KSMScheme,
+	}, nil
 }
