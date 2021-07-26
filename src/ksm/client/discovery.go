@@ -40,13 +40,13 @@ type LookupSRVFunc func(service, proto, name string) (cname string, addrs []*net
 // DiscovererConfig holds parameters for creating discoverer.
 type DiscovererConfig struct {
 	LookupSRV         LookupSRVFunc
-	APIClient         client.Kubernetes
+	K8sClient         client.Kubernetes
 	Logger            *logrus.Logger
 	OverridenEndpoint string
 }
 
 func NewDiscoverer(config DiscovererConfig) (client.Discoverer, error) {
-	if config.APIClient == nil {
+	if config.K8sClient == nil {
 		return nil, fmt.Errorf("API client can't be nil")
 	}
 
@@ -56,7 +56,7 @@ func NewDiscoverer(config DiscovererConfig) (client.Discoverer, error) {
 
 	sd := &discoverer{
 		lookupSRV:         config.LookupSRV,
-		apiClient:         config.APIClient,
+		k8sClient:         config.K8sClient,
 		logger:            config.Logger,
 		overridenEndpoint: config.OverridenEndpoint,
 	}
@@ -71,7 +71,7 @@ func NewDiscoverer(config DiscovererConfig) (client.Discoverer, error) {
 // discoverer implements Discoverer interface by using official Kubernetes' Go client
 type discoverer struct {
 	lookupSRV         LookupSRVFunc
-	apiClient         client.Kubernetes
+	k8sClient         client.Kubernetes
 	logger            *logrus.Logger
 	overridenEndpoint string
 }
@@ -115,7 +115,7 @@ func (sd *discoverer) Discover(timeout time.Duration) (client.HTTPClient, error)
 	}
 
 	sd.logger.Debugf("KSM client created with endpoint=%v and nodeIP=%v", endpoint, nodeIP)
-	return newKSMClient(timeout, nodeIP, endpoint, sd.logger, sd.apiClient), nil
+	return newKSMClient(timeout, nodeIP, endpoint, sd.logger, sd.k8sClient), nil
 }
 
 func newKSMClient(timeout time.Duration, nodeIP string, endpoint url.URL, logger *logrus.Logger, k8s client.Kubernetes) *ksm {
@@ -180,7 +180,7 @@ func (sd *discoverer) apiDiscover() (url.URL, error) {
 	var err error
 
 	for _, label := range ksmAppLabelNames {
-		services, err = sd.apiClient.FindServicesByLabel(metav1.LabelSelector{
+		services, err = sd.k8sClient.FindServicesByLabel(metav1.LabelSelector{
 			MatchLabels: map[string]string{
 				label: ksmAppLabelValue,
 			},
@@ -225,7 +225,7 @@ func (sd *discoverer) nodeIP() (string, error) {
 	var err error
 
 	for _, label := range ksmAppLabelNames {
-		pods, err = sd.apiClient.FindPodsByLabel(metav1.LabelSelector{
+		pods, err = sd.k8sClient.FindPodsByLabel(metav1.LabelSelector{
 			MatchLabels: map[string]string{
 				label: ksmAppLabelValue,
 			},

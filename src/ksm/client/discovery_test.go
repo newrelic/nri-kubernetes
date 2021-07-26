@@ -66,7 +66,7 @@ func TestDiscover_portThroughDNS(t *testing.T) {
 	// And an Discoverer implementation
 	config := DiscovererConfig{
 		LookupSRV: fakeLookupSRV,
-		APIClient: c,
+		K8sClient: c,
 		Logger:    logger,
 	}
 
@@ -100,7 +100,7 @@ func TestDiscover_portThroughDNSAndGuessedNodeIPFromMultiplePods(t *testing.T) {
 	// and an Discoverer implementation
 	config := DiscovererConfig{
 		LookupSRV: fakeLookupSRV,
-		APIClient: c,
+		K8sClient: c,
 		Logger:    logger,
 	}
 
@@ -171,7 +171,7 @@ func TestDiscover_metricsPortThroughAPIWhenDNSFails(t *testing.T) {
 			// and an Discoverer implementation whose DNS returns empty response
 			config := DiscovererConfig{
 				LookupSRV: emptyLookupSRV,
-				APIClient: c,
+				K8sClient: c,
 				Logger:    logger,
 			}
 
@@ -218,7 +218,7 @@ func TestDiscover_metricsPortThroughAPIWhenDNSError(t *testing.T) {
 	// and an Discoverer implementation whose DNS returns an error
 	config := DiscovererConfig{
 		LookupSRV: failingLookupSRV,
-		APIClient: c,
+		K8sClient: c,
 		Logger:    logger,
 	}
 
@@ -265,7 +265,7 @@ func TestDiscover_guessedTCPPortThroughAPIWhenDNSEmptyResponse(t *testing.T) {
 	// and an Discoverer implementation whose DNS returns empty response
 	config := DiscovererConfig{
 		LookupSRV: emptyLookupSRV,
-		APIClient: c,
+		K8sClient: c,
 		Logger:    logger,
 	}
 
@@ -301,7 +301,7 @@ func TestDiscover_errorRetrievingPortWhenDNSAndAPIResponsesEmpty(t *testing.T) {
 	// and an Discoverer implementation whose DNS returns empty response
 	config := DiscovererConfig{
 		LookupSRV: emptyLookupSRV,
-		APIClient: c,
+		K8sClient: c,
 		Logger:    logger,
 	}
 
@@ -334,7 +334,7 @@ func TestDiscover_errorRetrievingPortWhenDNSAndAPIErrors(t *testing.T) {
 	// and an Discoverer implementation whose DNS returns an error
 	config := DiscovererConfig{
 		LookupSRV: failingLookupSRV,
-		APIClient: c,
+		K8sClient: c,
 		Logger:    logger,
 	}
 
@@ -363,7 +363,7 @@ func TestDiscover_errorRetrievingNodeIPWhenPodListEmpty(t *testing.T) {
 	// And an Discoverer implementation
 	config := DiscovererConfig{
 		LookupSRV: fakeLookupSRV,
-		APIClient: c,
+		K8sClient: c,
 		Logger:    logger,
 	}
 
@@ -392,7 +392,7 @@ func TestDiscover_errorRetrievingNodeIPWhenErrorFindingPod(t *testing.T) {
 	// And an Discoverer implementation
 	config := DiscovererConfig{
 		LookupSRV: fakeLookupSRV,
-		APIClient: c,
+		K8sClient: c,
 		Logger:    logger,
 	}
 
@@ -417,7 +417,7 @@ func TestNodeIPForDiscoverer_Error(t *testing.T) {
 
 	config := DiscovererConfig{
 		LookupSRV: fakeLookupSRV,
-		APIClient: c,
+		K8sClient: c,
 		Logger:    logger,
 	}
 
@@ -507,7 +507,7 @@ func Test_Creating_discoverer_returns_error_when(t *testing.T) {
 
 	t.Run("Logger_is_not_set", func(t *testing.T) {
 		config := DiscovererConfig{
-			APIClient: c,
+			K8sClient: c,
 		}
 
 		d, err := NewDiscoverer(config)

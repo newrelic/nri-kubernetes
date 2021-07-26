@@ -399,7 +399,7 @@ func getKSMDiscoverer(logger *logrus.Logger) (client.Discoverer, error) {
 	}
 
 	config := clientKsm.DiscovererConfig{
-		APIClient: k8sClient,
+		K8sClient: k8sClient,
 		Logger:    logger,
 	}
 

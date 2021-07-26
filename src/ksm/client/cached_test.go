@@ -37,7 +37,7 @@ func TestDiscover_Cache(t *testing.T) {
 	// Given a KSM discoverer
 	wrappedDiscoverer := discoverer{
 		lookupSRV: fakeLookupSRV,
-		apiClient: c,
+		k8sClient: c,
 		logger:    logger,
 	}
 	// That is wrapped into a Cached Discoverer
@@ -78,7 +78,7 @@ func TestDiscover_Cache_BothFail(t *testing.T) {
 	cacher := NewDiscoveryCacher(
 		&discoverer{
 			lookupSRV: fakeLookupSRV,
-			apiClient: c,
+			k8sClient: c,
 			logger:    logger,
 		}, &store, time.Hour, logger)
 
@@ -108,7 +108,7 @@ func TestDiscover_LoadCacheFail(t *testing.T) {
 	// Given a KSM discoverer
 	wrappedDiscoverer := discoverer{
 		lookupSRV: fakeLookupSRV,
-		apiClient: c,
+		k8sClient: c,
 		logger:    logger,
 	}
 	// That is wrapped into a Cached Discoverer
@@ -160,7 +160,7 @@ func TestDiscover_CacheTTLExpiry(t *testing.T) {
 	// And a KSM discoverer
 	wrappedDiscoverer := discoverer{
 		lookupSRV: fakeLookupSRV,
-		apiClient: c,
+		k8sClient: c,
 		logger:    logger,
 	}
 	// That is wrapped into a Cached Discoverer
