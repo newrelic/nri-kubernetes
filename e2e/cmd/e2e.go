@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -204,7 +203,6 @@ func main() {
 
 	// TODO
 	var errs []error
-	ctx := context.TODO()
 	scenarios := generateScenarios(
 		cliArgs.IntegrationImageRepository,
 		cliArgs.IntegrationImageTag,
@@ -219,7 +217,7 @@ func main() {
 		logger.Infof("Scenario: %q", s)
 		logger.Infof("#####################")
 
-		err := executeScenario(ctx, s, c, logger)
+		err := executeScenario(s, c, logger)
 		if err != nil {
 			if cliArgs.FailFast {
 				logger.Info("Finishing execution because 'FailFast' is true")
@@ -287,15 +285,10 @@ func waitForKSM(c *k8s.Client, logger *logrus.Logger) (*v1.Pod, error) {
 	return &foundPod, nil
 }
 
-func executeScenario(
-	ctx context.Context,
-	currentScenario scenario.Scenario,
-	c *k8s.Client,
-	logger *logrus.Logger,
-) error {
+func executeScenario(currentScenario scenario.Scenario, c *k8s.Client, logger *logrus.Logger) error {
 	defer timer.Track(time.Now(), fmt.Sprintf("executeScenario func for %s", currentScenario), logger)
 
-	releaseName, err := installRelease(ctx, currentScenario, logger)
+	releaseName, err := installRelease(currentScenario, logger)
 	if err != nil {
 		return err
 	}
@@ -529,7 +522,7 @@ func testEventTypes(output map[string]integrationData, s scenario.Scenario) erro
 	return nil
 }
 
-func installRelease(_ context.Context, s scenario.Scenario, logger *logrus.Logger) (string, error) {
+func installRelease(s scenario.Scenario, logger *logrus.Logger) (string, error) {
 	dir, err := os.Getwd()
 	if err != nil {
 		return "", err
