@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
@@ -63,11 +64,14 @@ func TestDiscover_portThroughDNS(t *testing.T) {
 		&rest.Config{BearerToken: "foobar"},
 	)
 	// And an Discoverer implementation
-	d := discoverer{
-		lookupSRV: fakeLookupSRV,
-		apiClient: c,
-		logger:    logger,
+	config := DiscovererConfig{
+		LookupSRV: fakeLookupSRV,
+		K8sClient: c,
+		Logger:    logger,
 	}
+
+	d, err := NewDiscoverer(config)
+	require.Nil(t, err, "creating discoverer")
 
 	// When retrieving the KSM client
 	ksmClient, err := d.Discover(timeout)
@@ -94,11 +98,15 @@ func TestDiscover_portThroughDNSAndGuessedNodeIPFromMultiplePods(t *testing.T) {
 	)
 
 	// and an Discoverer implementation
-	d := discoverer{
-		lookupSRV: fakeLookupSRV,
-		apiClient: c,
-		logger:    logger,
+	config := DiscovererConfig{
+		LookupSRV: fakeLookupSRV,
+		K8sClient: c,
+		Logger:    logger,
 	}
+
+	d, err := NewDiscoverer(config)
+	require.Nil(t, err, "creating discoverer")
+
 	// When retrieving the KSM client with no port named 'http-metrics'
 	ksmClient, err := d.Discover(timeout)
 
@@ -108,13 +116,13 @@ func TestDiscover_portThroughDNSAndGuessedNodeIPFromMultiplePods(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("%s:%v", ksmQualifiedName, 11223), ksmClient.(*ksm).endpoint.Host)
 	assert.Equal(t, "http", ksmClient.(*ksm).endpoint.Scheme)
 	// And the nodeIP is correctly returned
-	assert.Equal(t, "162.178.1.1", ksmClient.(*ksm).nodeIP)
+	assert.Equal(t, "162.178.1.1", ksmClient.NodeIP())
 }
 
 func TestDiscover_metricsPortThroughAPIWhenDNSFails(t *testing.T) {
 	tt := []struct {
 		label     string
-		srvLookup lookupSRVFunc
+		srvLookup LookupSRVFunc
 	}{
 		{"k8s-app", emptyLookupSRV},
 		{"app", emptyLookupSRV},
@@ -128,7 +136,14 @@ func TestDiscover_metricsPortThroughAPIWhenDNSFails(t *testing.T) {
 		t.Run(fmt.Sprintf("KSM test for label %s", entry.label), func(t *testing.T) {
 			// Given a client
 			c := new(client.MockedKubernetes)
-			c.On("FindServicesByLabel", entry.label, mock.Anything).
+
+			labelSelector := metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					entry.label: ksmAppLabelValue,
+				},
+			}
+
+			c.On("FindServicesByLabel", labelSelector).
 				Return(&v1.ServiceList{Items: []v1.Service{
 					{
 						Spec: v1.ServiceSpec{
@@ -143,7 +158,7 @@ func TestDiscover_metricsPortThroughAPIWhenDNSFails(t *testing.T) {
 			c.On("FindServicesByLabel", mock.Anything, mock.Anything).
 				Return(&v1.ServiceList{}, nil)
 
-			c.On("FindPodsByLabel", entry.label, mock.Anything).
+			c.On("FindPodsByLabel", labelSelector).
 				Return(&v1.PodList{Items: []v1.Pod{{
 					Status: v1.PodStatus{HostIP: "6.7.8.9"},
 				}}}, nil)
@@ -154,11 +169,14 @@ func TestDiscover_metricsPortThroughAPIWhenDNSFails(t *testing.T) {
 			)
 
 			// and an Discoverer implementation whose DNS returns empty response
-			d := discoverer{
-				lookupSRV: emptyLookupSRV,
-				apiClient: c,
-				logger:    logger,
+			config := DiscovererConfig{
+				LookupSRV: emptyLookupSRV,
+				K8sClient: c,
+				Logger:    logger,
 			}
+
+			d, err := NewDiscoverer(config)
+			require.Nil(t, err, "creating discoverer")
 
 			// When discovering the KSM client
 			ksmClient, err := d.Discover(timeout)
@@ -169,7 +187,7 @@ func TestDiscover_metricsPortThroughAPIWhenDNSFails(t *testing.T) {
 			assert.Equal(t, "1.2.3.4:8888", ksmClient.(*ksm).endpoint.Host)
 			assert.Equal(t, "http", ksmClient.(*ksm).endpoint.Scheme)
 			// And the nodeIP is correctly returned
-			assert.Equal(t, "6.7.8.9", ksmClient.(*ksm).nodeIP)
+			assert.Equal(t, "6.7.8.9", ksmClient.NodeIP())
 		})
 	}
 }
@@ -198,11 +216,14 @@ func TestDiscover_metricsPortThroughAPIWhenDNSError(t *testing.T) {
 	)
 
 	// and an Discoverer implementation whose DNS returns an error
-	d := discoverer{
-		lookupSRV: failingLookupSRV,
-		apiClient: c,
-		logger:    logger,
+	config := DiscovererConfig{
+		LookupSRV: failingLookupSRV,
+		K8sClient: c,
+		Logger:    logger,
 	}
+
+	d, err := NewDiscoverer(config)
+	require.Nil(t, err, "creating discoverer")
 
 	// When retrieving the KSM client
 	ksmClient, err := d.Discover(timeout)
@@ -212,7 +233,7 @@ func TestDiscover_metricsPortThroughAPIWhenDNSError(t *testing.T) {
 	assert.Equal(t, "1.2.3.4:8888", ksmClient.(*ksm).endpoint.Host)
 	assert.Equal(t, "http", ksmClient.(*ksm).endpoint.Scheme)
 	// And the nodeIP is correctly returned
-	assert.Equal(t, "6.7.8.9", ksmClient.(*ksm).nodeIP)
+	assert.Equal(t, "6.7.8.9", ksmClient.NodeIP())
 }
 
 func TestDiscover_guessedTCPPortThroughAPIWhenDNSEmptyResponse(t *testing.T) {
@@ -242,11 +263,15 @@ func TestDiscover_guessedTCPPortThroughAPIWhenDNSEmptyResponse(t *testing.T) {
 	)
 
 	// and an Discoverer implementation whose DNS returns empty response
-	d := discoverer{
-		lookupSRV: emptyLookupSRV,
-		apiClient: c,
-		logger:    logger,
+	config := DiscovererConfig{
+		LookupSRV: emptyLookupSRV,
+		K8sClient: c,
+		Logger:    logger,
 	}
+
+	d, err := NewDiscoverer(config)
+	require.Nil(t, err, "creating discoverer")
+
 	// When retrieving the KSM client with no port named 'http-metrics'
 	ksmClient, err := d.Discover(timeout)
 
@@ -256,7 +281,7 @@ func TestDiscover_guessedTCPPortThroughAPIWhenDNSEmptyResponse(t *testing.T) {
 	assert.Equal(t, "11.22.33.44:8081", ksmClient.(*ksm).endpoint.Host)
 	assert.Equal(t, "http", ksmClient.(*ksm).endpoint.Scheme)
 	// And the nodeIP is correctly returned
-	assert.Equal(t, "6.7.8.9", ksmClient.(*ksm).nodeIP)
+	assert.Equal(t, "6.7.8.9", ksmClient.NodeIP())
 }
 
 func TestDiscover_errorRetrievingPortWhenDNSAndAPIResponsesEmpty(t *testing.T) {
@@ -274,11 +299,14 @@ func TestDiscover_errorRetrievingPortWhenDNSAndAPIResponsesEmpty(t *testing.T) {
 	)
 
 	// and an Discoverer implementation whose DNS returns empty response
-	d := discoverer{
-		lookupSRV: emptyLookupSRV,
-		apiClient: c,
-		logger:    logger,
+	config := DiscovererConfig{
+		LookupSRV: emptyLookupSRV,
+		K8sClient: c,
+		Logger:    logger,
 	}
+
+	d, err := NewDiscoverer(config)
+	require.Nil(t, err, "creating discoverer")
 
 	// When retrieving the KSM client
 	ksmClient, err := d.Discover(timeout)
@@ -304,11 +332,14 @@ func TestDiscover_errorRetrievingPortWhenDNSAndAPIErrors(t *testing.T) {
 	)
 
 	// and an Discoverer implementation whose DNS returns an error
-	d := discoverer{
-		lookupSRV: failingLookupSRV,
-		apiClient: c,
-		logger:    logger,
+	config := DiscovererConfig{
+		LookupSRV: failingLookupSRV,
+		K8sClient: c,
+		Logger:    logger,
 	}
+
+	d, err := NewDiscoverer(config)
+	require.Nil(t, err, "creating discoverer")
 
 	// When retrieving the KSM client
 	ksmClient, err := d.Discover(timeout)
@@ -330,11 +361,14 @@ func TestDiscover_errorRetrievingNodeIPWhenPodListEmpty(t *testing.T) {
 	)
 
 	// And an Discoverer implementation
-	d := discoverer{
-		lookupSRV: fakeLookupSRV,
-		apiClient: c,
-		logger:    logger,
+	config := DiscovererConfig{
+		LookupSRV: fakeLookupSRV,
+		K8sClient: c,
+		Logger:    logger,
 	}
+
+	d, err := NewDiscoverer(config)
+	require.Nil(t, err, "creating discoverer")
 
 	// When retrieving the KSM client
 	ksmClient, err := d.Discover(timeout)
@@ -356,11 +390,14 @@ func TestDiscover_errorRetrievingNodeIPWhenErrorFindingPod(t *testing.T) {
 	)
 
 	// And an Discoverer implementation
-	d := discoverer{
-		lookupSRV: fakeLookupSRV,
-		apiClient: c,
-		logger:    logger,
+	config := DiscovererConfig{
+		LookupSRV: fakeLookupSRV,
+		K8sClient: c,
+		Logger:    logger,
 	}
+
+	d, err := NewDiscoverer(config)
+	require.Nil(t, err, "creating discoverer")
 
 	// When retrieving the KSM client
 	ksmClient, err := d.Discover(timeout)
@@ -377,16 +414,20 @@ func TestNodeIPForDiscoverer_Error(t *testing.T) {
 		Return(&v1.PodList{Items: []v1.Pod{
 			{Status: v1.PodStatus{HostIP: "6.7.8.9"}},
 		}}, errors.New("no label"))
-	d := discoverer{
-		lookupSRV: fakeLookupSRV,
-		apiClient: c,
-		logger:    logger,
+
+	config := DiscovererConfig{
+		LookupSRV: fakeLookupSRV,
+		K8sClient: c,
+		Logger:    logger,
 	}
 
-	nodeIP, err := d.nodeIP()
+	d, err := NewDiscoverer(config)
+	require.Nil(t, err, "creating discoverer")
 
-	assert.EqualError(t, err, "no label")
-	assert.Equal(t, "", nodeIP)
+	ksmClient, err := d.Discover(timeout)
+
+	assert.NotNil(t, err, "expected discovery error")
+	assert.Nil(t, ksmClient)
 }
 
 // Testing NodeIP() method
@@ -449,4 +490,28 @@ func TestDo_error(t *testing.T) {
 	assert.NotNil(t, err)
 	// The response was not created
 	assert.Nil(t, resp)
+}
+
+func Test_Creating_discoverer_returns_error_when(t *testing.T) {
+	c := new(client.MockedKubernetes)
+
+	t.Run("API_client_is_not_set", func(t *testing.T) {
+		config := DiscovererConfig{
+			Logger: logger,
+		}
+
+		d, err := NewDiscoverer(config)
+		require.NotNil(t, err)
+		require.Nil(t, d)
+	})
+
+	t.Run("Logger_is_not_set", func(t *testing.T) {
+		config := DiscovererConfig{
+			K8sClient: c,
+		}
+
+		d, err := NewDiscoverer(config)
+		require.NotNil(t, err)
+		require.Nil(t, d)
+	})
 }

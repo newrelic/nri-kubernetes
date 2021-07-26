@@ -107,7 +107,6 @@ func controlPlaneJobs(
 	controllerManagerEndpointURL string,
 	apiServerEndpointURL string,
 ) ([]*scrape.Job, error) {
-
 	nodeInfo, err := apiServerClient.GetNodeInfo(nodeName)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't query ApiServer server: %v", err)
@@ -296,7 +295,6 @@ func main() {
 	apiServerClient := apiserver.NewClient(k8s)
 
 	ttlAPIServerCacheK8SVersion, err := time.ParseDuration(args.APIServerCacheK8SVersionTTL)
-
 	if err != nil {
 		logger.WithError(err).Errorf(
 			"while parsing the api server cache TTL value for the kubernetes server version. Defaulting to %s",
@@ -395,10 +393,14 @@ func main() {
 }
 
 func getKSMDiscoverer(logger *logrus.Logger) (client.Discoverer, error) {
-
 	k8sClient, err := client.NewKubernetes( /* tryLocalKubeconfig */ false)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("initializing Kubernetes client: %w", err)
+	}
+
+	config := clientKsm.DiscovererConfig{
+		K8sClient: k8sClient,
+		Logger:    logger,
 	}
 
 	// It's important this one is before the NodeLabel selector, for backwards compatibility.
@@ -407,22 +409,40 @@ func getKSMDiscoverer(logger *logrus.Logger) (client.Discoverer, error) {
 		args.KubeStateMetricsURL = strings.TrimSuffix(args.KubeStateMetricsURL, "/metrics")
 
 		logger.Debugf("Discovering KSM using static endpoint (KUBE_STATE_METRICS_URL=%s)", args.KubeStateMetricsURL)
-		return clientKsm.NewStaticEndpointDiscoverer(args.KubeStateMetricsURL, logger, k8sClient), nil
+
+		config.OverridenEndpoint = args.KubeStateMetricsURL
+
+		return clientKsm.NewDiscoverer(config)
 	}
 
 	if args.KubeStateMetricsPodLabel != "" {
 		logger.Debugf("Discovering KSM using Pod Label (KUBE_STATE_METRICS_POD_LABEL)")
-		return clientKsm.NewPodLabelDiscoverer(args.KubeStateMetricsPodLabel, args.KubeStateMetricsPort, args.KubeStateMetricsScheme, logger, k8sClient), nil
+
+		config := clientKsm.PodLabelDiscovererConfig{
+			KSMPodLabel: args.KubeStateMetricsPodLabel,
+			KSMPodPort:  args.KubeStateMetricsPort,
+			KSMScheme:   args.KubeStateMetricsScheme,
+			Logger:      logger,
+			K8sClient:   k8sClient,
+		}
+
+		discoverer, err := clientKsm.NewPodLabelDiscoverer(config)
+		if err != nil {
+			return nil, fmt.Errorf("creating KSM pod label discoverer: %w", err)
+		}
+
+		return discoverer, nil
 	}
 
 	logger.Debugf("Discovering KSM using DNS / k8s ApiServer (default)")
-	return clientKsm.NewDiscoverer(logger, k8sClient), nil
+
+	return clientKsm.NewDiscoverer(config)
 }
 
 func getMultiKSMDiscoverer(nodeIP string, logger *logrus.Logger) (client.MultiDiscoverer, error) {
 	k8sClient, err := client.NewKubernetes( /* tryLocalKubeconfig */ false)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("initializing Kubernetes client: %w", err)
 	}
 
 	if args.KubeStateMetricsPodLabel == "" {
@@ -430,5 +450,18 @@ func getMultiKSMDiscoverer(nodeIP string, logger *logrus.Logger) (client.MultiDi
 	}
 
 	logger.Debugf("Discovering distributed KSMs using pod labels from KUBE_STATE_METRICS_POD_LABEL")
-	return clientKsm.NewDistributedPodLabelDiscoverer(args.KubeStateMetricsPodLabel, nodeIP, logger, k8sClient), nil
+
+	config := clientKsm.DistributedPodLabelDiscovererConfig{
+		KSMPodLabel: args.KubeStateMetricsPodLabel,
+		NodeIP:      nodeIP,
+		K8sClient:   k8sClient,
+		Logger:      logger,
+	}
+
+	client, err := clientKsm.NewDistributedPodLabelDiscoverer(config)
+	if err != nil {
+		return nil, fmt.Errorf("creating new distributed pod label discoverer: %w", err)
+	}
+
+	return client, nil
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/transport"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
@@ -34,12 +35,43 @@ const (
 	headlessServiceClusterIP = "None"
 )
 
-type lookupSRVFunc func(service, proto, name string) (cname string, addrs []*net.SRV, err error)
+type LookupSRVFunc func(service, proto, name string) (cname string, addrs []*net.SRV, err error)
+
+// DiscovererConfig holds parameters for creating discoverer.
+type DiscovererConfig struct {
+	LookupSRV         LookupSRVFunc
+	K8sClient         client.Kubernetes
+	Logger            *logrus.Logger
+	OverridenEndpoint string
+}
+
+func NewDiscoverer(config DiscovererConfig) (client.Discoverer, error) {
+	if config.K8sClient == nil {
+		return nil, fmt.Errorf("API client can't be nil")
+	}
+
+	if config.Logger == nil {
+		return nil, fmt.Errorf("logger can't be nil")
+	}
+
+	sd := &discoverer{
+		lookupSRV:         config.LookupSRV,
+		k8sClient:         config.K8sClient,
+		logger:            config.Logger,
+		overridenEndpoint: config.OverridenEndpoint,
+	}
+
+	if sd.lookupSRV == nil {
+		sd.lookupSRV = net.LookupSRV
+	}
+
+	return sd, nil
+}
 
 // discoverer implements Discoverer interface by using official Kubernetes' Go client
 type discoverer struct {
-	lookupSRV         lookupSRVFunc
-	apiClient         client.Kubernetes
+	lookupSRV         LookupSRVFunc
+	k8sClient         client.Kubernetes
 	logger            *logrus.Logger
 	overridenEndpoint string
 }
@@ -83,7 +115,7 @@ func (sd *discoverer) Discover(timeout time.Duration) (client.HTTPClient, error)
 	}
 
 	sd.logger.Debugf("KSM client created with endpoint=%v and nodeIP=%v", endpoint, nodeIP)
-	return newKSMClient(timeout, nodeIP, endpoint, sd.logger, sd.apiClient), nil
+	return newKSMClient(timeout, nodeIP, endpoint, sd.logger, sd.k8sClient), nil
 }
 
 func newKSMClient(timeout time.Duration, nodeIP string, endpoint url.URL, logger *logrus.Logger, k8s client.Kubernetes) *ksm {
@@ -148,7 +180,11 @@ func (sd *discoverer) apiDiscover() (url.URL, error) {
 	var err error
 
 	for _, label := range ksmAppLabelNames {
-		services, err = sd.apiClient.FindServicesByLabel(label, ksmAppLabelValue)
+		services, err = sd.k8sClient.FindServicesByLabel(metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				label: ksmAppLabelValue,
+			},
+		})
 		if err == nil && len(services.Items) > 0 {
 			break
 		}
@@ -189,7 +225,11 @@ func (sd *discoverer) nodeIP() (string, error) {
 	var err error
 
 	for _, label := range ksmAppLabelNames {
-		pods, err = sd.apiClient.FindPodsByLabel(label, ksmAppLabelValue)
+		pods, err = sd.k8sClient.FindPodsByLabel(metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				label: ksmAppLabelValue,
+			},
+		})
 		if err == nil && len(pods.Items) > 0 {
 			break
 		}
@@ -214,21 +254,4 @@ func (sd *discoverer) nodeIP() (string, error) {
 		return "", errors.New("no HostIP address found for KSM node")
 	}
 	return nodeIP, nil
-}
-
-// NewDiscoverer instantiates a new Discoverer required for discovering node IP
-// of kube-state-metrics pod and endpoint of kube-state-metrics service
-func NewDiscoverer(logger *logrus.Logger, kubernetes client.Kubernetes) client.Discoverer {
-	return NewStaticEndpointDiscoverer("", logger, kubernetes)
-}
-
-// NewStaticEndpointDiscoverer instantiates a new Discoverer required for discovering only
-// node IP of kube-state-metrics pod
-func NewStaticEndpointDiscoverer(ksmEndpoint string, logger *logrus.Logger, kubernetes client.Kubernetes) client.Discoverer {
-	return &discoverer{
-		lookupSRV:         net.LookupSRV,
-		apiClient:         kubernetes,
-		logger:            logger,
-		overridenEndpoint: ksmEndpoint,
-	}
 }

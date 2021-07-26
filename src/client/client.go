@@ -12,6 +12,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -23,19 +24,25 @@ import (
 type Kubernetes interface {
 	// FindNode returns a Node reference containing the pod named as the argument, if any
 	FindNode(name string) (*v1.Node, error)
-	// FindPodsByLabel returns a PodList reference containing the pods matching the provided name/value label pair
-	FindPodsByLabel(name, value string) (*v1.PodList, error)
-	// FindServicesByLabel returns a ServiceList containing the services matching the provided name/value label pair
-	// name/value pairs
-	FindServicesByLabel(name, value string) (*v1.ServiceList, error)
+
+	// FindPodsByLabel returns a PodList reference containing the pods matching the provided label selector.
+	FindPodsByLabel(labelSelector metav1.LabelSelector) (*v1.PodList, error)
+
+	// FindServicesByLabel returns a ServiceList containing the services matching the provided label selector.
+	FindServicesByLabel(labelSelector metav1.LabelSelector) (*v1.ServiceList, error)
+
 	// ListServices returns a ServiceList containing all the services.
 	ListServices() (*v1.ServiceList, error)
+
 	// Config returns a config of API client
 	Config() *rest.Config
+
 	// SecureHTTPClient returns http.Client configured with timeout and CA Cert
 	SecureHTTPClient(time.Duration) (*http.Client, error)
+
 	// FindSecret returns the secret with the given name, if any
 	FindSecret(name, namespace string) (*v1.Secret, error)
+
 	// ServerVersion returns the kubernetes server version.
 	ServerVersion() (*version.Info, error)
 }
@@ -57,15 +64,25 @@ func (ka *goClientImpl) FindNode(name string) (*v1.Node, error) {
 	return ka.client.CoreV1().Nodes().Get(context.TODO(), name, metav1.GetOptions{})
 }
 
-func (ka *goClientImpl) FindPodsByLabel(name, value string) (*v1.PodList, error) {
+func (ka *goClientImpl) FindPodsByLabel(labelSelector metav1.LabelSelector) (*v1.PodList, error) {
+	selectorMap, err := metav1.LabelSelectorAsMap(&labelSelector)
+	if err != nil {
+		return nil, fmt.Errorf("converting label selector %q to map: %w", labelSelector, err)
+	}
+
 	return ka.client.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("%s=%s", name, value),
+		LabelSelector: labels.SelectorFromSet(selectorMap).String(),
 	})
 }
 
-func (ka *goClientImpl) FindServicesByLabel(name, value string) (*v1.ServiceList, error) {
+func (ka *goClientImpl) FindServicesByLabel(labelSelector metav1.LabelSelector) (*v1.ServiceList, error) {
+	selectorMap, err := metav1.LabelSelectorAsMap(&labelSelector)
+	if err != nil {
+		return nil, fmt.Errorf("converting label selector %q to map: %w", labelSelector, err)
+	}
+
 	return ka.client.CoreV1().Services("").List(context.TODO(), metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("%s=%s", name, value),
+		LabelSelector: labels.SelectorFromSet(selectorMap).String(),
 	})
 }
 

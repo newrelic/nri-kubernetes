@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/mock"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/rest"
 )
@@ -40,14 +41,14 @@ func (m *MockedKubernetes) FindNode(name string) (*v1.Node, error) {
 }
 
 // FindPodsByLabel mocks Kubernetes FindPodsByLabel
-func (m *MockedKubernetes) FindPodsByLabel(name, value string) (*v1.PodList, error) {
-	args := m.Called(name)
+func (m *MockedKubernetes) FindPodsByLabel(labelSelector metav1.LabelSelector) (*v1.PodList, error) {
+	args := m.Called(labelSelector)
 	return args.Get(0).(*v1.PodList), args.Error(1)
 }
 
 // FindServicesByLabel mocks Kubernetes FindServicesByLabel
-func (m *MockedKubernetes) FindServicesByLabel(name, value string) (*v1.ServiceList, error) {
-	args := m.Called(name, value)
+func (m *MockedKubernetes) FindServicesByLabel(labelSelector metav1.LabelSelector) (*v1.ServiceList, error) {
+	args := m.Called(labelSelector)
 	return args.Get(0).(*v1.ServiceList), args.Error(1)
 }
 

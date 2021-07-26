@@ -43,7 +43,19 @@ func main() {
 }
 
 func runKSMPodLabel(kubernetes k8sclient.Kubernetes, logger *logrus.Logger) {
-	discoverer := client.NewPodLabelDiscoverer(*ksmPodLabel, 8080, "http", logger, kubernetes)
+	config := client.PodLabelDiscovererConfig{
+		KSMPodLabel: *ksmPodLabel,
+		KSMPodPort:  8080,
+		KSMScheme:   "http",
+		Logger:      logger,
+		K8sClient:   kubernetes,
+	}
+
+	discoverer, err := client.NewPodLabelDiscoverer(config)
+	if err != nil {
+		logger.Fatalf("Initializing discoverer: %v", err)
+	}
+
 	ksm, err := discoverer.Discover(time.Second * 5)
 	if err != nil {
 		logger.Fatalf("Discovering KSM: %v", err)
