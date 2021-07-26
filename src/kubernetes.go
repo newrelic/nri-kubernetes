@@ -395,7 +395,7 @@ func main() {
 func getKSMDiscoverer(logger *logrus.Logger) (client.Discoverer, error) {
 	k8sClient, err := client.NewKubernetes( /* tryLocalKubeconfig */ false)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("initializing Kubernetes client: %w", err)
 	}
 
 	config := clientKsm.DiscovererConfig{
@@ -428,7 +428,7 @@ func getKSMDiscoverer(logger *logrus.Logger) (client.Discoverer, error) {
 func getMultiKSMDiscoverer(nodeIP string, logger *logrus.Logger) (client.MultiDiscoverer, error) {
 	k8sClient, err := client.NewKubernetes( /* tryLocalKubeconfig */ false)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("initializing Kubernetes client: %w", err)
 	}
 
 	if args.KubeStateMetricsPodLabel == "" {
