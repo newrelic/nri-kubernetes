@@ -213,9 +213,9 @@ func main() {
 			logger.Errorf(err.Error())
 		}
 		logger.Fatal("Error Detected")
-	} else {
-		logger.Infof("OK")
 	}
+
+	logger.Infof("OK")
 }
 
 func determineMinikubeHost(logger *logrus.Logger) string {
