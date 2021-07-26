@@ -54,24 +54,6 @@ const (
 	unknownFlavor  = "Unknown"
 )
 
-type eventTypeSchemasPerEntity map[entityID]jsonschema.EventTypeToSchemaFilename
-
-type entityID string
-
-func (e entityID) Name() string {
-	s := e.split()
-	return s[len(s)-1]
-}
-
-func (e entityID) Type() string {
-	s := e.split()
-	return strings.Join(s[:len(s)-1], ":")
-}
-
-func (e entityID) split() []string {
-	return strings.Split(string(e), ":")
-}
-
 func generateScenarios(
 	integrationImageRepository string,
 	integrationImageTag string,
@@ -425,6 +407,24 @@ func executeIntegrationForAllPods(c *k8s.Client, ksmPod *v1.Pod, nrPods *v1.PodL
 		output[d.podName] = d
 	}
 	return output, nil
+}
+
+type eventTypeSchemasPerEntity map[entityID]jsonschema.EventTypeToSchemaFilename
+
+type entityID string
+
+func (e entityID) Name() string {
+	s := e.split()
+	return s[len(s)-1]
+}
+
+func (e entityID) Type() string {
+	s := e.split()
+	return strings.Join(s[:len(s)-1], ":")
+}
+
+func (e entityID) split() []string {
+	return strings.Split(string(e), ":")
 }
 
 func testSpecificEntities(output map[string]integrationData, releaseName string) error {
