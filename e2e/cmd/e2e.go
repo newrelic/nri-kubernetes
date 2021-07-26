@@ -8,7 +8,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/args"
@@ -109,19 +108,16 @@ const (
 
 var allJobs = [...]job{jobKSM, jobKubelet, jobScheduler, jobEtcd, jobControllerManager, jobAPIServer}
 
-func execIntegration(pod v1.Pod, ksmPod *v1.Pod, dataChannel chan integrationData, wg *sync.WaitGroup, c *k8s.Client, logger *logrus.Logger) {
+func execIntegration(pod v1.Pod, ksmPod *v1.Pod, c *k8s.Client, logger *logrus.Logger) (*integrationData, error) {
 	defer timer.Track(time.Now(), fmt.Sprintf("execIntegration func for pod %s", pod.Name), logger)
-	defer wg.Done()
-	d := integrationData{
+
+	d := &integrationData{
 		podName: pod.Name,
 	}
 
 	output, err := c.PodExec(namespace, pod.Name, nrContainer, "/var/db/newrelic-infra/newrelic-integrations/bin/nri-kubernetes", "-timeout=30000", "-verbose")
 	if err != nil {
-		d.err = err
-		logger.Debugf("Error detecting running pod exec: %s", d.err.Error())
-		dataChannel <- d
-		return
+		return nil, fmt.Errorf("executing command inside pod: %w", err)
 	}
 
 	d.stdOut = output.Stdout.Bytes()
@@ -136,7 +132,7 @@ func execIntegration(pod v1.Pod, ksmPod *v1.Pod, dataChannel chan integrationDat
 
 	logrus.Printf("Pod: %s, hostIP %s, expected jobs: %#v", pod.Name, pod.Status.HostIP, d.expectedJobs)
 
-	dataChannel <- d
+	return d, nil
 }
 
 func main() {
@@ -384,28 +380,20 @@ func executeTests(
 	return nil
 }
 
-func executeIntegrationForAllPods(c *k8s.Client, ksmPod *v1.Pod, nrPods *v1.PodList, logger *logrus.Logger) (map[string]integrationData, error) {
-	output := make(map[string]integrationData)
-	dataChannel := make(chan integrationData)
-
-	var wg sync.WaitGroup
-	wg.Add(len(nrPods.Items))
-	go func() {
-		wg.Wait()
-		close(dataChannel)
-	}()
+func executeIntegrationForAllPods(c *k8s.Client, ksmPod *v1.Pod, nrPods *v1.PodList, logger *logrus.Logger) (map[string]*integrationData, error) {
+	output := map[string]*integrationData{}
 
 	for _, p := range nrPods.Items {
 		logger.Debugf("Executing integration inside pod: %s", p.Name)
-		go execIntegration(p, ksmPod, dataChannel, &wg, c, logger)
+
+		integrationData, err := execIntegration(p, ksmPod, c, logger)
+		if err != nil {
+			return output, fmt.Errorf("pod %q: %w", p.Name, err)
+		}
+
+		output[p.Name] = integrationData
 	}
 
-	for d := range dataChannel {
-		if d.err != nil {
-			return output, fmt.Errorf("pod: %s. %s", d.podName, d.err.Error())
-		}
-		output[d.podName] = d
-	}
 	return output, nil
 }
 
@@ -427,7 +415,7 @@ func (e entityID) split() []string {
 	return strings.Split(string(e), ":")
 }
 
-func testSpecificEntities(output map[string]integrationData, releaseName string) error {
+func testSpecificEntities(output map[string]*integrationData, releaseName string) error {
 	entitySchemas := eventTypeSchemasPerEntity{
 		entityID(fmt.Sprintf("k8s:%s:%s:volume:%s", cliArgs.ClusterName, namespace, fmt.Sprintf("default_busybox-%s_busybox-persistent-storage", releaseName))): {
 			"K8sVolumeSample": "persistentvolume.json",
@@ -465,7 +453,7 @@ func testSpecificEntities(output map[string]integrationData, releaseName string)
 	return nil
 }
 
-func testRoles(nodeCount int, integrationOutput map[string]integrationData) error {
+func testRoles(nodeCount int, integrationOutput map[string]*integrationData) error {
 	jobRunCount := map[job]int{}
 
 	for podName, output := range integrationOutput {
@@ -495,7 +483,7 @@ func testRoles(nodeCount int, integrationOutput map[string]integrationData) erro
 	return nil
 }
 
-func testEventTypes(output map[string]integrationData, s scenario.Scenario) error {
+func testEventTypes(output map[string]*integrationData, s scenario.Scenario) error {
 	for podName, o := range output {
 		schemasToMatch := make(map[string]jsonschema.EventTypeToSchemaFilename)
 		for _, expectedJob := range o.expectedJobs {
