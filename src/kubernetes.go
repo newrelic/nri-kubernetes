@@ -436,5 +436,18 @@ func getMultiKSMDiscoverer(nodeIP string, logger *logrus.Logger) (client.MultiDi
 	}
 
 	logger.Debugf("Discovering distributed KSMs using pod labels from KUBE_STATE_METRICS_POD_LABEL")
-	return clientKsm.NewDistributedPodLabelDiscoverer(args.KubeStateMetricsPodLabel, nodeIP, logger, k8sClient), nil
+
+	config := clientKsm.DistributedPodLabelDiscovererConfig{
+		KSMPodLabel: args.KubeStateMetricsPodLabel,
+		NodeIP:      nodeIP,
+		K8sClient:   k8sClient,
+		Logger:      logger,
+	}
+
+	client, err := clientKsm.NewDistributedPodLabelDiscoverer(config)
+	if err != nil {
+		return nil, fmt.Errorf("creating new distributed pod label discoverer: %w", err)
+	}
+
+	return client, nil
 }

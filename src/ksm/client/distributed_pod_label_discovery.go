@@ -72,12 +72,36 @@ func (p *distributedPodLabelDiscoverer) Discover(timeout time.Duration) ([]clien
 	return clients, nil
 }
 
-// NewDistributedPodLabelDiscoverer creates a new KSM discoverer that will find KSM pods using k8s labels
-func NewDistributedPodLabelDiscoverer(ksmPodLabel string, nodeIP string, logger *logrus.Logger, k8sClient client.Kubernetes) client.MultiDiscoverer {
-	return &distributedPodLabelDiscoverer{
-		logger:      logger,
-		ownNodeIP:   nodeIP,
-		k8sClient:   k8sClient,
-		ksmPodLabel: ksmPodLabel,
+// DistributedPodLabelDiscovererConfig stores configuration for DistributedPodLabelDiscoverer.
+type DistributedPodLabelDiscovererConfig struct {
+	KSMPodLabel string
+	NodeIP      string
+	K8sClient   client.Kubernetes
+	Logger      *logrus.Logger
+}
+
+// NewDistributedPodLabelDiscoverer creates a new KSM discoverer that will find KSM pods using k8s labels.
+func NewDistributedPodLabelDiscoverer(config DistributedPodLabelDiscovererConfig) (client.MultiDiscoverer, error) {
+	if config.Logger == nil {
+		return nil, fmt.Errorf("logger must be set")
 	}
+
+	if config.KSMPodLabel == "" {
+		return nil, fmt.Errorf("KSM pod label can't be empty")
+	}
+
+	if config.K8sClient == nil {
+		return nil, fmt.Errorf("Kubernetes client must be set")
+	}
+
+	if config.NodeIP == "" {
+		return nil, fmt.Errorf("node IP can't be empty")
+	}
+
+	return &distributedPodLabelDiscoverer{
+		logger:      config.Logger,
+		ownNodeIP:   config.NodeIP,
+		k8sClient:   config.K8sClient,
+		ksmPodLabel: config.KSMPodLabel,
+	}, nil
 }
