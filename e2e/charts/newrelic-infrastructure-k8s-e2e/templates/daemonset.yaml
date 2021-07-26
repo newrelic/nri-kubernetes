@@ -54,12 +54,10 @@ spec:
             {{- end }}
           env:
             {{- if eq .Values.daemonset.clusterFlavor "Minikube" }}
-              {{- if and (ne .Values.daemonset.clusterVersion "v1.15.x") (ne .Values.daemonset.clusterVersion "v1.14.x") (ne .Values.daemonset.clusterVersion "v1.13.x") }}
+              {{- if semverCompare ">=1.16-0" .Capabilities.KubeVersion.Version }}
             - name: "SCHEDULER_ENDPOINT_URL"
               value: "https://localhost:10259"
               {{- end }}
-            {{- end }}
-            {{- if eq .Values.daemonset.clusterFlavor "Minikube" }}
             - name: "API_SERVER_ENDPOINT_URL"
               value: "https://localhost:8443"
             - name: "CONTROLLER_MANAGER_ENDPOINT_URL"

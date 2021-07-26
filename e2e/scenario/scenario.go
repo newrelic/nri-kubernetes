@@ -20,7 +20,6 @@ type Scenario struct {
 	integrationImageTag        string
 	optionalNetworkSchema      bool
 	ClusterFlavor              string
-	K8sVersion                 string
 }
 
 // New returns a new Scenario
@@ -33,7 +32,6 @@ func New(
 	twoKSMInstances bool,
 	k8sServerInfo *version.Info,
 	clusterFlavor string,
-	K8sVersion string,
 ) Scenario {
 	return Scenario{
 		unprivileged:               unprivileged,
@@ -44,7 +42,6 @@ func New(
 		integrationImageTag:        integrationImageTag,
 		optionalNetworkSchema:      optionalNetworkSchema(k8sServerInfo, unprivileged),
 		ClusterFlavor:              clusterFlavor,
-		K8sVersion:                 K8sVersion,
 	}
 }
 
@@ -57,7 +54,6 @@ func (s Scenario) HelmValues() []string {
 		fmt.Sprintf("daemonset.image.repository=%s", s.integrationImageRepository),
 		fmt.Sprintf("daemonset.image.tag=%s", s.integrationImageTag),
 		fmt.Sprintf("daemonset.clusterFlavor=%s", s.ClusterFlavor),
-		fmt.Sprintf("k8sversion=%s", s.K8sVersion),
 	}
 
 	if s.twoKSMInstances {
