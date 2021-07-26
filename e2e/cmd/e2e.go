@@ -131,6 +131,11 @@ type testEnv struct {
 	logger    *logrus.Logger
 }
 
+type scenarioEnv struct {
+	testEnv
+	scenario scenario.Scenario
+}
+
 func main() {
 	err := args.SetupArgs(&cliArgs)
 	if err != nil {
@@ -195,8 +200,12 @@ func main() {
 		testEnv.logger.Infof("Scenario: %q", s)
 		testEnv.logger.Infof("#####################")
 
-		err := testEnv.executeScenario(s)
-		if err != nil {
+		se := scenarioEnv{
+			testEnv:  testEnv,
+			scenario: s,
+		}
+
+		if err := se.execute(); err != nil {
 			if cliArgs.FailFast {
 				testEnv.logger.Info("Finishing execution because 'FailFast' is true")
 				testEnv.logger.Infof("Ran with the following configuration: %s", s)
@@ -263,106 +272,106 @@ func (e *testEnv) waitForKSM() (*v1.Pod, error) {
 	return &foundPod, nil
 }
 
-func (e *testEnv) executeScenario(currentScenario scenario.Scenario) error {
-	defer timer.Track(time.Now(), fmt.Sprintf("executeScenario func for %s", currentScenario), e.logger)
+func (se *scenarioEnv) execute() error {
+	defer timer.Track(time.Now(), fmt.Sprintf("execute func for %s", se.scenario), se.logger)
 
-	releaseName, err := e.installRelease(currentScenario)
+	releaseName, err := se.installRelease()
 	if err != nil {
 		return err
 	}
 
 	defer func() {
-		e.logger.Infof("deleting release %s", releaseName)
-		err = helm.DeleteRelease(releaseName, cliArgs.Context, e.logger)
+		se.logger.Infof("deleting release %s", releaseName)
+		err = helm.DeleteRelease(releaseName, cliArgs.Context, se.logger)
 		if err != nil {
-			e.logger.Errorf("error while deleting release %q", err)
+			se.logger.Errorf("error while deleting release %q", err)
 		}
 	}()
 
 	// At least one of kube-state-metrics pods needs to be ready to enter to the newrelic-infra pod and execute the integration.
 	// If the kube-state-metrics pod is not ready, then metrics from replicaset, namespace and deployment will not be populate and JSON schemas will fail.
-	ksmPod, err := e.waitForKSM()
+	ksmPod, err := se.waitForKSM()
 	if err != nil {
 		return err
 	}
-	return e.executeTests(ksmPod, releaseName, currentScenario)
+	return se.executeTests(ksmPod, releaseName)
 }
 
-func (e *testEnv) executeTests(ksmPod *v1.Pod, releaseName string, currentScenario scenario.Scenario) error {
+func (se *scenarioEnv) executeTests(ksmPod *v1.Pod, releaseName string) error {
 	releaseLabel := fmt.Sprintf("releaseName=%s", releaseName)
 	// We're fetching the list of NR pods here just to fetch it once. If for
 	// some reason this list or the contents of it could change during the
 	// execution of these tests, we could move it to `test*` functions.
-	podsList, err := e.k8sClient.PodsListByLabels(namespace, []string{nrLabel, releaseLabel})
+	podsList, err := se.k8sClient.PodsListByLabels(namespace, []string{nrLabel, releaseLabel})
 	if err != nil {
 		return err
 	}
 
-	e.logger.Info("Found the following pods for test execution:")
+	se.logger.Info("Found the following pods for test execution:")
 	for _, pod := range podsList.Items {
-		e.logger.Infof("[%s] status: %s %s", pod.Name, pod.Status.Message, pod.Status.Reason)
+		se.logger.Infof("[%s] status: %s %s", pod.Name, pod.Status.Message, pod.Status.Reason)
 	}
 
-	nodes, err := e.k8sClient.NodesList()
+	nodes, err := se.k8sClient.NodesList()
 	if err != nil {
 		return fmt.Errorf("error getting the list of nodes in the cluster: %s", err)
 	}
-	output, err := e.executeIntegrationForAllPods(ksmPod, podsList)
+	output, err := se.executeIntegrationForAllPods(ksmPod, podsList)
 	if err != nil {
 		return err
 	}
 	var execErr executionErr
-	e.logger.Info("checking if the integrations are executed with the proper roles")
+	se.logger.Info("checking if the integrations are executed with the proper roles")
 	err = testRoles(len(nodes.Items), output)
 	if err != nil {
 		execErr.errs = append(execErr.errs, err)
 	}
 
-	if currentScenario.ClusterFlavor == minikubeFlavor {
+	if se.scenario.ClusterFlavor == minikubeFlavor {
 		// Minikube use hostPath provisioner for PVCs, which makes kubelet to not report PVC volumes in /stats/summary
 		// See https://github.com/yashbhutwala/kubectl-df-pv/issues/2 for more info.
-		e.logger.Info("Skipping `testSpecificEntities` because you're running them in Minikube.")
+		se.logger.Info("Skipping `testSpecificEntities` because you're running them in Minikube.")
 	} else {
-		e.logger.Info("checking if specific entities match our JSON schemas")
+		se.logger.Info("checking if specific entities match our JSON schemas")
 		err = retry.Do(
 			func() error {
 				err := testSpecificEntities(output, releaseName)
 				if err != nil {
 					var otherErr error
-					output, otherErr = e.executeIntegrationForAllPods(ksmPod, podsList)
+					output, otherErr = se.executeIntegrationForAllPods(ksmPod, podsList)
 					if otherErr != nil {
 						return otherErr
 					}
 					return err
 				}
-				e.logger.Debugf("The test 'checking if specific entities match our JSON schemas' succeeded")
+				se.logger.Debugf("The test 'checking if specific entities match our JSON schemas' succeeded")
 				return nil
 			},
 			retry.OnRetry(func(err error) {
-				e.logger.Debugf("Retrying, the error might be caused by a not ready environment. Scenario: %s", currentScenario)
+				se.logger.Debugf("Retrying, the error might be caused by a not ready environment. Scenario: %s", se.scenario)
 			}),
 		)
 		if err != nil {
 			execErr.errs = append(execErr.errs, err)
 		}
 	}
-	e.logger.Info("checking if the metric sets in all integrations match our JSON schemas")
+	se.logger.Info("checking if the metric sets in all integrations match our JSON schemas")
 	err = retry.Do(
 		func() error {
-			err := testEventTypes(output, currentScenario)
+			err := se.testEventTypes(output)
 			if err != nil {
 				var otherErr error
-				output, otherErr = e.executeIntegrationForAllPods(ksmPod, podsList)
+				output, otherErr = se.executeIntegrationForAllPods(ksmPod, podsList)
 				if otherErr != nil {
 					return otherErr
 				}
 				return err
 			}
-			e.logger.Debugf("Retrying, the error might be caused by a not ready environment. Scenario: %s", currentScenario)
+			se.logger.Debugf("Retrying, the error might be caused by a not ready environment. Scenario: %s", se.scenario)
 			return nil
 		},
 		retry.OnRetry(func(err error) {
-			e.logger.Debugf("Retrying since the error might be caused by the environment not being ready yet")
+			se.logger.Debugf("Retrying since the error might be caused by the environment not being ready yet")
 		}),
 	)
 	if err != nil {
@@ -477,11 +486,11 @@ func testRoles(nodeCount int, integrationOutput map[string]*integrationData) err
 	return nil
 }
 
-func testEventTypes(output map[string]*integrationData, s scenario.Scenario) error {
+func (se *scenarioEnv) testEventTypes(output map[string]*integrationData) error {
 	for podName, o := range output {
 		schemasToMatch := make(map[string]jsonschema.EventTypeToSchemaFilename)
 		for _, expectedJob := range o.expectedJobs {
-			expectedSchema := s.GetSchemasForJob(string(expectedJob))
+			expectedSchema := se.scenario.GetSchemasForJob(string(expectedJob))
 			logrus.Printf("Job: %s, types: %#v", expectedJob, expectedSchema)
 			schemasToMatch[string(expectedJob)] = expectedSchema
 		}
@@ -504,23 +513,23 @@ func testEventTypes(output map[string]*integrationData, s scenario.Scenario) err
 	return nil
 }
 
-func (e *testEnv) installRelease(s scenario.Scenario) (string, error) {
+func (se *scenarioEnv) installRelease() (string, error) {
 	dir, err := os.Getwd()
 	if err != nil {
 		return "", err
 	}
 
-	options := s.HelmValues()
+	options := se.scenario.HelmValues()
 	options = append(options,
 		fmt.Sprintf("integration.k8sClusterName=%s", cliArgs.ClusterName),
 		fmt.Sprintf("integration.newRelicLicenseKey=%s", cliArgs.NrLicenseKey),
 		"integration.verbose=true",
 		fmt.Sprintf("integration.collectorURL=%s", cliArgs.CollectorURL),
-		fmt.Sprintf("daemonset.clusterFlavor=%s", s.ClusterFlavor),
+		fmt.Sprintf("daemonset.clusterFlavor=%s", se.scenario.ClusterFlavor),
 	)
 
 	releaseName := fmt.Sprintf("%s-%s", "release", rand.String(5))
-	err = helm.InstallRelease(releaseName, filepath.Join(dir, cliArgs.NrChartPath), cliArgs.Context, e.logger, options...)
+	err = helm.InstallRelease(releaseName, filepath.Join(dir, cliArgs.NrChartPath), cliArgs.Context, se.logger, options...)
 	if err != nil {
 		return "", err
 	}
