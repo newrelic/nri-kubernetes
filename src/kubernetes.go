@@ -46,6 +46,7 @@ type argumentList struct {
 	KubeStateMetricsPodLabel     string `help:"discover KSM using Kubernetes Labels."`
 	KubeStateMetricsPort         int    `default:"8080" help:"port to query the KSM pod. Only works together with the pod label discovery"`
 	KubeStateMetricsScheme       string `default:"http" help:"scheme to query the KSM pod ('http' or 'https'). Only works together with the pod label discovery"`
+	KubeStateMetricsNamespace    string `default:"" help:"namespace to query the KSM pod. By default, all namespaces will be queried"`
 	DistributedKubeStateMetrics  bool   `default:"false" help:"Set to enable distributed KSM discovery. Requires that KubeStateMetricsPodLabel is set. Disabled by default."`
 	APIServerSecurePort          string `default:"" help:"Set to query the API Server over a secure port. Disabled by default"`
 	SchedulerEndpointURL         string `help:"Set a custom endpoint URL for the kube-scheduler endpoint."`
@@ -401,6 +402,7 @@ func getKSMDiscoverer(logger *logrus.Logger) (client.Discoverer, error) {
 	config := clientKsm.DiscovererConfig{
 		K8sClient: k8sClient,
 		Logger:    logger,
+		Namespace: args.KubeStateMetricsNamespace,
 	}
 
 	// It's important this one is before the NodeLabel selector, for backwards compatibility.
@@ -419,11 +421,12 @@ func getKSMDiscoverer(logger *logrus.Logger) (client.Discoverer, error) {
 		logger.Debugf("Discovering KSM using Pod Label (KUBE_STATE_METRICS_POD_LABEL)")
 
 		config := clientKsm.PodLabelDiscovererConfig{
-			KSMPodLabel: args.KubeStateMetricsPodLabel,
-			KSMPodPort:  args.KubeStateMetricsPort,
-			KSMScheme:   args.KubeStateMetricsScheme,
-			Logger:      logger,
-			K8sClient:   k8sClient,
+			KSMPodLabel:  args.KubeStateMetricsPodLabel,
+			KSMPodPort:   args.KubeStateMetricsPort,
+			KSMScheme:    args.KubeStateMetricsScheme,
+			KSMNamespace: args.KubeStateMetricsNamespace,
+			Logger:       logger,
+			K8sClient:    k8sClient,
 		}
 
 		discoverer, err := clientKsm.NewPodLabelDiscoverer(config)
@@ -452,10 +455,11 @@ func getMultiKSMDiscoverer(nodeIP string, logger *logrus.Logger) (client.MultiDi
 	logger.Debugf("Discovering distributed KSMs using pod labels from KUBE_STATE_METRICS_POD_LABEL")
 
 	config := clientKsm.DistributedPodLabelDiscovererConfig{
-		KSMPodLabel: args.KubeStateMetricsPodLabel,
-		NodeIP:      nodeIP,
-		K8sClient:   k8sClient,
-		Logger:      logger,
+		KSMPodLabel:  args.KubeStateMetricsPodLabel,
+		KSMNamespace: args.KubeStateMetricsNamespace,
+		NodeIP:       nodeIP,
+		K8sClient:    k8sClient,
+		Logger:       logger,
 	}
 
 	client, err := clientKsm.NewDistributedPodLabelDiscoverer(config)

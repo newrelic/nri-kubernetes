@@ -192,6 +192,9 @@ func main() {
 			// not the logic of KSM. This might change if KSM sharding becomes enabled by default.
 			s.TwoKSMInstances = true
 		},
+		"with_namespace_filtering": func(s *scenario.Scenario) {
+			s.ExtraArgs = []string{"-kube_state_metrics_namespace=default"}
+		},
 	}
 
 	for scenarioName, mutateTestScenario := range scenarios {
