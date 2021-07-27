@@ -6,7 +6,7 @@ FROM $BASE_IMAGE AS base
 # Set by docker automatically
 # If building with `docker build`, make sure to set GOOS/GOARCH explicitly when calling make:
 # `make compile GOOS=something GOARCH=something`
-# Otherwise the makefile will not append them to the binary name and docker build wil fail.
+# Otherwise the makefile will not append them to the binary name and docker build will fail.
 ARG TARGETOS
 ARG TARGETARCH
 

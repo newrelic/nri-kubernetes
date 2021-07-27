@@ -39,16 +39,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
-- Correctly identifing k8s server version with characters (#81)
+- Correctly identifying k8s server version with characters (#81)
 
 ## 2.3.0
 
 ### Changed
 
-- The base image of `newrelic/infrastructure-k8s` has been updated to `2.2.3`. 
+- The base image of `newrelic/infrastructure-k8s` has been updated to `2.2.3`.
   More info regarding all the integrations upgraded can be found in the [release notes of the base image](https://github.com/newrelic/infrastructure-bundle/releases/tag/2.2.3).
 - Changed scale of node `cpuRequestedCores` to cores from millis
-  
+
 ### Added
 
 - Added metrics pertaining to Horizontal Pod Autoscaler. More information about the collected metrics can be found in the [official documentation](https://docs.newrelic.com/docs/integrations/kubernetes-integration/understand-use-data/find-use-your-kubernetes-data)
@@ -61,7 +61,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
-- The base image of `newrelic/infrastructure-k8s` has been updated to `2.2.1`. 
+- The base image of `newrelic/infrastructure-k8s` has been updated to `2.2.1`.
   This base image has fixed an issue where `nrjmx` was not properly running due to the bundled java version.
   More info regarding all the integration upgraded can be found in the [release notes of the base image](https://github.com/newrelic/infrastructure-bundle/releases/tag/2.2.1).
 
@@ -75,8 +75,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
-- The base image of `newrelic/infrastructure-k8s` has been updated to `2.0.0`. 
-  That base image is bundling the integration `nri-nginx` `3.0.2` that contains a breaking change. 
+- The base image of `newrelic/infrastructure-k8s` has been updated to `2.0.0`.
+  That base image is bundling the integration `nri-nginx` `3.0.2` that contains a breaking change.
   More info regarding all the integration upgraded can be found in the [release notes of the base image](https://github.com/newrelic/infrastructure-bundle/releases/tag/2.0.0).
 
 
@@ -95,7 +95,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 1.26.7
 
-### Fixed 
+### Fixed
 
 - When configuring API_SERVER_ENDPOINT_URL with https endpoint, the
   api-server component will use that that instead of the default.
@@ -103,11 +103,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 1.26.6
 
-### Fixed 
+### Fixed
 
 - When discovering kube-state-metrics behind a headless service, the
   DNS discovery will return an error. Before it would be considered
-  successfull and return "None" as endpoint.
+  successful and return "None" as endpoint.
 
 ## 1.26.5
 
@@ -121,7 +121,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Added `restartCount` to containers in the `wainting` state
   - In case the container is in a crash loop the restart count would not be shown
-  
+
 ## 1.26.3
 
 ### Added
@@ -325,7 +325,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## 1.17.0
 
 ### Added
- - Added the necesary files for building a windows image of the integration.
+ - Added the necessary files for building a windows image of the integration.
    The windows image needs to be manually created and it's still not in our
    CI/CD pipeline. We have the files for building it but we are not publishing
    it. The latest supported image for Windows, at the time of writing, is
@@ -650,7 +650,7 @@ regardless of the format requested.
 - nodes/metrics resource was added to the newrelic cluster role.
 
 ### Changed
-- CAdvisor call is now bypassing Kubelet endpoint talking then directoy to CAdvisor port
+- CAdvisor call is now bypassing Kubelet endpoint talking then directly to CAdvisor port
 
 ## 1.0.0-beta1.0
 

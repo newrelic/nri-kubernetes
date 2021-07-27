@@ -19,7 +19,7 @@ func (v noValueType) String() string {
 	return string(v)
 }
 
-// EmptyValue means we couuld not get the value.
+// EmptyValue means we could not get the value.
 const EmptyValue noValueType = "no_value"
 
 // Labels is a map containing the label pair of a metric.

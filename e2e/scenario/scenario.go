@@ -3,6 +3,7 @@ package scenario
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/version"
 
@@ -11,63 +12,40 @@ import (
 
 // Scenario defines the environment that will be used for testing
 type Scenario struct {
-	unprivileged               bool
-	rbac                       bool
-	ksmVersion                 string
-	twoKSMInstances            bool
-	integrationImageRepository string
-	integrationImageTag        string
-	optionalNetworkSchema      bool
+	Unprivileged               bool
+	RBAC                       bool
+	KSMVersion                 string
+	TwoKSMInstances            bool
+	IntegrationImageRepository string
+	IntegrationImageTag        string
 	ClusterFlavor              string
-	K8sVersion                 string
+	K8sServerInfo              *version.Info
 }
 
-// New returns a new Scenario
-func New(
-	rbac bool,
-	unprivileged bool,
-	integrationImageRepository,
-	integrationImageTag,
-	ksmVersion string,
-	twoKSMInstances bool,
-	k8sServerInfo *version.Info,
-	clusterFlavor string,
-	K8sVersion string,
-) Scenario {
-	return Scenario{
-		unprivileged:               unprivileged,
-		rbac:                       rbac,
-		ksmVersion:                 ksmVersion,
-		twoKSMInstances:            twoKSMInstances,
-		integrationImageRepository: integrationImageRepository,
-		integrationImageTag:        integrationImageTag,
-		optionalNetworkSchema:      optionalNetworkSchema(k8sServerInfo, unprivileged),
-		ClusterFlavor:              clusterFlavor,
-		K8sVersion:                 K8sVersion,
+func (s Scenario) HelmValues() []string {
+	base := []string{
+		fmt.Sprintf("rbac=%v", s.RBAC),
+		fmt.Sprintf("ksm-instance-one.rbac.create=%v", s.RBAC),
+		fmt.Sprintf("ksm-instance-one.image.tag=%s", s.KSMVersion),
+		fmt.Sprintf("daemonset.unprivileged=%v", s.Unprivileged),
+		fmt.Sprintf("daemonset.image.repository=%s", s.IntegrationImageRepository),
+		fmt.Sprintf("daemonset.image.tag=%s", s.IntegrationImageTag),
+		fmt.Sprintf("daemonset.clusterFlavor=%s", s.ClusterFlavor),
 	}
+
+	if s.TwoKSMInstances {
+		base = append(base, []string{
+			fmt.Sprintf("ksm-instance-two.rbac.create=%v", s.RBAC),
+			fmt.Sprintf("ksm-instance-two.image.tag=%s", s.KSMVersion),
+			"two-ksm-instances=true",
+		}...)
+	}
+
+	return base
 }
 
 func (s Scenario) String() string {
-	str := fmt.Sprintf(
-		"rbac=%v,ksm-instance-one.rbac.create=%v,ksm-instance-one.image.tag=%s,daemonset.unprivileged=%v,daemonset.image.repository=%s,daemonset.image.tag=%s,daemonset.clusterFlavor=%s, k8sversion=%s",
-		s.rbac,
-		s.rbac,
-		s.ksmVersion,
-		s.unprivileged,
-		s.integrationImageRepository,
-		s.integrationImageTag,
-		s.ClusterFlavor,
-		s.K8sVersion,
-	)
-	if s.twoKSMInstances {
-		return fmt.Sprintf(
-			"%s,ksm-instance-two.rbac.create=%v,ksm-instance-two.image.tag=%s,two-ksm-instances=true",
-			str,
-			s.rbac,
-			s.ksmVersion,
-		)
-	}
-	return str
+	return strings.Join(s.HelmValues(), ",")
 }
 
 // GetSchemasForJob returns the json schemas that should be use to
@@ -75,7 +53,7 @@ func (s Scenario) String() string {
 func (s Scenario) GetSchemasForJob(job string) jsonschema.EventTypeToSchemaFilename {
 	eventTypeSchemas := defaultEventTypeToSchemaFilename()
 
-	if s.optionalNetworkSchema {
+	if optionalNetworkSchema(s.K8sServerInfo, s.Unprivileged) {
 		eventTypeSchemas["kubelet"]["K8sNodeSample"] = "node-no-network.json"
 		eventTypeSchemas["kubelet"]["K8sPodSample"] = "pod-no-network.json"
 	}
