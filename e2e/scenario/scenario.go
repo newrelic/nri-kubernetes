@@ -20,6 +20,7 @@ type Scenario struct {
 	IntegrationImageTag        string
 	ClusterFlavor              string
 	K8sServerInfo              *version.Info
+	ExtraArgs                  []string
 }
 
 func (s Scenario) HelmValues() []string {
@@ -31,6 +32,10 @@ func (s Scenario) HelmValues() []string {
 		fmt.Sprintf("daemonset.image.repository=%s", s.IntegrationImageRepository),
 		fmt.Sprintf("daemonset.image.tag=%s", s.IntegrationImageTag),
 		fmt.Sprintf("daemonset.clusterFlavor=%s", s.ClusterFlavor),
+	}
+
+	if len(s.ExtraArgs) > 0 {
+		base = append(base, fmt.Sprintf("integration-extra-args=%s", strings.Join(s.ExtraArgs, ",")))
 	}
 
 	if s.TwoKSMInstances {

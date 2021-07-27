@@ -93,7 +93,15 @@ func (se *scenarioEnv) execIntegration(pod v1.Pod, ksmPod *v1.Pod) (*integration
 		podName: pod.Name,
 	}
 
-	output, err := se.k8sClient.PodExec(namespace, pod.Name, nrContainer, "/var/db/newrelic-infra/newrelic-integrations/bin/nri-kubernetes", "-timeout=30000", "-verbose")
+	args := []string{
+		"/var/db/newrelic-infra/newrelic-integrations/bin/nri-kubernetes",
+		"-timeout=30000",
+		"-verbose",
+	}
+
+	args = append(args, se.scenario.ExtraArgs...)
+
+	output, err := se.k8sClient.PodExec(namespace, pod.Name, nrContainer, args...)
 	if err != nil {
 		return nil, fmt.Errorf("executing command inside pod: %w", err)
 	}
