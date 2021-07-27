@@ -718,6 +718,9 @@ var KSMSpecs = definition.SpecGroups{
 	"node": {
 		TypeGenerator: kubeletMetric.FromRawGroupsEntityTypeGenerator,
 		Specs: []definition.Spec{
+			// nodeName and Labels should be provided here as well so conditions can be queried and faceted by them.
+			{Name: "nodeName", ValueFunc: prometheus.FromLabelValue("kube_node_info", "node"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("node", "kube_node_labels"), Type: sdkMetric.ATTRIBUTE},
 			{
 				Name: "condition.*",
 				ValueFunc: definition.Transform(
@@ -839,6 +842,9 @@ var KSMQueries = []prometheus.Query{
 	},
 	{MetricName: "kube_hpa_status_current_replicas"},
 	{MetricName: "kube_hpa_status_desired_replicas"},
+	// Node info and labels, so sample containing conditions also has this information.
+	{MetricName: "kube_node_info"},
+	{MetricName: "kube_node_labels"},
 	// Node status condition
 	{MetricName: "kube_node_status_condition", Value: prometheus.QueryValue{
 		// Since we aggregate metrics which look like the following:
