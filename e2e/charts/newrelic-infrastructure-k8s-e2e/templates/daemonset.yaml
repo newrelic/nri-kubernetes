@@ -26,6 +26,8 @@ spec:
         - name: {{ .Values.daemonset.name }}
           image: "{{ .Values.daemonset.image.repository }}:{{ .Values.daemonset.image.tag }}"
           {{- if eq .Values.daemonset.clusterFlavor "Minikube" }}
+          # On minikube, agent image should be built using 'eval $(minikube -p minikube docker-env)',
+          # so it never has to be pulled from the registry.
           imagePullPolicy: Never
           {{- else }}
           imagePullPolicy: Always
@@ -53,6 +55,7 @@ spec:
               name: host-docker-socket
             {{- end }}
           env:
+            # On Minikube, also test scraping the controlplane via localhost.
             {{- if eq .Values.daemonset.clusterFlavor "Minikube" }}
               {{- if semverCompare ">=1.16-0" .Capabilities.KubeVersion.Version }}
             - name: "SCHEDULER_ENDPOINT_URL"
