@@ -39,7 +39,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
-- Correctly identifing k8s server version with characters (#81)
+- Correctly identifying k8s server version with characters (#81)
 
 ## 2.3.0
 
@@ -107,7 +107,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - When discovering kube-state-metrics behind a headless service, the
   DNS discovery will return an error. Before it would be considered
-  successfull and return "None" as endpoint.
+  successful and return "None" as endpoint.
 
 ## 1.26.5
 
@@ -325,7 +325,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## 1.17.0
 
 ### Added
- - Added the necesary files for building a windows image of the integration.
+ - Added the necessary files for building a windows image of the integration.
    The windows image needs to be manually created and it's still not in our
    CI/CD pipeline. We have the files for building it but we are not publishing
    it. The latest supported image for Windows, at the time of writing, is
@@ -650,7 +650,7 @@ regardless of the format requested.
 - nodes/metrics resource was added to the newrelic cluster role.
 
 ### Changed
-- CAdvisor call is now bypassing Kubelet endpoint talking then directoy to CAdvisor port
+- CAdvisor call is now bypassing Kubelet endpoint talking then directly to CAdvisor port
 
 ## 1.0.0-beta1.0
 

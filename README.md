@@ -11,7 +11,7 @@ The New Relic integration for Kubernetes instruments the container orchestration
 
 Check out our [documentation](https://docs.newrelic.com/docs/kubernetes-integration-new-relic-infrastructure) in order to find out more how to install and configure the integration, learn what metrics are captured and how to view them.
 
-Note that `nri-kubernetes` is released both as separate integration and as a part of the `infrastructure-k8s` image, which is [available in DockerHub](https://hub.docker.com/r/newrelic/infrastructure-k8s/tags?page=1&ordering=last_updated). Said image uses [`infrastructure-bundle`](https://github.com/newrelic/infrastructure-bundle) as a base, which additionaly includes the infrastructure agent and most of the available integrations used to send data to newrelic.
+Note that `nri-kubernetes` is released both as separate integration and as a part of the `infrastructure-k8s` image, which is [available in DockerHub](https://hub.docker.com/r/newrelic/infrastructure-k8s/tags?page=1&ordering=last_updated). Said image uses [`infrastructure-bundle`](https://github.com/newrelic/infrastructure-bundle) as a base, which additionally includes the infrastructure agent and most of the available integrations used to send data to newrelic.
 
 ## Table of contents
 
@@ -198,7 +198,7 @@ oc apply -f deploy/local-openshift.yaml
 ### Tips
 
 * If at any point you need to login to the guest VM, use the following command: `ssh -i ~/.crc/machines/crc/id_rsa core@$(crc ip)`
-* During testing it seemed that occassionally the cluster would stop reporting data for no reason (especially after my machine wakes up from sleep mode). If this happens, use the Microsoft solution (just restart the cluster).
+* During testing it seemed that occasionally the cluster would stop reporting data for no reason (especially after my machine wakes up from sleep mode). If this happens, use the Microsoft solution (just restart the cluster).
 
 ## Support
 

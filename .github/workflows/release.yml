@@ -84,7 +84,7 @@ jobs:
             -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged \
             .
 
-      - name: Buld and load x64 image for security scanning
+      - name: Build and load x64 image for security scanning
         # We need to build a single-arch image again to be able to --load it into the host
         run: |
           docker buildx build --load --platform=linux/amd64 \

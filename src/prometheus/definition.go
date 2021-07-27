@@ -140,7 +140,7 @@ func FromLabelsValueEntityIDGeneratorForPendingPods() definition.EntityIDGenerat
 // GroupEntityMetricsBySpec groups metrics coming from Prometheus by the
 // given rawEntityID and metric spec.
 //
-// It differes from GroupMetricsBySpec in that the key that maps to the
+// It differs from GroupMetricsBySpec in that the key that maps to the
 // RawMetrics is always the given rawEntityID and that the RawValues
 // are of the form []Metric instead of Metric.
 //
@@ -304,7 +304,7 @@ func IncludeOnlyLabelsFilter(labelsToInclude ...string) func(Labels) Labels {
 	}
 }
 
-// attributeName genereates the attribute name by suffixing the time-series
+// attributeName generates the attribute name by suffixing the time-series
 // labels to the given metricName in order.
 func attributeName(metricName, nameOverride string, labels Labels, labelsFilter ...LabelsFilter) string {
 	for _, filter := range labelsFilter {
