@@ -16,7 +16,6 @@ import (
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/rand"
-	"k8s.io/apimachinery/pkg/version"
 
 	_ "github.com/newrelic/nri-kubernetes/v2/e2e/gcp"
 	"github.com/newrelic/nri-kubernetes/v2/e2e/helm"
@@ -51,18 +50,6 @@ const (
 	minikubeFlavor = "Minikube"
 	unknownFlavor  = "Unknown"
 )
-
-func generateScenarios(integrationImageRepository string, integrationImageTag string, rbac bool, unprivileged bool, serverInfo *version.Info, clusterFlavor string) []scenario.Scenario {
-	return []scenario.Scenario{
-		// 2 latest versions, single KSM instance
-		scenario.New(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.9.7", false, serverInfo, clusterFlavor),
-		scenario.New(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.9.8", false, serverInfo, clusterFlavor),
-
-		// the behaviour for multiple KSMs only has to be tested for one version, because it's testing our logic,
-		// not the logic of KSM. This might change if KSM sharding becomes enabled by default.
-		scenario.New(rbac, unprivileged, integrationImageRepository, integrationImageTag, "v1.9.8", true, serverInfo, clusterFlavor),
-	}
-}
 
 type integrationData struct {
 	expectedJobs []job
@@ -187,28 +174,44 @@ func main() {
 
 	// TODO
 	var errs []error
-	scenarios := generateScenarios(
-		cliArgs.IntegrationImageRepository,
-		cliArgs.IntegrationImageTag,
-		cliArgs.Rbac,
-		cliArgs.Unprivileged,
-		k8sClient.ServerVersionInfo,
-		clusterFlavor,
-	)
-	for _, s := range scenarios {
+	scenarios := map[string]func(*scenario.Scenario){
+		"latest_single_instance": func(s *scenario.Scenario) {},
+		"latest_but_one_single_instance": func(s *scenario.Scenario) {
+			s.KSMVersion = "v1.9.7"
+		},
+		"multiple_instances": func(s *scenario.Scenario) {
+			// the behaviour for multiple KSMs only has to be tested for one version, because it's testing our logic,
+			// not the logic of KSM. This might change if KSM sharding becomes enabled by default.
+			s.TwoKSMInstances = true
+		},
+	}
+
+	for scenarioName, mutateTestScenario := range scenarios {
+		testScenario := scenario.Scenario{
+			Unprivileged:               cliArgs.Unprivileged,
+			RBAC:                       cliArgs.Rbac,
+			KSMVersion:                 "v1.9.8",
+			IntegrationImageRepository: cliArgs.IntegrationImageRepository,
+			IntegrationImageTag:        cliArgs.IntegrationImageTag,
+			ClusterFlavor:              clusterFlavor,
+			K8sServerInfo:              k8sClient.ServerVersionInfo,
+		}
+
+		mutateTestScenario(&testScenario)
+
 		testEnv.logger.Infof("#####################")
-		testEnv.logger.Infof("Scenario: %q", s)
+		testEnv.logger.Infof("Scenario %q: %s", scenarioName, testScenario)
 		testEnv.logger.Infof("#####################")
 
 		se := scenarioEnv{
 			testEnv:  testEnv,
-			scenario: s,
+			scenario: testScenario,
 		}
 
 		if err := se.execute(); err != nil {
 			if cliArgs.FailFast {
 				testEnv.logger.Info("Finishing execution because 'FailFast' is true")
-				testEnv.logger.Infof("Ran with the following configuration: %s", s)
+				testEnv.logger.Infof("Ran with the following configuration: %s", testScenario)
 
 				testEnv.logger.Fatal(err.Error())
 			}

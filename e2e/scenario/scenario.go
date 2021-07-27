@@ -12,54 +12,31 @@ import (
 
 // Scenario defines the environment that will be used for testing
 type Scenario struct {
-	unprivileged               bool
-	rbac                       bool
-	ksmVersion                 string
-	twoKSMInstances            bool
-	integrationImageRepository string
-	integrationImageTag        string
-	optionalNetworkSchema      bool
+	Unprivileged               bool
+	RBAC                       bool
+	KSMVersion                 string
+	TwoKSMInstances            bool
+	IntegrationImageRepository string
+	IntegrationImageTag        string
 	ClusterFlavor              string
-}
-
-// New returns a new Scenario
-func New(
-	rbac bool,
-	unprivileged bool,
-	integrationImageRepository,
-	integrationImageTag,
-	ksmVersion string,
-	twoKSMInstances bool,
-	k8sServerInfo *version.Info,
-	clusterFlavor string,
-) Scenario {
-	return Scenario{
-		unprivileged:               unprivileged,
-		rbac:                       rbac,
-		ksmVersion:                 ksmVersion,
-		twoKSMInstances:            twoKSMInstances,
-		integrationImageRepository: integrationImageRepository,
-		integrationImageTag:        integrationImageTag,
-		optionalNetworkSchema:      optionalNetworkSchema(k8sServerInfo, unprivileged),
-		ClusterFlavor:              clusterFlavor,
-	}
+	K8sServerInfo              *version.Info
 }
 
 func (s Scenario) HelmValues() []string {
 	base := []string{
-		fmt.Sprintf("rbac=%v", s.rbac),
-		fmt.Sprintf("ksm-instance-one.rbac.create=%v", s.rbac),
-		fmt.Sprintf("ksm-instance-one.image.tag=%s", s.ksmVersion),
-		fmt.Sprintf("daemonset.unprivileged=%v", s.unprivileged),
-		fmt.Sprintf("daemonset.image.repository=%s", s.integrationImageRepository),
-		fmt.Sprintf("daemonset.image.tag=%s", s.integrationImageTag),
+		fmt.Sprintf("rbac=%v", s.RBAC),
+		fmt.Sprintf("ksm-instance-one.rbac.create=%v", s.RBAC),
+		fmt.Sprintf("ksm-instance-one.image.tag=%s", s.KSMVersion),
+		fmt.Sprintf("daemonset.unprivileged=%v", s.Unprivileged),
+		fmt.Sprintf("daemonset.image.repository=%s", s.IntegrationImageRepository),
+		fmt.Sprintf("daemonset.image.tag=%s", s.IntegrationImageTag),
 		fmt.Sprintf("daemonset.clusterFlavor=%s", s.ClusterFlavor),
 	}
 
-	if s.twoKSMInstances {
+	if s.TwoKSMInstances {
 		base = append(base, []string{
-			fmt.Sprintf("ksm-instance-two.rbac.create=%v", s.rbac),
-			fmt.Sprintf("ksm-instance-two.image.tag=%s", s.ksmVersion),
+			fmt.Sprintf("ksm-instance-two.rbac.create=%v", s.RBAC),
+			fmt.Sprintf("ksm-instance-two.image.tag=%s", s.KSMVersion),
 			"two-ksm-instances=true",
 		}...)
 	}
@@ -76,7 +53,7 @@ func (s Scenario) String() string {
 func (s Scenario) GetSchemasForJob(job string) jsonschema.EventTypeToSchemaFilename {
 	eventTypeSchemas := defaultEventTypeToSchemaFilename()
 
-	if s.optionalNetworkSchema {
+	if optionalNetworkSchema(s.K8sServerInfo, s.Unprivileged) {
 		eventTypeSchemas["kubelet"]["K8sNodeSample"] = "node-no-network.json"
 		eventTypeSchemas["kubelet"]["K8sPodSample"] = "pod-no-network.json"
 	}
