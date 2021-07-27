@@ -21,7 +21,7 @@ type podLabelDiscoverer struct {
 }
 
 func (p *podLabelDiscoverer) findSingleKSMPodByLabel() (*v1.Pod, error) {
-	pods, err := p.k8sClient.FindPodsByLabel(metav1.LabelSelector{
+	pods, err := p.k8sClient.FindPodsByLabel("", metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			p.ksmPodLabel: "true",
 		},

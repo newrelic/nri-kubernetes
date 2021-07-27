@@ -26,13 +26,13 @@ type Kubernetes interface {
 	FindNode(name string) (*v1.Node, error)
 
 	// FindPodsByLabel returns a PodList reference containing the pods matching the provided label selector.
-	FindPodsByLabel(labelSelector metav1.LabelSelector) (*v1.PodList, error)
+	FindPodsByLabel(namespace string, labelSelector metav1.LabelSelector) (*v1.PodList, error)
 
 	// FindServicesByLabel returns a ServiceList containing the services matching the provided label selector.
-	FindServicesByLabel(labelSelector metav1.LabelSelector) (*v1.ServiceList, error)
+	FindServicesByLabel(namespace string, labelSelector metav1.LabelSelector) (*v1.ServiceList, error)
 
 	// ListServices returns a ServiceList containing all the services.
-	ListServices() (*v1.ServiceList, error)
+	ListServices(namespace string) (*v1.ServiceList, error)
 
 	// Config returns a config of API client
 	Config() *rest.Config
@@ -64,30 +64,30 @@ func (ka *goClientImpl) FindNode(name string) (*v1.Node, error) {
 	return ka.client.CoreV1().Nodes().Get(context.TODO(), name, metav1.GetOptions{})
 }
 
-func (ka *goClientImpl) FindPodsByLabel(labelSelector metav1.LabelSelector) (*v1.PodList, error) {
+func (ka *goClientImpl) FindPodsByLabel(namespace string, labelSelector metav1.LabelSelector) (*v1.PodList, error) {
 	selectorMap, err := metav1.LabelSelectorAsMap(&labelSelector)
 	if err != nil {
 		return nil, fmt.Errorf("converting label selector %q to map: %w", labelSelector, err)
 	}
 
-	return ka.client.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{
+	return ka.client.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{ // nosemgrep: context-todo
 		LabelSelector: labels.SelectorFromSet(selectorMap).String(),
 	})
 }
 
-func (ka *goClientImpl) FindServicesByLabel(labelSelector metav1.LabelSelector) (*v1.ServiceList, error) {
+func (ka *goClientImpl) FindServicesByLabel(namespace string, labelSelector metav1.LabelSelector) (*v1.ServiceList, error) {
 	selectorMap, err := metav1.LabelSelectorAsMap(&labelSelector)
 	if err != nil {
 		return nil, fmt.Errorf("converting label selector %q to map: %w", labelSelector, err)
 	}
 
-	return ka.client.CoreV1().Services("").List(context.TODO(), metav1.ListOptions{
+	return ka.client.CoreV1().Services(namespace).List(context.TODO(), metav1.ListOptions{ // nosemgrep: context-todo
 		LabelSelector: labels.SelectorFromSet(selectorMap).String(),
 	})
 }
 
-func (ka *goClientImpl) ListServices() (*v1.ServiceList, error) {
-	return ka.client.CoreV1().Services("").List(context.TODO(), metav1.ListOptions{})
+func (ka *goClientImpl) ListServices(namespace string) (*v1.ServiceList, error) {
+	return ka.client.CoreV1().Services(namespace).List(context.TODO(), metav1.ListOptions{}) // nosemgrep: context-todo
 }
 
 func (ka *goClientImpl) SecureHTTPClient(t time.Duration) (*http.Client, error) {

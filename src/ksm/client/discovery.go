@@ -180,7 +180,7 @@ func (sd *discoverer) apiDiscover() (url.URL, error) {
 	var err error
 
 	for _, label := range ksmAppLabelNames {
-		services, err = sd.k8sClient.FindServicesByLabel(metav1.LabelSelector{
+		services, err = sd.k8sClient.FindServicesByLabel("", metav1.LabelSelector{
 			MatchLabels: map[string]string{
 				label: ksmAppLabelValue,
 			},
@@ -225,7 +225,7 @@ func (sd *discoverer) nodeIP() (string, error) {
 	var err error
 
 	for _, label := range ksmAppLabelNames {
-		pods, err = sd.k8sClient.FindPodsByLabel(metav1.LabelSelector{
+		pods, err = sd.k8sClient.FindPodsByLabel("", metav1.LabelSelector{
 			MatchLabels: map[string]string{
 				label: ksmAppLabelValue,
 			},

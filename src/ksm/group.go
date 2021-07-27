@@ -22,7 +22,7 @@ type ksmGrouper struct {
 // addServiceSpecSelectorToGroup adds a new metric to the service group
 // which includes the selectors defined in the service spec.
 func (r *ksmGrouper) addServiceSpecSelectorToGroup(serviceGroup map[string]definition.RawMetrics) error {
-	services, err := r.k8sClient.ListServices()
+	services, err := r.k8sClient.ListServices("")
 	if err != nil {
 		return fmt.Errorf("listing services: %w", err)
 	}
