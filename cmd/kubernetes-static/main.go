@@ -225,7 +225,7 @@ func startStaticMetricsServer(content embed.FS, k8sMetricsVersion string) string
 	}
 
 	endpoint := fmt.Sprintf("http://%s", listener.Addr())
-	fmt.Println("Hosting Mock Metrics data on:", endpoint)
+	logrus.Infof("Hosting Mock Metrics data on: %s", endpoint)
 
 	mux := http.NewServeMux()
 
