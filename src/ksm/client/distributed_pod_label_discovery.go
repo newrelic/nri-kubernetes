@@ -13,14 +13,15 @@ import (
 )
 
 type distributedPodLabelDiscoverer struct {
-	ksmPodLabel string
-	ownNodeIP   string
-	logger      *logrus.Logger
-	k8sClient   client.Kubernetes
+	ksmPodLabel  string
+	ksmNamespace string
+	ownNodeIP    string
+	logger       *logrus.Logger
+	k8sClient    client.Kubernetes
 }
 
 func (p *distributedPodLabelDiscoverer) findAllLabeledPodsRunningOnNode() ([]v1.Pod, error) {
-	pods, err := p.k8sClient.FindPodsByLabel(metav1.LabelSelector{
+	pods, err := p.k8sClient.FindPodsByLabel(p.ksmNamespace, metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			p.ksmPodLabel: "true",
 		},
@@ -29,7 +30,7 @@ func (p *distributedPodLabelDiscoverer) findAllLabeledPodsRunningOnNode() ([]v1.
 		return nil, fmt.Errorf("querying API server for pods: %w", err)
 	}
 	if len(pods.Items) == 0 {
-		return nil, fmt.Errorf("discovering KSM with label %q: %w", p.ksmPodLabel, errNoKSMPodsFound)
+		return nil, fmt.Errorf("discovering KSM with label %q in namespace %q: %w", p.ksmPodLabel, p.ksmNamespace, errNoKSMPodsFound)
 	}
 
 	var foundPods []v1.Pod
@@ -74,10 +75,11 @@ func (p *distributedPodLabelDiscoverer) Discover(timeout time.Duration) ([]clien
 
 // DistributedPodLabelDiscovererConfig stores configuration for DistributedPodLabelDiscoverer.
 type DistributedPodLabelDiscovererConfig struct {
-	KSMPodLabel string
-	NodeIP      string
-	K8sClient   client.Kubernetes
-	Logger      *logrus.Logger
+	KSMPodLabel  string
+	NodeIP       string
+	KSMNamespace string
+	K8sClient    client.Kubernetes
+	Logger       *logrus.Logger
 }
 
 // NewDistributedPodLabelDiscoverer creates a new KSM discoverer that will find KSM pods using k8s labels.
@@ -99,9 +101,10 @@ func NewDistributedPodLabelDiscoverer(config DistributedPodLabelDiscovererConfig
 	}
 
 	return &distributedPodLabelDiscoverer{
-		logger:      config.Logger,
-		ownNodeIP:   config.NodeIP,
-		k8sClient:   config.K8sClient,
-		ksmPodLabel: config.KSMPodLabel,
+		logger:       config.Logger,
+		ownNodeIP:    config.NodeIP,
+		k8sClient:    config.K8sClient,
+		ksmPodLabel:  config.KSMPodLabel,
+		ksmNamespace: config.KSMNamespace,
 	}, nil
 }

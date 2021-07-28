@@ -41,14 +41,14 @@ func (m *MockedKubernetes) FindNode(name string) (*v1.Node, error) {
 }
 
 // FindPodsByLabel mocks Kubernetes FindPodsByLabel
-func (m *MockedKubernetes) FindPodsByLabel(labelSelector metav1.LabelSelector) (*v1.PodList, error) {
-	args := m.Called(labelSelector)
+func (m *MockedKubernetes) FindPodsByLabel(namespace string, labelSelector metav1.LabelSelector) (*v1.PodList, error) {
+	args := m.Called(namespace, labelSelector)
 	return args.Get(0).(*v1.PodList), args.Error(1)
 }
 
 // FindServicesByLabel mocks Kubernetes FindServicesByLabel
-func (m *MockedKubernetes) FindServicesByLabel(labelSelector metav1.LabelSelector) (*v1.ServiceList, error) {
-	args := m.Called(labelSelector)
+func (m *MockedKubernetes) FindServicesByLabel(namespace string, labelSelector metav1.LabelSelector) (*v1.ServiceList, error) {
+	args := m.Called(namespace, labelSelector)
 	return args.Get(0).(*v1.ServiceList), args.Error(1)
 }
 
@@ -59,7 +59,7 @@ func (m *MockedKubernetes) FindSecret(name, namespace string) (*v1.Secret, error
 }
 
 // ListServices mocks Kubernetes ListServices
-func (m *MockedKubernetes) ListServices() (*v1.ServiceList, error) {
+func (m *MockedKubernetes) ListServices(namespace string) (*v1.ServiceList, error) {
 	args := m.Called()
 	return args.Get(0).(*v1.ServiceList), args.Error(1)
 }

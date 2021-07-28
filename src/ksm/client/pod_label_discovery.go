@@ -13,15 +13,16 @@ import (
 )
 
 type podLabelDiscoverer struct {
-	ksmPodLabel string
-	logger      *logrus.Logger
-	k8sClient   client.Kubernetes
-	ksmPodPort  int
-	ksmScheme   string
+	ksmPodLabel  string
+	ksmNamespace string
+	logger       *logrus.Logger
+	k8sClient    client.Kubernetes
+	ksmPodPort   int
+	ksmScheme    string
 }
 
 func (p *podLabelDiscoverer) findSingleKSMPodByLabel() (*v1.Pod, error) {
-	pods, err := p.k8sClient.FindPodsByLabel(metav1.LabelSelector{
+	pods, err := p.k8sClient.FindPodsByLabel(p.ksmNamespace, metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			p.ksmPodLabel: "true",
 		},
@@ -31,7 +32,7 @@ func (p *podLabelDiscoverer) findSingleKSMPodByLabel() (*v1.Pod, error) {
 	}
 
 	if len(pods.Items) == 0 {
-		return nil, fmt.Errorf("discovering KSM with label %q: %w", p.ksmPodLabel, errNoKSMPodsFound)
+		return nil, fmt.Errorf("discovering KSM with label %q in namespace %q: %w", p.ksmPodLabel, p.ksmNamespace, errNoKSMPodsFound)
 	}
 
 	// In case there are multiple pods, we must be be sure to deterministically select the same Pod on each node
@@ -75,11 +76,12 @@ func (p *podLabelDiscoverer) Discover(timeout time.Duration) (client.HTTPClient,
 
 // PodLabelDiscovererConfig holds KSM PodLabelDiscoverer configuration.
 type PodLabelDiscovererConfig struct {
-	KSMPodLabel string
-	KSMPodPort  int
-	KSMScheme   string
-	Logger      *logrus.Logger
-	K8sClient   client.Kubernetes
+	KSMPodLabel  string
+	KSMPodPort   int
+	KSMScheme    string
+	KSMNamespace string
+	Logger       *logrus.Logger
+	K8sClient    client.Kubernetes
 }
 
 // NewPodLabelDiscoverer creates a new KSM discoverer that will find KSM pods using k8s labels.
@@ -109,10 +111,11 @@ func NewPodLabelDiscoverer(config PodLabelDiscovererConfig) (client.Discoverer, 
 	}
 
 	return &podLabelDiscoverer{
-		logger:      config.Logger,
-		k8sClient:   config.K8sClient,
-		ksmPodLabel: config.KSMPodLabel,
-		ksmPodPort:  config.KSMPodPort,
-		ksmScheme:   config.KSMScheme,
+		logger:       config.Logger,
+		k8sClient:    config.K8sClient,
+		ksmPodLabel:  config.KSMPodLabel,
+		ksmPodPort:   config.KSMPodPort,
+		ksmScheme:    config.KSMScheme,
+		ksmNamespace: config.KSMNamespace,
 	}, nil
 }

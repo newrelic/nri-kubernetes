@@ -143,7 +143,7 @@ func TestDiscover_metricsPortThroughAPIWhenDNSFails(t *testing.T) {
 				},
 			}
 
-			c.On("FindServicesByLabel", labelSelector).
+			c.On("FindServicesByLabel", mock.Anything, labelSelector).
 				Return(&v1.ServiceList{Items: []v1.Service{
 					{
 						Spec: v1.ServiceSpec{
@@ -155,15 +155,18 @@ func TestDiscover_metricsPortThroughAPIWhenDNSFails(t *testing.T) {
 						},
 					},
 				}}, nil)
+
 			c.On("FindServicesByLabel", mock.Anything, mock.Anything).
 				Return(&v1.ServiceList{}, nil)
 
-			c.On("FindPodsByLabel", labelSelector).
+			c.On("FindPodsByLabel", mock.Anything, labelSelector).
 				Return(&v1.PodList{Items: []v1.Pod{{
 					Status: v1.PodStatus{HostIP: "6.7.8.9"},
 				}}}, nil)
+
 			c.On("FindPodsByLabel", mock.Anything, mock.Anything).
 				Return(&v1.PodList{}, nil)
+
 			c.On("Config").Return(
 				&rest.Config{BearerToken: "foobar"},
 			)

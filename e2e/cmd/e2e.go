@@ -86,14 +86,22 @@ const (
 
 var allJobs = [...]job{jobKSM, jobKubelet, jobScheduler, jobEtcd, jobControllerManager, jobAPIServer}
 
-func (e *testEnv) execIntegration(pod v1.Pod, ksmPod *v1.Pod) (*integrationData, error) {
-	defer timer.Track(time.Now(), fmt.Sprintf("execIntegration func for pod %s", pod.Name), e.logger)
+func (se *scenarioEnv) execIntegration(pod v1.Pod, ksmPod *v1.Pod) (*integrationData, error) {
+	defer timer.Track(time.Now(), fmt.Sprintf("execIntegration func for pod %s", pod.Name), se.logger)
 
 	d := &integrationData{
 		podName: pod.Name,
 	}
 
-	output, err := e.k8sClient.PodExec(namespace, pod.Name, nrContainer, "/var/db/newrelic-infra/newrelic-integrations/bin/nri-kubernetes", "-timeout=30000", "-verbose")
+	args := []string{
+		"/var/db/newrelic-infra/newrelic-integrations/bin/nri-kubernetes",
+		"-timeout=30000",
+		"-verbose",
+	}
+
+	args = append(args, se.scenario.ExtraArgs...)
+
+	output, err := se.k8sClient.PodExec(namespace, pod.Name, nrContainer, args...)
 	if err != nil {
 		return nil, fmt.Errorf("executing command inside pod: %w", err)
 	}
@@ -108,7 +116,7 @@ func (e *testEnv) execIntegration(pod v1.Pod, ksmPod *v1.Pod) (*integrationData,
 		}
 	}
 
-	e.logger.Printf("Pod: %s, hostIP %s, expected jobs: %#v", pod.Name, pod.Status.HostIP, d.expectedJobs)
+	se.logger.Printf("Pod: %s, hostIP %s, expected jobs: %#v", pod.Name, pod.Status.HostIP, d.expectedJobs)
 
 	return d, nil
 }
@@ -183,6 +191,9 @@ func main() {
 			// the behaviour for multiple KSMs only has to be tested for one version, because it's testing our logic,
 			// not the logic of KSM. This might change if KSM sharding becomes enabled by default.
 			s.TwoKSMInstances = true
+		},
+		"with_namespace_filtering": func(s *scenario.Scenario) {
+			s.ExtraArgs = []string{"-kube_state_metrics_namespace=default"}
 		},
 	}
 
@@ -386,13 +397,13 @@ func (se *scenarioEnv) executeTests(ksmPod *v1.Pod, releaseName string) error {
 	return nil
 }
 
-func (e *testEnv) executeIntegrationForAllPods(ksmPod *v1.Pod, nrPods *v1.PodList) (map[string]*integrationData, error) {
+func (se *scenarioEnv) executeIntegrationForAllPods(ksmPod *v1.Pod, nrPods *v1.PodList) (map[string]*integrationData, error) {
 	output := map[string]*integrationData{}
 
 	for _, p := range nrPods.Items {
-		e.logger.Debugf("Executing integration inside pod: %s", p.Name)
+		se.logger.Debugf("Executing integration inside pod: %s", p.Name)
 
-		integrationData, err := e.execIntegration(p, ksmPod)
+		integrationData, err := se.execIntegration(p, ksmPod)
 		if err != nil {
 			return output, fmt.Errorf("pod %q: %w", p.Name, err)
 		}

@@ -16,8 +16,9 @@ const (
 )
 
 var (
-	discovery   = flag.String("discovery", KSMPodLabel, "Which discovery mechanism to run")
-	ksmPodLabel = flag.String("ksm_pod_label", "my-custom-ksm", "[ksm_pod_label] The label to search for")
+	discovery       = flag.String("discovery", KSMPodLabel, "Which discovery mechanism to run")
+	ksmPodLabel     = flag.String("ksm_pod_label", "my-custom-ksm", "[ksm_pod_label] The label to search for")
+	ksmPodNamespace = flag.String("ksm_pod_namespace", "", "Namespace to query the KSM pod. By default, all namespaces will be queried")
 )
 
 func main() {
@@ -44,11 +45,12 @@ func main() {
 
 func runKSMPodLabel(kubernetes k8sclient.Kubernetes, logger *logrus.Logger) {
 	config := client.PodLabelDiscovererConfig{
-		KSMPodLabel: *ksmPodLabel,
-		KSMPodPort:  8080,
-		KSMScheme:   "http",
-		Logger:      logger,
-		K8sClient:   kubernetes,
+		KSMPodLabel:  *ksmPodLabel,
+		KSMPodPort:   8080,
+		KSMScheme:    "http",
+		KSMNamespace: *ksmPodNamespace,
+		Logger:       logger,
+		K8sClient:    kubernetes,
 	}
 
 	discoverer, err := client.NewPodLabelDiscoverer(config)

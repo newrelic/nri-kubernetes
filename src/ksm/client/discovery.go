@@ -43,6 +43,7 @@ type DiscovererConfig struct {
 	K8sClient         client.Kubernetes
 	Logger            *logrus.Logger
 	OverridenEndpoint string
+	Namespace         string
 }
 
 func NewDiscoverer(config DiscovererConfig) (client.Discoverer, error) {
@@ -59,6 +60,7 @@ func NewDiscoverer(config DiscovererConfig) (client.Discoverer, error) {
 		k8sClient:         config.K8sClient,
 		logger:            config.Logger,
 		overridenEndpoint: config.OverridenEndpoint,
+		namespace:         config.Namespace,
 	}
 
 	if sd.lookupSRV == nil {
@@ -74,6 +76,7 @@ type discoverer struct {
 	k8sClient         client.Kubernetes
 	logger            *logrus.Logger
 	overridenEndpoint string
+	namespace         string
 }
 
 // ksm implements Client interface
@@ -180,7 +183,7 @@ func (sd *discoverer) apiDiscover() (url.URL, error) {
 	var err error
 
 	for _, label := range ksmAppLabelNames {
-		services, err = sd.k8sClient.FindServicesByLabel(metav1.LabelSelector{
+		services, err = sd.k8sClient.FindServicesByLabel(sd.namespace, metav1.LabelSelector{
 			MatchLabels: map[string]string{
 				label: ksmAppLabelValue,
 			},
@@ -225,7 +228,7 @@ func (sd *discoverer) nodeIP() (string, error) {
 	var err error
 
 	for _, label := range ksmAppLabelNames {
-		pods, err = sd.k8sClient.FindPodsByLabel(metav1.LabelSelector{
+		pods, err = sd.k8sClient.FindPodsByLabel(sd.namespace, metav1.LabelSelector{
 			MatchLabels: map[string]string{
 				label: ksmAppLabelValue,
 			},
