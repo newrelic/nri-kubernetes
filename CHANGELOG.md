@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ---
+## 2.7.0
+
+### Added
+
+- Integration now reports node status and conditions, as `condition.{Name}` (e.g. `condition.Ready`, `condition.PIDPressure`).
+- Added new KubeStateMetricsNamespace parameter to restrict discovery of KSM pod to a particular namespace.
+  * This should help reduce load in the control plane for clusters with many pods and/or nodes.
+
 ## 2.6.1
 
 ### Fixed
