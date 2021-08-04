@@ -13,67 +13,15 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/storage"
 )
 
-var logger = logrus.StandardLogger()
-var timeout = time.Second
-var storageKey = "mock-discovery-client"
-
-// Fake storage that backs data in-memory
-type fakeStorage struct {
-	values map[string]interface{}
-}
-
-func newFakeStorage() *fakeStorage {
-	return &fakeStorage{
-		values: map[string]interface{}{},
-	}
-}
-
-func (f *fakeStorage) Write(key string, value interface{}) error {
-	f.values[key] = value
-	return nil
-}
-
-func (f *fakeStorage) Read(key string, valuePtr interface{}) (int64, error) {
-	valPtr, ok := f.values[key].(*MockedKubernetes)
-	if !ok {
-		return 0, fmt.Errorf("key not found: %s", key)
-	}
-	*(valuePtr.(*MockedKubernetes)) = *valPtr //nolint: govet
-	return int64(1234567), nil
-}
-
-func (f *fakeStorage) Delete(key string) error {
-	_, ok := f.values[key]
-	if !ok {
-		return fmt.Errorf("key not found: %s", key)
-	}
-	delete(f.values, key)
-	return nil
-}
-
-func discoveryCacher(client HTTPClient, discoverer Discoverer, st storage.Storage) *DiscoveryCacher {
-	return &DiscoveryCacher{
-		StorageKey: storageKey,
-		Discoverer: discoverer,
-		Storage:    st,
-		Logger:     logger,
-		// Since we use just memory, Compose and Decompose are just identity functions
-		Compose: func(source interface{}, _ *DiscoveryCacher, _ time.Duration) (HTTPClient, error) {
-			return source.(HTTPClient), nil
-		},
-		Decompose: func(source HTTPClient) (interface{}, error) {
-			return client, nil
-		},
-	}
-}
+const (
+	timeout = time.Second
+)
 
 func TestCacheAwareClient_CachedClientWorks(t *testing.T) {
-	// Setup storage
-	store := newFakeStorage()
+	t.Parallel()
 
 	// Setup discovered client
 	wrappedClient := new(MockDiscoveredHTTPClient)
-	wrappedClient.On("NodeIP").Return("1.2.3.4")
 	wrappedClient.On("Do", mock.Anything, mock.Anything).Return(&http.Response{StatusCode: 200}, nil)
 
 	// Setup wrapped discoverer
@@ -82,7 +30,7 @@ func TestCacheAwareClient_CachedClientWorks(t *testing.T) {
 		Once() // Expectation: the discovery process will be invoked only once
 
 	// Given a DiscoveryCacher
-	cacher := discoveryCacher(wrappedClient, discoverer, store)
+	cacher := discoveryCacher(wrappedClient, discoverer)
 
 	// That discovers a client
 	client, err := cacher.Discover(timeout)
@@ -98,12 +46,10 @@ func TestCacheAwareClient_CachedClientWorks(t *testing.T) {
 }
 
 func TestCacheAwareClient_CachedClientDoesNotWork(t *testing.T) {
-	// Setup storage
-	store := newFakeStorage()
+	t.Parallel()
 
 	// Setup discovered client
 	wrappedClient := new(MockDiscoveredHTTPClient)
-	wrappedClient.On("NodeIP").Return("1.2.3.4")
 	// After the error on the first call, the second call returns a correct value
 	wrappedClient.On("Do", mock.Anything, mock.Anything).
 		Return(nil, fmt.Errorf("patapum")).Once()
@@ -116,7 +62,7 @@ func TestCacheAwareClient_CachedClientDoesNotWork(t *testing.T) {
 		Twice() // Expectation: the discovery process will be invoked twice
 
 	// Given a DiscoveryCacher
-	cacher := discoveryCacher(wrappedClient, discoverer, store)
+	cacher := discoveryCacher(wrappedClient, discoverer)
 
 	// That discovers a client
 	client, err := cacher.Discover(timeout)
@@ -132,12 +78,10 @@ func TestCacheAwareClient_CachedClientDoesNotWork(t *testing.T) {
 }
 
 func TestCacheAwareClient_RediscoveryDoesntWork(t *testing.T) {
-	// Setup storage
-	store := newFakeStorage()
+	t.Parallel()
 
 	// Setup discovered client
 	wrappedClient := new(MockDiscoveredHTTPClient)
-	wrappedClient.On("NodeIP").Return("1.2.3.4")
 	wrappedClient.On("Do", mock.Anything, mock.Anything).
 		Return(nil, fmt.Errorf("patapum"))
 
@@ -148,7 +92,7 @@ func TestCacheAwareClient_RediscoveryDoesntWork(t *testing.T) {
 	discoverer.On("Discover", mock.Anything).Return((*MockDiscoveredHTTPClient)(nil), fmt.Errorf("discovery failed"))
 
 	// Given a DiscoveryCacher
-	cacher := discoveryCacher(wrappedClient, discoverer, store)
+	cacher := discoveryCacher(wrappedClient, discoverer)
 
 	// That discovers a client
 	client, err := cacher.Discover(timeout)
@@ -163,6 +107,19 @@ func TestCacheAwareClient_RediscoveryDoesntWork(t *testing.T) {
 	discoverer.AssertExpectations(t)
 
 	// And the cache has been invalidated
-	_, err = store.Read(storageKey, &struct{}{})
+	_, err = cacher.Storage.Read(cacher.StorageKey, &struct{}{})
 	assert.Error(t, err)
+}
+
+func discoveryCacher(client HTTPClient, discoverer Discoverer) *DiscoveryCacher {
+	return &DiscoveryCacher{
+		StorageKey: "mock-discovery-client",
+		Discoverer: discoverer,
+		Storage:    &storage.MemoryStorage{},
+		Logger:     logrus.StandardLogger(),
+		// Since we use just memory, Compose and Decompose are just identity functions
+		Decompose: func(source HTTPClient) (interface{}, error) {
+			return client, nil
+		},
+	}
 }
