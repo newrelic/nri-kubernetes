@@ -41,7 +41,7 @@ func (d *DiscoveryCacher) Discover(timeout time.Duration) (HTTPClient, error) {
 	if err == nil {
 		d.Logger.Debugf("Found cached copy of %q stored at %s", d.StorageKey, time.Unix(creationTimestamp, 0))
 		// Check cached object TTL
-		if time.Now().Unix() < creationTimestamp+int64(d.TTL.Seconds()) {
+		if !expired(creationTimestamp, d.TTL) {
 			wrappedClient, err := d.Compose(d.CachedDataPtr, d, timeout)
 			if err != nil {
 				return nil, err
@@ -73,6 +73,10 @@ func (d *DiscoveryCacher) discoverAndCache(timeout time.Duration) (HTTPClient, e
 		d.Logger.WithError(err).Warnf("while storing %q in the cache", d.StorageKey)
 	}
 	return client, nil
+}
+
+func expired(creationTimestamp int64, ttl time.Duration) bool {
+	return time.Since(time.Unix(creationTimestamp, 0)) > ttl
 }
 
 func (d *DiscoveryCacher) wrap(client HTTPClient, timeout time.Duration) *cacheAwareClient {
@@ -143,7 +147,7 @@ func (d *MultiDiscoveryCacher) Discover(timeout time.Duration) ([]HTTPClient, er
 	if err == nil {
 		d.Logger.Debugf("Found cached copy of %q stored at %s", d.StorageKey, time.Unix(creationTimestamp, 0))
 		// Check cached object TTL
-		if time.Now().Unix() < creationTimestamp+int64(d.TTL.Seconds()) {
+		if !expired(creationTimestamp, d.TTL) {
 			clients, err := d.Compose(d.CachedDataPtr, d, timeout)
 			if err != nil {
 				return nil, errors.Wrap(err, "could not compose cache")
