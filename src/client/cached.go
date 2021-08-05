@@ -37,11 +37,11 @@ type Composer func(source interface{}, cacher *DiscoveryCacher, timeout time.Dur
 // Discover tries to retrieve a HTTPClient from the cache, and otherwise engage the discovery process from the wrapped
 // Discoverer
 func (d *DiscoveryCacher) Discover(timeout time.Duration) (HTTPClient, error) {
-	ts, err := d.Storage.Read(d.StorageKey, d.CachedDataPtr)
+	creationTimestamp, err := d.Storage.Read(d.StorageKey, d.CachedDataPtr)
 	if err == nil {
-		d.Logger.Debugf("Found cached copy of %q stored at %s", d.StorageKey, time.Unix(ts, 0))
+		d.Logger.Debugf("Found cached copy of %q stored at %s", d.StorageKey, time.Unix(creationTimestamp, 0))
 		// Check cached object TTL
-		if time.Now().Unix() < ts+int64(d.TTL.Seconds()) {
+		if time.Now().Unix() < creationTimestamp+int64(d.TTL.Seconds()) {
 			wrappedClient, err := d.Compose(d.CachedDataPtr, d, timeout)
 			if err != nil {
 				return nil, err
@@ -139,11 +139,11 @@ type MultiDiscoveryCacher struct {
 // If the cache is not present or has expired, it will be written.
 // If the cache read fails, the underlying discovery will still run.
 func (d *MultiDiscoveryCacher) Discover(timeout time.Duration) ([]HTTPClient, error) {
-	ts, err := d.Storage.Read(d.StorageKey, d.CachedDataPtr)
+	creationTimestamp, err := d.Storage.Read(d.StorageKey, d.CachedDataPtr)
 	if err == nil {
-		d.Logger.Debugf("Found cached copy of %q stored at %s", d.StorageKey, time.Unix(ts, 0))
+		d.Logger.Debugf("Found cached copy of %q stored at %s", d.StorageKey, time.Unix(creationTimestamp, 0))
 		// Check cached object TTL
-		if time.Now().Unix() < ts+int64(d.TTL.Seconds()) {
+		if time.Now().Unix() < creationTimestamp+int64(d.TTL.Seconds()) {
 			clients, err := d.Compose(d.CachedDataPtr, d, timeout)
 			if err != nil {
 				return nil, errors.Wrap(err, "could not compose cache")
