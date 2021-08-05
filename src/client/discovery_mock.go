@@ -15,7 +15,11 @@ type MockDiscoverer struct {
 // Discover provides a mock implementation for Discoverer interface
 func (m *MockDiscoverer) Discover(timeout time.Duration) (HTTPClient, error) {
 	args := m.Called(timeout)
-	return args.Get(0).(HTTPClient), args.Error(1)
+	if httpClient := args.Get(0); httpClient != nil {
+		return httpClient.(HTTPClient), args.Error(1)
+	}
+
+	return nil, args.Error(1)
 }
 
 // MockDiscoveredHTTPClient is a mock implementation of the HTTPClient interface
