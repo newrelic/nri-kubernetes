@@ -19,4 +19,4 @@ helm dependencies update ./e2e/charts/newrelic-infrastructure-k8s-e2e
 go run e2e/cmd/e2e.go --verbose --cluster_name=e2e --nr_license_key="fakeLicense" --rbac=true --integration_image_tag=test --integration_image_repository=test_image_normal
 ```
 
-Note: On macOS you might have to do run `minikube start --vm` to get a proper IP that will be used by the e2e test to check the cluster flavor. 
+Note: On macOS you might have to do run `minikube start --vm` to get a proper IP that will be used by the e2e test to check the cluster flavor.
