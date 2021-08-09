@@ -186,6 +186,7 @@ func main() {
 		"latest_single_instance": func(s *scenario.Scenario) {},
 		"latest_but_one_single_instance": func(s *scenario.Scenario) {
 			s.KSMVersion = "v1.9.7"
+			s.KSMImageRepository = "quay.io/coreos/kube-state-metrics"
 		},
 		"multiple_instances": func(s *scenario.Scenario) {
 			// the behaviour for multiple KSMs only has to be tested for one version, because it's testing our logic,
@@ -202,6 +203,7 @@ func main() {
 			Unprivileged:               cliArgs.Unprivileged,
 			RBAC:                       cliArgs.Rbac,
 			KSMVersion:                 "v1.9.8",
+			KSMImageRepository:         "k8s.gcr.io/kube-state-metrics/kube-state-metrics",
 			IntegrationImageRepository: cliArgs.IntegrationImageRepository,
 			IntegrationImageTag:        cliArgs.IntegrationImageTag,
 			ClusterFlavor:              clusterFlavor,
