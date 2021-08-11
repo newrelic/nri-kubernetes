@@ -40,7 +40,7 @@ clean:
 
 validate:
 	@echo "[validate] Validating source code running golangci-lint & semgrep... "
-	@go run  $(GOFLAGS) $(GOLANGCI_LINT) run --verbose
+	go run -modfile tools/go.mod $(GOFLAGS) $(GOLANGCI_LINT) run --verbose
 	@[ -f .semgrep.yml ] && semgrep_config=".semgrep.yml" || semgrep_config="p/golang" ; \
 	docker run --rm -v "${PWD}:/src:ro" --workdir /src returntocorp/semgrep -c "$$semgrep_config"
 

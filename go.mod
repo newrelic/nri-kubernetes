@@ -4,9 +4,9 @@ go 1.16
 
 require (
 	github.com/golang/protobuf v1.5.2
-	github.com/golangci/golangci-lint v1.40.1
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
+	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/newrelic/infra-integrations-sdk v2.0.1-0.20180410150501-14a5386f9150+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_model v0.2.0
@@ -26,6 +26,3 @@ require (
 	k8s.io/kubelet v0.22.0
 	k8s.io/utils v0.0.0-20210802155522-efc7438f0176 // indirect
 )
-
-// To avoid CVE-2018-16886 triggering a security scan.
-replace go.etcd.io/etcd => go.etcd.io/etcd v0.5.0-alpha.5.0.20190108173120-83c051b701d3
