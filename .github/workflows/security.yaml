@@ -1,15 +1,27 @@
 name: Security Scan
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+  schedule:
+    - cron: "0 3 * * *"
 
 jobs:
-  security:
+  # Note: Snyk SaaS is already configured for this repository, which does not need a workflow to run
+  trivy:
+    name: Trivy security scan
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
-    - name: Run Snyk to check for vulnerabilities
-      uses: snyk/actions/golang@master
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      with:
-        args: --severity-threshold=high
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run Trivy vulnerability scanner in repo mode
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          ignore-unfixed: true
+          exit-code: 1
+          severity: 'HIGH,CRITICAL'
