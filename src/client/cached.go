@@ -38,25 +38,27 @@ type Composer func(source interface{}, cacher *DiscoveryCacher, timeout time.Dur
 // Discoverer
 func (d *DiscoveryCacher) Discover(timeout time.Duration) (HTTPClient, error) {
 	creationTimestamp, err := d.Storage.Read(d.StorageKey, d.CachedDataPtr)
-	if err == nil {
-		d.Logger.Debugf("Found cached copy of %q stored at %s", d.StorageKey, time.Unix(creationTimestamp, 0))
-		// Check cached object TTL
-		if !expired(creationTimestamp, d.TTL) {
-			wrappedClient, err := d.Compose(d.CachedDataPtr, d, timeout)
-			if err != nil {
-				return nil, err
-			}
-			return d.wrap(wrappedClient, timeout), nil
-		}
-		d.Logger.Debugf("Cached copy of %q expired. Refreshing", d.StorageKey)
-	} else {
+	if err != nil {
 		d.Logger.Debugf("Cached %q not found. Triggering discovery process", d.StorageKey)
+
+		return d.discoverAndCache(timeout)
 	}
-	client, err := d.discoverAndCache(timeout)
+
+	d.Logger.Debugf("Found cached copy of %q stored at %s", d.StorageKey, time.Unix(creationTimestamp, 0))
+
+	// Check cached object TTL
+	if expired(creationTimestamp, d.TTL) {
+		d.Logger.Debugf("Cached copy of %q expired. Refreshing", d.StorageKey)
+
+		return d.discoverAndCache(timeout)
+	}
+
+	wrappedClient, err := d.Compose(d.CachedDataPtr, d, timeout)
 	if err != nil {
 		return nil, err
 	}
-	return d.wrap(client, timeout), nil
+
+	return d.wrap(wrappedClient, timeout), nil
 }
 
 func (d *DiscoveryCacher) discoverAndCache(timeout time.Duration) (HTTPClient, error) {
@@ -72,7 +74,7 @@ func (d *DiscoveryCacher) discoverAndCache(timeout time.Duration) (HTTPClient, e
 	if err != nil {
 		d.Logger.WithError(err).Warnf("while storing %q in the cache", d.StorageKey)
 	}
-	return client, nil
+	return d.wrap(client, timeout), nil
 }
 
 func expired(creationTimestamp int64, ttl time.Duration) bool {
