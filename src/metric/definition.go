@@ -973,6 +973,8 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "label.*", ValueFunc: definition.Transform(definition.FromRaw("labels"), kubeletMetric.OneMetricPerLabel), Type: sdkMetric.ATTRIBUTE},
 			{Name: "allocatable.*", ValueFunc: definition.Transform(definition.FromRaw("allocatable"), kubeletMetric.OneAttributePerAllocatable), Type: sdkMetric.GAUGE},
 			{Name: "capacity.*", ValueFunc: definition.Transform(definition.FromRaw("capacity"), kubeletMetric.OneAttributePerCapacity), Type: sdkMetric.GAUGE},
+			{Name: "condition.*", ValueFunc: definition.Transform(definition.FromRaw("conditions"), kubeletMetric.PrefixFromMapInt("condition.")), Type: sdkMetric.GAUGE},
+			{Name: "unschedulable", ValueFunc: definition.Transform(definition.FromRaw("unschedulable"), toNumericBoolean), Type: sdkMetric.GAUGE},
 			{Name: "memoryRequestedBytes", ValueFunc: definition.FromRaw("memoryRequestedBytes"), Type: sdkMetric.GAUGE},
 			{Name: "cpuRequestedCores", ValueFunc: definition.Transform(definition.FromRaw("cpuRequestedCores"), toCores), Type: sdkMetric.GAUGE},
 			// computed
