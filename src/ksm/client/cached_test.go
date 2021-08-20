@@ -87,50 +87,6 @@ func TestDiscover_Cache_BothFail(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestDiscover_LoadCacheFail(t *testing.T) {
-	// Setup cache directory
-	tmpDir, err := ioutil.TempDir("", "test_discover")
-	assert.NoError(t, err)
-
-	// Setup Kubernetes API client
-	c := new(client.MockedKubernetes)
-	c.On("FindPodsByLabel", mock.Anything, mock.Anything).
-		Return(&v1.PodList{Items: []v1.Pod{{
-			Status: v1.PodStatus{HostIP: "6.7.8.9"},
-		}}}, nil)
-	c.On("Config").Return(
-		&rest.Config{BearerToken: "foobar"},
-	)
-
-	// Setup storage
-	cacheStore := storage.NewJSONDiskStorage(tmpDir)
-
-	// Given a KSM discoverer
-	wrappedDiscoverer := discoverer{
-		lookupSRV: fakeLookupSRV,
-		k8sClient: c,
-		logger:    logger,
-	}
-	// That is wrapped into a Cached Discoverer
-	cacher := NewDiscoveryCacher(&wrappedDiscoverer, &cacheStore, time.Hour, logger)
-
-	// And previously has discovered the KSM endpoint
-	caClient, err := cacher.Discover(timeout)
-
-	// But the cache stored data is corrupted
-	assert.Nil(t, cacheStore.Write(cachedKey, "corrupt-data"))
-
-	// When the discovery process is invoked again
-	caClient, err = cacher.Discover(timeout)
-
-	// The discovery process has been triggered again
-	assert.NoError(t, err)
-	ksmClient := client.WrappedClient(caClient)
-	assert.Equal(t, fmt.Sprintf("%s:%v", ksmQualifiedName, 11223), ksmClient.(*ksm).endpoint.Host)
-	assert.Equal(t, "http", ksmClient.(*ksm).endpoint.Scheme)
-	assert.Equal(t, "6.7.8.9", caClient.NodeIP())
-}
-
 func TestDiscover_CacheTTLExpiry(t *testing.T) {
 	// Setup cache directory
 	tmpDir, err := ioutil.TempDir("", "test_discover")
