@@ -53,7 +53,7 @@ func (d *DiscoveryCacher) Discover(timeout time.Duration) (HTTPClient, error) {
 	d.Logger.Debugf("Found cached copy of %q stored at %s", d.StorageKey, time.Unix(creationTimestamp, 0))
 
 	// Check cached object TTL
-	if expired(creationTimestamp, d.TTL) {
+	if Expired(time.Now(), creationTimestamp, d.TTL) {
 		d.Logger.Debugf("Cached copy of %q expired. Refreshing", d.StorageKey)
 
 		return d.discoverAndCache(timeout)
@@ -83,8 +83,11 @@ func (d *DiscoveryCacher) discoverAndCache(timeout time.Duration) (HTTPClient, e
 	return d.wrap(client, timeout), nil
 }
 
-func expired(creationTimestamp int64, ttl time.Duration) bool {
-	return time.Since(time.Unix(creationTimestamp, 0)) > ttl
+// Expired checks, if for a given current time, object creation timestamp and TTL, object should be
+// considered as expired (TTL has been exceeded).
+func Expired(currentTime time.Time, creationTimestamp int64, ttl time.Duration) bool {
+	// As in documentation, time.Now().Sub() is the same as time.Since().
+	return currentTime.Sub(time.Unix(creationTimestamp, 0)) > ttl
 }
 
 func (d *DiscoveryCacher) wrap(client HTTPClient, timeout time.Duration) *cacheAwareClient {
@@ -157,7 +160,7 @@ func (d *MultiDiscoveryCacher) Discover(timeout time.Duration) ([]HTTPClient, er
 	if err == nil {
 		d.Logger.Debugf("Found cached copy of %q stored at %s", d.StorageKey, time.Unix(creationTimestamp, 0))
 		// Check cached object TTL
-		if !expired(creationTimestamp, d.TTL) {
+		if !Expired(time.Now(), creationTimestamp, d.TTL) {
 			clients, err := d.Compose(d.CachedDataPtr, d, timeout)
 			if err != nil {
 				return nil, errors.Wrap(err, "could not compose cache")
