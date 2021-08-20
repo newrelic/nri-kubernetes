@@ -715,26 +715,6 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "isLimited", ValueFunc: prometheus.FromValue("kube_hpa_status_condition_limited")},
 		},
 	},
-	"node": {
-		TypeGenerator: kubeletMetric.FromRawGroupsEntityTypeGenerator,
-		Specs: []definition.Spec{
-			// nodeName and Labels should be provided here as well so conditions can be queried and faceted by them.
-			{Name: "nodeName", ValueFunc: prometheus.FromLabelValue("kube_node_info", "node"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("node", "kube_node_labels"), Type: sdkMetric.ATTRIBUTE},
-			{
-				Name: "condition.*",
-				ValueFunc: definition.Transform(
-					// Will produce `condition.whatever = true` metrics from KSM output like
-					// kube_node_status_condition{condition="whatever",status="true"} 1.
-					prometheus.FromLabelValueWithLabelInName("kube_node_status_condition", "condition", "condition.%s", "status"),
-					// Will transform `condition.whatever = true` from previous step to `condition.whatever = 1`.
-					forEachFetchedValue(toNumericBoolean),
-				),
-				Type: sdkMetric.GAUGE,
-			},
-			{Name: "unschedulable", ValueFunc: prometheus.FromValue("kube_node_spec_unschedulable"), Type: sdkMetric.GAUGE},
-		},
-	},
 }
 
 // KSMQueries are the queries we will do to KSM in order to fetch all the raw metrics.
