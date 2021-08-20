@@ -75,7 +75,7 @@ func (f *fileCacheClient) load(obj interface{}, objectName string) bool {
 		return false
 	}
 
-	return !client.Expired(f.timeProvider.Time(), cacheTime, f.ttl)
+	return !client.Expired(f.timeProvider.Time(), cacheTime, f.ttl, 0)
 }
 
 func (f *fileCacheClient) store(obj interface{}, objectName string) error {

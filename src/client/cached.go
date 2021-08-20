@@ -1,6 +1,7 @@
 package client
 
 import (
+	"math/rand"
 	"net/http"
 	"time"
 
@@ -29,9 +30,10 @@ type DiscoveryCacher struct {
 
 // DiscoveryCacherConfig defines common properties for discovery cachers.
 type DiscoveryCacherConfig struct {
-	Storage storage.Storage
-	TTL     time.Duration
-	Logger  *logrus.Logger
+	Storage   storage.Storage
+	TTL       time.Duration
+	TTLJitter uint
+	Logger    *logrus.Logger
 }
 
 // Decomposer implementors must convert a HTTPClient into a data structure that can be Stored in the cache.
@@ -53,7 +55,7 @@ func (d *DiscoveryCacher) Discover(timeout time.Duration) (HTTPClient, error) {
 	d.Logger.Debugf("Found cached copy of %q stored at %s", d.StorageKey, time.Unix(creationTimestamp, 0))
 
 	// Check cached object TTL
-	if Expired(time.Now(), creationTimestamp, d.TTL) {
+	if Expired(time.Now(), creationTimestamp, d.TTL, d.TTLJitter) {
 		d.Logger.Debugf("Cached copy of %q expired. Refreshing", d.StorageKey)
 
 		return d.discoverAndCache(timeout)
@@ -85,9 +87,31 @@ func (d *DiscoveryCacher) discoverAndCache(timeout time.Duration) (HTTPClient, e
 
 // Expired checks, if for a given current time, object creation timestamp and TTL, object should be
 // considered as expired (TTL has been exceeded).
-func Expired(currentTime time.Time, creationTimestamp int64, ttl time.Duration) bool {
+//
+// If jitter max percentage is not zero, TTL will be either increased or decreased randomly by maximum of selected
+// TTL percentage. This allows to distribute cache expiration in time to avoid all caches to expire at the same time
+// in multiple clients, e.g. in distributed systems. As an example:
+//
+// For a TTL of 100 and jitter max percentage of 20, TTL will be within range of 80-120.
+//
+// If jitter max percentage is 0, TTL remains as given.
+func Expired(currentTime time.Time, creationTimestamp int64, ttl time.Duration, jitterMaxPercentage uint) bool {
+	rand.Seed(time.Now().UTC().UnixNano())
+
+	// Convert e.g. 20% to 0.2
+	jitterPercentage := float64(jitterMaxPercentage) / 100
+
+	// Random number between -1 and 1.
+	randomFactor := ((rand.Float64() * 2) - 1)
+
+	// Add extra 1 so we use original TTL +- jitter, otherwise we would get just jitter computed.
+	ttlMultiplier := (jitterPercentage * randomFactor) + 1
+
+	// Multiply TTL as float with multiplier, then convert back to duration in seconds.
+	ttlWithJitter := time.Duration(ttl.Seconds()*ttlMultiplier) * time.Second
+
 	// As in documentation, time.Now().Sub() is the same as time.Since().
-	return currentTime.Sub(time.Unix(creationTimestamp, 0)) > ttl
+	return currentTime.Sub(time.Unix(creationTimestamp, 0)) > ttlWithJitter
 }
 
 func (d *DiscoveryCacher) wrap(client HTTPClient, timeout time.Duration) *cacheAwareClient {
@@ -160,7 +184,7 @@ func (d *MultiDiscoveryCacher) Discover(timeout time.Duration) ([]HTTPClient, er
 	if err == nil {
 		d.Logger.Debugf("Found cached copy of %q stored at %s", d.StorageKey, time.Unix(creationTimestamp, 0))
 		// Check cached object TTL
-		if !Expired(time.Now(), creationTimestamp, d.TTL) {
+		if !Expired(time.Now(), creationTimestamp, d.TTL, d.TTLJitter) {
 			clients, err := d.Compose(d.CachedDataPtr, d, timeout)
 			if err != nil {
 				return nil, errors.Wrap(err, "could not compose cache")

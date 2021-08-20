@@ -244,6 +244,44 @@ func Test_CacheAwareClient_ignores_cache_decomposition_errors(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func Test_Cache_TTL_remains_intact_when_jitter_max_percentage_is_zero(t *testing.T) {
+	currentTime := time.Now()
+	creationTimestamp := currentTime.Unix() - 1
+	ttl := time.Second
+	jitterMaxPercentage := uint(0)
+
+	for i := 0; i < testIterations; i++ {
+		if !Expired(currentTime, creationTimestamp, ttl, jitterMaxPercentage) {
+			t.Fatalf("Unexpected cache expiration")
+		}
+	}
+}
+
+func Test_Cache_eventually_reaches_jitter_max_percentage(t *testing.T) {
+	currentTime := time.Now()
+	creationTimestamp := currentTime.Unix() - 100
+	ttl := 100 * time.Second
+	jitterMaxPercentage := uint(20)
+
+	expired := false
+
+	for i := 0; i < testIterations; i++ {
+		if Expired(currentTime, creationTimestamp, ttl, jitterMaxPercentage) {
+			t.Logf("Expired after %d iterations", i)
+			expired = true
+			break
+		}
+	}
+
+	if !expired {
+		t.Fatalf("Cache never expired after %d iterations", testIterations)
+	}
+}
+
+const (
+	testIterations = 1000
+)
+
 func discoveryCacher(client HTTPClient, discoverer Discoverer) *DiscoveryCacher {
 	return &DiscoveryCacher{
 		DiscoveryCacherConfig: DiscoveryCacherConfig{
