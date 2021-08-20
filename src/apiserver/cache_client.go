@@ -31,16 +31,15 @@ type currentTimeProvider int
 
 func (currentTimeProvider) Time() time.Time { return time.Now() }
 
-// NewFileCacheClientWrapper wraps the given Client and caches the responses for the given cacheDuration.
-func NewFileCacheClientWrapper(client Client, cacheDir string, cacheDuration time.Duration, options ...Option) Client {
-
+// NewFileCacheClientWrapper wraps the given Client and caches the responses for the given TTL.
+func NewFileCacheClientWrapper(client Client, cacheDir string, ttl time.Duration, options ...Option) Client {
 	diskStore := storage.NewJSONDiskStorage(cacheDir)
 
 	fcc := &fileCacheClient{
-		client:        client,
-		cache:         diskStore,
-		cacheDuration: cacheDuration,
-		timeProvider:  currentTimeProvider(0),
+		client:       client,
+		cache:        diskStore,
+		ttl:          ttl,
+		timeProvider: currentTimeProvider(0),
 	}
 
 	for _, opt := range options {
@@ -52,10 +51,10 @@ func NewFileCacheClientWrapper(client Client, cacheDir string, cacheDuration tim
 
 // fileCacheClient is an API Server client wrapper that caches responses on disk.
 type fileCacheClient struct {
-	client        Client
-	cache         storage.Storage
-	cacheDuration time.Duration
-	timeProvider  TimeProvider
+	client       Client
+	cache        storage.Storage
+	ttl          time.Duration
+	timeProvider TimeProvider
 }
 
 func getType(obj interface{}) string {
@@ -73,7 +72,7 @@ func cacheKey(obj interface{}, objectName string) string {
 
 func (f *fileCacheClient) cacheExpired(cacheTime int64) bool {
 	now := f.timeProvider.Time().Unix()
-	return cacheTime+int64(f.cacheDuration.Seconds()) < now
+	return cacheTime+int64(f.ttl.Seconds()) < now
 }
 
 func (f *fileCacheClient) load(obj interface{}, objectName string) bool {
@@ -90,7 +89,6 @@ func (f *fileCacheClient) store(obj interface{}, objectName string) error {
 }
 
 func (f *fileCacheClient) GetNodeInfo(nodeName string) (*NodeInfo, error) {
-
 	n := &NodeInfo{}
 
 	if f.load(n, nodeName) {
