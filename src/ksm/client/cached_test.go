@@ -32,7 +32,7 @@ func TestDiscover_Cache(t *testing.T) {
 	)
 
 	// Setup storage
-	store := storage.NewJSONDiskStorage(tmpDir)
+	cacheStore := storage.NewJSONDiskStorage(tmpDir)
 
 	// Given a KSM discoverer
 	wrappedDiscoverer := discoverer{
@@ -41,7 +41,7 @@ func TestDiscover_Cache(t *testing.T) {
 		logger:    logger,
 	}
 	// That is wrapped into a Cached Discoverer
-	cacher := NewDiscoveryCacher(&wrappedDiscoverer, &store, time.Hour, logger)
+	cacher := NewDiscoveryCacher(&wrappedDiscoverer, &cacheStore, time.Hour, logger)
 
 	// And previously has discovered the HTTP Client
 	caClient, err := cacher.Discover(timeout)
@@ -72,7 +72,7 @@ func TestDiscover_Cache_BothFail(t *testing.T) {
 		Return(&v1.ServiceList{Items: []v1.Service{}}, fmt.Errorf("error invoking Kubernetes API"))
 
 	// And a cache that does not store any cached copy
-	store := storage.NewJSONDiskStorage(tmpDir)
+	cacheStore := storage.NewJSONDiskStorage(tmpDir)
 
 	// And a Cached KSM discoverer
 	cacher := NewDiscoveryCacher(
@@ -80,7 +80,7 @@ func TestDiscover_Cache_BothFail(t *testing.T) {
 			lookupSRV: fakeLookupSRV,
 			k8sClient: c,
 			logger:    logger,
-		}, &store, time.Hour, logger)
+		}, &cacheStore, time.Hour, logger)
 
 	// The Discover invocation should return error
 	_, err = cacher.Discover(timeout)
@@ -103,7 +103,7 @@ func TestDiscover_LoadCacheFail(t *testing.T) {
 	)
 
 	// Setup storage
-	store := storage.NewJSONDiskStorage(tmpDir)
+	cacheStore := storage.NewJSONDiskStorage(tmpDir)
 
 	// Given a KSM discoverer
 	wrappedDiscoverer := discoverer{
@@ -112,13 +112,13 @@ func TestDiscover_LoadCacheFail(t *testing.T) {
 		logger:    logger,
 	}
 	// That is wrapped into a Cached Discoverer
-	cacher := NewDiscoveryCacher(&wrappedDiscoverer, &store, time.Hour, logger)
+	cacher := NewDiscoveryCacher(&wrappedDiscoverer, &cacheStore, time.Hour, logger)
 
 	// And previously has discovered the KSM endpoint
 	caClient, err := cacher.Discover(timeout)
 
 	// But the cache stored data is corrupted
-	assert.Nil(t, store.Write(cachedKey, "corrupt-data"))
+	assert.Nil(t, cacheStore.Write(cachedKey, "corrupt-data"))
 
 	// When the discovery process is invoked again
 	caClient, err = cacher.Discover(timeout)
@@ -147,7 +147,7 @@ func TestDiscover_CacheTTLExpiry(t *testing.T) {
 	)
 
 	// Setup storage
-	store := storage.NewJSONDiskStorage(tmpDir)
+	cacheStore := storage.NewJSONDiskStorage(tmpDir)
 
 	// Given an outdated version of a stored object
 	tu, _ := url.Parse("http://1.2.3.4")
@@ -155,7 +155,7 @@ func TestDiscover_CacheTTLExpiry(t *testing.T) {
 		Endpoint: *tu,
 		NodeIP:   "1.2.3.4",
 	}
-	assert.NoError(t, store.Write(cachedKey, &outdatedData))
+	assert.NoError(t, cacheStore.Write(cachedKey, &outdatedData))
 
 	// And a KSM discoverer
 	wrappedDiscoverer := discoverer{
@@ -164,7 +164,7 @@ func TestDiscover_CacheTTLExpiry(t *testing.T) {
 		logger:    logger,
 	}
 	// That is wrapped into a Cached Discoverer
-	cacher := NewDiscoveryCacher(&wrappedDiscoverer, &store, -time.Second, logger)
+	cacher := NewDiscoveryCacher(&wrappedDiscoverer, &cacheStore, -time.Second, logger)
 
 	// When the discovery process tries to get the data from the cache
 	caClient, err := cacher.Discover(timeout)
