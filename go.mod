@@ -25,3 +25,6 @@ require (
 	k8s.io/kubelet v0.21.2
 	sigs.k8s.io/structured-merge-diff/v4 v4.1.1 // indirect
 )
+
+// To avoid CVE-2018-16886 triggering a security scan.
+replace go.etcd.io/etcd => go.etcd.io/etcd v0.5.0-alpha.5.0.20190108173120-83c051b701d3
