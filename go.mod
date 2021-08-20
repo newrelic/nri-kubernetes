@@ -7,7 +7,6 @@ require (
 	github.com/golangci/golangci-lint v1.40.1
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/newrelic/infra-integrations-sdk v2.0.1-0.20180410150501-14a5386f9150+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_model v0.2.0
@@ -19,9 +18,11 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/net v0.0.0-20210525063256-abc453219eb5
 	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c
-	k8s.io/api v0.21.2
-	k8s.io/apimachinery v0.21.2
+	k8s.io/api v0.22.1
+	k8s.io/apimachinery v0.22.1
 	k8s.io/client-go v0.21.2
 	k8s.io/kubelet v0.21.2
-	sigs.k8s.io/structured-merge-diff/v4 v4.1.1 // indirect
 )
+
+// To avoid CVE-2018-16886 triggering a security scan.
+replace go.etcd.io/etcd => go.etcd.io/etcd v0.5.0-alpha.5.0.20190108173120-83c051b701d3
