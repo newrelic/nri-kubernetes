@@ -8,6 +8,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
+	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/storage"
 )
 
@@ -32,9 +33,10 @@ func TestFileCacheReadMiss(t *testing.T) {
 			v1.ResourceMemory:           *resource.NewQuantity(2033283072, resource.BinarySI),
 		},
 	}
+
 	client := TestAPIServer{Mem: map[string]*NodeInfo{"MyNode": myNode}}
 
-	cacheWrapper := NewFileCacheClientWrapper(client, &storage.MemoryStorage{}, time.Hour)
+	cacheWrapper := NewFileCacheClientWrapper(client, testCacherConfig())
 
 	node, err := cacheWrapper.GetNodeInfo("MyNode")
 
@@ -90,7 +92,7 @@ func TestFileCacheReadCacheAndExpiry(t *testing.T) {
 
 	timeProvider := &manualTimeProvider{time.Now()}
 
-	cacheWrapper := NewFileCacheClientWrapper(client, &storage.MemoryStorage{}, time.Hour, WithTimeProvider(timeProvider))
+	cacheWrapper := NewFileCacheClientWrapper(client, testCacherConfig(), WithTimeProvider(timeProvider))
 
 	// this will have written the response to disk
 	_, err := cacheWrapper.GetNodeInfo("MyNode")
@@ -123,3 +125,10 @@ type manualTimeProvider struct {
 }
 
 func (m manualTimeProvider) Time() time.Time { return m.time }
+
+func testCacherConfig() client.DiscoveryCacherConfig {
+	return client.DiscoveryCacherConfig{
+		TTL:     time.Hour,
+		Storage: &storage.MemoryStorage{},
+	}
+}

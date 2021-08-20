@@ -320,11 +320,12 @@ func main() {
 
 	var apiServerClientK8sVersion apiserver.Client
 	if apiServerCacheK8SVersionTTL != time.Duration(0) {
-		apiServerClientK8sVersion = apiserver.NewFileCacheClientWrapper(
-			apiServerClient,
-			storage.NewJSONDiskStorage(getCacheDir(apiserverCacheDirK8sVersion)),
-			apiServerCacheK8SVersionTTL,
-		)
+		config := client.DiscoveryCacherConfig{
+			TTL:     apiServerCacheK8SVersionTTL,
+			Storage: storage.NewJSONDiskStorage(getCacheDir(apiserverCacheDirK8sVersion)),
+		}
+
+		apiServerClientK8sVersion = apiserver.NewFileCacheClientWrapper(apiServerClient, config)
 	} else {
 		apiServerClientK8sVersion = apiServerClient
 	}
@@ -341,9 +342,11 @@ func main() {
 	}
 
 	if apiServerCacheTTL != time.Duration(0) {
-		apiServerClient = apiserver.NewFileCacheClientWrapper(apiServerClient,
-			storage.NewJSONDiskStorage(getCacheDir(apiserverCacheDir)),
-			apiServerCacheTTL)
+		config := client.DiscoveryCacherConfig{
+			TTL:     apiServerCacheTTL,
+			Storage: storage.NewJSONDiskStorage(getCacheDir(apiserverCacheDir)),
+		}
+		apiServerClient = apiserver.NewFileCacheClientWrapper(apiServerClient, config)
 	}
 
 	podsFetcher := metric2.NewPodsFetcher(logger, kubeletClient, enableStaticPodsStatus).FetchFuncWithCache()

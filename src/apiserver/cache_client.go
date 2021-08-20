@@ -7,6 +7,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/version"
 
+	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/storage"
 )
 
@@ -32,11 +33,11 @@ type currentTimeProvider int
 func (currentTimeProvider) Time() time.Time { return time.Now() }
 
 // NewFileCacheClientWrapper wraps the given Client and caches the responses for the given TTL.
-func NewFileCacheClientWrapper(client Client, storage storage.Storage, ttl time.Duration, options ...Option) Client {
+func NewFileCacheClientWrapper(client Client, config client.DiscoveryCacherConfig, options ...Option) Client {
 	fcc := &fileCacheClient{
 		client:       client,
-		cache:        storage,
-		ttl:          ttl,
+		cache:        config.Storage,
+		ttl:          config.TTL,
 		timeProvider: currentTimeProvider(0),
 	}
 
