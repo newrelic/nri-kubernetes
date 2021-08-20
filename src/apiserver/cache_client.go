@@ -69,18 +69,13 @@ func cacheKey(obj interface{}, objectName string) string {
 	return fmt.Sprintf("%s.%s", objectType, objectName)
 }
 
-func (f *fileCacheClient) cacheExpired(cacheTime int64) bool {
-	// As in documentation, time.Now().Sub() is the same as time.Since().
-	return f.timeProvider.Time().Sub(time.Unix(cacheTime, 0)) > f.ttl
-}
-
 func (f *fileCacheClient) load(obj interface{}, objectName string) bool {
 	cacheTime, err := f.cache.Read(cacheKey(obj, objectName), obj)
 	if err != nil {
 		return false
 	}
 
-	return !f.cacheExpired(cacheTime)
+	return !client.Expired(f.timeProvider.Time(), cacheTime, f.ttl)
 }
 
 func (f *fileCacheClient) store(obj interface{}, objectName string) error {
