@@ -219,10 +219,10 @@ func main() {
 		return
 	}
 
-	ttl, err := time.ParseDuration(args.DiscoveryCacheTTL)
+	discoveryCacheTTL, err := time.ParseDuration(args.DiscoveryCacheTTL)
 	if err != nil {
 		logger.WithError(err).Errorf("while parsing the cache TTL value. Defaulting to %s", defaultDiscoveryCacheTTL)
-		ttl = defaultDiscoveryCacheTTL
+		discoveryCacheTTL = defaultDiscoveryCacheTTL
 	}
 
 	timeout := time.Millisecond * time.Duration(args.Timeout)
@@ -234,14 +234,14 @@ func main() {
 	cacheStorage := storage.NewJSONDiskStorage(getCacheDir(discoveryCacheDir))
 
 	defaultNetworkInterface, err := network.CachedDefaultInterface(
-		logger, args.NetworkRouteFile, cacheStorage, ttl)
+		logger, args.NetworkRouteFile, cacheStorage, discoveryCacheTTL)
 	if err != nil {
 		logger.Warn(err)
 	}
 
 	config := client.DiscoveryCacherConfig{
 		Storage: cacheStorage,
-		TTL:     ttl,
+		TTL:     discoveryCacheTTL,
 		Logger:  logger,
 	}
 
@@ -265,7 +265,7 @@ func main() {
 
 		config := client.DiscoveryCacherConfig{
 			Storage: cacheStorage,
-			TTL:     ttl,
+			TTL:     discoveryCacheTTL,
 			Logger:  logger,
 		}
 
@@ -309,21 +309,21 @@ func main() {
 
 	apiServerClient := apiserver.NewClient(k8s)
 
-	ttlAPIServerCacheK8SVersion, err := time.ParseDuration(args.APIServerCacheK8SVersionTTL)
+	apiServerCacheK8SVersionTTL, err := time.ParseDuration(args.APIServerCacheK8SVersionTTL)
 	if err != nil {
 		logger.WithError(err).Errorf(
 			"while parsing the api server cache TTL value for the kubernetes server version. Defaulting to %s",
 			defaultAPIServerCacheK8SVersionTTL,
 		)
-		ttlAPIServerCacheK8SVersion = defaultAPIServerCacheK8SVersionTTL
+		apiServerCacheK8SVersionTTL = defaultAPIServerCacheK8SVersionTTL
 	}
 
 	var apiServerClientK8sVersion apiserver.Client
-	if ttlAPIServerCacheK8SVersion != time.Duration(0) {
+	if apiServerCacheK8SVersionTTL != time.Duration(0) {
 		apiServerClientK8sVersion = apiserver.NewFileCacheClientWrapper(
 			apiServerClient,
 			getCacheDir(apiserverCacheDirK8sVersion),
-			ttlAPIServerCacheK8SVersion,
+			apiServerCacheK8SVersionTTL,
 		)
 	} else {
 		apiServerClientK8sVersion = apiServerClient
@@ -334,16 +334,16 @@ func main() {
 	}
 	enableStaticPodsStatus := featureflag.StaticPodsStatus(k8sVersion)
 
-	ttlAPIServerCache, err := time.ParseDuration(args.APIServerCacheTTL)
+	apiServerCacheTTL, err := time.ParseDuration(args.APIServerCacheTTL)
 	if err != nil {
 		logger.WithError(err).Errorf("while parsing the api server cache TTL value. Defaulting to %s", defaultAPIServerCacheTTL)
-		ttlAPIServerCache = defaultAPIServerCacheTTL
+		apiServerCacheTTL = defaultAPIServerCacheTTL
 	}
 
-	if ttlAPIServerCache != time.Duration(0) {
+	if apiServerCacheTTL != time.Duration(0) {
 		apiServerClient = apiserver.NewFileCacheClientWrapper(apiServerClient,
 			getCacheDir(apiserverCacheDir),
-			ttlAPIServerCache)
+			apiServerCacheTTL)
 	}
 
 	podsFetcher := metric2.NewPodsFetcher(logger, kubeletClient, enableStaticPodsStatus).FetchFuncWithCache()
