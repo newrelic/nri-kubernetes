@@ -1,35 +1,18 @@
 package apiserver
 
 import (
-	"io/ioutil"
-	"os"
 	"testing"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/storage"
 )
-
-func getTempDir(t *testing.T) (string, func()) {
-	tmpDir, err := ioutil.TempDir("", "testrunner")
-	require.NoError(t, err, "could not create temporary test directory")
-
-	return tmpDir, func() {
-		if err := os.RemoveAll(tmpDir); err != nil {
-			logrus.Warningf("Could not remove temporary test directory: %v", err)
-		}
-	}
-}
 
 // TestFileCacheReadMiss tests whether the fileCache will handle missing files on disk
 func TestFileCacheReadMiss(t *testing.T) {
-
-	dir, cleanup := getTempDir(t)
-	defer cleanup()
-
 	myNode := &NodeInfo{
 		NodeName: "MyNode",
 		Labels: map[string]string{
@@ -51,7 +34,7 @@ func TestFileCacheReadMiss(t *testing.T) {
 	}
 	client := TestAPIServer{Mem: map[string]*NodeInfo{"MyNode": myNode}}
 
-	cacheWrapper := NewFileCacheClientWrapper(client, dir, time.Hour)
+	cacheWrapper := NewFileCacheClientWrapper(client, &storage.MemoryStorage{}, time.Hour)
 
 	node, err := cacheWrapper.GetNodeInfo("MyNode")
 
@@ -61,10 +44,6 @@ func TestFileCacheReadMiss(t *testing.T) {
 
 // TestFileCacheReadCacheAndExpiry tests whether the fileCache will properly read from cache, and that it resets the cache
 func TestFileCacheReadCacheAndExpiry(t *testing.T) {
-
-	dir, cleanup := getTempDir(t)
-	defer cleanup()
-
 	// The resource.Quantity struct has an attribute called `s` that caches
 	// the string representation. This attribute is calculated and stored
 	// when calling the String and UnmarshalJSON functions. We need to call
@@ -111,7 +90,7 @@ func TestFileCacheReadCacheAndExpiry(t *testing.T) {
 
 	timeProvider := &manualTimeProvider{time.Now()}
 
-	cacheWrapper := NewFileCacheClientWrapper(client, dir, time.Hour, WithTimeProvider(timeProvider))
+	cacheWrapper := NewFileCacheClientWrapper(client, &storage.MemoryStorage{}, time.Hour, WithTimeProvider(timeProvider))
 
 	// this will have written the response to disk
 	_, err := cacheWrapper.GetNodeInfo("MyNode")
@@ -137,7 +116,6 @@ func TestFileCacheReadCacheAndExpiry(t *testing.T) {
 	node, err = cacheWrapper.GetNodeInfo("MyNode")
 	assert.NoError(t, err)
 	assert.Equal(t, node, myUpdatedNode)
-
 }
 
 type manualTimeProvider struct {

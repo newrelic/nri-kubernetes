@@ -322,7 +322,7 @@ func main() {
 	if apiServerCacheK8SVersionTTL != time.Duration(0) {
 		apiServerClientK8sVersion = apiserver.NewFileCacheClientWrapper(
 			apiServerClient,
-			getCacheDir(apiserverCacheDirK8sVersion),
+			storage.NewJSONDiskStorage(getCacheDir(apiserverCacheDirK8sVersion)),
 			apiServerCacheK8SVersionTTL,
 		)
 	} else {
@@ -342,7 +342,7 @@ func main() {
 
 	if apiServerCacheTTL != time.Duration(0) {
 		apiServerClient = apiserver.NewFileCacheClientWrapper(apiServerClient,
-			getCacheDir(apiserverCacheDir),
+			storage.NewJSONDiskStorage(getCacheDir(apiserverCacheDir)),
 			apiServerCacheTTL)
 	}
 

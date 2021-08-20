@@ -32,12 +32,10 @@ type currentTimeProvider int
 func (currentTimeProvider) Time() time.Time { return time.Now() }
 
 // NewFileCacheClientWrapper wraps the given Client and caches the responses for the given TTL.
-func NewFileCacheClientWrapper(client Client, cacheDir string, ttl time.Duration, options ...Option) Client {
-	diskStore := storage.NewJSONDiskStorage(cacheDir)
-
+func NewFileCacheClientWrapper(client Client, storage storage.Storage, ttl time.Duration, options ...Option) Client {
 	fcc := &fileCacheClient{
 		client:       client,
-		cache:        diskStore,
+		cache:        storage,
 		ttl:          ttl,
 		timeProvider: currentTimeProvider(0),
 	}
