@@ -70,8 +70,8 @@ func cacheKey(obj interface{}, objectName string) string {
 }
 
 func (f *fileCacheClient) cacheExpired(cacheTime int64) bool {
-	now := f.timeProvider.Time().Unix()
-	return cacheTime+int64(f.ttl.Seconds()) < now
+	// As in documentation, time.Now().Sub() is the same as time.Since().
+	return f.timeProvider.Time().Sub(time.Unix(cacheTime, 0)) > f.ttl
 }
 
 func (f *fileCacheClient) load(obj interface{}, objectName string) bool {
