@@ -281,8 +281,8 @@ func TestMultiDiscover_CacheTTL(t *testing.T) {
 	}
 }
 
-func testCacherConfig() *DiscoveryCacherConfig {
-	return &DiscoveryCacherConfig{
+func testCacherConfig() client.DiscoveryCacherConfig {
+	return client.DiscoveryCacherConfig{
 		Storage: &storage.MemoryStorage{},
 		TTL:     time.Hour,
 		Logger:  logger,

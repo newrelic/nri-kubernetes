@@ -246,11 +246,13 @@ func Test_CacheAwareClient_ignores_cache_decomposition_errors(t *testing.T) {
 
 func discoveryCacher(client HTTPClient, discoverer Discoverer) *DiscoveryCacher {
 	return &DiscoveryCacher{
+		DiscoveryCacherConfig: DiscoveryCacherConfig{
+			Storage: &storage.MemoryStorage{},
+			Logger:  logrus.StandardLogger(),
+		},
 		CachedDataPtr: &MockDiscoveredHTTPClient{},
 		StorageKey:    "mock-discovery-client",
 		Discoverer:    discoverer,
-		Storage:       &storage.MemoryStorage{},
-		Logger:        logrus.StandardLogger(),
 		// Since we use just memory, Compose and Decompose are just identity functions
 		Decompose: func(source HTTPClient) (interface{}, error) {
 			return client, nil

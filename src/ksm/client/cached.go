@@ -5,10 +5,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
-	"github.com/newrelic/nri-kubernetes/v2/src/storage"
 )
 
 const cachedKey = "ksm-client"
@@ -42,25 +39,16 @@ func decompose(source client.HTTPClient) (interface{}, error) {
 	}, nil
 }
 
-// DiscoveryCacherConfig defines common properties for discovery cachers.
-type DiscoveryCacherConfig struct {
-	Storage storage.Storage
-	TTL     time.Duration
-	Logger  *logrus.Logger
-}
-
 // NewDiscoveryCacher creates a new DiscoveryCacher that wraps a discoverer and caches the data into the
 // specified storage
-func NewDiscoveryCacher(discoverer client.Discoverer, config *DiscoveryCacherConfig) client.Discoverer {
+func NewDiscoveryCacher(discoverer client.Discoverer, config client.DiscoveryCacherConfig) client.Discoverer {
 	return &client.DiscoveryCacher{
-		CachedDataPtr: &cache{},
-		StorageKey:    cachedKey,
-		Discoverer:    discoverer,
-		Storage:       config.Storage,
-		TTL:           config.TTL,
-		Logger:        config.Logger,
-		Compose:       compose,
-		Decompose:     decompose,
+		DiscoveryCacherConfig: config,
+		CachedDataPtr:         &cache{},
+		StorageKey:            cachedKey,
+		Discoverer:            discoverer,
+		Compose:               compose,
+		Decompose:             decompose,
 	}
 }
 
@@ -105,15 +93,13 @@ func multiDecompose(sources []client.HTTPClient) (interface{}, error) {
 // NewDistributedDiscoveryCacher initializes a client.MultiDiscoveryCacher with the given parameters.
 // This should be the only way to create instances of client.MultiDiscoveryCacher, as it guarantees the cached data
 // pointer is initialized.
-func NewDistributedDiscoveryCacher(innerDiscoverer client.MultiDiscoverer, config *DiscoveryCacherConfig) client.MultiDiscoverer {
+func NewDistributedDiscoveryCacher(innerDiscoverer client.MultiDiscoverer, config client.DiscoveryCacherConfig) client.MultiDiscoverer {
 	return &client.MultiDiscoveryCacher{
-		Discoverer:    innerDiscoverer,
-		CachedDataPtr: &multiCache{},
-		StorageKey:    cachedKey,
-		Storage:       config.Storage,
-		TTL:           config.TTL,
-		Logger:        config.Logger,
-		Compose:       multiCompose,
-		Decompose:     multiDecompose,
+		DiscoveryCacherConfig: config,
+		CachedDataPtr:         &multiCache{},
+		StorageKey:            cachedKey,
+		Discoverer:            innerDiscoverer,
+		Compose:               multiCompose,
+		Decompose:             multiDecompose,
 	}
 }

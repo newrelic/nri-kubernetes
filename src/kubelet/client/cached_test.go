@@ -28,7 +28,7 @@ func TestDiscover_Cache_HTTP(t *testing.T) {
 	}
 
 	// And a Kubelet Discovery Cacher
-	cacher := NewDiscoveryCacher(&wrappedDiscoverer, &storage.MemoryStorage{}, time.Hour, logger)
+	cacher := NewDiscoveryCacher(&wrappedDiscoverer, testCacherConfig())
 
 	// That successfully retrieved the insecure Kubelet URL
 	caClient, err := cacher.Discover(timeout)
@@ -64,7 +64,7 @@ func TestDiscover_Cache_HTTPS_InsecureClient(t *testing.T) {
 	}
 
 	// And a Kubelet Discovery Cacher
-	cacher := NewDiscoveryCacher(&wrappedDiscoverer, &storage.MemoryStorage{}, time.Hour, logger)
+	cacher := NewDiscoveryCacher(&wrappedDiscoverer, testCacherConfig())
 
 	// That successfully retrieved the secure Kubelet URL
 	caClient, err := cacher.Discover(timeout)
@@ -99,7 +99,7 @@ func TestDiscover_Cache_HTTPS_SecureClient(t *testing.T) {
 	}
 
 	// And a Kubelet Discovery Cacher
-	cacher := NewDiscoveryCacher(&wrappedDiscoverer, &storage.MemoryStorage{}, time.Hour, logger)
+	cacher := NewDiscoveryCacher(&wrappedDiscoverer, testCacherConfig())
 
 	// That successfully retrieved the secure Kubelet API URL
 	caClient, err := cacher.Discover(timeout)
@@ -134,10 +134,18 @@ func TestDiscover_Cache_DiscoveryError(t *testing.T) {
 	}
 
 	// And a Kubelet Discovery Cacher without any cached data
-	cacher := NewDiscoveryCacher(&wrappedDiscoverer, &storage.MemoryStorage{}, time.Hour, logger)
+	cacher := NewDiscoveryCacher(&wrappedDiscoverer, testCacherConfig())
 
 	// When retrieving the Kubelet client
 	_, err := cacher.Discover(timeout)
 	// The system returns an error
 	assert.Error(t, err)
+}
+
+func testCacherConfig() client.DiscoveryCacherConfig {
+	return client.DiscoveryCacherConfig{
+		Storage: &storage.MemoryStorage{},
+		TTL:     time.Hour,
+		Logger:  logger,
+	}
 }

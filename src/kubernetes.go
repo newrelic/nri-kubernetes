@@ -238,7 +238,14 @@ func main() {
 	if err != nil {
 		logger.Warn(err)
 	}
-	kubeletDiscoverer := clientKubelet.NewDiscoveryCacher(innerKubeletDiscoverer, cacheStorage, ttl, logger)
+
+	config := client.DiscoveryCacherConfig{
+		Storage: cacheStorage,
+		TTL:     ttl,
+		Logger:  logger,
+	}
+
+	kubeletDiscoverer := clientKubelet.NewDiscoveryCacher(innerKubeletDiscoverer, config)
 
 	kubeletClient, err := kubeletDiscoverer.Discover(timeout)
 	if err != nil {
@@ -256,7 +263,7 @@ func main() {
 		var ksmClients []client.HTTPClient
 		var ksmNodeIP string
 
-		config := &clientKsm.DiscoveryCacherConfig{
+		config := client.DiscoveryCacherConfig{
 			Storage: cacheStorage,
 			TTL:     ttl,
 			Logger:  logger,

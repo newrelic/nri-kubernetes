@@ -14,18 +14,24 @@ import (
 // Discoverer and uses it to discover endpoints when the data is not found in the cache.
 // This type is not thread-safe.
 type DiscoveryCacher struct {
+	DiscoveryCacherConfig
+
+	// Discoverer points to the wrapped Discovered used to resolve endpoints when they are not found in the cache
+	Discoverer Discoverer
+	Compose    Composer
+	Decompose  Decomposer
+
 	// CachedDataPtr must be a pointer to an object where the data will be unmarshalled to
 	CachedDataPtr interface{}
 	// StorageKey is the key for the Storage Cache
 	StorageKey string
-	// Discoverer points to the wrapped Discovered used to resolve endpoints when they are not found in the cache
-	Discoverer Discoverer
-	// Storage for cached data
-	Storage   storage.Storage
-	TTL       time.Duration
-	Logger    *logrus.Logger
-	Compose   Composer
-	Decompose Decomposer
+}
+
+// DiscoveryCacherConfig defines common properties for discovery cachers.
+type DiscoveryCacherConfig struct {
+	Storage storage.Storage
+	TTL     time.Duration
+	Logger  *logrus.Logger
 }
 
 // Decomposer implementors must convert a HTTPClient into a data structure that can be Stored in the cache.
@@ -130,14 +136,16 @@ func WrappedClient(caClient HTTPClient) HTTPClient {
 // It implements the MultiDiscoverer interface.
 // This type is not threadsafe.
 type MultiDiscoveryCacher struct {
-	Discoverer    MultiDiscoverer
+	DiscoveryCacherConfig
+
+	Discoverer MultiDiscoverer
+	Compose    MultiComposer
+	Decompose  MultiDecomposer
+
+	// CachedDataPtr must be a pointer to an object where the data will be unmarshalled to
 	CachedDataPtr interface{}
-	StorageKey    string
-	Storage       storage.Storage
-	TTL           time.Duration
-	Logger        *logrus.Logger
-	Compose       MultiComposer
-	Decompose     MultiDecomposer
+	// StorageKey is the key for the Storage Cache
+	StorageKey string
 }
 
 // Discover runs the underlying discovery and caches its result.
