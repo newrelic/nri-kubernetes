@@ -255,12 +255,19 @@ func main() {
 	if !args.DisableKubeStateMetrics {
 		var ksmClients []client.HTTPClient
 		var ksmNodeIP string
+
+		config := &clientKsm.DiscoveryCacherConfig{
+			Storage: cacheStorage,
+			TTL:     ttl,
+			Logger:  logger,
+		}
+
 		if args.DistributedKubeStateMetrics {
 			ksmDiscoverer, err := getMultiKSMDiscoverer(kubeletNodeIP, logger)
 			if err != nil {
 				logger.Panic(err)
 			}
-			ksmDiscoveryCache := clientKsm.NewDistributedDiscoveryCacher(ksmDiscoverer, cacheStorage, ttl, logger)
+			ksmDiscoveryCache := clientKsm.NewDistributedDiscoveryCacher(ksmDiscoverer, config)
 			ksmClients, err = ksmDiscoveryCache.Discover(timeout)
 			logger.Debugf("found %d KSM clients:", len(ksmClients))
 			for _, c := range ksmClients {
@@ -275,7 +282,7 @@ func main() {
 			if err != nil {
 				logger.Panic(err)
 			}
-			ksmDiscoverer := clientKsm.NewDiscoveryCacher(innerKSMDiscoverer, cacheStorage, ttl, logger)
+			ksmDiscoverer := clientKsm.NewDiscoveryCacher(innerKSMDiscoverer, config)
 			ksmClient, err := ksmDiscoverer.Discover(timeout)
 			if err != nil {
 				logger.Panic(err)

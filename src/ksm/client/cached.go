@@ -42,16 +42,23 @@ func decompose(source client.HTTPClient) (interface{}, error) {
 	}, nil
 }
 
+// DiscoveryCacherConfig defines common properties for discovery cachers.
+type DiscoveryCacherConfig struct {
+	Storage storage.Storage
+	TTL     time.Duration
+	Logger  *logrus.Logger
+}
+
 // NewDiscoveryCacher creates a new DiscoveryCacher that wraps a discoverer and caches the data into the
 // specified storage
-func NewDiscoveryCacher(discoverer client.Discoverer, storage storage.Storage, ttl time.Duration, logger *logrus.Logger) client.Discoverer {
+func NewDiscoveryCacher(discoverer client.Discoverer, config *DiscoveryCacherConfig) client.Discoverer {
 	return &client.DiscoveryCacher{
 		CachedDataPtr: &cache{},
 		StorageKey:    cachedKey,
 		Discoverer:    discoverer,
-		Storage:       storage,
-		TTL:           ttl,
-		Logger:        logger,
+		Storage:       config.Storage,
+		TTL:           config.TTL,
+		Logger:        config.Logger,
 		Compose:       compose,
 		Decompose:     decompose,
 	}
@@ -98,14 +105,14 @@ func multiDecompose(sources []client.HTTPClient) (interface{}, error) {
 // NewDistributedDiscoveryCacher initializes a client.MultiDiscoveryCacher with the given parameters.
 // This should be the only way to create instances of client.MultiDiscoveryCacher, as it guarantees the cached data
 // pointer is initialized.
-func NewDistributedDiscoveryCacher(innerDiscoverer client.MultiDiscoverer, storage storage.Storage, ttl time.Duration, logger *logrus.Logger) client.MultiDiscoverer {
+func NewDistributedDiscoveryCacher(innerDiscoverer client.MultiDiscoverer, config *DiscoveryCacherConfig) client.MultiDiscoverer {
 	return &client.MultiDiscoveryCacher{
 		Discoverer:    innerDiscoverer,
 		CachedDataPtr: &multiCache{},
 		StorageKey:    cachedKey,
-		Storage:       storage,
-		TTL:           ttl,
-		Logger:        logger,
+		Storage:       config.Storage,
+		TTL:           config.TTL,
+		Logger:        config.Logger,
 		Compose:       multiCompose,
 		Decompose:     multiDecompose,
 	}

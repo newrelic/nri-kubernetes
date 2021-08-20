@@ -26,17 +26,15 @@ func TestDiscover_Cache(t *testing.T) {
 		&rest.Config{BearerToken: "foobar"},
 	)
 
-	// Setup storage
-	cacheStore := &storage.MemoryStorage{}
-
 	// Given a KSM discoverer
 	wrappedDiscoverer := discoverer{
 		lookupSRV: fakeLookupSRV,
 		k8sClient: c,
 		logger:    logger,
 	}
+
 	// That is wrapped into a Cached Discoverer
-	cacher := NewDiscoveryCacher(&wrappedDiscoverer, cacheStore, time.Hour, logger)
+	cacher := NewDiscoveryCacher(&wrappedDiscoverer, testCacherConfig())
 
 	// And previously has discovered the HTTP Client
 	caClient, err := cacher.Discover(timeout)
@@ -63,16 +61,13 @@ func TestDiscover_Cache_BothFail(t *testing.T) {
 	c.On("FindServicesByLabel", mock.Anything, mock.Anything).
 		Return(&v1.ServiceList{Items: []v1.Service{}}, fmt.Errorf("error invoking Kubernetes API"))
 
-	// And a cache that does not store any cached copy
-	cacheStore := &storage.MemoryStorage{}
-
 	// And a Cached KSM discoverer
 	cacher := NewDiscoveryCacher(
 		&discoverer{
 			lookupSRV: fakeLookupSRV,
 			k8sClient: c,
 			logger:    logger,
-		}, cacheStore, time.Hour, logger)
+		}, testCacherConfig())
 
 	// The Discover invocation should return error
 	_, err := cacher.Discover(timeout)
@@ -107,8 +102,13 @@ func TestDiscover_CacheTTLExpiry(t *testing.T) {
 		k8sClient: c,
 		logger:    logger,
 	}
+
+	config := testCacherConfig()
+	config.TTL = -time.Second
+	config.Storage = cacheStore
+
 	// That is wrapped into a Cached Discoverer
-	cacher := NewDiscoveryCacher(&wrappedDiscoverer, cacheStore, -time.Second, logger)
+	cacher := NewDiscoveryCacher(&wrappedDiscoverer, config)
 
 	// When the discovery process tries to get the data from the cache
 	caClient, err := cacher.Discover(timeout)
@@ -146,16 +146,14 @@ func TestMultiDiscover_Cache(t *testing.T) {
 		&rest.Config{BearerToken: "foobar"},
 	)
 
-	// Cache storage.
-	cacheStore := &storage.MemoryStorage{}
-
 	// Creates a distribute discovery with cache.
 	wrappedDiscoverer := distributedPodLabelDiscoverer{
 		ownNodeIP: "6.7.8.9",
 		k8sClient: c,
 		logger:    logger,
 	}
-	cacher := NewDistributedDiscoveryCacher(&wrappedDiscoverer, cacheStore, time.Hour, logger)
+
+	cacher := NewDistributedDiscoveryCacher(&wrappedDiscoverer, testCacherConfig())
 
 	clients, err := cacher.Discover(timeout)
 	assert.Len(t, clients, 2)
@@ -184,16 +182,14 @@ func TestMultiDiscover_CacheWithError(t *testing.T) {
 	c.On("FindPodsByLabel", mock.Anything, mock.Anything).
 		Return(&v1.PodList{}, fmt.Errorf("error invoking Kubernetes API"))
 
-	// Cache storage.
-	cacheStore := &storage.MemoryStorage{}
-
 	// Creates a distribute discovery with cache.
 	wrappedDiscoverer := distributedPodLabelDiscoverer{
 		ownNodeIP: "6.7.8.9",
 		k8sClient: c,
 		logger:    logger,
 	}
-	cacher := NewDistributedDiscoveryCacher(&wrappedDiscoverer, cacheStore, time.Hour, logger)
+
+	cacher := NewDistributedDiscoveryCacher(&wrappedDiscoverer, testCacherConfig())
 
 	clients, err := cacher.Discover(timeout)
 	assert.Error(t, err)
@@ -218,10 +214,12 @@ func TestMultiDiscover_CacheCorrupted(t *testing.T) {
 		&rest.Config{BearerToken: "foobar"},
 	)
 
+	config := testCacherConfig()
+
 	// Use disk storage here, as it does not validate written data, so we can corrupt it.
 	//
 	// This test should be moved to src/client.MultiDiscoveryCacher tests.
-	cacheStore := storage.NewJSONDiskStorage(t.TempDir())
+	config.Storage = storage.NewJSONDiskStorage(t.TempDir())
 
 	// Creates a distribute discovery with cache.
 	wrappedDiscoverer := distributedPodLabelDiscoverer{
@@ -230,17 +228,15 @@ func TestMultiDiscover_CacheCorrupted(t *testing.T) {
 		logger:    logger,
 	}
 
-	cacher := NewDistributedDiscoveryCacher(&wrappedDiscoverer, &cacheStore, time.Hour, logger)
+	cacher := NewDistributedDiscoveryCacher(&wrappedDiscoverer, config)
 
-	assert.Nil(t, cacheStore.Write(cachedKey, "corrupt-data"))
+	assert.Nil(t, config.Storage.Write(cachedKey, "corrupt-data"))
 	clients, err := cacher.Discover(timeout)
 	assert.NoError(t, err)
 	assert.Equal(t, 2, len(clients))
 }
 
 func TestMultiDiscover_CacheTTL(t *testing.T) {
-	cacheStore := &storage.MemoryStorage{}
-
 	// Mock out the access to the Kubernetes API when looking up pods by label.
 	c := new(client.MockedKubernetes)
 	outdatedURL, _ := url.Parse("http://1.2.3.4")
@@ -265,7 +261,11 @@ func TestMultiDiscover_CacheTTL(t *testing.T) {
 		k8sClient: c,
 		logger:    logger,
 	}
-	cacher := NewDistributedDiscoveryCacher(&wrappedDiscoverer, cacheStore, -time.Hour, logger)
+
+	config := testCacherConfig()
+	config.TTL = -time.Hour
+
+	cacher := NewDistributedDiscoveryCacher(&wrappedDiscoverer, config)
 
 	clients, err := cacher.Discover(timeout)
 	assert.Len(t, clients, 1)
@@ -278,5 +278,13 @@ func TestMultiDiscover_CacheTTL(t *testing.T) {
 	// We should not see the outdated host's URL anymore.
 	for _, cachedClient := range cachedClients {
 		assert.NotEqual(t, cachedClient.(*ksm).endpoint, outdatedURL.Host)
+	}
+}
+
+func testCacherConfig() *DiscoveryCacherConfig {
+	return &DiscoveryCacherConfig{
+		Storage: &storage.MemoryStorage{},
+		TTL:     time.Hour,
+		Logger:  logger,
 	}
 }
