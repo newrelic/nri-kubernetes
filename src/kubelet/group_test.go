@@ -93,6 +93,29 @@ func TestGroup(t *testing.T) {
 				v1.ResourceEphemeralStorage: *resource.NewQuantity(18211586048, resource.BinarySI),
 				v1.ResourceMemory:           *resource.NewQuantity(2033283072, resource.BinarySI),
 			},
+			Conditions: []v1.NodeCondition{
+				{
+					Type:   "TrueCondition",
+					Status: v1.ConditionTrue,
+				},
+				{
+					Type:   "FalseCondition",
+					Status: v1.ConditionFalse,
+				},
+				{
+					Type:   "UnknownCondition",
+					Status: v1.ConditionUnknown,
+				},
+				{
+					Type:   "DuplicatedCondition",
+					Status: v1.ConditionTrue,
+				},
+				{
+					Type:   "DuplicatedCondition",
+					Status: v1.ConditionFalse,
+				},
+			},
+			Unschedulable: false,
 		},
 	}}
 	queries := []prometheus.Query{

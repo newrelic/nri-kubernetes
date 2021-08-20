@@ -307,6 +307,13 @@ var ExpectedGroupData = definition.RawGroups{
 					"errors":  uint64(0),
 				},
 			},
+			"conditions": map[string]int{
+				"TrueCondition":       1,
+				"FalseCondition":      0,
+				"UnknownCondition":    -1,
+				"DuplicatedCondition": -1,
+			},
+			"unschedulable": false,
 		},
 	},
 	"volume": {
@@ -707,6 +714,13 @@ var ExpectedGroupDataWithoutStaticPodsStatus = definition.RawGroups{
 					"errors":  uint64(0),
 				},
 			},
+			"conditions": map[string]int{
+				"TrueCondition":       1,
+				"FalseCondition":      0,
+				"UnknownCondition":    -1,
+				"DuplicatedCondition": -1,
+			},
+			"unschedulable": false,
 		},
 	},
 	"volume": {
