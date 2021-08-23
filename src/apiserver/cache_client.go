@@ -38,6 +38,7 @@ func NewFileCacheClientWrapper(client Client, config client.DiscoveryCacherConfi
 		client:       client,
 		cache:        config.Storage,
 		ttl:          config.TTL,
+		ttlJitter:    config.TTLJitter,
 		timeProvider: currentTimeProvider(0),
 	}
 
@@ -53,6 +54,7 @@ type fileCacheClient struct {
 	client       Client
 	cache        storage.Storage
 	ttl          time.Duration
+	ttlJitter    uint
 	timeProvider TimeProvider
 }
 
@@ -75,7 +77,7 @@ func (f *fileCacheClient) load(obj interface{}, objectName string) bool {
 		return false
 	}
 
-	return !client.Expired(f.timeProvider.Time(), cacheTime, f.ttl, 0)
+	return !client.Expired(f.timeProvider.Time(), cacheTime, f.ttl, f.ttlJitter)
 }
 
 func (f *fileCacheClient) store(obj interface{}, objectName string) error {
