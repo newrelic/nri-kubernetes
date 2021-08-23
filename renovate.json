@@ -1,5 +1,16 @@
 {
   "extends": [
     "config:base"
+  ],
+  "regexManagers": [
+    {
+      "fileMatch": [
+        "^Dockerfile$"
+      ],
+      "datasourceTemplate": "docker",
+      "matchStrings": [
+        "BASE_IMAGE=(?<depName>.+):(?<currentValue>.+)"
+      ]
+    }
   ]
 }
