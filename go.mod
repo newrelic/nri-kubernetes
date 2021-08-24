@@ -4,10 +4,9 @@ go 1.16
 
 require (
 	github.com/golang/protobuf v1.5.2
-	github.com/golangci/golangci-lint v1.40.1
+	github.com/golangci/golangci-lint v1.42.0
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/newrelic/infra-integrations-sdk v2.0.1-0.20180410150501-14a5386f9150+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_model v0.2.0
