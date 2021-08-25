@@ -1,9 +1,10 @@
 package testdata
 
 import (
-	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 )
 
 // ExpectedGroupData is the expectation for main group_test tests.
