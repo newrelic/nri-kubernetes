@@ -3,10 +3,12 @@
     "config:base"
   ],
   "enabledManagers": [
+    // Enable only the regex manager (for Dockerfile base image bumping). Go dependencies are managed by Dependabot.
     "regex"
   ],
   "regexManagers": [
     {
+      // Parse bundle image version from `BASE_IMAGE` ARG in Dockerfile.
       "fileMatch": [
         "^Dockerfile$"
       ],
