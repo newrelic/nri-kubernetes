@@ -1,6 +1,7 @@
 package metric
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
@@ -23,4 +24,21 @@ func PrefixFromMapInt(prefix string) func(mapValue definition.FetchedValue) (def
 
 		return prefixed, nil
 	}
+}
+
+// OneMetricPerLabel transforms a map of labels to FetchedValues type,
+// which will be converted later to one metric per label.
+// It also prefix the labels with 'label.'
+func OneMetricPerLabel(rawLabels definition.FetchedValue) (definition.FetchedValue, error) {
+	labels, ok := rawLabels.(map[string]string)
+	if !ok {
+		return rawLabels, errors.New("error on creating kubelet label metrics")
+	}
+
+	modified := make(definition.FetchedValues, len(labels))
+	for k, v := range labels {
+		modified[fmt.Sprintf("label.%v", k)] = v
+	}
+
+	return modified, nil
 }
