@@ -157,10 +157,10 @@ var ExpectedGroupData = definition.RawGroups{
 			"podName":          "kube-state-metrics-57f4659995-6n2qq",
 			"nodeName":         "minikube",
 			"nodeIP":           "192.168.99.100",
-			//"restartCount": int32(7), // No restartCount since there is no restartCount in status field in the pod fetched from kubelet /pods.
-			//"isReady":              false, // No isReady since there is no isReady in status field in the pod fetched from kubelet /pods.
-			//"status":         "Running", // No Status since there is no ContainerStatuses field in the pod fetched from kubelet /pods.
-			//"startedAt":            parseTime("2018-02-27T15:21:37Z"), // No startedAt since there is no startedAt in status field in the pod fetched from kubelet /pods.
+			// "restartCount": int32(7), // No restartCount since there is no restartCount in status field in the pod fetched from kubelet /pods.
+			// "isReady":              false, // No isReady since there is no isReady in status field in the pod fetched from kubelet /pods.
+			// "status":         "Running", // No Status since there is no ContainerStatuses field in the pod fetched from kubelet /pods.
+			// "startedAt":            parseTime("2018-02-27T15:21:37Z"), // No startedAt since there is no startedAt in status field in the pod fetched from kubelet /pods.
 			"deploymentName":       "kube-state-metrics",
 			"cpuRequestedCores":    int64(101),
 			"cpuLimitCores":        int64(101),
@@ -189,10 +189,10 @@ var ExpectedGroupData = definition.RawGroups{
 			"podName":          "kube-state-metrics-57f4659995-6n2qq",
 			"nodeName":         "minikube",
 			"nodeIP":           "192.168.99.100",
-			//"restartCount": int32(7), // No restartCount since there is no restartCount in status field in the pod fetched from kubelet /pods.
-			//"isReady":              false, // No isReady since there is no isReady in status field in the pod fetched from kubelet /pods.
-			//"status":         "Running", // No Status since there is no ContainerStatuses field in the pod fetched from kubelet /pods.
-			//"startedAt":            parseTime("2018-02-27T15:21:37Z"), // No startedAt since there is no startedAt in status field in the pod fetched from kubelet /pods.
+			// "restartCount": int32(7), // No restartCount since there is no restartCount in status field in the pod fetched from kubelet /pods.
+			// "isReady":              false, // No isReady since there is no isReady in status field in the pod fetched from kubelet /pods.
+			// "status":         "Running", // No Status since there is no ContainerStatuses field in the pod fetched from kubelet /pods.
+			// "startedAt":            parseTime("2018-02-27T15:21:37Z"), // No startedAt since there is no startedAt in status field in the pod fetched from kubelet /pods.
 			"deploymentName":       "kube-state-metrics",
 			"cpuRequestedCores":    int64(100),
 			"cpuLimitCores":        int64(100),
@@ -561,10 +561,10 @@ var ExpectedGroupDataWithoutStaticPodsStatus = definition.RawGroups{
 			"podName":          "kube-state-metrics-57f4659995-6n2qq",
 			"nodeName":         "minikube",
 			"nodeIP":           "192.168.99.100",
-			//"restartCount": int32(7), // No restartCount since there is no restartCount in status field in the pod fetched from kubelet /pods.
-			//"isReady":              false, // No isReady since there is no isReady in status field in the pod fetched from kubelet /pods.
-			//"status":         "Running", // No Status since there is no ContainerStatuses field in the pod fetched from kubelet /pods.
-			//"startedAt":            parseTime("2018-02-27T15:21:37Z"), // No startedAt since there is no startedAt in status field in the pod fetched from kubelet /pods.
+			// "restartCount": int32(7), // No restartCount since there is no restartCount in status field in the pod fetched from kubelet /pods.
+			// "isReady":              false, // No isReady since there is no isReady in status field in the pod fetched from kubelet /pods.
+			// "status":         "Running", // No Status since there is no ContainerStatuses field in the pod fetched from kubelet /pods.
+			// "startedAt":            parseTime("2018-02-27T15:21:37Z"), // No startedAt since there is no startedAt in status field in the pod fetched from kubelet /pods.
 			"deploymentName":       "kube-state-metrics",
 			"cpuRequestedCores":    int64(101),
 			"cpuLimitCores":        int64(101),
@@ -593,10 +593,10 @@ var ExpectedGroupDataWithoutStaticPodsStatus = definition.RawGroups{
 			"podName":          "kube-state-metrics-57f4659995-6n2qq",
 			"nodeName":         "minikube",
 			"nodeIP":           "192.168.99.100",
-			//"restartCount": int32(7), // No restartCount since there is no restartCount in status field in the pod fetched from kubelet /pods.
-			//"isReady":              false, // No isReady since there is no isReady in status field in the pod fetched from kubelet /pods.
-			//"status":         "Running", // No Status since there is no ContainerStatuses field in the pod fetched from kubelet /pods.
-			//"startedAt":            parseTime("2018-02-27T15:21:37Z"), // No startedAt since there is no startedAt in status field in the pod fetched from kubelet /pods.
+			// "restartCount": int32(7), // No restartCount since there is no restartCount in status field in the pod fetched from kubelet /pods.
+			// "isReady":              false, // No isReady since there is no isReady in status field in the pod fetched from kubelet /pods.
+			// "status":         "Running", // No Status since there is no ContainerStatuses field in the pod fetched from kubelet /pods.
+			// "startedAt":            parseTime("2018-02-27T15:21:37Z"), // No startedAt since there is no startedAt in status field in the pod fetched from kubelet /pods.
 			"deploymentName":       "kube-state-metrics",
 			"cpuRequestedCores":    int64(100),
 			"cpuLimitCores":        int64(100),
