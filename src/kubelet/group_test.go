@@ -7,7 +7,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/newrelic/nri-kubernetes/v2/src/apiserver"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
+	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric/testdata"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
