@@ -66,7 +66,6 @@ func rawGroupsHandlerFunc(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		io.Copy(w, f) // nolint: errcheck
 	}
-
 }
 
 func TestGroup(t *testing.T) {
