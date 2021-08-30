@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ---
+## 2.8.0
+
+### Added
+
+ - Kubernetes v1.22.0 Support
+ 
+### Changed
+
+* Upgrade infrastructure-bundle to 2.6.4 (#123)
+  - See https://github.com/newrelic/infrastructure-bundle/releases/tag/2.6.4 for more details about the upgraded integrations in this release of the infrastructure-bundle
+
 ## 2.7.0
 
 ### Added
