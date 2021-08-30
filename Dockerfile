@@ -1,5 +1,5 @@
 ARG MODE=normal
-ARG BASE_IMAGE=newrelic/infrastructure-bundle:2.6.0
+ARG BASE_IMAGE=newrelic/infrastructure-bundle:2.6.4
 
 FROM $BASE_IMAGE AS base
 
