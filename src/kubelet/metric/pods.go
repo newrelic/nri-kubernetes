@@ -2,7 +2,6 @@ package metric
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -352,23 +351,6 @@ func deploymentNameBasedOnCreator(creatorKind, creatorName string) string {
 func replicasetNameToDeploymentName(rsName string) string {
 	s := strings.Split(rsName, "-")
 	return strings.Join(s[:len(s)-1], "-")
-}
-
-// OneMetricPerLabel transforms a map of labels to FetchedValues type,
-// which will be converted later to one metric per label.
-// It also prefix the labels with 'label.'
-func OneMetricPerLabel(rawLabels definition.FetchedValue) (definition.FetchedValue, error) {
-	labels, ok := rawLabels.(map[string]string)
-	if !ok {
-		return rawLabels, errors.New("error on creating kubelet label metrics")
-	}
-
-	modified := make(definition.FetchedValues, len(labels))
-	for k, v := range labels {
-		modified[fmt.Sprintf("label.%v", k)] = v
-	}
-
-	return modified, nil
 }
 
 func podID(pod *v1.Pod) string {

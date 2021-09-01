@@ -68,6 +68,29 @@ func main() {
 			Labels: map[string]string{
 				"node-role.kubernetes.io/master": "",
 			},
+			Conditions: []v1.NodeCondition{
+				{
+					Type:   "DiskPressure",
+					Status: v1.ConditionFalse,
+				},
+				{
+					Type:   "MemoryPressure",
+					Status: v1.ConditionFalse,
+				},
+				{
+					Type:   "DiskPressure",
+					Status: v1.ConditionFalse,
+				},
+				{
+					Type:   "PIDPressure",
+					Status: v1.ConditionFalse,
+				},
+				{
+					Type:   "Ready",
+					Status: v1.ConditionTrue,
+				},
+			},
+			Unschedulable: false,
 		},
 	}}
 

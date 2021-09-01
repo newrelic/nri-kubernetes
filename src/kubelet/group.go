@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/sirupsen/logrus"
+	v1 "k8s.io/api/core/v1"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/apiserver"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
@@ -82,6 +83,32 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 		}
 	}
 
+	// Convert node conditions to a map so our ValueFuncs can work nicely with them.
+	nodeConditions := make(map[string]int, len(nodeInfo.Conditions))
+
+	for _, condition := range nodeInfo.Conditions {
+		conditionValue := -1
+		switch condition.Status {
+		case v1.ConditionTrue:
+			conditionValue = 1
+		case v1.ConditionFalse:
+			conditionValue = 0
+		case v1.ConditionUnknown:
+			conditionValue = -1
+		default:
+			// Should be unreachable as any other value is not allowed by the API. But if it were, we skip it.
+			continue
+		}
+
+		// Since conditions is a list, there could be duplicate conditions. Check ff we have added this condition before
+		// with a different value, and set it to unknown if this is the case.
+		if oldValue, ok := nodeConditions[string(condition.Type)]; ok && oldValue != conditionValue {
+			conditionValue = -1
+		}
+
+		nodeConditions[string(condition.Type)] = conditionValue
+	}
+
 	g := definition.RawGroups{
 		"node": {
 			response.Node.NodeName: definition.RawMetrics{
@@ -90,6 +117,8 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 				"capacity":             nodeInfo.Capacity,
 				"memoryRequestedBytes": requestedMemoryBytes,
 				"cpuRequestedCores":    requestedCPUMillis,
+				"conditions":           nodeConditions,
+				"unschedulable":        nodeInfo.Unschedulable,
 			},
 		},
 	}

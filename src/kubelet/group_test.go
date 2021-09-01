@@ -7,7 +7,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/newrelic/nri-kubernetes/v2/src/apiserver"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
+	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric/testdata"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
@@ -66,7 +66,6 @@ func rawGroupsHandlerFunc(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		io.Copy(w, f) // nolint: errcheck
 	}
-
 }
 
 func TestGroup(t *testing.T) {
@@ -94,6 +93,29 @@ func TestGroup(t *testing.T) {
 				v1.ResourceEphemeralStorage: *resource.NewQuantity(18211586048, resource.BinarySI),
 				v1.ResourceMemory:           *resource.NewQuantity(2033283072, resource.BinarySI),
 			},
+			Conditions: []v1.NodeCondition{
+				{
+					Type:   "TrueCondition",
+					Status: v1.ConditionTrue,
+				},
+				{
+					Type:   "FalseCondition",
+					Status: v1.ConditionFalse,
+				},
+				{
+					Type:   "UnknownCondition",
+					Status: v1.ConditionUnknown,
+				},
+				{
+					Type:   "DuplicatedCondition",
+					Status: v1.ConditionTrue,
+				},
+				{
+					Type:   "DuplicatedCondition",
+					Status: v1.ConditionFalse,
+				},
+			},
+			Unschedulable: false,
 		},
 	}}
 	queries := []prometheus.Query{
