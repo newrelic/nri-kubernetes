@@ -40,19 +40,23 @@ func (c clientImpl) GetNodeInfo(nodeName string) (*NodeInfo, error) {
 	}
 
 	return &NodeInfo{
-		NodeName:    node.ObjectMeta.Name,
-		Labels:      node.Labels,
-		Allocatable: node.Status.Allocatable,
-		Capacity:    node.Status.Capacity,
+		NodeName:      node.ObjectMeta.Name,
+		Labels:        node.Labels,
+		Allocatable:   node.Status.Allocatable,
+		Capacity:      node.Status.Capacity,
+		Conditions:    node.Status.Conditions,
+		Unschedulable: node.Spec.Unschedulable,
 	}, nil
 }
 
 // NodeInfo contains information about a specific node
 type NodeInfo struct {
-	NodeName    string
-	Labels      map[string]string
-	Allocatable v1.ResourceList
-	Capacity    v1.ResourceList
+	NodeName      string
+	Labels        map[string]string
+	Allocatable   v1.ResourceList
+	Capacity      v1.ResourceList
+	Conditions    []v1.NodeCondition
+	Unschedulable bool
 }
 
 // IsMasterNode returns true if the NodeInfo contains the labels that

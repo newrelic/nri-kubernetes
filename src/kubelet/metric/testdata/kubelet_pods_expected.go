@@ -87,7 +87,7 @@ var ExpectedRawData = definition.RawGroups{
 			"restartCount":   int32(6),
 			"isReady":        true,
 			"status":         "Running",
-			//"reason": "", // TODO
+			// "reason":               "", // TODO
 			"startedAt":            parseTime("2018-02-27T15:21:16Z"),
 			"cpuRequestedCores":    int64(100),
 			"memoryRequestedBytes": int64(104857600),
@@ -105,11 +105,11 @@ var ExpectedRawData = definition.RawGroups{
 			"podName":        "kube-state-metrics-57f4659995-6n2qq",
 			"nodeName":       "minikube",
 			"nodeIP":         "192.168.99.100",
-			//"restartCount": int32(7), // No restartCount since there is no restartCount in status field in the pod.
-			//"isReady":              false, // No isReady since there is no isReady in status field in the pod.
-			//"status":         "Running", // No Status since there is no ContainerStatuses field in the pod.
+			// "restartCount":   int32(7),  // No restartCount since there is no restartCount in status field in the pod.
+			// "isReady":        false,     // No isReady since there is no isReady in status field in the pod.
+			// "status":         "Running", // No Status since there is no ContainerStatuses field in the pod.
 			"deploymentName": "kube-state-metrics",
-			//"startedAt":            parseTime("2018-02-27T15:21:37Z"), // No startedAt since there is no startedAt in status field in the pod.
+			// "startedAt":            parseTime("2018-02-27T15:21:37Z"), // No startedAt since there is no startedAt in status field in the pod.
 			"cpuRequestedCores":    int64(101),
 			"cpuLimitCores":        int64(101),
 			"memoryRequestedBytes": int64(106954752),
@@ -126,12 +126,12 @@ var ExpectedRawData = definition.RawGroups{
 			"podName":        "kube-state-metrics-57f4659995-6n2qq",
 			"nodeName":       "minikube",
 			"nodeIP":         "192.168.99.100",
-			//"restartCount": int32(7), // No restartCount since there is no restartCount in status field in the pod.
-			//"isReady":        false, // No isReady since there is no isReady in status field in the pod.
-			//"status":         "Running", // No Status since there is no ContainerStatuses field in the pod.
+			// "restartCount":   int32(7),  // No restartCount since there is no restartCount in status field in the pod.
+			// "isReady":        false,     // No isReady since there is no isReady in status field in the pod.
+			// "status":         "Running", // No Status since there is no ContainerStatuses field in the pod.
 			"deploymentName": "kube-state-metrics",
-			//"reason": "", // TODO
-			//"startedAt":            parseTime("2018-02-27T15:21:38Z"), // No startedAt since there is no startedAt in status field in the pod.
+			// "reason":               "",                                // TODO
+			// "startedAt":            parseTime("2018-02-27T15:21:38Z"), // No startedAt since there is no startedAt in status field in the pod.
 			"cpuRequestedCores":    int64(100),
 			"cpuLimitCores":        int64(100),
 			"memoryRequestedBytes": int64(31457280),
