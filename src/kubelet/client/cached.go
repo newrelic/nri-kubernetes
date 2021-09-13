@@ -5,10 +5,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
-	"github.com/newrelic/nri-kubernetes/v2/src/storage"
 )
 
 const cachedKey = "kubelet-client"
@@ -57,15 +54,13 @@ func decompose(source client.HTTPClient) (interface{}, error) {
 
 // NewDiscoveryCacher creates a new DiscoveryCacher that wraps a discoverer and caches the data into the
 // specified storage
-func NewDiscoveryCacher(discoverer client.Discoverer, storage storage.Storage, ttl time.Duration, logger *logrus.Logger) *client.DiscoveryCacher {
+func NewDiscoveryCacher(discoverer client.Discoverer, config client.DiscoveryCacherConfig) *client.DiscoveryCacher {
 	return &client.DiscoveryCacher{
-		CachedDataPtr: &cache{},
-		StorageKey:    cachedKey,
-		Discoverer:    discoverer,
-		Storage:       storage,
-		TTL:           ttl,
-		Logger:        logger,
-		Compose:       compose,
-		Decompose:     decompose,
+		DiscoveryCacherConfig: config,
+		CachedDataPtr:         &cache{},
+		StorageKey:            cachedKey,
+		Discoverer:            discoverer,
+		Compose:               compose,
+		Decompose:             decompose,
 	}
 }

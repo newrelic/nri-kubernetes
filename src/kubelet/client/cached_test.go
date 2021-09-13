@@ -2,7 +2,6 @@ package client
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"testing"
 	"time"
@@ -20,10 +19,6 @@ func TestDiscover_Cache_HTTP(t *testing.T) {
 	c := mockedClient()
 	onFindNode(c, defaultNodeName, "1.2.3.4", defaultInsecureKubeletPort)
 
-	// And a disk cache storage
-	tmpDir, err := ioutil.TempDir("", "test_discover_cached_kubelet")
-	assert.NoError(t, err)
-	storage := storage.NewJSONDiskStorage(tmpDir)
 	// and an Discoverer implementation
 	wrappedDiscoverer := discoverer{
 		nodeName:    defaultNodeName,
@@ -33,7 +28,7 @@ func TestDiscover_Cache_HTTP(t *testing.T) {
 	}
 
 	// And a Kubelet Discovery Cacher
-	cacher := NewDiscoveryCacher(&wrappedDiscoverer, storage, time.Hour, logger)
+	cacher := NewDiscoveryCacher(&wrappedDiscoverer, testCacherConfig())
 
 	// That successfully retrieved the insecure Kubelet URL
 	caClient, err := cacher.Discover(timeout)
@@ -60,10 +55,6 @@ func TestDiscover_Cache_HTTPS_InsecureClient(t *testing.T) {
 	c := mockedClient()
 	onFindNode(c, defaultNodeName, "1.2.3.4", defaultSecureKubeletPort)
 
-	// And a disk cache storage
-	tmpDir, err := ioutil.TempDir("", "test_discover_cached_kubelet")
-	assert.NoError(t, err)
-	storage := storage.NewJSONDiskStorage(tmpDir)
 	// and an Discoverer implementation
 	wrappedDiscoverer := discoverer{
 		nodeName:    defaultNodeName,
@@ -73,7 +64,7 @@ func TestDiscover_Cache_HTTPS_InsecureClient(t *testing.T) {
 	}
 
 	// And a Kubelet Discovery Cacher
-	cacher := NewDiscoveryCacher(&wrappedDiscoverer, storage, time.Hour, logger)
+	cacher := NewDiscoveryCacher(&wrappedDiscoverer, testCacherConfig())
 
 	// That successfully retrieved the secure Kubelet URL
 	caClient, err := cacher.Discover(timeout)
@@ -99,10 +90,6 @@ func TestDiscover_Cache_HTTPS_SecureClient(t *testing.T) {
 	// In a node whose Kubelet endpoint has not an standard port
 	onFindNode(c, defaultNodeName, "1.2.3.4", 55332)
 
-	// And a disk cache storage
-	tmpDir, err := ioutil.TempDir("", "test_discover_cached_kubelet")
-	assert.NoError(t, err)
-	storage := storage.NewJSONDiskStorage(tmpDir)
 	// and an Discoverer implementation
 	wrappedDiscoverer := discoverer{
 		nodeName:    defaultNodeName,
@@ -112,7 +99,7 @@ func TestDiscover_Cache_HTTPS_SecureClient(t *testing.T) {
 	}
 
 	// And a Kubelet Discovery Cacher
-	cacher := NewDiscoveryCacher(&wrappedDiscoverer, storage, time.Hour, logger)
+	cacher := NewDiscoveryCacher(&wrappedDiscoverer, testCacherConfig())
 
 	// That successfully retrieved the secure Kubelet API URL
 	caClient, err := cacher.Discover(timeout)
@@ -138,10 +125,6 @@ func TestDiscover_Cache_DiscoveryError(t *testing.T) {
 	// That doesn't find node so it isn't going to be able to find the kubelet host IP
 	c.On("FindNode", defaultNodeName).Return(&v1.Node{}, fmt.Errorf("Node not found"))
 
-	// And a disk cache storage
-	tmpDir, err := ioutil.TempDir("", "test_discover_cached_kubelet")
-	assert.NoError(t, err)
-	storage := storage.NewJSONDiskStorage(tmpDir)
 	// and an Discoverer implementation
 	wrappedDiscoverer := discoverer{
 		nodeName:    defaultNodeName,
@@ -151,10 +134,18 @@ func TestDiscover_Cache_DiscoveryError(t *testing.T) {
 	}
 
 	// And a Kubelet Discovery Cacher without any cached data
-	cacher := NewDiscoveryCacher(&wrappedDiscoverer, storage, time.Hour, logger)
+	cacher := NewDiscoveryCacher(&wrappedDiscoverer, testCacherConfig())
 
 	// When retrieving the Kubelet client
-	_, err = cacher.Discover(timeout)
+	_, err := cacher.Discover(timeout)
 	// The system returns an error
 	assert.Error(t, err)
+}
+
+func testCacherConfig() client.DiscoveryCacherConfig {
+	return client.DiscoveryCacherConfig{
+		Storage: &storage.MemoryStorage{},
+		TTL:     time.Hour,
+		Logger:  logger,
+	}
 }

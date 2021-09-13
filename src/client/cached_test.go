@@ -9,71 +9,20 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/storage"
 )
 
-var logger = logrus.StandardLogger()
-var timeout = time.Second
-var storageKey = "mock-discovery-client"
-
-// Fake storage that backs data in-memory
-type fakeStorage struct {
-	values map[string]interface{}
-}
-
-func newFakeStorage() *fakeStorage {
-	return &fakeStorage{
-		values: map[string]interface{}{},
-	}
-}
-
-func (f *fakeStorage) Write(key string, value interface{}) error {
-	f.values[key] = value
-	return nil
-}
-
-func (f *fakeStorage) Read(key string, valuePtr interface{}) (int64, error) {
-	valPtr, ok := f.values[key].(*MockedKubernetes)
-	if !ok {
-		return 0, fmt.Errorf("key not found: %s", key)
-	}
-	*(valuePtr.(*MockedKubernetes)) = *valPtr //nolint: govet
-	return int64(1234567), nil
-}
-
-func (f *fakeStorage) Delete(key string) error {
-	_, ok := f.values[key]
-	if !ok {
-		return fmt.Errorf("key not found: %s", key)
-	}
-	delete(f.values, key)
-	return nil
-}
-
-func discoveryCacher(client HTTPClient, discoverer Discoverer, st storage.Storage) *DiscoveryCacher {
-	return &DiscoveryCacher{
-		StorageKey: storageKey,
-		Discoverer: discoverer,
-		Storage:    st,
-		Logger:     logger,
-		// Since we use just memory, Compose and Decompose are just identity functions
-		Compose: func(source interface{}, _ *DiscoveryCacher, _ time.Duration) (HTTPClient, error) {
-			return source.(HTTPClient), nil
-		},
-		Decompose: func(source HTTPClient) (interface{}, error) {
-			return client, nil
-		},
-	}
-}
+const (
+	timeout = time.Second
+)
 
 func TestCacheAwareClient_CachedClientWorks(t *testing.T) {
-	// Setup storage
-	store := newFakeStorage()
+	t.Parallel()
 
 	// Setup discovered client
 	wrappedClient := new(MockDiscoveredHTTPClient)
-	wrappedClient.On("NodeIP").Return("1.2.3.4")
 	wrappedClient.On("Do", mock.Anything, mock.Anything).Return(&http.Response{StatusCode: 200}, nil)
 
 	// Setup wrapped discoverer
@@ -82,7 +31,7 @@ func TestCacheAwareClient_CachedClientWorks(t *testing.T) {
 		Once() // Expectation: the discovery process will be invoked only once
 
 	// Given a DiscoveryCacher
-	cacher := discoveryCacher(wrappedClient, discoverer, store)
+	cacher := discoveryCacher(wrappedClient, discoverer)
 
 	// That discovers a client
 	client, err := cacher.Discover(timeout)
@@ -98,12 +47,10 @@ func TestCacheAwareClient_CachedClientWorks(t *testing.T) {
 }
 
 func TestCacheAwareClient_CachedClientDoesNotWork(t *testing.T) {
-	// Setup storage
-	store := newFakeStorage()
+	t.Parallel()
 
 	// Setup discovered client
 	wrappedClient := new(MockDiscoveredHTTPClient)
-	wrappedClient.On("NodeIP").Return("1.2.3.4")
 	// After the error on the first call, the second call returns a correct value
 	wrappedClient.On("Do", mock.Anything, mock.Anything).
 		Return(nil, fmt.Errorf("patapum")).Once()
@@ -116,7 +63,7 @@ func TestCacheAwareClient_CachedClientDoesNotWork(t *testing.T) {
 		Twice() // Expectation: the discovery process will be invoked twice
 
 	// Given a DiscoveryCacher
-	cacher := discoveryCacher(wrappedClient, discoverer, store)
+	cacher := discoveryCacher(wrappedClient, discoverer)
 
 	// That discovers a client
 	client, err := cacher.Discover(timeout)
@@ -132,12 +79,10 @@ func TestCacheAwareClient_CachedClientDoesNotWork(t *testing.T) {
 }
 
 func TestCacheAwareClient_RediscoveryDoesntWork(t *testing.T) {
-	// Setup storage
-	store := newFakeStorage()
+	t.Parallel()
 
 	// Setup discovered client
 	wrappedClient := new(MockDiscoveredHTTPClient)
-	wrappedClient.On("NodeIP").Return("1.2.3.4")
 	wrappedClient.On("Do", mock.Anything, mock.Anything).
 		Return(nil, fmt.Errorf("patapum"))
 
@@ -148,7 +93,7 @@ func TestCacheAwareClient_RediscoveryDoesntWork(t *testing.T) {
 	discoverer.On("Discover", mock.Anything).Return((*MockDiscoveredHTTPClient)(nil), fmt.Errorf("discovery failed"))
 
 	// Given a DiscoveryCacher
-	cacher := discoveryCacher(wrappedClient, discoverer, store)
+	cacher := discoveryCacher(wrappedClient, discoverer)
 
 	// That discovers a client
 	client, err := cacher.Discover(timeout)
@@ -163,6 +108,195 @@ func TestCacheAwareClient_RediscoveryDoesntWork(t *testing.T) {
 	discoverer.AssertExpectations(t)
 
 	// And the cache has been invalidated
-	_, err = store.Read(storageKey, &struct{}{})
+	_, err = cacher.Storage.Read(cacher.StorageKey, &struct{}{})
 	assert.Error(t, err)
+}
+
+func Test_CacheAwareClient_when_cache_TTL_is_not_reached(t *testing.T) {
+	t.Parallel()
+
+	// Setup discovered client
+	wrappedClient := new(MockDiscoveredHTTPClient)
+	wrappedClient.On("Do", mock.Anything, mock.Anything).Return(&http.Response{StatusCode: 200}, nil)
+
+	// Setup wrapped discoverer
+	discoverer := new(MockDiscoverer)
+	discoverer.On("Discover", mock.Anything).Return(wrappedClient, nil).
+		Once() // Expectation: the discovery process will be invoked only once
+
+	// Given a DiscoveryCacher
+	cacher := discoveryCacher(wrappedClient, discoverer)
+	cacher.TTL = time.Hour
+
+	// That discovers a client
+	_, err := cacher.Discover(timeout)
+	require.NoError(t, err, "running discovery")
+
+	client, err := cacher.Discover(timeout)
+	require.NoError(t, err, "running discovery again")
+
+	t.Run("returns_functional_cached_HTTP_client", func(t *testing.T) {
+		resp, err := client.Do("GET", "/api/path")
+		assert.NoError(t, err)
+		assert.Equal(t, 200, resp.StatusCode)
+	})
+
+	t.Run("does_not_perform_the_discovery", func(t *testing.T) {
+		// The Discovery process has been triggered once
+		discoverer.AssertExpectations(t)
+	})
+}
+
+func Test_CacheAwareClient_perform_the_discovery_again_when_cache_TTL_is_reached(t *testing.T) {
+	t.Parallel()
+
+	// Setup discovered client
+	wrappedClient := new(MockDiscoveredHTTPClient)
+	wrappedClient.On("Do", mock.Anything, mock.Anything).Return(&http.Response{StatusCode: 200}, nil)
+
+	// Setup wrapped discoverer
+	discoverer := new(MockDiscoverer)
+	discoverer.On("Discover", mock.Anything).Return(wrappedClient, nil).
+		Times(2) // Expectation: the discovery process will be invoked twice.
+
+	// Given a DiscoveryCacher
+	cacher := discoveryCacher(wrappedClient, discoverer)
+	cacher.TTL = time.Second
+
+	// That discovers a client
+	_, err := cacher.Discover(timeout)
+	require.NoError(t, err, "running discovery")
+
+	time.Sleep(2 * cacher.TTL) // Sleep twice the TTL to make sure we don't hit cache.
+
+	_, err = cacher.Discover(timeout)
+	require.NoError(t, err, "running discovery again")
+
+	// The Discovery process has been triggered once.
+	discoverer.AssertExpectations(t)
+}
+
+func Test_CacheAwareClient_returns_error_when(t *testing.T) {
+	t.Parallel()
+
+	t.Run("discovery_fails", func(t *testing.T) {
+		t.Parallel()
+
+		// Setup wrapped discoverer
+		discoverer := new(MockDiscoverer)
+		discoverer.On("Discover", mock.Anything).Return(nil, fmt.Errorf("error"))
+
+		// Given a DiscoveryCacher
+		cacher := discoveryCacher(nil, discoverer)
+
+		// That discovers a client
+		_, err := cacher.Discover(timeout)
+		require.Error(t, err)
+	})
+
+	t.Run("cache_composition_fails", func(t *testing.T) {
+		t.Parallel()
+
+		// Setup discovered client
+		wrappedClient := new(MockDiscoveredHTTPClient)
+		wrappedClient.On("Do", mock.Anything, mock.Anything).Return(&http.Response{StatusCode: 200}, nil)
+
+		// Setup wrapped discoverer
+		discoverer := new(MockDiscoverer)
+		discoverer.On("Discover", mock.Anything).Return(wrappedClient, nil)
+
+		// Given a DiscoveryCacher
+		cacher := discoveryCacher(wrappedClient, discoverer)
+		cacher.TTL = time.Hour
+		cacher.Compose = func(_ interface{}, _ *DiscoveryCacher, _ time.Duration) (HTTPClient, error) {
+			return nil, fmt.Errorf("error")
+		}
+
+		// That discovers a client
+		_, err := cacher.Discover(timeout)
+		require.NoError(t, err)
+
+		_, err = cacher.Discover(timeout)
+		require.Error(t, err)
+	})
+}
+
+func Test_CacheAwareClient_ignores_cache_decomposition_errors(t *testing.T) {
+	t.Parallel()
+
+	// Setup discovered client
+	wrappedClient := new(MockDiscoveredHTTPClient)
+	wrappedClient.On("Do", mock.Anything, mock.Anything).Return(&http.Response{StatusCode: 200}, nil)
+
+	// Setup wrapped discoverer
+	discoverer := new(MockDiscoverer)
+	discoverer.On("Discover", mock.Anything).Return(wrappedClient, nil)
+
+	// Given a DiscoveryCacher
+	cacher := discoveryCacher(wrappedClient, discoverer)
+	cacher.TTL = time.Hour
+	cacher.Decompose = func(source HTTPClient) (interface{}, error) {
+		return nil, fmt.Errorf("error")
+	}
+
+	// That discovers a client
+	_, err := cacher.Discover(timeout)
+	require.NoError(t, err)
+}
+
+func Test_Cache_TTL_remains_intact_when_jitter_max_percentage_is_zero(t *testing.T) {
+	currentTime := time.Now()
+	creationTimestamp := currentTime.Unix() - 1
+	ttl := time.Second
+	jitterMaxPercentage := uint(0)
+
+	for i := 0; i < testIterations; i++ {
+		if !Expired(currentTime, creationTimestamp, ttl, jitterMaxPercentage) {
+			t.Fatalf("Unexpected cache expiration")
+		}
+	}
+}
+
+func Test_Cache_eventually_reaches_jitter_max_percentage(t *testing.T) {
+	currentTime := time.Now()
+	creationTimestamp := currentTime.Unix() - 100
+	ttl := 100 * time.Second
+	jitterMaxPercentage := uint(20)
+
+	expired := false
+
+	for i := 0; i < testIterations; i++ {
+		if Expired(currentTime, creationTimestamp, ttl, jitterMaxPercentage) {
+			t.Logf("Expired after %d iterations", i)
+			expired = true
+			break
+		}
+	}
+
+	if !expired {
+		t.Fatalf("Cache never expired after %d iterations", testIterations)
+	}
+}
+
+const (
+	testIterations = 1000
+)
+
+func discoveryCacher(client HTTPClient, discoverer Discoverer) *DiscoveryCacher {
+	return &DiscoveryCacher{
+		DiscoveryCacherConfig: DiscoveryCacherConfig{
+			Storage: &storage.MemoryStorage{},
+			Logger:  logrus.StandardLogger(),
+		},
+		CachedDataPtr: &MockDiscoveredHTTPClient{},
+		StorageKey:    "mock-discovery-client",
+		Discoverer:    discoverer,
+		// Since we use just memory, Compose and Decompose are just identity functions
+		Decompose: func(source HTTPClient) (interface{}, error) {
+			return client, nil
+		},
+		Compose: func(source interface{}, _ *DiscoveryCacher, _ time.Duration) (HTTPClient, error) {
+			return source.(HTTPClient), nil
+		},
+	}
 }

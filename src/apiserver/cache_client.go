@@ -7,6 +7,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/version"
 
+	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/storage"
 )
 
@@ -31,16 +32,14 @@ type currentTimeProvider int
 
 func (currentTimeProvider) Time() time.Time { return time.Now() }
 
-// NewFileCacheClientWrapper wraps the given Client and caches the responses for the given cacheDuration.
-func NewFileCacheClientWrapper(client Client, cacheDir string, cacheDuration time.Duration, options ...Option) Client {
-
-	diskStore := storage.NewJSONDiskStorage(cacheDir)
-
+// NewFileCacheClientWrapper wraps the given Client and caches the responses for the given TTL.
+func NewFileCacheClientWrapper(client Client, config client.DiscoveryCacherConfig, options ...Option) Client {
 	fcc := &fileCacheClient{
-		client:        client,
-		cache:         diskStore,
-		cacheDuration: cacheDuration,
-		timeProvider:  currentTimeProvider(0),
+		client:       client,
+		cache:        config.Storage,
+		ttl:          config.TTL,
+		ttlJitter:    config.TTLJitter,
+		timeProvider: currentTimeProvider(0),
 	}
 
 	for _, opt := range options {
@@ -52,10 +51,11 @@ func NewFileCacheClientWrapper(client Client, cacheDir string, cacheDuration tim
 
 // fileCacheClient is an API Server client wrapper that caches responses on disk.
 type fileCacheClient struct {
-	client        Client
-	cache         storage.Storage
-	cacheDuration time.Duration
-	timeProvider  TimeProvider
+	client       Client
+	cache        storage.Storage
+	ttl          time.Duration
+	ttlJitter    uint
+	timeProvider TimeProvider
 }
 
 func getType(obj interface{}) string {
@@ -71,18 +71,13 @@ func cacheKey(obj interface{}, objectName string) string {
 	return fmt.Sprintf("%s.%s", objectType, objectName)
 }
 
-func (f *fileCacheClient) cacheExpired(cacheTime int64) bool {
-	now := f.timeProvider.Time().Unix()
-	return cacheTime+int64(f.cacheDuration.Seconds()) < now
-}
-
 func (f *fileCacheClient) load(obj interface{}, objectName string) bool {
 	cacheTime, err := f.cache.Read(cacheKey(obj, objectName), obj)
 	if err != nil {
 		return false
 	}
 
-	return !f.cacheExpired(cacheTime)
+	return !client.Expired(f.timeProvider.Time(), cacheTime, f.ttl, f.ttlJitter)
 }
 
 func (f *fileCacheClient) store(obj interface{}, objectName string) error {
@@ -90,7 +85,6 @@ func (f *fileCacheClient) store(obj interface{}, objectName string) error {
 }
 
 func (f *fileCacheClient) GetNodeInfo(nodeName string) (*NodeInfo, error) {
-
 	n := &NodeInfo{}
 
 	if f.load(n, nodeName) {

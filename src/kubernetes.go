@@ -32,28 +32,31 @@ import (
 
 type argumentList struct {
 	sdkArgs.DefaultArgumentList
-	Timeout                      int    `default:"5000" help:"timeout in milliseconds for calling metrics sources"`
-	ClusterName                  string `help:"Identifier of your cluster. You could use it later to filter data in your New Relic account"`
-	DiscoveryCacheDir            string `default:"/var/cache/nr-kubernetes" help:"The location of the cached values for discovered endpoints. Obsolete, use CacheDir instead."`
-	CacheDir                     string `default:"/var/cache/nr-kubernetes" help:"The location where to store various cached data."`
-	DiscoveryCacheTTL            string `default:"1h" help:"Duration since the discovered endpoints are stored in the cache until they expire. Valid time units: 'ns', 'us', 'ms', 's', 'm', 'h'"`
-	APIServerCacheTTL            string `default:"5m" help:"Duration to cache responses from the API Server. Valid time units: 'ns', 'us', 'ms', 's', 'm', 'h'. Set to 0s to disable"`
-	APIServerCacheK8SVersionTTL  string `default:"3h" help:"Duration to cache the kubernetes version responses from the API Server. Valid time units: 'ns', 'us', 'ms', 's', 'm', 'h'. Set to 0s to disable"`
-	EtcdTLSSecretName            string `help:"Name of the secret that stores your ETCD TLS configuration"`
-	EtcdTLSSecretNamespace       string `default:"default" help:"Namespace in which the ETCD TLS secret lives"`
-	DisableKubeStateMetrics      bool   `default:"false" help:"Used to disable KSM data fetching. Defaults to 'false''"`
-	KubeStateMetricsURL          string `help:"kube-state-metrics URL. If it is not provided, it will be discovered."`
-	KubeStateMetricsPodLabel     string `help:"discover KSM using Kubernetes Labels."`
-	KubeStateMetricsPort         int    `default:"8080" help:"port to query the KSM pod. Only works together with the pod label discovery"`
-	KubeStateMetricsScheme       string `default:"http" help:"scheme to query the KSM pod ('http' or 'https'). Only works together with the pod label discovery"`
-	KubeStateMetricsNamespace    string `default:"" help:"namespace to query the KSM pod. By default, all namespaces will be queried"`
-	DistributedKubeStateMetrics  bool   `default:"false" help:"Set to enable distributed KSM discovery. Requires that KubeStateMetricsPodLabel is set. Disabled by default."`
-	APIServerSecurePort          string `default:"" help:"Set to query the API Server over a secure port. Disabled by default"`
-	SchedulerEndpointURL         string `help:"Set a custom endpoint URL for the kube-scheduler endpoint."`
-	EtcdEndpointURL              string `help:"Set a custom endpoint URL for the Etcd endpoint."`
-	ControllerManagerEndpointURL string `help:"Set a custom endpoint URL for the kube-controller-manager endpoint."`
-	APIServerEndpointURL         string `help:"Set a custom endpoint URL for the API server endpoint."`
-	NetworkRouteFile             string `help:"Route file to get the default interface from. If left empty on Linux /proc/net/route will be used by default"`
+	Timeout                           int    `default:"5000" help:"timeout in milliseconds for calling metrics sources"`
+	ClusterName                       string `help:"Identifier of your cluster. You could use it later to filter data in your New Relic account"`
+	DiscoveryCacheDir                 string `default:"/var/cache/nr-kubernetes" help:"The location of the cached values for discovered endpoints. Obsolete, use CacheDir instead."`
+	CacheDir                          string `default:"/var/cache/nr-kubernetes" help:"The location where to store various cached data."`
+	DiscoveryCacheTTL                 string `default:"1h" help:"Duration since the discovered endpoints are stored in the cache until they expire. Valid time units: 'ns', 'us', 'ms', 's', 'm', 'h'"`
+	DiscoveryCacheTTLJitter           int    `default:"0" help:"Total percentage how much the TTL can be randomly reduced or increased to spead load on the API server for discovery. E.g. 100% can either double the TTL or reduce it to 0."`
+	APIServerCacheTTL                 string `default:"5m" help:"Duration to cache responses from the API Server. Valid time units: 'ns', 'us', 'ms', 's', 'm', 'h'. Set to 0s to disable"`
+	APIServerCacheTTLJitter           int    `default:"0" help:"Total percentage how much the TTL can be randomly reduced or increased to spead load on the API server for API metrics. E.g. 100% can either double the TTL or reduce it to 0."`
+	APIServerCacheK8SVersionTTL       string `default:"3h" help:"Duration to cache the kubernetes version responses from the API Server. Valid time units: 'ns', 'us', 'ms', 's', 'm', 'h'. Set to 0s to disable"`
+	APIServerCacheK8SVersionTTLJitter int    `default:"0" help:"Total percentage how much the TTL can be randomly reduced or increased to spead load on the API server for K8s version discovery. E.g. 100% can either double the TTL or reduce it to 0."`
+	EtcdTLSSecretName                 string `help:"Name of the secret that stores your ETCD TLS configuration"`
+	EtcdTLSSecretNamespace            string `default:"default" help:"Namespace in which the ETCD TLS secret lives"`
+	DisableKubeStateMetrics           bool   `default:"false" help:"Used to disable KSM data fetching. Defaults to 'false''"`
+	KubeStateMetricsURL               string `help:"kube-state-metrics URL. If it is not provided, it will be discovered."`
+	KubeStateMetricsPodLabel          string `help:"discover KSM using Kubernetes Labels."`
+	KubeStateMetricsPort              int    `default:"8080" help:"port to query the KSM pod. Only works together with the pod label discovery"`
+	KubeStateMetricsScheme            string `default:"http" help:"scheme to query the KSM pod ('http' or 'https'). Only works together with the pod label discovery"`
+	KubeStateMetricsNamespace         string `default:"" help:"namespace to query the KSM pod. By default, all namespaces will be queried"`
+	DistributedKubeStateMetrics       bool   `default:"false" help:"Set to enable distributed KSM discovery. Requires that KubeStateMetricsPodLabel is set. Disabled by default."`
+	APIServerSecurePort               string `default:"" help:"Set to query the API Server over a secure port. Disabled by default"`
+	SchedulerEndpointURL              string `help:"Set a custom endpoint URL for the kube-scheduler endpoint."`
+	EtcdEndpointURL                   string `help:"Set a custom endpoint URL for the Etcd endpoint."`
+	ControllerManagerEndpointURL      string `help:"Set a custom endpoint URL for the kube-controller-manager endpoint."`
+	APIServerEndpointURL              string `help:"Set a custom endpoint URL for the API server endpoint."`
+	NetworkRouteFile                  string `help:"Route file to get the default interface from. If left empty on Linux /proc/net/route will be used by default"`
 }
 
 const (
@@ -210,6 +213,18 @@ func main() {
 		logger.Panic(errors.New("cluster_name argument is mandatory"))
 	}
 
+	if args.APIServerCacheK8SVersionTTLJitter < 0 {
+		logger.Panicf("API server cache TTL jitter for K8s version must be a positive value, got %d", args.APIServerCacheK8SVersionTTLJitter)
+	}
+
+	if args.APIServerCacheTTLJitter < 0 {
+		logger.Panicf("API server cache TTL jitter must be a positive value, got: %d", args.APIServerCacheTTLJitter)
+	}
+
+	if args.DiscoveryCacheTTLJitter < 0 {
+		logger.Panicf("Discovery cache TTL jitter must be a positive value, got: %d", args.DiscoveryCacheTTLJitter)
+	}
+
 	nodeName := os.Getenv(nodeNameEnvVar)
 	if nodeName == "" {
 		logger.Panicf("%s env var should be provided by Kubernetes and is mandatory", nodeNameEnvVar)
@@ -219,10 +234,10 @@ func main() {
 		return
 	}
 
-	ttl, err := time.ParseDuration(args.DiscoveryCacheTTL)
+	discoveryCacheTTL, err := time.ParseDuration(args.DiscoveryCacheTTL)
 	if err != nil {
 		logger.WithError(err).Errorf("while parsing the cache TTL value. Defaulting to %s", defaultDiscoveryCacheTTL)
-		ttl = defaultDiscoveryCacheTTL
+		discoveryCacheTTL = defaultDiscoveryCacheTTL
 	}
 
 	timeout := time.Millisecond * time.Duration(args.Timeout)
@@ -234,11 +249,19 @@ func main() {
 	cacheStorage := storage.NewJSONDiskStorage(getCacheDir(discoveryCacheDir))
 
 	defaultNetworkInterface, err := network.CachedDefaultInterface(
-		logger, args.NetworkRouteFile, cacheStorage, ttl)
+		logger, args.NetworkRouteFile, cacheStorage, discoveryCacheTTL)
 	if err != nil {
 		logger.Warn(err)
 	}
-	kubeletDiscoverer := clientKubelet.NewDiscoveryCacher(innerKubeletDiscoverer, cacheStorage, ttl, logger)
+
+	config := client.DiscoveryCacherConfig{
+		Storage:   cacheStorage,
+		TTL:       discoveryCacheTTL,
+		TTLJitter: uint(args.DiscoveryCacheTTLJitter),
+		Logger:    logger,
+	}
+
+	kubeletDiscoverer := clientKubelet.NewDiscoveryCacher(innerKubeletDiscoverer, config)
 
 	kubeletClient, err := kubeletDiscoverer.Discover(timeout)
 	if err != nil {
@@ -255,12 +278,20 @@ func main() {
 	if !args.DisableKubeStateMetrics {
 		var ksmClients []client.HTTPClient
 		var ksmNodeIP string
+
+		config := client.DiscoveryCacherConfig{
+			Storage:   cacheStorage,
+			TTL:       discoveryCacheTTL,
+			TTLJitter: uint(args.DiscoveryCacheTTLJitter),
+			Logger:    logger,
+		}
+
 		if args.DistributedKubeStateMetrics {
 			ksmDiscoverer, err := getMultiKSMDiscoverer(kubeletNodeIP, logger)
 			if err != nil {
 				logger.Panic(err)
 			}
-			ksmDiscoveryCache := clientKsm.NewDistributedDiscoveryCacher(ksmDiscoverer, cacheStorage, ttl, logger)
+			ksmDiscoveryCache := clientKsm.NewDistributedDiscoveryCacher(ksmDiscoverer, config)
 			ksmClients, err = ksmDiscoveryCache.Discover(timeout)
 			logger.Debugf("found %d KSM clients:", len(ksmClients))
 			for _, c := range ksmClients {
@@ -275,7 +306,7 @@ func main() {
 			if err != nil {
 				logger.Panic(err)
 			}
-			ksmDiscoverer := clientKsm.NewDiscoveryCacher(innerKSMDiscoverer, cacheStorage, ttl, logger)
+			ksmDiscoverer := clientKsm.NewDiscoveryCacher(innerKSMDiscoverer, config)
 			ksmClient, err := ksmDiscoverer.Discover(timeout)
 			if err != nil {
 				logger.Panic(err)
@@ -295,22 +326,24 @@ func main() {
 
 	apiServerClient := apiserver.NewClient(k8s)
 
-	ttlAPIServerCacheK8SVersion, err := time.ParseDuration(args.APIServerCacheK8SVersionTTL)
+	apiServerCacheK8SVersionTTL, err := time.ParseDuration(args.APIServerCacheK8SVersionTTL)
 	if err != nil {
 		logger.WithError(err).Errorf(
 			"while parsing the api server cache TTL value for the kubernetes server version. Defaulting to %s",
 			defaultAPIServerCacheK8SVersionTTL,
 		)
-		ttlAPIServerCacheK8SVersion = defaultAPIServerCacheK8SVersionTTL
+		apiServerCacheK8SVersionTTL = defaultAPIServerCacheK8SVersionTTL
 	}
 
 	var apiServerClientK8sVersion apiserver.Client
-	if ttlAPIServerCacheK8SVersion != time.Duration(0) {
-		apiServerClientK8sVersion = apiserver.NewFileCacheClientWrapper(
-			apiServerClient,
-			getCacheDir(apiserverCacheDirK8sVersion),
-			ttlAPIServerCacheK8SVersion,
-		)
+	if apiServerCacheK8SVersionTTL != time.Duration(0) {
+		config := client.DiscoveryCacherConfig{
+			TTL:       apiServerCacheK8SVersionTTL,
+			TTLJitter: uint(args.APIServerCacheK8SVersionTTLJitter),
+			Storage:   storage.NewJSONDiskStorage(getCacheDir(apiserverCacheDirK8sVersion)),
+		}
+
+		apiServerClientK8sVersion = apiserver.NewFileCacheClientWrapper(apiServerClient, config)
 	} else {
 		apiServerClientK8sVersion = apiServerClient
 	}
@@ -320,16 +353,19 @@ func main() {
 	}
 	enableStaticPodsStatus := featureflag.StaticPodsStatus(k8sVersion)
 
-	ttlAPIServerCache, err := time.ParseDuration(args.APIServerCacheTTL)
+	apiServerCacheTTL, err := time.ParseDuration(args.APIServerCacheTTL)
 	if err != nil {
 		logger.WithError(err).Errorf("while parsing the api server cache TTL value. Defaulting to %s", defaultAPIServerCacheTTL)
-		ttlAPIServerCache = defaultAPIServerCacheTTL
+		apiServerCacheTTL = defaultAPIServerCacheTTL
 	}
 
-	if ttlAPIServerCache != time.Duration(0) {
-		apiServerClient = apiserver.NewFileCacheClientWrapper(apiServerClient,
-			getCacheDir(apiserverCacheDir),
-			ttlAPIServerCache)
+	if apiServerCacheTTL != time.Duration(0) {
+		config := client.DiscoveryCacherConfig{
+			TTL:       apiServerCacheTTL,
+			TTLJitter: uint(args.APIServerCacheTTLJitter),
+			Storage:   storage.NewJSONDiskStorage(getCacheDir(apiserverCacheDir)),
+		}
+		apiServerClient = apiserver.NewFileCacheClientWrapper(apiServerClient, config)
 	}
 
 	podsFetcher := metric2.NewPodsFetcher(logger, kubeletClient, enableStaticPodsStatus).FetchFuncWithCache()
