@@ -12,7 +12,6 @@ ARG TARGETARCH
 
 # ensure there is no default integration enabled
 RUN rm -rf /etc/newrelic-infra/integrations.d/*
-ADD nri-kubernetes-definition.yml /var/db/newrelic-infra/newrelic-integrations/
 ADD --chmod=755 bin/nri-kubernetes-${TARGETOS}-${TARGETARCH} /var/db/newrelic-infra/newrelic-integrations/bin/
 RUN mv /var/db/newrelic-infra/newrelic-integrations/bin/nri-kubernetes-${TARGETOS}-${TARGETARCH} \
        /var/db/newrelic-infra/newrelic-integrations/bin/nri-kubernetes
