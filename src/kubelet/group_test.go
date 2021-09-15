@@ -115,7 +115,8 @@ func TestGroup(t *testing.T) {
 					Status: v1.ConditionFalse,
 				},
 			},
-			Unschedulable: false,
+			Unschedulable:  false,
+			KubeletVersion: "v1.22.1",
 		},
 	}}
 	queries := []prometheus.Query{
