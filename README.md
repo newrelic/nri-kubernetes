@@ -82,7 +82,7 @@ For in cluster development process [Minikube](https://kubernetes.io/docs/setup/l
 
 ### Run
 
-Run `make deploy-dev`. This will compile your integration binary with compatibility for the container OS architecture, build a temporary docker image and finally deploy it to your Minikube.
+Run `GOOS=linux GOARCH=amd64 make deploy-dev`. This will compile your integration binary with compatibility for the container OS architecture, build a temporary docker image and finally deploy it to your Minikube.
 
 Then you can [view your data](#usage) or run the integration standalone. To do so follow the steps:
 

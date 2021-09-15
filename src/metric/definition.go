@@ -977,6 +977,7 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "unschedulable", ValueFunc: definition.Transform(definition.FromRaw("unschedulable"), toNumericBoolean), Type: sdkMetric.GAUGE},
 			{Name: "memoryRequestedBytes", ValueFunc: definition.FromRaw("memoryRequestedBytes"), Type: sdkMetric.GAUGE},
 			{Name: "cpuRequestedCores", ValueFunc: definition.Transform(definition.FromRaw("cpuRequestedCores"), toCores), Type: sdkMetric.GAUGE},
+			{Name: "kubeletVersion", ValueFunc: definition.FromRaw("kubeletVersion"), Type: sdkMetric.ATTRIBUTE},
 			// computed
 			{Name: "fsCapacityUtilization", ValueFunc: toUtilization("fsUsedBytes", "fsCapacityBytes"), Type: sdkMetric.GAUGE},
 			{Name: "allocatableCpuCoresUtilization", ValueFunc: toUtilization("cpuUsedCores", "allocatableCpuCores"), Type: sdkMetric.GAUGE},
