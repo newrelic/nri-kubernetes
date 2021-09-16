@@ -15,7 +15,6 @@ type Scenario struct {
 	Unprivileged               bool
 	RBAC                       bool
 	KSMVersion                 string
-	KSMImageRepository         string
 	TwoKSMInstances            bool
 	IntegrationImageRepository string
 	IntegrationImageTag        string
@@ -28,7 +27,6 @@ func (s Scenario) HelmValues() []string {
 	base := []string{
 		fmt.Sprintf("rbac=%v", s.RBAC),
 		fmt.Sprintf("ksm-instance-one.rbac.create=%v", s.RBAC),
-		fmt.Sprintf("ksm-instance-one.image.repository=%s", s.KSMImageRepository),
 		fmt.Sprintf("ksm-instance-one.image.tag=%s", s.KSMVersion),
 		fmt.Sprintf("daemonset.unprivileged=%v", s.Unprivileged),
 		fmt.Sprintf("daemonset.image.repository=%s", s.IntegrationImageRepository),
@@ -43,7 +41,6 @@ func (s Scenario) HelmValues() []string {
 	if s.TwoKSMInstances {
 		base = append(base, []string{
 			fmt.Sprintf("ksm-instance-two.rbac.create=%v", s.RBAC),
-			fmt.Sprintf("ksm-instance-two.image.repository=%s", s.KSMImageRepository),
 			fmt.Sprintf("ksm-instance-two.image.tag=%s", s.KSMVersion),
 			"two-ksm-instances=true",
 		}...)
