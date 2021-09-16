@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ---
+## 2.7.1
+
+### Fixed
+
+- Node status and conditions are now fetched from the Kubernetes API rather than KSM, which makes the query experience more consistent (#194)
+- Infrastructure agent and integrations have been updated to the latest versions (#202)
+
+
 ## 2.7.0
 
 ### Added
