@@ -11,7 +11,11 @@ build:
     context: .
     docker:
       dockerfile: Dockerfile
-  local: {}
+      buildArgs:
+        TARGETOS: linux
+        TARGETARCH: amd64
+  local:
+    useBuildkit: true
 deploy:
   kubectl:
     manifests:

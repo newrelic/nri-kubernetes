@@ -119,6 +119,7 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 				"cpuRequestedCores":    requestedCPUMillis,
 				"conditions":           nodeConditions,
 				"unschedulable":        nodeInfo.Unschedulable,
+				"kubeletVersion":       nodeInfo.KubeletVersion,
 			},
 		},
 	}
