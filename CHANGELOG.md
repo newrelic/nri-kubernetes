@@ -7,14 +7,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
----
-## 2.9.0
-
 ### Added
 
 - Moved default config.sample to [V4](https://docs.newrelic.com/docs/create-integrations/infrastructure-integrations-sdk/specifications/host-integrations-newer-configuration-format/), added a dependency for infra-agent version 1.20.0
 
 Please notice that old [V3](https://docs.newrelic.com/docs/create-integrations/infrastructure-integrations-sdk/specifications/host-integrations-standard-configuration-format/) configuration format is deprecated, but still supported.
+
+---
+
+## 2.8.1
+
+### Changed
+
+- Node status and conditions are now fetched from the API Server rather than KSM, which fixes some inconsistencies in the samples. This does not change which data is reported, and should be an invisible change. (https://github.com/newrelic/nri-kubernetes/pull/194).
+- Add a series of parameters which allow to configure a jitter to be applied to API Server response caching, which might help to spread the load on large clusters. (https://github.com/newrelic/nri-kubernetes/pull/185).
+
+## 2.7.1
+
+> Note: This is an out-of-order release which brings some hotfixes to the 2.7.x branch
+
+### Changed
+
+- Node status and conditions are now fetched from the API Server rather than KSM, which fixes some inconsistencies in the samples. This does not change which data is reported, and should be an invisible change.
 
 ## 2.8.0
 
