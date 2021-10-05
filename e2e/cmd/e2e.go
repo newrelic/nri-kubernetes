@@ -161,7 +161,8 @@ func main() {
 	expectedNumberOfNodes := 1
 
 	if nodesCount := len(nodes.Items); nodesCount != expectedNumberOfNodes {
-		testEnv.logger.Fatalf("e2e tests require %d number of nodes on the cluster, found %d", expectedNumberOfNodes, nodesCount)
+		testEnv.logger.Errorf("e2e tests require %d number of nodes on the cluster, found %d", expectedNumberOfNodes, nodesCount)
+		os.Exit(1)
 	}
 
 	testEnv.logger.Infof("Executing tests in %q cluster. K8s version: %s", k8sClient.Config.Host, k8sClient.ServerVersion())
@@ -226,7 +227,8 @@ func main() {
 				testEnv.logger.Info("Finishing execution because 'FailFast' is true")
 				testEnv.logger.Infof("Ran with the following configuration: %s", testScenario)
 
-				testEnv.logger.Fatal(err.Error())
+				testEnv.logger.Errorf(err.Error())
+				os.Exit(1)
 			}
 			errs = append(errs, err)
 		}
@@ -237,7 +239,8 @@ func main() {
 		for _, err := range errs {
 			testEnv.logger.Errorf(err.Error())
 		}
-		testEnv.logger.Fatal("Error Detected")
+		testEnv.logger.Errorf("Error Detected")
+		os.Exit(1)
 	}
 
 	testEnv.logger.Infof("OK")
