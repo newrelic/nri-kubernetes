@@ -289,7 +289,7 @@ func TestGetDeploymentNameForContainer_ErrorOnMissingData(t *testing.T) {
 
 func TestStatusForContainer(t *testing.T) {
 	var raw definition.RawGroups
-	var statusTests = []struct {
+	statusTests := []struct {
 		s        string
 		expected string
 	}{

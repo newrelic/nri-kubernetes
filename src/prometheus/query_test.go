@@ -2,18 +2,14 @@ package prometheus
 
 import (
 	"io"
-	"testing"
-
 	"net/http"
 	"net/http/httptest"
-
-	"github.com/stretchr/testify/assert"
-
 	"os"
-
-	"github.com/golang/protobuf/proto"
+	"testing"
 
 	model "github.com/prometheus/client_model/go"
+	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/proto"
 )
 
 type ksm struct {
@@ -40,7 +36,7 @@ func (c *ksm) NodeIP() string {
 
 func TestDo(t *testing.T) {
 	// TODO create or use an agnostic test sample.
-	var c = ksm{
+	c := ksm{
 		nodeIP: "1.2.3.4",
 	}
 

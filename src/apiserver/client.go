@@ -32,9 +32,7 @@ func (c clientImpl) GetServerVersion() (*version.Info, error) {
 
 // GetNodeInfo queries the API server for information about the given node
 func (c clientImpl) GetNodeInfo(nodeName string) (*NodeInfo, error) {
-
 	node, err := c.k8sClient.FindNode(nodeName)
-
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not find node information for nodeName='%s'", nodeName)
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/metric"
 	"github.com/newrelic/infra-integrations-sdk/sdk"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/version"
 )
 
@@ -80,16 +81,12 @@ func metricsNamingManipulator(ms metric.MetricSet, entity sdk.Entity, clusterNam
 	return ms.SetMetric("displayName", entity.Name, metric.ATTRIBUTE)
 }
 
-func TestIntegrationProtocol2PopulateFunc_CorrectValue(t *testing.T) {
+func TestIntegrationPopulator_CorrectValue(t *testing.T) {
 	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedEntityData1, err := sdk.NewEntityData("entity_id_1", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet1 := metric.MetricSet{
 		"event_type":  "TestSample",
@@ -104,9 +101,7 @@ func TestIntegrationProtocol2PopulateFunc_CorrectValue(t *testing.T) {
 	expectedEntityData1.Metrics = []metric.MetricSet{expectedMetricSet1}
 
 	expectedEntityData2, err := sdk.NewEntityData("entity_id_2", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 	expectedMetricSet2 := metric.MetricSet{
 		"event_type":  "TestSample",
 		"metric_1":    2,
@@ -119,7 +114,7 @@ func TestIntegrationProtocol2PopulateFunc_CorrectValue(t *testing.T) {
 	}
 	expectedEntityData2.Metrics = []metric.MetricSet{expectedMetricSet2}
 
-	populated, errs := IntegrationProtocol2PopulateFunc(
+	populated, errs := IntegrationPopulator(
 		integration,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
@@ -133,7 +128,7 @@ func TestIntegrationProtocol2PopulateFunc_CorrectValue(t *testing.T) {
 	assert.Contains(t, integration.Data, &expectedEntityData2)
 }
 
-func TestIntegrationProtocol2PopulateFunc_PartialResult(t *testing.T) {
+func TestIntegrationPopulator_PartialResult(t *testing.T) {
 	metricSpecsWithIncompatibleType := SpecGroups{
 		"test": SpecGroup{
 			TypeGenerator: fromGroupEntityTypeGuessFunc,
@@ -145,14 +140,10 @@ func TestIntegrationProtocol2PopulateFunc_PartialResult(t *testing.T) {
 	}
 
 	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedEntityData1, err := sdk.NewEntityData("entity_id_1", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet1 := metric.MetricSet{
 		"event_type":  "TestSample",
@@ -164,9 +155,7 @@ func TestIntegrationProtocol2PopulateFunc_PartialResult(t *testing.T) {
 	expectedEntityData1.Metrics = []metric.MetricSet{expectedMetricSet1}
 
 	expectedEntityData2, err := sdk.NewEntityData("entity_id_2", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 	expectedMetricSet2 := metric.MetricSet{
 		"event_type":  "TestSample",
 		"metric_1":    2,
@@ -176,7 +165,7 @@ func TestIntegrationProtocol2PopulateFunc_PartialResult(t *testing.T) {
 	}
 	expectedEntityData2.Metrics = []metric.MetricSet{expectedMetricSet2}
 
-	populated, errs := IntegrationProtocol2PopulateFunc(
+	populated, errs := IntegrationPopulator(
 		integration,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
@@ -191,16 +180,14 @@ func TestIntegrationProtocol2PopulateFunc_PartialResult(t *testing.T) {
 	assert.Len(t, errs, 2)
 }
 
-func TestIntegrationProtocol2PopulateFunc_EntitiesDataNotPopulated_EmptyMetricGroups(t *testing.T) {
+func TestIntegrationPopulator_EntitiesDataNotPopulated_EmptyMetricGroups(t *testing.T) {
 	metricGroupEmpty := RawGroups{}
 
 	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 	expectedData := make([]*sdk.EntityData, 0)
 
-	populated, errs := IntegrationProtocol2PopulateFunc(
+	populated, errs := IntegrationPopulator(
 		integration,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
@@ -213,11 +200,9 @@ func TestIntegrationProtocol2PopulateFunc_EntitiesDataNotPopulated_EmptyMetricGr
 	assert.Equal(t, expectedData, integration.Data)
 }
 
-func TestIntegrationProtocol2PopulateFunc_EntitiesDataNotPopulated_ErrorSettingEntities(t *testing.T) {
+func TestIntegrationPopulator_EntitiesDataNotPopulated_ErrorSettingEntities(t *testing.T) {
 	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	metricGroupEmptyEntityID := RawGroups{
 		"test": {
@@ -232,7 +217,7 @@ func TestIntegrationProtocol2PopulateFunc_EntitiesDataNotPopulated_ErrorSettingE
 	}
 	expectedData := []*sdk.EntityData{}
 
-	populated, errs := IntegrationProtocol2PopulateFunc(
+	populated, errs := IntegrationPopulator(
 		integration,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
@@ -245,7 +230,7 @@ func TestIntegrationProtocol2PopulateFunc_EntitiesDataNotPopulated_ErrorSettingE
 	assert.Equal(t, expectedData, integration.Data)
 }
 
-func TestIntegrationProtocol2PopulateFunc_MetricsSetsNotPopulated_OnlyEntity(t *testing.T) {
+func TestIntegrationPopulator_MetricsSetsNotPopulated_OnlyEntity(t *testing.T) {
 	metricSpecsIncorrect := SpecGroups{
 		"test": SpecGroup{
 			TypeGenerator: fromGroupEntityTypeGuessFunc,
@@ -256,14 +241,10 @@ func TestIntegrationProtocol2PopulateFunc_MetricsSetsNotPopulated_OnlyEntity(t *
 	}
 
 	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedEntityData1, err := sdk.NewEntityData("entity_id_1", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet1 := metric.MetricSet{
 		"event_type":  "TestSample",
@@ -274,9 +255,7 @@ func TestIntegrationProtocol2PopulateFunc_MetricsSetsNotPopulated_OnlyEntity(t *
 	expectedEntityData1.Metrics = []metric.MetricSet{expectedMetricSet1}
 
 	expectedEntityData2, err := sdk.NewEntityData("entity_id_2", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet2 := metric.MetricSet{
 		"event_type":  "TestSample",
@@ -286,7 +265,7 @@ func TestIntegrationProtocol2PopulateFunc_MetricsSetsNotPopulated_OnlyEntity(t *
 	}
 	expectedEntityData2.Metrics = []metric.MetricSet{expectedMetricSet2}
 
-	populated, errs := IntegrationProtocol2PopulateFunc(
+	populated, errs := IntegrationPopulator(
 		integration,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
@@ -303,7 +282,7 @@ func TestIntegrationProtocol2PopulateFunc_MetricsSetsNotPopulated_OnlyEntity(t *
 	assert.Contains(t, integration.Data, &expectedEntityData2)
 }
 
-func TestIntegrationProtocol2PopulateFunc_EntityIDGenerator(t *testing.T) {
+func TestIntegrationPopulator_EntityIDGenerator(t *testing.T) {
 	generator := func(groupLabel, rawEntityID string, g RawGroups) (string, error) {
 		return fmt.Sprintf("%v-generated", rawEntityID), nil
 	}
@@ -320,9 +299,7 @@ func TestIntegrationProtocol2PopulateFunc_EntityIDGenerator(t *testing.T) {
 	}
 
 	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 	raw := RawGroups{
 		"test": {
 			"testEntity1": {
@@ -337,9 +314,7 @@ func TestIntegrationProtocol2PopulateFunc_EntityIDGenerator(t *testing.T) {
 	}
 
 	expectedEntityData1, err := sdk.NewEntityData("testEntity1-generated", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet1 := metric.MetricSet{
 		"event_type":  "TestSample",
@@ -352,9 +327,7 @@ func TestIntegrationProtocol2PopulateFunc_EntityIDGenerator(t *testing.T) {
 	expectedEntityData1.Metrics = []metric.MetricSet{expectedMetricSet1}
 
 	expectedEntityData2, err := sdk.NewEntityData("testEntity2-generated", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet2 := metric.MetricSet{
 		"event_type":  "TestSample",
@@ -366,7 +339,7 @@ func TestIntegrationProtocol2PopulateFunc_EntityIDGenerator(t *testing.T) {
 	}
 	expectedEntityData2.Metrics = []metric.MetricSet{expectedMetricSet2}
 
-	populated, errs := IntegrationProtocol2PopulateFunc(
+	populated, errs := IntegrationPopulator(
 		integration,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
@@ -382,7 +355,7 @@ func TestIntegrationProtocol2PopulateFunc_EntityIDGenerator(t *testing.T) {
 	assert.Contains(t, integration.Data, &expectedEntityData2)
 }
 
-func TestIntegrationProtocol2PopulateFunc_EntityIDGeneratorFuncWithError(t *testing.T) {
+func TestIntegrationPopulator_EntityIDGeneratorFuncWithError(t *testing.T) {
 	generator := func(groupLabel, rawEntityID string, g RawGroups) (string, error) {
 		return "", errors.New("error generating entity ID")
 	}
@@ -398,11 +371,9 @@ func TestIntegrationProtocol2PopulateFunc_EntityIDGeneratorFuncWithError(t *test
 		},
 	}
 	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
-	populated, errs := IntegrationProtocol2PopulateFunc(
+	populated, errs := IntegrationPopulator(
 		integration,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
@@ -417,7 +388,7 @@ func TestIntegrationProtocol2PopulateFunc_EntityIDGeneratorFuncWithError(t *test
 	assert.Equal(t, integration.Data, []*sdk.EntityData{})
 }
 
-func TestIntegrationProtocol2PopulateFunc_PopulateOnlySpecifiedGroups(t *testing.T) {
+func TestIntegrationPopulator_PopulateOnlySpecifiedGroups(t *testing.T) {
 	generator := func(groupLabel, rawEntityID string, g RawGroups) (string, error) {
 		return fmt.Sprintf("%v-generated", rawEntityID), nil
 	}
@@ -457,9 +428,7 @@ func TestIntegrationProtocol2PopulateFunc_PopulateOnlySpecifiedGroups(t *testing
 	}
 
 	expectedEntityData1, err := sdk.NewEntityData("testEntity11-generated", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet1 := metric.MetricSet{
 		"event_type":  "TestSample",
@@ -472,10 +441,7 @@ func TestIntegrationProtocol2PopulateFunc_PopulateOnlySpecifiedGroups(t *testing
 	expectedEntityData1.Metrics = []metric.MetricSet{expectedMetricSet1}
 
 	expectedEntityData2, err := sdk.NewEntityData("testEntity12-generated", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
-
+	require.NoError(t, err)
 	expectedMetricSet2 := metric.MetricSet{
 		"event_type":  "TestSample",
 		"metric_1":    3,
@@ -487,9 +453,7 @@ func TestIntegrationProtocol2PopulateFunc_PopulateOnlySpecifiedGroups(t *testing
 	expectedEntityData2.Metrics = []metric.MetricSet{expectedMetricSet2}
 
 	expectedEntityData3, err := sdk.NewEntityData("playground", "k8s:cluster")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 	expectedMetricSet3 := metric.MetricSet{
 		"event_type":        "K8sClusterSample",
 		"entityName":        "k8s:cluster:playground",
@@ -503,10 +467,8 @@ func TestIntegrationProtocol2PopulateFunc_PopulateOnlySpecifiedGroups(t *testing
 	expectedEntityData3.Inventory = expectedInventory
 
 	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
-	if err != nil {
-		t.Fatal()
-	}
-	populated, errs := IntegrationProtocol2PopulateFunc(
+	require.NoError(t, err)
+	populated, errs := IntegrationPopulator(
 		integration,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
@@ -522,7 +484,7 @@ func TestIntegrationProtocol2PopulateFunc_PopulateOnlySpecifiedGroups(t *testing
 	assert.Len(t, integration.Data, 3)
 }
 
-func TestIntegrationProtocol2PopulateFunc_EntityTypeGeneratorFuncWithError(t *testing.T) {
+func TestIntegrationPopulator_EntityTypeGeneratorFuncWithError(t *testing.T) {
 	generatorWithError := func(_ string, _ string, _ RawGroups, _ string) (string, error) {
 		return "", errors.New("error generating entity type")
 	}
@@ -538,11 +500,9 @@ func TestIntegrationProtocol2PopulateFunc_EntityTypeGeneratorFuncWithError(t *te
 	}
 
 	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
-	populated, errs := IntegrationProtocol2PopulateFunc(
+	populated, errs := IntegrationPopulator(
 		integration,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
@@ -557,20 +517,16 @@ func TestIntegrationProtocol2PopulateFunc_EntityTypeGeneratorFuncWithError(t *te
 	assert.Equal(t, integration.Data, []*sdk.EntityData{})
 }
 
-func TestIntegrationProtocol2PopulateFunc_ManipulatorFuncWithError(t *testing.T) {
+func TestIntegrationPopulator_ManipulatorFuncWithError(t *testing.T) {
 	manipulatorFuncWithError := func(ms metric.MetricSet, entity sdk.Entity, clusterName string) error {
 		return errors.New("error from manipulator function")
 	}
 
 	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedEntityData1, err := sdk.NewEntityData("entity_id_1", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet1 := metric.MetricSet{
 		"entityName": "playground:test:entity_id_1",
@@ -583,9 +539,7 @@ func TestIntegrationProtocol2PopulateFunc_ManipulatorFuncWithError(t *testing.T)
 	expectedEntityData1.Metrics = []metric.MetricSet{expectedMetricSet1}
 
 	expectedEntityData2, err := sdk.NewEntityData("entity_id_2", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 	expectedMetricSet2 := metric.MetricSet{
 		"entityName": "playground:test:entity_id_2",
 		"event_type": "TestSample",
@@ -596,7 +550,7 @@ func TestIntegrationProtocol2PopulateFunc_ManipulatorFuncWithError(t *testing.T)
 	}
 	expectedEntityData2.Metrics = []metric.MetricSet{expectedMetricSet2}
 
-	populated, errs := IntegrationProtocol2PopulateFunc(
+	populated, errs := IntegrationPopulator(
 		integration,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
@@ -610,27 +564,21 @@ func TestIntegrationProtocol2PopulateFunc_ManipulatorFuncWithError(t *testing.T)
 	assert.Contains(t, integration.Data, &expectedEntityData2)
 }
 
-func TestIntegrationProtocol2PopulateFunc_msTypeGuesserFuncWithError(t *testing.T) {
+func TestIntegrationPopulator_msTypeGuesserFuncWithError(t *testing.T) {
 	msTypeGuesserFuncWithError := func(_, groupLabel, _ string, _ RawGroups) (string, error) {
 		return "", errors.New("error setting event type")
 	}
 
 	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedEntityData1, err := sdk.NewEntityData("entity_id_1", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedEntityData2, err := sdk.NewEntityData("entity_id_2", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
-	populated, errs := IntegrationProtocol2PopulateFunc(
+	populated, errs := IntegrationPopulator(
 		integration,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},

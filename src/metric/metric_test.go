@@ -6,15 +6,14 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/metric"
 	"github.com/newrelic/infra-integrations-sdk/sdk"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 )
 
 func TestK8sClusterMetricsManipulator(t *testing.T) {
 	entityData, err := sdk.NewEntityData("fluentd-elasticsearch-jnqb7", "k8s:playground:kube-system:pod")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 	metricSet := metric.MetricSet{
 		"event_type":        "K8sPodSample",
 		"podInfo.namespace": "kube-system",
@@ -59,9 +58,7 @@ func TestK8sMetricSetTypeGuesser(t *testing.T) {
 
 func TestK8sEntityMetricsManipulator(t *testing.T) {
 	entityData, err := sdk.NewEntityData("fluentd-elasticsearch-jnqb7", "k8s:playground:kube-system:pod")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 	metricSet := metric.MetricSet{
 		"event_type":        "K8sPodSample",
 		"podInfo.namespace": "kube-system",

@@ -24,7 +24,6 @@ func doCachedDefaultInterface(
 	storage storage.Storage,
 	ttl time.Duration,
 ) (string, error) {
-
 	var cached string
 	ts, err := storage.Read(storageKey, &cached)
 	if err == nil {
@@ -51,7 +50,7 @@ func doCachedDefaultInterface(
 		"Caching default network interface '%s' using key %q", defaultInterface, storageKey)
 	err = storage.Write(storageKey, defaultInterface)
 	if err != nil {
-		logger.WithError(err).Warnf("while storing %q in the cache", storageKey)
+		logger.Warnf("while storing %q in the cache: %v", storageKey, err)
 	}
 
 	return defaultInterface, nil

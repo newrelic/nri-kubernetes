@@ -12,6 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
 
@@ -223,11 +224,9 @@ func TestDo_HTTP(t *testing.T) {
 	defer s.Close()
 
 	endpoint, err := url.Parse(s.URL)
-	if err != nil {
-		assert.FailNow(t, err.Error())
-	}
+	require.NoError(t, err)
 
-	var c = &kubelet{
+	c := &kubelet{
 		nodeIP:     "1.2.3.4",
 		config:     rest.Config{BearerToken: "Foo"},
 		nodeName:   "nodeFoo",
@@ -252,11 +251,9 @@ func TestDo_HTTPS(t *testing.T) {
 	defer s.Close()
 
 	endpoint, err := url.Parse(s.URL)
-	if err != nil {
-		assert.FailNow(t, err.Error())
-	}
+	require.NoError(t, err)
 
-	var c = &kubelet{
+	c := &kubelet{
 		nodeIP:     "1.2.3.4",
 		config:     rest.Config{BearerToken: "Foo"},
 		nodeName:   "nodeFoo",
@@ -281,9 +278,7 @@ func TestCheckCall(t *testing.T) {
 	defer s.Close()
 
 	endpoint, err := url.Parse(s.URL)
-	if err != nil {
-		assert.FailNow(t, err.Error())
-	}
+	require.NoError(t, err)
 
 	err = checkCall(s.Client(), *endpoint, "foo", "foo token")
 	assert.NoError(t, err)
@@ -294,9 +289,7 @@ func TestCheckCall_ErrorNotSuccessStatusCode(t *testing.T) {
 	defer s.Close()
 
 	endpoint, err := url.Parse(s.URL)
-	if err != nil {
-		assert.FailNow(t, err.Error())
-	}
+	require.NoError(t, err)
 
 	expectedCalledURL := fmt.Sprintf("%s/foo", s.URL)
 

@@ -2,14 +2,13 @@ package jsonschema
 
 import (
 	"encoding/json"
-	"testing"
-
-	"os"
-
 	"io/ioutil"
+	"os"
+	"testing"
 
 	"github.com/newrelic/infra-integrations-sdk/sdk"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var s = map[string]EventTypeToSchemaFilename{
@@ -23,9 +22,7 @@ func TestNoError(t *testing.T) {
 	c := readTestInput(t, "testdata/input-complete.json")
 	i := sdk.IntegrationProtocol2{}
 	err := json.Unmarshal(c, &i)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = MatchIntegration(&i)
 	assert.NoError(t, err)
@@ -37,9 +34,7 @@ func TestErrorValidatingInputWithNoData(t *testing.T) {
 	c := readTestInput(t, "testdata/input-invalid-nodata.json")
 	i := sdk.IntegrationProtocol2{}
 	err := json.Unmarshal(c, &i)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = MatchIntegration(&i)
 	assert.Contains(t, err.Error(), "data: Array must have at least 1 items")
@@ -49,9 +44,7 @@ func TestErrorValidatingEventTypes(t *testing.T) {
 	c := readTestInput(t, "testdata/input-missing-event-type.json")
 	i := sdk.IntegrationProtocol2{}
 	err := json.Unmarshal(c, &i)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	jobMetrics := map[string]EventTypeToSchemaFilename{
 		"dummy-job-name": {
@@ -71,9 +64,7 @@ func TestErrorValidatingTestNode(t *testing.T) {
 	c := readTestInput(t, "testdata/input-invalid-testnode.json")
 	i := sdk.IntegrationProtocol2{}
 	err := json.Unmarshal(c, &i)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = MatchEntities(i.Data, s, "testdata")
 	assert.Contains(t, err.Error(), "test-node:node1-dsn.compute.internal TestNodeSample")
@@ -84,16 +75,12 @@ func TestErrorValidatingTestNode(t *testing.T) {
 
 func readTestInput(t *testing.T, filepath string) []byte {
 	f, err := os.Open(filepath)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	defer f.Close()
 
 	c, err := ioutil.ReadAll(f)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return c
 }

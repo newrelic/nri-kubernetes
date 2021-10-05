@@ -28,7 +28,6 @@ func getDefaultInterface(routeFile string) (string, error) {
 		return "", fmt.Errorf("getting routes content from file %s: %w", routeFile, err)
 	}
 	return findDefaultInterface(routes)
-
 }
 
 func routeFileContent(routeFile string) ([]byte, error) {

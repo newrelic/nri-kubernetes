@@ -90,7 +90,7 @@ type ksm struct {
 func (sd *discoverer) Discover(timeout time.Duration) (client.HTTPClient, error) {
 	var endpoint url.URL
 	if sd.overridenEndpoint != "" {
-		sd.logger.Debug("Using user-defined KSM endpoint " + sd.overridenEndpoint)
+		sd.logger.Debugf("Using user-defined KSM endpoint " + sd.overridenEndpoint)
 		ep, err := url.Parse(sd.overridenEndpoint)
 		if err != nil {
 			return nil, fmt.Errorf("wrong user-provided KSM endpoint: %s", err)
@@ -98,11 +98,11 @@ func (sd *discoverer) Discover(timeout time.Duration) (client.HTTPClient, error)
 		endpoint = *ep
 	} else {
 		var err error
-		sd.logger.Debug("Attempting DNS discovery of KSM endpoint")
+		sd.logger.Debugf("Attempting DNS discovery of KSM endpoint")
 		endpoint, err = sd.dnsDiscover()
 		if err != nil {
 			// if DNS discovery fails, we dig into Kubernetes API to get the service data
-			sd.logger.Debug("Attempting API server discovery of KSM endpoint")
+			sd.logger.Debugf("Attempting API server discovery of KSM endpoint")
 			endpoint, err = sd.apiDiscover()
 			if err != nil {
 				return nil, fmt.Errorf("failed to discover kube-state-metrics endpoint, got error: %s", err)

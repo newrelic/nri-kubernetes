@@ -143,7 +143,7 @@ func (sd *discoverer) Discover(timeout time.Duration) (client.HTTPClient, error)
 
 		err = sd.connChecker(c.client, c.url, healthzPath, config.BearerToken)
 		if err != nil {
-			sd.logger.Debug(err.Error())
+			sd.logger.Debugf(err.Error())
 			continue
 		}
 
@@ -264,7 +264,7 @@ func NewDiscoverer(nodeName string, logger *logrus.Logger) (client.Discoverer, e
 }
 
 func (sd *discoverer) getNode(nodeName string) (*v1.Node, error) {
-	var node = new(v1.Node)
+	node := new(v1.Node)
 	var err error
 	// Get the containing node and discover the InternalIP and Kubelet port
 	node, err = sd.apiClient.FindNode(nodeName)

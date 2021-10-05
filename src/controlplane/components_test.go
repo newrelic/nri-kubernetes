@@ -30,11 +30,10 @@ func TestSetEtcdTLSComponentOption(t *testing.T) {
 	assert.Equal(t, tlsSecretName, etcd.TLSSecretName)
 	assert.Equal(t, tlsSecretNamespace, etcd.TLSSecretNamespace)
 	assert.False(t, etcd.Skip)
-
 }
 
 func TestWithEndpointURL(t *testing.T) {
-	var testCases = []struct {
+	testCases := []struct {
 		name                string
 		components          []Component
 		assertShouldPanic   func()

@@ -5,8 +5,10 @@ import (
 	"time"
 )
 
-type RetriableFunc func() error
-type OnRetryFunc func(err error)
+type (
+	RetriableFunc func() error
+	OnRetryFunc   func(err error)
+)
 
 type config struct {
 	delay   time.Duration

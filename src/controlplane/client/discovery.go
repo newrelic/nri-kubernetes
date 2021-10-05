@@ -104,7 +104,6 @@ func (c *ControlPlaneComponentClient) buildPrometheusRequest(method string, e ur
 }
 
 func (c *ControlPlaneComponentClient) configureAuthentication() error {
-
 	if c.authenticationMethod == mTLS {
 		tlsConfig, err := c.getTLSConfigFromSecret()
 		if err != nil {
@@ -139,15 +138,13 @@ func (c *ControlPlaneComponentClient) configureAuthentication() error {
 }
 
 func (c *ControlPlaneComponentClient) getTLSConfigFromSecret() (*tls.Config, error) {
-
 	namespace := c.tlsSecretNamespace
 	if namespace == "" {
-		c.logger.Debug("TLS Secret name configured, but not TLS Secret namespace. Defaulting to `default` namespace.")
+		c.logger.Debugf("TLS Secret name configured, but not TLS Secret namespace. Defaulting to `default` namespace.")
 		namespace = "default"
 	}
 
 	secret, err := c.k8sClient.FindSecret(c.tlsSecretName, namespace)
-
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not find secret %s containing TLS configuration", c.tlsSecretName)
 	}
@@ -186,7 +183,6 @@ func (c *ControlPlaneComponentClient) getTLSConfigFromSecret() (*tls.Config, err
 }
 
 func parseTLSConfig(certPEMBlock, keyPEMBlock, cacertPEMBlock []byte, insecureSkipVerify bool) (*tls.Config, error) {
-
 	cert, err := tls.X509KeyPair(certPEMBlock, keyPEMBlock)
 	if err != nil {
 		return nil, err

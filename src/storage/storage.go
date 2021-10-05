@@ -12,8 +12,8 @@ import (
 
 const (
 	fileExt    = ".json"
-	filePerm   = 0644
-	folderPerm = 0744
+	filePerm   = 0o644
+	folderPerm = 0o744
 )
 
 var now = time.Now
