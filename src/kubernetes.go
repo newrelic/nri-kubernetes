@@ -241,7 +241,7 @@ func main() {
 
 	discoveryCacheTTL, err := time.ParseDuration(args.DiscoveryCacheTTL)
 	if err != nil {
-		logger.WithError(err).Errorf("while parsing the cache TTL value. Defaulting to %s", defaultDiscoveryCacheTTL)
+		logger.Errorf("Error while parsing the cache TTL value, defaulting to %s: %v", defaultDiscoveryCacheTTL, err)
 		discoveryCacheTTL = defaultDiscoveryCacheTTL
 	}
 
@@ -340,9 +340,9 @@ func main() {
 
 	apiServerCacheK8SVersionTTL, err := time.ParseDuration(args.APIServerCacheK8SVersionTTL)
 	if err != nil {
-		logger.WithError(err).Errorf(
-			"while parsing the api server cache TTL value for the kubernetes server version. Defaulting to %s",
-			defaultAPIServerCacheK8SVersionTTL,
+		logger.Errorf(
+			"Error while parsing the api server cache TTL value for the kubernetes server version, defaulting to %s: %v",
+			defaultAPIServerCacheK8SVersionTTL, err,
 		)
 		apiServerCacheK8SVersionTTL = defaultAPIServerCacheK8SVersionTTL
 	}
@@ -361,13 +361,13 @@ func main() {
 	}
 	k8sVersion, err := apiServerClientK8sVersion.GetServerVersion()
 	if err != nil {
-		logger.WithError(err).Errorf("getting the kubernetes server version")
+		logger.Errorf("Error getting the kubernetes server version: %v", err)
 	}
 	enableStaticPodsStatus := featureflag.StaticPodsStatus(k8sVersion)
 
 	apiServerCacheTTL, err := time.ParseDuration(args.APIServerCacheTTL)
 	if err != nil {
-		logger.WithError(err).Errorf("while parsing the api server cache TTL value. Defaulting to %s", defaultAPIServerCacheTTL)
+		logger.Errorf("while parsing the api server cache TTL value, defaulting to %s: %v", defaultAPIServerCacheTTL, err)
 		apiServerCacheTTL = defaultAPIServerCacheTTL
 	}
 
