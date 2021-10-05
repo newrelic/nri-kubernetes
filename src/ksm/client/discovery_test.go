@@ -454,9 +454,7 @@ func TestDo(t *testing.T) {
 	r := strings.NewReader("Foo")
 	s := httptest.NewServer(mockResponseHandler(r))
 	endpoint, err := url.Parse(s.URL)
-	if err != nil {
-		assert.FailNow(t, err.Error())
-	}
+	require.NoError(t, err)
 
 	c := &ksm{
 		nodeIP:     "1.2.3.4",

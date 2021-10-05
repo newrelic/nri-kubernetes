@@ -9,6 +9,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/metric"
 	"github.com/newrelic/infra-integrations-sdk/sdk"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/version"
 )
 
@@ -82,14 +83,10 @@ func metricsNamingManipulator(ms metric.MetricSet, entity sdk.Entity, clusterNam
 
 func TestIntegrationPopulator_CorrectValue(t *testing.T) {
 	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedEntityData1, err := sdk.NewEntityData("entity_id_1", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet1 := metric.MetricSet{
 		"event_type":  "TestSample",
@@ -104,9 +101,7 @@ func TestIntegrationPopulator_CorrectValue(t *testing.T) {
 	expectedEntityData1.Metrics = []metric.MetricSet{expectedMetricSet1}
 
 	expectedEntityData2, err := sdk.NewEntityData("entity_id_2", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 	expectedMetricSet2 := metric.MetricSet{
 		"event_type":  "TestSample",
 		"metric_1":    2,
@@ -145,14 +140,10 @@ func TestIntegrationPopulator_PartialResult(t *testing.T) {
 	}
 
 	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedEntityData1, err := sdk.NewEntityData("entity_id_1", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet1 := metric.MetricSet{
 		"event_type":  "TestSample",
@@ -164,9 +155,7 @@ func TestIntegrationPopulator_PartialResult(t *testing.T) {
 	expectedEntityData1.Metrics = []metric.MetricSet{expectedMetricSet1}
 
 	expectedEntityData2, err := sdk.NewEntityData("entity_id_2", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 	expectedMetricSet2 := metric.MetricSet{
 		"event_type":  "TestSample",
 		"metric_1":    2,
@@ -195,9 +184,7 @@ func TestIntegrationPopulator_EntitiesDataNotPopulated_EmptyMetricGroups(t *test
 	metricGroupEmpty := RawGroups{}
 
 	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 	expectedData := make([]*sdk.EntityData, 0)
 
 	populated, errs := IntegrationPopulator(
@@ -215,9 +202,7 @@ func TestIntegrationPopulator_EntitiesDataNotPopulated_EmptyMetricGroups(t *test
 
 func TestIntegrationPopulator_EntitiesDataNotPopulated_ErrorSettingEntities(t *testing.T) {
 	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	metricGroupEmptyEntityID := RawGroups{
 		"test": {
@@ -256,14 +241,10 @@ func TestIntegrationPopulator_MetricsSetsNotPopulated_OnlyEntity(t *testing.T) {
 	}
 
 	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedEntityData1, err := sdk.NewEntityData("entity_id_1", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet1 := metric.MetricSet{
 		"event_type":  "TestSample",
@@ -274,9 +255,7 @@ func TestIntegrationPopulator_MetricsSetsNotPopulated_OnlyEntity(t *testing.T) {
 	expectedEntityData1.Metrics = []metric.MetricSet{expectedMetricSet1}
 
 	expectedEntityData2, err := sdk.NewEntityData("entity_id_2", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet2 := metric.MetricSet{
 		"event_type":  "TestSample",
@@ -320,9 +299,7 @@ func TestIntegrationPopulator_EntityIDGenerator(t *testing.T) {
 	}
 
 	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 	raw := RawGroups{
 		"test": {
 			"testEntity1": {
@@ -337,9 +314,7 @@ func TestIntegrationPopulator_EntityIDGenerator(t *testing.T) {
 	}
 
 	expectedEntityData1, err := sdk.NewEntityData("testEntity1-generated", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet1 := metric.MetricSet{
 		"event_type":  "TestSample",
@@ -352,9 +327,7 @@ func TestIntegrationPopulator_EntityIDGenerator(t *testing.T) {
 	expectedEntityData1.Metrics = []metric.MetricSet{expectedMetricSet1}
 
 	expectedEntityData2, err := sdk.NewEntityData("testEntity2-generated", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet2 := metric.MetricSet{
 		"event_type":  "TestSample",
@@ -398,9 +371,7 @@ func TestIntegrationPopulator_EntityIDGeneratorFuncWithError(t *testing.T) {
 		},
 	}
 	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	populated, errs := IntegrationPopulator(
 		integration,
@@ -457,9 +428,7 @@ func TestIntegrationPopulator_PopulateOnlySpecifiedGroups(t *testing.T) {
 	}
 
 	expectedEntityData1, err := sdk.NewEntityData("testEntity11-generated", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet1 := metric.MetricSet{
 		"event_type":  "TestSample",
@@ -472,10 +441,7 @@ func TestIntegrationPopulator_PopulateOnlySpecifiedGroups(t *testing.T) {
 	expectedEntityData1.Metrics = []metric.MetricSet{expectedMetricSet1}
 
 	expectedEntityData2, err := sdk.NewEntityData("testEntity12-generated", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
-
+	require.NoError(t, err)
 	expectedMetricSet2 := metric.MetricSet{
 		"event_type":  "TestSample",
 		"metric_1":    3,
@@ -487,9 +453,7 @@ func TestIntegrationPopulator_PopulateOnlySpecifiedGroups(t *testing.T) {
 	expectedEntityData2.Metrics = []metric.MetricSet{expectedMetricSet2}
 
 	expectedEntityData3, err := sdk.NewEntityData("playground", "k8s:cluster")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 	expectedMetricSet3 := metric.MetricSet{
 		"event_type":        "K8sClusterSample",
 		"entityName":        "k8s:cluster:playground",
@@ -503,9 +467,7 @@ func TestIntegrationPopulator_PopulateOnlySpecifiedGroups(t *testing.T) {
 	expectedEntityData3.Inventory = expectedInventory
 
 	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 	populated, errs := IntegrationPopulator(
 		integration,
 		defaultNS,
@@ -538,9 +500,7 @@ func TestIntegrationPopulator_EntityTypeGeneratorFuncWithError(t *testing.T) {
 	}
 
 	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	populated, errs := IntegrationPopulator(
 		integration,
@@ -563,14 +523,10 @@ func TestIntegrationPopulator_ManipulatorFuncWithError(t *testing.T) {
 	}
 
 	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedEntityData1, err := sdk.NewEntityData("entity_id_1", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedMetricSet1 := metric.MetricSet{
 		"entityName": "playground:test:entity_id_1",
@@ -583,9 +539,7 @@ func TestIntegrationPopulator_ManipulatorFuncWithError(t *testing.T) {
 	expectedEntityData1.Metrics = []metric.MetricSet{expectedMetricSet1}
 
 	expectedEntityData2, err := sdk.NewEntityData("entity_id_2", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 	expectedMetricSet2 := metric.MetricSet{
 		"entityName": "playground:test:entity_id_2",
 		"event_type": "TestSample",
@@ -616,19 +570,13 @@ func TestIntegrationPopulator_msTypeGuesserFuncWithError(t *testing.T) {
 	}
 
 	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedEntityData1, err := sdk.NewEntityData("entity_id_1", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	expectedEntityData2, err := sdk.NewEntityData("entity_id_2", "playground:test")
-	if err != nil {
-		t.Fatal()
-	}
+	require.NoError(t, err)
 
 	populated, errs := IntegrationPopulator(
 		integration,

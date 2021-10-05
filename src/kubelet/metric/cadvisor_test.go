@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric/testdata"
@@ -36,11 +37,11 @@ func readerToHandler(r io.Reader) http.HandlerFunc {
 		io.Copy(w, r) // nolint: errcheck
 	}
 }
+
 func runCAdvisorFetchFunc(t *testing.T, file string) {
 	f, err := os.Open(file)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
+
 	defer f.Close()
 
 	c := testClient{
@@ -52,6 +53,7 @@ func runCAdvisorFetchFunc(t *testing.T, file string) {
 	assert.NoError(t, err)
 	assert.Equal(t, testdata.ExpectedCadvisorRawData, g)
 }
+
 func TestCadvisorFetchFunc(t *testing.T) {
 	t.Run("Kubernetes version 1.15", func(t *testing.T) {
 		runCAdvisorFetchFunc(t, "./testdata/k8s_v1_15_kubelet_metrics_cadvisor_payload_plain.txt")
