@@ -210,24 +210,29 @@ func main() {
 	defer logger.Debug(exitLog)
 	logger.Debugf("Integration %q ver. %s (git %s) started", integrationName, integrationVersion, integrationCommitHash)
 	if args.ClusterName == "" {
-		logger.Panic(errors.New("cluster_name argument is mandatory"))
+		logger.Errorf("cluster_name argument is mandatory")
+		os.Exit(1)
 	}
 
 	if args.APIServerCacheK8SVersionTTLJitter < 0 {
-		logger.Panicf("API server cache TTL jitter for K8s version must be a positive value, got %d", args.APIServerCacheK8SVersionTTLJitter)
+		logger.Errorf("API server cache TTL jitter for K8s version must be a positive value, got %d", args.APIServerCacheK8SVersionTTLJitter)
+		os.Exit(1)
 	}
 
 	if args.APIServerCacheTTLJitter < 0 {
-		logger.Panicf("API server cache TTL jitter must be a positive value, got: %d", args.APIServerCacheTTLJitter)
+		logger.Errorf("API server cache TTL jitter must be a positive value, got: %d", args.APIServerCacheTTLJitter)
+		os.Exit(1)
 	}
 
 	if args.DiscoveryCacheTTLJitter < 0 {
-		logger.Panicf("Discovery cache TTL jitter must be a positive value, got: %d", args.DiscoveryCacheTTLJitter)
+		logger.Errorf("Discovery cache TTL jitter must be a positive value, got: %d", args.DiscoveryCacheTTLJitter)
+		os.Exit(1)
 	}
 
 	nodeName := os.Getenv(nodeNameEnvVar)
 	if nodeName == "" {
-		logger.Panicf("%s env var should be provided by Kubernetes and is mandatory", nodeNameEnvVar)
+		logger.Errorf("%s env var should be provided by Kubernetes and is mandatory", nodeNameEnvVar)
+		os.Exit(1)
 	}
 
 	if !args.All && !args.Metrics {
@@ -244,7 +249,8 @@ func main() {
 
 	innerKubeletDiscoverer, err := clientKubelet.NewDiscoverer(nodeName, logger)
 	if err != nil {
-		logger.Panicf("error during Kubelet auto discovering process. %s", err)
+		logger.Errorf("Error during Kubelet auto discovering process: %v", err)
+		os.Exit(1)
 	}
 	cacheStorage := storage.NewJSONDiskStorage(getCacheDir(discoveryCacheDir))
 
@@ -265,14 +271,16 @@ func main() {
 
 	kubeletClient, err := kubeletDiscoverer.Discover(timeout)
 	if err != nil {
-		logger.Panic(err)
+		logger.Errorf("Error discovering kubelet: %v", err)
+		os.Exit(1)
 	}
 	kubeletNodeIP := kubeletClient.NodeIP()
 	logger.Debugf("Kubelet node IP = %s", kubeletNodeIP)
 
 	k8s, err := client.NewKubernetes(false)
 	if err != nil {
-		logger.Panic(err)
+		logger.Errorf("Error building kubernetes client: %v", err)
+		os.Exit(1)
 	}
 
 	if !args.DisableKubeStateMetrics {
@@ -289,7 +297,8 @@ func main() {
 		if args.DistributedKubeStateMetrics {
 			ksmDiscoverer, err := getMultiKSMDiscoverer(kubeletNodeIP, logger)
 			if err != nil {
-				logger.Panic(err)
+				logger.Errorf("Error getting multiKSM discoverer: %v", err)
+				os.Exit(1)
 			}
 			ksmDiscoveryCache := clientKsm.NewDistributedDiscoveryCacher(ksmDiscoverer, config)
 			ksmClients, err = ksmDiscoveryCache.Discover(timeout)
@@ -298,18 +307,21 @@ func main() {
 				logger.Debugf("- node IP: %s", c.NodeIP())
 			}
 			if err != nil {
-				logger.Panic(err)
+				logger.Errorf("Error discovering KSM: %v", err)
+				os.Exit(1)
 			}
 			ksmNodeIP = kubeletNodeIP
 		} else {
 			innerKSMDiscoverer, err := getKSMDiscoverer(logger)
 			if err != nil {
-				logger.Panic(err)
+				logger.Errorf("Error getting KSM discoverer: %v", err)
+				os.Exit(1)
 			}
 			ksmDiscoverer := clientKsm.NewDiscoveryCacher(innerKSMDiscoverer, config)
 			ksmClient, err := ksmDiscoverer.Discover(timeout)
 			if err != nil {
-				logger.Panic(err)
+				logger.Errorf("Error discovering KSM: %v", err)
+				os.Exit(1)
 			}
 			ksmNodeIP = ksmClient.NodeIP()
 			// we only scrape KSM when we are on the same Node as KSM
@@ -421,11 +433,13 @@ func main() {
 	}
 
 	if successfulJobs == 0 {
-		logger.Panic("No data was populated")
+		logger.Errorf("No data was populated")
+		os.Exit(1)
 	}
 
 	if err := integration.Publish(); err != nil {
-		logger.Panic(err)
+		logger.Errorf("Error rendering integration output: %v", err)
+		os.Exit(1)
 	}
 }
 
