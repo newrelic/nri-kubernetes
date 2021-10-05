@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"time"
 
@@ -39,13 +40,16 @@ func main() {
 
 	switch *discovery {
 	case KSMPodLabel:
-		runKSMPodLabel(k8sClient, logger)
+		if err := runKSMPodLabel(k8sClient, logger); err != nil {
+			logger.Errorf("Error %v", err)
+			os.Exit(1)
+		}
 	default:
 		logger.Infof("Invalid discovery type: %s", *discovery)
 	}
 }
 
-func runKSMPodLabel(kubernetes k8sclient.Kubernetes, logger *logrus.Logger) {
+func runKSMPodLabel(kubernetes k8sclient.Kubernetes, logger *logrus.Logger) error {
 	config := client.PodLabelDiscovererConfig{
 		KSMPodLabel:  *ksmPodLabel,
 		KSMPodPort:   8080,
@@ -57,13 +61,15 @@ func runKSMPodLabel(kubernetes k8sclient.Kubernetes, logger *logrus.Logger) {
 
 	discoverer, err := client.NewPodLabelDiscoverer(config)
 	if err != nil {
-		logger.Fatalf("Initializing discoverer: %v", err)
+		return fmt.Errorf("initializing discoverer: %w", err)
 	}
 
 	ksm, err := discoverer.Discover(time.Second * 5)
 	if err != nil {
-		logger.Fatalf("Discovering KSM: %v", err)
+		return fmt.Errorf("discovering KSM: %w", err)
 	}
 
 	logger.Infof("Found KSM pod on HostIP: %s", ksm.NodeIP())
+
+	return nil
 }
