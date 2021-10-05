@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/pkg/errors"
 	"github.com/xeipuuv/gojsonschema"
@@ -35,22 +34,6 @@ func MatchIntegration(i *integration.Integration) error {
 	return validate(gojsonschema.NewStringLoader(schema.IntegrationSchema), gojsonschema.NewGoLoader(i))
 }
 
-// mergeMetricSets returns a single map containing all the metrics from metricSets.
-func mergeMetricSets(metricSets []*metric.Set) (map[string]interface{}, error) {
-	mergedMetricSet := map[string]interface{}{}
-
-	for _, metricSet := range metricSets {
-		for k, v := range metricSet.Metrics {
-			if oldV, ok := mergedMetricSet[k]; ok && oldV != v {
-				return nil, fmt.Errorf("refusing to overwrite metric %q=%q with different value %q", k, oldV, v)
-			}
-			mergedMetricSet[k] = v
-		}
-	}
-
-	return mergedMetricSet, nil
-}
-
 // MatchEntities matches metric sets of entities against a set of JSON schema
 // for each event type.
 func MatchEntities(data []*integration.Entity, schemaFileByJobByType map[string]EventTypeToSchemaFilename, schemasDir string) error {
@@ -66,36 +49,29 @@ func MatchEntities(data []*integration.Entity, schemaFileByJobByType map[string]
 	}
 
 	for _, entityData := range data {
-		// For easier integration testing, all the different metricSets for each entity are merged into one, which is
-		// then compared with the JsonSchema.
-		// mergeMetricSets errors if this merge would overwrite attributes so the semantics of the tests don't change.
-		metrics, err := mergeMetricSets(entityData.Metrics)
-		if err != nil {
-			errs = append(errs, fmt.Errorf("merging metricSets for %q: %w", entityData.Metadata.Name, err))
-			continue
-		}
+		for _, metric := range entityData.Metrics {
+			eventType := metric.Metrics["event_type"].(string)
+			_, found := expectedEvents[eventType]
+			if !found {
+				missingSchemas[eventType] = struct{}{}
+				continue
+			}
 
-		eventType := metrics["event_type"].(string)
-		_, found := expectedEvents[eventType]
-		if !found {
-			missingSchemas[eventType] = struct{}{}
-			continue
-		}
+			foundTypes[eventType] = struct{}{}
+			job := expectedEvents[eventType]
+			schemaFilename := schemaFileByJobByType[job][eventType]
+			fp, err := schemaFilepath(schemaFilename, schemasDir)
+			if err != nil {
+				errs = append(errs, fmt.Errorf("found event %s, but schema not found", eventType))
+				continue
+			}
 
-		foundTypes[eventType] = struct{}{}
-		job := expectedEvents[eventType]
-		schemaFilename := schemaFileByJobByType[job][eventType]
-		fp, err := schemaFilepath(schemaFilename, schemasDir)
-		if err != nil {
-			errs = append(errs, fmt.Errorf("found event %s, but schema not found", eventType))
-			continue
-		}
-
-		err = validate(gojsonschema.NewReferenceLoader(fp), gojsonschema.NewGoLoader(metrics))
-		if err != nil {
-			entity := entityData.Metadata
-			errMsg := fmt.Errorf("%s:%s %s:\n%s", entity.Namespace, entity.Name, metrics["event_type"], err)
-			errs = append(errs, errMsg)
+			err = validate(gojsonschema.NewReferenceLoader(fp), gojsonschema.NewGoLoader(metric))
+			if err != nil {
+				entity := entityData.Metadata
+				errMsg := fmt.Errorf("%s:%s %s:\n%s", entity.Namespace, entity.Name, metric.Metrics["event_type"], err)
+				errs = append(errs, errMsg)
+			}
 		}
 	}
 
