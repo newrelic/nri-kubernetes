@@ -257,7 +257,7 @@ func main() {
 	defaultNetworkInterface, err := network.CachedDefaultInterface(
 		logger, args.NetworkRouteFile, cacheStorage, discoveryCacheTTL)
 	if err != nil {
-		logger.Warn(err)
+		logger.Warnf("Error finding default network interface: %v", err)
 	}
 
 	config := client.DiscoveryCacherConfig{
