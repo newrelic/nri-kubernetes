@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/sirupsen/logrus"
 
 	k8sclient "github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
@@ -28,7 +27,7 @@ func main() {
 
 	verbose := true
 
-	logger := log.New(verbose)
+	logger := log.NewStdErr(verbose)
 
 	tryLocalKubeconfig := true
 
@@ -49,7 +48,7 @@ func main() {
 	}
 }
 
-func runKSMPodLabel(kubernetes k8sclient.Kubernetes, logger *logrus.Logger) error {
+func runKSMPodLabel(kubernetes k8sclient.Kubernetes, logger log.Logger) error {
 	config := client.PodLabelDiscovererConfig{
 		KSMPodLabel:  *ksmPodLabel,
 		KSMPodPort:   8080,

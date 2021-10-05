@@ -9,8 +9,8 @@ import (
 	"time"
 
 	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
+	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/infra-integrations-sdk/sdk"
 	"github.com/sirupsen/logrus"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/apiserver"
@@ -96,7 +96,7 @@ func getCacheDir(subDirectory string) string {
 }
 
 func controlPlaneJobs(
-	logger *logrus.Logger,
+	logger log.Logger,
 	apiServerClient apiserver.Client,
 	nodeName string,
 	timeout time.Duration,
@@ -187,7 +187,7 @@ func controlPlaneJobs(
 }
 
 func main() {
-	integration, err := sdk.NewIntegrationProtocol2(integrationName, integrationVersion, &args)
+	integration, err := integration.New(integrationName, integrationVersion, integration.Args(&args))
 	var jobs []*scrape.Job
 	exitLog := fmt.Sprintf("Integration %q exited", integrationName)
 	if err != nil {
@@ -195,7 +195,7 @@ func main() {
 		log.Fatal(err) // Global logs used as args processed inside NewIntegrationProtocol2
 	}
 
-	logger := log.New(args.Verbose)
+	logger := log.NewStdErr(args.Verbose)
 	defer func() {
 		if r := recover(); r != nil {
 			recErr, ok := r.(*logrus.Entry)
@@ -235,9 +235,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	if !args.All && !args.Metrics {
-		return
-	}
+	// TODO: Map to v3
+	//if !args.All && !args.Metrics {
+	//	os.Exit(1)
+	//}
 
 	discoveryCacheTTL, err := time.ParseDuration(args.DiscoveryCacheTTL)
 	if err != nil {
@@ -443,7 +444,7 @@ func main() {
 	}
 }
 
-func getKSMDiscoverer(logger *logrus.Logger) (client.Discoverer, error) {
+func getKSMDiscoverer(logger log.Logger) (client.Discoverer, error) {
 	k8sClient, err := client.NewKubernetes( /* tryLocalKubeconfig */ false)
 	if err != nil {
 		return nil, fmt.Errorf("initializing Kubernetes client: %w", err)
@@ -492,7 +493,7 @@ func getKSMDiscoverer(logger *logrus.Logger) (client.Discoverer, error) {
 	return clientKsm.NewDiscoverer(config)
 }
 
-func getMultiKSMDiscoverer(nodeIP string, logger *logrus.Logger) (client.MultiDiscoverer, error) {
+func getMultiKSMDiscoverer(nodeIP string, logger log.Logger) (client.MultiDiscoverer, error) {
 	k8sClient, err := client.NewKubernetes( /* tryLocalKubeconfig */ false)
 	if err != nil {
 		return nil, fmt.Errorf("initializing Kubernetes client: %w", err)

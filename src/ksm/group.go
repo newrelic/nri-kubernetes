@@ -3,7 +3,7 @@ package ksm
 import (
 	"fmt"
 
-	"github.com/sirupsen/logrus"
+	"github.com/newrelic/infra-integrations-sdk/log"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
@@ -15,7 +15,7 @@ import (
 type ksmGrouper struct {
 	queries   []prometheus.Query
 	client    client.HTTPClient
-	logger    *logrus.Logger
+	logger    log.Logger
 	k8sClient client.Kubernetes
 }
 
@@ -70,7 +70,7 @@ func (r *ksmGrouper) Group(specGroups definition.SpecGroups) (definition.RawGrou
 }
 
 // NewGrouper creates a grouper aware of Kube State Metrics raw metrics.
-func NewGrouper(c client.HTTPClient, queries []prometheus.Query, logger *logrus.Logger, k8sClient client.Kubernetes) data.Grouper {
+func NewGrouper(c client.HTTPClient, queries []prometheus.Query, logger log.Logger, k8sClient client.Kubernetes) data.Grouper {
 	return &ksmGrouper{
 		queries:   queries,
 		client:    c,

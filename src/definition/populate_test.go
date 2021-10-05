@@ -1,13 +1,15 @@
 package definition
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/newrelic/infra-integrations-sdk/metric"
-	"github.com/newrelic/infra-integrations-sdk/sdk"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/newrelic/infra-integrations-sdk/data/inventory"
+	"github.com/newrelic/infra-integrations-sdk/data/metric"
+	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/version"
@@ -73,59 +75,52 @@ func fromGroupEntityTypeGuessFunc(groupLabel string, _ string, _ RawGroups, pref
 	return fmt.Sprintf("%s:%s", prefix, groupLabel), nil
 }
 
-func clusterMetricsManipulator(ms metric.MetricSet, entity sdk.Entity, clusterName string) error {
-	return ms.SetMetric("clusterName", clusterName, metric.ATTRIBUTE)
-}
-
-func metricsNamingManipulator(ms metric.MetricSet, entity sdk.Entity, clusterName string) error {
-	return ms.SetMetric("displayName", entity.Name, metric.ATTRIBUTE)
-}
-
 func TestIntegrationPopulator_CorrectValue(t *testing.T) {
-	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
+	intgr, err := integration.New("nr.test", "1.0.0")
 	require.NoError(t, err)
 
-	expectedEntityData1, err := sdk.NewEntityData("entity_id_1", "playground:test")
+	expectedEntityData1, err := intgr.Entity("entity_id_1", "playground:test")
 	require.NoError(t, err)
 
-	expectedMetricSet1 := metric.MetricSet{
-		"event_type":  "TestSample",
-		"metric_1":    1,
-		"metric_2":    "metric_value_2",
-		"multiple_1":  "one",
-		"multiple_2":  "two",
-		"entityName":  "playground:test:entity_id_1",
-		"displayName": "entity_id_1",
-		"clusterName": "playground",
+	expectedMetricSet1 := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":  "TestSample",
+			"metric_1":    1,
+			"metric_2":    "metric_value_2",
+			"multiple_1":  "one",
+			"multiple_2":  "two",
+			"displayName": "entity_id_1",
+			"clusterName": "playground",
+		},
 	}
-	expectedEntityData1.Metrics = []metric.MetricSet{expectedMetricSet1}
+	expectedEntityData1.Metrics = []*metric.Set{expectedMetricSet1}
 
-	expectedEntityData2, err := sdk.NewEntityData("entity_id_2", "playground:test")
+	expectedEntityData2, err := intgr.Entity("entity_id_2", "playground:test")
 	require.NoError(t, err)
-	expectedMetricSet2 := metric.MetricSet{
-		"event_type":  "TestSample",
-		"metric_1":    2,
-		"metric_2":    "metric_value_4",
-		"multiple_1":  "one",
-		"multiple_2":  "two",
-		"entityName":  "playground:test:entity_id_2",
-		"displayName": "entity_id_2",
-		"clusterName": "playground",
+
+	expectedMetricSet2 := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":  "TestSample",
+			"metric_1":    2,
+			"metric_2":    "metric_value_4",
+			"multiple_1":  "one",
+			"multiple_2":  "two",
+			"displayName": "entity_id_2",
+			"clusterName": "playground",
+		},
 	}
-	expectedEntityData2.Metrics = []metric.MetricSet{expectedMetricSet2}
+	expectedEntityData2.Metrics = []*metric.Set{expectedMetricSet2}
 
 	populated, errs := IntegrationPopulator(
-		integration,
+		intgr,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-		metricsNamingManipulator,
-		clusterMetricsManipulator,
 	)(rawGroupsSample, specs)
 	assert.True(t, populated)
 	assert.Empty(t, errs)
-	assert.Contains(t, integration.Data, &expectedEntityData1)
-	assert.Contains(t, integration.Data, &expectedEntityData2)
+	assert.Contains(t, intgr.Entities, expectedEntityData1)
+	assert.Contains(t, intgr.Entities, expectedEntityData2)
 }
 
 func TestIntegrationPopulator_PartialResult(t *testing.T) {
@@ -139,43 +134,44 @@ func TestIntegrationPopulator_PartialResult(t *testing.T) {
 		},
 	}
 
-	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
+	intgr, err := integration.New("nr.test", "1.0.0")
 	require.NoError(t, err)
 
-	expectedEntityData1, err := sdk.NewEntityData("entity_id_1", "playground:test")
+	expectedEntityData1, err := intgr.Entity("entity_id_1", "playground:test")
 	require.NoError(t, err)
 
-	expectedMetricSet1 := metric.MetricSet{
-		"event_type":  "TestSample",
-		"metric_1":    1,
-		"entityName":  "playground:test:entity_id_1",
-		"displayName": "entity_id_1",
-		"clusterName": "playground",
+	expectedMetricSet1 := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":  "TestSample",
+			"metric_1":    1,
+			"displayName": "entity_id_1",
+			"clusterName": "playground",
+		},
 	}
-	expectedEntityData1.Metrics = []metric.MetricSet{expectedMetricSet1}
+	expectedEntityData1.Metrics = []*metric.Set{expectedMetricSet1}
 
-	expectedEntityData2, err := sdk.NewEntityData("entity_id_2", "playground:test")
+	expectedEntityData2, err := intgr.Entity("entity_id_2", "playground:test")
 	require.NoError(t, err)
-	expectedMetricSet2 := metric.MetricSet{
-		"event_type":  "TestSample",
-		"metric_1":    2,
-		"entityName":  "playground:test:entity_id_2",
-		"displayName": "entity_id_2",
-		"clusterName": "playground",
+
+	expectedMetricSet2 := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":  "TestSample",
+			"metric_1":    2,
+			"displayName": "entity_id_2",
+			"clusterName": "playground",
+		},
 	}
-	expectedEntityData2.Metrics = []metric.MetricSet{expectedMetricSet2}
+	expectedEntityData2.Metrics = []*metric.Set{expectedMetricSet2}
 
 	populated, errs := IntegrationPopulator(
-		integration,
+		intgr,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-		metricsNamingManipulator,
-		clusterMetricsManipulator,
 	)(rawGroupsSample, metricSpecsWithIncompatibleType)
 	assert.True(t, populated)
-	assert.Contains(t, integration.Data, &expectedEntityData1)
-	assert.Contains(t, integration.Data, &expectedEntityData2)
+	assert.Contains(t, intgr.Entities, expectedEntityData1)
+	assert.Contains(t, intgr.Entities, expectedEntityData2)
 
 	assert.Len(t, errs, 2)
 }
@@ -183,25 +179,24 @@ func TestIntegrationPopulator_PartialResult(t *testing.T) {
 func TestIntegrationPopulator_EntitiesDataNotPopulated_EmptyMetricGroups(t *testing.T) {
 	metricGroupEmpty := RawGroups{}
 
-	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
+	intgr, err := integration.New("nr.test", "1.0.0")
 	require.NoError(t, err)
-	expectedData := make([]*sdk.EntityData, 0)
+
+	expectedData := make([]*integration.Entity, 0)
 
 	populated, errs := IntegrationPopulator(
-		integration,
+		intgr,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-		metricsNamingManipulator,
-		clusterMetricsManipulator,
 	)(metricGroupEmpty, specs)
 	assert.False(t, populated)
 	assert.Nil(t, errs)
-	assert.Equal(t, expectedData, integration.Data)
+	assert.Equal(t, expectedData, intgr.Entities)
 }
 
 func TestIntegrationPopulator_EntitiesDataNotPopulated_ErrorSettingEntities(t *testing.T) {
-	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
+	intgr, err := integration.New("nr.test", "1.0.0")
 	require.NoError(t, err)
 
 	metricGroupEmptyEntityID := RawGroups{
@@ -215,19 +210,18 @@ func TestIntegrationPopulator_EntitiesDataNotPopulated_ErrorSettingEntities(t *t
 			},
 		},
 	}
-	expectedData := []*sdk.EntityData{}
+
+	expectedData := []*integration.Entity{}
 
 	populated, errs := IntegrationPopulator(
-		integration,
+		intgr,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-		metricsNamingManipulator,
-		clusterMetricsManipulator,
 	)(metricGroupEmptyEntityID, specs)
 	assert.False(t, populated)
 	assert.EqualError(t, errs[0], "entity name and type are required when defining one")
-	assert.Equal(t, expectedData, integration.Data)
+	assert.Equal(t, expectedData, intgr.Entities)
 }
 
 func TestIntegrationPopulator_MetricsSetsNotPopulated_OnlyEntity(t *testing.T) {
@@ -240,46 +234,46 @@ func TestIntegrationPopulator_MetricsSetsNotPopulated_OnlyEntity(t *testing.T) {
 		},
 	}
 
-	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
+	intgr, err := integration.New("nr.test", "1.0.0")
 	require.NoError(t, err)
 
-	expectedEntityData1, err := sdk.NewEntityData("entity_id_1", "playground:test")
+	expectedEntityData1, err := intgr.Entity("entity_id_1", "playground:test")
 	require.NoError(t, err)
 
-	expectedMetricSet1 := metric.MetricSet{
-		"event_type":  "TestSample",
-		"entityName":  "playground:test:entity_id_1",
-		"displayName": "entity_id_1",
-		"clusterName": "playground",
+	expectedMetricSet1 := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":  "TestSample",
+			"displayName": "entity_id_1",
+			"clusterName": "playground",
+		},
 	}
-	expectedEntityData1.Metrics = []metric.MetricSet{expectedMetricSet1}
+	expectedEntityData1.Metrics = []*metric.Set{expectedMetricSet1}
 
-	expectedEntityData2, err := sdk.NewEntityData("entity_id_2", "playground:test")
+	expectedEntityData2, err := intgr.Entity("entity_id_2", "playground:test")
 	require.NoError(t, err)
 
-	expectedMetricSet2 := metric.MetricSet{
-		"event_type":  "TestSample",
-		"entityName":  "playground:test:entity_id_2",
-		"displayName": "entity_id_2",
-		"clusterName": "playground",
+	expectedMetricSet2 := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":  "TestSample",
+			"displayName": "entity_id_2",
+			"clusterName": "playground",
+		},
 	}
-	expectedEntityData2.Metrics = []metric.MetricSet{expectedMetricSet2}
+	expectedEntityData2.Metrics = []*metric.Set{expectedMetricSet2}
 
 	populated, errs := IntegrationPopulator(
-		integration,
+		intgr,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-		metricsNamingManipulator,
-		clusterMetricsManipulator,
 	)(rawGroupsSample, metricSpecsIncorrect)
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
 
-	assert.Contains(t, errs, errors.New("error populating metric for entity ID entity_id_1: cannot fetch value for metric \"useless\": metric \"nonExistentMetric\" not found"))
-	assert.Contains(t, errs, errors.New("error populating metric for entity ID entity_id_2: cannot fetch value for metric \"useless\": metric \"nonExistentMetric\" not found"))
-	assert.Contains(t, integration.Data, &expectedEntityData1)
-	assert.Contains(t, integration.Data, &expectedEntityData2)
+	assert.Contains(t, errs, fmt.Errorf("error populating metric for entity ID entity_id_1: cannot fetch value for metric \"useless\": metric \"nonExistentMetric\" not found"))
+	assert.Contains(t, errs, fmt.Errorf("error populating metric for entity ID entity_id_2: cannot fetch value for metric \"useless\": metric \"nonExistentMetric\" not found"))
+	assert.Contains(t, intgr.Entities, expectedEntityData1)
+	assert.Contains(t, intgr.Entities, expectedEntityData2)
 }
 
 func TestIntegrationPopulator_EntityIDGenerator(t *testing.T) {
@@ -298,8 +292,9 @@ func TestIntegrationPopulator_EntityIDGenerator(t *testing.T) {
 		},
 	}
 
-	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
+	intgr, err := integration.New("nr.test", "1.0.0")
 	require.NoError(t, err)
+
 	raw := RawGroups{
 		"test": {
 			"testEntity1": {
@@ -313,51 +308,51 @@ func TestIntegrationPopulator_EntityIDGenerator(t *testing.T) {
 		},
 	}
 
-	expectedEntityData1, err := sdk.NewEntityData("testEntity1-generated", "playground:test")
+	expectedEntityData1, err := intgr.Entity("testEntity1-generated", "playground:test")
 	require.NoError(t, err)
 
-	expectedMetricSet1 := metric.MetricSet{
-		"event_type":  "TestSample",
-		"metric_1":    1,
-		"metric_2":    2,
-		"entityName":  "playground:test:testEntity1-generated",
-		"displayName": "testEntity1-generated",
-		"clusterName": "playground",
+	expectedMetricSet1 := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":  "TestSample",
+			"metric_1":    1,
+			"metric_2":    2,
+			"displayName": "testEntity1-generated",
+			"clusterName": "playground",
+		},
 	}
-	expectedEntityData1.Metrics = []metric.MetricSet{expectedMetricSet1}
+	expectedEntityData1.Metrics = []*metric.Set{expectedMetricSet1}
 
-	expectedEntityData2, err := sdk.NewEntityData("testEntity2-generated", "playground:test")
+	expectedEntityData2, err := intgr.Entity("testEntity2-generated", "playground:test")
 	require.NoError(t, err)
 
-	expectedMetricSet2 := metric.MetricSet{
-		"event_type":  "TestSample",
-		"metric_1":    3,
-		"metric_2":    4,
-		"entityName":  "playground:test:testEntity2-generated",
-		"displayName": "testEntity2-generated",
-		"clusterName": "playground",
+	expectedMetricSet2 := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":  "TestSample",
+			"metric_1":    3,
+			"metric_2":    4,
+			"displayName": "testEntity2-generated",
+			"clusterName": "playground",
+		},
 	}
-	expectedEntityData2.Metrics = []metric.MetricSet{expectedMetricSet2}
+	expectedEntityData2.Metrics = []*metric.Set{expectedMetricSet2}
 
 	populated, errs := IntegrationPopulator(
-		integration,
+		intgr,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-		metricsNamingManipulator,
-		clusterMetricsManipulator,
 	)(raw, withGeneratorSpec)
 
 	assert.True(t, populated)
 	assert.Empty(t, errs)
 
-	assert.Contains(t, integration.Data, &expectedEntityData1)
-	assert.Contains(t, integration.Data, &expectedEntityData2)
+	assert.Contains(t, intgr.Entities, expectedEntityData1)
+	assert.Contains(t, intgr.Entities, expectedEntityData2)
 }
 
 func TestIntegrationPopulator_EntityIDGeneratorFuncWithError(t *testing.T) {
 	generator := func(groupLabel, rawEntityID string, g RawGroups) (string, error) {
-		return "", errors.New("error generating entity ID")
+		return "", fmt.Errorf("error generating entity ID")
 	}
 
 	specsWithGeneratorFuncError := SpecGroups{
@@ -370,22 +365,20 @@ func TestIntegrationPopulator_EntityIDGeneratorFuncWithError(t *testing.T) {
 			},
 		},
 	}
-	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
+	intgr, err := integration.New("nr.test", "1.0.0")
 	require.NoError(t, err)
 
 	populated, errs := IntegrationPopulator(
-		integration,
+		intgr,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-		metricsNamingManipulator,
-		clusterMetricsManipulator,
 	)(rawGroupsSample, specsWithGeneratorFuncError)
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
-	assert.Contains(t, errs, errors.New("error generating entity ID for entity_id_1: error generating entity ID"))
-	assert.Contains(t, errs, errors.New("error generating entity ID for entity_id_2: error generating entity ID"))
-	assert.Equal(t, integration.Data, []*sdk.EntityData{})
+	assert.Contains(t, errs, fmt.Errorf("error generating entity ID for entity_id_1: error generating entity ID"))
+	assert.Contains(t, errs, fmt.Errorf("error generating entity ID for entity_id_2: error generating entity ID"))
+	assert.Equal(t, intgr.Entities, []*integration.Entity{})
 }
 
 func TestIntegrationPopulator_PopulateOnlySpecifiedGroups(t *testing.T) {
@@ -427,66 +420,101 @@ func TestIntegrationPopulator_PopulateOnlySpecifiedGroups(t *testing.T) {
 		},
 	}
 
-	expectedEntityData1, err := sdk.NewEntityData("testEntity11-generated", "playground:test")
+	// Create a dummy integration, used only to create entities easily.
+	intgr, err := integration.New("nr.test", "1.0.0")
 	require.NoError(t, err)
 
-	expectedMetricSet1 := metric.MetricSet{
-		"event_type":  "TestSample",
-		"metric_1":    1,
-		"metric_2":    2,
-		"entityName":  "playground:test:testEntity11-generated",
-		"displayName": "testEntity11-generated",
-		"clusterName": "playground",
-	}
-	expectedEntityData1.Metrics = []metric.MetricSet{expectedMetricSet1}
-
-	expectedEntityData2, err := sdk.NewEntityData("testEntity12-generated", "playground:test")
+	expectedEntityData1, err := intgr.Entity("testEntity11-generated", "playground:test")
 	require.NoError(t, err)
-	expectedMetricSet2 := metric.MetricSet{
-		"event_type":  "TestSample",
-		"metric_1":    3,
-		"metric_2":    4,
-		"entityName":  "playground:test:testEntity12-generated",
-		"displayName": "testEntity12-generated",
-		"clusterName": "playground",
-	}
-	expectedEntityData2.Metrics = []metric.MetricSet{expectedMetricSet2}
 
-	expectedEntityData3, err := sdk.NewEntityData("playground", "k8s:cluster")
-	require.NoError(t, err)
-	expectedMetricSet3 := metric.MetricSet{
-		"event_type":        "K8sClusterSample",
-		"entityName":        "k8s:cluster:playground",
-		"clusterName":       "playground",
-		"clusterK8sVersion": "v1.15.42",
+	expectedMetricSet1 := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":  "TestSample",
+			"metric_1":    float64(1),
+			"metric_2":    float64(2),
+			"displayName": "testEntity11-generated",
+			"clusterName": "playground",
+		},
 	}
-	expectedEntityData3.Metrics = []metric.MetricSet{expectedMetricSet3}
-	expectedInventory := sdk.Inventory{}
-	expectedInventory.SetItem("cluster", "name", "playground")
-	expectedInventory.SetItem("cluster", "k8sVersion", "v1.15.42")
+	expectedEntityData1.Metrics = []*metric.Set{expectedMetricSet1}
+
+	expectedEntityData2, err := intgr.Entity("testEntity12-generated", "playground:test")
+	require.NoError(t, err)
+
+	expectedMetricSet2 := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":  "TestSample",
+			"metric_1":    float64(3),
+			"metric_2":    float64(4),
+			"displayName": "testEntity12-generated",
+			"clusterName": "playground",
+		},
+	}
+	expectedEntityData2.Metrics = []*metric.Set{expectedMetricSet2}
+
+	expectedEntityData3, err := intgr.Entity("playground", "k8s:cluster")
+	require.NoError(t, err)
+
+	expectedMetricSet3 := &metric.Set{
+		Metrics: map[string]interface{}{
+			"event_type":        "K8sClusterSample",
+			"clusterName":       "playground",
+			"clusterK8sVersion": "v1.15.42",
+		},
+	}
+	expectedEntityData3.Metrics = []*metric.Set{expectedMetricSet3}
+	expectedInventory := inventory.New()
+
+	err = expectedInventory.SetItem("cluster", "name", "playground")
+	require.NoError(t, err)
+
+	err = expectedInventory.SetItem("cluster", "k8sVersion", "v1.15.42")
+	require.NoError(t, err)
+
 	expectedEntityData3.Inventory = expectedInventory
 
-	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
-	require.NoError(t, err)
+	intgr.Clear()
 	populated, errs := IntegrationPopulator(
-		integration,
+		intgr,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-		metricsNamingManipulator,
-		clusterMetricsManipulator,
 	)(groups, withGeneratorSpec)
 	assert.True(t, populated)
 	assert.Empty(t, errs)
-	assert.Contains(t, integration.Data, &expectedEntityData1)
-	assert.Contains(t, integration.Data, &expectedEntityData2)
-	assert.Contains(t, integration.Data, &expectedEntityData3)
-	assert.Len(t, integration.Data, 3)
+	assert.Len(t, intgr.Entities, 3)
+
+	compareIgnoreFields := cmpopts.IgnoreUnexported(integration.Entity{}, metric.Set{}, inventory.Inventory{})
+	for _, expectedEntity := range []*integration.Entity{
+		expectedEntityData1,
+		expectedEntityData2,
+		expectedEntityData3,
+	} {
+		found := false
+		closestMatchDiff := ""
+		for _, entity := range intgr.Entities {
+			curDiff := cmp.Diff(entity, expectedEntity, compareIgnoreFields)
+			// If curDiff is empty we got an exact match, return.
+			if curDiff == "" {
+				found = true
+				break
+			}
+
+			// Otherwise, store current diff as closest match if it is smaller than the closestMatch, or if the latter is empty
+			if closestMatchDiff == "" || len(curDiff) < len(closestMatchDiff) {
+				closestMatchDiff = curDiff
+			}
+		}
+
+		if !found {
+			t.Fatalf("Entity list does not contain %q. Closest match:\n%s", expectedEntity.Metadata.Name, closestMatchDiff)
+		}
+	}
 }
 
 func TestIntegrationPopulator_EntityTypeGeneratorFuncWithError(t *testing.T) {
 	generatorWithError := func(_ string, _ string, _ RawGroups, _ string) (string, error) {
-		return "", errors.New("error generating entity type")
+		return "", fmt.Errorf("error generating entity type")
 	}
 
 	specsWithGeneratorFuncError := SpecGroups{
@@ -499,94 +527,45 @@ func TestIntegrationPopulator_EntityTypeGeneratorFuncWithError(t *testing.T) {
 		},
 	}
 
-	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
+	intgr, err := integration.New("nr.test", "1.0.0")
 	require.NoError(t, err)
 
 	populated, errs := IntegrationPopulator(
-		integration,
+		intgr,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-		metricsNamingManipulator,
-		clusterMetricsManipulator,
 	)(rawGroupsSample, specsWithGeneratorFuncError)
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
-	assert.Contains(t, errs, errors.New("error generating entity type for entity_id_1: error generating entity type"))
-	assert.Contains(t, errs, errors.New("error generating entity type for entity_id_2: error generating entity type"))
-	assert.Equal(t, integration.Data, []*sdk.EntityData{})
-}
-
-func TestIntegrationPopulator_ManipulatorFuncWithError(t *testing.T) {
-	manipulatorFuncWithError := func(ms metric.MetricSet, entity sdk.Entity, clusterName string) error {
-		return errors.New("error from manipulator function")
-	}
-
-	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
-	require.NoError(t, err)
-
-	expectedEntityData1, err := sdk.NewEntityData("entity_id_1", "playground:test")
-	require.NoError(t, err)
-
-	expectedMetricSet1 := metric.MetricSet{
-		"entityName": "playground:test:entity_id_1",
-		"event_type": "TestSample",
-		"metric_1":   1,
-		"metric_2":   "metric_value_2",
-		"multiple_1": "one",
-		"multiple_2": "two",
-	}
-	expectedEntityData1.Metrics = []metric.MetricSet{expectedMetricSet1}
-
-	expectedEntityData2, err := sdk.NewEntityData("entity_id_2", "playground:test")
-	require.NoError(t, err)
-	expectedMetricSet2 := metric.MetricSet{
-		"entityName": "playground:test:entity_id_2",
-		"event_type": "TestSample",
-		"metric_1":   2,
-		"metric_2":   "metric_value_4",
-		"multiple_1": "one",
-		"multiple_2": "two",
-	}
-	expectedEntityData2.Metrics = []metric.MetricSet{expectedMetricSet2}
-
-	populated, errs := IntegrationPopulator(
-		integration,
-		defaultNS,
-		&version.Info{GitVersion: "v1.15.42"},
-		fromGroupMetricSetTypeGuessFunc,
-		manipulatorFuncWithError,
-	)(rawGroupsSample, specs)
-	assert.True(t, populated)
-	assert.Len(t, errs, 2)
-	assert.Contains(t, errs, errors.New("error from manipulator function"))
-	assert.Contains(t, integration.Data, &expectedEntityData1)
-	assert.Contains(t, integration.Data, &expectedEntityData2)
+	assert.Contains(t, errs, fmt.Errorf("error generating entity type for entity_id_1: error generating entity type"))
+	assert.Contains(t, errs, fmt.Errorf("error generating entity type for entity_id_2: error generating entity type"))
+	assert.Equal(t, intgr.Entities, []*integration.Entity{})
 }
 
 func TestIntegrationPopulator_msTypeGuesserFuncWithError(t *testing.T) {
 	msTypeGuesserFuncWithError := func(_, groupLabel, _ string, _ RawGroups) (string, error) {
-		return "", errors.New("error setting event type")
+		return "", fmt.Errorf("error setting event type")
 	}
 
-	integration, err := sdk.NewIntegrationProtocol2("nr.test", "1.0.0", new(struct{}))
+	intgr, err := integration.New("nr.test", "1.0.0")
 	require.NoError(t, err)
 
-	expectedEntityData1, err := sdk.NewEntityData("entity_id_1", "playground:test")
+	expectedEntityData1, err := intgr.Entity("entity_id_1", "playground:test")
 	require.NoError(t, err)
 
-	expectedEntityData2, err := sdk.NewEntityData("entity_id_2", "playground:test")
+	expectedEntityData2, err := intgr.Entity("entity_id_2", "playground:test")
 	require.NoError(t, err)
 
 	populated, errs := IntegrationPopulator(
-		integration,
+		intgr,
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		msTypeGuesserFuncWithError,
 	)(rawGroupsSample, specs)
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
-	assert.Contains(t, errs, errors.New("error setting event type"))
-	assert.Contains(t, integration.Data, &expectedEntityData1)
-	assert.Contains(t, integration.Data, &expectedEntityData2)
+	assert.Contains(t, errs, fmt.Errorf("error setting event type"))
+	assert.Contains(t, intgr.Entities, expectedEntityData1)
+	assert.Contains(t, intgr.Entities, expectedEntityData2)
 }

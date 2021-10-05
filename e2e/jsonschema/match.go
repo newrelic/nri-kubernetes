@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/newrelic/infra-integrations-sdk/metric"
-	"github.com/newrelic/infra-integrations-sdk/sdk"
+	"github.com/newrelic/infra-integrations-sdk/data/metric"
+	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/pkg/errors"
 	"github.com/xeipuuv/gojsonschema"
 
@@ -31,29 +31,29 @@ func (errMatch ErrMatch) Error() string {
 
 // MatchIntegration matches an integration against a JSON schema defined for an
 // Infrastructure Integration.
-func MatchIntegration(o *sdk.IntegrationProtocol2) error {
-	return validate(gojsonschema.NewStringLoader(schema.IntegrationSchema), gojsonschema.NewGoLoader(o))
+func MatchIntegration(i *integration.Integration) error {
+	return validate(gojsonschema.NewStringLoader(schema.IntegrationSchema), gojsonschema.NewGoLoader(i))
 }
 
-func mergeMetricSets(metricSets []metric.MetricSet) metric.MetricSet {
-	var mergedMetricSet metric.MetricSet
+// mergeMetricSets returns a single map containing all the metrics from metricSets.
+func mergeMetricSets(metricSets []*metric.Set) (map[string]interface{}, error) {
+	mergedMetricSet := map[string]interface{}{}
 
 	for _, metricSet := range metricSets {
-		if mergedMetricSet == nil {
-			mergedMetricSet = metric.NewMetricSet(metricSet["event_type"].(string))
-		}
-
-		for k, v := range metricSet {
+		for k, v := range metricSet.Metrics {
+			if oldV, ok := mergedMetricSet[k]; ok && oldV != v {
+				return nil, fmt.Errorf("refusing to overwrite metric %q=%q with different value %q", k, oldV, v)
+			}
 			mergedMetricSet[k] = v
 		}
 	}
 
-	return mergedMetricSet
+	return mergedMetricSet, nil
 }
 
 // MatchEntities matches metric sets of entities against a set of JSON schema
 // for each event type.
-func MatchEntities(data []*sdk.EntityData, schemaFileByJobByType map[string]EventTypeToSchemaFilename, schemasDir string) error {
+func MatchEntities(data []*integration.Entity, schemaFileByJobByType map[string]EventTypeToSchemaFilename, schemasDir string) error {
 	var errs []error
 	missingSchemas := make(map[string]struct{})
 	foundTypes := make(map[string]struct{})
@@ -66,9 +66,16 @@ func MatchEntities(data []*sdk.EntityData, schemaFileByJobByType map[string]Even
 	}
 
 	for _, entityData := range data {
-		metric := mergeMetricSets(entityData.Metrics)
+		// For easier integration testing, all the different metricSets for each entity are merged into one, which is
+		// then compared with the JsonSchema.
+		// mergeMetricSets errors if this merge would overwrite attributes so the semantics of the tests don't change.
+		metrics, err := mergeMetricSets(entityData.Metrics)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("merging metricSets for %q: %w", entityData.Metadata.Name, err))
+			continue
+		}
 
-		eventType := metric["event_type"].(string)
+		eventType := metrics["event_type"].(string)
 		_, found := expectedEvents[eventType]
 		if !found {
 			missingSchemas[eventType] = struct{}{}
@@ -84,10 +91,10 @@ func MatchEntities(data []*sdk.EntityData, schemaFileByJobByType map[string]Even
 			continue
 		}
 
-		err = validate(gojsonschema.NewReferenceLoader(fp), gojsonschema.NewGoLoader(metric))
+		err = validate(gojsonschema.NewReferenceLoader(fp), gojsonschema.NewGoLoader(metrics))
 		if err != nil {
-			entity := entityData.Entity
-			errMsg := fmt.Errorf("%s:%s %s:\n%s", entity.Type, entity.Name, metric["event_type"], err)
+			entity := entityData.Metadata
+			errMsg := fmt.Errorf("%s:%s %s:\n%s", entity.Namespace, entity.Name, metrics["event_type"], err)
 			errs = append(errs, errMsg)
 		}
 	}
