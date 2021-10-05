@@ -207,7 +207,7 @@ func main() {
 		}
 	}()
 
-	defer logger.Debug(exitLog)
+	defer logger.Debugf(exitLog)
 	logger.Debugf("Integration %q ver. %s (git %s) started", integrationName, integrationVersion, integrationCommitHash)
 	if args.ClusterName == "" {
 		logger.Errorf("cluster_name argument is mandatory")

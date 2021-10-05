@@ -143,7 +143,7 @@ func (sd *discoverer) Discover(timeout time.Duration) (client.HTTPClient, error)
 
 		err = sd.connChecker(c.client, c.url, healthzPath, config.BearerToken)
 		if err != nil {
-			sd.logger.Debug(err.Error())
+			sd.logger.Debugf(err.Error())
 			continue
 		}
 

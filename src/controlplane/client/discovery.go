@@ -140,7 +140,7 @@ func (c *ControlPlaneComponentClient) configureAuthentication() error {
 func (c *ControlPlaneComponentClient) getTLSConfigFromSecret() (*tls.Config, error) {
 	namespace := c.tlsSecretNamespace
 	if namespace == "" {
-		c.logger.Debug("TLS Secret name configured, but not TLS Secret namespace. Defaulting to `default` namespace.")
+		c.logger.Debugf("TLS Secret name configured, but not TLS Secret namespace. Defaulting to `default` namespace.")
 		namespace = "default"
 	}
 
