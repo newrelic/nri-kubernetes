@@ -367,7 +367,7 @@ func main() {
 
 	apiServerCacheTTL, err := time.ParseDuration(args.APIServerCacheTTL)
 	if err != nil {
-		logger.Errorf("while parsing the api server cache TTL value, defaulting to %s: %v", defaultAPIServerCacheTTL, err)
+		logger.Errorf("Error while parsing the api server cache TTL value, defaulting to %s: %v", defaultAPIServerCacheTTL, err)
 		apiServerCacheTTL = defaultAPIServerCacheTTL
 	}
 
@@ -428,7 +428,7 @@ func main() {
 		}
 
 		if len(result.Errors) > 0 {
-			logger.WithFields(logrus.Fields{"phase": "populate", "datasource": job.Name}).Debug(result.Error())
+			logger.Infof("Error populating data from %s: %v", job.Name, result.Error())
 		}
 	}
 
