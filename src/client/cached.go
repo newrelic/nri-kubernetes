@@ -80,7 +80,7 @@ func (d *DiscoveryCacher) discoverAndCache(timeout time.Duration) (HTTPClient, e
 		err = d.Storage.Write(d.StorageKey, toCache)
 	}
 	if err != nil {
-		d.Logger.WithError(err).Warnf("while storing %q in the cache", d.StorageKey)
+		d.Logger.Warnf("Could not store %q in the cache: %v", d.StorageKey, err)
 	}
 	return d.wrap(client, timeout), nil
 }
@@ -141,7 +141,7 @@ func (c *cacheAwareClient) Do(method, path string) (*http.Response, error) {
 	if err != nil {
 		// If the client can't be rediscovered, it anyway invalidates the cache
 		if err := c.cacher.Storage.Delete(c.cacher.StorageKey); err != nil {
-			c.cacher.Logger.WithError(err).Debugf("while trying to remove %q from the cache", c.cacher.StorageKey)
+			c.cacher.Logger.Debugf("Could not remove %q from the cache: %v", c.cacher.StorageKey, err)
 		}
 		return nil, err
 	}
@@ -212,7 +212,7 @@ func (d *MultiDiscoveryCacher) discoverAndCache(timeout time.Duration) ([]HTTPCl
 		err = d.Storage.Write(d.StorageKey, toCache)
 	}
 	if err != nil {
-		d.Logger.WithError(err).Warnf("while storing %q in the cache", d.StorageKey)
+		d.Logger.Warnf("Could not store %q in the cache: %v", d.StorageKey, err)
 	}
 	return clients, nil
 }
