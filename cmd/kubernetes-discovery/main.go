@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"os"
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
@@ -32,7 +33,8 @@ func main() {
 
 	k8sClient, err := k8sclient.NewKubernetes(tryLocalKubeconfig)
 	if err != nil {
-		logger.Fatalf("Could not create Kubernetes client: %v", err)
+		logger.Errorf("Could not create Kubernetes client: %v", err)
+		os.Exit(1)
 	}
 
 	switch *discovery {
