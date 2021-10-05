@@ -2,11 +2,9 @@ package jsonschema
 
 import (
 	"encoding/json"
-	"testing"
-
-	"os"
-
 	"io/ioutil"
+	"os"
+	"testing"
 
 	"github.com/newrelic/infra-integrations-sdk/sdk"
 	"github.com/stretchr/testify/assert"

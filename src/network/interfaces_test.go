@@ -18,8 +18,7 @@ func getInterfaceMock(defaultInterface string) defaultInterfaceFunc {
 }
 
 func TestCachedDefaultInterface(t *testing.T) {
-
-	var logger = logrus.StandardLogger()
+	logger := logrus.StandardLogger()
 	cachePath, err := ioutil.TempDir("", "interfaceCacheTest")
 	require.NoError(t, err)
 	defer func() {

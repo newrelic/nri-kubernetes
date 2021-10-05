@@ -10,7 +10,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 )
 
-//TODO: See https://github.com/prometheus/prom2json/blob/master/prom2json.go#L171 for how to connect, how to parse plain text, etc
+// TODO: See https://github.com/prometheus/prom2json/blob/master/prom2json.go#L171 for how to connect, how to parse plain text, etc
 
 // QueryOperator indicates the operator used for the query.
 type QueryOperator int

@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
 	"github.com/sirupsen/logrus"
 
 	k8sclient "github.com/newrelic/nri-kubernetes/v2/src/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
 )
 
 const (

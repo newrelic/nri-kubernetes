@@ -102,7 +102,6 @@ func WithEndpointURL(name ComponentName, endpointURL string) ComponentOption {
 		} else {
 			component.Endpoint = *url
 		}
-
 	}
 }
 

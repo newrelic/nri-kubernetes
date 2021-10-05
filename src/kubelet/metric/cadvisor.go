@@ -124,7 +124,6 @@ func createRawEntityID(m prometheus.Metric) (string, error) {
 	namespace := m.Labels["namespace"]
 	if namespace == "" {
 		return "", errors.New("namespace not found in cAdvisor metrics")
-
 	}
 
 	podName, _ := getLabel(m.Labels, "pod_name", "pod")

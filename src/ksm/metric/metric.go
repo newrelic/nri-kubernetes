@@ -94,7 +94,6 @@ func GetDeploymentNameForContainer() definition.FetchFunc {
 		}
 
 		return deploymentNameBasedOnCreator(podMetrics["created_by_kind"].(string), podMetrics["created_by_name"].(string)), nil
-
 	}
 }
 

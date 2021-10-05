@@ -4,22 +4,22 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
 )
 
 var logger = logrus.StandardLogger()
 
 // Testing Discover() method
 func TestDiscover(t *testing.T) {
-
 	component := controlplane.BuildComponentList()[0]
 	podName := "scheduler"
 
-	var testCases = []struct {
+	testCases := []struct {
 		name                     string
 		assertIsComponentRunning func(assert.TestingT, bool, ...interface{}) bool
 		assertPodName            func(string)
@@ -125,7 +125,6 @@ func TestDiscover(t *testing.T) {
 }
 
 func TestDiscover_ShouldSetNoAuth_WhenBothAuthFalse(t *testing.T) {
-
 	component := controlplane.BuildComponentList()[0]
 	component.UseServiceAccountAuthentication = false
 	component.UseMTLSAuthentication = false
@@ -171,7 +170,6 @@ func TestDiscover_ShouldSetNoAuth_WhenBothAuthFalse(t *testing.T) {
 }
 
 func TestDiscover_ShouldSetSAAuth_WhenUseSAAuthIsTrue(t *testing.T) {
-
 	component := controlplane.BuildComponentList()[0]
 	component.UseServiceAccountAuthentication = true
 	podName := "scheduler"
@@ -216,7 +214,6 @@ func TestDiscover_ShouldSetSAAuth_WhenUseSAAuthIsTrue(t *testing.T) {
 }
 
 func TestDiscover_ShouldSetMTLSAuth_WhenUseMTLSAuthIsTrue(t *testing.T) {
-
 	component := controlplane.BuildComponentList()[0]
 	component.UseMTLSAuthentication = true
 	podName := "scheduler"

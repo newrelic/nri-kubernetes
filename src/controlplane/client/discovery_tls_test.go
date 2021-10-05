@@ -11,11 +11,12 @@ import (
 	"testing"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/client"
 )
 
 const (
@@ -87,7 +88,6 @@ func TestMutualTLSCalls(t *testing.T) {
 }
 
 func createClientComponent(endpoint string, cacert, key, cert []byte, insecureSkipVerify *bool) *ControlPlaneComponentClient {
-
 	// Data will be the contents of the secret holding our TLS config
 	data := map[string][]byte{}
 
@@ -128,7 +128,6 @@ func createClientComponent(endpoint string, cacert, key, cert []byte, insecureSk
 }
 
 func startMTLSServer() string {
-
 	l, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
 		panic(err)
