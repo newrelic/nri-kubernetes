@@ -3,7 +3,8 @@ module github.com/newrelic/nri-kubernetes/v2
 go 1.16
 
 require (
-	github.com/newrelic/infra-integrations-sdk v2.0.1-0.20180410150501-14a5386f9150+incompatible
+	github.com/google/go-cmp v0.5.6
+	github.com/newrelic/infra-integrations-sdk v3.6.8+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/prom2json v1.3.0

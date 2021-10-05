@@ -1,7 +1,7 @@
 package definition
 
 import (
-	sdk "github.com/newrelic/infra-integrations-sdk/metric"
+	"github.com/newrelic/infra-integrations-sdk/data/metric"
 )
 
 // EntityIDGeneratorFunc generates an entity ID.
@@ -14,7 +14,7 @@ type EntityTypeGeneratorFunc func(groupLabel, rawEntityID string, g RawGroups, p
 type Spec struct {
 	Name      string
 	ValueFunc FetchFunc
-	Type      sdk.SourceType
+	Type      metric.SourceType
 	Optional  bool
 }
 

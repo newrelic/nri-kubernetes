@@ -9,7 +9,7 @@ import (
 	"path"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"github.com/newrelic/infra-integrations-sdk/log"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
 
@@ -21,7 +21,7 @@ import (
 // discoverer implements Discoverer interface by using official Kubernetes' Go client
 type discoverer struct {
 	apiClient   client.Kubernetes
-	logger      *logrus.Logger
+	logger      log.Logger
 	connChecker connectionChecker
 	nodeName    string
 }
@@ -47,7 +47,7 @@ type kubelet struct {
 	nodeIP     string
 	nodeName   string
 	httpType   int // httpBasic, httpInsecure, httpSecure
-	logger     *logrus.Logger
+	logger     log.Logger
 }
 
 type connectionParams struct {
@@ -161,7 +161,7 @@ func apiURLFromConfig(config *rest.Config) (u *url.URL, err error) {
 	return
 }
 
-func newKubelet(nodeIP string, nodeName string, endpoint url.URL, bearerToken string, client *http.Client, httpType int, logger *logrus.Logger) *kubelet {
+func newKubelet(nodeIP string, nodeName string, endpoint url.URL, bearerToken string, client *http.Client, httpType int, logger log.Logger) *kubelet {
 	return &kubelet{
 		nodeIP: nodeIP,
 		endpoint: url.URL{
@@ -245,7 +245,7 @@ func checkCall(client *http.Client, URL url.URL, urlPath, token string) error {
 }
 
 // NewDiscoverer instantiates a new Discoverer
-func NewDiscoverer(nodeName string, logger *logrus.Logger) (client.Discoverer, error) {
+func NewDiscoverer(nodeName string, logger log.Logger) (client.Discoverer, error) {
 	if nodeName == "" {
 		return nil, errors.New("nodeName is empty")
 	}

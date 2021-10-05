@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/storage"
 )
@@ -33,7 +33,7 @@ type DiscoveryCacherConfig struct {
 	Storage   storage.Storage
 	TTL       time.Duration
 	TTLJitter uint
-	Logger    *logrus.Logger
+	Logger    log.Logger
 }
 
 // Decomposer implementors must convert a HTTPClient into a data structure that can be Stored in the cache.

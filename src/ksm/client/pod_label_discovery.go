@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"github.com/newrelic/infra-integrations-sdk/log"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -15,7 +15,7 @@ import (
 type podLabelDiscoverer struct {
 	ksmPodLabel  string
 	ksmNamespace string
-	logger       *logrus.Logger
+	logger       log.Logger
 	k8sClient    client.Kubernetes
 	ksmPodPort   int
 	ksmScheme    string
@@ -80,7 +80,7 @@ type PodLabelDiscovererConfig struct {
 	KSMPodPort   int
 	KSMScheme    string
 	KSMNamespace string
-	Logger       *logrus.Logger
+	Logger       log.Logger
 	K8sClient    client.Kubernetes
 }
 
