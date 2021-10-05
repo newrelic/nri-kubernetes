@@ -7,9 +7,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/golang/protobuf/proto"
 	model "github.com/prometheus/client_model/go"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/proto"
 )
 
 type ksm struct {
