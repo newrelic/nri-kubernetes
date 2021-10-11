@@ -131,7 +131,7 @@ func valueFromPrometheus(metricType model.MetricType, metric *model.Metric) Valu
 func Do(c client.HTTPClient, endpoint string, queries []Query) ([]MetricFamily, error) {
 	resp, err := c.Do(http.MethodGet, endpoint)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fetching metrics: %w", err)
 	}
 	defer resp.Body.Close() // nolint: errcheck
 
@@ -155,7 +155,11 @@ func Do(c client.HTTPClient, endpoint string, queries []Query) ([]MetricFamily, 
 		}
 	}
 
-	return metrics, err
+	if err != nil {
+		return nil, fmt.Errorf("parsing metrics: %w", err)
+	}
+
+	return metrics, nil
 }
 
 func labelsFromPrometheus(pairs []*model.LabelPair) Labels {
