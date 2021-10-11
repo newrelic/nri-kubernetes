@@ -150,7 +150,7 @@ func Do(c client.HTTPClient, endpoint string, queries []Query) ([]MetricFamily, 
 		for _, q := range queries {
 			f := q.Execute(promMetricFamily)
 			if f.Valid() {
-				metrics = append(metrics, q.Execute(promMetricFamily))
+				metrics = append(metrics, f)
 			}
 		}
 	}
