@@ -190,7 +190,6 @@ func controlPlaneJobs(
 
 func main() {
 	integration, err := integration.New(integrationName, integrationVersion, integration.Args(&args))
-	var jobs []*scrape.Job
 	exitLog := fmt.Sprintf("Integration %q exited", integrationName)
 	if err != nil {
 		defer log.Debug(exitLog)
@@ -285,6 +284,8 @@ func main() {
 		logger.Errorf("Error building kubernetes client: %v", err)
 		os.Exit(1)
 	}
+
+	var jobs []*scrape.Job
 
 	if !args.DisableKubeStateMetrics {
 		var ksmClients []client.HTTPClient
