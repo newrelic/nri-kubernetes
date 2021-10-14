@@ -17,7 +17,7 @@ const prometheusMetricsPath = "/metrics"
 
 type componentGrouper struct {
 	queries []prometheus.Query
-	client  client.HTTPClient
+	client  client.HTTPDoer
 	logger  log.Logger
 	podName string
 }
@@ -43,7 +43,7 @@ func (r *componentGrouper) Group(specGroups definition.SpecGroups) (definition.R
 // NewComponentGrouper creates a grouper for the given control plane
 // component podName.
 func NewComponentGrouper(
-	c client.HTTPClient,
+	c client.HTTPDoer,
 	queries []prometheus.Query,
 	logger log.Logger,
 	podName string,
