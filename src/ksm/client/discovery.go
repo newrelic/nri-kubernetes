@@ -87,7 +87,7 @@ type ksm struct {
 	logger     log.Logger
 }
 
-func (sd *discoverer) Discover(timeout time.Duration) (client.HTTPClient, error) {
+func (sd *discoverer) Discover(clientTimeout time.Duration) (client.HTTPClient, error) {
 	var endpoint url.URL
 	if sd.overridenEndpoint != "" {
 		sd.logger.Debugf("Using user-defined KSM endpoint " + sd.overridenEndpoint)
@@ -118,7 +118,7 @@ func (sd *discoverer) Discover(timeout time.Duration) (client.HTTPClient, error)
 	}
 
 	sd.logger.Debugf("KSM client created with endpoint=%v and nodeIP=%v", endpoint, nodeIP)
-	return newKSMClient(timeout, nodeIP, endpoint, sd.logger, sd.k8sClient), nil
+	return newKSMClient(clientTimeout, nodeIP, endpoint, sd.logger, sd.k8sClient), nil
 }
 
 func newKSMClient(timeout time.Duration, nodeIP string, endpoint url.URL, logger log.Logger, k8s client.Kubernetes) *ksm {
