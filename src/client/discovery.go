@@ -19,6 +19,17 @@ type MultiDiscoverer interface {
 
 // HTTPClient allows to connect to the discovered Kubernetes services
 type HTTPClient interface {
+	HTTPDoer
+	NodeIPGetter
+}
+
+// HTTPDoer is an interface for HTTP client with, which should provide
+// scheme, port and hostname for the HTTP call.
+type HTTPDoer interface {
 	Do(method, path string) (*http.Response, error)
+}
+
+// NodeIPGetter allows getting discovered Node IP.
+type NodeIPGetter interface {
 	NodeIP() string
 }
