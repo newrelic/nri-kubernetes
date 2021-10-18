@@ -1,8 +1,6 @@
 package network
 
 import (
-	"io/ioutil"
-	"os"
 	"testing"
 	"time"
 
@@ -19,12 +17,7 @@ func getInterfaceMock(defaultInterface string) defaultInterfaceFunc {
 
 func TestCachedDefaultInterface(t *testing.T) {
 	logger := logrus.StandardLogger()
-	cachePath, err := ioutil.TempDir("", "interfaceCacheTest")
-	require.NoError(t, err)
-	defer func() {
-		_ = os.RemoveAll(cachePath)
-	}()
-	cacheStorage := storage.NewJSONDiskStorage(cachePath)
+	cacheStorage := storage.NewJSONDiskStorage(t.TempDir())
 
 	// Get the interface from the defaultInterfaceFunc and cache
 	i, err := doCachedDefaultInterface(
