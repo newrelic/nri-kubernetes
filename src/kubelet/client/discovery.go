@@ -63,7 +63,7 @@ func (c *kubelet) NodeIP() string {
 }
 
 // Do method calls discovered kubelet endpoint with specified method and path, i.e. "/stats/summary
-func (c *kubelet) Do(method, urlPath string) (*http.Response, error) {
+func (c *kubelet) Do(urlPath string) (*http.Response, error) {
 	e := c.endpoint
 	e.Path = path.Join(c.endpoint.Path, urlPath)
 
@@ -81,13 +81,13 @@ func (c *kubelet) Do(method, urlPath string) (*http.Response, error) {
 			c.logger.Debugf("Using standalone cadvisor on port %s", port)
 		}
 
-		r, err = prometheus.NewRequest(method, e.String())
+		r, err = prometheus.NewRequest(e.String())
 	} else {
-		r, err = http.NewRequest(method, e.String(), nil)
+		r, err = http.NewRequest(http.MethodGet, e.String(), nil)
 	}
 
 	if err != nil {
-		return nil, fmt.Errorf("error creating %s request to: %s. Got error: %s ", method, e.String(), err)
+		return nil, fmt.Errorf("error creating request to: %s. Got error: %s ", e.String(), err)
 	}
 
 	if c.endpoint.Scheme == "https" {

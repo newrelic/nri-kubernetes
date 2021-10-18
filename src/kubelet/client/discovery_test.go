@@ -237,7 +237,7 @@ func TestDo_HTTP(t *testing.T) {
 
 	expectedCalledURL := fmt.Sprintf("%s/foo", s.URL)
 
-	resp, err := c.Do(http.MethodGet, "foo")
+	resp, err := c.Do("foo")
 
 	assert.NoError(t, err)
 	assert.Equal(t, expectedCalledURL, resp.Request.URL.String())
@@ -264,7 +264,7 @@ func TestDo_HTTPS(t *testing.T) {
 
 	expectedCalledURL := fmt.Sprintf("%s/foo", s.URL)
 
-	resp, err := c.Do(http.MethodGet, "foo")
+	resp, err := c.Do("foo")
 
 	assert.NoError(t, err)
 	assert.Equal(t, expectedCalledURL, resp.Request.URL.String())

@@ -38,7 +38,7 @@ func TestCacheAwareClient_CachedClientWorks(t *testing.T) {
 	assert.NoError(t, err)
 
 	// When the client works as expected
-	resp, err := client.Do(http.MethodGet, "/api/path")
+	resp, err := client.Do("/api/path")
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
 
@@ -70,7 +70,7 @@ func TestCacheAwareClient_CachedClientDoesNotWork(t *testing.T) {
 	assert.NoError(t, err)
 
 	// When the cached client does not work (see discovered client mock setup)
-	resp, err := client.Do(http.MethodGet, "/api/path")
+	resp, err := client.Do("/api/path")
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
 
@@ -100,7 +100,7 @@ func TestCacheAwareClient_RediscoveryDoesntWork(t *testing.T) {
 	assert.NoError(t, err)
 
 	// When the cached client does not work and neither the re-discovery do
-	resp, err := client.Do(http.MethodGet, "/api/path")
+	resp, err := client.Do("/api/path")
 	assert.Equal(t, "discovery failed", err.Error())
 	assert.Nil(t, resp)
 
@@ -136,7 +136,7 @@ func Test_CacheAwareClient_when_cache_TTL_is_not_reached(t *testing.T) {
 	require.NoError(t, err, "running discovery again")
 
 	t.Run("returns_functional_cached_HTTP_client", func(t *testing.T) {
-		resp, err := client.Do(http.MethodGet, "/api/path")
+		resp, err := client.Do("/api/path")
 		assert.NoError(t, err)
 		assert.Equal(t, 200, resp.StatusCode)
 	})

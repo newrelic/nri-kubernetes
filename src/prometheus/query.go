@@ -129,7 +129,7 @@ func valueFromPrometheus(metricType model.MetricType, metric *model.Metric) Valu
 
 // Do is the main entry point. It runs queries against the Prometheus metrics provided by the endpoint.
 func Do(c client.HTTPDoer, endpoint string, queries []Query) ([]MetricFamily, error) {
-	resp, err := c.Do(http.MethodGet, endpoint)
+	resp, err := c.Do(endpoint)
 	if err != nil {
 		return nil, fmt.Errorf("fetching metrics: %w", err)
 	}

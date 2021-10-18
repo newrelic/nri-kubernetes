@@ -35,7 +35,7 @@ type PodsFetcher struct {
 }
 
 func doPodsFetch(logger log.Logger, c client.HTTPDoer, enableStaticPodsStatus bool) (definition.RawGroups, error) {
-	r, err := c.Do(http.MethodGet, KubeletPodsPath)
+	r, err := c.Do(KubeletPodsPath)
 	if err != nil {
 		return nil, err
 	}

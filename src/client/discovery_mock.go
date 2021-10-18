@@ -28,8 +28,8 @@ type MockDiscoveredHTTPClient struct {
 }
 
 // Do provides a mock implementation for HTTPClient interface
-func (m *MockDiscoveredHTTPClient) Do(method, path string) (*http.Response, error) {
-	args := m.Called(method, path)
+func (m *MockDiscoveredHTTPClient) Do(path string) (*http.Response, error) {
+	args := m.Called(path)
 
 	resp := args.Get(0)
 	if resp == nil {

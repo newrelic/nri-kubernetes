@@ -9,7 +9,7 @@ import (
 )
 
 func TestNewRequest(t *testing.T) {
-	r, err := NewRequest(http.MethodGet, "http://example.com")
+	r, err := NewRequest("http://example.com")
 	require.NoError(t, err)
 
 	assert.Equal(t, AcceptHeader, r.Header.Get("Accept"))

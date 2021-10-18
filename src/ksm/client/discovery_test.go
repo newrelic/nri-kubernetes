@@ -464,7 +464,7 @@ func TestDo(t *testing.T) {
 	}
 
 	// When retrieving http response
-	resp, err := c.Do(http.MethodGet, "foo")
+	resp, err := c.Do("foo")
 
 	// The call works correctly
 	assert.NoError(t, err)
@@ -485,7 +485,7 @@ func TestDo_error(t *testing.T) {
 	}
 
 	// When retrieving http response
-	resp, err := client.Do("", "")
+	resp, err := client.Do("")
 
 	// The call returns error
 	assert.NotNil(t, err)

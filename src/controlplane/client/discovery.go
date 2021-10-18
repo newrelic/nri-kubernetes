@@ -56,7 +56,7 @@ type ControlPlaneComponentClient struct {
 	InsecureFallback         bool
 }
 
-func (c *ControlPlaneComponentClient) Do(method, urlPath string) (*http.Response, error) {
+func (c *ControlPlaneComponentClient) Do(urlPath string) (*http.Response, error) {
 	// Use the secure endpoint by default. If this component doesn't support it yet, fallback to the insecure one.
 	e := c.secureEndpoint
 	usingSecureEndpoint := true
@@ -65,7 +65,7 @@ func (c *ControlPlaneComponentClient) Do(method, urlPath string) (*http.Response
 		usingSecureEndpoint = false
 	}
 
-	r, err := c.buildPrometheusRequest(method, e, urlPath)
+	r, err := c.buildPrometheusRequest(e, urlPath)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func (c *ControlPlaneComponentClient) Do(method, urlPath string) (*http.Response
 		c.logger.Debugf("Error when calling secure endpoint: %s", err.Error())
 		c.logger.Debugf("Falling back to insecure endpoint")
 		e = c.endpoint
-		r, err := c.buildPrometheusRequest(method, e, urlPath)
+		r, err := c.buildPrometheusRequest(e, urlPath)
 		if err != nil {
 			return nil, err
 		}
@@ -94,11 +94,11 @@ func (c *ControlPlaneComponentClient) Do(method, urlPath string) (*http.Response
 	return resp, err
 }
 
-func (c *ControlPlaneComponentClient) buildPrometheusRequest(method string, e url.URL, urlPath string) (*http.Request, error) {
+func (c *ControlPlaneComponentClient) buildPrometheusRequest(e url.URL, urlPath string) (*http.Request, error) {
 	e.Path = path.Join(e.Path, urlPath)
-	r, err := prometheus.NewRequest(method, e.String())
+	r, err := prometheus.NewRequest(e.String())
 	if err != nil {
-		return nil, fmt.Errorf("Error creating %s request to: %s. Got error: %v ", method, e.String(), err)
+		return nil, fmt.Errorf("Error creating request to: %s. Got error: %v ", e.String(), err)
 	}
 	return r, err
 }

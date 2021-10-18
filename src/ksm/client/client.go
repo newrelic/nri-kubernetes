@@ -34,13 +34,13 @@ func (c *ksm) NodeIP() string {
 	return c.nodeIP
 }
 
-func (c *ksm) Do(method, urlPath string) (*http.Response, error) {
+func (c *ksm) Do(urlPath string) (*http.Response, error) {
 	e := c.endpoint
 	e.Path = path.Join(c.endpoint.Path, urlPath)
 
-	r, err := prometheus.NewRequest(method, e.String())
+	r, err := prometheus.NewRequest(e.String())
 	if err != nil {
-		return nil, fmt.Errorf("Error creating %s request to: %s. Got error: %s ", method, e.String(), err)
+		return nil, fmt.Errorf("Error creating request to: %s. Got error: %s ", e.String(), err)
 	}
 
 	c.logger.Debugf("Calling kube-state-metrics endpoint: %s", r.URL.String())

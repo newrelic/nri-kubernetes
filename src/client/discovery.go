@@ -26,7 +26,7 @@ type HTTPClient interface {
 // HTTPDoer is an interface for HTTP client with, which should provide
 // scheme, port and hostname for the HTTP call.
 type HTTPDoer interface {
-	Do(method, path string) (*http.Response, error)
+	Do(path string) (*http.Response, error)
 }
 
 // NodeIPGetter allows getting discovered Node IP.
