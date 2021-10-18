@@ -1,7 +1,9 @@
 package client
 
 import (
+	"crypto/tls"
 	"fmt"
+	"net/http"
 	"net/url"
 	"time"
 
@@ -70,6 +72,15 @@ func (p *podLabelDiscoverer) Discover(timeout time.Duration) (client.HTTPClient,
 		endpoint,
 		p.logger,
 	)
+
+	if endpoint.Scheme == "https" {
+		ksmClient.httpClient.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		}
+	}
+
 	return ksmClient, nil
 }
 

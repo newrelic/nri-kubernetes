@@ -1,7 +1,6 @@
 package client
 
 import (
-	"crypto/tls"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -26,11 +25,6 @@ func newKSMClient(timeout time.Duration, nodeIP string, endpoint url.URL, logger
 		endpoint: endpoint,
 		httpClient: &http.Client{
 			Timeout: timeout,
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
 		},
 		logger: logger,
 	}
