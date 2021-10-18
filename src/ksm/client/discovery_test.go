@@ -464,7 +464,7 @@ func TestDo(t *testing.T) {
 	}
 
 	// When retrieving http response
-	resp, err := c.Do("GET", "foo")
+	resp, err := c.Do(http.MethodGet, "foo")
 
 	// The call works correctly
 	assert.NoError(t, err)
@@ -473,7 +473,7 @@ func TestDo(t *testing.T) {
 	// Accept Header was added to the request
 	assert.Equal(t, prometheus.AcceptHeader, resp.Request.Header.Get("Accept"))
 	// Correct http method was used
-	assert.Equal(t, "GET", resp.Request.Method)
+	assert.Equal(t, http.MethodGet, resp.Request.Method)
 }
 
 func TestDo_error(t *testing.T) {

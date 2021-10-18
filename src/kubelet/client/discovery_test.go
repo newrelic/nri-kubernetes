@@ -237,12 +237,12 @@ func TestDo_HTTP(t *testing.T) {
 
 	expectedCalledURL := fmt.Sprintf("%s/foo", s.URL)
 
-	resp, err := c.Do("GET", "foo")
+	resp, err := c.Do(http.MethodGet, "foo")
 
 	assert.NoError(t, err)
 	assert.Equal(t, expectedCalledURL, resp.Request.URL.String())
 	assert.Equal(t, "", resp.Request.Header.Get("Authorization"))
-	assert.Equal(t, "GET", resp.Request.Method)
+	assert.Equal(t, http.MethodGet, resp.Request.Method)
 	assert.Equal(t, s.URL, endpoint.String())
 }
 
@@ -264,12 +264,12 @@ func TestDo_HTTPS(t *testing.T) {
 
 	expectedCalledURL := fmt.Sprintf("%s/foo", s.URL)
 
-	resp, err := c.Do("GET", "foo")
+	resp, err := c.Do(http.MethodGet, "foo")
 
 	assert.NoError(t, err)
 	assert.Equal(t, expectedCalledURL, resp.Request.URL.String())
 	assert.Equal(t, fmt.Sprintf("Bearer %s", c.config.BearerToken), resp.Request.Header.Get("Authorization"))
-	assert.Equal(t, "GET", resp.Request.Method)
+	assert.Equal(t, http.MethodGet, resp.Request.Method)
 	assert.Equal(t, s.URL, endpoint.String())
 }
 

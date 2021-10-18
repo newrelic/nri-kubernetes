@@ -81,7 +81,7 @@ func TestMutualTLSCalls(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			endpoint := startMTLSServer()
 			c := createClientComponent(endpoint, test.cacert, test.key, test.cert, test.insecureSkipVerify)
-			resp, err := c.Do("GET", "/test")
+			resp, err := c.Do(http.MethodGet, "/test")
 			test.assert(t, resp, err)
 		})
 	}
