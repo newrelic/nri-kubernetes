@@ -105,7 +105,7 @@ func (sd *discoverer) Discover(clientTimeout time.Duration) (client.HTTPClient, 
 	}
 
 	sd.logger.Debugf("KSM client created with endpoint=%v and nodeIP=%v", endpoint, nodeIP)
-	return newKSMClient(clientTimeout, nodeIP, endpoint, sd.logger, sd.k8sClient), nil
+	return newKSMClient(clientTimeout, nodeIP, endpoint, sd.logger), nil
 }
 
 // dnsDiscover uses DNS to discover KSM

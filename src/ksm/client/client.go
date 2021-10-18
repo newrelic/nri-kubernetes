@@ -9,9 +9,7 @@ import (
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
-	"k8s.io/client-go/transport"
 )
 
 // ksm implements Client interface
@@ -22,25 +20,20 @@ type ksm struct {
 	logger     log.Logger
 }
 
-func newKSMClient(timeout time.Duration, nodeIP string, endpoint url.URL, logger log.Logger, k8s client.Kubernetes) *ksm {
-	bearer := k8s.Config().BearerToken
-	rt := newBearerRoundTripper(bearer)
-
+func newKSMClient(timeout time.Duration, nodeIP string, endpoint url.URL, logger log.Logger) *ksm {
 	return &ksm{
 		nodeIP:   nodeIP,
 		endpoint: endpoint,
 		httpClient: &http.Client{
-			Timeout:   timeout,
-			Transport: rt,
+			Timeout: timeout,
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
 		},
 		logger: logger,
 	}
-}
-
-func newBearerRoundTripper(bearer string) http.RoundTripper {
-	baseTransport := http.DefaultTransport.(*http.Transport).Clone()
-	baseTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	return transport.NewBearerAuthRoundTripper(bearer, baseTransport)
 }
 
 func (c *ksm) NodeIP() string {

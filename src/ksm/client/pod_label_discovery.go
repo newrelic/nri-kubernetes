@@ -69,7 +69,6 @@ func (p *podLabelDiscoverer) Discover(timeout time.Duration) (client.HTTPClient,
 		pod.Status.HostIP,
 		endpoint,
 		p.logger,
-		p.k8sClient,
 	)
 	return ksmClient, nil
 }
