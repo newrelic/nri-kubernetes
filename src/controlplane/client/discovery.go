@@ -104,7 +104,8 @@ func (c *ControlPlaneComponentClient) buildPrometheusRequest(method string, e ur
 }
 
 func (c *ControlPlaneComponentClient) configureAuthentication() error {
-	if c.authenticationMethod == mTLS {
+	switch c.authenticationMethod {
+	case mTLS:
 		tlsConfig, err := c.getTLSConfigFromSecret()
 		if err != nil {
 			return errors.Wrap(err, "could not load TLS configuration")
@@ -113,11 +114,7 @@ func (c *ControlPlaneComponentClient) configureAuthentication() error {
 		c.httpClient.Transport = &http.Transport{
 			TLSClientConfig: tlsConfig,
 		}
-		return nil
-	}
-
-	if c.authenticationMethod == serviceAccount {
-
+	case serviceAccount:
 		config, err := rest.InClusterConfig()
 		if err != nil {
 			return errors.Wrapf(err, "could not create in cluster Kubernetes configuration to query pod: %s", c.PodName)
@@ -130,10 +127,10 @@ func (c *ControlPlaneComponentClient) configureAuthentication() error {
 
 		// Use the default kubernetes Bearer token authentication RoundTripper
 		c.httpClient.Transport = transport.NewBearerAuthRoundTripper(config.BearerToken, t)
-		return nil
+	default:
+		c.httpClient.Transport = http.DefaultTransport
 	}
 
-	c.httpClient.Transport = http.DefaultTransport
 	return nil
 }
 
