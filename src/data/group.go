@@ -4,20 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/newrelic/infra-integrations-sdk/integration"
-	"k8s.io/apimachinery/pkg/version"
-
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 )
 
 // Grouper groups raw data by any desired label such object (pod, container...).
 type Grouper interface {
 	Group(definition.SpecGroups) (definition.RawGroups, *ErrorGroup)
-}
-
-// Populator populates a given integration with grouped raw data.
-type Populator interface {
-	Populate(definition.RawGroups, definition.SpecGroups, *integration.Integration, string, *version.Info) PopulateResult
 }
 
 // ErrorGroup groups errors that can be recoverable (the execution can continue) or not
