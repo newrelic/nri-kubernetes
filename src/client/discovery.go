@@ -26,7 +26,7 @@ type HTTPClient interface {
 // HTTPGetter is an interface for HTTP client with, which should provide
 // scheme, port and hostname for the HTTP call.
 type HTTPGetter interface {
-	Do(path string) (*http.Response, error)
+	Get(path string) (*http.Response, error)
 }
 
 // NodeIPGetter allows getting discovered Node IP.

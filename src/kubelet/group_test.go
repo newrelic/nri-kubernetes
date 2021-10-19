@@ -23,7 +23,7 @@ type testClient struct {
 	handler http.HandlerFunc
 }
 
-func (c *testClient) Do(path string) (*http.Response, error) {
+func (c *testClient) Get(path string) (*http.Response, error) {
 	req := httptest.NewRequest(http.MethodGet, path, nil)
 	w := httptest.NewRecorder()
 

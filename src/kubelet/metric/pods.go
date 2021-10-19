@@ -34,7 +34,7 @@ type PodsFetcher struct {
 }
 
 func (f *PodsFetcher) doPodsFetch() (definition.RawGroups, error) {
-	r, err := f.client.Do(KubeletPodsPath)
+	r, err := f.client.Get(KubeletPodsPath)
 	if err != nil {
 		return nil, err
 	}

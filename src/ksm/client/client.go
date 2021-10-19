@@ -34,10 +34,11 @@ func (c *ksm) NodeIP() string {
 	return c.nodeIP
 }
 
-func (c *ksm) Do(urlPath string) (*http.Response, error) {
+func (c *ksm) Get(urlPath string) (*http.Response, error) {
 	e := c.endpoint
 	e.Path = path.Join(c.endpoint.Path, urlPath)
 
+	// Creates Prometheus request.
 	r, err := prometheus.NewRequest(e.String())
 	if err != nil {
 		return nil, fmt.Errorf("Error creating request to: %s. Got error: %s ", e.String(), err)

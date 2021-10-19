@@ -63,7 +63,7 @@ func (c *kubelet) NodeIP() string {
 }
 
 // Do method calls discovered kubelet endpoint with specified method and path, i.e. "/stats/summary
-func (c *kubelet) Do(urlPath string) (*http.Response, error) {
+func (c *kubelet) Get(urlPath string) (*http.Response, error) {
 	e := c.endpoint
 	e.Path = path.Join(c.endpoint.Path, urlPath)
 

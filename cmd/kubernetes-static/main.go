@@ -280,7 +280,7 @@ type basicHTTPClient struct {
 	httpClient http.Client
 }
 
-func (b basicHTTPClient) Do(path string) (*http.Response, error) {
+func (b basicHTTPClient) Get(path string) (*http.Response, error) {
 	endpoint := fmt.Sprintf("%s%s", b.url, path)
 	log.Info("Getting: %s", endpoint)
 

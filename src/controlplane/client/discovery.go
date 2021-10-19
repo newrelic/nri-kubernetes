@@ -56,7 +56,7 @@ type ControlPlaneComponentClient struct {
 	InsecureFallback         bool
 }
 
-func (c *ControlPlaneComponentClient) Do(urlPath string) (*http.Response, error) {
+func (c *ControlPlaneComponentClient) Get(urlPath string) (*http.Response, error) {
 	// Use the secure endpoint by default. If this component doesn't support it yet, fallback to the insecure one.
 	e := c.secureEndpoint
 	usingSecureEndpoint := true
