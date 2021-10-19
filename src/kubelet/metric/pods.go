@@ -26,7 +26,6 @@ const KubeletPodsPath = "/pods"
 // integration execution.
 type PodsFetcher struct {
 	once                   sync.Once
-	cached                 bool
 	cachedPods             definition.RawGroups
 	fetchError             error
 	logger                 log.Logger
