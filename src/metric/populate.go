@@ -11,9 +11,6 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 )
 
-type k8sPopulator struct {
-}
-
 // MultipleErrs represents a bunch of errs.
 // Recoverable == true means that you can keep working with those errors.
 // Recoverable == false means you must handle the errors or panic.
@@ -32,7 +29,7 @@ func (e MultipleErrs) Error() string {
 }
 
 // Populate populates k8s raw data to sdk metrics.
-func (p *k8sPopulator) Populate(
+func Populate(
 	groups definition.RawGroups,
 	specGroups definition.SpecGroups,
 	i *integration.Integration,
@@ -55,9 +52,4 @@ func (p *k8sPopulator) Populate(
 	}
 
 	return data.PopulateResult{Errors: nil, Populated: true}
-}
-
-// NewK8sPopulator creates a Kubernetes aware populator.
-func NewK8sPopulator() data.Populator {
-	return &k8sPopulator{}
 }

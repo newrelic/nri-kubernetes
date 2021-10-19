@@ -139,8 +139,6 @@ var kubeletSpecs = definition.SpecGroups{
 }
 
 func TestPopulateK8s(t *testing.T) {
-	p := NewK8sPopulator()
-
 	intgr, err := integration.New("test", "test")
 	assert.NoError(t, err)
 	intgr.Clear()
@@ -156,7 +154,7 @@ func TestPopulateK8s(t *testing.T) {
 	}
 
 	k8sVersion := &version.Info{GitVersion: "v1.15.42"}
-	err = p.Populate(foo, kubeletSpecs, intgr, "test-cluster", k8sVersion)
+	err = Populate(foo, kubeletSpecs, intgr, "test-cluster", k8sVersion)
 	require.IsType(t, err, data.PopulateResult{})
 	assert.Empty(t, err.(data.PopulateResult).Errors)
 
