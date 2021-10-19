@@ -14,7 +14,7 @@ import (
 
 type ksmGrouper struct {
 	queries   []prometheus.Query
-	client    client.HTTPDoer
+	client    client.HTTPGetter
 	logger    log.Logger
 	k8sClient client.Kubernetes
 }
@@ -70,7 +70,7 @@ func (r *ksmGrouper) Group(specGroups definition.SpecGroups) (definition.RawGrou
 }
 
 // NewGrouper creates a grouper aware of Kube State Metrics raw metrics.
-func NewGrouper(c client.HTTPDoer, queries []prometheus.Query, logger log.Logger, k8sClient client.Kubernetes) data.Grouper {
+func NewGrouper(c client.HTTPGetter, queries []prometheus.Query, logger log.Logger, k8sClient client.Kubernetes) data.Grouper {
 	return &ksmGrouper{
 		queries:   queries,
 		client:    c,

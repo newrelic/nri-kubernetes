@@ -18,7 +18,7 @@ import (
 const StatsSummaryPath = "/stats/summary"
 
 // GetMetricsData calls kubelet /stats/summary endpoint and returns unmarshalled response
-func GetMetricsData(c client.HTTPDoer) (*v1.Summary, error) {
+func GetMetricsData(c client.HTTPGetter) (*v1.Summary, error) {
 	resp, err := c.Do(StatsSummaryPath)
 	if err != nil {
 		return nil, fmt.Errorf("performing GET request to kubelet endpoint %q: %w", StatsSummaryPath, err)

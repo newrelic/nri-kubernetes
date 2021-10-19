@@ -29,7 +29,7 @@ type PodsFetcher struct {
 	cachedPods             definition.RawGroups
 	fetchError             error
 	logger                 log.Logger
-	client                 client.HTTPDoer
+	client                 client.HTTPGetter
 	enableStaticPodsStatus bool
 }
 
@@ -128,7 +128,7 @@ func (f *PodsFetcher) FetchFuncWithCache() data.FetchFunc {
 }
 
 // NewPodsFetcher returns a new PodsFetcher.
-func NewPodsFetcher(l log.Logger, c client.HTTPDoer, enableStaticPodsStatus bool) *PodsFetcher {
+func NewPodsFetcher(l log.Logger, c client.HTTPGetter, enableStaticPodsStatus bool) *PodsFetcher {
 	return &PodsFetcher{
 		logger:                 l,
 		client:                 c,
