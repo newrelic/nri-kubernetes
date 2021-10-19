@@ -55,7 +55,6 @@ type integrationData struct {
 	podName      string
 	stdOut       []byte
 	stdErr       []byte
-	err          error
 }
 
 type executionErr struct {
