@@ -29,6 +29,10 @@ type HTTPGetter interface {
 	Get(path string) (*http.Response, error)
 }
 
+type HTTPDoer interface {
+	Do(*http.Request) (*http.Response, error)
+}
+
 // NodeIPGetter allows getting discovered Node IP.
 type NodeIPGetter interface {
 	NodeIP() string
