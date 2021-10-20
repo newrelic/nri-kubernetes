@@ -1118,26 +1118,6 @@ func fromPrometheusNumeric(value definition.FetchedValue) (definition.FetchedVal
 	return nil, fmt.Errorf("invalid type value '%v'. Expected 'gauge' or 'counter', got '%T'", value, value)
 }
 
-func forEachFetchedValue(tf definition.TransformFunc) definition.TransformFunc {
-	return func(value definition.FetchedValue) (definition.FetchedValue, error) {
-		values, ok := value.(definition.FetchedValues)
-		if !ok {
-			return nil, fmt.Errorf("value of type %T is not a definition.FetchedValues", value)
-		}
-
-		for k, value := range values {
-			newValue, err := tf(value)
-			if err != nil {
-				return nil, fmt.Errorf("converting value %q: %w", k, err)
-			}
-
-			values[k] = newValue
-		}
-
-		return values, nil
-	}
-}
-
 // Subtract returns a new FetchFunc that subtracts 2 values. It expects that the values are float64
 func Subtract(left definition.FetchFunc, right definition.FetchFunc) definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {

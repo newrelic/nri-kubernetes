@@ -449,8 +449,8 @@ func TestNodeIP(t *testing.T) {
 	assert.Equal(t, "1.2.3.4", nodeIP)
 }
 
-// Testing Do() method
-func TestDo(t *testing.T) {
+// Testing Get() method
+func TestGet(t *testing.T) {
 	r := strings.NewReader("Foo")
 	s := httptest.NewServer(mockResponseHandler(r))
 	endpoint, err := url.Parse(s.URL)
@@ -464,7 +464,7 @@ func TestDo(t *testing.T) {
 	}
 
 	// When retrieving http response
-	resp, err := c.Do("GET", "foo")
+	resp, err := c.Get("foo")
 
 	// The call works correctly
 	assert.NoError(t, err)
@@ -473,10 +473,10 @@ func TestDo(t *testing.T) {
 	// Accept Header was added to the request
 	assert.Equal(t, prometheus.AcceptHeader, resp.Request.Header.Get("Accept"))
 	// Correct http method was used
-	assert.Equal(t, "GET", resp.Request.Method)
+	assert.Equal(t, http.MethodGet, resp.Request.Method)
 }
 
-func TestDo_error(t *testing.T) {
+func TestGet_error(t *testing.T) {
 	client := &ksm{
 		nodeIP:     "",
 		endpoint:   url.URL{},
@@ -485,7 +485,7 @@ func TestDo_error(t *testing.T) {
 	}
 
 	// When retrieving http response
-	resp, err := client.Do("", "")
+	resp, err := client.Get("")
 
 	// The call returns error
 	assert.NotNil(t, err)

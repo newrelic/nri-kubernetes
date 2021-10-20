@@ -66,7 +66,6 @@ func (p *distributedPodLabelDiscoverer) Discover(timeout time.Duration) ([]clien
 			pod.Status.HostIP,
 			endpoint,
 			p.logger,
-			p.k8sClient,
 		)
 		clients = append(clients, ksmClient)
 	}

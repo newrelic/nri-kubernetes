@@ -56,7 +56,7 @@ type ControlPlaneComponentClient struct {
 	InsecureFallback         bool
 }
 
-func (c *ControlPlaneComponentClient) Do(method, urlPath string) (*http.Response, error) {
+func (c *ControlPlaneComponentClient) Get(urlPath string) (*http.Response, error) {
 	// Use the secure endpoint by default. If this component doesn't support it yet, fallback to the insecure one.
 	e := c.secureEndpoint
 	usingSecureEndpoint := true
@@ -65,7 +65,7 @@ func (c *ControlPlaneComponentClient) Do(method, urlPath string) (*http.Response
 		usingSecureEndpoint = false
 	}
 
-	r, err := c.buildPrometheusRequest(method, e, urlPath)
+	r, err := c.buildPrometheusRequest(e, urlPath)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func (c *ControlPlaneComponentClient) Do(method, urlPath string) (*http.Response
 		c.logger.Debugf("Error when calling secure endpoint: %s", err.Error())
 		c.logger.Debugf("Falling back to insecure endpoint")
 		e = c.endpoint
-		r, err := c.buildPrometheusRequest(method, e, urlPath)
+		r, err := c.buildPrometheusRequest(e, urlPath)
 		if err != nil {
 			return nil, err
 		}
@@ -94,17 +94,18 @@ func (c *ControlPlaneComponentClient) Do(method, urlPath string) (*http.Response
 	return resp, err
 }
 
-func (c *ControlPlaneComponentClient) buildPrometheusRequest(method string, e url.URL, urlPath string) (*http.Request, error) {
+func (c *ControlPlaneComponentClient) buildPrometheusRequest(e url.URL, urlPath string) (*http.Request, error) {
 	e.Path = path.Join(e.Path, urlPath)
-	r, err := prometheus.NewRequest(method, e.String())
+	r, err := prometheus.NewRequest(e.String())
 	if err != nil {
-		return nil, fmt.Errorf("Error creating %s request to: %s. Got error: %v ", method, e.String(), err)
+		return nil, fmt.Errorf("Error creating request to: %s. Got error: %v ", e.String(), err)
 	}
 	return r, err
 }
 
 func (c *ControlPlaneComponentClient) configureAuthentication() error {
-	if c.authenticationMethod == mTLS {
+	switch c.authenticationMethod {
+	case mTLS:
 		tlsConfig, err := c.getTLSConfigFromSecret()
 		if err != nil {
 			return errors.Wrap(err, "could not load TLS configuration")
@@ -113,11 +114,7 @@ func (c *ControlPlaneComponentClient) configureAuthentication() error {
 		c.httpClient.Transport = &http.Transport{
 			TLSClientConfig: tlsConfig,
 		}
-		return nil
-	}
-
-	if c.authenticationMethod == serviceAccount {
-
+	case serviceAccount:
 		config, err := rest.InClusterConfig()
 		if err != nil {
 			return errors.Wrapf(err, "could not create in cluster Kubernetes configuration to query pod: %s", c.PodName)
@@ -130,10 +127,10 @@ func (c *ControlPlaneComponentClient) configureAuthentication() error {
 
 		// Use the default kubernetes Bearer token authentication RoundTripper
 		c.httpClient.Transport = transport.NewBearerAuthRoundTripper(config.BearerToken, t)
-		return nil
+	default:
+		c.httpClient.Transport = http.DefaultTransport
 	}
 
-	c.httpClient.Transport = http.DefaultTransport
 	return nil
 }
 

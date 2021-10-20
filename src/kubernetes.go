@@ -44,6 +44,8 @@ type argumentList struct {
 	APIServerCacheK8SVersionTTLJitter int    `default:"0" help:"Total percentage how much the TTL can be randomly reduced or increased to spead load on the API server for K8s version discovery. E.g. 100% can either double the TTL or reduce it to 0."`
 	EtcdTLSSecretName                 string `help:"Name of the secret that stores your ETCD TLS configuration"`
 	EtcdTLSSecretNamespace            string `default:"default" help:"Namespace in which the ETCD TLS secret lives"`
+	DisableKubelet                    bool   `default:"false" help:"Don't scrape kubelet"`
+	DisableControlplane               bool   `default:"false" help:"Don't scrape controlplane"`
 	DisableKubeStateMetrics           bool   `default:"false" help:"Used to disable KSM data fetching. Defaults to 'false''"`
 	KubeStateMetricsURL               string `help:"kube-state-metrics URL. If it is not provided, it will be discovered."`
 	KubeStateMetricsPodLabel          string `help:"discover KSM using Kubernetes Labels."`
@@ -188,7 +190,6 @@ func controlPlaneJobs(
 
 func main() {
 	integration, err := integration.New(integrationName, integrationVersion, integration.Args(&args))
-	var jobs []*scrape.Job
 	exitLog := fmt.Sprintf("Integration %q exited", integrationName)
 	if err != nil {
 		defer log.Debug(exitLog)
@@ -283,6 +284,8 @@ func main() {
 		logger.Errorf("Error building kubernetes client: %v", err)
 		os.Exit(1)
 	}
+
+	var jobs []*scrape.Job
 
 	if !args.DisableKubeStateMetrics {
 		var ksmClients []client.HTTPClient
@@ -382,39 +385,47 @@ func main() {
 	}
 
 	podsFetcher := metric2.NewPodsFetcher(logger, kubeletClient, enableStaticPodsStatus).FetchFuncWithCache()
-	cpJobs, err := controlPlaneJobs(
-		logger,
-		apiServerClient,
-		nodeName,
-		timeout,
-		kubeletNodeIP,
-		podsFetcher,
-		k8s,
-		args.EtcdTLSSecretName,
-		args.EtcdTLSSecretNamespace,
-		args.APIServerSecurePort,
-		args.SchedulerEndpointURL,
-		args.EtcdEndpointURL,
-		args.ControllerManagerEndpointURL,
-		args.APIServerEndpointURL,
-	)
 
-	if err != nil {
-		logger.Errorf("couldn't configure control plane components jobs: %v", err)
+	if !args.DisableControlplane {
+		cpJobs, err := controlPlaneJobs(
+			logger,
+			apiServerClient,
+			nodeName,
+			timeout,
+			kubeletNodeIP,
+			podsFetcher,
+			k8s,
+			args.EtcdTLSSecretName,
+			args.EtcdTLSSecretNamespace,
+			args.APIServerSecurePort,
+			args.SchedulerEndpointURL,
+			args.EtcdEndpointURL,
+			args.ControllerManagerEndpointURL,
+			args.APIServerEndpointURL,
+		)
+
+		if err != nil {
+			logger.Errorf("couldn't configure control plane components jobs: %v", err)
+		} else {
+			jobs = append(jobs, cpJobs...)
+		}
 	} else {
-		jobs = append(jobs, cpJobs...)
+		logger.Infof("Controlplane scraping disabled")
 	}
 
-	// Kubelet is always scraped, on each node
-	kubeletGrouper := kubelet.NewGrouper(
-		kubeletClient,
-		logger,
-		apiServerClient,
-		defaultNetworkInterface,
-		podsFetcher,
-		metric2.CadvisorFetchFunc(kubeletClient, metric.CadvisorQueries),
-	)
-	jobs = append(jobs, scrape.NewScrapeJob("kubelet", kubeletGrouper, metric.KubeletSpecs))
+	if !args.DisableKubelet {
+		kubeletGrouper := kubelet.NewGrouper(
+			kubeletClient,
+			logger,
+			apiServerClient,
+			defaultNetworkInterface,
+			podsFetcher,
+			metric2.CadvisorFetchFunc(kubeletClient, metric.CadvisorQueries),
+		)
+		jobs = append(jobs, scrape.NewScrapeJob("kubelet", kubeletGrouper, metric.KubeletSpecs))
+	} else {
+		logger.Infof("Kubelet scraping disabled")
+	}
 
 	successfulJobs := 0
 	for _, job := range jobs {

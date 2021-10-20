@@ -16,7 +16,7 @@ type ksm struct {
 	nodeIP string
 }
 
-func (c *ksm) Do(method, path string) (*http.Response, error) {
+func (c *ksm) Get(path string) (*http.Response, error) {
 	f, err := os.Open("testdata/metrics_plain.txt")
 	if err != nil {
 		return nil, err
@@ -34,7 +34,7 @@ func (c *ksm) NodeIP() string {
 	return c.nodeIP
 }
 
-func TestDo(t *testing.T) {
+func TestGet(t *testing.T) {
 	// TODO create or use an agnostic test sample.
 	c := ksm{
 		nodeIP: "1.2.3.4",

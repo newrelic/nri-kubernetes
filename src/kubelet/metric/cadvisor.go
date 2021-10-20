@@ -37,7 +37,7 @@ func getLabel(labels prometheus.Labels, names ...string) (string, bool) {
 }
 
 // CadvisorFetchFunc creates a FetchFunc that fetches data from the kubelet cadvisor metrics path.
-func CadvisorFetchFunc(c client.HTTPClient, queries []prometheus.Query) data.FetchFunc {
+func CadvisorFetchFunc(c client.HTTPGetter, queries []prometheus.Query) data.FetchFunc {
 	return func() (definition.RawGroups, error) {
 		families, err := prometheus.Do(c, KubeletCAdvisorMetricsPath, queries)
 		if err != nil {

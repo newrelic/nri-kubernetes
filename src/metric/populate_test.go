@@ -1,4 +1,4 @@
-package metric
+package metric_test
 
 import (
 	"sort"
@@ -10,7 +10,8 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/newrelic/infra-integrations-sdk/data/event"
 	"github.com/newrelic/infra-integrations-sdk/data/inventory"
-	"github.com/newrelic/infra-integrations-sdk/data/metric"
+	sdkMetric "github.com/newrelic/infra-integrations-sdk/data/metric"
+
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -19,6 +20,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric/testdata"
+	"github.com/newrelic/nri-kubernetes/v2/src/metric"
 )
 
 func parseTime(raw string) time.Time {
@@ -34,7 +36,7 @@ var expectedEntities = []*integration.Entity{
 			Namespace: "k8s:cluster",
 			IDAttrs:   integration.IDAttributes{},
 		},
-		Metrics: []*metric.Set{
+		Metrics: []*sdkMetric.Set{
 			{
 				Metrics: map[string]interface{}{
 					"event_type":        "K8sClusterSample",
@@ -52,7 +54,7 @@ var expectedEntities = []*integration.Entity{
 			Namespace: "k8s:test-cluster:kube-system:pod",
 			IDAttrs:   integration.IDAttributes{},
 		},
-		Metrics: []*metric.Set{
+		Metrics: []*sdkMetric.Set{
 			{
 				Metrics: map[string]interface{}{
 					"event_type":                     "K8sPodSample",
@@ -89,7 +91,7 @@ var expectedEntities = []*integration.Entity{
 			Namespace: "k8s:test-cluster:kube-system:newrelic-infra-rz225:container",
 			IDAttrs:   integration.IDAttributes{},
 		},
-		Metrics: []*metric.Set{
+		Metrics: []*sdkMetric.Set{
 			{
 				Metrics: map[string]interface{}{
 					"event_type":            "K8sContainerSample",
@@ -134,13 +136,11 @@ var expectedEntities = []*integration.Entity{
 
 // We reduce the test fixtures in order to simplify testing.
 var kubeletSpecs = definition.SpecGroups{
-	"pod":       KubeletSpecs["pod"],
-	"container": KubeletSpecs["container"],
+	"pod":       metric.KubeletSpecs["pod"],
+	"container": metric.KubeletSpecs["container"],
 }
 
 func TestPopulateK8s(t *testing.T) {
-	p := NewK8sPopulator()
-
 	intgr, err := integration.New("test", "test")
 	assert.NoError(t, err)
 	intgr.Clear()
@@ -156,7 +156,7 @@ func TestPopulateK8s(t *testing.T) {
 	}
 
 	k8sVersion := &version.Info{GitVersion: "v1.15.42"}
-	err = p.Populate(foo, kubeletSpecs, intgr, "test-cluster", k8sVersion)
+	err = metric.Populate(foo, kubeletSpecs, intgr, "test-cluster", k8sVersion)
 	require.IsType(t, err, data.PopulateResult{})
 	assert.Empty(t, err.(data.PopulateResult).Errors)
 
@@ -182,7 +182,7 @@ func TestPopulateK8s(t *testing.T) {
 	sort.Slice(intgr.Entities, entitySliceLesser(intgr.Entities))
 	sort.Slice(expectedEntities, entitySliceLesser(expectedEntities))
 
-	compareIgnoreFields := cmpopts.IgnoreUnexported(integration.Entity{}, metric.Set{}, inventory.Inventory{})
+	compareIgnoreFields := cmpopts.IgnoreUnexported(integration.Entity{}, sdkMetric.Set{}, inventory.Inventory{})
 	for j := range expectedEntities {
 		if diff := cmp.Diff(intgr.Entities[j], expectedEntities[j], compareIgnoreFields); diff != "" {
 			t.Errorf("Entities[%d] mismatch: %s", j, diff)

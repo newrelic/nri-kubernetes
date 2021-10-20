@@ -23,7 +23,7 @@ func TestCacheAwareClient_CachedClientWorks(t *testing.T) {
 
 	// Setup discovered client
 	wrappedClient := new(MockDiscoveredHTTPClient)
-	wrappedClient.On("Do", mock.Anything, mock.Anything).Return(&http.Response{StatusCode: 200}, nil)
+	wrappedClient.On("Get", mock.Anything).Return(&http.Response{StatusCode: 200}, nil)
 
 	// Setup wrapped discoverer
 	discoverer := new(MockDiscoverer)
@@ -38,7 +38,7 @@ func TestCacheAwareClient_CachedClientWorks(t *testing.T) {
 	assert.NoError(t, err)
 
 	// When the client works as expected
-	resp, err := client.Do("GET", "/api/path")
+	resp, err := client.Get("/api/path")
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
 
@@ -52,9 +52,9 @@ func TestCacheAwareClient_CachedClientDoesNotWork(t *testing.T) {
 	// Setup discovered client
 	wrappedClient := new(MockDiscoveredHTTPClient)
 	// After the error on the first call, the second call returns a correct value
-	wrappedClient.On("Do", mock.Anything, mock.Anything).
+	wrappedClient.On("Get", mock.Anything).
 		Return(nil, fmt.Errorf("patapum")).Once()
-	wrappedClient.On("Do", mock.Anything, mock.Anything).
+	wrappedClient.On("Get", mock.Anything).
 		Return(&http.Response{StatusCode: 200}, nil)
 
 	// Setup wrapped discoverer
@@ -70,7 +70,7 @@ func TestCacheAwareClient_CachedClientDoesNotWork(t *testing.T) {
 	assert.NoError(t, err)
 
 	// When the cached client does not work (see discovered client mock setup)
-	resp, err := client.Do("GET", "/api/path")
+	resp, err := client.Get("/api/path")
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
 
@@ -83,7 +83,7 @@ func TestCacheAwareClient_RediscoveryDoesntWork(t *testing.T) {
 
 	// Setup discovered client
 	wrappedClient := new(MockDiscoveredHTTPClient)
-	wrappedClient.On("Do", mock.Anything, mock.Anything).
+	wrappedClient.On("Get", mock.Anything).
 		Return(nil, fmt.Errorf("patapum"))
 
 	// Setup wrapped discoverer
@@ -100,7 +100,7 @@ func TestCacheAwareClient_RediscoveryDoesntWork(t *testing.T) {
 	assert.NoError(t, err)
 
 	// When the cached client does not work and neither the re-discovery do
-	resp, err := client.Do("GET", "/api/path")
+	resp, err := client.Get("/api/path")
 	assert.Equal(t, "discovery failed", err.Error())
 	assert.Nil(t, resp)
 
@@ -117,7 +117,7 @@ func Test_CacheAwareClient_when_cache_TTL_is_not_reached(t *testing.T) {
 
 	// Setup discovered client
 	wrappedClient := new(MockDiscoveredHTTPClient)
-	wrappedClient.On("Do", mock.Anything, mock.Anything).Return(&http.Response{StatusCode: 200}, nil)
+	wrappedClient.On("Get", mock.Anything).Return(&http.Response{StatusCode: 200}, nil)
 
 	// Setup wrapped discoverer
 	discoverer := new(MockDiscoverer)
@@ -136,7 +136,7 @@ func Test_CacheAwareClient_when_cache_TTL_is_not_reached(t *testing.T) {
 	require.NoError(t, err, "running discovery again")
 
 	t.Run("returns_functional_cached_HTTP_client", func(t *testing.T) {
-		resp, err := client.Do("GET", "/api/path")
+		resp, err := client.Get("/api/path")
 		assert.NoError(t, err)
 		assert.Equal(t, 200, resp.StatusCode)
 	})
@@ -152,7 +152,7 @@ func Test_CacheAwareClient_perform_the_discovery_again_when_cache_TTL_is_reached
 
 	// Setup discovered client
 	wrappedClient := new(MockDiscoveredHTTPClient)
-	wrappedClient.On("Do", mock.Anything, mock.Anything).Return(&http.Response{StatusCode: 200}, nil)
+	wrappedClient.On("Get", mock.Anything).Return(&http.Response{StatusCode: 200}, nil)
 
 	// Setup wrapped discoverer
 	discoverer := new(MockDiscoverer)
@@ -199,7 +199,7 @@ func Test_CacheAwareClient_returns_error_when(t *testing.T) {
 
 		// Setup discovered client
 		wrappedClient := new(MockDiscoveredHTTPClient)
-		wrappedClient.On("Do", mock.Anything, mock.Anything).Return(&http.Response{StatusCode: 200}, nil)
+		wrappedClient.On("Get", mock.Anything).Return(&http.Response{StatusCode: 200}, nil)
 
 		// Setup wrapped discoverer
 		discoverer := new(MockDiscoverer)
@@ -226,7 +226,7 @@ func Test_CacheAwareClient_ignores_cache_decomposition_errors(t *testing.T) {
 
 	// Setup discovered client
 	wrappedClient := new(MockDiscoveredHTTPClient)
-	wrappedClient.On("Do", mock.Anything, mock.Anything).Return(&http.Response{StatusCode: 200}, nil)
+	wrappedClient.On("Get", mock.Anything, mock.Anything).Return(&http.Response{StatusCode: 200}, nil)
 
 	// Setup wrapped discoverer
 	discoverer := new(MockDiscoverer)

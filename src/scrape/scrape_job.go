@@ -45,5 +45,5 @@ func (s *Job) Populate(
 		logger.Warnf("%s", errs)
 	}
 
-	return metric.NewK8sPopulator().Populate(groups, s.Specs, integration, clusterName, k8sVersion)
+	return metric.Populate(groups, s.Specs, integration, clusterName, k8sVersion)
 }

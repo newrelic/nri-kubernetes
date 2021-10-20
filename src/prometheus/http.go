@@ -8,8 +8,8 @@ import (
 const AcceptHeader = `text/plain`
 
 // NewRequest returns a new Request given a method, URL, setting the required header for accepting protobuf.
-func NewRequest(method, url string) (*http.Request, error) {
-	r, err := http.NewRequest(method, url, nil)
+func NewRequest(url string) (*http.Request, error) {
+	r, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -15,7 +15,7 @@ import (
 
 type kubelet struct {
 	apiServer               apiserver.Client
-	client                  client.HTTPClient
+	client                  client.HTTPGetter
 	fetchers                []data.FetchFunc
 	logger                  log.Logger
 	defaultNetworkInterface string
@@ -129,7 +129,7 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 }
 
 // NewGrouper creates a grouper aware of Kubelet raw metrics.
-func NewGrouper(c client.HTTPClient, logger log.Logger, apiServer apiserver.Client, defaultNetworkInterface string, fetchers ...data.FetchFunc) data.Grouper {
+func NewGrouper(c client.HTTPGetter, logger log.Logger, apiServer apiserver.Client, defaultNetworkInterface string, fetchers ...data.FetchFunc) data.Grouper {
 	return &kubelet{
 		apiServer:               apiServer,
 		client:                  c,

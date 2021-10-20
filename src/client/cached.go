@@ -129,8 +129,8 @@ type cacheAwareClient struct {
 	timeout time.Duration
 }
 
-func (c *cacheAwareClient) Do(method, path string) (*http.Response, error) {
-	response, err := c.client.Do(method, path)
+func (c *cacheAwareClient) Get(path string) (*http.Response, error) {
+	response, err := c.client.Get(path)
 	if err == nil {
 		return response, nil
 	}
@@ -146,7 +146,7 @@ func (c *cacheAwareClient) Do(method, path string) (*http.Response, error) {
 		return nil, err
 	}
 	c.client = newClient
-	return c.client.Do(method, path)
+	return c.client.Get(path)
 }
 
 // this implementation doesn't guarantee the returned NodeIP is valid in the moment of the function invocation.

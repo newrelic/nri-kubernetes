@@ -60,8 +60,8 @@ type MetricFamily struct {
 	Metrics []Metric
 }
 
-// Valid validates that all the attributes were filled.
-func (f *MetricFamily) Valid() bool {
+// valid validates that all the attributes were filled.
+func (f *MetricFamily) valid() bool {
 	return f.Name != "" && f.Type != "" && len(f.Metrics) > 0
 }
 

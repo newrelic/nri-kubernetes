@@ -26,16 +26,15 @@ const KubeletPodsPath = "/pods"
 // integration execution.
 type PodsFetcher struct {
 	once                   sync.Once
-	cached                 bool
 	cachedPods             definition.RawGroups
 	fetchError             error
 	logger                 log.Logger
-	client                 client.HTTPClient
+	client                 client.HTTPGetter
 	enableStaticPodsStatus bool
 }
 
-func doPodsFetch(logger log.Logger, c client.HTTPClient, enableStaticPodsStatus bool) (definition.RawGroups, error) {
-	r, err := c.Do(http.MethodGet, KubeletPodsPath)
+func (f *PodsFetcher) doPodsFetch() (definition.RawGroups, error) {
+	r, err := f.client.Get(KubeletPodsPath)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +76,7 @@ func doPodsFetch(logger log.Logger, c client.HTTPClient, enableStaticPodsStatus 
 
 	for _, p := range pods.Items {
 		id := podID(&p)
-		raw["pod"][id] = fetchPodData(logger, &p, enableStaticPodsStatus)
+		raw["pod"][id] = f.fetchPodData(&p)
 
 		if _, ok := raw["pod"][id]["nodeIP"]; ok && nodeIP == "" {
 			nodeIP = raw["pod"][id]["nodeIP"].(string)
@@ -89,7 +88,7 @@ func doPodsFetch(logger log.Logger, c client.HTTPClient, enableStaticPodsStatus 
 			raw["pod"][id]["nodeIP"] = nodeIP
 		}
 
-		containers := fetchContainersData(logger, &p, enableStaticPodsStatus)
+		containers := f.fetchContainersData(&p)
 		for id, c := range containers {
 			raw["container"][id] = c
 
@@ -122,14 +121,14 @@ func doPodsFetch(logger log.Logger, c client.HTTPClient, enableStaticPodsStatus 
 func (f *PodsFetcher) FetchFuncWithCache() data.FetchFunc {
 	return func() (definition.RawGroups, error) {
 		f.once.Do(func() {
-			f.cachedPods, f.fetchError = doPodsFetch(f.logger, f.client, f.enableStaticPodsStatus)
+			f.cachedPods, f.fetchError = f.doPodsFetch()
 		})
 		return f.cachedPods, f.fetchError
 	}
 }
 
 // NewPodsFetcher returns a new PodsFetcher.
-func NewPodsFetcher(l log.Logger, c client.HTTPClient, enableStaticPodsStatus bool) *PodsFetcher {
+func NewPodsFetcher(l log.Logger, c client.HTTPGetter, enableStaticPodsStatus bool) *PodsFetcher {
 	return &PodsFetcher{
 		logger:                 l,
 		client:                 c,
@@ -137,12 +136,12 @@ func NewPodsFetcher(l log.Logger, c client.HTTPClient, enableStaticPodsStatus bo
 	}
 }
 
-func fetchContainersData(logger log.Logger, pod *v1.Pod, enableStaticPodsStatus bool) map[string]definition.RawMetrics {
+func (f *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]definition.RawMetrics {
 	statuses := make(map[string]definition.RawMetrics)
-	if enableStaticPodsStatus || !isStaticPod(pod) {
+	if f.enableStaticPodsStatus || !isStaticPod(pod) {
 		fillContainerStatuses(pod, statuses)
 	} else {
-		logger.Debugf("static pod found. Skip fetching containers status for pod %q", podID(pod))
+		f.logger.Debugf("static pod found. Skip fetching containers status for pod %q", podID(pod))
 	}
 
 	metrics := make(map[string]definition.RawMetrics)
@@ -253,17 +252,17 @@ func isFakePendingPod(s v1.PodStatus) bool {
 }
 
 // TODO handle errors and missing data
-func fetchPodData(logger log.Logger, pod *v1.Pod, staticPodsStatusSupport bool) definition.RawMetrics {
+func (f *PodsFetcher) fetchPodData(pod *v1.Pod) definition.RawMetrics {
 	metrics := definition.RawMetrics{
 		"namespace": pod.GetObjectMeta().GetNamespace(),
 		"podName":   pod.GetObjectMeta().GetName(),
 		"nodeName":  pod.Spec.NodeName,
 	}
 
-	if staticPodsStatusSupport || !isStaticPod(pod) {
-		fillPodStatus(logger, metrics, pod)
+	if f.enableStaticPodsStatus || !isStaticPod(pod) {
+		f.fillPodStatus(metrics, pod)
 	} else {
-		logger.Debugf("Static pod found. Skip fetching pod status for pod %q", podID(pod))
+		f.logger.Debugf("Static pod found. Skip fetching pod status for pod %q", podID(pod))
 	}
 
 	if v := pod.Status.HostIP; v != "" {
@@ -307,14 +306,14 @@ func fetchPodData(logger log.Logger, pod *v1.Pod, staticPodsStatusSupport bool) 
 	return metrics
 }
 
-func fillPodStatus(logger log.Logger, r definition.RawMetrics, pod *v1.Pod) {
+func (f *PodsFetcher) fillPodStatus(r definition.RawMetrics, pod *v1.Pod) {
 	// TODO Review if those Fake Pending Pods are still an issue
 	if isFakePendingPod(pod.Status) {
 		r["status"] = "Running"
 		r["isReady"] = "True"
 		r["isScheduled"] = "True"
 
-		logger.Debugf("Fake Pending Pod marked as Running")
+		f.logger.Debugf("Fake Pending Pod marked as Running")
 
 		return
 	}
