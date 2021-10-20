@@ -36,16 +36,22 @@ func (c *ksm) NodeIP() string {
 
 // Get implements HTTPGetter interface by sending Prometheus plain text request using configured client.
 func (c *ksm) Get(urlPath string) (*http.Response, error) {
-	e := c.endpoint
-	e.Path = path.Join(c.endpoint.Path, urlPath)
+	url := c.url(urlPath)
 
 	// Creates Prometheus request.
-	r, err := prometheus.NewRequest(e.String())
+	r, err := prometheus.NewRequest(url)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating request to: %s. Got error: %s ", e.String(), err)
+		return nil, fmt.Errorf("Error creating request to: %s. Got error: %s ", url, err)
 	}
 
 	c.logger.Debugf("Calling kube-state-metrics endpoint: %s", r.URL.String())
 
 	return c.httpClient.Do(r)
+}
+
+func (c *ksm) url(extraPath string) string {
+	e := c.endpoint
+	e.Path = path.Join(c.endpoint.Path, extraPath)
+
+	return e.String()
 }
