@@ -44,6 +44,10 @@ func (c *ksm) Get(urlPath string) (*http.Response, error) {
 		return nil, fmt.Errorf("Error creating request to: %s. Got error: %s ", url, err)
 	}
 
+	return c.Do(r)
+}
+
+func (c *ksm) Do(r *http.Request) (*http.Response, error) {
 	c.logger.Debugf("Calling kube-state-metrics endpoint: %s", r.URL.String())
 
 	return c.httpClient.Do(r)
