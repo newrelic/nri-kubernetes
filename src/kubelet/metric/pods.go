@@ -25,12 +25,11 @@ const KubeletPodsPath = "/pods"
 // results and avoid querying the kubelet multiple times in the same
 // integration execution.
 type PodsFetcher struct {
-	once                   sync.Once
-	cachedPods             definition.RawGroups
-	fetchError             error
-	logger                 log.Logger
-	client                 client.HTTPGetter
-	enableStaticPodsStatus bool
+	once       sync.Once
+	cachedPods definition.RawGroups
+	fetchError error
+	logger     log.Logger
+	client     client.HTTPGetter
 }
 
 func (f *PodsFetcher) doPodsFetch() (definition.RawGroups, error) {
@@ -128,21 +127,16 @@ func (f *PodsFetcher) FetchFuncWithCache() data.FetchFunc {
 }
 
 // NewPodsFetcher returns a new PodsFetcher.
-func NewPodsFetcher(l log.Logger, c client.HTTPGetter, enableStaticPodsStatus bool) *PodsFetcher {
+func NewPodsFetcher(l log.Logger, c client.HTTPGetter) *PodsFetcher {
 	return &PodsFetcher{
-		logger:                 l,
-		client:                 c,
-		enableStaticPodsStatus: enableStaticPodsStatus,
+		logger: l,
+		client: c,
 	}
 }
 
 func (f *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]definition.RawMetrics {
 	statuses := make(map[string]definition.RawMetrics)
-	if f.enableStaticPodsStatus || !isStaticPod(pod) {
-		fillContainerStatuses(pod, statuses)
-	} else {
-		f.logger.Debugf("static pod found. Skip fetching containers status for pod %q", podID(pod))
-	}
+	fillContainerStatuses(pod, statuses)
 
 	metrics := make(map[string]definition.RawMetrics)
 
@@ -259,11 +253,7 @@ func (f *PodsFetcher) fetchPodData(pod *v1.Pod) definition.RawMetrics {
 		"nodeName":  pod.Spec.NodeName,
 	}
 
-	if f.enableStaticPodsStatus || !isStaticPod(pod) {
-		f.fillPodStatus(metrics, pod)
-	} else {
-		f.logger.Debugf("Static pod found. Skip fetching pod status for pod %q", podID(pod))
-	}
+	f.fillPodStatus(metrics, pod)
 
 	if v := pod.Status.HostIP; v != "" {
 		metrics["nodeIP"] = v

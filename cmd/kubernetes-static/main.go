@@ -96,7 +96,7 @@ func main() {
 
 	// Kubelet
 	kubeletClient := newBasicHTTPClient(endpoint + "/kubelet")
-	podsFetcher := kubeletmetric.NewPodsFetcher(logger, kubeletClient, true)
+	podsFetcher := kubeletmetric.NewPodsFetcher(logger, kubeletClient)
 	kubeletGrouper := kubelet.NewGrouper(
 		kubeletClient,
 		logger,

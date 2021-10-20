@@ -13,7 +13,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/apiserver"
-	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric/testdata"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
@@ -131,42 +130,21 @@ func TestGroup(t *testing.T) {
 		},
 	}
 
-	testCases := []struct {
-		name                  string
-		enableStaticPodStatus bool
-		expected              definition.RawGroups
-	}{
-		{
-			name:                  "with kubernetes support for static pod status",
-			enableStaticPodStatus: true,
-			expected:              testdata.ExpectedGroupData,
-		},
-		{
-			name:                  "without kubernetes support for static pod status",
-			enableStaticPodStatus: false,
-			expected:              testdata.ExpectedGroupDataWithoutStaticPodsStatus,
-		},
-	}
+	podsFetcher := metric.NewPodsFetcher(
+		logrus.StandardLogger(),
+		&c,
+	)
+	grouper := NewGrouper(
+		&c,
+		logrus.StandardLogger(),
+		a,
+		"eth0",
+		podsFetcher.FetchFuncWithCache(),
+		metric.CadvisorFetchFunc(&c, queries),
+	)
+	r, errGroup := grouper.Group(nil)
 
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			podsFetcher := metric.NewPodsFetcher(
-				logrus.StandardLogger(),
-				&c,
-				testCase.enableStaticPodStatus,
-			)
-			grouper := NewGrouper(
-				&c,
-				logrus.StandardLogger(),
-				a,
-				"eth0",
-				podsFetcher.FetchFuncWithCache(),
-				metric.CadvisorFetchFunc(&c, queries),
-			)
-			r, errGroup := grouper.Group(nil)
+	assert.Nil(t, errGroup)
+	assert.Equal(t, testdata.ExpectedGroupData, r)
 
-			assert.Nil(t, errGroup)
-			assert.Equal(t, testCase.expected, r)
-		})
-	}
 }
