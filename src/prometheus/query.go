@@ -167,6 +167,10 @@ func handleResponseWithFilter(resp *http.Response, err error, queries []Query) (
 	return metrics, nil
 }
 
+type FilteredMetricFamiliesGetter interface {
+	FilteredMetricFamilies([]Query) ([]MetricFamily, error)
+}
+
 func GetFilteredMetricFamilies(httpClient client.HTTPDoer, url string, queries []Query) ([]MetricFamily, error) {
 	req, err := NewRequest(url)
 	if err != nil {
