@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/newrelic/nri-kubernetes/v2/src/ksm/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
 
@@ -58,4 +59,13 @@ func (c *ksm) url(extraPath string) string {
 	e.Path = path.Join(c.endpoint.Path, extraPath)
 
 	return e.String()
+}
+
+func (c *ksm) FilteredMetricFamilies(queries []prometheus.Query) ([]prometheus.MetricFamily, error) {
+	mFamily, err := prometheus.GetFilteredMetricFamilies(c, c.url(metric.PrometheusMetricsPath), queries)
+	if err != nil {
+		return nil, fmt.Errorf("getting filtered metric families: %w", err)
+	}
+
+	return mFamily, nil
 }
