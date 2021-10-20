@@ -13,10 +13,11 @@ import (
 )
 
 type ksmGrouper struct {
-	queries   []prometheus.Query
-	client    client.HTTPGetter
-	logger    log.Logger
-	k8sClient client.Kubernetes
+	client               client.HTTPGetter
+	queries              []prometheus.Query
+	metricFamiliesGetter prometheus.FilteredMetricFamiliesGetter
+	logger               log.Logger
+	k8sClient            client.Kubernetes
 }
 
 // addServiceSpecSelectorToGroup adds a new metric to the service group
@@ -49,7 +50,15 @@ func (r *ksmGrouper) addServiceSpecSelectorToGroup(serviceGroup map[string]defin
 // Group implements Grouper interface by fetching Prometheus metrics from KSM and then modifying it
 // using Service objects fetched from API server.
 func (r *ksmGrouper) Group(specGroups definition.SpecGroups) (definition.RawGroups, *data.ErrorGroup) {
-	mFamily, err := prometheus.Do(r.client, metric.PrometheusMetricsPath, r.queries)
+	getter := func(queries []prometheus.Query) ([]prometheus.MetricFamily, error) {
+		return prometheus.Do(r.client, metric.PrometheusMetricsPath, r.queries)
+	}
+
+	if r.metricFamiliesGetter != nil {
+		getter = r.metricFamiliesGetter.FilteredMetricFamilies
+	}
+
+	mFamily, err := getter(r.queries)
 	if err != nil {
 		return nil, &data.ErrorGroup{
 			Errors: []error{fmt.Errorf("querying KSM: %w", err)},
