@@ -130,6 +130,11 @@ func valueFromPrometheus(metricType model.MetricType, metric *model.Metric) Valu
 // Do is the main entry point. It runs queries against the Prometheus metrics provided by the endpoint.
 func Do(c client.HTTPGetter, endpoint string, queries []Query) ([]MetricFamily, error) {
 	resp, err := c.Get(endpoint)
+
+	return handleResponseWithFilter(resp, err, queries)
+}
+
+func handleResponseWithFilter(resp *http.Response, err error, queries []Query) ([]MetricFamily, error) {
 	if err != nil {
 		return nil, fmt.Errorf("fetching metrics: %w", err)
 	}
@@ -160,6 +165,17 @@ func Do(c client.HTTPGetter, endpoint string, queries []Query) ([]MetricFamily, 
 	}
 
 	return metrics, nil
+}
+
+func GetFilteredMetricFamilies(httpClient client.HTTPDoer, url string, queries []Query) ([]MetricFamily, error) {
+	req, err := NewRequest(url)
+	if err != nil {
+		return nil, fmt.Errorf("building request: %w", err)
+	}
+
+	resp, err := httpClient.Do(req)
+
+	return handleResponseWithFilter(resp, err, queries)
 }
 
 func labelsFromPrometheus(pairs []*model.LabelPair) Labels {
