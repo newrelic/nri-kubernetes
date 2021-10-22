@@ -91,3 +91,35 @@ func NewGrouper(c client.HTTPGetter, queries []prometheus.Query, logger log.Logg
 		k8sClient: k8sClient,
 	}
 }
+
+type GrouperConfig struct {
+	Queries              []prometheus.Query
+	MetricFamiliesGetter prometheus.FilteredMetricFamiliesGetter
+	Logger               log.Logger
+	K8sClient            client.Kubernetes
+}
+
+func NewValidatedGrouper(config *GrouperConfig) (data.Grouper, error) {
+	if config == nil {
+		return nil, fmt.Errorf("config must be provided")
+	}
+
+	if config.MetricFamiliesGetter == nil {
+		return nil, fmt.Errorf("metric families getter must be set")
+	}
+
+	if config.Logger == nil {
+		return nil, fmt.Errorf("logger must be set")
+	}
+
+	if config.K8sClient == nil {
+		return nil, fmt.Errorf("k8s client must be set")
+	}
+
+	return &ksmGrouper{
+		queries:              config.Queries,
+		metricFamiliesGetter: config.MetricFamiliesGetter,
+		logger:               config.Logger,
+		k8sClient:            config.K8sClient,
+	}, nil
+}

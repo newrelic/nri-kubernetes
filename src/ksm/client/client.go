@@ -20,10 +20,32 @@ type ksm struct {
 	logger     log.Logger
 }
 
+func NewKSMClient(timeout time.Duration, host string, logger log.Logger) (prometheus.FilteredMetricFamiliesGetter, error) {
+	if logger == nil {
+		return nil, fmt.Errorf("logger not provided")
+	}
+
+	if host == "" {
+		return nil, fmt.Errorf("host can't be empty")
+	}
+
+	return &ksm{
+		endpoint: url.URL{
+			Scheme: "http",
+			Host:   host,
+		},
+		httpClient: &http.Client{
+			Timeout: timeout,
+		},
+		logger: logger,
+	}, nil
+}
+
 func newKSMClient(timeout time.Duration, nodeIP string, endpoint url.URL, logger log.Logger) *ksm {
 	return &ksm{
 		nodeIP:   nodeIP,
 		endpoint: endpoint,
+		// HTTP Client definition.
 		httpClient: &http.Client{
 			Timeout: timeout,
 		},
@@ -51,6 +73,7 @@ func (c *ksm) Get(urlPath string) (*http.Response, error) {
 func (c *ksm) Do(r *http.Request) (*http.Response, error) {
 	c.logger.Debugf("Calling kube-state-metrics endpoint: %s", r.URL.String())
 
+	// Calls http.Client.
 	return c.httpClient.Do(r)
 }
 
