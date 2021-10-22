@@ -7,7 +7,8 @@ import (
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
-	"k8s.io/client-go/rest"
+	"k8s.io/client-go/informers"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 
@@ -24,12 +25,33 @@ func main() {
 }
 
 func run() error {
-	_, err := restConfig()
+	k8s, err := newClient()
 	if err != nil {
 		return fmt.Errorf("getting REST config: %w", err)
 	}
 
-	discoverer, err := ksm.NewDiscoverer()
+	// Arbitrary value, same used in Prometheus.
+	resyncDuration := 10 * time.Minute
+
+	verbose := true
+	logger := log.NewStdErr(verbose)
+
+	stopCh := make(chan struct{})
+
+	discoveryConfig := ksm.DiscoveryConfig{
+		EndpointsLister: func(options ...informers.SharedInformerOption) ksm.EndpointsLister {
+			factory := informers.NewSharedInformerFactoryWithOptions(k8s, resyncDuration, options...)
+
+			lister := factory.Core().V1().Endpoints().Lister()
+
+			factory.Start(stopCh)
+			factory.WaitForCacheSync(stopCh)
+
+			return lister
+		},
+	}
+
+	discoverer, err := ksm.NewDiscoverer(discoveryConfig)
 	if err != nil {
 		return fmt.Errorf("creating KSM discoverer: %w", err)
 	}
@@ -39,19 +61,18 @@ func run() error {
 		return fmt.Errorf("discovering KSM endpoints: %w", err)
 	}
 
-	verbose := true
-	logger := log.NewStdErr(verbose)
-	var clientTimeout time.Duration
+	var noClientTimeout time.Duration
+
+	k8sClient, err := client.NewKubernetes(true)
+	if err != nil {
+		return fmt.Errorf("creating Kubernetes client: %w", err)
+	}
 
 	for _, endpoint := range endpoints {
-		metricFamiliesGetter, err := ksmclient.NewKSMClient(clientTimeout, endpoint, logger)
+		// TODO: Make single client be usable for multiple endpoints?
+		metricFamiliesGetter, err := ksmclient.NewKSMClient(noClientTimeout, endpoint, logger)
 		if err != nil {
 			return fmt.Errorf("creating KSM client: %w", err)
-		}
-
-		k8sClient, err := client.NewKubernetes(true)
-		if err != nil {
-			return fmt.Errorf("creating Kubernetes client: %w", err)
 		}
 
 		ksmGrouperConfig := &ksm.GrouperConfig{
@@ -66,7 +87,7 @@ func run() error {
 			return fmt.Errorf("creating KSM grouper: %w", err)
 		}
 
-		// TODO: What does Grouper abstraction mean?
+		// TODO: What does Grouper abstraction mean? Rename it to RawGroupsFetcher?
 		rawGroups, err := grouper.Group(metric.KSMSpecs)
 		if err != nil {
 			logger.Warnf("Grouping returned error: %v", err)
@@ -78,16 +99,21 @@ func run() error {
 	return nil
 }
 
-func restConfig() (*rest.Config, error) {
+func newClient() (kubernetes.Interface, error) {
 	kubeconfigPath := os.Getenv("KUBECONFIG")
 	if home := homedir.HomeDir(); kubeconfigPath == "" && home != "" {
 		kubeconfigPath = filepath.Join(home, ".kube", "config")
 	}
 
-	c, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
 	if err != nil {
 		return nil, fmt.Errorf("building config: %w", err)
 	}
 
-	return c, nil
+	client, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("creating client: %w", err)
+	}
+
+	return client, nil
 }
