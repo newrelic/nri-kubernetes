@@ -46,6 +46,8 @@ func (r *ksmGrouper) addServiceSpecSelectorToGroup(serviceGroup map[string]defin
 	return nil
 }
 
+// Group implements Grouper interface by fetching Prometheus metrics from KSM and then modifying it
+// using Service objects fetched from API server.
 func (r *ksmGrouper) Group(specGroups definition.SpecGroups) (definition.RawGroups, *data.ErrorGroup) {
 	mFamily, err := prometheus.Do(r.client, metric.PrometheusMetricsPath, r.queries)
 	if err != nil {

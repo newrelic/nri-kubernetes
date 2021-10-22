@@ -62,7 +62,7 @@ func (c *kubelet) NodeIP() string {
 	return c.nodeIP
 }
 
-// Do method calls discovered kubelet endpoint with specified method and path, i.e. "/stats/summary
+// Get implements HTTPGetter interface by sending GET request using configured client.
 func (c *kubelet) Get(urlPath string) (*http.Response, error) {
 	e := c.endpoint
 	e.Path = path.Join(c.endpoint.Path, urlPath)

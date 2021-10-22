@@ -22,6 +22,8 @@ type componentGrouper struct {
 	podName string
 }
 
+// Group implements Grouper interface by fetching Prometheus metrics from a given component and converting them
+// into metrics of a single entity ID, using controlplane Pod name.
 func (r *componentGrouper) Group(specGroups definition.SpecGroups) (definition.RawGroups, *data.ErrorGroup) {
 	mFamily, err := prometheus.Do(r.client, prometheusMetricsPath, r.queries)
 	if err != nil {

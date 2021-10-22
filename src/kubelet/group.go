@@ -21,6 +21,9 @@ type kubelet struct {
 	defaultNetworkInterface string
 }
 
+// Group implements Grouper interface by fetching RawGroups using both given fetch functions
+// and hardcoded fetching calls pulling kubelet summary metrics, node information from Kubernetes API
+// and then merging all this information.
 func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.ErrorGroup) {
 	rawGroups := definition.RawGroups{
 		"network": {
