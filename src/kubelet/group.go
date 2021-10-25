@@ -54,7 +54,7 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 	}
 
 	resources, errs := metric.GroupStatsSummary(response)
-	if len(errs) != 0 {
+	if len(errs) > 0 {
 		return nil, &data.ErrorGroup{
 			Recoverable: true,
 			Errors:      errs,
