@@ -38,8 +38,7 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 			// TODO We don't have to panic when multiple err
 			if _, ok := err.(data.ErrorGroup); !ok {
 				return nil, &data.ErrorGroup{
-					Recoverable: false,
-					Errors:      []error{fmt.Errorf("error querying Kubelet. %s", err)},
+					Errors: []error{fmt.Errorf("error querying Kubelet. %s", err)},
 				}
 			}
 		}
@@ -50,8 +49,7 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 	response, err := metric.GetMetricsData(r.client)
 	if err != nil {
 		return nil, &data.ErrorGroup{
-			Recoverable: false,
-			Errors:      []error{fmt.Errorf("error querying Kubelet. %s", err)},
+			Errors: []error{fmt.Errorf("error querying Kubelet. %s", err)},
 		}
 	}
 
@@ -65,8 +63,7 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 	nodeInfo, err := r.apiServer.GetNodeInfo(response.Node.NodeName)
 	if err != nil {
 		return nil, &data.ErrorGroup{
-			Recoverable: false,
-			Errors:      []error{fmt.Errorf("error querying ApiServer: %v", err)},
+			Errors: []error{fmt.Errorf("error querying ApiServer: %v", err)},
 		}
 	}
 

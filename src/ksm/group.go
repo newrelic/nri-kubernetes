@@ -52,8 +52,7 @@ func (r *ksmGrouper) Group(specGroups definition.SpecGroups) (definition.RawGrou
 	mFamily, err := prometheus.Do(r.client, metric.PrometheusMetricsPath, r.queries)
 	if err != nil {
 		return nil, &data.ErrorGroup{
-			Recoverable: false,
-			Errors:      []error{fmt.Errorf("querying KSM: %w", err)},
+			Errors: []error{fmt.Errorf("querying KSM: %w", err)},
 		}
 	}
 

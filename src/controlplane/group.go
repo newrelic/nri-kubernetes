@@ -28,7 +28,6 @@ func (r *componentGrouper) Group(specGroups definition.SpecGroups) (definition.R
 	mFamily, err := prometheus.Do(r.client, prometheusMetricsPath, r.queries)
 	if err != nil {
 		return nil, &data.ErrorGroup{
-			Recoverable: false,
 			Errors: []error{
 				fmt.Errorf("error querying controlplane component %s: %s", r.podName, err),
 			},
