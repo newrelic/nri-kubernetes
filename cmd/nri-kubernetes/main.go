@@ -12,6 +12,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 
+	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/ksm"
 	ksmclient "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
@@ -39,15 +40,17 @@ func run() error {
 	stopCh := make(chan struct{})
 
 	discoveryConfig := ksm.DiscoveryConfig{
-		EndpointsLister: func(options ...informers.SharedInformerOption) ksm.EndpointsLister {
-			factory := informers.NewSharedInformerFactoryWithOptions(k8s, resyncDuration, options...)
+		EndpointsDiscoveryConfig: discovery.EndpointsDiscoveryConfig{
+			EndpointsLister: func(options ...informers.SharedInformerOption) discovery.EndpointsLister {
+				factory := informers.NewSharedInformerFactoryWithOptions(k8s, resyncDuration, options...)
 
-			lister := factory.Core().V1().Endpoints().Lister()
+				lister := factory.Core().V1().Endpoints().Lister()
 
-			factory.Start(stopCh)
-			factory.WaitForCacheSync(stopCh)
+				factory.Start(stopCh)
+				factory.WaitForCacheSync(stopCh)
 
-			return lister
+				return lister
+			},
 		},
 	}
 
