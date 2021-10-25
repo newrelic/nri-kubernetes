@@ -29,29 +29,31 @@ func populateCluster(i *integration.Integration, clusterName string, k8sVersion 
 	return ms.SetMetric("clusterK8sVersion", k8sVersionStr, metric.ATTRIBUTE)
 }
 
+type IntegrationPopulateConfig struct {
+	Integration   *integration.Integration
+	ClusterName   string
+	K8sVersion    fmt.Stringer
+	MsTypeGuesser GuessFunc
+	Groups        RawGroups
+	Specs         SpecGroups
+}
+
 // IntegrationPopulator populates an integration with the given metrics and definition.
-func IntegrationPopulator(
-	i *integration.Integration,
-	clusterName string,
-	k8sVersion fmt.Stringer,
-	msTypeGuesser GuessFunc,
-	groups RawGroups,
-	specs SpecGroups,
-) (bool, []error) {
+func IntegrationPopulator(config *IntegrationPopulateConfig) (bool, []error) {
 	var populated bool
 	var errs []error
 	var msEntityType string
-	for groupLabel, entities := range groups {
+	for groupLabel, entities := range config.Groups {
 		for entityID := range entities {
 
 			// Only populate specified groups.
-			if _, ok := specs[groupLabel]; !ok {
+			if _, ok := config.Specs[groupLabel]; !ok {
 				continue
 			}
 
 			msEntityID := entityID
-			if generator := specs[groupLabel].IDGenerator; generator != nil {
-				generatedEntityID, err := generator(groupLabel, entityID, groups)
+			if generator := config.Specs[groupLabel].IDGenerator; generator != nil {
+				generatedEntityID, err := generator(groupLabel, entityID, config.Groups)
 				if err != nil {
 					errs = append(errs, fmt.Errorf("error generating entity ID for %s: %s", entityID, err))
 					continue
@@ -59,8 +61,8 @@ func IntegrationPopulator(
 				msEntityID = generatedEntityID
 			}
 
-			if generatorType := specs[groupLabel].TypeGenerator; generatorType != nil {
-				generatedEntityType, err := generatorType(groupLabel, entityID, groups, clusterName)
+			if generatorType := config.Specs[groupLabel].TypeGenerator; generatorType != nil {
+				generatedEntityType, err := generatorType(groupLabel, entityID, config.Groups, config.ClusterName)
 				if err != nil {
 					errs = append(errs, fmt.Errorf("error generating entity type for %s: %s", entityID, err))
 					continue
@@ -68,7 +70,7 @@ func IntegrationPopulator(
 				msEntityType = generatedEntityType
 			}
 
-			e, err := i.Entity(msEntityID, msEntityType)
+			e, err := config.Integration.Entity(msEntityID, msEntityType)
 			if err != nil {
 				errs = append(errs, err)
 				continue
@@ -77,11 +79,11 @@ func IntegrationPopulator(
 			// Add entity attributes, which will propagate to all metric.Sets.
 			// This was previously (on sdk v2) done by msManipulators.
 			e.AddAttributes(
-				attribute.Attr("clusterName", clusterName),
+				attribute.Attr("clusterName", config.ClusterName),
 				attribute.Attr("displayName", e.Metadata.Name),
 			)
 
-			msType, err := msTypeGuesser(clusterName, groupLabel, entityID, groups)
+			msType, err := config.MsTypeGuesser(config.ClusterName, groupLabel, entityID, config.Groups)
 			if err != nil {
 				errs = append(errs, err)
 				continue
@@ -89,7 +91,7 @@ func IntegrationPopulator(
 
 			ms := e.NewMetricSet(msType)
 
-			wasPopulated, populateErrs := metricSetPopulate(ms, groupLabel, entityID, groups, specs)
+			wasPopulated, populateErrs := metricSetPopulate(ms, groupLabel, entityID, config.Groups, config.Specs)
 			if len(populateErrs) != 0 {
 				for _, err := range populateErrs {
 					errs = append(errs, fmt.Errorf("error populating metric for entity ID %s: %s", entityID, err))
@@ -102,7 +104,7 @@ func IntegrationPopulator(
 		}
 	}
 	if populated {
-		err := populateCluster(i, clusterName, k8sVersion)
+		err := populateCluster(config.Integration, config.ClusterName, config.K8sVersion)
 		if err != nil {
 			errs = append(errs, err)
 		}

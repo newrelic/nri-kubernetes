@@ -47,7 +47,15 @@ func (s *Job) Populate(
 		logger.Warnf("%s", errs)
 	}
 
-	ok, populateErrs := definition.IntegrationPopulator(i, clusterName, k8sVersion, k8sMetricSetTypeGuesser, groups, s.Specs)
+	config := &definition.IntegrationPopulateConfig{
+		Integration:   i,
+		ClusterName:   clusterName,
+		K8sVersion:    k8sVersion,
+		Specs:         s.Specs,
+		MsTypeGuesser: k8sMetricSetTypeGuesser,
+		Groups:        groups,
+	}
+	ok, populateErrs := definition.IntegrationPopulator(config)
 
 	if len(populateErrs) > 0 {
 		return data.PopulateResult{Errors: populateErrs, Populated: ok}
