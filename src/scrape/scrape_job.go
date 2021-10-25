@@ -40,8 +40,7 @@ func (s *Job) Populate(
 	if errs != nil && len(errs.Errors) > 0 {
 		if !errs.Recoverable {
 			return data.PopulateResult{
-				Errors:    errs.Errors,
-				Populated: false,
+				Errors: errs.Errors,
 			}
 		}
 
@@ -57,12 +56,11 @@ func (s *Job) Populate(
 	// This should not happen ideally if no errors were reported.
 	if !ok {
 		return data.PopulateResult{
-			Errors:    []error{errors.New("no data was populated")},
-			Populated: false,
+			Errors: []error{errors.New("no data was populated")},
 		}
 	}
 
-	return data.PopulateResult{Errors: nil, Populated: true}
+	return data.PopulateResult{Populated: true}
 }
 
 // k8sMetricSetTypeGuesser is the metric set type guesser for k8s integrations.
