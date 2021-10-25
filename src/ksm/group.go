@@ -64,7 +64,10 @@ func (r *ksmGrouper) Group(specGroups definition.SpecGroups) (definition.RawGrou
 	}
 
 	if len(errs) > 0 {
-		return groups, &data.ErrorGroup{Recoverable: true, Errors: errs}
+		return groups, &data.ErrorGroup{
+			Recoverable: true,
+			Errors:      errs,
+		}
 	}
 
 	return groups, nil

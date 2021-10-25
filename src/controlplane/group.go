@@ -36,8 +36,12 @@ func (r *componentGrouper) Group(specGroups definition.SpecGroups) (definition.R
 
 	groups, errs := prometheus.GroupEntityMetricsBySpec(specGroups, mFamily, r.podName)
 	if len(errs) > 0 {
-		return groups, &data.ErrorGroup{Recoverable: true, Errors: errs}
+		return groups, &data.ErrorGroup{
+			Recoverable: true,
+			Errors:      errs,
+		}
 	}
+
 	return groups, nil
 }
 
