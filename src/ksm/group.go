@@ -13,11 +13,11 @@ import (
 )
 
 type ksmGrouper struct {
-	client               client.HTTPGetter
-	queries              []prometheus.Query
-	metricFamiliesGetter prometheus.FilteredMetricFamiliesGetter
-	logger               log.Logger
-	k8sClient            client.Kubernetes
+	client                 client.HTTPGetter
+	queries                []prometheus.Query
+	filteredMetricFamilies prometheus.FilteredMetricFamilies
+	logger                 log.Logger
+	k8sClient              client.Kubernetes
 }
 
 // addServiceSpecSelectorToGroup adds a new metric to the service group
@@ -54,8 +54,8 @@ func (r *ksmGrouper) Group(specGroups definition.SpecGroups) (definition.RawGrou
 		return prometheus.Do(r.client, metric.PrometheusMetricsPath, r.queries)
 	}
 
-	if r.metricFamiliesGetter != nil {
-		getter = r.metricFamiliesGetter.FilteredMetricFamilies
+	if r.filteredMetricFamilies != nil {
+		getter = r.filteredMetricFamilies
 	}
 
 	mFamily, err := getter(r.queries)
@@ -94,7 +94,7 @@ func NewGrouper(c client.HTTPGetter, queries []prometheus.Query, logger log.Logg
 
 type GrouperConfig struct {
 	Queries              []prometheus.Query
-	MetricFamiliesGetter prometheus.FilteredMetricFamiliesGetter
+	MetricFamiliesGetter prometheus.FilteredMetricFamilies
 	Logger               log.Logger
 	K8sClient            client.Kubernetes
 }
@@ -117,9 +117,9 @@ func NewValidatedGrouper(config *GrouperConfig) (data.Grouper, error) {
 	}
 
 	return &ksmGrouper{
-		queries:              config.Queries,
-		metricFamiliesGetter: config.MetricFamiliesGetter,
-		logger:               config.Logger,
-		k8sClient:            config.K8sClient,
+		queries:                config.Queries,
+		filteredMetricFamilies: config.MetricFamiliesGetter,
+		logger:                 config.Logger,
+		k8sClient:              config.K8sClient,
 	}, nil
 }

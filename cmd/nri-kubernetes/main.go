@@ -68,15 +68,14 @@ func run() error {
 		return fmt.Errorf("creating Kubernetes client: %w", err)
 	}
 
-	for _, endpoint := range endpoints {
-		// TODO: Make single client be usable for multiple endpoints?
-		metricFamiliesGetter, err := ksmclient.NewKSMClient(noClientTimeout, endpoint, logger)
-		if err != nil {
-			return fmt.Errorf("creating KSM client: %w", err)
-		}
+	ksmClient, err := ksmclient.NewKSMClient(noClientTimeout, logger)
+	if err != nil {
+		return fmt.Errorf("creating KSM client: %w", err)
+	}
 
+	for _, endpoint := range endpoints {
 		ksmGrouperConfig := &ksm.GrouperConfig{
-			MetricFamiliesGetter: metricFamiliesGetter,
+			MetricFamiliesGetter: ksmClient.MetricFamiliesGetterForEndpoint(endpoint),
 			Logger:               logger,
 			K8sClient:            k8sClient,
 			Queries:              metric.KSMQueries,
