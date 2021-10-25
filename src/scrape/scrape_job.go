@@ -37,7 +37,7 @@ func (s *Job) Populate(
 	k8sVersion *version.Info,
 ) data.PopulateResult {
 	groups, errs := s.Grouper.Group(s.Specs)
-	if errs != nil && len(errs.Errors) > 0 {
+	if errs != nil {
 		if !errs.Recoverable {
 			return data.PopulateResult{
 				Errors: errs.Errors,
