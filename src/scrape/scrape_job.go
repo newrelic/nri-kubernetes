@@ -1,13 +1,16 @@
 package scrape
 
 import (
+	"errors"
+	"fmt"
+	"strings"
+
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"k8s.io/apimachinery/pkg/version"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
-	"github.com/newrelic/nri-kubernetes/v2/src/metric"
 )
 
 // NewScrapeJob creates a new Scrape Job with the given attributes
@@ -28,7 +31,7 @@ type Job struct {
 
 // Populate will get the data using the given Group, transform it, and push it to the given Integration
 func (s *Job) Populate(
-	integration *integration.Integration,
+	i *integration.Integration,
 	clusterName string,
 	logger log.Logger,
 	k8sVersion *version.Info,
@@ -45,5 +48,28 @@ func (s *Job) Populate(
 		logger.Warnf("%s", errs)
 	}
 
-	return metric.Populate(groups, s.Specs, integration, clusterName, k8sVersion)
+	ok, populateErrs := definition.IntegrationPopulator(i, clusterName, k8sVersion, k8sMetricSetTypeGuesser, groups, s.Specs)
+
+	if len(populateErrs) > 0 {
+		return data.PopulateResult{Errors: populateErrs, Populated: ok}
+	}
+
+	// This should not happen ideally if no errors were reported.
+	if !ok {
+		return data.PopulateResult{
+			Errors:    []error{errors.New("no data was populated")},
+			Populated: false,
+		}
+	}
+
+	return data.PopulateResult{Errors: nil, Populated: true}
+}
+
+// k8sMetricSetTypeGuesser is the metric set type guesser for k8s integrations.
+func k8sMetricSetTypeGuesser(_, groupLabel, _ string, _ definition.RawGroups) (string, error) {
+	var sampleName string
+	for _, s := range strings.Split(groupLabel, "-") {
+		sampleName += strings.Title(s)
+	}
+	return fmt.Sprintf("K8s%vSample", sampleName), nil
 }

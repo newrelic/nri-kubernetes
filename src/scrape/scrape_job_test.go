@@ -1,4 +1,4 @@
-package metric_test
+package scrape
 
 import (
 	"sort"
@@ -11,6 +11,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/data/event"
 	"github.com/newrelic/infra-integrations-sdk/data/inventory"
 	sdkMetric "github.com/newrelic/infra-integrations-sdk/data/metric"
+	"github.com/newrelic/infra-integrations-sdk/log"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/stretchr/testify/assert"
@@ -140,23 +141,29 @@ var kubeletSpecs = definition.SpecGroups{
 	"container": metric.KubeletSpecs["container"],
 }
 
-func TestPopulateK8s(t *testing.T) {
-	intgr, err := integration.New("test", "test")
-	assert.NoError(t, err)
-	intgr.Clear()
+type testGrouper struct{}
 
+func (tg *testGrouper) Group(definition.SpecGroups) (definition.RawGroups, *data.ErrorGroup) {
 	// We reduce the test fixtures in order to simplify testing.
-	foo := definition.RawGroups{
+	return definition.RawGroups{
 		"pod": {
 			"kube-system_newrelic-infra-rz225": testdata.ExpectedGroupData["pod"]["kube-system_newrelic-infra-rz225"],
 		},
 		"container": {
 			"kube-system_newrelic-infra-rz225_newrelic-infra": testdata.ExpectedGroupData["container"]["kube-system_newrelic-infra-rz225_newrelic-infra"],
 		},
-	}
+	}, nil
+}
+
+func TestPopulateK8s(t *testing.T) {
+	intgr, err := integration.New("test", "test")
+	assert.NoError(t, err)
+	intgr.Clear()
+
+	testJob := NewScrapeJob("test", &testGrouper{}, kubeletSpecs)
 
 	k8sVersion := &version.Info{GitVersion: "v1.15.42"}
-	err = metric.Populate(foo, kubeletSpecs, intgr, "test-cluster", k8sVersion)
+	err = testJob.Populate(intgr, "test-cluster", log.NewStdErr(true), k8sVersion)
 	require.IsType(t, err, data.PopulateResult{})
 	assert.Empty(t, err.(data.PopulateResult).Errors)
 
@@ -187,5 +194,24 @@ func TestPopulateK8s(t *testing.T) {
 		if diff := cmp.Diff(intgr.Entities[j], expectedEntities[j], compareIgnoreFields); diff != "" {
 			t.Errorf("Entities[%d] mismatch: %s", j, diff)
 		}
+	}
+}
+
+func TestK8sMetricSetTypeGuesser(t *testing.T) {
+	testCases := []struct {
+		groupLabel string
+		expected   string
+	}{
+		{groupLabel: "replicaset", expected: "K8sReplicasetSample"},
+		{groupLabel: "api-server", expected: "K8sApiServerSample"},
+		{groupLabel: "controller-manager", expected: "K8sControllerManagerSample"},
+		{groupLabel: "-controller-manager-", expected: "K8sControllerManagerSample"},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.groupLabel, func(*testing.T) {
+			guess, err := k8sMetricSetTypeGuesser("", testCase.groupLabel, "", nil)
+			assert.Nil(t, err)
+			assert.Equal(t, testCase.expected, guess)
+		})
 	}
 }
