@@ -116,7 +116,9 @@ func TestIntegrationPopulator_CorrectValue(t *testing.T) {
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-	)(rawGroupsSample, specs)
+		rawGroupsSample,
+		specs,
+	)
 	assert.True(t, populated)
 	assert.Empty(t, errs)
 	assert.Contains(t, intgr.Entities, expectedEntityData1)
@@ -168,7 +170,9 @@ func TestIntegrationPopulator_PartialResult(t *testing.T) {
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-	)(rawGroupsSample, metricSpecsWithIncompatibleType)
+		rawGroupsSample,
+		metricSpecsWithIncompatibleType,
+	)
 	assert.True(t, populated)
 	assert.Contains(t, intgr.Entities, expectedEntityData1)
 	assert.Contains(t, intgr.Entities, expectedEntityData2)
@@ -189,7 +193,9 @@ func TestIntegrationPopulator_EntitiesDataNotPopulated_EmptyMetricGroups(t *test
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-	)(metricGroupEmpty, specs)
+		metricGroupEmpty,
+		specs,
+	)
 	assert.False(t, populated)
 	assert.Nil(t, errs)
 	assert.Equal(t, expectedData, intgr.Entities)
@@ -218,7 +224,9 @@ func TestIntegrationPopulator_EntitiesDataNotPopulated_ErrorSettingEntities(t *t
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-	)(metricGroupEmptyEntityID, specs)
+		metricGroupEmptyEntityID,
+		specs,
+	)
 	assert.False(t, populated)
 	assert.EqualError(t, errs[0], "entity name and type are required when defining one")
 	assert.Equal(t, expectedData, intgr.Entities)
@@ -266,7 +274,9 @@ func TestIntegrationPopulator_MetricsSetsNotPopulated_OnlyEntity(t *testing.T) {
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-	)(rawGroupsSample, metricSpecsIncorrect)
+		rawGroupsSample,
+		metricSpecsIncorrect,
+	)
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
 
@@ -341,7 +351,9 @@ func TestIntegrationPopulator_EntityIDGenerator(t *testing.T) {
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-	)(raw, withGeneratorSpec)
+		raw,
+		withGeneratorSpec,
+	)
 
 	assert.True(t, populated)
 	assert.Empty(t, errs)
@@ -373,7 +385,9 @@ func TestIntegrationPopulator_EntityIDGeneratorFuncWithError(t *testing.T) {
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-	)(rawGroupsSample, specsWithGeneratorFuncError)
+		rawGroupsSample,
+		specsWithGeneratorFuncError,
+	)
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
 	assert.Contains(t, errs, fmt.Errorf("error generating entity ID for entity_id_1: error generating entity ID"))
@@ -479,7 +493,9 @@ func TestIntegrationPopulator_PopulateOnlySpecifiedGroups(t *testing.T) {
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-	)(groups, withGeneratorSpec)
+		groups,
+		withGeneratorSpec,
+	)
 	assert.True(t, populated)
 	assert.Empty(t, errs)
 	assert.Len(t, intgr.Entities, 3)
@@ -535,7 +551,9 @@ func TestIntegrationPopulator_EntityTypeGeneratorFuncWithError(t *testing.T) {
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		fromGroupMetricSetTypeGuessFunc,
-	)(rawGroupsSample, specsWithGeneratorFuncError)
+		rawGroupsSample,
+		specsWithGeneratorFuncError,
+	)
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
 	assert.Contains(t, errs, fmt.Errorf("error generating entity type for entity_id_1: error generating entity type"))
@@ -562,7 +580,9 @@ func TestIntegrationPopulator_msTypeGuesserFuncWithError(t *testing.T) {
 		defaultNS,
 		&version.Info{GitVersion: "v1.15.42"},
 		msTypeGuesserFuncWithError,
-	)(rawGroupsSample, specs)
+		rawGroupsSample,
+		specs,
+	)
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
 	assert.Contains(t, errs, fmt.Errorf("error setting event type"))
