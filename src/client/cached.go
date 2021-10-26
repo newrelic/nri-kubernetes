@@ -129,6 +129,8 @@ type cacheAwareClient struct {
 	timeout time.Duration
 }
 
+// Get implements HTTPGetter interface and will re-trigger the discovery process if sending request using
+// cached client fails.
 func (c *cacheAwareClient) Get(path string) (*http.Response, error) {
 	response, err := c.client.Get(path)
 	if err == nil {

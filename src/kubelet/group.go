@@ -21,6 +21,9 @@ type kubelet struct {
 	defaultNetworkInterface string
 }
 
+// Group implements Grouper interface by fetching RawGroups using both given fetch functions
+// and hardcoded fetching calls pulling kubelet summary metrics, node information from Kubernetes API
+// and then merging all this information.
 func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.ErrorGroup) {
 	rawGroups := definition.RawGroups{
 		"network": {
@@ -35,8 +38,7 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 			// TODO We don't have to panic when multiple err
 			if _, ok := err.(data.ErrorGroup); !ok {
 				return nil, &data.ErrorGroup{
-					Recoverable: false,
-					Errors:      []error{fmt.Errorf("error querying Kubelet. %s", err)},
+					Errors: []error{fmt.Errorf("error querying Kubelet. %s", err)},
 				}
 			}
 		}
@@ -47,14 +49,16 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 	response, err := metric.GetMetricsData(r.client)
 	if err != nil {
 		return nil, &data.ErrorGroup{
-			Recoverable: false,
-			Errors:      []error{fmt.Errorf("error querying Kubelet. %s", err)},
+			Errors: []error{fmt.Errorf("error querying Kubelet. %s", err)},
 		}
 	}
 
 	resources, errs := metric.GroupStatsSummary(response)
-	if len(errs) != 0 {
-		return nil, &data.ErrorGroup{Recoverable: true, Errors: errs}
+	if len(errs) > 0 {
+		return nil, &data.ErrorGroup{
+			Recoverable: true,
+			Errors:      errs,
+		}
 	}
 
 	fillGroupsAndMergeNonExistent(rawGroups, resources)
@@ -62,8 +66,7 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 	nodeInfo, err := r.apiServer.GetNodeInfo(response.Node.NodeName)
 	if err != nil {
 		return nil, &data.ErrorGroup{
-			Recoverable: false,
-			Errors:      []error{fmt.Errorf("error querying ApiServer: %v", err)},
+			Errors: []error{fmt.Errorf("error querying ApiServer: %v", err)},
 		}
 	}
 

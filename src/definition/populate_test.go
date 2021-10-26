@@ -75,6 +75,17 @@ func fromGroupEntityTypeGuessFunc(groupLabel string, _ string, _ RawGroups, pref
 	return fmt.Sprintf("%s:%s", prefix, groupLabel), nil
 }
 
+func testConfig(i *integration.Integration) *IntegrationPopulateConfig {
+	return &IntegrationPopulateConfig{
+		Integration:   i,
+		ClusterName:   defaultNS,
+		K8sVersion:    &version.Info{GitVersion: "v1.15.42"},
+		MsTypeGuesser: fromGroupMetricSetTypeGuessFunc,
+		Groups:        rawGroupsSample,
+		Specs:         specs,
+	}
+}
+
 func TestIntegrationPopulator_CorrectValue(t *testing.T) {
 	intgr, err := integration.New("nr.test", "1.0.0")
 	require.NoError(t, err)
@@ -111,12 +122,7 @@ func TestIntegrationPopulator_CorrectValue(t *testing.T) {
 	}
 	expectedEntityData2.Metrics = []*metric.Set{expectedMetricSet2}
 
-	populated, errs := IntegrationPopulator(
-		intgr,
-		defaultNS,
-		&version.Info{GitVersion: "v1.15.42"},
-		fromGroupMetricSetTypeGuessFunc,
-	)(rawGroupsSample, specs)
+	populated, errs := IntegrationPopulator(testConfig(intgr))
 	assert.True(t, populated)
 	assert.Empty(t, errs)
 	assert.Contains(t, intgr.Entities, expectedEntityData1)
@@ -163,12 +169,10 @@ func TestIntegrationPopulator_PartialResult(t *testing.T) {
 	}
 	expectedEntityData2.Metrics = []*metric.Set{expectedMetricSet2}
 
-	populated, errs := IntegrationPopulator(
-		intgr,
-		defaultNS,
-		&version.Info{GitVersion: "v1.15.42"},
-		fromGroupMetricSetTypeGuessFunc,
-	)(rawGroupsSample, metricSpecsWithIncompatibleType)
+	config := testConfig(intgr)
+	config.Specs = metricSpecsWithIncompatibleType
+
+	populated, errs := IntegrationPopulator(config)
 	assert.True(t, populated)
 	assert.Contains(t, intgr.Entities, expectedEntityData1)
 	assert.Contains(t, intgr.Entities, expectedEntityData2)
@@ -184,12 +188,10 @@ func TestIntegrationPopulator_EntitiesDataNotPopulated_EmptyMetricGroups(t *test
 
 	expectedData := make([]*integration.Entity, 0)
 
-	populated, errs := IntegrationPopulator(
-		intgr,
-		defaultNS,
-		&version.Info{GitVersion: "v1.15.42"},
-		fromGroupMetricSetTypeGuessFunc,
-	)(metricGroupEmpty, specs)
+	config := testConfig(intgr)
+	config.Groups = metricGroupEmpty
+
+	populated, errs := IntegrationPopulator(config)
 	assert.False(t, populated)
 	assert.Nil(t, errs)
 	assert.Equal(t, expectedData, intgr.Entities)
@@ -213,12 +215,10 @@ func TestIntegrationPopulator_EntitiesDataNotPopulated_ErrorSettingEntities(t *t
 
 	expectedData := []*integration.Entity{}
 
-	populated, errs := IntegrationPopulator(
-		intgr,
-		defaultNS,
-		&version.Info{GitVersion: "v1.15.42"},
-		fromGroupMetricSetTypeGuessFunc,
-	)(metricGroupEmptyEntityID, specs)
+	config := testConfig(intgr)
+	config.Groups = metricGroupEmptyEntityID
+
+	populated, errs := IntegrationPopulator(config)
 	assert.False(t, populated)
 	assert.EqualError(t, errs[0], "entity name and type are required when defining one")
 	assert.Equal(t, expectedData, intgr.Entities)
@@ -261,12 +261,11 @@ func TestIntegrationPopulator_MetricsSetsNotPopulated_OnlyEntity(t *testing.T) {
 	}
 	expectedEntityData2.Metrics = []*metric.Set{expectedMetricSet2}
 
-	populated, errs := IntegrationPopulator(
-		intgr,
-		defaultNS,
-		&version.Info{GitVersion: "v1.15.42"},
-		fromGroupMetricSetTypeGuessFunc,
-	)(rawGroupsSample, metricSpecsIncorrect)
+	config := testConfig(intgr)
+	config.Specs = metricSpecsIncorrect
+
+	populated, errs := IntegrationPopulator(config)
+
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
 
@@ -336,12 +335,11 @@ func TestIntegrationPopulator_EntityIDGenerator(t *testing.T) {
 	}
 	expectedEntityData2.Metrics = []*metric.Set{expectedMetricSet2}
 
-	populated, errs := IntegrationPopulator(
-		intgr,
-		defaultNS,
-		&version.Info{GitVersion: "v1.15.42"},
-		fromGroupMetricSetTypeGuessFunc,
-	)(raw, withGeneratorSpec)
+	config := testConfig(intgr)
+	config.Groups = raw
+	config.Specs = withGeneratorSpec
+
+	populated, errs := IntegrationPopulator(config)
 
 	assert.True(t, populated)
 	assert.Empty(t, errs)
@@ -368,12 +366,11 @@ func TestIntegrationPopulator_EntityIDGeneratorFuncWithError(t *testing.T) {
 	intgr, err := integration.New("nr.test", "1.0.0")
 	require.NoError(t, err)
 
-	populated, errs := IntegrationPopulator(
-		intgr,
-		defaultNS,
-		&version.Info{GitVersion: "v1.15.42"},
-		fromGroupMetricSetTypeGuessFunc,
-	)(rawGroupsSample, specsWithGeneratorFuncError)
+	config := testConfig(intgr)
+	config.Specs = specsWithGeneratorFuncError
+
+	populated, errs := IntegrationPopulator(config)
+
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
 	assert.Contains(t, errs, fmt.Errorf("error generating entity ID for entity_id_1: error generating entity ID"))
@@ -474,12 +471,13 @@ func TestIntegrationPopulator_PopulateOnlySpecifiedGroups(t *testing.T) {
 	expectedEntityData3.Inventory = expectedInventory
 
 	intgr.Clear()
-	populated, errs := IntegrationPopulator(
-		intgr,
-		defaultNS,
-		&version.Info{GitVersion: "v1.15.42"},
-		fromGroupMetricSetTypeGuessFunc,
-	)(groups, withGeneratorSpec)
+
+	config := testConfig(intgr)
+	config.Specs = withGeneratorSpec
+	config.Groups = groups
+
+	populated, errs := IntegrationPopulator(config)
+
 	assert.True(t, populated)
 	assert.Empty(t, errs)
 	assert.Len(t, intgr.Entities, 3)
@@ -530,12 +528,11 @@ func TestIntegrationPopulator_EntityTypeGeneratorFuncWithError(t *testing.T) {
 	intgr, err := integration.New("nr.test", "1.0.0")
 	require.NoError(t, err)
 
-	populated, errs := IntegrationPopulator(
-		intgr,
-		defaultNS,
-		&version.Info{GitVersion: "v1.15.42"},
-		fromGroupMetricSetTypeGuessFunc,
-	)(rawGroupsSample, specsWithGeneratorFuncError)
+	config := testConfig(intgr)
+	config.Specs = specsWithGeneratorFuncError
+
+	populated, errs := IntegrationPopulator(config)
+
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
 	assert.Contains(t, errs, fmt.Errorf("error generating entity type for entity_id_1: error generating entity type"))
@@ -557,12 +554,11 @@ func TestIntegrationPopulator_msTypeGuesserFuncWithError(t *testing.T) {
 	expectedEntityData2, err := intgr.Entity("entity_id_2", "playground:test")
 	require.NoError(t, err)
 
-	populated, errs := IntegrationPopulator(
-		intgr,
-		defaultNS,
-		&version.Info{GitVersion: "v1.15.42"},
-		msTypeGuesserFuncWithError,
-	)(rawGroupsSample, specs)
+	config := testConfig(intgr)
+	config.MsTypeGuesser = msTypeGuesserFuncWithError
+
+	populated, errs := IntegrationPopulator(config)
+
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
 	assert.Contains(t, errs, fmt.Errorf("error setting event type"))

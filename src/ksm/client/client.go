@@ -34,6 +34,7 @@ func (c *ksm) NodeIP() string {
 	return c.nodeIP
 }
 
+// Get implements HTTPGetter interface by sending Prometheus plain text request using configured client.
 func (c *ksm) Get(urlPath string) (*http.Response, error) {
 	e := c.endpoint
 	e.Path = path.Join(c.endpoint.Path, urlPath)

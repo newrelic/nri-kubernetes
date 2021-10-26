@@ -22,12 +22,12 @@ func (m *MockDiscoverer) Discover(timeout time.Duration) (HTTPClient, error) {
 	return nil, args.Error(1)
 }
 
-// MockDiscoveredHTTPClient is a mock implementation of the HTTPClient interface
+// MockDiscoveredHTTPClient is a mock implementation of the HTTPGetter interface.
 type MockDiscoveredHTTPClient struct {
 	mock.Mock
 }
 
-// Do provides a mock implementation for HTTPClient interface
+// Get implements HTTPGetter interface by allowing mocking the response.
 func (m *MockDiscoveredHTTPClient) Get(path string) (*http.Response, error) {
 	args := m.Called(path)
 

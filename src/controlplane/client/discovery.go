@@ -56,6 +56,10 @@ type ControlPlaneComponentClient struct {
 	InsecureFallback         bool
 }
 
+// Get implements HTTPGetter interface by selecting proper authentication strategy for request
+// based on client configuration.
+//
+// If secure request fails and insecure fallback is configured, request will be attempted over HTTP.
 func (c *ControlPlaneComponentClient) Get(urlPath string) (*http.Response, error) {
 	// Use the secure endpoint by default. If this component doesn't support it yet, fallback to the insecure one.
 	e := c.secureEndpoint
