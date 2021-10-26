@@ -26,6 +26,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/network"
 	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
+	"github.com/newrelic/nri-kubernetes/v2/src/sink"
 	"github.com/newrelic/nri-kubernetes/v2/src/storage"
 )
 
@@ -189,14 +190,6 @@ func controlPlaneJobs(
 
 func main() {
 	exitLog := fmt.Sprintf("Integration %q exited", integrationName)
-
-	integration, err := integration.New(integrationName, integrationVersion, integration.Args(&args))
-	if err != nil {
-		defer log.Debug(exitLog)
-		log.Fatal(err) // Global logs used as args processed inside NewIntegrationProtocol2
-	}
-
-	logger := log.NewStdErr(args.Verbose)
 	defer func() {
 		if r := recover(); r != nil {
 			recErr, ok := r.(*logrus.Entry)
@@ -208,7 +201,27 @@ func main() {
 		}
 	}()
 
+	iOptions := []integration.Option{integration.Args(&args)}
+
+	if os.Getenv("HTTP_SINK") == "enabled" {
+		c := sink.DefaultPesterClient()
+
+		h, err := sink.NewHTTPSink(c, sink.DefaultAgentForwarderEndpoint, sink.DefaultTimeout)
+		if err != nil {
+			log.Fatal(fmt.Errorf("creating HTTPSink: %w", err))
+		}
+
+		iOptions = append(iOptions, integration.Writer(h))
+	}
+
+	i, err := integration.New(integrationName, integrationVersion, iOptions...)
+	if err != nil {
+		log.Fatal(fmt.Errorf("creating integration: %w", err))
+	}
+
+	logger := log.NewStdErr(args.Verbose)
 	defer logger.Debugf(exitLog)
+
 	logger.Debugf("Integration %q ver. %s (git %s) started", integrationName, integrationVersion, integrationCommitHash)
 	if args.ClusterName == "" {
 		logger.Errorf("cluster_name argument is mandatory")
@@ -430,7 +443,7 @@ func main() {
 	for _, job := range jobs {
 		logger.Debugf("Running job: %s", job.Name)
 		start := time.Now()
-		result := job.Populate(integration, args.ClusterName, logger, k8sVersion)
+		result := job.Populate(i, args.ClusterName, logger, k8sVersion)
 		measured := time.Since(start)
 		logger.Debugf("Job %s took %s", job.Name, measured.Round(time.Millisecond))
 
@@ -448,7 +461,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := integration.Publish(); err != nil {
+	if err := i.Publish(); err != nil {
 		logger.Errorf("Error rendering integration output: %v", err)
 		os.Exit(1)
 	}

@@ -9,6 +9,7 @@ require (
 	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/prom2json v1.3.0
 	github.com/segmentio/go-camelcase v0.0.0-20160726192923-7085f1e3c734
+	github.com/sethgrid/pester v1.1.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
 	github.com/xeipuuv/gojsonschema v1.2.0
@@ -19,4 +20,5 @@ require (
 	k8s.io/apimachinery v0.22.2
 	k8s.io/client-go v0.22.2
 	k8s.io/kubelet v0.22.2
+	k8s.io/utils v0.0.0-20210819203725-bdf08cb9a70a
 )

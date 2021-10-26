@@ -23,6 +23,8 @@ spec:
       #imagePullSecrets:
       #  - name: nr-quay-secret
       containers:
+        - name: http-sink-dump
+          image: "http-sink-dump:0.0.1"
         - name: {{ .Values.daemonset.name }}
           image: "{{ .Values.daemonset.image.repository }}:{{ .Values.daemonset.image.tag }}"
           {{- if eq .Values.daemonset.clusterFlavor "Minikube" }}
@@ -58,6 +60,8 @@ spec:
             # On Minikube, also test scraping the controlplane via localhost.
             {{- if eq .Values.daemonset.clusterFlavor "Minikube" }}
               {{- if semverCompare ">=1.16-0" .Capabilities.KubeVersion.Version }}
+            - value: "enabled"
+              name: "HTTP_SINK"
             - name: "SCHEDULER_ENDPOINT_URL"
               value: "https://localhost:10259"
               {{- end }}
