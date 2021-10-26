@@ -18,7 +18,6 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
 	clientControlPlane "github.com/newrelic/nri-kubernetes/v2/src/controlplane/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
-	"github.com/newrelic/nri-kubernetes/v2/src/featureflag"
 	"github.com/newrelic/nri-kubernetes/v2/src/ksm"
 	clientKsm "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet"
@@ -189,8 +188,9 @@ func controlPlaneJobs(
 }
 
 func main() {
-	integration, err := integration.New(integrationName, integrationVersion, integration.Args(&args))
 	exitLog := fmt.Sprintf("Integration %q exited", integrationName)
+
+	integration, err := integration.New(integrationName, integrationVersion, integration.Args(&args))
 	if err != nil {
 		defer log.Debug(exitLog)
 		log.Fatal(err) // Global logs used as args processed inside NewIntegrationProtocol2
@@ -367,7 +367,6 @@ func main() {
 	if err != nil {
 		logger.Errorf("Error getting the kubernetes server version: %v", err)
 	}
-	enableStaticPodsStatus := featureflag.StaticPodsStatus(k8sVersion)
 
 	apiServerCacheTTL, err := time.ParseDuration(args.APIServerCacheTTL)
 	if err != nil {
@@ -384,7 +383,7 @@ func main() {
 		apiServerClient = apiserver.NewFileCacheClientWrapper(apiServerClient, config)
 	}
 
-	podsFetcher := metric2.NewPodsFetcher(logger, kubeletClient, enableStaticPodsStatus).FetchFuncWithCache()
+	podsFetcher := metric2.NewPodsFetcher(logger, kubeletClient).FetchFuncWithCache()
 
 	if !args.DisableControlplane {
 		cpJobs, err := controlPlaneJobs(
