@@ -91,7 +91,7 @@ jobs:
             -t $DOCKER_IMAGE_NAME:ci-scan \
             .
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.0.20
+        uses: aquasecurity/trivy-action@0.0.22
         with:
           image-ref: '${{ env.DOCKER_IMAGE_NAME }}:ci-scan'
           format: 'table'
