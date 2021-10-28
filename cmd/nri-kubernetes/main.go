@@ -63,11 +63,13 @@ func run(ctx context.Context, options runOptions) error {
 		return fmt.Errorf("feeding integration: %w", err)
 	}
 
+	ticker := time.NewTicker(time.Duration(int64(options.IntervalSeconds) * int64(time.Second)))
+
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
-		case <-time.After(time.Duration(int64(options.IntervalSeconds) * int64(time.Second))):
+		case <-ticker.C:
 			if err := feedAndPublish(i); err != nil {
 				return fmt.Errorf("feeding integration: %w", err)
 			}

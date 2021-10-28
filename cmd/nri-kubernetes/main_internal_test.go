@@ -31,12 +31,14 @@ func Test_main_accepts_CLI_flags(t *testing.T) {
 		errCh <- err
 	}()
 
+	timeout := time.NewTimer(time.Second)
+
 	select {
 	case err := <-errCh:
 		if err != nil {
 			t.Errorf("should be still running: %v", err)
 		}
-	case <-time.After(1 * time.Second):
+	case <-timeout.C:
 		if err := cmd.Process.Kill(); err != nil {
 			t.Fatalf("Sending signal to process failed: %v", err)
 		}
@@ -69,6 +71,9 @@ func Test_main_gracefully_handles(t *testing.T) {
 			func() {
 				termSent := false
 
+				startTimeout := time.NewTimer(time.Second)
+				termTimeout := time.NewTimer(2 * time.Second)
+
 				for {
 					select {
 					case err := <-errCh:
@@ -76,14 +81,14 @@ func Test_main_gracefully_handles(t *testing.T) {
 							t.Fatalf("Executing process failed: %v", err)
 						}
 						return
-					case <-time.After(1 * time.Second):
+					case <-startTimeout.C:
 						if !termSent {
 							if err := cmd.Process.Signal(sig); err != nil {
 								t.Fatalf("Sending TERM signal to process failed: %v", err)
 							}
 							termSent = true
 						}
-					case <-time.After(2 * time.Second):
+					case <-termTimeout.C:
 						if err := cmd.Process.Kill(); err != nil {
 							t.Fatalf("Killing process failed: %v", err)
 						}
