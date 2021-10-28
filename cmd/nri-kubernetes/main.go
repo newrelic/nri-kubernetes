@@ -93,7 +93,9 @@ func feedAndPublish(i *integration.Integration) error {
 		return fmt.Errorf("setting inventory item: %w", err)
 	}
 
-	i.Publish()
+	if err := i.Publish(); err != nil {
+		return fmt.Errorf("publishing metrics: %w", err)
+	}
 
 	return nil
 }
