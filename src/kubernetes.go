@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -204,9 +205,9 @@ func main() {
 	iOptions := []integration.Option{integration.Args(&args)}
 
 	if os.Getenv("HTTP_SINK") == "enabled" {
-		c := sink.DefaultPesterClient()
+		c := sink.DefaultPesterClient(sink.DefaultRequestTimeout)
 
-		h, err := sink.NewHTTPSink(c, sink.DefaultAgentForwarderEndpoint, sink.DefaultTimeout)
+		h, err := sink.NewHTTPSink(context.Background(), c, sink.DefaultAgentForwarderEndpoint, sink.DefaultTimeout)
 		if err != nil {
 			log.Fatal(fmt.Errorf("creating HTTPSink: %w", err))
 		}

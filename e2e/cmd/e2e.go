@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -11,13 +10,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/newrelic/infra-integrations-sdk/args"
-	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/rand"
-	"k8s.io/utils/pointer"
 
+	"github.com/newrelic/infra-integrations-sdk/args"
+	"github.com/newrelic/infra-integrations-sdk/integration"
 	_ "github.com/newrelic/nri-kubernetes/v2/e2e/gcp"
 	"github.com/newrelic/nri-kubernetes/v2/e2e/helm"
 	"github.com/newrelic/nri-kubernetes/v2/e2e/jsonschema"
@@ -47,7 +45,6 @@ const (
 	nrLabel        = "name=newrelic-infra"
 	namespace      = "default"
 	nrContainer    = "newrelic-infra"
-	sinkContainer  = "http-sink-dump"
 	ksmLabel       = "app.kubernetes.io/name=kube-state-metrics"
 	minikubeFlavor = "Minikube"
 	unknownFlavor  = "Unknown"
@@ -107,23 +104,7 @@ func (se *scenarioEnv) execIntegration(pod v1.Pod, ksmPod *v1.Pod) (*integration
 		return nil, fmt.Errorf("executing command inside pod: %w", err)
 	}
 
-	req := se.k8sClient.Clientset.CoreV1().Pods(namespace).GetLogs(pod.Name, &v1.PodLogOptions{
-		Container:  sinkContainer,
-		LimitBytes: pointer.Int64(5000000),
-	})
-	result := req.Do(context.Background())
-
-	data, err := result.Raw()
-	if err != nil {
-		return nil, fmt.Errorf("getting raw result: %w", err)
-	}
-
-	sl := strings.Split(string(data), "\n")
-
-	if len(sl) < 2 {
-		return nil, fmt.Errorf("we expect at least two lines from the httpDump logs")
-	}
-	d.stdOut = []byte(sl[len(sl)-2])
+	d.stdOut = output.Stdout.Bytes()
 	d.stdErr = output.Stderr.Bytes()
 
 	for _, j := range allJobs {

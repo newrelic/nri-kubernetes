@@ -33,7 +33,6 @@ jobs:
         run: |
           GOOS=linux GOARCH=amd64 make compile # Set GOOS and GOARCH explicitly since Dockerfile expects them in the binary name
           docker build -t test_image_${{ matrix.privilegedMode }}:test --build-arg 'MODE=${{ matrix.privilegedMode }}' .
-          docker build -t http-sink-dump:0.0.1 -f ./e2e/cmd/http-sink-dump/Dockerfile ./e2e/cmd/http-sink-dump
       - name: Setup Helm
         run: |
           chmod go-r /home/runner/.kube/config
