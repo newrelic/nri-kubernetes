@@ -1,6 +1,10 @@
 package main
 
 import (
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/newrelic/infra-integrations-sdk/integration"
 )
 
@@ -10,7 +14,11 @@ type argumentList struct {
 
 func main() {
 	run(integration.Args(&argumentList{}))
-	// panic("err")
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	<-sigs
 }
 
 func run(extraOptions ...integration.Option) {
