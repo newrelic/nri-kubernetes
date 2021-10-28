@@ -24,7 +24,7 @@ func Test_main_accepts_CLI_flags(t *testing.T) {
 	outputCh := make(chan []byte, 1)
 	errCh := make(chan error)
 
-	cmd := exec.Command(os.Args[0], "-test.main", "-timeout=10")
+	cmd := exec.Command(os.Args[0], "-test.main", "-interval_seconds=30")
 	go func() {
 		output, err := cmd.CombinedOutput()
 		outputCh <- output
@@ -36,7 +36,7 @@ func Test_main_accepts_CLI_flags(t *testing.T) {
 		if err != nil {
 			t.Errorf("should be still running: %v", err)
 		}
-	case <-time.After(5 * time.Second):
+	case <-time.After(1 * time.Second):
 		if err := cmd.Process.Kill(); err != nil {
 			t.Fatalf("Sending signal to process failed: %v", err)
 		}
@@ -97,9 +97,4 @@ func Test_main_gracefully_handles(t *testing.T) {
 			}
 		})
 	}
-}
-
-func Test_run(t *testing.T) {
-	run()
-	run()
 }
