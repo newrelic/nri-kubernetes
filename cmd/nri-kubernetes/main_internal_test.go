@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 	"testing"
 	"time"
@@ -102,4 +103,41 @@ func Test_main_gracefully_handles(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_main_exits_with_error_when_unknown_flag_is_given(t *testing.T) {
+	outputCh := make(chan []byte, 1)
+	errCh := make(chan error)
+
+	cmd := exec.Command(os.Args[0], "-test.main", "-foo")
+	go func() {
+		output, err := cmd.CombinedOutput()
+		outputCh <- output
+		errCh <- err
+	}()
+
+	timeout := time.NewTimer(time.Second)
+
+	select {
+	case err := <-errCh:
+		if err == nil {
+			t.Fatalf("Expected running error to occur")
+		}
+	case <-timeout.C:
+		if err := cmd.Process.Kill(); err != nil {
+			t.Fatalf("Sending signal to process failed: %v", err)
+		}
+	}
+
+	t.Run("and_prints_message_that_running_integration_failed", func(t *testing.T) {
+		output := <-outputCh
+		if len(output) == 0 {
+			t.Fatalf("No output printed")
+		}
+
+		expectedMessage := "Running integration failed"
+		if !strings.Contains(string(output), "Running integration failed") {
+			t.Fatalf("Expected %q message being printed, got:\n%s", expectedMessage, string(output))
+		}
+	})
 }

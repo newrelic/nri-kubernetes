@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -19,6 +20,9 @@ type argumentList struct {
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	errCh := make(chan error)
+
+	// NewRelic SDK use ExitOnError, which makes it impossible to handle errors properly.
+	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
 
 	args := &argumentList{}
 
