@@ -202,7 +202,6 @@ func fillContainerStatuses(pod *v1.Pod, dest map[string]definition.RawMetrics) {
 			dest[id]["status"] = "Running"
 			dest[id]["startedAt"] = c.State.Running.StartedAt.Time.In(time.UTC) // TODO WE DO NOT REPORT THAT METRIC
 			dest[id]["restartCount"] = c.RestartCount
-			dest[id]["isReady"] = c.Ready
 		case c.State.Waiting != nil:
 			dest[id]["status"] = "Waiting"
 			dest[id]["reason"] = c.State.Waiting.Reason
@@ -297,27 +296,7 @@ func (f *PodsFetcher) fetchPodData(pod *v1.Pod) definition.RawMetrics {
 }
 
 func (f *PodsFetcher) fillPodStatus(r definition.RawMetrics, pod *v1.Pod) {
-	// TODO Review if those Fake Pending Pods are still an issue
-	if isFakePendingPod(pod.Status) {
-		r["status"] = "Running"
-		r["isReady"] = "True"
-		r["isScheduled"] = "True"
 
-		f.logger.Debugf("Fake Pending Pod marked as Running")
-
-		return
-	}
-
-	for _, c := range pod.Status.Conditions {
-		switch c.Type {
-		case "Ready":
-			r["isReady"] = string(c.Status)
-		case "PodScheduled":
-			r["isScheduled"] = string(c.Status)
-		}
-	}
-
-	r["status"] = string(pod.Status.Phase)
 }
 
 func podLabels(p *v1.Pod) map[string]string {
