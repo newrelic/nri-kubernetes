@@ -190,13 +190,14 @@ func controlPlaneJobs(
 func main() {
 	exitLog := fmt.Sprintf("Integration %q exited", integrationName)
 
-	integration, err := integration.New(integrationName, integrationVersion, integration.Args(&args))
+	i, err := integration.New(integrationName, integrationVersion, integration.Args(&args))
 	if err != nil {
 		defer log.Debug(exitLog)
 		log.Fatal(err) // Global logs used as args processed inside NewIntegrationProtocol2
 	}
 
 	logger := log.NewStdErr(args.Verbose)
+
 	defer func() {
 		if r := recover(); r != nil {
 			recErr, ok := r.(*logrus.Entry)
@@ -209,6 +210,7 @@ func main() {
 	}()
 
 	defer logger.Debugf(exitLog)
+
 	logger.Debugf("Integration %q ver. %s (git %s) started", integrationName, integrationVersion, integrationCommitHash)
 	if args.ClusterName == "" {
 		logger.Errorf("cluster_name argument is mandatory")
@@ -430,7 +432,7 @@ func main() {
 	for _, job := range jobs {
 		logger.Debugf("Running job: %s", job.Name)
 		start := time.Now()
-		result := job.Populate(integration, args.ClusterName, logger, k8sVersion)
+		result := job.Populate(i, args.ClusterName, logger, k8sVersion)
 		measured := time.Since(start)
 		logger.Debugf("Job %s took %s", job.Name, measured.Round(time.Millisecond))
 
@@ -448,7 +450,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := integration.Publish(); err != nil {
+	if err := i.Publish(); err != nil {
 		logger.Errorf("Error rendering integration output: %v", err)
 		os.Exit(1)
 	}
