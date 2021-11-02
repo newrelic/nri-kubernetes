@@ -43,6 +43,9 @@ jobs:
       - name: e2e-test
         uses: newrelic/newrelic-integration-e2e-action@v1.0.1
         with:
+          retry_seconds: 60
+          retry_attempts: 5
+          agent_enabled: false
           spec_path: e2e/test-specs.yml
           account_id: ${{ secrets.ACCOUNT_ID }}
           api_key: ${{ secrets.API_KEY }}
