@@ -10,42 +10,38 @@ jobs:
   e2eTests:
     runs-on: ubuntu-20.04
     strategy:
-      max-parallel: 7 # len(k8sVersion) is a good number to have here
+      max-parallel: 4 # len(k8sVersion)/2 is a good number to have here
       matrix:
-        privilegedMode: [ "normal", "unprivileged" ]
         # Latest patch version can be found in https://github.com/kubernetes/website/blob/main/content/en/releases/patch-releases.md
         # Some versions might not be available yet in https://storage.googleapis.com/kubernetes-release/release/v1.X.Y/bin/linux/amd64/kubelet
-        k8sVersion: [ "v1.16.15", "v1.17.17", "v1.18.20", "v1.19.14", "v1.20.10", "v1.21.4", "v1.22.0" ]
+        k8sVersion: ["v1.22.0" ] # [ "v1.16.15", "v1.17.17", "v1.18.20", "v1.19.14", "v1.20.10", "v1.21.4", "v1.22.0" ]
     env:
       DOCKER_BUILDKIT: '1' # Setting DOCKER_BUILDKIT=1 ensures TARGETOS and TARGETARCH are populated
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
         with:
-          go-version: '1.16'
+          go-version: '1.17'
       - name: Setup Minikube
         uses: manusa/actions-setup-minikube@v2.4.2
         with:
-          minikube version: v1.20.0
+          minikube version: v1.23.2
           kubernetes version: ${{ matrix.k8sVersion }}
-          driver: none # required for nri-kubernetes, as metrics gathered for the host are tested as well
+          driver: docker
+          start args: "--nodes=2"
       - name: Compile and Build Image
         run: |
           GOOS=linux GOARCH=amd64 make compile # Set GOOS and GOARCH explicitly since Dockerfile expects them in the binary name
-          docker build -t test_image_${{ matrix.privilegedMode }}:test --build-arg 'MODE=${{ matrix.privilegedMode }}' .
+          docker build -t test_image:test --build-arg 'MODE=normal' .
+          docker build -t test_image:test-unprivileged --build-arg 'MODE=unprivileged' .
       - name: Setup Helm
         run: |
           chmod go-r /home/runner/.kube/config
           helm repo add stable https://charts.helm.sh/stable
-          helm dependencies update ./e2e/charts/newrelic-infrastructure-k8s-e2e
-      - name: Interact with the cluster
-        # Best-effort (but unsupported) minors can be marked as non-blocking as follows:
-        # continue-on-error: ${{ contains(matrix.k8sVersion, 'v1.22') }}
-        # We are changing the group of .kube/config due to "WARNING: Kubernetes configuration file is group-readable."
-        run: |
-          if [ "${{ matrix.privilegedMode }}" = "unprivileged" ]; then
-            UNPRIVILEGED=true
-          else
-            UNPRIVILEGED=false
-          fi
-          go run e2e/cmd/e2e.go --verbose --cluster_name=e2e --nr_license_key="fakeLicense" --rbac=true --integration_image_tag=test --integration_image_repository=test_image_${{ matrix.privilegedMode }} --unprivileged=$UNPRIVILEGED
+      - name: e2e-test
+        uses: newrelic/newrelic-integration-e2e-action@v1.0.1
+        with:
+          spec_path: e2e/test-specs.yml
+          account_id: ${{ secrets.ACCOUNT_ID }}
+          api_key: ${{ secrets.API_KEY }}
+          license_key: ${{ secrets.LICENSE_KEY }}
