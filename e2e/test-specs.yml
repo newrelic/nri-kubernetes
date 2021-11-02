@@ -8,9 +8,9 @@ scenarios:
       This scenario will verify that metrics from a k8s Cluster are correctly collected.
     before:
       - helm upgrade --install ${SCENARIO_TAG}-resources ./charts/e2e-resources
-      - helm upgrade --install ${SCENARIO_TAG} newrelic/nri-bundle --set newrelic-infrastructure.image.tag=test --set newrelic-infrastructure.image.repository=test_image --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG} --set ksm.enabled=true --set webhook.enabled=false
-      - kubectl describe pods
+      - helm upgrade --install ${SCENARIO_TAG} newrelic/nri-bundle --values e2e-values.yaml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG}
     after:
+      - kubectl describe pods -l app=newrelic-infrastructure
       - kubectl logs -l app=newrelic-infrastructure
       - helm delete ${SCENARIO_TAG}-resources
       - helm delete ${SCENARIO_TAG}
@@ -40,9 +40,9 @@ scenarios:
       This scenario will verify that metrics from a k8s Cluster are correctly collected without privileges.
     before:
       - helm upgrade --install ${SCENARIO_TAG}-resources ./charts/e2e-resources
-      - helm upgrade --install ${SCENARIO_TAG} newrelic/nri-bundle --set newrelic-infrastructure.image.tag=test --set newrelic-infrastructure.image.repository=test_image --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG} --set ksm.enabled=true --set newrelic-infrastructure.privileged=false --set webhook.enabled=false
-      - kubectl describe pods
+      - helm upgrade --install ${SCENARIO_TAG} newrelic/nri-bundle --values e2e-values.yaml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG} --set newrelic-infrastructure.privileged=false
     after:
+      - kubectl describe pods -l app=newrelic-infrastructure
       - kubectl logs -l app=newrelic-infrastructure
       - helm delete ${SCENARIO_TAG}-resources
       - helm delete ${SCENARIO_TAG}

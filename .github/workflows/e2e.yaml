@@ -34,6 +34,8 @@ jobs:
           GOOS=linux GOARCH=amd64 make compile # Set GOOS and GOARCH explicitly since Dockerfile expects them in the binary name
           docker build -t test_image:test --build-arg 'MODE=normal' .
           docker build -t test_image:test-unprivileged --build-arg 'MODE=unprivileged' .
+          minikube image load test_image:test
+          minikube image load test_image:test-unprivileged
       - name: Setup Helm
         run: |
           chmod go-r /home/runner/.kube/config
