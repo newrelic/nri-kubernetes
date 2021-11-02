@@ -9,7 +9,9 @@ scenarios:
     before:
       - helm upgrade --install ${SCENARIO_TAG}-resources ./charts/e2e-resources
       - helm upgrade --install ${SCENARIO_TAG} newrelic/nri-bundle --set newrelic-infrastructure.image.tag=test --set newrelic-infrastructure.image.repository=test_image --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG} --set ksm.enabled=true --set webhook.enabled=false
+      - kubectl describe pods
     after:
+      - kubectl logs -l app=newrelic-infrastructure
       - helm delete ${SCENARIO_TAG}-resources
       - helm delete ${SCENARIO_TAG}
     tests:
@@ -39,7 +41,9 @@ scenarios:
     before:
       - helm upgrade --install ${SCENARIO_TAG}-resources ./charts/e2e-resources
       - helm upgrade --install ${SCENARIO_TAG} newrelic/nri-bundle --set newrelic-infrastructure.image.tag=test --set newrelic-infrastructure.image.repository=test_image --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG} --set ksm.enabled=true --set newrelic-infrastructure.privileged=false --set webhook.enabled=false
+      - kubectl describe pods
     after:
+      - kubectl logs -l app=newrelic-infrastructure
       - helm delete ${SCENARIO_TAG}-resources
       - helm delete ${SCENARIO_TAG}
     tests:
