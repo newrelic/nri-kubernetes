@@ -1,0 +1,66 @@
+description: |
+  End-to-end tests for k8s integration
+
+custom_test_key: k8s.clusterName
+
+scenarios:
+  - description: |
+      This scenario will verify that metrics from a k8s Cluster are correctly collected.
+    before:
+      - helm upgrade --install ${SCENARIO_TAG}-resources ./charts/e2e-resources
+      - helm upgrade --install ${SCENARIO_TAG} newrelic/nri-bundle --set newrelic-infrastructure.image.tag=test --set newrelic-infrastructure.image.repository=test_image --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG} --set ksm.enabled=true --set webhook.enabled=false
+    after:
+      - helm delete ${SCENARIO_TAG}-resources
+      - helm delete ${SCENARIO_TAG}
+    tests:
+      nrqls: []
+      entities: []
+      metrics:
+        - source: "k8s.yml"
+          except_entities:
+            - K8sVolume
+            - K8sHpaSample
+            - K8sCluster # all metrics are related to controlPlane
+          except_metrics:
+            - k8s.container.cpuCoresUtilization
+            - k8s.container.cpuLimitCores
+            - k8s.container.cpuCfsPeriodsDelta
+            - k8s.container.cpuCfsThrottledPeriodsDelta
+            - k8s.container.cpuCfsThrottledSecondsDelta
+            - k8s.container.cpuCfsPeriodsTotal
+            - k8s.container.cpuCfsThrottledPeriodsTotal
+            - k8s.container.cpuCfsThrottledSecondsTotal
+            - k8s.node.allocatableHugepages*
+            - k8s.node.capacity*
+            - k8s.node.capacityAttachableVolumes*
+            - k8s.node.allocatableAttachableVolumes*
+  - description: |
+      This scenario will verify that metrics from a k8s Cluster are correctly collected without privileges.
+    before:
+      - helm upgrade --install ${SCENARIO_TAG}-resources ./charts/e2e-resources
+      - helm upgrade --install ${SCENARIO_TAG} newrelic/nri-bundle --set newrelic-infrastructure.image.tag=test --set newrelic-infrastructure.image.repository=test_image --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG} --set ksm.enabled=true --set newrelic-infrastructure.privileged=false --set webhook.enabled=false
+    after:
+      - helm delete ${SCENARIO_TAG}-resources
+      - helm delete ${SCENARIO_TAG}
+    tests:
+      nrqls: []
+      entities: []
+      metrics:
+        - source: "k8s.yml"
+          except_entities:
+            - K8sVolume
+            - K8sHpaSample
+            - K8sCluster # all metrics are related to controlPlane
+          except_metrics:
+            - k8s.container.cpuCoresUtilization
+            - k8s.container.cpuLimitCores
+            - k8s.container.cpuCfsPeriodsDelta
+            - k8s.container.cpuCfsThrottledPeriodsDelta
+            - k8s.container.cpuCfsThrottledSecondsDelta
+            - k8s.container.cpuCfsPeriodsTotal
+            - k8s.container.cpuCfsThrottledPeriodsTotal
+            - k8s.container.cpuCfsThrottledSecondsTotal
+            - k8s.node.allocatableHugepages*
+            - k8s.node.capacity*
+            - k8s.node.capacityAttachableVolumes*
+            - k8s.node.allocatableAttachableVolumes*
