@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/sethgrid/pester"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -38,24 +40,13 @@ func Test_http_Sink_creation_fails_when_there_is(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			options := getHTTPSinkOptions()
+			options := getHTTPSinkOptions(t)
 			modifyFunc(&options)
 
 			_, err := sink.NewHTTPSink(options)
 			assert.Error(t, err, "error expected since client is nil")
 		})
 	}
-
-}
-
-func Test_default_pester_client_have_expected_parameters(t *testing.T) {
-	t.Parallel()
-
-	c := sink.DefaultPesterClient(sink.DefaultRequestTimeout)
-
-	require.NotNil(t, c)
-	assert.Equal(t, 5, c.MaxRetries)
-	assert.Equal(t, sink.DefaultRequestTimeout, c.Timeout)
 }
 
 func Test_http_sink_writes_data_successfully_when_within_ctxDeadline(t *testing.T) {
@@ -86,7 +77,7 @@ func Test_http_sink_writes_data_successfully_when_within_ctxDeadline(t *testing.
 
 			testURL := runTestServer(t, testHandler)
 
-			options := getHTTPSinkOptions()
+			options := getHTTPSinkOptions(t)
 			options.URL = testURL
 
 			h, err := sink.NewHTTPSink(options)
@@ -134,12 +125,14 @@ func Test_http_sink_fails_writing_data_when(t *testing.T) {
 			t.Parallel()
 
 			testHandler := tc.testHandler
-
 			testURL := runTestServer(t, testHandler)
+
+			c := defaultPesterClient(t)
+			c.Timeout = tc.requestTimeout
 
 			h, err := sink.NewHTTPSink(sink.HTTPSinkOptions{
 				URL:        testURL,
-				Client:     sink.DefaultPesterClient(tc.requestTimeout),
+				Client:     c,
 				CtxTimeout: 1 * time.Second,
 				Ctx:        context.Background(),
 			})
@@ -169,11 +162,27 @@ func runTestServer(t *testing.T, testHandler func(w http.ResponseWriter, req *ht
 	return fmt.Sprintf("http://localhost:%d%s", port, testURI)
 }
 
-func getHTTPSinkOptions() sink.HTTPSinkOptions {
+func getHTTPSinkOptions(t *testing.T) sink.HTTPSinkOptions {
+	t.Helper()
+
 	return sink.HTTPSinkOptions{
 		URL:        sink.DefaultAgentForwarderEndpoint,
-		Client:     sink.DefaultPesterClient(sink.DefaultRequestTimeout),
+		Client:     defaultPesterClient(t),
 		CtxTimeout: sink.DefaultCtxTimeout,
 		Ctx:        context.Background(),
 	}
+}
+
+func defaultPesterClient(t *testing.T) *pester.Client {
+	t.Helper()
+
+	c := pester.New()
+	c.Backoff = pester.LinearBackoff
+	c.MaxRetries = 5
+	c.Timeout = sink.DefaultRequestTimeout
+	c.LogHook = func(e pester.ErrEntry) {
+		log.NewStdErr(false)
+	}
+
+	return c
 }

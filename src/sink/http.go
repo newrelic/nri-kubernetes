@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/sethgrid/pester"
 )
 
 const (
@@ -87,23 +86,10 @@ func (h httpSink) Write(p []byte) (n int, err error) {
 	defer cleanBody(resp)
 
 	if resp.StatusCode != http.StatusNoContent {
-		return 0, fmt.Errorf("unexpected statuscode: %d, expected: %d", resp.StatusCode, http.StatusNoContent)
+		return 0, fmt.Errorf("unexpected status code: %d, expected: %d", resp.StatusCode, http.StatusNoContent)
 	}
 
 	return len(p), nil
-}
-
-// DefaultPesterClient return a defaultPesterClient to be used with httpSink.
-func DefaultPesterClient(reqTimeout time.Duration) *pester.Client {
-	c := pester.New()
-	c.Backoff = pester.LinearBackoff
-	c.MaxRetries = 5
-	c.Timeout = reqTimeout
-	c.LogHook = func(e pester.ErrEntry) {
-		log.NewStdErr(false)
-	}
-
-	return c
 }
 
 func cleanBody(resp *http.Response) {
