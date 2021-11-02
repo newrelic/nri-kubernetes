@@ -13,57 +13,64 @@ import (
 )
 
 const (
-	// DefaultTimeout is the default IO timeout for the client.
-	DefaultTimeout = 15 * time.Second
+	// DefaultCtxTimeout is the default IO timeout for the context of the client.
+	DefaultCtxTimeout = 15 * time.Second
 	// DefaultRequestTimeout is the default IO timeout for each request.
 	DefaultRequestTimeout = 15 * time.Second
 	// DefaultAgentForwarderEndpoint holds the default endpoint of the agent forwarder.
 	DefaultAgentForwarderEndpoint = "http://localhost:8001/v1/data"
 )
 
-// HTTPSink holds the configuration of the HTTP sink used by the integration.
-type HTTPSink struct {
-	url           string
-	client        Doer
-	timeout       time.Duration
-	globalContext context.Context
+// httpSink holds the configuration of the HTTP sink used by the integration.
+type httpSink struct {
+	url        string
+	client     Doer
+	ctxTimeout time.Duration
+	ctx        context.Context
 }
 
-// Doer is the interface that HTTPSink client should satisfy.
+// HTTPSinkOptions holds the configuration of the HTTP sink used by the integration.
+type HTTPSinkOptions struct {
+	URL        string
+	Client     Doer
+	CtxTimeout time.Duration
+	Ctx        context.Context
+}
+
+// Doer is the interface that httpSink client should satisfy.
 type Doer interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
 //NewHTTPSink initialize httpSink struct.
-func NewHTTPSink(globalCtx context.Context, client Doer, url string, ctxTimeout time.Duration) (io.Writer, error) {
-	if client == nil {
-		return nil, fmt.Errorf("client of httpSink cannot be nil")
+func NewHTTPSink(options HTTPSinkOptions) (io.Writer, error) {
+	if options.Client == nil {
+		return nil, fmt.Errorf("client cannot be nil")
 	}
 
-	if url == "" {
-		return nil, fmt.Errorf("url of httpSink cannot be empty")
+	if options.URL == "" {
+		return nil, fmt.Errorf("url cannot be empty")
 	}
 
-	if ctxTimeout == 0 {
+	if options.CtxTimeout == 0 {
 		return nil, fmt.Errorf("contextTimeout cannot be zero")
 	}
 
-	if globalCtx == nil {
-		return nil, fmt.Errorf("globalCtx cannot be nil")
+	if options.Ctx == nil {
+		return nil, fmt.Errorf("ctx cannot be nil")
 	}
 
-	return &HTTPSink{
-		url:           url,
-		client:        client,
-		timeout:       ctxTimeout,
-		globalContext: globalCtx,
+	return &httpSink{
+		url:        options.URL,
+		client:     options.Client,
+		ctxTimeout: options.CtxTimeout,
+		ctx:        options.Ctx,
 	}, nil
 }
 
 // Write is the function signature needed by the infrastructure SDK package.
-func (h HTTPSink) Write(p []byte) (n int, err error) {
-	// Pester gives the possibility to set-up a per-request timeout, that can confusing in this use-case.
-	ctx, cancel := context.WithTimeout(h.globalContext, h.timeout)
+func (h httpSink) Write(p []byte) (n int, err error) {
+	ctx, cancel := context.WithTimeout(h.ctx, h.ctxTimeout)
 	defer cancel()
 
 	request, err := http.NewRequestWithContext(ctx, "POST", h.url, bytes.NewBuffer(p))

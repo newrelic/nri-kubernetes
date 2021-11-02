@@ -8,42 +8,47 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sethgrid/pester"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/sink"
 )
 
-func Test_HTTPSink_Creation_Error_NoClient(t *testing.T) {
+func Test_http_Sink_creation_fails_when_there_is(t *testing.T) {
 	t.Parallel()
 
-	_, err := sink.NewHTTPSink(context.Background(), nil, sink.DefaultAgentForwarderEndpoint, sink.DefaultTimeout)
-	require.Error(t, err, "error expected since client is nil")
+	testCases := map[string]func(s *sink.HTTPSinkOptions){
+		"no_ctx": func(s *sink.HTTPSinkOptions) {
+			s.Ctx = nil
+		},
+		"no_client": func(s *sink.HTTPSinkOptions) {
+			s.Client = nil
+		},
+		"no_url": func(s *sink.HTTPSinkOptions) {
+			s.URL = ""
+		},
+		"no_timeout": func(s *sink.HTTPSinkOptions) {
+			s.CtxTimeout = 0
+		},
+	}
+
+	for testName, modifyFunc := range testCases {
+		modifyFunc := modifyFunc
+
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+
+			options := getHTTPSinkOptions()
+			modifyFunc(&options)
+
+			_, err := sink.NewHTTPSink(options)
+			assert.Error(t, err, "error expected since client is nil")
+		})
+	}
+
 }
 
-func Test_HTTPSink_Creation_Error_No_URL(t *testing.T) {
-	t.Parallel()
-
-	_, err := sink.NewHTTPSink(context.Background(), pester.New(), "", sink.DefaultTimeout)
-	require.Error(t, err, "error expected url client is empty")
-}
-
-func Test_HTTPSink_Creation_Error_No_CtxTimeout(t *testing.T) {
-	t.Parallel()
-
-	_, err := sink.NewHTTPSink(context.Background(), pester.New(), sink.DefaultAgentForwarderEndpoint, 0)
-	require.Error(t, err, "error expected since timeout is zero")
-}
-
-func Test_HTTP_Sink_Creation_Error_No_Ctx(t *testing.T) {
-	t.Parallel()
-
-	_, err := sink.NewHTTPSink(nil, pester.New(), sink.DefaultAgentForwarderEndpoint, sink.DefaultRequestTimeout)
-	require.Error(t, err, "error expected since ctx is null")
-}
-
-func Test_Default_Pester_Client(t *testing.T) {
+func Test_default_pester_client_have_expected_parameters(t *testing.T) {
 	t.Parallel()
 
 	c := sink.DefaultPesterClient(sink.DefaultRequestTimeout)
@@ -53,31 +58,38 @@ func Test_Default_Pester_Client(t *testing.T) {
 	assert.Equal(t, sink.DefaultRequestTimeout, c.Timeout)
 }
 
-func Test_HTTPSink_writes_data_successfully_when_server_return_204(t *testing.T) {
+func Test_http_sink_writes_data_successfully_when_within_ctxDeadline(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]struct {
-		testHandler func(w http.ResponseWriter, req *http.Request)
-	}{
-		"server_return_204": {
-			testHandler: func(w http.ResponseWriter, req *http.Request) {
+	numRetries := 0
+
+	testCases := map[string]func(w http.ResponseWriter, req *http.Request){
+		"server_returns_204": func(w http.ResponseWriter, req *http.Request) {
+			w.WriteHeader(204)
+			_, _ = w.Write([]byte("randomData"))
+		},
+		"server_returns_5xx_and_then_204": func(w http.ResponseWriter, req *http.Request) {
+			if numRetries < 2 {
+				numRetries++
+				w.WriteHeader(503)
+			} else {
 				w.WriteHeader(204)
-				_, _ = w.Write([]byte("randomData"))
-			},
+			}
 		},
 	}
 
-	for testName, testcase := range testCases {
-		tc := testcase
+	for testName, testHandler := range testCases {
+		testHandler := testHandler
 
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			testHandler := tc.testHandler
 			testURL := runTestServer(t, testHandler)
 
-			c := sink.DefaultPesterClient(sink.DefaultRequestTimeout)
-			h, err := sink.NewHTTPSink(context.Background(), c, testURL, sink.DefaultTimeout)
+			options := getHTTPSinkOptions()
+			options.URL = testURL
+
+			h, err := sink.NewHTTPSink(options)
 			require.NoError(t, err, "no error expected")
 
 			_, err = h.Write([]byte("random data"))
@@ -86,54 +98,29 @@ func Test_HTTPSink_writes_data_successfully_when_server_return_204(t *testing.T)
 	}
 }
 
-func Test_Default_Pester_Client_Writing_Data_Is_Retried(t *testing.T) {
-	t.Parallel()
-
-	numRetries := 0
-
-	testHandler := func(w http.ResponseWriter, req *http.Request) {
-		if numRetries < 2 {
-			numRetries++
-			w.WriteHeader(503)
-		} else {
-			w.WriteHeader(204)
-		}
-	}
-
-	testURL := runTestServer(t, testHandler)
-
-	c := sink.DefaultPesterClient(sink.DefaultRequestTimeout)
-	h, err := sink.NewHTTPSink(context.Background(), c, testURL, sink.DefaultTimeout)
-	require.NoError(t, err, "no error expected")
-
-	_, err = h.Write([]byte("random data"))
-	assert.NoError(t, err, "no error expected")
-
-}
-
-func Test_HTTPSink_fails_writing_data_when(t *testing.T) {
+func Test_http_sink_fails_writing_data_when(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
 		testHandler    func(w http.ResponseWriter, req *http.Request)
 		requestTimeout time.Duration
 	}{
-		"data_post_fails_when_server_never_returns_204": {
+		"server_never_returns_204": {
 			testHandler: func(w http.ResponseWriter, req *http.Request) {
-				w.WriteHeader(404)
+				w.WriteHeader(503)
 			},
 			requestTimeout: sink.DefaultRequestTimeout,
 		},
-		"data_post_fails_when_reply_exceeds_context_deadline": {
+		"server_replies_after_context_deadline": {
 			testHandler: func(w http.ResponseWriter, req *http.Request) {
 				time.Sleep(3 * time.Second)
 				w.WriteHeader(204)
 			},
 			requestTimeout: sink.DefaultRequestTimeout,
 		},
-		"data_post_fails_when_replies_exceed_request_timeout": {
+		"server_replies_to_each_request_after_request_timeout": {
 			testHandler: func(w http.ResponseWriter, req *http.Request) {
-				time.Sleep(3 * time.Second)
+				time.Sleep(500 * time.Millisecond)
 				w.WriteHeader(204)
 			},
 			requestTimeout: 1 * time.Nanosecond,
@@ -147,10 +134,15 @@ func Test_HTTPSink_fails_writing_data_when(t *testing.T) {
 			t.Parallel()
 
 			testHandler := tc.testHandler
+
 			testURL := runTestServer(t, testHandler)
 
-			c := sink.DefaultPesterClient(tc.requestTimeout)
-			h, err := sink.NewHTTPSink(context.Background(), c, testURL, 1*time.Second)
+			h, err := sink.NewHTTPSink(sink.HTTPSinkOptions{
+				URL:        testURL,
+				Client:     sink.DefaultPesterClient(tc.requestTimeout),
+				CtxTimeout: 1 * time.Second,
+				Ctx:        context.Background(),
+			})
 			require.NoError(t, err, "no error expected")
 
 			_, err = h.Write([]byte("random data"))
@@ -175,4 +167,13 @@ func runTestServer(t *testing.T, testHandler func(w http.ResponseWriter, req *ht
 	}()
 
 	return fmt.Sprintf("http://localhost:%d%s", port, testURI)
+}
+
+func getHTTPSinkOptions() sink.HTTPSinkOptions {
+	return sink.HTTPSinkOptions{
+		URL:        sink.DefaultAgentForwarderEndpoint,
+		Client:     sink.DefaultPesterClient(sink.DefaultRequestTimeout),
+		CtxTimeout: sink.DefaultCtxTimeout,
+		Ctx:        context.Background(),
+	}
 }

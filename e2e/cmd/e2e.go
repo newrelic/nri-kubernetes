@@ -10,12 +10,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/newrelic/infra-integrations-sdk/args"
+	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/rand"
 
-	"github.com/newrelic/infra-integrations-sdk/args"
-	"github.com/newrelic/infra-integrations-sdk/integration"
 	_ "github.com/newrelic/nri-kubernetes/v2/e2e/gcp"
 	"github.com/newrelic/nri-kubernetes/v2/e2e/helm"
 	"github.com/newrelic/nri-kubernetes/v2/e2e/jsonschema"

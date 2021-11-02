@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -27,7 +26,6 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/network"
 	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
-	"github.com/newrelic/nri-kubernetes/v2/src/sink"
 	"github.com/newrelic/nri-kubernetes/v2/src/storage"
 )
 
@@ -191,6 +189,15 @@ func controlPlaneJobs(
 
 func main() {
 	exitLog := fmt.Sprintf("Integration %q exited", integrationName)
+
+	i, err := integration.New(integrationName, integrationVersion, integration.Args(&args))
+	if err != nil {
+		defer log.Debug(exitLog)
+		log.Fatal(err) // Global logs used as args processed inside NewIntegrationProtocol2
+	}
+
+	logger := log.NewStdErr(args.Verbose)
+
 	defer func() {
 		if r := recover(); r != nil {
 			recErr, ok := r.(*logrus.Entry)
@@ -202,25 +209,6 @@ func main() {
 		}
 	}()
 
-	iOptions := []integration.Option{integration.Args(&args)}
-
-	if os.Getenv("HTTP_SINK") == "enabled" {
-		c := sink.DefaultPesterClient(sink.DefaultRequestTimeout)
-
-		h, err := sink.NewHTTPSink(context.Background(), c, sink.DefaultAgentForwarderEndpoint, sink.DefaultTimeout)
-		if err != nil {
-			log.Fatal(fmt.Errorf("creating HTTPSink: %w", err))
-		}
-
-		iOptions = append(iOptions, integration.Writer(h))
-	}
-
-	i, err := integration.New(integrationName, integrationVersion, iOptions...)
-	if err != nil {
-		log.Fatal(fmt.Errorf("creating integration: %w", err))
-	}
-
-	logger := log.NewStdErr(args.Verbose)
 	defer logger.Debugf(exitLog)
 
 	logger.Debugf("Integration %q ver. %s (git %s) started", integrationName, integrationVersion, integrationCommitHash)
