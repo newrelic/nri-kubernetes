@@ -5,6 +5,8 @@ In order to run it locally you can do the following
 eval $(minikube -p minikube docker-env)
 ```
 
+Note that the control plane flags in `e2e-values.yml` have been set meeting the minikube specifications. 
+
 Then you need to build the binary and the image. Notice that  since the Dockerfile includes multiarch
 support, you may need to set `DOCKER_BUILDKIT=1` when running `docker build` for the `TARGETARCH`
 and `TARGETOS` args to be populated.
