@@ -8,7 +8,7 @@ scenarios:
       This scenario will verify that metrics from a k8s Cluster are correctly collected.
     before:
       - helm upgrade --install ${SCENARIO_TAG}-resources ./charts/e2e-resources
-      - helm upgrade --install ${SCENARIO_TAG} newrelic/nri-bundle --values e2e-values.yaml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG}
+      - helm upgrade --install ${SCENARIO_TAG} newrelic/nri-bundle --values e2e-values.yml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG}
     after:
       - kubectl describe pods -l app=newrelic-infrastructure
       - kubectl logs -l app=newrelic-infrastructure
@@ -19,10 +19,7 @@ scenarios:
       entities: []
       metrics:
         - source: "k8s.yml"
-          except_entities:
-            - K8sVolume
-            - K8sHpaSample
-            - K8sCluster # all metrics are related to controlPlane
+          except_entities: []
           except_metrics:
             - k8s.container.cpuCoresUtilization
             - k8s.container.cpuLimitCores
@@ -32,15 +29,43 @@ scenarios:
             - k8s.container.cpuCfsPeriodsTotal
             - k8s.container.cpuCfsThrottledPeriodsTotal
             - k8s.container.cpuCfsThrottledSecondsTotal
+
             - k8s.node.allocatableHugepages*
             - k8s.node.capacity*
             - k8s.node.capacityAttachableVolumes*
             - k8s.node.allocatableAttachableVolumes*
+
+            - k8s.controllermanager.leaderElectionMasterStatus
+
+            - k8s.etcd.mvccDbTotalSizeInBytes
+            - k8s.etcd.networkClientGrpcReceivedBytesRate
+            - k8s.etcd.networkClientGrpcSentBytesRate
+            - k8s.etcd.serverHasLeader
+            - k8s.etcd.serverLeaderChangesSeenDelta
+            - k8s.etcd.serverProposalsAppliedDelta
+            - k8s.etcd.serverProposalsAppliedRate
+            - k8s.etcd.serverProposalsCommittedDelta
+            - k8s.etcd.serverProposalsCommittedRate
+            - k8s.etcd.serverProposalsFailedDelta
+            - k8s.etcd.serverProposalsFailedRate
+            - k8s.etcd.serverProposalsPending
+            - k8s.etcd.goGoroutines
+            - k8s.etcd.goThreads
+            - k8s.etcd.process.cpuSecondsDelta
+            - k8s.etcd.process.maxFds
+            - k8s.etcd.process.openFds
+            - k8s.etcd.process.residentMemoryBytes
+            - k8s.etcd.process.processFdsUtilization
+
+            - k8s.scheduler.leaderElectionMasterStatus
+            - k8s.scheduler.podPreemptionVictims
+            - k8s.scheduler.preemptionAttemptsDelta
+            - k8s.scheduler.schedulingDurationSeconds_*
   - description: |
       This scenario will verify that metrics from a k8s Cluster are correctly collected without privileges.
     before:
       - helm upgrade --install ${SCENARIO_TAG}-resources ./charts/e2e-resources
-      - helm upgrade --install ${SCENARIO_TAG} newrelic/nri-bundle --values e2e-values.yaml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG} --set newrelic-infrastructure.privileged=false
+      - helm upgrade --install ${SCENARIO_TAG} newrelic/nri-bundle --values e2e-values.yml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG} --set newrelic-infrastructure.privileged=false
     after:
       - kubectl describe pods -l app=newrelic-infrastructure
       - kubectl logs -l app=newrelic-infrastructure
@@ -52,8 +77,6 @@ scenarios:
       metrics:
         - source: "k8s.yml"
           except_entities:
-            - K8sVolume
-            - K8sHpaSample
             - K8sCluster # all metrics are related to controlPlane
           except_metrics:
             - k8s.container.cpuCoresUtilization
@@ -64,6 +87,7 @@ scenarios:
             - k8s.container.cpuCfsPeriodsTotal
             - k8s.container.cpuCfsThrottledPeriodsTotal
             - k8s.container.cpuCfsThrottledSecondsTotal
+
             - k8s.node.allocatableHugepages*
             - k8s.node.capacity*
             - k8s.node.capacityAttachableVolumes*
