@@ -10,9 +10,9 @@ scenarios:
       - helm upgrade --install ${SCENARIO_TAG}-resources -n nr-${SCENARIO_TAG} --create-namespace ./charts/e2e-resources
       - helm upgrade --install ${SCENARIO_TAG} -n nr-${SCENARIO_TAG} --create-namespace newrelic/nri-bundle --values e2e-values.yml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG}
     after:
-      - kubectl logs -l app=newrelic-infrastructure
-      - helm delete ${SCENARIO_TAG}-resources
-      - helm delete ${SCENARIO_TAG}
+      - kubectl logs -l app=newrelic-infrastructure -n nr-${SCENARIO_TAG}
+      - helm delete ${SCENARIO_TAG}-resources -n nr-${SCENARIO_TAG}
+      - helm delete ${SCENARIO_TAG} -n nr-${SCENARIO_TAG}
     tests:
       nrqls: []
       entities: []
@@ -20,15 +20,6 @@ scenarios:
         - source: "k8s.yml"
           except_entities: []
           except_metrics:
-            - k8s.container.cpuCoresUtilization
-            - k8s.container.cpuLimitCores
-            - k8s.container.cpuCfsPeriodsDelta
-            - k8s.container.cpuCfsThrottledPeriodsDelta
-            - k8s.container.cpuCfsThrottledSecondsDelta
-            - k8s.container.cpuCfsPeriodsTotal
-            - k8s.container.cpuCfsThrottledPeriodsTotal
-            - k8s.container.cpuCfsThrottledSecondsTotal
-
             - k8s.node.allocatableHugepages*
             - k8s.node.capacity*
             - k8s.node.capacityAttachableVolumes*
@@ -66,9 +57,9 @@ scenarios:
       - helm upgrade --install ${SCENARIO_TAG}-resources -n nr-${SCENARIO_TAG} --create-namespace ./charts/e2e-resources
       - helm upgrade --install ${SCENARIO_TAG} -n nr-${SCENARIO_TAG} --create-namespace newrelic/nri-bundle --values e2e-values.yml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG} --set newrelic-infrastructure.privileged=false
     after:
-      - kubectl logs -l app=newrelic-infrastructure
-      - helm delete ${SCENARIO_TAG}-resources
-      - helm delete ${SCENARIO_TAG}
+      - kubectl logs -l app=newrelic-infrastructure -n nr-${SCENARIO_TAG}
+      - helm delete ${SCENARIO_TAG}-resources -n nr-${SCENARIO_TAG}
+      - helm delete ${SCENARIO_TAG} -n nr-${SCENARIO_TAG}
     tests:
       nrqls: []
       entities: []
@@ -77,15 +68,6 @@ scenarios:
           except_entities:
             - K8sCluster # all metrics are related to controlPlane
           except_metrics:
-            - k8s.container.cpuCoresUtilization
-            - k8s.container.cpuLimitCores
-            - k8s.container.cpuCfsPeriodsDelta
-            - k8s.container.cpuCfsThrottledPeriodsDelta
-            - k8s.container.cpuCfsThrottledSecondsDelta
-            - k8s.container.cpuCfsPeriodsTotal
-            - k8s.container.cpuCfsThrottledPeriodsTotal
-            - k8s.container.cpuCfsThrottledSecondsTotal
-
             - k8s.node.allocatableHugepages*
             - k8s.node.capacity*
             - k8s.node.capacityAttachableVolumes*

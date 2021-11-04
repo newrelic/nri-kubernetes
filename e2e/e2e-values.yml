@@ -4,6 +4,13 @@ newrelic-infrastructure:
     pullPolicy: Never
     tag: test
     repository: test_image
+  resources:
+    limits:
+      cpu: 500m
+      memory: 300M
+    requests:
+      cpu: 100m
+      memory: 150M
   apiServerEndpointUrl: https://localhost:8443
   schedulerEndpointUrl: https://localhost:10259
   controllerManagerEndpointUrl: https://localhost:10257

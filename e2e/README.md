@@ -20,8 +20,8 @@ docker build -t test_image:test-unprivileged --build-arg 'MODE=unprivileged' .
 You need to install the binary `https://github.com/newrelic/newrelic-integration-e2e-action/tree/main/newrelic-integration-e2e` used in the e2e test
 ```shell
 git clone https://github.com/newrelic/newrelic-integration-e2e-action
-cd newrelic-integration-e2e
-go build -o  $GOPATH/bin/newrelic-integration-e2e ./...
+cd newrelic-integration-e2e-action/newrelic-integration-e2e
+go build -o  $GOPATH/bin/newrelic-integration-e2e ./cmd/...
 ```
 
 You can now run the e2e tests locally
