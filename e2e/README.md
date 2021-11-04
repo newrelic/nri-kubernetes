@@ -21,7 +21,7 @@ You need to install the binary `https://github.com/newrelic/newrelic-integration
 ```shell
 git clone https://github.com/newrelic/newrelic-integration-e2e-action
 cd newrelic-integration-e2e
-go build -o  $GOPATH/newrelic-integration-e2e
+go build -o  $GOPATH/bin/newrelic-integration-e2e ./...
 ```
 
 You can now run the e2e tests locally
