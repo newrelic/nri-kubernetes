@@ -1,0 +1,146 @@
+{{- if and (include "newrelic.areValuesValid" .) .Values.enableLinux }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ .Release.Namespace }}
+  labels: {{ include "newrelic.labels" . | indent 4 }}
+  name: {{ template "newrelic.fullname" . }}-k8s
+  {{- if .Values.daemonSet.annotations }}
+  annotations: {{ toYaml .Values.daemonSet.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ template "newrelic.name" . }}
+      release: {{.Release.Name }}
+  template:
+    metadata:
+    {{- if .Values.podAnnotations }}
+      annotations:
+{{ toYaml .Values.podAnnotations | indent 8}}
+    {{- end }}
+      labels:
+        app: {{ template "newrelic.name" . }}
+        release: {{.Release.Name }}
+        {{- if .Values.podLabels}}
+{{ toYaml .Values.podLabels | indent 8 }}
+        {{- end }}
+        mode: {{ template "newrelic.mode" . }}
+    spec:
+      serviceAccountName: {{ template "newrelic.serviceAccountName" . }}
+      {{- if .Values.image.pullSecrets }}
+      imagePullSecrets:
+{{ toYaml .Values.image.pullSecrets | indent 8 }}
+      {{- end }}
+      containers:
+        - name: forwarder
+          image: newrelic/k8s-events-forwarder:1.20.5
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          ports:
+            - containerPort: 8001
+          env:
+            - name: "CLUSTER_NAME"
+              value: {{ include "newrelic.cluster" . }}
+            - name: "NRIA_CUSTOM_ATTRIBUTES"
+              value: "{\"clusterName\":\"$(CLUSTER_NAME)\",\"test-key\":\"test-value\"}"
+            - name: NRIA_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "newrelic.fullname" . }}-config
+                  key: license
+            {{- if (include "newrelic.nrStaging" .) }}
+            - name: NRIA_STAGING
+              value: "true"
+            {{- end }}
+            {{- if .Values.proxy }}
+            - name: NRIA_PROXY
+              value: "{{ .Values.proxy }}"
+            {{- end }}
+            # Using FORWARD_ONLY mode to avoid the entity creation for the events.
+            - name: NRIA_IS_SECURE_FORWARD_ONLY
+              value: "false"
+            - name: NRIA_IS_FORWARD_ONLY
+              value: "true"
+          volumeMounts:
+            - mountPath: /var/db/newrelic-infra/data
+              name: tmpfs-data
+            - mountPath: /var/db/newrelic-infra/user_data
+              name: tmpfs-user-data
+            - mountPath: /tmp
+              name: tmpfs-tmp-forwarder
+            {{- if .Values.config }}
+            - name: config
+              mountPath: /etc/newrelic-infra.yml
+              subPath: newrelic-infra.yml
+            {{- end }}
+        - name: ksm-scraper
+          image: {{ .Values.forwarderImage.repository }}:{{ .Values.forwarderImage.tag }}
+          imagePullPolicy: {{ .Values.forwarderImage.pullPolicy }}
+          securityContext:
+            runAsUser: {{ .Values.runAsUser | default 1000 }}
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          env:
+            - name: "CLUSTER_NAME"
+              value: {{ include "newrelic.cluster" . }}
+            - name: "NRK8S_NODE_NAME"
+              valueFrom:
+                fieldRef:
+                  apiVersion: "v1"
+                  fieldPath: "spec.nodeName"
+          volumeMounts:
+            - mountPath: /var/cache/nr-kubernetes
+              name: tmpfs-cache
+            - mountPath: /tmp
+              name: tmpfs-tmp-ksm
+          {{- if .Values.resources }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          {{- end }}
+      volumes:
+        - name: tmpfs-data
+          emptyDir: {}
+        - name: tmpfs-user-data
+          emptyDir: {}
+        - name: tmpfs-tmp-forwarder
+          emptyDir: {}
+        - name: tmpfs-tmp-ksm
+          emptyDir: { }
+        - name: tmpfs-cache
+          emptyDir: {}
+        {{- if .Values.config }}
+        - name: config
+          configMap:
+            name: {{ template "newrelic.fullname" . }}
+            items:
+            - key: newrelic-infra.yml
+              path: newrelic-infra.yml
+        {{- end }}
+      {{- if $.Values.priorityClassName }}
+      priorityClassName: {{ $.Values.priorityClassName }}
+      {{- end }}
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: kube-state-metrics
+            weight: 100
+      {{- if .Values.nodeAffinity }}
+        nodeAffinity: {{ .Values.nodeAffinity | toYaml | nindent 10 }}
+      {{- end }}
+      {{- if $.Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml $.Values.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
+      {{- end }}
+{{- end }}
