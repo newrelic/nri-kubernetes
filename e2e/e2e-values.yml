@@ -1,22 +1,19 @@
-newrelic-infrastructure:
-  verboseLog: true
-  image:
-    pullPolicy: Never
-    tag: e2e
-    repository: e2e/newrelic-infrastructure
-  resources:
-    limits:
-      cpu: 500m
-      memory: 300M
-    requests:
-      cpu: 100m
-      memory: 150M
-  apiServerEndpointUrl: https://localhost:8443
-  schedulerEndpointUrl: https://localhost:10259
-  controllerManagerEndpointUrl: https://localhost:10257
-
-ksm:
-  enabled: true
-
-webhook:
-  enabled: false
+verboseLog: true
+image:
+  pullPolicy: Never
+  tag: e2e
+  repository: e2e/newrelic-infrastructure
+forwarderImage:
+  pullPolicy: Never
+  tag: e2e
+  repository: e2e/newrelic-infrastructure-ksm
+resources:
+  limits:
+    cpu: 500m
+    memory: 300M
+  requests:
+    cpu: 100m
+    memory: 150M
+apiServerEndpointUrl: https://localhost:8443
+schedulerEndpointUrl: https://localhost:10259
+controllerManagerEndpointUrl: https://localhost:10257
