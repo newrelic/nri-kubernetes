@@ -49,6 +49,8 @@ validate:
 compile:
 	@echo "[compile] Building $(BINARY_NAME)"
 	CGO_ENABLED=$(CGO_ENABLED) go build $(LDFLAGS) -o $(BIN_DIR)/$(BINARY_NAME) ./src
+	CGO_ENABLED=$(CGO_ENABLED) go build $(LDFLAGS) -o $(BIN_DIR)/$(BINARY_NAME)-ksm ./cmd/nri-kubernetes
+
 
 .PHONY: compile-multiarch
 compile-multiarch:
