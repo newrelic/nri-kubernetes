@@ -7,31 +7,26 @@ import (
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
 
 func TestAddServiceSpecSelectorToGroup(t *testing.T) {
-	k8sClient := new(client.MockedKubernetes)
-	serviceList := &v1.ServiceList{
-		Items: []v1.Service{
-			{
-				Spec: v1.ServiceSpec{
-					Selector: map[string]string{
-						"l1": "v1",
-						"l2": "v2",
-					},
+	serviceList := []*v1.Service{
+		{
+			Spec: v1.ServiceSpec{
+				Selector: map[string]string{
+					"l1": "v1",
+					"l2": "v2",
 				},
 			},
 		},
 	}
-	serviceList.Items[0].Namespace = "kube-system"
-	serviceList.Items[0].Name = "kube-state-metrics"
-	k8sClient.On("ListServices").Return(serviceList, nil)
+	serviceList[0].Namespace = "kube-system"
+	serviceList[0].Name = "kube-state-metrics"
 
 	grouper := &ksmGrouper{
-		k8sClient: k8sClient,
+		services: serviceList,
 	}
 
 	serviceGroup := map[string]definition.RawMetrics{

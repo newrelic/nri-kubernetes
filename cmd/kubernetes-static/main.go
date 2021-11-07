@@ -19,7 +19,6 @@ import (
 	"k8s.io/apimachinery/pkg/version"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/apiserver"
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
 	"github.com/newrelic/nri-kubernetes/v2/src/ksm"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet"
@@ -104,89 +103,97 @@ func main() {
 		"ens5",
 		podsFetcher.FetchFuncWithCache(),
 		kubeletmetric.CadvisorFetchFunc(kubeletClient, metric.CadvisorQueries))
-	// KSM
-	ksmClient := newBasicHTTPClient(endpoint + "/ksm")
-	k8sClient := &client.MockedKubernetes{}
 
-	serviceList := &v1.ServiceList{
-		Items: []v1.Service{
-			{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "kube-state-metrics",
-					Namespace: "kube-system",
-				},
-				Spec: v1.ServiceSpec{
-					Selector: map[string]string{
-						"l1": "v1",
-						"l2": "v2",
-					},
+	serviceList := []*v1.Service{
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "kube-state-metrics",
+				Namespace: "kube-system",
+			},
+			Spec: v1.ServiceSpec{
+				Selector: map[string]string{
+					"l1": "v1",
+					"l2": "v2",
 				},
 			},
-			{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "cockroachdb",
-					Namespace: "default",
-				},
-				Spec: v1.ServiceSpec{
-					Selector: map[string]string{
-						"l1": "v1",
-						"l2": "v2",
-					},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "cockroachdb",
+				Namespace: "default",
+			},
+			Spec: v1.ServiceSpec{
+				Selector: map[string]string{
+					"l1": "v1",
+					"l2": "v2",
 				},
 			},
-			{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "metrics-server",
-					Namespace: "kube-system",
-				},
-				Spec: v1.ServiceSpec{
-					Selector: map[string]string{
-						"l1": "v1",
-						"l2": "v2",
-					},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "metrics-server",
+				Namespace: "kube-system",
+			},
+			Spec: v1.ServiceSpec{
+				Selector: map[string]string{
+					"l1": "v1",
+					"l2": "v2",
 				},
 			},
-			{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "kubernetes",
-					Namespace: "default",
-				},
-				Spec: v1.ServiceSpec{
-					Selector: map[string]string{
-						"l1": "v1",
-						"l2": "v2",
-					},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "kubernetes",
+				Namespace: "default",
+			},
+			Spec: v1.ServiceSpec{
+				Selector: map[string]string{
+					"l1": "v1",
+					"l2": "v2",
 				},
 			},
-			{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "kube-dns",
-					Namespace: "kube-system",
-				},
-				Spec: v1.ServiceSpec{
-					Selector: map[string]string{
-						"l1": "v1",
-						"l2": "v2",
-					},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "kube-dns",
+				Namespace: "kube-system",
+			},
+			Spec: v1.ServiceSpec{
+				Selector: map[string]string{
+					"l1": "v1",
+					"l2": "v2",
 				},
 			},
-			{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "cockroachdb-public",
-					Namespace: "default",
-				},
-				Spec: v1.ServiceSpec{
-					Selector: map[string]string{
-						"l1": "v1",
-						"l2": "v2",
-					},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "cockroachdb-public",
+				Namespace: "default",
+			},
+			Spec: v1.ServiceSpec{
+				Selector: map[string]string{
+					"l1": "v1",
+					"l2": "v2",
 				},
 			},
 		},
 	}
 
-	k8sClient.On("ListServices").Return(serviceList, nil)
-	ksmGrouper := ksm.NewGrouper(ksmClient, metric.KSMQueries, logger, k8sClient)
+	ksmClient, err := ksm.NewKSMClient(log.NewStdErr(true))
+	if err != nil {
+		log.Fatal(err)
+	}
+	ksmGrouperConfig := &ksm.GrouperConfig{
+		MetricFamiliesGetter: ksmClient.MetricFamiliesGetterForEndpoint(endpoint, "http"),
+		Logger:               logger,
+		Services:             serviceList,
+		Queries:              metric.KSMQueries,
+	}
+
+	ksmGrouper, err := ksm.NewValidatedGrouper(ksmGrouperConfig)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	jobs := []*scrape.Job{
 		scrape.NewScrapeJob("kubelet", kubeletGrouper, metric.KubeletSpecs),
