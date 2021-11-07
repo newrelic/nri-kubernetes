@@ -1,11 +1,9 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path"
-	"strings"
 	"time"
 
 	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
@@ -18,8 +16,6 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
 	clientControlPlane "github.com/newrelic/nri-kubernetes/v2/src/controlplane/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
-	"github.com/newrelic/nri-kubernetes/v2/src/ksm"
-	clientKsm "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet"
 	clientKubelet "github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
 	metric2 "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
@@ -45,13 +41,6 @@ type argumentList struct {
 	EtcdTLSSecretNamespace            string `default:"default" help:"Namespace in which the ETCD TLS secret lives"`
 	DisableKubelet                    bool   `default:"false" help:"Don't scrape kubelet"`
 	DisableControlplane               bool   `default:"false" help:"Don't scrape controlplane"`
-	DisableKubeStateMetrics           bool   `default:"false" help:"Used to disable KSM data fetching. Defaults to 'false''"`
-	KubeStateMetricsURL               string `help:"kube-state-metrics URL. If it is not provided, it will be discovered."`
-	KubeStateMetricsPodLabel          string `help:"discover KSM using Kubernetes Labels."`
-	KubeStateMetricsPort              int    `default:"8080" help:"port to query the KSM pod. Only works together with the pod label discovery"`
-	KubeStateMetricsScheme            string `default:"http" help:"scheme to query the KSM pod ('http' or 'https'). Only works together with the pod label discovery"`
-	KubeStateMetricsNamespace         string `default:"" help:"namespace to query the KSM pod. By default, all namespaces will be queried"`
-	DistributedKubeStateMetrics       bool   `default:"false" help:"Set to enable distributed KSM discovery. Requires that KubeStateMetricsPodLabel is set. Disabled by default."`
 	APIServerSecurePort               string `default:"" help:"Set to query the API Server over a secure port. Disabled by default"`
 	SchedulerEndpointURL              string `help:"Set a custom endpoint URL for the kube-scheduler endpoint."`
 	EtcdEndpointURL                   string `help:"Set a custom endpoint URL for the Etcd endpoint."`
@@ -289,59 +278,6 @@ func main() {
 
 	var jobs []*scrape.Job
 
-	if !args.DisableKubeStateMetrics {
-		var ksmClients []client.HTTPClient
-		var ksmNodeIP string
-
-		config := client.DiscoveryCacherConfig{
-			Storage:   cacheStorage,
-			TTL:       discoveryCacheTTL,
-			TTLJitter: uint(args.DiscoveryCacheTTLJitter),
-			Logger:    logger,
-		}
-
-		if args.DistributedKubeStateMetrics {
-			ksmDiscoverer, err := getMultiKSMDiscoverer(kubeletNodeIP, logger)
-			if err != nil {
-				logger.Errorf("Error getting multiKSM discoverer: %v", err)
-				os.Exit(1)
-			}
-			ksmDiscoveryCache := clientKsm.NewDistributedDiscoveryCacher(ksmDiscoverer, config)
-			ksmClients, err = ksmDiscoveryCache.Discover(timeout)
-			logger.Debugf("found %d KSM clients:", len(ksmClients))
-			for _, c := range ksmClients {
-				logger.Debugf("- node IP: %s", c.NodeIP())
-			}
-			if err != nil {
-				logger.Errorf("Error discovering KSM: %v", err)
-				os.Exit(1)
-			}
-			ksmNodeIP = kubeletNodeIP
-		} else {
-			innerKSMDiscoverer, err := getKSMDiscoverer(logger)
-			if err != nil {
-				logger.Errorf("Error getting KSM discoverer: %v", err)
-				os.Exit(1)
-			}
-			ksmDiscoverer := clientKsm.NewDiscoveryCacher(innerKSMDiscoverer, config)
-			ksmClient, err := ksmDiscoverer.Discover(timeout)
-			if err != nil {
-				logger.Errorf("Error discovering KSM: %v", err)
-				os.Exit(1)
-			}
-			ksmNodeIP = ksmClient.NodeIP()
-			// we only scrape KSM when we are on the same Node as KSM
-			if kubeletNodeIP == ksmNodeIP {
-				ksmClients = append(ksmClients, ksmClient)
-			}
-		}
-		logger.Debugf("KSM Node = %s", ksmNodeIP)
-		for _, ksmClient := range ksmClients {
-			ksmGrouper := ksm.NewGrouper(ksmClient, metric.KSMQueries, logger, k8s)
-			jobs = append(jobs, scrape.NewScrapeJob("kube-state-metrics", ksmGrouper, metric.KSMSpecs))
-		}
-	}
-
 	apiServerClient := apiserver.NewClient(k8s)
 
 	apiServerCacheK8SVersionTTL, err := time.ParseDuration(args.APIServerCacheK8SVersionTTL)
@@ -454,81 +390,4 @@ func main() {
 		logger.Errorf("Error rendering integration output: %v", err)
 		os.Exit(1)
 	}
-}
-
-func getKSMDiscoverer(logger log.Logger) (client.Discoverer, error) {
-	k8sClient, err := client.NewKubernetes( /* tryLocalKubeconfig */ false)
-	if err != nil {
-		return nil, fmt.Errorf("initializing Kubernetes client: %w", err)
-	}
-
-	config := clientKsm.DiscovererConfig{
-		K8sClient: k8sClient,
-		Logger:    logger,
-		Namespace: args.KubeStateMetricsNamespace,
-	}
-
-	// It's important this one is before the NodeLabel selector, for backwards compatibility.
-	if args.KubeStateMetricsURL != "" {
-		// Remove /metrics suffix if present
-		args.KubeStateMetricsURL = strings.TrimSuffix(args.KubeStateMetricsURL, "/metrics")
-
-		logger.Debugf("Discovering KSM using static endpoint (KUBE_STATE_METRICS_URL=%s)", args.KubeStateMetricsURL)
-
-		config.OverridenEndpoint = args.KubeStateMetricsURL
-
-		return clientKsm.NewDiscoverer(config)
-	}
-
-	if args.KubeStateMetricsPodLabel != "" {
-		logger.Debugf("Discovering KSM using Pod Label (KUBE_STATE_METRICS_POD_LABEL)")
-
-		config := clientKsm.PodLabelDiscovererConfig{
-			KSMPodLabel:  args.KubeStateMetricsPodLabel,
-			KSMPodPort:   args.KubeStateMetricsPort,
-			KSMScheme:    args.KubeStateMetricsScheme,
-			KSMNamespace: args.KubeStateMetricsNamespace,
-			Logger:       logger,
-			K8sClient:    k8sClient,
-		}
-
-		discoverer, err := clientKsm.NewPodLabelDiscoverer(config)
-		if err != nil {
-			return nil, fmt.Errorf("creating KSM pod label discoverer: %w", err)
-		}
-
-		return discoverer, nil
-	}
-
-	logger.Debugf("Discovering KSM using DNS / k8s ApiServer (default)")
-
-	return clientKsm.NewDiscoverer(config)
-}
-
-func getMultiKSMDiscoverer(nodeIP string, logger log.Logger) (client.MultiDiscoverer, error) {
-	k8sClient, err := client.NewKubernetes( /* tryLocalKubeconfig */ false)
-	if err != nil {
-		return nil, fmt.Errorf("initializing Kubernetes client: %w", err)
-	}
-
-	if args.KubeStateMetricsPodLabel == "" {
-		return nil, errors.New("multi KSM discovery set without a KUBE_STATE_METRICS_POD_LABEL")
-	}
-
-	logger.Debugf("Discovering distributed KSMs using pod labels from KUBE_STATE_METRICS_POD_LABEL")
-
-	config := clientKsm.DistributedPodLabelDiscovererConfig{
-		KSMPodLabel:  args.KubeStateMetricsPodLabel,
-		KSMNamespace: args.KubeStateMetricsNamespace,
-		NodeIP:       nodeIP,
-		K8sClient:    k8sClient,
-		Logger:       logger,
-	}
-
-	client, err := clientKsm.NewDistributedPodLabelDiscoverer(config)
-	if err != nil {
-		return nil, fmt.Errorf("creating new distributed pod label discoverer: %w", err)
-	}
-
-	return client, nil
 }
