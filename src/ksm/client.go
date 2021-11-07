@@ -8,15 +8,10 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/sethgrid/pester"
-	"k8s.io/client-go/informers"
-	"k8s.io/client-go/kubernetes"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v2/src/ksm/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
-
-const defaultLabelSelector = "app.kubernetes.io/name=kube-state-metrics"
 
 // ksm implements Client interface
 type ksm struct {
@@ -74,67 +69,4 @@ func (c *ksm) Do(r *http.Request) (*http.Response, error) {
 
 	// Calls http.Client.
 	return c.client.Do(r)
-}
-
-func NewEndpointsDiscoverer(client kubernetes.Interface, opts ...EndpointDiscoveryOptions) (discovery.EndpointsDiscoverer, error) {
-	// Arbitrary value, same used in Prometheus.
-	resyncDuration := 10 * time.Minute
-	stopCh := make(chan struct{})
-	discoveryConfig := discovery.EndpointsDiscoveryConfig{
-		LabelSelector: defaultLabelSelector,
-
-		EndpointsLister: func(options ...informers.SharedInformerOption) discovery.EndpointsLister {
-			factory := informers.NewSharedInformerFactoryWithOptions(client, resyncDuration, options...)
-
-			lister := factory.Core().V1().Endpoints().Lister()
-
-			factory.Start(stopCh)
-			factory.WaitForCacheSync(stopCh)
-
-			return lister
-		},
-	}
-
-	for _, optFunc := range opts {
-		err := optFunc(&discoveryConfig)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return discovery.NewEndpointsDiscoverer(discoveryConfig)
-}
-
-type EndpointDiscoveryOptions func(*discovery.EndpointsDiscoveryConfig) error
-
-func WithNamespace(ns string) EndpointDiscoveryOptions {
-	return func(edc *discovery.EndpointsDiscoveryConfig) error {
-		edc.Namespace = ns
-
-		return nil
-	}
-}
-
-func WithLabelSelector(label string) EndpointDiscoveryOptions {
-	return func(edc *discovery.EndpointsDiscoveryConfig) error {
-		edc.LabelSelector = label
-
-		return nil
-	}
-}
-
-func WithPort(port int) EndpointDiscoveryOptions {
-	return func(edc *discovery.EndpointsDiscoveryConfig) error {
-		edc.Port = port
-
-		return nil
-	}
-}
-
-func WithFixedEndpoint(fixedEndpoint string) EndpointDiscoveryOptions {
-	return func(edc *discovery.EndpointsDiscoveryConfig) error {
-		edc.FixedEndpoint = []string{fixedEndpoint}
-
-		return nil
-	}
 }
