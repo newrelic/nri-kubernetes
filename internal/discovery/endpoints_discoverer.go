@@ -2,9 +2,11 @@ package discovery
 
 import (
 	"fmt"
+	"k8s.io/client-go/kubernetes"
 	"net"
 	"sort"
 	"strconv"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,7 +20,7 @@ type EndpointsDiscoveryConfig struct {
 	Port          int
 	FixedEndpoint []string
 
-	EndpointsLister func(...informers.SharedInformerOption) EndpointsLister
+	Client kubernetes.Interface
 }
 
 type EndpointsLister interface {
@@ -36,17 +38,29 @@ type endpointsDiscoverer struct {
 }
 
 func NewEndpointsDiscoverer(config EndpointsDiscoveryConfig) (EndpointsDiscoverer, error) {
-	if config.EndpointsLister == nil && config.FixedEndpoint == nil {
-		return nil, fmt.Errorf("endpoints lister factory must be configured")
+	if config.Client == nil && config.FixedEndpoint == nil {
+		return nil, fmt.Errorf("client must be configured")
 	}
 
-	if config.FixedEndpoint != nil {
-		// Sorting the array is needed to be sure we are hitting each time the endpoints in the same order
-		sort.Strings(config.FixedEndpoint)
+	// Sorting the array is needed to be sure we are hitting each time the endpoints in the same order
+	sort.Strings(config.FixedEndpoint)
+
+	// Arbitrary value, same used in Prometheus.
+	resyncDuration := 10 * time.Minute
+	stopCh := make(chan struct{})
+	el := func(options ...informers.SharedInformerOption) EndpointsLister {
+		factory := informers.NewSharedInformerFactoryWithOptions(config.Client, resyncDuration, options...)
+
+		lister := factory.Core().V1().Endpoints().Lister()
+
+		factory.Start(stopCh)
+		factory.WaitForCacheSync(stopCh)
+
+		return lister
 	}
 
 	return &endpointsDiscoverer{
-		endpointsLister: config.EndpointsLister(
+		endpointsLister: el(
 			informers.WithNamespace(config.Namespace),
 			informers.WithTweakListOptions(func(options *v1.ListOptions) {
 				options.LabelSelector = config.LabelSelector
