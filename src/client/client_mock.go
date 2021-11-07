@@ -1,6 +1,7 @@
 package client
 
 import (
+	"k8s.io/client-go/kubernetes"
 	"net/http"
 	"time"
 
@@ -62,4 +63,9 @@ func (m *MockedKubernetes) FindSecret(name, namespace string) (*v1.Secret, error
 func (m *MockedKubernetes) ListServices(namespace string) (*v1.ServiceList, error) {
 	args := m.Called()
 	return args.Get(0).(*v1.ServiceList), args.Error(1)
+}
+
+// GetClient mocks Kubernetes GetClient
+func (m *MockedKubernetes) GetClient() *kubernetes.Clientset {
+	return nil
 }
