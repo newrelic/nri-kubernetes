@@ -78,8 +78,8 @@ spec:
               subPath: newrelic-infra.yml
             {{- end }}
         - name: ksm-scraper
-          image: {{ .Values.forwarderImage.repository }}:{{ .Values.forwarderImage.tag }}
-          imagePullPolicy: {{ .Values.forwarderImage.pullPolicy }}
+          image: {{ .Values.ksmScraperImage.repository }}:{{ .Values.ksmScraperImage.tag }}
+          imagePullPolicy: {{ .Values.ksmScraperImage.pullPolicy }}
           securityContext:
             runAsUser: {{ .Values.runAsUser | default 1000 }}
             allowPrivilegeEscalation: false
