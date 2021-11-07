@@ -14,7 +14,7 @@ jobs:
       matrix:
         # Latest patch version can be found in https://github.com/kubernetes/website/blob/main/content/en/releases/patch-releases.md
         # Some versions might not be available yet in https://storage.googleapis.com/kubernetes-release/release/v1.X.Y/bin/linux/amd64/kubelet
-        k8sVersion: [ "v1.16.15", "v1.17.17", "v1.18.20", "v1.19.14", "v1.20.10", "v1.21.4", "v1.22.0" ]
+        k8sVersion: ["v1.22.0"] # [ "v1.16.15", "v1.17.17", "v1.18.20", "v1.19.14", "v1.20.10", "v1.21.4", "v1.22.0" ]
     env:
       DOCKER_BUILDKIT: '1' # Setting DOCKER_BUILDKIT=1 ensures TARGETOS and TARGETARCH are populated
     steps:
@@ -37,6 +37,8 @@ jobs:
           GOOS=linux GOARCH=amd64 make compile # Set GOOS and GOARCH explicitly since Dockerfile expects them in the binary name
           docker build -t e2e/newrelic-infrastructure:e2e --build-arg 'MODE=normal' .
           docker build -t e2e/newrelic-infrastructure:e2e-unprivileged --build-arg 'MODE=unprivileged' .
+          docker build -t e2e/newrelic-infrastructure-ksm -f Dockerfile-ksm .
+          minikube image load e2e/newrelic-infrastructure-ksm
           minikube image load e2e/newrelic-infrastructure:e2e
           minikube image load e2e/newrelic-infrastructure:e2e-unprivileged
       - name: Setup Helm
@@ -44,7 +46,9 @@ jobs:
           chmod go-r /home/runner/.kube/config
           helm repo add stable https://charts.helm.sh/stable
           helm repo add newrelic https://helm-charts.newrelic.com
+          helm repo add kube-state-metrics https://kubernetes.github.io/kube-state-metrics
           helm repo update
+          helm install ksm kube-state-metrics/kube-state-metrics -n kube-system
       - name: Run e2e-test
         uses: newrelic/newrelic-integration-e2e-action@v1
         with:
