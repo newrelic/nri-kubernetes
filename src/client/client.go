@@ -44,6 +44,9 @@ type Kubernetes interface {
 
 	// ServerVersion returns the kubernetes server version.
 	ServerVersion() (*version.Info, error)
+
+	// GetClient return the client used internally
+	GetClient() *kubernetes.Clientset
 }
 
 type goClientImpl struct {
@@ -99,6 +102,10 @@ func (ka *goClientImpl) SecureHTTPClient(t time.Duration) (*http.Client, error) 
 
 func (ka *goClientImpl) FindSecret(name, namespace string) (*v1.Secret, error) {
 	return ka.client.CoreV1().Secrets(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+}
+
+func (ka *goClientImpl) GetClient() *kubernetes.Clientset {
+	return ka.client
 }
 
 // BasicHTTPClient returns http.Client configured with timeout
