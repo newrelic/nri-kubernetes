@@ -2,17 +2,17 @@ package ksm
 
 import (
 	"fmt"
-	"github.com/newrelic/nri-kubernetes/v2/src/ksm/metric"
-	"github.com/sethgrid/pester"
 	"net/http"
 	"net/url"
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/sethgrid/pester"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
+	"github.com/newrelic/nri-kubernetes/v2/src/ksm/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
 
