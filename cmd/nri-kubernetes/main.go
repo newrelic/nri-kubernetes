@@ -21,6 +21,8 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/storage"
 )
 
+const defaultLabelSelector = "app.kubernetes.io/name=kube-state-metrics"
+
 type clientsCluster struct {
 	k8s                 client.Kubernetes
 	ksm                 ksm.Client
@@ -174,24 +176,26 @@ func createIntegrationWithHTTPSink(logger log.Logger) (*integration.Integration,
 }
 
 func getDiscoverer(c config.Mock, k8s client.Kubernetes, logger log.Logger) (discovery.EndpointsDiscoverer, error) {
-	var opts []ksm.EndpointDiscoveryOptions
+	dc := discovery.EndpointsDiscoveryConfig{
+		LabelSelector: defaultLabelSelector,
+	}
 
 	if c.KSMConfig.KubeStateMetricsURL != "" {
 		logger.Debugf("ksm discovery disabled")
-		opts = append(opts, ksm.WithFixedEndpoint(c.KSMConfig.KubeStateMetricsURL))
+		dc.FixedEndpoint = []string{c.KSMConfig.KubeStateMetricsURL}
 	}
 
 	if c.KSMConfig.KubeStateMetricsNamespace != "" {
-		opts = append(opts, ksm.WithNamespace(c.KSMConfig.KubeStateMetricsNamespace))
+		dc.Namespace = c.KSMConfig.KubeStateMetricsNamespace
 	}
 
 	if c.KSMConfig.KubeStateMetricsPodLabel != "" {
-		opts = append(opts, ksm.WithLabelSelector(c.KSMConfig.KubeStateMetricsPodLabel))
+		dc.LabelSelector = c.KSMConfig.KubeStateMetricsPodLabel
 	}
 
 	if c.KSMConfig.KubeStateMetricsPort != 0 {
-		opts = append(opts, ksm.WithPort(c.KSMConfig.KubeStateMetricsPort))
+		dc.Port = c.KSMConfig.KubeStateMetricsPort
 	}
 
-	return ksm.NewEndpointsDiscoverer(k8s.GetClient(), opts...)
+	return discovery.NewEndpointsDiscoverer(dc)
 }

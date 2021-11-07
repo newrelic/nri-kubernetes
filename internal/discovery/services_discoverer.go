@@ -14,12 +14,12 @@ type ServicesLister interface {
 	List(selector labels.Selector) (ret []*corev1.Service, err error)
 }
 
-type servicesDiscoverer struct {
-	ServicesLister ServicesLister
-}
-
 type ServiceDiscoverer interface {
 	Discover() ([]*corev1.Service, error)
+}
+
+type servicesDiscoverer struct {
+	ServicesLister ServicesLister
 }
 
 func (d *servicesDiscoverer) Discover() ([]*corev1.Service, error) {
