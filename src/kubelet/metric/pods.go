@@ -218,22 +218,6 @@ func fillContainerStatuses(pod *v1.Pod, dest map[string]definition.RawMetrics) {
 	}
 }
 
-// Static pods are created by Kubelet on start time reading from static yaml files.
-// They contain the annotation: `"kubernetes.io/config.source": "file"`
-// Kubelet creates Mirror Pods in the K8s API that represents each static pod. They have a different pod ID than their Kubelet internal ones.
-//
-// For some reason, when the status of a static pod changes, Kubelet does not update the internal Pod status but the Mirror Pod.
-// Static Kubelet internal Pods statuses ‌are never updated, no matters the transition (Pending->Running->Succeeded…).
-//
-// This is a known bug in Kubelet. See https://github.com/kubernetes/kubernetes/issues/61717
-func isStaticPod(p *v1.Pod) bool {
-	if source, ok := p.GetAnnotations()["kubernetes.io/config.source"]; ok && source == "file" {
-		return true
-	}
-
-	return false
-}
-
 // isFakePendingPods returns true if a pod is a fake pending pod.
 // Pods that are created before having API server up are reported as Pending
 // in Kubelet /pods endpoint where in fact they are correctly running. This is a bug in Kubelet.

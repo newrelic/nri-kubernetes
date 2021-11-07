@@ -2,7 +2,6 @@ package metric
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
@@ -11,22 +10,6 @@ import (
 
 // PrometheusMetricsPath is the KSM prometheus metrics endpoint.
 const PrometheusMetricsPath = "/metrics"
-
-// GetStatusForContainer returns the status of a container
-func GetStatusForContainer() definition.FetchFunc {
-	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
-		queryValue := prometheus.GaugeValue(1)
-		s := []string{"running", "waiting", "terminated"}
-		for _, k := range s {
-			v, _ := prometheus.FromValue(fmt.Sprintf("kube_pod_container_status_%s", k))(groupLabel, entityID, groups)
-			if v == queryValue {
-				return strings.Title(k), nil
-			}
-		}
-
-		return "Unknown", nil
-	}
-}
 
 // GetDeploymentNameForReplicaSet returns the name of the deployment has created
 // a ReplicaSet.
@@ -68,32 +51,6 @@ func GetDeploymentNameForPod() definition.FetchFunc {
 		}
 
 		return deploymentNameBasedOnCreator(creatorKind.(string), creatorName.(string)), nil
-	}
-}
-
-// GetDeploymentNameForContainer returns the name of the deployment has created
-// a container. It's providing this information inheriting some metrics from its
-// pod. Returns an empty string if its pod hasn't been created by a deployment.
-func GetDeploymentNameForContainer() definition.FetchFunc {
-	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
-		mm := map[string]string{
-			"created_by_kind": "created_by_kind",
-			"created_by_name": "created_by_name",
-		}
-		podValues, err := prometheus.InheritSpecificLabelValuesFrom("pod", "kube_pod_info", mm)(groupLabel, entityID, groups)
-		if err != nil {
-			return nil, err
-		}
-		podMetrics := podValues.(definition.FetchedValues)
-		if _, ok := podMetrics["created_by_kind"].(string); !ok || podMetrics["created_by_kind"].(string) == "" {
-			return nil, errors.New("error generating deployment name for container. created_by_kind field is missing")
-		}
-
-		if _, ok := podMetrics["created_by_name"].(string); !ok || podMetrics["created_by_name"].(string) == "" {
-			return nil, errors.New("error generating deployment name for container. created_by_name field is missing")
-		}
-
-		return deploymentNameBasedOnCreator(podMetrics["created_by_kind"].(string), podMetrics["created_by_name"].(string)), nil
 	}
 }
 
