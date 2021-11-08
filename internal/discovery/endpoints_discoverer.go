@@ -2,7 +2,6 @@ package discovery
 
 import (
 	"fmt"
-	"k8s.io/client-go/kubernetes"
 	"net"
 	"sort"
 	"strconv"
@@ -12,6 +11,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/informers"
+	"k8s.io/client-go/kubernetes"
 )
 
 type EndpointsDiscoveryConfig struct {
@@ -79,10 +79,6 @@ func (d *endpointsDiscoverer) Discover() ([]string, error) {
 	endpoints, err := d.endpointsLister.List(labels.Everything())
 	if err != nil {
 		return nil, fmt.Errorf("listing endpoints: %w", err)
-	}
-
-	if len(endpoints) == 0 {
-		return nil, fmt.Errorf("no endpoints discovered")
 	}
 
 	hosts := []string{}
