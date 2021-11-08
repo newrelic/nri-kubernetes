@@ -51,10 +51,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	servicesDiscoverer, err := discovery.NewServicesDiscoverer(k8s.GetClient())
-	if err != nil {
-		log.Fatal(err)
-	}
+	servicesDiscoverer := discovery.NewServicesDiscoverer(k8s.GetClient())
 
 	ksmClient, err := ksm.NewKSMClient(logger)
 	if err != nil {
@@ -178,6 +175,7 @@ func createIntegrationWithHTTPSink(logger log.Logger) (*integration.Integration,
 func getDiscoverer(c config.Mock, k8s client.Kubernetes, logger log.Logger) (discovery.EndpointsDiscoverer, error) {
 	dc := discovery.EndpointsDiscoveryConfig{
 		LabelSelector: defaultLabelSelector,
+		Client:        k8s.GetClient(),
 	}
 
 	if c.KSMConfig.KubeStateMetricsURL != "" {
