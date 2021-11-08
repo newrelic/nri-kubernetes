@@ -15,6 +15,12 @@ Please notice that old [V3](https://docs.newrelic.com/docs/create-integrations/i
 
 ---
 
+## 2.8.2
+
+### Changed
+
+- Updated agent and integrations to they latest versions
+
 ## 2.8.1
 
 ### Changed
