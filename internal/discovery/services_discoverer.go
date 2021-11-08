@@ -32,7 +32,7 @@ func (d *servicesDiscoverer) Discover() ([]*corev1.Service, error) {
 	return services, nil
 }
 
-func NewServicesDiscoverer(client kubernetes.Interface) (ServiceDiscoverer, error) {
+func NewServicesDiscoverer(client kubernetes.Interface) ServiceDiscoverer {
 	// Arbitrary value, same used in Prometheus.
 	resyncDuration := 10 * time.Minute
 	stopCh := make(chan struct{})
@@ -49,5 +49,5 @@ func NewServicesDiscoverer(client kubernetes.Interface) (ServiceDiscoverer, erro
 
 	return &servicesDiscoverer{
 		ServicesLister: sl(),
-	}, nil
+	}
 }
