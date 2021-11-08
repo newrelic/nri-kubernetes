@@ -59,6 +59,7 @@ spec:
             - sleep
             - infinity
 ---
+{{- if .Values.persistentVolume.enabled }}
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -70,6 +71,7 @@ spec:
     storage: 5M
   hostPath:
     path: /data/pv0001/
+{{ end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
