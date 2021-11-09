@@ -1,4 +1,4 @@
-package ksm
+package grouper
 
 import (
 	"testing"
@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 
+	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
@@ -25,8 +26,12 @@ func TestAddServiceSpecSelectorToGroup(t *testing.T) {
 	serviceList[0].Namespace = "kube-system"
 	serviceList[0].Name = "kube-state-metrics"
 
-	grouper := &ksmGrouper{
-		services: serviceList,
+	grouper := &grouper{
+		Config: Config{
+			ServicesLister: discovery.MockedServicesLister{
+				Services: serviceList,
+			},
+		},
 	}
 
 	serviceGroup := map[string]definition.RawMetrics{

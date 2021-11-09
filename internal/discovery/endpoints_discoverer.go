@@ -15,11 +15,17 @@ import (
 )
 
 type EndpointsDiscoveryConfig struct {
+	// LabelSelector is the selector used to filter Endpoints.
 	LabelSelector string
-	Namespace     string
-	Port          int
-	FixedEndpoint []string
+	// Namespace can be used to restric the search to a particular namespace.
+	Namespace string
+	// If set, Port will discard all endpoints discovered that do not use this specified port
+	Port int
 
+	// FixedEndpoints is a manually set of endpoints, that will override the discovery process.
+	FixedEndpoints []string
+
+	// Client is the Kubernetes client.Interface used to build informers.
 	Client kubernetes.Interface
 }
 
@@ -38,12 +44,12 @@ type endpointsDiscoverer struct {
 }
 
 func NewEndpointsDiscoverer(config EndpointsDiscoveryConfig) (EndpointsDiscoverer, error) {
-	if config.Client == nil && config.FixedEndpoint == nil {
+	if config.Client == nil && config.FixedEndpoints == nil {
 		return nil, fmt.Errorf("client must be configured")
 	}
 
 	// Sorting the array is needed to be sure we are hitting each time the endpoints in the same order
-	sort.Strings(config.FixedEndpoint)
+	sort.Strings(config.FixedEndpoints)
 
 	// Arbitrary value, same used in Prometheus.
 	resyncDuration := 10 * time.Minute
@@ -67,7 +73,7 @@ func NewEndpointsDiscoverer(config EndpointsDiscoveryConfig) (EndpointsDiscovere
 			}),
 		),
 		port:                config.Port,
-		fixedEndpointSorted: config.FixedEndpoint,
+		fixedEndpointSorted: config.FixedEndpoints,
 	}, nil
 }
 

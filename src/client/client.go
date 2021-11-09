@@ -46,7 +46,7 @@ type Kubernetes interface {
 	ServerVersion() (*version.Info, error)
 
 	// GetClient return the client used internally
-	GetClient() *kubernetes.Clientset
+	GetClient() kubernetes.Interface
 }
 
 type goClientImpl struct {
@@ -104,7 +104,7 @@ func (ka *goClientImpl) FindSecret(name, namespace string) (*v1.Secret, error) {
 	return ka.client.CoreV1().Secrets(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 }
 
-func (ka *goClientImpl) GetClient() *kubernetes.Clientset {
+func (ka *goClientImpl) GetClient() kubernetes.Interface {
 	return ka.client
 }
 

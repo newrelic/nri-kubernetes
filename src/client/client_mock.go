@@ -66,6 +66,6 @@ func (m *MockedKubernetes) ListServices(namespace string) (*v1.ServiceList, erro
 }
 
 // GetClient mocks Kubernetes GetClient
-func (m *MockedKubernetes) GetClient() *kubernetes.Clientset {
+func (m *MockedKubernetes) GetClient() kubernetes.Interface {
 	return nil
 }
