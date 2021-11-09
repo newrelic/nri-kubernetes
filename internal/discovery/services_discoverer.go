@@ -10,8 +10,23 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+const defaultResyncDuration = 10 * time.Minute
+
 type ServicesLister interface {
 	List(selector labels.Selector) (ret []*corev1.Service, err error)
+}
+
+func NewServicesLister(client kubernetes.Interface, options ...informers.SharedInformerOption) (ServicesLister, chan<- struct{}) {
+	stopCh := make(chan struct{})
+
+	factory := informers.NewSharedInformerFactoryWithOptions(client, defaultResyncDuration, options...)
+
+	lister := factory.Core().V1().Services().Lister()
+
+	factory.Start(stopCh)
+	factory.WaitForCacheSync(stopCh)
+
+	return lister, stopCh
 }
 
 type ServiceDiscoverer interface {
@@ -34,20 +49,9 @@ func (d *servicesDiscoverer) Discover() ([]*corev1.Service, error) {
 
 func NewServicesDiscoverer(client kubernetes.Interface) ServiceDiscoverer {
 	// Arbitrary value, same used in Prometheus.
-	resyncDuration := 10 * time.Minute
-	stopCh := make(chan struct{})
-	sl := func(options ...informers.SharedInformerOption) ServicesLister {
-		factory := informers.NewSharedInformerFactoryWithOptions(client, resyncDuration, options...)
-
-		lister := factory.Core().V1().Services().Lister()
-
-		factory.Start(stopCh)
-		factory.WaitForCacheSync(stopCh)
-
-		return lister
-	}
+	sl, _ := NewServicesLister(client)
 
 	return &servicesDiscoverer{
-		ServicesLister: sl(),
+		ServicesLister: sl,
 	}
 }
