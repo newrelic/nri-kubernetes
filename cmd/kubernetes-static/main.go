@@ -18,9 +18,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/version"
 
+	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v2/src/apiserver"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
-	"github.com/newrelic/nri-kubernetes/v2/src/ksm"
+	ksmClient "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
+	ksmGrouper "github.com/newrelic/nri-kubernetes/v2/src/ksm/grouper"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet"
 	kubeletmetric "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
@@ -179,25 +181,25 @@ func main() {
 		},
 	}
 
-	ksmClient, err := ksm.NewKSMClient(log.NewStdErr(true))
+	kc, err := ksmClient.New(ksmClient.WithLogger(log.New(true, os.Stderr)))
 	if err != nil {
 		log.Fatal(err)
 	}
-	ksmGrouperConfig := &ksm.GrouperConfig{
-		MetricFamiliesGetter: ksmClient.MetricFamiliesGetterForEndpoint(endpoint, "http"),
-		Logger:               logger,
-		Services:             serviceList,
-		Queries:              metric.KSMQueries,
-	}
 
-	ksmGrouper, err := ksm.NewValidatedGrouper(ksmGrouperConfig)
+	kg, err := ksmGrouper.New(ksmGrouper.Config{
+		MetricFamiliesGetter: kc.MetricFamiliesGetter(endpoint, "http"),
+		Queries:              metric.KSMQueries,
+		ServicesLister: discovery.MockedServicesLister{
+			Services: serviceList,
+		},
+	}, ksmGrouper.WithLogger(logger))
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	jobs := []*scrape.Job{
 		scrape.NewScrapeJob("kubelet", kubeletGrouper, metric.KubeletSpecs),
-		scrape.NewScrapeJob("kube-state-metrics", ksmGrouper, metric.KSMSpecs),
+		scrape.NewScrapeJob("kube-state-metrics", kg, metric.KSMSpecs),
 	}
 
 	// controlPlaneComponentPods maps component.Name to the pod name
