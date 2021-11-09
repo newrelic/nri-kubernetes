@@ -73,7 +73,7 @@ func Test_endpoints_discovery_whit(t *testing.T) {
 		},
 		"fixed_url": {
 			configModifier: func(s *discovery.EndpointsDiscoveryConfig) {
-				s.FixedEndpoint = []string{"9.8.7.6:123"}
+				s.FixedEndpoints = []string{"9.8.7.6:123"}
 			},
 			result: []string{"9.8.7.6:123"},
 		},

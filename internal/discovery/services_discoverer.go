@@ -10,6 +10,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// defaultResyncDuration is an arbitrary value, same used in Prometheus.
 const defaultResyncDuration = 10 * time.Minute
 
 type ServicesLister interface {
@@ -27,6 +28,14 @@ func NewServicesLister(client kubernetes.Interface, options ...informers.SharedI
 	factory.WaitForCacheSync(stopCh)
 
 	return lister, stopCh
+}
+
+type MockedServicesLister struct {
+	Services []*corev1.Service
+}
+
+func (msl MockedServicesLister) List(selector labels.Selector) (ret []*corev1.Service, err error) {
+	return msl.Services, nil
 }
 
 type ServiceDiscoverer interface {
@@ -48,7 +57,7 @@ func (d *servicesDiscoverer) Discover() ([]*corev1.Service, error) {
 }
 
 func NewServicesDiscoverer(client kubernetes.Interface) ServiceDiscoverer {
-	// Arbitrary value, same used in Prometheus.
+
 	sl, _ := NewServicesLister(client)
 
 	return &servicesDiscoverer{
