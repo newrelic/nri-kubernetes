@@ -20,7 +20,8 @@ import (
 
 	"github.com/newrelic/nri-kubernetes/v2/src/apiserver"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
-	"github.com/newrelic/nri-kubernetes/v2/src/ksm"
+	"github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/ksm/grouper"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet"
 	kubeletmetric "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
@@ -179,18 +180,18 @@ func main() {
 		},
 	}
 
-	ksmClient, err := ksm.NewKSMClient(log.NewStdErr(true))
+	ksmClient, err := client.NewKSMClient(log.NewStdErr(true))
 	if err != nil {
 		log.Fatal(err)
 	}
-	ksmGrouperConfig := &ksm.GrouperConfig{
+	ksmGrouperConfig := &grouper.Config{
 		MetricFamiliesGetter: ksmClient.MetricFamiliesGetterForEndpoint(endpoint, "http"),
 		Logger:               logger,
 		Services:             serviceList,
 		Queries:              metric.KSMQueries,
 	}
 
-	ksmGrouper, err := ksm.NewValidatedGrouper(ksmGrouperConfig)
+	ksmGrouper, err := grouper.NewValidatedGrouper(ksmGrouperConfig)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -5,26 +5,31 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"time"
 )
 
-//This is only a mock of the new config
+// This is only a mock of the new config
 type Mock struct {
-	KSMConfig   KSMConfig
+	KSM
 	Verbose     bool
 	ClusterName string
+	Interval    time.Duration
 }
 
-type KSMConfig struct {
-	KubeStateMetricsURL         string
-	KubeStateMetricsPodLabel    string
-	KubeStateMetricsScheme      string
-	KubeStateMetricsPort        int
-	KubeStateMetricsNamespace   string
-	DistributedKubeStateMetrics bool
+type KSM struct {
+	// Static configuration of KSM endpoint
+	Host   string
+	Scheme string
+	Port   int
+
+	// Autodiscovery settings
+	PodLabel    string
+	Namespace   string
+	Distributed bool
 }
 
 func LoadConfig() Mock {
-	//strconv.ParseBool(os.Getenv("VERBOSE"))
+	// strconv.ParseBool(os.Getenv("VERBOSE"))
 	kubeStateMetricsPort, _ := strconv.Atoi(os.Getenv("KUBE_STATE_METRIC_PORT"))
 	distributedKubeStateMetrics, _ := strconv.ParseBool(os.Getenv("DISTRIBUTED_KUBE_STATE_METRIC"))
 	schema := "http"
@@ -42,13 +47,14 @@ func LoadConfig() Mock {
 	return Mock{
 		ClusterName: os.Getenv("CLUSTER_NAME"),
 		Verbose:     true,
-		KSMConfig: KSMConfig{
-			KubeStateMetricsURL:         ksmURL,
-			KubeStateMetricsPodLabel:    os.Getenv("KUBE_STATE_METRIC_POD_LABEL"),
-			KubeStateMetricsScheme:      schema,
-			KubeStateMetricsPort:        kubeStateMetricsPort,
-			KubeStateMetricsNamespace:   os.Getenv("KUBE_STATE_METRIC_NAMESPACE"),
-			DistributedKubeStateMetrics: distributedKubeStateMetrics,
+		Interval:    15 * time.Second,
+		KSM: KSM{
+			Host:        ksmURL,
+			PodLabel:    os.Getenv("KUBE_STATE_METRIC_POD_LABEL"),
+			Scheme:      schema,
+			Port:        kubeStateMetricsPort,
+			Namespace:   os.Getenv("KUBE_STATE_METRIC_NAMESPACE"),
+			Distributed: distributedKubeStateMetrics,
 		},
 	}
 }

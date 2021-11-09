@@ -1,4 +1,4 @@
-package ksm
+package grouper
 
 import (
 	"fmt"
@@ -18,14 +18,14 @@ type ksmGrouper struct {
 	services               []*corev1.Service
 }
 
-type GrouperConfig struct {
+type Config struct {
 	Queries              []prometheus.Query
 	MetricFamiliesGetter prometheus.FilteredMetricFamilies
 	Logger               log.Logger
 	Services             []*corev1.Service
 }
 
-func NewValidatedGrouper(config *GrouperConfig) (data.Grouper, error) {
+func NewValidatedGrouper(config *Config) (data.Grouper, error) {
 	if config == nil {
 		return nil, fmt.Errorf("config must be provided")
 	}

@@ -1,4 +1,4 @@
-package ksm
+package client
 
 import (
 	"fmt"
