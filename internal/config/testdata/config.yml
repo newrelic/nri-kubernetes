@@ -1,0 +1,68 @@
+cluster_name: dummy_cluster
+interval: 15
+verbose: true
+timeout: 30
+cache_dir: /var/cache/nr-kubernetes
+network_route_file:
+
+kubelet:
+  discovery:
+    static:
+      url:
+    client:
+      authentication:
+
+etcd:
+  enable:
+    nodeSelector: node-role=controller
+  discovery:
+    static:
+      urls:
+        - https://localhost:10222
+        - http://localhost:8080
+    localPod:
+      labelSelectors:
+        - k8s-app=etcd-manager-main
+        - tier=control-plane,component=etcd
+  secret:
+    name:
+    namespace:
+
+scheduler:
+  discovery:
+    static:
+      url:
+    localPod:
+      labelSelectors:
+        - tier=control-plane,component=kube-scheduler
+
+controller_manager:
+  discovery:
+    static:
+      url:
+    localPod:
+      labelSelectors:
+        - tier=control-plane,component=kube-controller-manager
+
+api_server:
+  discovery:
+    static:
+      url:
+    localPod:
+      labelSelectors:
+        - tier=control-plane,component=kube-apiserver
+  secure_port:
+  cache:
+    ttl:
+    ttl_jitter:
+    k8s_version_ttl:
+    k8s_version_ttl_jitter:
+
+
+ksm:
+  discovery:
+    static:
+      url: localhost:8080
+    endpoints:
+      labelSelector: app=ksm
+      namespace: ksm

@@ -31,9 +31,11 @@ type clusterClients struct {
 }
 
 func main() {
-	// TODO: Can this error?
-	conf := config.LoadConfig()
-	logger = log.NewStdErr(conf.Verbose)
+	conf, err := config.LoadConfig()
+	if err != nil {
+		log.Error(err.Error())
+		os.Exit(ExitIntegration)
+	}
 
 	clients, err := buildClients()
 	if err != nil {
@@ -72,7 +74,7 @@ func buildClients() (*clusterClients, error) {
 	}, nil
 }
 
-func runKSM(config *config.Mock, clients *clusterClients, i *integration.Integration) error {
+func runKSM(config *config.Config, clients *clusterClients, i *integration.Integration) error {
 	ksmScraper, err := ksm.NewScraper(config, ksm.Providers{
 		// TODO: Get rid of custom client.Kubernetes wrapper and use kubernetes.Interface directly.
 		K8s: clients.k8s.GetClient(),
