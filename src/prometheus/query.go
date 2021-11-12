@@ -130,14 +130,14 @@ func valueFromPrometheus(metricType model.MetricType, metric *model.Metric) Valu
 // Do is the main entry point. It runs queries against the Prometheus metrics provided by the endpoint.
 func Do(c client.HTTPGetter, endpoint string, queries []Query) ([]MetricFamily, error) {
 	resp, err := c.Get(endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("fetching metrics from %q: %w", endpoint, err)
+	}
 
-	return handleResponseWithFilter(resp, err, queries)
+	return handleResponseWithFilter(resp, queries)
 }
 
-func handleResponseWithFilter(resp *http.Response, err error, queries []Query) ([]MetricFamily, error) {
-	if err != nil {
-		return nil, fmt.Errorf("fetching metrics: %w", err)
-	}
+func handleResponseWithFilter(resp *http.Response, queries []Query) ([]MetricFamily, error) {
 	defer resp.Body.Close() // nolint: errcheck
 
 	if resp.StatusCode != http.StatusOK {
@@ -147,6 +147,7 @@ func handleResponseWithFilter(resp *http.Response, err error, queries []Query) (
 	metrics := make([]MetricFamily, 0)
 	ch := make(chan *model.MetricFamily)
 
+	var err error
 	go func() {
 		err = prom2json.ParseResponse(resp, ch)
 	}()
@@ -171,15 +172,18 @@ type MetricsFamiliesGetter func([]Query) ([]MetricFamily, error)
 
 func GetFilteredMetricFamilies(httpClient client.HTTPDoer, url string, queries []Query) ([]MetricFamily, error) {
 
-	//todo it would be nice to have context with deadline
+	// todo it would be nice to have context with deadline
 	req, err := NewRequest(url)
 	if err != nil {
 		return nil, fmt.Errorf("building request: %w", err)
 	}
 
 	resp, err := httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("fetching metrics from %q: %w", url, err)
+	}
 
-	return handleResponseWithFilter(resp, err, queries)
+	return handleResponseWithFilter(resp, queries)
 }
 
 func labelsFromPrometheus(pairs []*model.LabelPair) Labels {
