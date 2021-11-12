@@ -18,7 +18,7 @@ type Mock struct {
 
 type KSM struct {
 	// URL defines a static endpoint for KSM.
-	StaticEndpoint string
+	StaticURL string
 
 	// Autodiscovery settings.
 	// Scheme that will be used to hit the endpoints of discovered KSM services. Defaults to http.
@@ -54,12 +54,12 @@ func LoadConfig() Mock {
 		Verbose:     true,
 		Interval:    15 * time.Second,
 		KSM: KSM{
-			StaticEndpoint: ksmURL,
-			PodLabel:       os.Getenv("KUBE_STATE_METRIC_POD_LABEL"),
-			Scheme:         schema,
-			Port:           kubeStateMetricsPort,
-			Namespace:      os.Getenv("KUBE_STATE_METRIC_NAMESPACE"),
-			Distributed:    distributedKubeStateMetrics,
+			StaticURL:   ksmURL,
+			PodLabel:    os.Getenv("KUBE_STATE_METRIC_POD_LABEL"),
+			Scheme:      schema,
+			Port:        kubeStateMetricsPort,
+			Namespace:   os.Getenv("KUBE_STATE_METRIC_NAMESPACE"),
+			Distributed: distributedKubeStateMetrics,
 		},
 	}
 }

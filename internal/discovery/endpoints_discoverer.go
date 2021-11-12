@@ -22,9 +22,6 @@ type EndpointsDiscoveryConfig struct {
 	// If set, Port will discard all endpoints discovered that do not use this specified port
 	Port int
 
-	// FixedEndpoints is a manually set of endpoints, that will override the discovery process.
-	FixedEndpoints []string
-
 	// Client is the Kubernetes client.Interface used to build informers.
 	Client kubernetes.Interface
 }
@@ -44,12 +41,9 @@ type endpointsDiscoverer struct {
 }
 
 func NewEndpointsDiscoverer(config EndpointsDiscoveryConfig) (EndpointsDiscoverer, error) {
-	if config.Client == nil && config.FixedEndpoints == nil {
+	if config.Client == nil {
 		return nil, fmt.Errorf("client must be configured")
 	}
-
-	// Sorting the array is needed to be sure we are hitting each time the endpoints in the same order
-	sort.Strings(config.FixedEndpoints)
 
 	// Arbitrary value, same used in Prometheus.
 	resyncDuration := 10 * time.Minute
@@ -72,8 +66,7 @@ func NewEndpointsDiscoverer(config EndpointsDiscoveryConfig) (EndpointsDiscovere
 				options.LabelSelector = config.LabelSelector
 			}),
 		),
-		port:                config.Port,
-		fixedEndpointSorted: config.FixedEndpoints,
+		port: config.Port,
 	}, nil
 }
 
@@ -87,7 +80,7 @@ func (d *endpointsDiscoverer) Discover() ([]string, error) {
 		return nil, fmt.Errorf("listing endpoints: %w", err)
 	}
 
-	hosts := []string{}
+	var hosts []string
 
 	for _, endpoint := range endpoints {
 		for _, subset := range endpoint.Subsets {
