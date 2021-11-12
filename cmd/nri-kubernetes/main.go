@@ -31,11 +31,9 @@ type clusterClients struct {
 }
 
 func main() {
-	c := config.LoadConfig()
-	logger = log.NewStdErr(c.Verbose)
-
 	// TODO: Can this error?
 	conf := config.LoadConfig()
+	logger = log.NewStdErr(conf.Verbose)
 
 	clients, err := buildClients()
 	if err != nil {
