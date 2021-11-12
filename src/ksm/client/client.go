@@ -4,13 +4,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/sethgrid/pester"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/ksm/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
 
@@ -74,19 +72,13 @@ func New(opts ...OptionFunc) (*Client, error) {
 type MetricFamiliesGetter interface {
 	// MetricFamiliesGetter returns a prometheus.FilteredFetcher configured to get KSM metrics from and endpoint.
 	// prometheus.FilteredFetcher will be used by the prometheus client to scrape and filter metrics.
-	MetricFamiliesGetter(endpoint string, schema string) prometheus.MetricsFamiliesGetter
+	MetricFamiliesGetter(url string) prometheus.MetricsFamiliesGetter
 }
 
 // MetricFamiliesGetter returns a function that obtains metric families from a list of prometheus queries.
-func (c *Client) MetricFamiliesGetter(endpoint string, schema string) prometheus.MetricsFamiliesGetter {
-	ksmMetricsURL := url.URL{
-		Scheme: schema,
-		Host:   endpoint,
-		Path:   metric.PrometheusMetricsPath,
-	}
-
+func (c *Client) MetricFamiliesGetter(url string) prometheus.MetricsFamiliesGetter {
 	return func(queries []prometheus.Query) ([]prometheus.MetricFamily, error) {
-		mFamily, err := prometheus.GetFilteredMetricFamilies(c.http, ksmMetricsURL.String(), queries)
+		mFamily, err := prometheus.GetFilteredMetricFamilies(c.http, url, queries)
 		if err != nil {
 			return nil, fmt.Errorf("getting filtered metric families: %w", err)
 		}

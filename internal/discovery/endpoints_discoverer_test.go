@@ -34,7 +34,7 @@ func Test_endpoints_discovery_whit(t *testing.T) {
 			configModifier: func(s *discovery.EndpointsDiscoveryConfig) {
 				s.LabelSelector = "not-matching"
 			},
-			result: []string{},
+			result: nil,
 		},
 		"matching_selector": {
 			configModifier: func(s *discovery.EndpointsDiscoveryConfig) {
@@ -51,7 +51,7 @@ func Test_endpoints_discovery_whit(t *testing.T) {
 			configModifier: func(s *discovery.EndpointsDiscoveryConfig) {
 				s.Namespace = "different-namespace"
 			},
-			result: []string{},
+			result: nil,
 		},
 		"matching_namespace": {
 			configModifier: func(s *discovery.EndpointsDiscoveryConfig) {
@@ -63,19 +63,13 @@ func Test_endpoints_discovery_whit(t *testing.T) {
 			configModifier: func(s *discovery.EndpointsDiscoveryConfig) {
 				s.Port = 1000
 			},
-			result: []string{},
+			result: nil,
 		},
 		"matching_port": {
 			configModifier: func(s *discovery.EndpointsDiscoveryConfig) {
 				s.Port = 81
 			},
 			result: []string{"5.6.7.8:81"},
-		},
-		"fixed_url": {
-			configModifier: func(s *discovery.EndpointsDiscoveryConfig) {
-				s.FixedEndpoints = []string{"9.8.7.6:123"}
-			},
-			result: []string{"9.8.7.6:123"},
 		},
 	}
 
