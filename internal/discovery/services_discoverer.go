@@ -30,6 +30,8 @@ func NewServicesLister(client kubernetes.Interface, options ...informers.SharedI
 	return lister, stopCh
 }
 
+// MockedServicesLister is a simple lister that returns a hardcoded list of services.
+// For integration testing, it is recommended to use the a ServiceDiscoverer with testutil.FakeK8sClient as a backend.
 type MockedServicesLister struct {
 	Services []*corev1.Service
 }
