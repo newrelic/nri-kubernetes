@@ -187,7 +187,7 @@ func main() {
 	}
 
 	kg, err := ksmGrouper.New(ksmGrouper.Config{
-		MetricFamiliesGetter: kc.MetricFamiliesGetter(endpoint, "http"),
+		MetricFamiliesGetter: kc.MetricFamiliesGetter(endpoint),
 		Queries:              metric.KSMQueries,
 		ServicesLister: discovery.MockedServicesLister{
 			Services: serviceList,

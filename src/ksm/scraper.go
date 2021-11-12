@@ -3,6 +3,7 @@ package ksm
 import (
 	"fmt"
 	"io"
+	"net/url"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
@@ -18,6 +19,8 @@ import (
 )
 
 const defaultLabelSelector = "app.kubernetes.io/name=kube-state-metrics"
+const defaultScheme = "http"
+const ksmMetricsPath = "metrics"
 
 // Providers is a struct holding pointers to all the clients Scraper needs to get data from.
 // TODO: Extract this out of the KSM package.
@@ -95,9 +98,9 @@ func NewScraper(config *config.Mock, providers Providers, options ...ScraperOpt)
 func (s *Scraper) Run(i *integration.Integration) error {
 	populated := false
 
-	endpoints, err := s.endpointsDiscoverer.Discover()
+	endpoints, err := s.ksmURLs()
 	if err != nil {
-		return fmt.Errorf("discovering KSM endpoints: %w", err)
+		return err
 	}
 
 	s.logger.Debugf("Discovered endpoints: %q", endpoints)
@@ -105,7 +108,7 @@ func (s *Scraper) Run(i *integration.Integration) error {
 	for _, endpoint := range endpoints {
 		s.logger.Debugf("Fetching KSM data from %q", endpoint)
 		grouper, err := ksmGrouper.New(ksmGrouper.Config{
-			MetricFamiliesGetter: s.KSM.MetricFamiliesGetter(endpoint, s.config.KSM.Scheme),
+			MetricFamiliesGetter: s.KSM.MetricFamiliesGetter(endpoint),
 			Queries:              metric.KSMQueries,
 			ServicesLister:       s.servicesLister,
 		}, ksmGrouper.WithLogger(s.logger))
@@ -156,13 +159,6 @@ func (s *Scraper) buildDiscoverer() (discovery.EndpointsDiscoverer, error) {
 		Client:        s.K8s,
 	}
 
-	if s.config.KSM.StaticEndpoint != "" {
-		s.logger.Debugf("Found KSM URL override, discovery disabled")
-		dc.FixedEndpoints = []string{s.config.KSM.StaticEndpoint}
-
-		return discovery.NewEndpointsDiscoverer(dc)
-	}
-
 	if s.config.KSM.Namespace != "" {
 		s.logger.Debugf("Restricting KSM discovery to namespace %q", s.config.KSM.Namespace)
 		dc.Namespace = s.config.KSM.Namespace
@@ -179,4 +175,32 @@ func (s *Scraper) buildDiscoverer() (discovery.EndpointsDiscoverer, error) {
 	}
 
 	return discovery.NewEndpointsDiscoverer(dc)
+}
+
+func (s *Scraper) ksmURLs() ([]string, error) {
+	if u := s.config.KSM.StaticURL; u != "" {
+		s.logger.Debugf("Using overridden endpoint for ksm %q", u)
+		return []string{u}, nil
+	}
+
+	endpoints, err := s.endpointsDiscoverer.Discover()
+	if err != nil {
+		return nil, fmt.Errorf("discovering KSM endpoints: %w", err)
+	}
+
+	scheme := s.config.KSM.Scheme
+	if scheme == "" {
+		scheme = defaultScheme
+	}
+
+	urls := make([]string, 0, len(endpoints))
+	for _, endpoint := range endpoints {
+		urls = append(urls, (&url.URL{
+			Scheme: scheme,
+			Host:   endpoint,
+			Path:   ksmMetricsPath,
+		}).String())
+	}
+
+	return urls, nil
 }
