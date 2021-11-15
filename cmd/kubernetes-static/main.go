@@ -43,12 +43,12 @@ var args argumentList
 func main() {
 	// Determines which subdirectory of cmd/kubernetes-static/ to use
 	// for serving the static metrics
-	k8sMetricsVersion := testutil.LatestVersion()
+	testData := testutil.LatestVersion()
 	if envVersion := os.Getenv("K8S_METRICS_VERSION"); envVersion != "" {
-		k8sMetricsVersion = testutil.Version(envVersion)
+		testData = testutil.Version(envVersion)
 	}
 
-	testSever, err := testutil.NewServer(k8sMetricsVersion)
+	testSever, err := testData.Server()
 	if err != nil {
 		logrus.Fatalf("Error building testserver: %v", err)
 	}

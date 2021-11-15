@@ -19,7 +19,7 @@ func TestScraper(t *testing.T) {
 		t.Run(fmt.Sprintf("for_version_%s", version), func(t *testing.T) {
 			t.Parallel()
 
-			testServer, err := testutil.NewServer(version)
+			testServer, err := version.Server()
 			if err != nil {
 				t.Fatalf("Cannot create fake KSM server: %v", err)
 			}
