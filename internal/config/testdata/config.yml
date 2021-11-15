@@ -3,66 +3,69 @@ interval: 15
 verbose: true
 timeout: 30
 cache_dir: /var/cache/nr-kubernetes
-network_route_file:
+network_route_file: /path/to/file
 
 kubelet:
   discovery:
     static:
-      url:
-    client:
-      authentication:
+      url: http://localhost:8181
+    client_authentication:
+      ca_file: "/CN=jbeda/O=app1/O=app2"
+      bearer_token: "Bearer D45C23AB3322"
 
 etcd:
   enable:
-    nodeSelector: node-role=controller
+    node_selector: node-role=controller
   discovery:
     static:
       urls:
         - https://localhost:10222
         - http://localhost:8080
-    localPod:
-      labelSelectors:
+    local_pod:
+      label_selectors:
         - k8s-app=etcd-manager-main
         - tier=control-plane,component=etcd
   secret:
-    name:
-    namespace:
+    name: nri-bundle-nri-kube-events-config
+    namespace: newrelic
 
 scheduler:
   discovery:
     static:
-      url:
-    localPod:
-      labelSelectors:
+      url: https://localhost:2221
+    local_pod:
+      label_selectors:
         - tier=control-plane,component=kube-scheduler
 
 controller_manager:
   discovery:
     static:
-      url:
-    localPod:
-      labelSelectors:
+      url: https://localhost:2223
+    local_pod:
+      label_selectors:
         - tier=control-plane,component=kube-controller-manager
 
 api_server:
   discovery:
     static:
-      url:
-    localPod:
-      labelSelectors:
+      url: https://localhost:2226
+    local_pod:
+      label_selectors:
         - tier=control-plane,component=kube-apiserver
-  secure_port:
+  secure_port: 90
   cache:
-    ttl:
-    ttl_jitter:
-    k8s_version_ttl:
-    k8s_version_ttl_jitter:
-
+    ttl: 1h
+    ttl_jitter: 75
+    k8s_version_ttl: 3h
+    k8s_version_ttl_jitter: 25
 
 ksm:
   discovery:
+    scheme: http
+    port: 80
+    distributed: true
     static:
       url: localhost:8080
     endpoints:
-      labelSelector: app=ksm
+      label_selector: app=ksm
       namespace: ksm

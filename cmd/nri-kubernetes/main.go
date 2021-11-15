@@ -31,11 +31,12 @@ type clusterClients struct {
 }
 
 func main() {
-	conf, err := config.LoadConfig()
+	conf, err := config.LoadConfig(config.FilePath, config.FileName)
 	if err != nil {
 		log.Error(err.Error())
 		os.Exit(ExitIntegration)
 	}
+	logger = log.NewStdErr(conf.Verbose)
 
 	clients, err := buildClients()
 	if err != nil {
@@ -127,3 +128,35 @@ func createIntegrationWithHTTPSink() (*integration.Integration, error) {
 
 	return integration.New("com.newrelic.kubernetes", "test-ksm", integration.Writer(h))
 }
+
+/*
+func LoadConfig() Config {
+	// strconv.ParseBool(os.Getenv("VERBOSE"))
+	kubeStateMetricsPort, _ := strconv.Atoi(os.Getenv("KUBE_STATE_METRIC_PORT"))
+	distributedKubeStateMetrics, _ := strconv.ParseBool(os.Getenv("DISTRIBUTED_KUBE_STATE_METRIC"))
+	schema := "http"
+
+	if os.Getenv("KUBE_STATE_METRIC_SCHEME") != "" {
+		schema = os.Getenv("KUBE_STATE_METRIC_SCHEME")
+	}
+
+	var ksmURL string
+	if u, err := url.Parse(os.Getenv("KUBE_STATE_METRIC_URL")); err != nil {
+		ksmURL = net.JoinHostPort(u.Host, u.Port())
+		schema = u.Scheme
+	}
+
+	return Config{
+		ClusterName: os.Getenv("CLUSTER_NAME"),
+		Verbose:     true,
+		Interval:    15 * time.Second,
+		KSM: KSM{
+			StaticURL:   ksmURL,
+			PodLabel:    os.Getenv("KUBE_STATE_METRIC_POD_LABEL"),
+			Scheme:      schema,
+			Port:        kubeStateMetricsPort,
+			Namespace:   os.Getenv("KUBE_STATE_METRIC_NAMESPACE"),
+			Distributed: distributedKubeStateMetrics,
+		},
+	}
+}*/
