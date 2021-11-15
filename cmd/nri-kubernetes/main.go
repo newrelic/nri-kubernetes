@@ -76,7 +76,7 @@ func buildClients() (*clusterClients, error) {
 }
 
 func runKSM(config *config.Config, clients *clusterClients, i *integration.Integration) error {
-	ksmScraper, err := ksm.NewScraper(config, ksm.Providers{
+	ksmScraper, err := ksm.NewScraper(config.ClusterName, config.KSM, ksm.Providers{
 		// TODO: Get rid of custom client.Kubernetes wrapper and use kubernetes.Interface directly.
 		K8s: clients.k8s.GetClient(),
 		KSM: clients.ksm,
@@ -128,35 +128,3 @@ func createIntegrationWithHTTPSink() (*integration.Integration, error) {
 
 	return integration.New("com.newrelic.kubernetes", "test-ksm", integration.Writer(h))
 }
-
-/*
-func LoadConfig() Config {
-	// strconv.ParseBool(os.Getenv("VERBOSE"))
-	kubeStateMetricsPort, _ := strconv.Atoi(os.Getenv("KUBE_STATE_METRIC_PORT"))
-	distributedKubeStateMetrics, _ := strconv.ParseBool(os.Getenv("DISTRIBUTED_KUBE_STATE_METRIC"))
-	schema := "http"
-
-	if os.Getenv("KUBE_STATE_METRIC_SCHEME") != "" {
-		schema = os.Getenv("KUBE_STATE_METRIC_SCHEME")
-	}
-
-	var ksmURL string
-	if u, err := url.Parse(os.Getenv("KUBE_STATE_METRIC_URL")); err != nil {
-		ksmURL = net.JoinHostPort(u.Host, u.Port())
-		schema = u.Scheme
-	}
-
-	return Config{
-		ClusterName: os.Getenv("CLUSTER_NAME"),
-		Verbose:     true,
-		Interval:    15 * time.Second,
-		KSM: KSM{
-			StaticURL:   ksmURL,
-			PodLabel:    os.Getenv("KUBE_STATE_METRIC_POD_LABEL"),
-			Scheme:      schema,
-			Port:        kubeStateMetricsPort,
-			Namespace:   os.Getenv("KUBE_STATE_METRIC_NAMESPACE"),
-			Distributed: distributedKubeStateMetrics,
-		},
-	}
-}*/

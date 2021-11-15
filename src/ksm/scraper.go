@@ -3,6 +3,7 @@ package ksm
 import (
 	"fmt"
 	"io"
+	"net"
 	"net/url"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
@@ -31,8 +32,9 @@ type Providers struct {
 
 // Scraper takes care of getting metrics from an autodiscovered KSM instance.
 type Scraper struct {
-	logger log.Logger
-	config *config.Mock
+	logger      log.Logger
+	clusterName string
+	config      config.KSM
 	Providers
 	k8sVersion          *version.Info
 	endpointsDiscoverer discovery.EndpointsDiscoverer
@@ -52,15 +54,25 @@ func WithLogger(logger log.Logger) ScraperOpt {
 
 // NewScraper builds a new Scraper, initializing its internal informers. After use, informers should be closed by calling
 // Close() to prevent resource leakage.
-func NewScraper(config *config.Mock, providers Providers, options ...ScraperOpt) (*Scraper, error) {
+func NewScraper(clusterName string, cfg config.KSM, providers Providers, options ...ScraperOpt) (*Scraper, error) {
 	s := &Scraper{
-		config:    config,
-		Providers: providers,
+		clusterName: clusterName,
+		config:      cfg,
+		Providers:   providers,
 		// TODO: An empty implementation of the logger interface would be better
 		logger: log.New(false, io.Discard),
 	}
 
 	// TODO: Sanity check config
+	if s.config.Discovery.Scheme == "" {
+		s.config.Discovery.Scheme = config.DefaultSchema
+	}
+
+	if u, err := url.Parse(s.config.Discovery.Static.URL); err != nil {
+		s.config.Discovery.Static.URL = net.JoinHostPort(u.Host, u.Port())
+		s.config.Discovery.Scheme = u.Scheme
+	}
+
 	// return nil, ConfigErr...
 
 	for i, opt := range options {
@@ -120,7 +132,7 @@ func (s *Scraper) Run(i *integration.Integration) error {
 		job := scrape.NewScrapeJob("kube-state-metrics", grouper, metric.KSMSpecs)
 
 		s.logger.Debugf("Running KSM job")
-		r := job.Populate(i, s.config.ClusterName, s.logger, s.k8sVersion)
+		r := job.Populate(i, s.clusterName, s.logger, s.k8sVersion)
 		if r.Errors != nil {
 			s.logger.Warnf("Error populating KSM metrics: %v", r.Error())
 		}
@@ -132,7 +144,7 @@ func (s *Scraper) Run(i *integration.Integration) error {
 
 		populated = r.Populated
 
-		if !s.config.KSM.Distributed {
+		if !s.config.Discovery.Distributed {
 			break
 		}
 	}
@@ -159,26 +171,26 @@ func (s *Scraper) buildDiscoverer() (discovery.EndpointsDiscoverer, error) {
 		Client:        s.K8s,
 	}
 
-	if s.config.KSM.Namespace != "" {
-		s.logger.Debugf("Restricting KSM discovery to namespace %q", s.config.KSM.Namespace)
-		dc.Namespace = s.config.KSM.Namespace
+	if s.config.Discovery.Endpoints.Namespace != "" {
+		s.logger.Debugf("Restricting KSM discovery to namespace %q", s.config.Discovery.Endpoints.Namespace)
+		dc.Namespace = s.config.Discovery.Endpoints.Namespace
 	}
 
-	if s.config.KSM.PodLabel != "" {
-		s.logger.Debugf("Overriding default KSM labelSelector (%q) to %q", defaultLabelSelector, s.config.KSM.PodLabel)
-		dc.LabelSelector = s.config.KSM.PodLabel
+	if s.config.Discovery.Endpoints.LabelSelector != "" {
+		s.logger.Debugf("Overriding default KSM labelSelector (%q) to %q", defaultLabelSelector, s.config.Discovery.Endpoints.LabelSelector)
+		dc.LabelSelector = s.config.Discovery.Endpoints.LabelSelector
 	}
 
-	if s.config.KSM.Port != 0 {
-		s.logger.Debugf("Overriding default KSM port to %d", defaultLabelSelector, s.config.KSM.Port)
-		dc.Port = s.config.KSM.Port
+	if s.config.Discovery.Port != 0 {
+		s.logger.Debugf("Overriding default KSM port to %d", defaultLabelSelector, s.config.Discovery.Port)
+		dc.Port = s.config.Discovery.Port
 	}
 
 	return discovery.NewEndpointsDiscoverer(dc)
 }
 
 func (s *Scraper) ksmURLs() ([]string, error) {
-	if u := s.config.KSM.StaticURL; u != "" {
+	if u := s.config.Discovery.Static.URL; u != "" {
 		s.logger.Debugf("Using overridden endpoint for ksm %q", u)
 		return []string{u}, nil
 	}
@@ -188,7 +200,7 @@ func (s *Scraper) ksmURLs() ([]string, error) {
 		return nil, fmt.Errorf("discovering KSM endpoints: %w", err)
 	}
 
-	scheme := s.config.KSM.Scheme
+	scheme := s.config.Discovery.Scheme
 	if scheme == "" {
 		scheme = defaultScheme
 	}

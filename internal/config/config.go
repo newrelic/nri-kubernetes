@@ -8,8 +8,9 @@ import (
 )
 
 const (
-	FileName = "nri-kubernetes"
-	FilePath = "/etc/newrelic-infra/integrations.d/"
+	DefaultSchema = "http"
+	FileName      = "nri-kubernetes"
+	FilePath      = "/etc/newrelic-infra/integrations.d/"
 )
 
 type Config struct {
