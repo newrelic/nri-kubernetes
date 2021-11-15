@@ -113,7 +113,7 @@ func TestLoadConfig(t *testing.T) {
 				},
 			},
 		},
-		ApiServer: ApiServer{
+		APIServer: APIServer{
 			Discovery: struct {
 				Static struct {
 					URL string `mapstructure:"url"`
@@ -136,10 +136,10 @@ func TestLoadConfig(t *testing.T) {
 			SecurePort: 90,
 			Cache: struct {
 				TTL                 string `mapstructure:"ttl"`
-				TTL_jitter          int    `mapstructure:"ttl_jitter"`
+				TTLJitter           int    `mapstructure:"ttl_jitter"`
 				K8sVersionTTL       string `mapstructure:"k8s_version_ttl"`
 				K8sVersionTTLJitter int    `mapstructure:"k8s_version_ttl_jitter"`
-			}{TTL: "1h", TTL_jitter: 75, K8sVersionTTL: "3h", K8sVersionTTLJitter: 25},
+			}{TTL: "1h", TTLJitter: 75, K8sVersionTTL: "3h", K8sVersionTTLJitter: 25},
 		},
 		KSM: KSM{
 			Discovery: struct {

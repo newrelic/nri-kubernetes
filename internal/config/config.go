@@ -25,7 +25,7 @@ type Config struct {
 	Etcd              `mapstructure:"etcd"`
 	Scheduler         `mapstructure:"scheduler"`
 	ControllerManager `mapstructure:"controller_manager"`
-	ApiServer         `mapstructure:"api_server"`
+	APIServer         `mapstructure:"api_server"`
 	KSM               `mapstructure:"ksm"`
 }
 
@@ -81,7 +81,7 @@ type ControllerManager struct {
 	} `mapstructure:"discovery"`
 }
 
-type ApiServer struct {
+type APIServer struct {
 	Discovery struct {
 		Static struct {
 			URL string `mapstructure:"url"`
@@ -92,7 +92,7 @@ type ApiServer struct {
 	} `mapstructure:"discovery"`
 	Cache struct {
 		TTL                 string `mapstructure:"ttl"`
-		TTL_jitter          int    `mapstructure:"ttl_jitter"`
+		TTLJitter           int    `mapstructure:"ttl_jitter"`
 		K8sVersionTTL       string `mapstructure:"k8s_version_ttl"`
 		K8sVersionTTLJitter int    `mapstructure:"k8s_version_ttl_jitter"`
 	} `mapstructure:"cache"`
