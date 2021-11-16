@@ -11,6 +11,7 @@ import (
 	"github.com/sethgrid/pester"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
+	"github.com/newrelic/nri-kubernetes/v2/internal/deprecated"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/ksm"
 	ksmClient "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
@@ -23,6 +24,7 @@ const (
 	ExitClients = iota
 	ExitIntegration
 	ExitLoop
+	ExitSetup
 )
 
 type clusterClients struct {
@@ -33,9 +35,6 @@ type clusterClients struct {
 func main() {
 	c := config.LoadConfig()
 	logger = log.NewStdErr(c.Verbose)
-
-	// TODO: Can this error?
-	conf := config.LoadConfig()
 
 	clients, err := buildClients()
 	if err != nil {
@@ -49,12 +48,75 @@ func main() {
 		os.Exit(ExitIntegration)
 	}
 
-	// TODO: Here we will switch-case between components: KSM, ControlPlane, etc.
-	err = runKSM(&conf, clients, i)
-	if err != nil {
-		logger.Errorf(err.Error())
-		os.Exit(ExitLoop)
+	var ksmScraper *ksm.Scraper
+	if c.KSM.Enabled {
+		ksmScraper, err = setupKSM(c, clients)
+		if err != nil {
+			logger.Errorf("setting up ksm scraper: %w", err)
+			os.Exit(ExitSetup)
+		}
+		defer ksmScraper.Close()
 	}
+
+	for {
+		// TODO think carefully to the signature of this function
+		err := runScrapers(c, ksmScraper, i, clients)
+		if err != nil {
+			logger.Errorf("retrieving scraper data: %v", err)
+			os.Exit(ExitLoop)
+		}
+
+		err = i.Publish()
+		if err != nil {
+			logger.Errorf("publishing integration: %v", err)
+			os.Exit(ExitLoop)
+		}
+
+		time.Sleep(c.Interval)
+	}
+}
+
+func runScrapers(c config.Mock, ksmScraper *ksm.Scraper, i *integration.Integration, clients *clusterClients) error {
+	if c.KSM.Enabled {
+		err := ksmScraper.Run(i)
+		if err != nil {
+			return fmt.Errorf("retrieving ksm data: %w", err)
+		}
+	}
+
+	if c.Kubelet.Enabled {
+		// TODO this is merely a stub running old code
+		err := deprecated.RunKubelet(&c, clients.k8s, i)
+		if err != nil {
+			return fmt.Errorf("retrieving kubelet data: %w", err)
+		}
+	}
+
+	if c.ControlPlane.Enabled {
+		// TODO this is merely a stub running old code
+		err := deprecated.RunControlPlane(&c, clients.k8s, i)
+		if err != nil {
+			return fmt.Errorf("retrieving control-plane data: %w", err)
+
+		}
+	}
+
+	return nil
+}
+
+func setupKSM(c config.Mock, clients *clusterClients) (*ksm.Scraper, error) {
+	providers := ksm.Providers{
+		// TODO: Get rid of custom client.Kubernetes wrapper and use kubernetes.Interface directly.
+		K8s: clients.k8s.GetClient(),
+		KSM: clients.ksm,
+	}
+
+	ksmScraper, err := ksm.NewScraper(&c, providers, ksm.WithLogger(logger))
+	if err != nil {
+		return nil, fmt.Errorf("building KSM scraper: %w", err)
+	}
+
+	return ksmScraper, nil
 }
 
 func buildClients() (*clusterClients, error) {
@@ -72,36 +134,6 @@ func buildClients() (*clusterClients, error) {
 		k8s: k8s,
 		ksm: ksmCli,
 	}, nil
-}
-
-func runKSM(config *config.Mock, clients *clusterClients, i *integration.Integration) error {
-	ksmScraper, err := ksm.NewScraper(config, ksm.Providers{
-		// TODO: Get rid of custom client.Kubernetes wrapper and use kubernetes.Interface directly.
-		K8s: clients.k8s.GetClient(),
-		KSM: clients.ksm,
-	},
-		ksm.WithLogger(logger),
-	)
-
-	if err != nil {
-		return fmt.Errorf("building KSM scraper: %w", err)
-	}
-
-	defer ksmScraper.Close()
-
-	for {
-		err = ksmScraper.Run(i)
-		if err != nil {
-			return fmt.Errorf("scraping KSM: %w", err)
-		}
-
-		err = i.Publish()
-		if err != nil {
-			return fmt.Errorf("publishing integration: %w", err)
-		}
-
-		time.Sleep(config.Interval)
-	}
 }
 
 func createIntegrationWithHTTPSink() (*integration.Integration, error) {
