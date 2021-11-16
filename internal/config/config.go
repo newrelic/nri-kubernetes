@@ -41,7 +41,7 @@ type KSM struct {
 
 type ControlPlane struct {
 	ETCD              ETCD
-	ApiServer         APIServer
+	APIServer         APIServer
 	Scheduler         Scheduler
 	ControllerManager ControllerManager
 	Enabled           bool
@@ -116,7 +116,7 @@ func LoadConfig() Mock {
 				EtcdTLSSecretNamespace: os.Getenv("ETCD_ENDPOINT_SECRET_NAMESPACE"),
 				EtcdTLSSecretName:      os.Getenv("ETCD_ENDPOINT_SECRET_NAME"),
 			},
-			ApiServer: APIServer{
+			APIServer: APIServer{
 				APIServerEndpointURL: os.Getenv("API_SERVER_ENDPOINT_URL"),
 				APIServerSecurePort:  os.Getenv("API_SERVER_SECURE_PORT"),
 			},
