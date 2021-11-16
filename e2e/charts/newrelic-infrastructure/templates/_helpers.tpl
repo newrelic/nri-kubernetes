@@ -56,17 +56,6 @@ Create the name of the service account to use
 {{- end -}}
 
 {{/*
-Create the image name depending on the "privileged" flag
-*/}}
-{{- define "newrelic.image" -}}
-{{- if .Values.privileged -}}
-"{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion}}"
-{{- else -}}
-"{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}-unprivileged"
-{{- end -}}
-{{- end -}}
-
-{{/*
 Return the licenseKey
 */}}
 {{- define "newrelic.licenseKey" -}}

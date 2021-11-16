@@ -3,6 +3,7 @@
 In order to run it locally you can do the following
 ```shell
 eval $(minikube -p minikube docker-env)
+minikube addons enable metrics-server
 ```
 
 Note that the control plane flags in `e2e-values.yml` have been set meeting the minikube specifications. 
@@ -13,8 +14,8 @@ and `TARGETOS` args to be populated.
 ```shell
 GOOS=linux GOARCH=amd64 make compile # Set GOOS and GOARCH explicitly since Dockerfile expects them in the binary name
 export  DOCKER_BUILDKIT=1
-docker build -t e2e/newrelic-infrastructure:e2e --build-arg 'MODE=normal' .
-docker build -t e2e/newrelic-infrastructure:e2e-unprivileged --build-arg 'MODE=unprivileged' .
+docker build -t e2e/newrelic-infrastructure:e2e .
+docker build -t e2e/newrelic-infrastructure-scraper:e2e -f Dockerfile-scraper .
 ```
 
 You need to install the binary `https://github.com/newrelic/newrelic-integration-e2e-action/tree/main/newrelic-integration-e2e` used in the e2e test
