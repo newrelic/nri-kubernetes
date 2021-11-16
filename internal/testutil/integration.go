@@ -13,7 +13,7 @@ import (
 // to parse flags.
 var integrationMutex = sync.Mutex{}
 
-// NewIntegration retunrs a new integration.Integration ready for use in testing and mocks.
+// NewIntegration returns a new integration.Integration ready for use in testing and mocks.
 // Integration will use the test name and will fail the test if creation is unsuccessful.
 func NewIntegration(t *testing.T) *integration.Integration {
 	integrationMutex.Lock()

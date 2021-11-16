@@ -34,7 +34,7 @@ func (a Asserter) Using(groups definition.SpecGroups) Asserter {
 	return a
 }
 
-// On retunrs an asserter configured to check for existence on the supplied entities.
+// On returns an asserter configured to check for existence on the supplied entities.
 func (a Asserter) On(entities []*integration.Entity) Asserter {
 	a.entities = entities
 	return a
