@@ -66,11 +66,6 @@ jobs:
             --build-arg 'BASE_IMAGE=newrelic/infrastructure-bundle:nightly' \
             -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG \
             .
-          docker buildx build --platform=$DOCKER_PLATFORMS \
-            --build-arg 'MODE=unprivileged' \
-            --build-arg 'BASE_IMAGE=newrelic/infrastructure-bundle:nightly' \
-            -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged \
-            .
 
       - name: Build and load x64 image for security scanning
         # We need to build a single-arch image again to be able to --load it into the host
@@ -92,9 +87,4 @@ jobs:
           docker buildx build --push --platform=$DOCKER_PLATFORMS \
             --build-arg 'BASE_IMAGE=newrelic/infrastructure-bundle:nightly' \
             -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG \
-            .
-          docker buildx build --push --platform=$DOCKER_PLATFORMS \
-            --build-arg 'MODE=unprivileged' \
-            --build-arg 'BASE_IMAGE=newrelic/infrastructure-bundle:nightly' \
-            -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged \
             .
