@@ -80,11 +80,11 @@ func RunControlPlane(config *config.Mock, k8s client.Kubernetes, i *integration.
 		k8s,
 		config.ETCD.EtcdTLSSecretName,
 		config.ETCD.EtcdTLSSecretNamespace,
-		config.ApiServer.APIServerSecurePort,
+		config.APIServer.APIServerSecurePort,
 		config.Scheduler.SchedulerEndpointURL,
 		config.ETCD.EtcdEndpointURL,
 		config.ControllerManager.ControllerManagerEndpointURL,
-		config.ApiServer.APIServerEndpointURL,
+		config.APIServer.APIServerEndpointURL,
 	)
 
 	if err != nil {
