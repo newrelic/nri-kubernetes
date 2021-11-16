@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
@@ -11,12 +12,20 @@ import (
 
 // Asserter is a helper for checking whether an integration contains all the metrics defined in a specGroup.
 // It provides a chainable API.
+// Asserter is safe to use concurrently.
 type Asserter struct {
+	*sync.Mutex
 	entities        []*integration.Entity
 	specGroups      definition.SpecGroups
 	exclude         map[string]map[string]bool
 	excludeOptional bool
 	silent          bool
+}
+
+func NewAsserter() Asserter {
+	return Asserter{
+		Mutex: &sync.Mutex{},
+	}
 }
 
 // Using returns an asserter that will use the supplied specGroups to assert entities.
@@ -35,6 +44,11 @@ func (a Asserter) On(entities []*integration.Entity) Asserter {
 // If no metricNames are specified, Asserter will ignore the whole group.
 // Missing metrics are still logged.
 func (a Asserter) Excluding(groupName string, metricNames ...string) Asserter {
+	// Exclusion map is a pointer and therefore shared by copies of the asserter.
+	// For this reason we need to grab the lock here.
+	a.Lock()
+	defer a.Unlock()
+
 	if a.exclude == nil {
 		a.exclude = map[string]map[string]bool{}
 	}
