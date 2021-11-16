@@ -56,7 +56,6 @@ jobs:
       - name: Check consistency of deployment yamls
         run: |
           grep -e "$DOCKER_IMAGE_NAME:${DOCKER_IMAGE_TAG/-pre}" deploy/newrelic-infra.yaml
-          grep -e "$DOCKER_IMAGE_NAME:${DOCKER_IMAGE_TAG/-pre}" deploy/newrelic-infra-unprivileged.yaml
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -77,10 +76,6 @@ jobs:
         run: |
           docker buildx build --platform=$DOCKER_PLATFORMS \
             -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG \
-            .
-          docker buildx build --platform=$DOCKER_PLATFORMS \
-            --build-arg 'MODE=unprivileged' \
-            -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged \
             .
 
       - name: Build and load x64 image for security scanning
@@ -103,18 +98,9 @@ jobs:
           docker buildx build --push --platform=$DOCKER_PLATFORMS \
             -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG \
             .
-          docker buildx build --push --platform=$DOCKER_PLATFORMS \
-            --build-arg 'MODE=unprivileged' \
-            -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-unprivileged \
-            .
       - name: Push :latest images
         if: ${{ ! github.event.release.prerelease }}
         run: |
           docker buildx build --push --platform=$DOCKER_PLATFORMS \
             -t $DOCKER_IMAGE_NAME:latest \
             .
-          docker buildx build --push --platform=$DOCKER_PLATFORMS \
-            --build-arg 'MODE=unprivileged' \
-            -t $DOCKER_IMAGE_NAME:latest-unprivileged \
-            .
-
