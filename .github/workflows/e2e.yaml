@@ -35,10 +35,10 @@ jobs:
       - name: Compile, Build and load Images
         run: |
           GOOS=linux GOARCH=amd64 make compile # Set GOOS and GOARCH explicitly since Dockerfile expects them in the binary name
-          docker build -t e2e/newrelic-infrastructure:e2e --build-arg 'MODE=normal' .
-          docker build -t e2e/newrelic-infrastructure-ksm:e2e -f Dockerfile-ksm .
-          minikube image load e2e/newrelic-infrastructure-ksm:e2e
+          docker build -t e2e/newrelic-infrastructure:e2e .
+          docker build -t e2e/newrelic-infrastructure-scraper:e2e -f Dockerfile-scraper .
           minikube image load e2e/newrelic-infrastructure:e2e
+          minikube image load e2e/newrelic-infrastructure-scraper:e2e
       - name: Setup Helm
         run: |
           chmod go-r /home/runner/.kube/config
