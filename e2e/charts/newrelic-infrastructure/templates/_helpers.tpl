@@ -184,3 +184,18 @@ licenseKey and cluster are set.
 {{- $customSecretLicenseKey := include "newrelic.customSecretLicenseKey" . -}}
 {{- and (or $licenseKey (and $customSecretName $customSecretLicenseKey)) $cluster}}
 {{- end -}}
+
+
+{{- define "newrelic.deprecatedKubeStateMetricsUrl" -}}
+{{- if .Values.kubeStateMetricsUrl }}
+url: {{ .Values.kubeStateMetricsUrl | quote }}
+{{- end -}}
+{{- end -}}
+
+{{- define "config.ksm" -}}
+{{ toYaml (merge (include "newrelic.deprecatedKubeStateMetricsPodLabel" . | fromYaml) .Values.config.ksm) }}
+{{- end }}
+
+{{- define "config" -}}
+{{ toYaml (merge (include "config.ksm" . | fromYaml) .Values.config) }}
+{{- end }}

@@ -5,8 +5,8 @@ image:
   repository: e2e/newrelic-infrastructure
 ksmScraperImage:
   pullPolicy: Never
-  tag: e2e
-  repository: e2e/newrelic-infrastructure-ksm
+  tag: e2e-ksm
+  repository: e2e/newrelic-infrastructure
 resources:
   limits:
     cpu: 500m
@@ -17,3 +17,21 @@ resources:
 apiServerEndpointUrl: https://localhost:8443
 schedulerEndpointUrl: https://localhost:10259
 controllerManagerEndpointUrl: https://localhost:10257
+config:
+  cluster_name: dummy_cluster
+  interval: 15
+  verbose: true
+  timeout: 30
+  cache_dir: /var/cache/nr-kubernetes
+  network_route_file: /path/to/file
+
+  ksm:
+    discovery:
+      scheme:
+      port:
+      distributed:
+      static:
+        url:
+      endpoints:
+        label_selector:
+        namespace:

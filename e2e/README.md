@@ -15,6 +15,7 @@ GOOS=linux GOARCH=amd64 make compile # Set GOOS and GOARCH explicitly since Dock
 export  DOCKER_BUILDKIT=1
 docker build -t e2e/newrelic-infrastructure:e2e --build-arg 'MODE=normal' .
 docker build -t e2e/newrelic-infrastructure:e2e-unprivileged --build-arg 'MODE=unprivileged' .
+docker build -t e2e/newrelic-infrastructure:e2e-ksm --file Dockerfile-ksm .
 ```
 
 You need to install the binary `https://github.com/newrelic/newrelic-integration-e2e-action/tree/main/newrelic-integration-e2e` used in the e2e test
@@ -23,6 +24,14 @@ git clone https://github.com/newrelic/newrelic-integration-e2e-action
 cd newrelic-integration-e2e-action/newrelic-integration-e2e
 go build -o  $GOPATH/bin/newrelic-integration-e2e ./cmd/...
 ```
+
+If you don't have ksm in your minikube cluster install it:
+```shell
+helm repo add kube-state-metrics https://kubernetes.github.io/kube-state-metrics
+helm repo update
+helm install ksm kube-state-metrics/kube-state-metrics -n kube-system
+```
+
 
 You can now run the e2e tests locally
 ```shell
