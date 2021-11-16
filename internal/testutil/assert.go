@@ -101,7 +101,7 @@ func (a Asserter) Assert(t *testing.T) {
 					continue
 				}
 
-				t.Errorf("metric %q not found in entity %q", spec.Name, entity.Metadata.Name)
+				t.Errorf("metric %q not found in entity %q %q", spec.Name, entity.Metadata.Namespace, entity.Metadata.Name)
 				t.Failed()
 			}
 		}
