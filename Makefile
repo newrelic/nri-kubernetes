@@ -48,8 +48,7 @@ validate:
 
 compile:
 	@echo "[compile] Building $(BINARY_NAME)"
-	CGO_ENABLED=$(CGO_ENABLED) go build $(LDFLAGS) -o $(BIN_DIR)/$(BINARY_NAME) ./src
-	CGO_ENABLED=$(CGO_ENABLED) go build $(LDFLAGS) -o $(BIN_DIR)/$(BINARY_NAME)-ksm ./cmd/nri-kubernetes
+	CGO_ENABLED=$(CGO_ENABLED) go build $(LDFLAGS) -o $(BIN_DIR)/$(BINARY_NAME)-scraper ./cmd/nri-kubernetes
 
 
 .PHONY: compile-multiarch
@@ -90,18 +89,6 @@ buildLicenseNotice:
 .PHONY: e2e
 e2e: guard-CLUSTER_NAME guard-NR_LICENSE_KEY
 	@go run e2e/cmd/e2e.go --verbose
-
-.PHONY: e2e-compile
-e2e-compile:
-	@echo "[compile E2E binary] Building $(E2E_BINARY_NAME)"
-	# CGO_ENABLED=0 is needed since the binary is compiled in a non alpine linux.
-	@GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o $(BIN_DIR)/$(E2E_BINARY_NAME) ./e2e/cmd/e2e.go
-
-.PHONY: e2e-compile-only
-e2e-compile-only:
-	@echo "[compile E2E binary] Building $(E2E_BINARY_NAME)"
-	# CGO_ENABLED=0 is needed since the binary is compiled in a non alpine linux.
-	@GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o $(BIN_DIR)/$(E2E_BINARY_NAME) ./e2e/cmd/e2e.go
 
 .PHONY: run-static
 run-static:
