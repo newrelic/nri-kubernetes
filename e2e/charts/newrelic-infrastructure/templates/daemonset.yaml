@@ -38,28 +38,23 @@ spec:
 {{ toYaml .Values.image.pullSecrets | indent 8 }}
       {{- end }}
       containers:
-        - name: {{ template "newrelic.name" . }}
-          image: {{ template "newrelic.image" . }}
-          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+        - name: kubelet-cp-scraper
+          image: {{ .Values.scraperImage.repository }}:{{ .Values.scraperImage.tag }}
+          imagePullPolicy: {{ .Values.scraperImage.pullPolicy }}
           securityContext:
             {{- if .Values.privileged }}
             privileged: true
             {{- else }}
             runAsUser: {{ .Values.runAsUser | default 1000 }}
+            runAsGroup: {{ .Values.runAsGroup | default 2000 }}
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             {{- end }}
           env:
-            - name: NRIA_LICENSE_KEY
-              valueFrom:
-                secretKeyRef:
-                  {{- if (include "newrelic.licenseKey" .) }}
-                  name: {{ template "newrelic.fullname" . }}-config
-                  key: license
-                  {{- else }}
-                  name: {{ include "newrelic.customSecretName" . }}
-                  key: {{ include "newrelic.customSecretLicenseKey" . }}
-                  {{- end }}
+            - name: "CONTROL_PLANE_ENABLED"
+              value: "true"
+            - name: "KUBELET_ENABLED"
+              value: "true"
             - name: "CLUSTER_NAME"
               value: {{ include "newrelic.cluster" . }}
             {{- if .Values.etcdTlsSecretName }}
@@ -102,63 +97,12 @@ spec:
             - name: "API_SERVER_SECURE_PORT"
               value: {{ .Values.apiServerSecurePort | quote }}
             {{- end }}
-            {{- if .Values.eventQueueDepth }}
-            - name: "NRIA_EVENT_QUEUE_DEPTH"
-              value: {{ .Values.eventQueueDepth | quote }}
-            {{- end }}
-            {{- if .Values.discoveryCacheTTL }}
-            - name: "DISCOVERY_CACHE_TTL"
-              value: {{ .Values.discoveryCacheTTL | quote }}
-            {{- end }}
-            {{- /* Ugly hack to check if .Values.enableProcessMetrics is defined: */}}
-            {{- if ne (print .Values.enableProcessMetrics) "<nil>" }}
-            - name: "NRIA_ENABLE_PROCESS_METRICS"
-              value: {{ .Values.enableProcessMetrics | quote }}
-            {{- end }}
-            {{- if (include "newrelic.nrStaging" .) }}
-            - name: "NRIA_STAGING"
-              value: "true"
-            {{- end }}
             - name: "NRK8S_NODE_NAME"
               valueFrom:
                 fieldRef:
                   apiVersion: "v1"
                   fieldPath: "spec.nodeName"
-            {{- if .Values.useNodeNameAsDisplayName }}
-            - name: "NRIA_DISPLAY_NAME"
-            {{- if .Values.prefixDisplayNameWithCluster }}
-              value: "{{ include "newrelic.cluster" . }}:$(NRK8S_NODE_NAME)"
-            {{- else }}
-              valueFrom:
-                fieldRef:
-                  apiVersion: "v1"
-                  fieldPath: "spec.nodeName"
-            {{- end }}
-            {{- end }}
-            {{- if .Values.customAttributes }}
-            - name: "NRIA_CUSTOM_ATTRIBUTES"
-              value: {{ .Values.customAttributes }}
-            {{- end }}
-            - name: "NRIA_PASSTHROUGH_ENVIRONMENT"
-              value: "KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,CLUSTER_NAME,CADVISOR_PORT,NRK8S_NODE_NAME,ETCD_TLS_SECRET_NAME,ETCD_TLS_SECRET_NAMESPACE,API_SERVER_SECURE_PORT,SCHEDULER_ENDPOINT_URL,ETCD_ENDPOINT_URL,CONTROLLER_MANAGER_ENDPOINT_URL,API_SERVER_ENDPOINT_URL,DISCOVERY_CACHE_TTL"
-            {{- if .Values.verboseLog }}
-            - name: NRIA_VERBOSE
-              value: "1"
-            {{- end }}
-            {{- if .Values.logFile }}
-            - name: NRIA_LOG_FILE
-              value: {{ .Values.logFile }}
-            {{- end }}
           volumeMounts:
-            {{- if .Values.config }}
-            - name: config
-              mountPath: /etc/newrelic-infra.yml
-              subPath: newrelic-infra.yml
-            {{- end }}
-            {{- if .Values.integrations_config }}
-            - name: nri-integrations-cfg-volume
-              mountPath: /etc/newrelic-infra/integrations.d/
-            {{- end }}
             {{- if .Values.privileged }}
             - name: dev
               mountPath: /dev
@@ -183,6 +127,85 @@ spec:
               name: tmpfs-tmp
             - mountPath: /var/cache/nr-kubernetes
               name: tmpfs-cache
+            {{- end }}
+          {{- if .Values.resources }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          {{- end }}
+        - name: agent
+          image: {{ .Values.agentImage.repository }}:{{ .Values.agentImage.tag }}
+          imagePullPolicy: {{ .Values.agentImage.pullPolicy }}
+          securityContext:
+            {{- if .Values.privileged }}
+            privileged: true
+            {{- else }}
+            runAsUser: {{ .Values.runAsUser | default 1000 }}
+            runAsGroup: {{ .Values.runAsGroup | default 2000 }}
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            {{- end }}
+          env:
+            - name: NRIA_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  {{- if (include "newrelic.licenseKey" .) }}
+                  name: {{ template "newrelic.fullname" . }}-config
+                  key: license
+                  {{- else }}
+                  name: {{ include "newrelic.customSecretName" . }}
+                  key: {{ include "newrelic.customSecretLicenseKey" . }}
+                  {{- end }}
+            {{- if .Values.eventQueueDepth }}
+            - name: "NRIA_EVENT_QUEUE_DEPTH"
+              value: {{ .Values.eventQueueDepth | quote }}
+            {{- end }}
+            {{- /* Ugly hack to check if .Values.enableProcessMetrics is defined: */}}
+            {{- if ne (print .Values.enableProcessMetrics) "<nil>" }}
+            - name: "NRIA_ENABLE_PROCESS_METRICS"
+              value: {{ .Values.enableProcessMetrics | quote }}
+            {{- end }}
+            {{- if (include "newrelic.nrStaging" .) }}
+            - name: "NRIA_STAGING"
+              value: "true"
+            {{- end }}
+            {{- if .Values.useNodeNameAsDisplayName }}
+            - name: "NRIA_DISPLAY_NAME"
+            {{- if .Values.prefixDisplayNameWithCluster }}
+              value: "{{ include "newrelic.cluster" . }}:$(NRK8S_NODE_NAME)"
+            {{- else }}
+              valueFrom:
+                fieldRef:
+                  apiVersion: "v1"
+                  fieldPath: "spec.nodeName"
+            {{- end }}
+            {{- end }}
+            {{- if .Values.customAttributes }}
+            - name: "NRIA_CUSTOM_ATTRIBUTES"
+              value: {{ .Values.customAttributes }}
+            {{- end }}
+            {{- if .Values.verboseLog }}
+            - name: NRIA_VERBOSE
+              value: "1"
+            {{- end }}
+            {{- if .Values.logFile }}
+            - name: NRIA_LOG_FILE
+              value: {{ .Values.logFile }}
+            {{- end }}
+            {{- if .Values.privileged }}
+            - name: "NRIA_OVERRIDE_HOST_ROOT"
+              value: ""
+            - name: "NRIA_IS_SECURE_FORWARD_ONLY"
+              value: "true"
+            {{- end }}
+          volumeMounts:
+            {{- if .Values.config }}
+            - name: config
+              mountPath: /etc/newrelic-infra.yml
+              subPath: newrelic-infra.yml
+            {{- end }}
+            {{- if .Values.integrations_config }}
+            - name: nri-integrations-cfg-volume
+              mountPath: /etc/newrelic-infra/integrations.d/
             {{- end }}
           {{- if .Values.resources }}
           resources:

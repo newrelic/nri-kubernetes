@@ -1,12 +1,16 @@
 verboseLog: true
-image:
+forwarderImage:
+  pullPolicy: IfNotPresent
+  tag: 1.20.5
+  repository: newrelic/k8s-events-forwarder
+agentImage:
   pullPolicy: Never
   tag: e2e
   repository: e2e/newrelic-infrastructure
-ksmScraperImage:
+scraperImage:
   pullPolicy: Never
   tag: e2e
-  repository: e2e/newrelic-infrastructure-ksm
+  repository: e2e/newrelic-infrastructure-scraper
 resources:
   limits:
     cpu: 500m
