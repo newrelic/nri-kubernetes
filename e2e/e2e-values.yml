@@ -17,6 +17,8 @@ resources:
 apiServerEndpointUrl: https://localhost:8443
 schedulerEndpointUrl: https://localhost:10259
 controllerManagerEndpointUrl: https://localhost:10257
+#kubeStateMetricsUrl: https://localhost:10250
+#kubeStateMetricsPort: 6669
 config:
   cluster_name: dummy_cluster
   interval: 15
@@ -24,14 +26,13 @@ config:
   timeout: 30
   cache_dir: /var/cache/nr-kubernetes
   network_route_file: /path/to/file
-
   ksm:
     discovery:
-      scheme:
-      port:
-      distributed:
+      scheme: http
+      port: 0
+      distributed: ""
       static:
-        url:
+        url: ""
       endpoints:
-        label_selector:
-        namespace:
+        label_selector: ""
+        namespace: ""

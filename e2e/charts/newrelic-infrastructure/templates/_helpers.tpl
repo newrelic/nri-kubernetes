@@ -186,16 +186,18 @@ licenseKey and cluster are set.
 {{- end -}}
 
 
-{{- define "newrelic.deprecatedKubeStateMetricsUrl" -}}
-{{- if .Values.kubeStateMetricsUrl }}
-url: {{ .Values.kubeStateMetricsUrl | quote }}
+{{- define "newrelic.deprecatedKubeStateMetrics" -}}
+ksm:
+  discovery:
+      scheme: {{  $.Values.kubeStateMetricsScheme | quote }}
+      port: {{  $.Values.kubeStateMetricsPort | quote }}
+      static:
+        url: {{  $.Values.kubeStateMetricsUrl | quote }}
+      endpoints:
+          label_selector: {{  $.Values.kubeStateMetricsPodLabel | quote }}
+          namespace: {{  $.Values.kubeStateMetricsNamespace | quote }}
 {{- end -}}
-{{- end -}}
-
-{{- define "config.ksm" -}}
-{{ toYaml (merge (include "newrelic.deprecatedKubeStateMetricsPodLabel" . | fromYaml) .Values.config.ksm) }}
-{{- end }}
 
 {{- define "config" -}}
-{{ toYaml (merge (include "config.ksm" . | fromYaml) .Values.config) }}
+{{ toYaml (merge (include "newrelic.deprecatedKubeStateMetrics" . | fromYaml) .Values.config) }}
 {{- end }}
