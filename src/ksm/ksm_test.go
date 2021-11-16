@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
 	"github.com/newrelic/nri-kubernetes/v2/src/ksm"
@@ -17,8 +16,7 @@ import (
 func TestScraper(t *testing.T) {
 	for _, version := range testutil.AllVersions() {
 		t.Run(fmt.Sprintf("for_version_%s", version), func(t *testing.T) {
-			// TODO: We cannot t.Parallel() because integration.New() is not thread-safe.
-			//t.Parallel()
+			t.Parallel()
 
 			testServer, err := version.Server()
 			if err != nil {
@@ -44,10 +42,7 @@ func TestScraper(t *testing.T) {
 				KSM: ksmCli,
 			})
 
-			i, err := integration.New("nri-kubernetes-ksm-test", "0.0.0")
-			if err != nil {
-				t.Fatalf("creating integration: %v", err)
-			}
+			i := testutil.NewIntegration(t)
 
 			err = scraper.Run(i)
 			if err != nil {

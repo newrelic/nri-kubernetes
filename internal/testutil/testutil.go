@@ -2,8 +2,6 @@ package testutil
 
 import (
 	"embed"
-
-	"github.com/newrelic/infra-integrations-sdk/integration"
 )
 
 //go:embed data
@@ -18,12 +16,6 @@ type Version string
 // Server returns an HTTP Server for the given version, ready to serve static endpoints for KSM, Kubelet and CP components.
 func (v Version) Server() (*Server, error) {
 	return newServer(v)
-}
-
-// Entities return the list of entities with its metrics that the integration should be generating for the given verison.
-// Entities can be asserted using an Asserter.
-func (v Version) Entities() ([]*integration.Entity, error) {
-	return entities(v)
 }
 
 // List of all the versions we have testdata for.
