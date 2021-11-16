@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   namespace: {{ .Release.Namespace }}
   labels: {{ include "newrelic.labels" . | indent 4 }}
-  name: {{ template "newrelic.fullname" . }}-k8s
+  name: {{ template "newrelic.fullname" . }}-ksm
   {{- if .Values.daemonSet.annotations }}
   annotations: {{ toYaml .Values.daemonSet.annotations | nindent 4 }}
   {{- end }}
@@ -34,17 +34,20 @@ spec:
       {{- end }}
       containers:
         - name: forwarder
-          image: newrelic/k8s-events-forwarder:1.20.5
-          imagePullPolicy: IfNotPresent
+          image: {{ .Values.forwarderImage.repository }}:{{ .Values.forwarderImage.tag }}
+          imagePullPolicy: {{ .Values.forwarderImage.pullPolicy }}
           securityContext:
-            privileged: false
+            {{- if .Values.privileged }}
+            privileged: true
+            {{- else }}
+            runAsUser: {{ .Values.runAsUser | default 1000 }}
+            runAsGroup: {{ .Values.runAsGroup | default 2000 }}
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
+            {{- end }}
           ports:
             - containerPort: 8001
           env:
-            - name: "CLUSTER_NAME"
-              value: {{ include "newrelic.cluster" . }}
             - name: "NRIA_CUSTOM_ATTRIBUTES"
               value: "{\"clusterName\":\"$(CLUSTER_NAME)\",\"test-key\":\"test-value\"}"
             - name: NRIA_LICENSE_KEY
@@ -78,13 +81,20 @@ spec:
               subPath: newrelic-infra.yml
             {{- end }}
         - name: ksm-scraper
-          image: {{ .Values.ksmScraperImage.repository }}:{{ .Values.ksmScraperImage.tag }}
-          imagePullPolicy: {{ .Values.ksmScraperImage.pullPolicy }}
+          image: {{ .Values.scraperImage.repository }}:{{ .Values.scraperImage.tag }}
+          imagePullPolicy: {{ .Values.scraperImage.pullPolicy }}
           securityContext:
+            {{- if .Values.privileged }}
+            privileged: true
+            {{- else }}
             runAsUser: {{ .Values.runAsUser | default 1000 }}
+            runAsGroup: {{ .Values.runAsGroup | default 2000 }}
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
+            {{- end }}
           env:
+            - name: "KUBE_STATE_METRIC_ENABLED"
+              value: "true"
             - name: "CLUSTER_NAME"
               value: {{ include "newrelic.cluster" . }}
             - name: "NRK8S_NODE_NAME"
