@@ -38,7 +38,59 @@ spec:
 {{ toYaml .Values.image.pullSecrets | indent 8 }}
       {{- end }}
       containers:
-        - name: kubelet-cp-scraper
+        - name: kubelet-scraper
+          image: {{ .Values.scraperImage.repository }}:{{ .Values.scraperImage.tag }}
+          imagePullPolicy: {{ .Values.scraperImage.pullPolicy }}
+          securityContext:
+            {{- if .Values.privileged }}
+            privileged: true
+            {{- else }}
+            runAsUser: {{ .Values.runAsUser | default 1000 }}
+            runAsGroup: {{ .Values.runAsGroup | default 2000 }}
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            {{- end }}
+          env:
+            - name: "KUBELET_ENABLED"
+              value: "true"
+            - name: "CLUSTER_NAME"
+              value: {{ include "newrelic.cluster" . }}
+            - name: "NRK8S_NODE_NAME"
+              valueFrom:
+                fieldRef:
+                  apiVersion: "v1"
+                  fieldPath: "spec.nodeName"
+          volumeMounts:
+            {{- if .Values.privileged }}
+            - name: dev
+              mountPath: /dev
+            {{- if and (.Values.openshift.enabled) (eq .Values.openshift.version "4.x") }}
+            - name: host-crio-socket
+              mountPath: /var/run/crio.sock
+            {{- else }}
+            - name: host-docker-socket
+              mountPath: /var/run/docker.sock
+            {{- end }}
+            - name: log
+              mountPath: /var/log
+            - name: host-volume
+              mountPath: /host
+              readOnly: true
+            {{- else }}
+            - mountPath: /var/db/newrelic-infra/data
+              name: tmpfs-data
+            - mountPath: /var/db/newrelic-infra/user_data
+              name: tmpfs-user-data
+            - mountPath: /tmp
+              name: tmpfs-tmp
+            - mountPath: /var/cache/nr-kubernetes
+              name: tmpfs-cache
+            {{- end }}
+          {{- if .Values.resources }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          {{- end }}
+        - name: control-plane-scraper
           image: {{ .Values.scraperImage.repository }}:{{ .Values.scraperImage.tag }}
           imagePullPolicy: {{ .Values.scraperImage.pullPolicy }}
           securityContext:
@@ -52,8 +104,6 @@ spec:
             {{- end }}
           env:
             - name: "CONTROL_PLANE_ENABLED"
-              value: "true"
-            - name: "KUBELET_ENABLED"
               value: "true"
             - name: "CLUSTER_NAME"
               value: {{ include "newrelic.cluster" . }}
