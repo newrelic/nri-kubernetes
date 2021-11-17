@@ -13,6 +13,9 @@ ARG TARGETARCH
 # ensure there is no default integration enabled
 RUN rm -rf /etc/newrelic-infra/integrations.d/*
 
+# creating the nri-agent user used only in unprivileged mode
+RUN addgroup -g 2000 nri-agent && adduser -D -u 1000 -G nri-agent nri-agent
+
 ENV NRIA_HTTP_SERVER_ENABLED true
 
 ENTRYPOINT ["/sbin/tini", "--", "/usr/bin/newrelic-infra"]

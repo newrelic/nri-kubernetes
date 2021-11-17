@@ -64,23 +64,12 @@ spec:
             {{- if .Values.privileged }}
             - name: dev
               mountPath: /dev
-            {{- if and (.Values.openshift.enabled) (eq .Values.openshift.version "4.x") }}
-            - name: host-crio-socket
-              mountPath: /var/run/crio.sock
-            {{- else }}
-            - name: host-docker-socket
-              mountPath: /var/run/docker.sock
-            {{- end }}
             - name: log
               mountPath: /var/log
             - name: host-volume
               mountPath: /host
               readOnly: true
             {{- else }}
-            - mountPath: /var/db/newrelic-infra/data
-              name: tmpfs-data
-            - mountPath: /var/db/newrelic-infra/user_data
-              name: tmpfs-user-data
             - mountPath: /tmp
               name: tmpfs-tmp
             - mountPath: /var/cache/nr-kubernetes
@@ -90,6 +79,7 @@ spec:
           resources:
 {{ toYaml .Values.resources | indent 12 }}
           {{- end }}
+        {{- if .Values.privileged }}
         - name: control-plane-scraper
           image: {{ .Values.scraperImage.repository }}:{{ .Values.scraperImage.tag }}
           imagePullPolicy: {{ .Values.scraperImage.pullPolicy }}
@@ -156,23 +146,12 @@ spec:
             {{- if .Values.privileged }}
             - name: dev
               mountPath: /dev
-            {{- if and (.Values.openshift.enabled) (eq .Values.openshift.version "4.x") }}
-            - name: host-crio-socket
-              mountPath: /var/run/crio.sock
-            {{- else }}
-            - name: host-docker-socket
-              mountPath: /var/run/docker.sock
-            {{- end }}
             - name: log
               mountPath: /var/log
             - name: host-volume
               mountPath: /host
               readOnly: true
             {{- else }}
-            - mountPath: /var/db/newrelic-infra/data
-              name: tmpfs-data
-            - mountPath: /var/db/newrelic-infra/user_data
-              name: tmpfs-user-data
             - mountPath: /tmp
               name: tmpfs-tmp
             - mountPath: /var/cache/nr-kubernetes
@@ -182,6 +161,7 @@ spec:
           resources:
 {{ toYaml .Values.resources | indent 12 }}
           {{- end }}
+        {{- end }}
         - name: agent
           image: {{ .Values.agentImage.repository }}:{{ .Values.agentImage.tag }}
           imagePullPolicy: {{ .Values.agentImage.pullPolicy }}
@@ -256,6 +236,29 @@ spec:
             {{- if .Values.integrations_config }}
             - name: nri-integrations-cfg-volume
               mountPath: /etc/newrelic-infra/integrations.d/
+            {{- end }}
+            {{- if .Values.privileged }}
+            - name: dev
+              mountPath: /dev
+            {{- if and (.Values.openshift.enabled) (eq .Values.openshift.version "4.x") }}
+            - name: host-crio-socket
+              mountPath: /var/run/crio.sock
+            {{- else }}
+            - name: host-docker-socket
+              mountPath: /var/run/docker.sock
+            {{- end }}
+            - name: log
+              mountPath: /var/log
+            - name: host-volume
+              mountPath: /host
+              readOnly: true
+            {{- else }}
+            - mountPath: /var/db/newrelic-infra/data
+              name: tmpfs-data
+            - mountPath: /var/db/newrelic-infra/user_data
+              name: tmpfs-user-data
+            - mountPath: /tmp
+              name: tmpfs-tmp
             {{- end }}
           {{- if .Values.resources }}
           resources:
