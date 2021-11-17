@@ -16,6 +16,7 @@ import (
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/version"
+	"k8s.io/client-go/kubernetes/fake"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
@@ -53,11 +54,7 @@ func main() {
 		logrus.Fatalf("Error building testserver: %v", err)
 	}
 
-	fakeK8s, err := testutil.FakeK8sClient()
-	if err != nil {
-		logrus.Fatal(err)
-	}
-
+	fakeK8s := fake.NewSimpleClientset(testutil.K8sEverything()...)
 	integration, err := integration.New(integrationName, integrationVersion, integration.Args(&args))
 	if err != nil {
 		logrus.Fatal(err)

@@ -11,6 +11,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/ksm"
 	ksmClient "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
+	"k8s.io/client-go/kubernetes/fake"
 )
 
 func TestScraper(t *testing.T) {
@@ -35,11 +36,7 @@ func TestScraper(t *testing.T) {
 				t.Fatalf("error creating ksm client: %v", err)
 			}
 
-			fakeK8s, err := testutil.FakeK8sClient()
-			if err != nil {
-				t.Fatalf("Cannot create fake K8s server: %v", err)
-			}
-
+			fakeK8s := fake.NewSimpleClientset(testutil.K8sEverything()...)
 			scraper, err := ksm.NewScraper(&config.Mock{
 				KSM: config.KSM{
 					StaticURL: testServer.KSMEndpoint(),
