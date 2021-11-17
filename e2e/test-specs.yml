@@ -55,7 +55,7 @@ scenarios:
       This scenario will verify that metrics from a k8s Cluster are correctly collected without privileges.
     before:
       - helm upgrade --install ${SCENARIO_TAG}-resources -n nr-${SCENARIO_TAG} --create-namespace ./charts/e2e-resources --set persistentVolume.enabled=true
-      - helm upgrade --install ${SCENARIO_TAG} -n nr-${SCENARIO_TAG} --create-namespace ./charts/newrelic-infrastructure --values e2e-values.yml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG} --set newrelic-infrastructure.privileged=false
+      - helm upgrade --install ${SCENARIO_TAG} -n nr-${SCENARIO_TAG} --create-namespace ./charts/newrelic-infrastructure --values e2e-values.yml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG} --set privileged=false
     after:
       - kubectl logs -l app=newrelic-infrastructure -n nr-${SCENARIO_TAG} --all-containers
       - helm delete ${SCENARIO_TAG}-resources -n nr-${SCENARIO_TAG}
