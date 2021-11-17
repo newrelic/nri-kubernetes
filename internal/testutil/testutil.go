@@ -21,22 +21,24 @@ func (v Version) Server() (*Server, error) {
 // List of all the versions we have testdata for.
 // When adding a new version:
 // - REMEMBER TO ADD IT TO AllVersions() BELOW.
-// - UPDATE LatestVersion() BELOW IF NEEDED
 
 const (
 	Testdata116 = "1_16"
 	Testdata118 = "1_18"
 )
 
-// LatestVersion returns the latest version we have test data for.
-func LatestVersion() Version {
-	return Testdata118
-}
-
 // AllVersions returns a list of versions we have test data for.
+// PLEASE ADD NEW VERSIONS HERE AS WELL.
+// PLEASE KEEP THIS LIST SORTED, WITH NEWER RELEASES LAST IN THE LIST.
 func AllVersions() []Version {
 	return []Version{
 		Testdata116,
 		Testdata118,
 	}
+}
+
+// LatestVersion returns the latest version we have test data for.
+func LatestVersion() Version {
+	allVersions := AllVersions()
+	return allVersions[len(allVersions)-1]
 }
