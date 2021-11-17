@@ -15,13 +15,6 @@ import (
 )
 
 func TestScraper(t *testing.T) {
-	// TODO(roobre): We should not exclude Optional, pod or hpa metrics. To be tackled in a follow-up PR.
-	asserter := testutil.NewAsserter().
-		Using(metric.KSMSpecs).
-		ExcludingOptional().
-		Excluding("pod").
-		Excluding("hpa")
-
 	for _, version := range testutil.AllVersions() {
 		t.Run(fmt.Sprintf("for_version_%s", version), func(t *testing.T) {
 			t.Parallel()
@@ -54,7 +47,13 @@ func TestScraper(t *testing.T) {
 				t.Fatalf("running scraper: %v", err)
 			}
 
-			asserter.On(i.Entities).Assert(t)
+			testutil.NewAsserter().
+				Using(metric.KSMSpecs).
+				// TODO(roobre): We should not exclude Optional, pod or hpa metrics. To be tackled in a follow-up PR.
+				ExcludingOptional().
+				Excluding("pod").
+				Excluding("hpa").
+				On(i.Entities).Assert(t)
 		})
 	}
 }

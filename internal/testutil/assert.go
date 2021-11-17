@@ -43,6 +43,7 @@ func (a Asserter) On(entities []*integration.Entity) Asserter {
 // Excluding returns an asserter that will not fail for the supplied groupName and metricName if they are missing.
 // If no metricNames are specified, Asserter will ignore the whole group.
 // Missing metrics are still logged.
+// TODO: Consider whether Excluding should return a pure copy of the asserter
 func (a Asserter) Excluding(groupName string, metricNames ...string) Asserter {
 	// Exclusion map is a pointer and therefore shared by copies of the asserter.
 	// For this reason we need to grab the lock here.
@@ -79,6 +80,10 @@ func (a Asserter) ExcludingOptional() Asserter {
 // Assert checks whether all metrics defined in the supplied groups are present, and fails the test if any is not.
 func (a Asserter) Assert(t *testing.T) {
 	t.Helper()
+
+	if len(a.specGroups) == 0 {
+		t.Fatalf("cannot assert empty specGroups, did you forget Using()?")
+	}
 
 	// TODO: Consider paralleling if it's too slow.
 	for groupName, group := range a.specGroups {
