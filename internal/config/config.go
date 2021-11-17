@@ -87,8 +87,8 @@ func LoadConfig() Mock {
 	}
 
 	ksmEnabled, _ := strconv.ParseBool(os.Getenv("KUBE_STATE_METRIC_ENABLED"))
-	kubeleEnabled, _ := strconv.ParseBool(os.Getenv("CONTROL_PLANE_ENABLED"))
-	controlPlanEnabled, _ := strconv.ParseBool(os.Getenv("KUBELET_ENABLED"))
+	kubeleEnabled, _ := strconv.ParseBool(os.Getenv("KUBELET_ENABLED"))
+	controlPlanEnabled, _ := strconv.ParseBool(os.Getenv("CONTROL_PLANE_ENABLED"))
 
 	return Mock{
 		ClusterName: os.Getenv("CLUSTER_NAME"),
