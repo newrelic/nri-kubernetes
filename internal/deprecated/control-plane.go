@@ -1,8 +1,13 @@
 package deprecated
 
 import (
+	"context"
 	"fmt"
+	kubeletClient "github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
+	"path"
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
@@ -14,45 +19,32 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
 	clientControlPlane "github.com/newrelic/nri-kubernetes/v2/src/controlplane/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
-	clientKubelet "github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
 	metric2 "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
 	"github.com/newrelic/nri-kubernetes/v2/src/storage"
 )
 
+var logger log.Logger = log.NewStdErr(true)
+
 func RunControlPlane(config *config.Mock, k8s client.Kubernetes, i *integration.Integration) error {
 	const (
 		apiserverCacheDir        = "apiserver"
-		discoveryCacheDir        = "discovery"
-		defaultDiscoveryCacheTTL = time.Hour
 		defaultAPIServerCacheTTL = time.Minute * 5
 		nodeNameEnvVar           = "NRK8S_NODE_NAME"
+		defaultTimeout           = time.Millisecond * 5000
 	)
 
-	innerKubeletDiscoverer, err := clientKubelet.NewDiscoverer(config.NodeName, logger)
+	node, err := k8s.GetClient().CoreV1().Nodes().Get(context.Background(), config.NodeName, metav1.GetOptions{})
 	if err != nil {
-		logger.Errorf("Error during Kubelet auto discovering process: %v", err)
-		os.Exit(1)
+		return fmt.Errorf("getting info for node %q: %w", config.NodeName, err)
 	}
 
-	configCache := client.DiscoveryCacherConfig{
-		Storage: storage.NewJSONDiskStorage(getCacheDir(discoveryCacheDir)),
-		TTL:     defaultDiscoveryCacheTTL,
-		Logger:  logger,
-	}
-
-	kubeletDiscoverer := clientKubelet.NewDiscoveryCacher(innerKubeletDiscoverer, configCache)
-
-	timeout := config.Timeout
-	kubeletClient, err := kubeletDiscoverer.Discover(timeout)
+	hostIP, err := getHostIP(node)
 	if err != nil {
-		logger.Errorf("Error discovering kubelet: %v", err)
-		os.Exit(1)
+		return err
 	}
-	kubeletNodeIP := kubeletClient.NodeIP()
-	logger.Debugf("Kubelet node IP = %s", kubeletNodeIP)
 
-	apiServerClient := apiserver.NewClient(k8s)
+	apiServerClient := apiserver.NewClient(k8s.GetClient())
 
 	apiServerCacheTTL := defaultAPIServerCacheTTL
 
@@ -70,13 +62,18 @@ func RunControlPlane(config *config.Mock, k8s client.Kubernetes, i *integration.
 		os.Exit(1)
 	}
 
+	kubeletCli, err := kubeletClient.New(k8s.GetClient(), config.NodeName, kubeletClient.WithLogger(logger))
+	if err != nil {
+		return fmt.Errorf("building Kubelet client: %w", err)
+	}
+
 	cpJobs, err := controlPlaneJobs(
 		logger,
 		apiServerClient,
 		nodeName,
-		config.Timeout,
-		kubeletClient.NodeIP(),
-		metric2.NewPodsFetcher(logger, kubeletClient).FetchFuncWithCache(),
+		defaultTimeout,
+		hostIP,
+		metric2.NewPodsFetcher(logger, kubeletCli).FetchFuncWithCache(),
 		k8s,
 		config.ETCD.EtcdTLSSecretName,
 		config.ETCD.EtcdTLSSecretNamespace,
@@ -206,4 +203,29 @@ func controlPlaneJobs(
 	}
 
 	return jobs, nil
+}
+
+func getHostIP(node *v1.Node) (string, error) {
+	var ip string
+
+	for _, address := range node.Status.Addresses {
+		if address.Type == "InternalIP" {
+			ip = address.Address
+			break
+		}
+	}
+
+	if ip == "" {
+		return "", fmt.Errorf("could not get Kubelet host IP")
+	}
+
+	return ip, nil
+}
+
+func getCacheDir(subDirectory string) string {
+	const (
+		defaultCacheDir = "/var/cache/nr-kubernetes"
+	)
+
+	return path.Join(defaultCacheDir, subDirectory)
 }

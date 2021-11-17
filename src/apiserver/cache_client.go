@@ -5,8 +5,6 @@ import (
 	"reflect"
 	"time"
 
-	"k8s.io/apimachinery/pkg/version"
-
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/storage"
 )
@@ -97,20 +95,4 @@ func (f *fileCacheClient) GetNodeInfo(nodeName string) (*NodeInfo, error) {
 	}
 
 	return n, f.store(n, n.NodeName)
-}
-
-func (f *fileCacheClient) GetServerVersion() (*version.Info, error) {
-	const key = "k8sVersion"
-	k8sVersion := &version.Info{}
-
-	if f.load(k8sVersion, key) {
-		return k8sVersion, nil
-	}
-
-	k8sVersion, err := f.client.GetServerVersion()
-	if err != nil {
-		return nil, err
-	}
-
-	return k8sVersion, f.store(k8sVersion, key)
 }

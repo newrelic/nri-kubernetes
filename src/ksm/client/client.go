@@ -35,14 +35,6 @@ func WithLogger(logger log.Logger) OptionFunc {
 	}
 }
 
-// WithHTTPDoer returns an OptionFunc that changes the HTTP Doer from the default Pester.
-func WithHTTPDoer(doer HTTPDoer) OptionFunc {
-	return func(kc *Client) error {
-		kc.http = doer
-		return nil
-	}
-}
-
 // New builds a Client using the given options. By default, it will use pester as an HTTP Doer and a noop logger.
 func New(opts ...OptionFunc) (*Client, error) {
 	k := &Client{

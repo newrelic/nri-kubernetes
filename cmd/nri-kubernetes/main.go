@@ -16,6 +16,8 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/ksm"
 	ksmClient "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/kubelet"
+	kubeletClient "github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/sink"
 )
 
@@ -29,15 +31,16 @@ const (
 )
 
 type clusterClients struct {
-	k8s client.Kubernetes
-	ksm ksmClient.MetricFamiliesGetter
+	k8s     client.Kubernetes
+	ksm     ksmClient.MetricFamiliesGetter
+	kubelet kubeletClient.HTTPClient
 }
 
 func main() {
 	c := config.LoadConfig()
 	logger = log.NewStdErr(c.Verbose)
 
-	clients, err := buildClients()
+	clients, err := buildClients(c)
 	if err != nil {
 		log.Error(err.Error())
 		os.Exit(ExitClients)
@@ -47,6 +50,15 @@ func main() {
 	if err != nil {
 		logger.Errorf("creating integration with http sink: %w", err)
 		os.Exit(ExitIntegration)
+	}
+
+	var kubeletScraper *kubelet.Scraper
+	if c.Kubelet.Enabled {
+		kubeletScraper, err = setupKubelet(c, clients)
+		if err != nil {
+			logger.Errorf("setting up ksm scraper: %w", err)
+			os.Exit(ExitSetup)
+		}
 	}
 
 	var ksmScraper *ksm.Scraper
@@ -61,7 +73,7 @@ func main() {
 
 	for {
 		// TODO think carefully to the signature of this function
-		err := runScrapers(c, ksmScraper, i, clients)
+		err := runScrapers(c, ksmScraper, kubeletScraper, i, clients)
 		if err != nil {
 			logger.Errorf("retrieving scraper data: %v", err)
 			os.Exit(ExitLoop)
@@ -77,7 +89,7 @@ func main() {
 	}
 }
 
-func runScrapers(c config.Mock, ksmScraper *ksm.Scraper, i *integration.Integration, clients *clusterClients) error {
+func runScrapers(c config.Mock, ksmScraper *ksm.Scraper, kubeletScraper *kubelet.Scraper, i *integration.Integration, clients *clusterClients) error {
 	if c.KSM.Enabled {
 		err := ksmScraper.Run(i)
 		if err != nil {
@@ -86,8 +98,7 @@ func runScrapers(c config.Mock, ksmScraper *ksm.Scraper, i *integration.Integrat
 	}
 
 	if c.Kubelet.Enabled {
-		// TODO this is merely a stub running old code
-		err := deprecated.RunKubelet(&c, clients.k8s, i)
+		err := kubeletScraper.Run(i)
 		if err != nil {
 			return fmt.Errorf("retrieving kubelet data: %w", err)
 		}
@@ -120,7 +131,22 @@ func setupKSM(c config.Mock, clients *clusterClients) (*ksm.Scraper, error) {
 	return ksmScraper, nil
 }
 
-func buildClients() (*clusterClients, error) {
+func setupKubelet(c config.Mock, clients *clusterClients) (*kubelet.Scraper, error) {
+
+	providers := kubelet.Providers{
+		// TODO: Get rid of custom client.Kubernetes wrapper and use kubernetes.Interface directly.
+		K8s:     clients.k8s.GetClient(),
+		Kubelet: clients.kubelet,
+	}
+	ksmScraper, err := kubelet.NewScraper(&c, providers, kubelet.WithLogger(logger))
+	if err != nil {
+		return nil, fmt.Errorf("building kubelet scraper: %w", err)
+	}
+
+	return ksmScraper, nil
+}
+
+func buildClients(c config.Mock) (*clusterClients, error) {
 	k8s, err := client.NewKubernetes(true)
 	if err != nil {
 		return nil, fmt.Errorf("building kubernetes client: %w", err)
@@ -131,9 +157,15 @@ func buildClients() (*clusterClients, error) {
 		return nil, fmt.Errorf("building KSM client: %w", err)
 	}
 
+	kubeletCli, err := kubeletClient.New(k8s.GetClient(), c.NodeName, kubeletClient.WithLogger(logger))
+	if err != nil {
+		return nil, fmt.Errorf("building Kubelet client: %w", err)
+	}
+
 	return &clusterClients{
-		k8s: k8s,
-		ksm: ksmCli,
+		k8s:     k8s,
+		ksm:     ksmCli,
+		kubelet: kubeletCli,
 	}, nil
 }
 

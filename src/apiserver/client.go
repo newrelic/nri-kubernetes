@@ -1,38 +1,32 @@
 package apiserver
 
 import (
+	"context"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/version"
-
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 // Client an interface for querying the k8s API server
 type Client interface {
 	GetNodeInfo(nodeName string) (*NodeInfo, error)
-	GetServerVersion() (*version.Info, error)
 }
 
 // NewClient creates a new API Server client
-func NewClient(client client.Kubernetes) Client {
+func NewClient(client kubernetes.Interface) Client {
 	return clientImpl{
 		k8sClient: client,
 	}
 }
 
 type clientImpl struct {
-	k8sClient client.Kubernetes
-}
-
-// GetServerVersion returns the kubernetes server version.
-func (c clientImpl) GetServerVersion() (*version.Info, error) {
-	return c.k8sClient.ServerVersion()
+	k8sClient kubernetes.Interface
 }
 
 // GetNodeInfo queries the API server for information about the given node
 func (c clientImpl) GetNodeInfo(nodeName string) (*NodeInfo, error) {
-	node, err := c.k8sClient.FindNode(nodeName)
+	node, err := c.k8sClient.CoreV1().Nodes().Get(context.TODO(), nodeName, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not find node information for nodeName='%s'", nodeName)
 	}

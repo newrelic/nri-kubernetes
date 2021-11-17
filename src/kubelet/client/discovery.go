@@ -1,8 +1,12 @@
 package client
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"io"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	"net/http"
 	"net/url"
 	"os"
@@ -18,52 +22,141 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
 
-// discoverer implements Discoverer interface by using official Kubernetes' Go client
-type discoverer struct {
-	apiClient   client.Kubernetes
-	logger      log.Logger
-	connChecker connectionChecker
-	nodeName    string
-}
-
 const (
 	healthzPath                = "/healthz"
 	defaultInsecureKubeletPort = 10255
 	defaultSecureKubeletPort   = 10250
+	defaultTimeout             = time.Millisecond * 5000
 )
 
 // client type (if you need to add new values, do it at the end of the list)
 const (
 	httpBasic = iota
-	httpInsecure
-	httpSecure
+	httpsInsecure
+	https
 )
 
-// kubelet implements Client interface
-type kubelet struct {
-	httpClient *http.Client
-	endpoint   url.URL
-	config     rest.Config
-	nodeIP     string
-	nodeName   string
-	httpType   int // httpBasic, httpInsecure, httpSecure
-	logger     log.Logger
+// TODO refactor this interface
+// HTTPClient allows to connect to the discovered Kubernetes services
+type HTTPClient interface {
+	Get(path string) (*http.Response, error)
+}
+
+// httpDoer is a simple interface encapsulating objects capable of making requests.
+type httpDoer interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
+// Client implements a client for Kubelet, capable of retrieving prometheus metrics from a given endpoint.
+type Client struct {
+	// http is an HttpDoer that the Kubelet client will use to make requests.
+	http httpDoer
+	// TODO: Use a non-sdk logger
+	logger   log.Logger
+	nodeName string
+	nodeIP   string
+
+	//  TODO review old data migrated
+	endpoint    url.URL
+	bearerToken string
+	httpType    int // httpBasic, httpsInsecure, https
+}
+
+type OptionFunc func(kc *Client) error
+
+// WithLogger returns an OptionFunc to change the logger from the default noop logger.
+func WithLogger(logger log.Logger) OptionFunc {
+	return func(kc *Client) error {
+		kc.logger = logger
+		return nil
+	}
+}
+
+// New builds a Client using the given options.
+func New(kc kubernetes.Interface, nodeName string, opts ...OptionFunc) (*Client, error) {
+	k := &Client{
+		logger:   log.New(false, io.Discard),
+		nodeName: nodeName,
+	}
+
+	for i, opt := range opts {
+		if err := opt(k); err != nil {
+			return nil, fmt.Errorf("applying option #%d: %w", i, err)
+		}
+	}
+
+	node, err := kc.CoreV1().Nodes().Get(context.Background(), k.nodeName, metav1.GetOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("getting info for node %q: %w", nodeName, err)
+	}
+
+	hostIP, err := getHostIP(node)
+	if err != nil {
+		return nil, err
+	}
+
+	k.nodeIP = hostIP
+
+	port := int(node.Status.DaemonEndpoints.KubeletEndpoint.Port)
+	if port == 0 {
+		return nil, fmt.Errorf("could not get Kubelet port")
+	}
+
+	hostURL := fmt.Sprintf("%s:%d", hostIP, port)
+
+	usedConnectionCases := make([]connectionParams, 0)
+	switch port {
+	case defaultInsecureKubeletPort:
+		usedConnectionCases = append(usedConnectionCases, connectionHTTP(hostURL, defaultTimeout))
+	case defaultSecureKubeletPort:
+		usedConnectionCases = append(usedConnectionCases, connectionHTTPS(hostURL, defaultTimeout))
+	default:
+		usedConnectionCases = append(usedConnectionCases, connectionHTTP(hostURL, defaultTimeout), connectionHTTPS(hostURL, defaultTimeout))
+	}
+
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, fmt.Errorf("retrieving cluster config %w", err)
+	}
+
+	k.bearerToken = config.BearerToken
+
+	for _, c := range usedConnectionCases {
+		err = checkCall(c.client, c.url, healthzPath, config.BearerToken)
+		if err != nil {
+			k.logger.Debugf("trying connecting to kubelet: %s", err.Error())
+			continue
+		}
+
+		k.endpoint = url.URL{
+			Host:   c.url.Host,
+			Path:   c.url.Path,
+			Scheme: c.url.Scheme,
+		}
+		k.httpType = c.httpType
+		k.http = c.client
+	}
+
+	connectionAPIHTTPS, err := connectionAPIHTTPS(kc, config.Host, nodeName)
+	if err != nil {
+		return nil, fmt.Errorf("trying connecting thorugh api server to kubelet: %w", err)
+	}
+
+	err = checkCall(connectionAPIHTTPS.client, connectionAPIHTTPS.url, healthzPath, config.BearerToken)
+	if err != nil {
+		return nil, fmt.Errorf("testing connection thorugh API: %w", err)
+	}
+	return k, nil
 }
 
 type connectionParams struct {
 	url      url.URL
-	client   *http.Client
-	httpType int // httpBasic, httpInsecure, httpSecure
-}
-
-type connectionChecker func(client *http.Client, URL url.URL, urlPath, token string) error
-
-func (c *kubelet) NodeIP() string {
-	return c.nodeIP
+	client   httpDoer
+	httpType int // httpBasic, httpsInsecure, https
 }
 
 // Get implements HTTPGetter interface by sending GET request using configured client.
-func (c *kubelet) Get(urlPath string) (*http.Response, error) {
+func (c *Client) Get(urlPath string) (*http.Response, error) {
 	e := c.endpoint
 	e.Path = path.Join(c.endpoint.Path, urlPath)
 
@@ -91,92 +184,12 @@ func (c *kubelet) Get(urlPath string) (*http.Response, error) {
 	}
 
 	if c.endpoint.Scheme == "https" {
-		r.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.config.BearerToken))
+		r.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.bearerToken))
 	}
 
 	c.logger.Debugf("Calling Kubelet endpoint: %s", r.URL.String())
 
-	return c.httpClient.Do(r)
-}
-
-func (sd *discoverer) Discover(timeout time.Duration) (client.HTTPClient, error) {
-	node, err := sd.getNode(sd.nodeName)
-	if err != nil {
-		return nil, err
-	}
-
-	hostIP, err := getHostIP(node)
-	if err != nil {
-		return nil, err
-	}
-
-	port, err := getPort(node)
-	if err != nil {
-		return nil, err
-	}
-
-	hostURL := fmt.Sprintf("%s:%d", hostIP, port)
-
-	connectionAPIHTTPS, secErr := sd.connectionAPIHTTPS(sd.nodeName, timeout)
-
-	usedConnectionCases := make([]connectionParams, 0)
-	switch port {
-	case defaultInsecureKubeletPort:
-		usedConnectionCases = append(usedConnectionCases, connectionHTTP(hostURL, timeout), connectionAPIHTTPS)
-	case defaultSecureKubeletPort:
-		usedConnectionCases = append(usedConnectionCases, connectionHTTPS(hostURL, timeout), connectionAPIHTTPS)
-	default:
-		usedConnectionCases = append(usedConnectionCases, connectionHTTP(hostURL, timeout), connectionHTTPS(hostURL, timeout), connectionAPIHTTPS)
-	}
-
-	config := sd.apiClient.Config()
-	apiURL, err := apiURLFromConfig(config)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, c := range usedConnectionCases {
-
-		if secErr != nil && c.url.Host == apiURL.Host {
-			return nil, secErr
-		}
-
-		err = sd.connChecker(c.client, c.url, healthzPath, config.BearerToken)
-		if err != nil {
-			sd.logger.Debugf(err.Error())
-			continue
-		}
-
-		return newKubelet(hostIP, sd.nodeName, c.url, config.BearerToken, c.client, c.httpType, sd.logger), nil
-	}
-	return nil, err
-}
-
-func apiURLFromConfig(config *rest.Config) (u *url.URL, err error) {
-	u, err = url.Parse(config.Host)
-	if err != nil {
-		err = fmt.Errorf("error parsing kubernetes api url from in cluster config. %s", err)
-	}
-
-	return
-}
-
-func newKubelet(nodeIP string, nodeName string, endpoint url.URL, bearerToken string, client *http.Client, httpType int, logger log.Logger) *kubelet {
-	return &kubelet{
-		nodeIP: nodeIP,
-		endpoint: url.URL{
-			Host:   endpoint.Host,
-			Path:   endpoint.Path,
-			Scheme: endpoint.Scheme,
-		},
-		httpClient: client,
-		httpType:   httpType,
-		config: rest.Config{
-			BearerToken: bearerToken,
-		},
-		nodeName: nodeName,
-		logger:   logger,
-	}
+	return c.http.Do(r)
 }
 
 func connectionHTTP(host string, timeout time.Duration) connectionParams {
@@ -197,19 +210,30 @@ func connectionHTTPS(host string, timeout time.Duration) connectionParams {
 			Scheme: "https",
 		},
 		client:   client.InsecureHTTPClient(timeout),
-		httpType: httpInsecure,
+		httpType: httpsInsecure,
 	}
 }
 
-func (sd *discoverer) connectionAPIHTTPS(nodeName string, timeout time.Duration) (connectionParams, error) {
-	secureClient, err := sd.apiClient.SecureHTTPClient(timeout)
+// GetClientFromInterface it merely an helper to allow using the fake client
+var GetClientFromRestInterface = getClientFromRestInterface
+
+func getClientFromRestInterface(kc kubernetes.Interface) (httpDoer, error) {
+	secureClient, ok := kc.Discovery().RESTClient().(*rest.RESTClient)
+	if !ok {
+		return nil, errors.New("failed to set up a client for connecting to Kubelet through API proxy")
+	}
+	return secureClient.Client, nil
+}
+
+func connectionAPIHTTPS(kc kubernetes.Interface, hostname string, nodeName string) (connectionParams, error) {
+	client, err := GetClientFromRestInterface(kc)
 	if err != nil {
-		return connectionParams{}, err
+		err = fmt.Errorf("error getting client from rest client interface: %w", err)
 	}
 
-	apiURL, err := apiURLFromConfig(sd.apiClient.Config())
+	apiURL, err := url.Parse(hostname)
 	if err != nil {
-		return connectionParams{}, err
+		err = fmt.Errorf("error parsing kubernetes api url from in cluster config: %w", err)
 	}
 
 	return connectionParams{
@@ -218,12 +242,12 @@ func (sd *discoverer) connectionAPIHTTPS(nodeName string, timeout time.Duration)
 			Path:   fmt.Sprintf("/api/v1/nodes/%s/proxy/", nodeName),
 			Scheme: apiURL.Scheme,
 		},
-		client:   secureClient,
-		httpType: httpSecure,
+		client:   client,
+		httpType: https,
 	}, nil
 }
 
-func checkCall(client *http.Client, URL url.URL, urlPath, token string) error {
+func checkCall(client httpDoer, URL url.URL, urlPath, token string) error {
 	URL.Path = path.Join(URL.Path, urlPath)
 
 	r, err := http.NewRequest(http.MethodGet, URL.String(), nil)
@@ -242,46 +266,6 @@ func checkCall(client *http.Client, URL url.URL, urlPath, token string) error {
 		return nil
 	}
 	return fmt.Errorf("error calling endpoint %s. Got status code: %d", URL.String(), resp.StatusCode)
-}
-
-// NewDiscoverer instantiates a new Discoverer
-func NewDiscoverer(nodeName string, logger log.Logger) (client.Discoverer, error) {
-	if nodeName == "" {
-		return nil, errors.New("nodeName is empty")
-	}
-
-	c, err := client.NewKubernetes(false)
-	if err != nil {
-		return nil, err
-	}
-
-	return &discoverer{
-		nodeName:    nodeName,
-		logger:      logger,
-		connChecker: checkCall,
-		apiClient:   c,
-	}, nil
-}
-
-func (sd *discoverer) getNode(nodeName string) (*v1.Node, error) {
-	node := new(v1.Node)
-	var err error
-	// Get the containing node and discover the InternalIP and Kubelet port
-	node, err = sd.apiClient.FindNode(nodeName)
-	if err != nil {
-		return nil, fmt.Errorf("could not find node named %q. %s", nodeName, err)
-	}
-
-	return node, nil
-}
-
-func getPort(node *v1.Node) (int, error) {
-	port := int(node.Status.DaemonEndpoints.KubeletEndpoint.Port)
-	if port == 0 {
-		return 0, fmt.Errorf("could not get Kubelet port")
-	}
-
-	return port, nil
 }
 
 func getHostIP(node *v1.Node) (string, error) {
