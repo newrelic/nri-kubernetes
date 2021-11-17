@@ -11,16 +11,22 @@ import (
 )
 
 // Asserter is a helper for checking whether an integration contains all the metrics defined in a specGroup.
-// It provides a chainable API.
+// It provides a chainable API, with each call returning a copy of the asserter. This way, successive calls to the
+// chainable methods do not modify the previous Asserter, allowing to reuse the chain as a test fans out.
 // Asserter is safe to use concurrently.
 type Asserter struct {
 	*sync.Mutex
 	entities        []*integration.Entity
 	specGroups      definition.SpecGroups
-	exclude         map[string]map[string]bool
+	exclude         exclusions
 	excludeOptional bool
 	silent          bool
 }
+
+// exclusions is a map from groupName to metricName to a boolean which is true if the metric should be excluded.
+// An entry for a groupName with an empty list of metrics to exclude will be interpreted as an exclusion for all metrics
+// in that group.
+type exclusions map[string]map[string]bool
 
 func NewAsserter() Asserter {
 	return Asserter{
@@ -43,15 +49,15 @@ func (a Asserter) On(entities []*integration.Entity) Asserter {
 // Excluding returns an asserter that will not fail for the supplied groupName and metricName if they are missing.
 // If no metricNames are specified, Asserter will ignore the whole group.
 // Missing metrics are still logged.
-// TODO: Consider whether Excluding should return a pure copy of the asserter
 func (a Asserter) Excluding(groupName string, metricNames ...string) Asserter {
-	// Exclusion map is a pointer and therefore shared by copies of the asserter.
-	// For this reason we need to grab the lock here.
-	a.Lock()
-	defer a.Unlock()
+	// Map is a pointer and therefore shared among all asserters. To avoid modifying the previous asserter we need to
+	// copy it.
+	prevExclude := a.exclude
+	a.exclude = map[string]map[string]bool{}
 
-	if a.exclude == nil {
-		a.exclude = map[string]map[string]bool{}
+	// Copy exclusions from previous asserter
+	for prevGroup, prevMetrics := range prevExclude {
+		a.exclude[prevGroup] = prevMetrics
 	}
 
 	if a.exclude[groupName] == nil {
