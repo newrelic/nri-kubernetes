@@ -166,7 +166,7 @@ func buildClients(c config.Mock) (*clusterClients, error) {
 		return nil, fmt.Errorf("building KSM client: %w", err)
 	}
 
-	kubeletCli, err := kubeletClient.New(k8s, c.NodeName, kubeletClient.WithLogger(logger))
+	kubeletCli, err := kubeletClient.New(k8s, c.NodeName, k8sConfig, kubeletClient.WithLogger(logger))
 	if err != nil {
 		return nil, fmt.Errorf("building Kubelet client: %w", err)
 	}

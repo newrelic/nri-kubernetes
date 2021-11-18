@@ -7,6 +7,9 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 	"os"
 	"path"
 	"time"
@@ -62,8 +65,8 @@ func RunControlPlane(config *config.Mock, k8s kubernetes.Interface, i *integrati
 		logger.Errorf("%s env var should be provided by Kubernetes and is mandatory", nodeNameEnvVar)
 		os.Exit(1)
 	}
-
-	kubeletCli, err := kubeletClient.New(k8s, config.NodeName, kubeletClient.WithLogger(logger))
+	K8sConfig, _ := getK8sConfig(true)
+	kubeletCli, err := kubeletClient.New(k8s, config.NodeName, K8sConfig, kubeletClient.WithLogger(logger))
 	if err != nil {
 		return fmt.Errorf("building Kubelet client: %w", err)
 	}
@@ -229,4 +232,19 @@ func getCacheDir(subDirectory string) string {
 	)
 
 	return path.Join(defaultCacheDir, subDirectory)
+}
+
+func getK8sConfig(tryLocalKubeConfig bool) (*rest.Config, error) {
+	config, err := rest.InClusterConfig()
+	if err == nil || !tryLocalKubeConfig {
+		return config, nil
+	}
+
+	kubeconf := path.Join(homedir.HomeDir(), ".kube", "config")
+	config, err = clientcmd.BuildConfigFromFlags("", kubeconf)
+	if err != nil {
+		return nil, fmt.Errorf("could not load local kube config: %w", err)
+	}
+	return config, nil
+
 }

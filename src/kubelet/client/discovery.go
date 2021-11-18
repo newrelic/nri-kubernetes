@@ -70,7 +70,7 @@ func WithLogger(logger log.Logger) OptionFunc {
 }
 
 // New builds a Client using the given options.
-func New(kc kubernetes.Interface, nodeName string, inClusterConfig rest.Config, opts ...OptionFunc) (*Client, error) {
+func New(kc kubernetes.Interface, nodeName string, inClusterConfig *rest.Config, opts ...OptionFunc) (*Client, error) {
 	c := &Client{
 		logger:   log.New(false, io.Discard),
 		nodeName: nodeName,
