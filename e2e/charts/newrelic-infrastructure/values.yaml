@@ -198,6 +198,18 @@ nodeSelector: {}
 # Please refer to the daemonset.yaml template for more details on how to achieve this.
 nodeAffinity: {}
 
+controlPlane:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: node-role.kubernetes.io/control-plane
+              operator: Exists
+        - matchExpressions:
+            - key: node-role.kubernetes.io/master
+              operator: Exists
+
+
 # Please note that an additional nodeSelector is added automatically in order to
 # select the correct Windows version of the node: "node.kubernetes.io/windows-build"
 # https://kubernetes.io/docs/setup/production-environment/windows/user-guide-windows-containers/
