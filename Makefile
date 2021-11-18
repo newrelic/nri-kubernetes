@@ -45,9 +45,8 @@ validate:
 	docker run --rm -v "${PWD}:/src:ro" --workdir /src returntocorp/semgrep -c "$$semgrep_config"
 
 .PHONY: compile
-
 compile:
-	@echo "[compile] Building $(BINARY_NAME)"
+	@echo "[compile] Building $(BINARY_NAME)-scraper"
 	CGO_ENABLED=$(CGO_ENABLED) go build $(LDFLAGS) -o $(BIN_DIR)/$(BINARY_NAME)-scraper ./cmd/nri-kubernetes
 
 
