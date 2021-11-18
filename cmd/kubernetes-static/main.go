@@ -15,10 +15,11 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/version"
+	"k8s.io/client-go/kubernetes/fake"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
+	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
 	"github.com/newrelic/nri-kubernetes/v2/src/apiserver"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
 	ksmClient "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
@@ -40,20 +41,20 @@ type argumentList struct {
 
 var args argumentList
 
-// Embed static metrics into binary.
-//go:embed data
-var content embed.FS
-
 func main() {
 	// Determines which subdirectory of cmd/kubernetes-static/ to use
 	// for serving the static metrics
-	k8sMetricsVersion := os.Getenv("K8S_METRICS_VERSION")
-	if k8sMetricsVersion == "" {
-		k8sMetricsVersion = "1_18"
+	testData := testutil.LatestVersion()
+	if envVersion := os.Getenv("K8S_METRICS_VERSION"); envVersion != "" {
+		testData = testutil.Version(envVersion)
 	}
 
-	endpoint := startStaticMetricsServer(content, k8sMetricsVersion)
+	testSever, err := testData.Server()
+	if err != nil {
+		logrus.Fatalf("Error building testserver: %v", err)
+	}
 
+	fakeK8s := fake.NewSimpleClientset(testutil.K8sEverything()...)
 	integration, err := integration.New(integrationName, integrationVersion, integration.Args(&args))
 	if err != nil {
 		logrus.Fatal(err)
@@ -96,7 +97,7 @@ func main() {
 	}}
 
 	// Kubelet
-	kubeletClient := newBasicHTTPClient(endpoint + "/kubelet")
+	kubeletClient := newBasicHTTPClient(testSever.KubeletEndpoint())
 	podsFetcher := kubeletmetric.NewPodsFetcher(logger, kubeletClient)
 	kubeletGrouper := kubelet.NewGrouper(
 		kubeletClient,
@@ -104,94 +105,19 @@ func main() {
 		apiServerClient,
 		"ens5",
 		podsFetcher.FetchFuncWithCache(),
-		kubeletmetric.CadvisorFetchFunc(kubeletClient, metric.CadvisorQueries))
-
-	serviceList := []*v1.Service{
-		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "kube-state-metrics",
-				Namespace: "kube-system",
-			},
-			Spec: v1.ServiceSpec{
-				Selector: map[string]string{
-					"l1": "v1",
-					"l2": "v2",
-				},
-			},
-		},
-		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "cockroachdb",
-				Namespace: "default",
-			},
-			Spec: v1.ServiceSpec{
-				Selector: map[string]string{
-					"l1": "v1",
-					"l2": "v2",
-				},
-			},
-		},
-		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "metrics-server",
-				Namespace: "kube-system",
-			},
-			Spec: v1.ServiceSpec{
-				Selector: map[string]string{
-					"l1": "v1",
-					"l2": "v2",
-				},
-			},
-		},
-		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "kubernetes",
-				Namespace: "default",
-			},
-			Spec: v1.ServiceSpec{
-				Selector: map[string]string{
-					"l1": "v1",
-					"l2": "v2",
-				},
-			},
-		},
-		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "kube-dns",
-				Namespace: "kube-system",
-			},
-			Spec: v1.ServiceSpec{
-				Selector: map[string]string{
-					"l1": "v1",
-					"l2": "v2",
-				},
-			},
-		},
-		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "cockroachdb-public",
-				Namespace: "default",
-			},
-			Spec: v1.ServiceSpec{
-				Selector: map[string]string{
-					"l1": "v1",
-					"l2": "v2",
-				},
-			},
-		},
-	}
+		kubeletmetric.CadvisorFetchFunc(kubeletClient, metric.CadvisorQueries),
+	)
 
 	kc, err := ksmClient.New(ksmClient.WithLogger(log.New(true, os.Stderr)))
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	fakeLister, _ := discovery.NewServicesLister(fakeK8s)
 	kg, err := ksmGrouper.New(ksmGrouper.Config{
-		MetricFamiliesGetter: kc.MetricFamiliesGetter(endpoint),
+		MetricFamiliesGetter: kc.MetricFamiliesGetter(testSever.KSMEndpoint()),
 		Queries:              metric.KSMQueries,
-		ServicesLister: discovery.MockedServicesLister{
-			Services: serviceList,
-		},
+		ServicesLister:       fakeLister,
 	}, ksmGrouper.WithLogger(logger))
 	if err != nil {
 		log.Fatal(err)
@@ -213,7 +139,7 @@ func main() {
 
 	for _, component := range controlplane.BuildComponentList() {
 		componentGrouper := controlplane.NewComponentGrouper(
-			newBasicHTTPClient(fmt.Sprintf("%s/controlplane/%s", endpoint, component.Name)),
+			newBasicHTTPClient(testSever.ControlPlaneEndpoint(string(component.Name))),
 			component.Queries,
 			logger,
 			controlPlaneComponentPods[component.Name],
