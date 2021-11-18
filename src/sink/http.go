@@ -16,8 +16,9 @@ const (
 	DefaultCtxTimeout = 15 * time.Second
 	// DefaultRequestTimeout is the default IO timeout for each request.
 	DefaultRequestTimeout = 15 * time.Second
-	// DefaultAgentForwarderEndpoint holds the default endpoint of the agent forwarder.
-	DefaultAgentForwarderEndpoint = "http://localhost:%s/v1/data"
+	// DefaultAgentForwarderhost holds the default endpoint of the agent forwarder.
+	DefaultAgentForwarderhost = "localhost"
+	DefaultAgentForwarderPath = "/v1/data"
 )
 
 // httpSink holds the configuration of the HTTP sink used by the integration.

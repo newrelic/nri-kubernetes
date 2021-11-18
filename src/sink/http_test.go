@@ -166,7 +166,7 @@ func getHTTPSinkOptions(t *testing.T) sink.HTTPSinkOptions {
 	t.Helper()
 
 	return sink.HTTPSinkOptions{
-		URL:        sink.DefaultAgentForwarderEndpoint,
+		URL:        sink.DefaultAgentForwarderhost,
 		Client:     defaultPesterClient(t),
 		CtxTimeout: sink.DefaultCtxTimeout,
 		Ctx:        context.Background(),
