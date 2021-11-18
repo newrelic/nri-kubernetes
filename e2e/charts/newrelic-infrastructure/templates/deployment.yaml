@@ -40,8 +40,8 @@ spec:
             {{- if .Values.privileged }}
             privileged: true
             {{- else }}
-            runAsUser: {{ .Values.runAsUser | default 1000 }}
-            runAsGroup: {{ .Values.runAsGroup | default 2000 }}
+            runAsUser: {{ .Values.runAsUser }}
+            runAsGroup: {{ .Values.runAsGroup }}
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             {{- end }}
@@ -88,17 +88,13 @@ spec:
               subPath: newrelic-infra.yml
             {{- end }}
         - name: ksm-scraper
-          image: {{ .Values.scraperImage.repository }}:{{ .Values.scraperImage.tag }}
+          image: {{ .Values.scraperImage.repository }}:{{ .Values.scraperImage.tag | default .Chart.AppVersion }}
           imagePullPolicy: {{ .Values.scraperImage.pullPolicy }}
           securityContext:
-            {{- if .Values.privileged }}
-            privileged: true
-            {{- else }}
-            runAsUser: {{ .Values.runAsUser | default 1000 }}
-            runAsGroup: {{ .Values.runAsGroup | default 2000 }}
+            runAsUser: {{ .Values.runAsUser }}
+            runAsGroup: {{ .Values.runAsGroup }}
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
-            {{- end }}
           env:
             - name: "KUBE_STATE_METRIC_ENABLED"
               value: "true"
