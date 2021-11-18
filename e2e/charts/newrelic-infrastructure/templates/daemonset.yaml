@@ -221,7 +221,7 @@ spec:
             - name: NRIA_LOG_FILE
               value: {{ .Values.logFile }}
             {{- end }}
-            {{- if .Values.privileged }}
+            {{- if not .Values.privileged }}
             - name: "NRIA_OVERRIDE_HOST_ROOT"
               value: ""
             - name: "NRIA_IS_SECURE_FORWARD_ONLY"

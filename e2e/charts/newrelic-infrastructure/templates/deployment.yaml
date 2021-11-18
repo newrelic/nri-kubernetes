@@ -50,6 +50,17 @@ spec:
           env:
             - name: "NRIA_CUSTOM_ATTRIBUTES"
               value: "{\"clusterName\":\"$(CLUSTER_NAME)\",\"test-key\":\"test-value\"}"
+            {{- if .Values.useNodeNameAsDisplayName }}
+            - name: "NRIA_DISPLAY_NAME"
+            {{- if .Values.prefixDisplayNameWithCluster }}
+              value: "{{ include "newrelic.cluster" . }}:$(NRK8S_NODE_NAME)"
+            {{- else }}
+              valueFrom:
+                fieldRef:
+                  apiVersion: "v1"
+                  fieldPath: "spec.nodeName"
+            {{- end }}
+            {{- end }}
             - name: NRIA_LICENSE_KEY
               valueFrom:
                 secretKeyRef:
@@ -58,10 +69,6 @@ spec:
             {{- if (include "newrelic.nrStaging" .) }}
             - name: NRIA_STAGING
               value: "true"
-            {{- end }}
-            {{- if .Values.proxy }}
-            - name: NRIA_PROXY
-              value: "{{ .Values.proxy }}"
             {{- end }}
             # Using FORWARD_ONLY mode to avoid the entity creation for the events.
             - name: NRIA_IS_SECURE_FORWARD_ONLY
