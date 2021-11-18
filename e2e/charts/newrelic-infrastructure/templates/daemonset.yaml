@@ -38,7 +38,7 @@ spec:
 {{ toYaml .Values.image.pullSecrets | indent 8 }}
       {{- end }}
       containers:
-        - name: kubelet-scraper
+        - name: kubelet
           image: {{ .Values.scraperImage.repository }}:{{ .Values.scraperImage.tag | default .Chart.AppVersion }}
           imagePullPolicy: {{ .Values.scraperImage.pullPolicy }}
           securityContext:
@@ -57,26 +57,16 @@ spec:
                   apiVersion: "v1"
                   fieldPath: "spec.nodeName"
           volumeMounts:
-            {{- if .Values.privileged }}
-            - name: dev
-              mountPath: /dev
-            - name: log
-              mountPath: /var/log
-            - name: host-volume
-              mountPath: /host
-              readOnly: true
-            {{- else }}
-            - mountPath: /tmp
-              name: tmpfs-tmp
             - mountPath: /var/cache/nr-kubernetes
               name: tmpfs-cache
-            {{- end }}
+            - mountPath: /tmp
+              name: tmpfs-tmp
           {{- if .Values.resources }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
           {{- end }}
         {{- if .Values.privileged }}
-        - name: control-plane-scraper
+        - name: control-plane
           image: {{ .Values.scraperImage.repository }}:{{ .Values.scraperImage.tag | default .Chart.AppVersion }}
           imagePullPolicy: {{ .Values.scraperImage.pullPolicy }}
           securityContext:
@@ -135,20 +125,10 @@ spec:
                   apiVersion: "v1"
                   fieldPath: "spec.nodeName"
           volumeMounts:
-            {{- if .Values.privileged }}
-            - name: dev
-              mountPath: /dev
-            - name: log
-              mountPath: /var/log
-            - name: host-volume
-              mountPath: /host
-              readOnly: true
-            {{- else }}
-            - mountPath: /tmp
-              name: tmpfs-tmp
             - mountPath: /var/cache/nr-kubernetes
               name: tmpfs-cache
-            {{- end }}
+            - mountPath: /tmp
+              name: tmpfs-tmp
           {{- if .Values.resources }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
@@ -281,11 +261,11 @@ spec:
           emptyDir: {}
         - name: tmpfs-user-data
           emptyDir: {}
+        {{- end }}
         - name: tmpfs-tmp
           emptyDir: {}
         - name: tmpfs-cache
           emptyDir: {}
-        {{- end }}
         {{- if .Values.config }}
         - name: config
           configMap:
