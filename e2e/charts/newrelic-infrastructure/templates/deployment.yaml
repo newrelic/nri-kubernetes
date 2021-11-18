@@ -37,17 +37,15 @@ spec:
           image: {{ .Values.forwarderImage.repository }}:{{ .Values.forwarderImage.tag }}
           imagePullPolicy: {{ .Values.forwarderImage.pullPolicy }}
           securityContext:
-            {{- if .Values.privileged }}
-            privileged: true
-            {{- else }}
             runAsUser: {{ .Values.runAsUser }}
             runAsGroup: {{ .Values.runAsGroup }}
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
-            {{- end }}
           ports:
-            - containerPort: 8001
+            - containerPort: {{ .Values.ksm.httpServerPort }}
           env:
+            - name: "NRIA_HTTP_SERVER_PORT"
+              value: {{ .Values.ksm.httpServerPort | quote }}
             - name: "NRIA_CUSTOM_ATTRIBUTES"
               value: "{\"clusterName\":\"$(CLUSTER_NAME)\",\"test-key\":\"test-value\"}"
             {{- if .Values.useNodeNameAsDisplayName }}
@@ -98,6 +96,8 @@ spec:
           env:
             - name: "KUBE_STATE_METRIC_ENABLED"
               value: "true"
+            - name: "HTTP_SERVER_PORT"
+              value: {{ .Values.ksm.httpServerPort | quote }}
             - name: "CLUSTER_NAME"
               value: {{ include "newrelic.cluster" . }}
             - name: "NRK8S_NODE_NAME"
