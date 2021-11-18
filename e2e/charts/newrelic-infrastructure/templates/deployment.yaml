@@ -81,13 +81,13 @@ spec:
             - mountPath: /var/db/newrelic-infra/user_data
               name: tmpfs-user-data
             - mountPath: /tmp
-              name: tmpfs-tmp-forwarder
+              name: tmpfs-tmp
             {{- if .Values.config }}
             - name: config
               mountPath: /etc/newrelic-infra.yml
               subPath: newrelic-infra.yml
             {{- end }}
-        - name: ksm-scraper
+        - name: ksm
           image: {{ .Values.scraperImage.repository }}:{{ .Values.scraperImage.tag | default .Chart.AppVersion }}
           imagePullPolicy: {{ .Values.scraperImage.pullPolicy }}
           securityContext:
@@ -109,7 +109,7 @@ spec:
             - mountPath: /var/cache/nr-kubernetes
               name: tmpfs-cache
             - mountPath: /tmp
-              name: tmpfs-tmp-ksm
+              name: tmpfs-tmp
           {{- if .Values.resources }}
           resources:
 {{ toYaml .Values.resources | indent 12 }}
@@ -119,10 +119,8 @@ spec:
           emptyDir: {}
         - name: tmpfs-user-data
           emptyDir: {}
-        - name: tmpfs-tmp-forwarder
+        - name: tmpfs-tmp
           emptyDir: {}
-        - name: tmpfs-tmp-ksm
-          emptyDir: { }
         - name: tmpfs-cache
           emptyDir: {}
         {{- if .Values.config }}

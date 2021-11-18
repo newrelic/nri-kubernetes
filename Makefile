@@ -46,8 +46,8 @@ validate:
 
 .PHONY: compile
 compile:
-	@echo "[compile] Building $(BINARY_NAME)-scraper"
-	CGO_ENABLED=$(CGO_ENABLED) go build $(LDFLAGS) -o $(BIN_DIR)/$(BINARY_NAME)-scraper ./cmd/nri-kubernetes
+	@echo "[compile] Building $(BINARY_NAME)"
+	CGO_ENABLED=$(CGO_ENABLED) go build $(LDFLAGS) -o $(BIN_DIR)/$(BINARY_NAME) ./cmd/nri-kubernetes
 
 
 .PHONY: compile-multiarch
