@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
 	"os"
 	"time"
 
@@ -145,8 +146,10 @@ func createIntegrationWithHTTPSink(httpServerPort string) (*integration.Integrat
 		logger.Debugf("sending data to httpSink: %q", e)
 	}
 
+	endpoint := net.JoinHostPort(sink.DefaultAgentForwarderhost, httpServerPort)
+
 	sinkOptions := sink.HTTPSinkOptions{
-		URL:        fmt.Sprintf(sink.DefaultAgentForwarderEndpoint, httpServerPort),
+		URL:        fmt.Sprintf("http://%s%s", endpoint, sink.DefaultAgentForwarderPath),
 		Client:     c,
 		CtxTimeout: sink.DefaultCtxTimeout,
 		Ctx:        context.Background(),
