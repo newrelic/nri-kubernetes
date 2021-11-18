@@ -43,6 +43,8 @@ function main() {
     kubedump namespaces
     kubedump services
     kubedump pods
+
+    cleanup
 }
 
 # bootstrap install the required components in the cluster to generate the testdata
@@ -76,6 +78,15 @@ function bootstrap() {
     kubectl cp datagen.sh scraper/$pod:/bin/
 }
 
+function cleanup() {
+    echo "Removing e2e-resources chart"
+    helm uninstall e2e -n mock || true
+    echo "Removing ksm"
+    helm uninstall ksm -n ksm || true
+    echo "Removing scraper pods"
+    kubectl delete -f ./deployments/scraper.yaml --wait || true
+}
+
 function scraper_pod() {
     kubectl get pods -l $1 -n scraper -o jsonpath='{.items[0].metadata.name}'
 }
@@ -99,10 +110,14 @@ function scrape() {
     curl -ksSL "${endpoint[@]}"
 }
 
-if [[ $1 = "scrape" ]]; then
+command=$1
+
+case $command in
+scrape|bootstrap|cleanup)
     shift
-    scrape $@
+    $command $@
     exit $?
-fi
+  ;;
+esac
 
 main $@
