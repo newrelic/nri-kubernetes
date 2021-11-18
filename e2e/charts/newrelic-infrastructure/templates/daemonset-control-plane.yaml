@@ -47,6 +47,8 @@ spec:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
           env:
+            - name: "HTTP_SERVER_PORT"
+              value: {{ .Values.controlPlane.httpServerPort | quote }}
             - name: "CONTROL_PLANE_ENABLED"
               value: "true"
             - name: "CLUSTER_NAME"
@@ -109,17 +111,15 @@ spec:
           image: {{ .Values.forwarderImage.repository }}:{{ .Values.forwarderImage.tag }}
           imagePullPolicy: {{ .Values.forwarderImage.pullPolicy }}
           securityContext:
-            {{- if .Values.privileged }}
-            privileged: true
-            {{- else }}
             runAsUser: {{ .Values.runAsUser }}
             runAsGroup: {{ .Values.runAsGroup }}
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
-            {{- end }}
           ports:
-            - containerPort: 8001
+            - containerPort: {{ .Values.controlPlane.httpServerPort }}
           env:
+            - name: "NRIA_HTTP_SERVER_PORT"
+              value: {{ .Values.controlPlane.httpServerPort | quote }}
             - name: "NRIA_CUSTOM_ATTRIBUTES"
               value: "{\"clusterName\":\"$(CLUSTER_NAME)\",\"test-key\":\"test-value\"}"
             {{- if .Values.useNodeNameAsDisplayName }}

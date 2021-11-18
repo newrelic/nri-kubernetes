@@ -208,7 +208,13 @@ controlPlane:
         - matchExpressions:
             - key: node-role.kubernetes.io/master
               operator: Exists
+  httpServerPort: "8002"
 
+ksm:
+  httpServerPort: "8003"
+
+kubelet:
+  httpServerPort: "8004"
 
 # Please note that an additional nodeSelector is added automatically in order to
 # select the correct Windows version of the node: "node.kubernetes.io/windows-build"
