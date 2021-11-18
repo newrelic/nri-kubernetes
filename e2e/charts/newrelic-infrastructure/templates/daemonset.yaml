@@ -47,6 +47,8 @@ spec:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
           env:
+            - name: "HTTP_SERVER_PORT"
+              value: {{ .Values.kubelet.httpServerPort | quote }}
             - name: "KUBELET_ENABLED"
               value: "true"
             - name: "CLUSTER_NAME"
@@ -78,8 +80,10 @@ spec:
             readOnlyRootFilesystem: true
             {{- end }}
           ports:
-            - containerPort: 8001
+            - containerPort: {{ .Values.kubelet.httpServerPort }}
           env:
+            - name: "NRIA_HTTP_SERVER_PORT"
+              value: {{ .Values.kubelet.httpServerPort | quote }}
             - name: NRIA_LICENSE_KEY
               valueFrom:
                 secretKeyRef:
