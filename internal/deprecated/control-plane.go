@@ -6,6 +6,7 @@ import (
 	kubeletClient "github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	"os"
 	"path"
 	"time"
@@ -26,7 +27,7 @@ import (
 
 var logger log.Logger = log.NewStdErr(true)
 
-func RunControlPlane(config *config.Mock, k8s client.Kubernetes, i *integration.Integration) error {
+func RunControlPlane(config *config.Mock, k8s kubernetes.Interface, i *integration.Integration) error {
 	const (
 		apiserverCacheDir        = "apiserver"
 		defaultAPIServerCacheTTL = time.Minute * 5
@@ -34,7 +35,7 @@ func RunControlPlane(config *config.Mock, k8s client.Kubernetes, i *integration.
 		defaultTimeout           = time.Millisecond * 5000
 	)
 
-	node, err := k8s.GetClient().CoreV1().Nodes().Get(context.Background(), config.NodeName, metav1.GetOptions{})
+	node, err := k8s.CoreV1().Nodes().Get(context.Background(), config.NodeName, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("getting info for node %q: %w", config.NodeName, err)
 	}
@@ -44,7 +45,7 @@ func RunControlPlane(config *config.Mock, k8s client.Kubernetes, i *integration.
 		return err
 	}
 
-	apiServerClient := apiserver.NewClient(k8s.GetClient())
+	apiServerClient := apiserver.NewClient(k8s)
 
 	apiServerCacheTTL := defaultAPIServerCacheTTL
 
@@ -62,7 +63,7 @@ func RunControlPlane(config *config.Mock, k8s client.Kubernetes, i *integration.
 		os.Exit(1)
 	}
 
-	kubeletCli, err := kubeletClient.New(k8s.GetClient(), config.NodeName, kubeletClient.WithLogger(logger))
+	kubeletCli, err := kubeletClient.New(k8s, config.NodeName, kubeletClient.WithLogger(logger))
 	if err != nil {
 		return fmt.Errorf("building Kubelet client: %w", err)
 	}
@@ -88,7 +89,7 @@ func RunControlPlane(config *config.Mock, k8s client.Kubernetes, i *integration.
 		logger.Errorf("couldn't configure control plane components jobs: %v", err)
 	}
 
-	K8sVersion, _ := k8s.GetClient().Discovery().ServerVersion()
+	K8sVersion, _ := k8s.Discovery().ServerVersion()
 
 	successfulJobs := 0
 	for _, job := range cpJobs {
@@ -121,7 +122,7 @@ func controlPlaneJobs(
 	timeout time.Duration,
 	nodeIP string,
 	podsFetcher data.FetchFunc,
-	k8sClient client.Kubernetes,
+	k8sClient kubernetes.Interface,
 	etcdTLSSecretName string,
 	etcdTLSSecretNamespace string,
 	apiServerSecurePort string,

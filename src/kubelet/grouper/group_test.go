@@ -1,4 +1,4 @@
-package kubelet
+package grouper
 
 import (
 	"io"
@@ -39,7 +39,7 @@ func (c *testClient) NodeIP() string {
 func rawGroupsHandlerFunc(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
 	case metric.KubeletPodsPath:
-		f, err := os.Open("metric/testdata/kubelet_pods_payload.json") // TODO move fetch and testdata to just kubelet package.
+		f, err := os.Open("../metric/testdata/kubelet_pods_payload.json") // TODO move fetch and testdata to just kubelet package.
 		if err != nil {
 			panic(err)
 		}
@@ -48,7 +48,7 @@ func rawGroupsHandlerFunc(w http.ResponseWriter, r *http.Request) {
 
 		io.Copy(w, f) // nolint: errcheck
 	case metric.StatsSummaryPath:
-		f, err := os.Open("metric/testdata/kubelet_stats_summary_payload.json") // TODO move fetch and testdata to just kubelet package.
+		f, err := os.Open("../metric/testdata/kubelet_stats_summary_payload.json") // TODO move fetch and testdata to just kubelet package.
 		if err != nil {
 			panic(err)
 		}
@@ -57,7 +57,7 @@ func rawGroupsHandlerFunc(w http.ResponseWriter, r *http.Request) {
 
 		io.Copy(w, f) // nolint: errcheck
 	case metric.KubeletCAdvisorMetricsPath:
-		f, err := os.Open("metric/testdata/k8s_v1_15_kubelet_metrics_cadvisor_payload_plain.txt")
+		f, err := os.Open("../metric/testdata/k8s_v1_15_kubelet_metrics_cadvisor_payload_plain.txt")
 		if err != nil {
 			panic(err)
 		}

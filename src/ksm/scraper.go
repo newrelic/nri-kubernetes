@@ -69,6 +69,8 @@ func NewScraper(config *config.Mock, providers Providers, options ...ScraperOpt)
 		}
 	}
 
+	// TODO If this could change without a restart of the pod we should run it each time we scrape data,
+	// possibly with a reasonable cache Es: NewCachedDiscoveryClientForConfig
 	k8sVersion, err := providers.K8s.Discovery().ServerVersion()
 	if err != nil {
 		return nil, fmt.Errorf("fetching K8s version: %w", err)

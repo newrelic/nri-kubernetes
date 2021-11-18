@@ -5,15 +5,19 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"path"
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/sethgrid/pester"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/deprecated"
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/ksm"
 	ksmClient "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet"
@@ -31,7 +35,7 @@ const (
 )
 
 type clusterClients struct {
-	k8s     client.Kubernetes
+	k8s     kubernetes.Interface
 	ksm     ksmClient.MetricFamiliesGetter
 	kubelet kubeletClient.HTTPClient
 }
@@ -119,7 +123,7 @@ func runScrapers(c config.Mock, ksmScraper *ksm.Scraper, kubeletScraper *kubelet
 func setupKSM(c config.Mock, clients *clusterClients) (*ksm.Scraper, error) {
 	providers := ksm.Providers{
 		// TODO: Get rid of custom client.Kubernetes wrapper and use kubernetes.Interface directly.
-		K8s: clients.k8s.GetClient(),
+		K8s: clients.k8s,
 		KSM: clients.ksm,
 	}
 
@@ -135,7 +139,7 @@ func setupKubelet(c config.Mock, clients *clusterClients) (*kubelet.Scraper, err
 
 	providers := kubelet.Providers{
 		// TODO: Get rid of custom client.Kubernetes wrapper and use kubernetes.Interface directly.
-		K8s:     clients.k8s.GetClient(),
+		K8s:     clients.k8s,
 		Kubelet: clients.kubelet,
 	}
 	ksmScraper, err := kubelet.NewScraper(&c, providers, kubelet.WithLogger(logger))
@@ -147,7 +151,12 @@ func setupKubelet(c config.Mock, clients *clusterClients) (*kubelet.Scraper, err
 }
 
 func buildClients(c config.Mock) (*clusterClients, error) {
-	k8s, err := client.NewKubernetes(true)
+	k8sConfig, err := getK8sConfig(true)
+	if err != nil {
+		return nil, fmt.Errorf("retrieving k8s config: %w", err)
+	}
+
+	k8s, err := kubernetes.NewForConfig(k8sConfig)
 	if err != nil {
 		return nil, fmt.Errorf("building kubernetes client: %w", err)
 	}
@@ -157,7 +166,7 @@ func buildClients(c config.Mock) (*clusterClients, error) {
 		return nil, fmt.Errorf("building KSM client: %w", err)
 	}
 
-	kubeletCli, err := kubeletClient.New(k8s.GetClient(), c.NodeName, kubeletClient.WithLogger(logger))
+	kubeletCli, err := kubeletClient.New(k8s, c.NodeName, kubeletClient.WithLogger(logger))
 	if err != nil {
 		return nil, fmt.Errorf("building Kubelet client: %w", err)
 	}
@@ -193,4 +202,19 @@ func createIntegrationWithHTTPSink(httpServerPort string) (*integration.Integrat
 	}
 
 	return integration.New("com.newrelic.kubernetes", "test-ksm", integration.Writer(h))
+}
+
+func getK8sConfig(tryLocalKubeConfig bool) (*rest.Config, error) {
+	config, err := rest.InClusterConfig()
+	if err == nil || !tryLocalKubeConfig {
+		return config, nil
+	}
+
+	kubeconf := path.Join(homedir.HomeDir(), ".kube", "config")
+	config, err = clientcmd.BuildConfigFromFlags("", kubeconf)
+	if err != nil {
+		return nil, fmt.Errorf("could not load local kube config: %w", err)
+	}
+	return config, nil
+
 }

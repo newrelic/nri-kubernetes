@@ -2,11 +2,13 @@ package client
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -17,7 +19,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
@@ -27,13 +28,6 @@ const (
 	defaultInsecureKubeletPort = 10255
 	defaultSecureKubeletPort   = 10250
 	defaultTimeout             = time.Millisecond * 5000
-)
-
-// client type (if you need to add new values, do it at the end of the list)
-const (
-	httpBasic = iota
-	httpsInsecure
-	https
 )
 
 // TODO refactor this interface
@@ -47,19 +41,22 @@ type httpDoer interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
+// Providers is a struct holding pointers to all the clients Scraper needs to get data from.
+// TODO: Extract this out of the KSM package.
+type Providers struct {
+	K8s kubernetes.Interface
+}
+
 // Client implements a client for Kubelet, capable of retrieving prometheus metrics from a given endpoint.
 type Client struct {
-	// http is an HttpDoer that the Kubelet client will use to make requests.
-	http httpDoer
 	// TODO: Use a non-sdk logger
-	logger   log.Logger
-	nodeName string
-	nodeIP   string
-
-	//  TODO review old data migrated
+	logger      log.Logger
+	nodeName    string
+	nodeIP      string
+	doer        httpDoer
 	endpoint    url.URL
 	bearerToken string
-	httpType    int // httpBasic, httpsInsecure, https
+	Providers
 }
 
 type OptionFunc func(kc *Client) error
@@ -73,39 +70,56 @@ func WithLogger(logger log.Logger) OptionFunc {
 }
 
 // New builds a Client using the given options.
-func New(kc kubernetes.Interface, nodeName string, opts ...OptionFunc) (*Client, error) {
-	k := &Client{
+func New(kc kubernetes.Interface, nodeName string, inClusterConfig rest.Config, opts ...OptionFunc) (*Client, error) {
+	c := &Client{
 		logger:   log.New(false, io.Discard),
 		nodeName: nodeName,
+		Providers: Providers{
+			K8s: kc,
+		},
 	}
 
 	for i, opt := range opts {
-		if err := opt(k); err != nil {
+		if err := opt(c); err != nil {
 			return nil, fmt.Errorf("applying option #%d: %w", i, err)
 		}
 	}
 
-	node, err := kc.CoreV1().Nodes().Get(context.Background(), k.nodeName, metav1.GetOptions{})
+	node, err := kc.CoreV1().Nodes().Get(context.Background(), c.nodeName, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("getting info for node %q: %w", nodeName, err)
 	}
 
-	hostIP, err := getHostIP(node)
+	c.bearerToken = inClusterConfig.BearerToken
+
+	c.nodeIP, err = getHostIP(node)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("getting hostIP: %w", err)
 	}
 
-	k.nodeIP = hostIP
-
-	port := int(node.Status.DaemonEndpoints.KubeletEndpoint.Port)
-	if port == 0 {
-		return nil, fmt.Errorf("could not get Kubelet port")
+	err = c.setupConnection(c.nodeIP, node.Status.DaemonEndpoints.KubeletEndpoint.Port)
+	if err == nil {
+		c.logger.Debugf("connected to Kubelet with localhost")
+		return c, nil
 	}
 
-	hostURL := fmt.Sprintf("%s:%d", hostIP, port)
+	c.logger.Debugf("Kubelet connection on localhost failed, falling back to API proxy: %v", err)
 
-	usedConnectionCases := make([]connectionParams, 0)
-	switch port {
+	err = c.setupConnectionAPI(inClusterConfig.Host)
+	if err != nil {
+		return nil, fmt.Errorf("no connection method was succeeded: %w ", err)
+	}
+	c.logger.Debugf("connected to Kubelet with API proxy")
+
+	return c, nil
+}
+
+func (c *Client) setupConnection(nodeIP string, portInt int32) error {
+	port := fmt.Sprintf("%d", portInt)
+	hostURL := net.JoinHostPort(nodeIP, port)
+
+	var usedConnectionCases []connectionParams
+	switch portInt {
 	case defaultInsecureKubeletPort:
 		usedConnectionCases = append(usedConnectionCases, connectionHTTP(hostURL, defaultTimeout))
 	case defaultSecureKubeletPort:
@@ -114,45 +128,53 @@ func New(kc kubernetes.Interface, nodeName string, opts ...OptionFunc) (*Client,
 		usedConnectionCases = append(usedConnectionCases, connectionHTTP(hostURL, defaultTimeout), connectionHTTPS(hostURL, defaultTimeout))
 	}
 
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return nil, fmt.Errorf("retrieving cluster config %w", err)
-	}
-
-	k.bearerToken = config.BearerToken
-
-	for _, c := range usedConnectionCases {
-		err = checkCall(c.client, c.url, healthzPath, config.BearerToken)
+	for _, conn := range usedConnectionCases {
+		err := checkCall(conn.client, conn.url, healthzPath, c.bearerToken)
 		if err != nil {
-			k.logger.Debugf("trying connecting to kubelet: %s", err.Error())
+			c.logger.Debugf("trying connecting to kubelet: %s", err.Error())
 			continue
 		}
 
-		k.endpoint = url.URL{
-			Host:   c.url.Host,
-			Path:   c.url.Path,
-			Scheme: c.url.Scheme,
-		}
-		k.httpType = c.httpType
-		k.http = c.client
+		c.doer = conn.client
+		c.endpoint = conn.url
+
+		return nil
 	}
 
-	connectionAPIHTTPS, err := connectionAPIHTTPS(kc, config.Host, nodeName)
+	return fmt.Errorf("no connection succeded through localhost")
+}
+
+func (c *Client) setupConnectionAPI(hostname string) error {
+	client, err := GetClientFromRestInterface(c.K8s)
 	if err != nil {
-		return nil, fmt.Errorf("trying connecting thorugh api server to kubelet: %w", err)
+		err = fmt.Errorf("error getting client from rest client interface: %w", err)
 	}
 
-	err = checkCall(connectionAPIHTTPS.client, connectionAPIHTTPS.url, healthzPath, config.BearerToken)
+	apiURL, err := url.Parse(hostname)
 	if err != nil {
-		return nil, fmt.Errorf("testing connection thorugh API: %w", err)
+		err = fmt.Errorf("error parsing kubernetes api url from in cluster config: %w", err)
 	}
-	return k, nil
+
+	url := url.URL{
+		Host:   apiURL.Host,
+		Path:   fmt.Sprintf("/api/v1/nodes/%s/proxy/", c.nodeName),
+		Scheme: apiURL.Scheme,
+	}
+
+	err = checkCall(client, url, healthzPath, c.bearerToken)
+	if err != nil {
+		return fmt.Errorf("testing connection thorugh API: %w", err)
+	}
+
+	c.endpoint = url
+	c.doer = client
+
+	return nil
 }
 
 type connectionParams struct {
-	url      url.URL
-	client   httpDoer
-	httpType int // httpBasic, httpsInsecure, https
+	url    url.URL
+	client httpDoer
 }
 
 // Get implements HTTPGetter interface by sending GET request using configured client.
@@ -189,7 +211,7 @@ func (c *Client) Get(urlPath string) (*http.Response, error) {
 
 	c.logger.Debugf("Calling Kubelet endpoint: %s", r.URL.String())
 
-	return c.http.Do(r)
+	return c.doer.Do(r)
 }
 
 func connectionHTTP(host string, timeout time.Duration) connectionParams {
@@ -198,19 +220,25 @@ func connectionHTTP(host string, timeout time.Duration) connectionParams {
 			Host:   host,
 			Scheme: "http",
 		},
-		client:   client.BasicHTTPClient(timeout),
-		httpType: httpBasic,
+		client: &http.Client{
+			Timeout: timeout,
+		},
 	}
 }
 
 func connectionHTTPS(host string, timeout time.Duration) connectionParams {
+	client := &http.Client{
+		Timeout: timeout,
+	}
+	client.Transport = &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
 	return connectionParams{
 		url: url.URL{
 			Host:   host,
 			Scheme: "https",
 		},
-		client:   client.InsecureHTTPClient(timeout),
-		httpType: httpsInsecure,
+		client: client,
 	}
 }
 
@@ -225,28 +253,6 @@ func getClientFromRestInterface(kc kubernetes.Interface) (httpDoer, error) {
 	return secureClient.Client, nil
 }
 
-func connectionAPIHTTPS(kc kubernetes.Interface, hostname string, nodeName string) (connectionParams, error) {
-	client, err := GetClientFromRestInterface(kc)
-	if err != nil {
-		err = fmt.Errorf("error getting client from rest client interface: %w", err)
-	}
-
-	apiURL, err := url.Parse(hostname)
-	if err != nil {
-		err = fmt.Errorf("error parsing kubernetes api url from in cluster config: %w", err)
-	}
-
-	return connectionParams{
-		url: url.URL{
-			Host:   apiURL.Host,
-			Path:   fmt.Sprintf("/api/v1/nodes/%s/proxy/", nodeName),
-			Scheme: apiURL.Scheme,
-		},
-		client:   client,
-		httpType: https,
-	}, nil
-}
-
 func checkCall(client httpDoer, URL url.URL, urlPath, token string) error {
 	URL.Path = path.Join(URL.Path, urlPath)
 
@@ -254,17 +260,21 @@ func checkCall(client httpDoer, URL url.URL, urlPath, token string) error {
 	if err != nil {
 		return fmt.Errorf("error creating request to: %s. Got error: %s ", URL.String(), err)
 	}
+
 	if URL.Scheme == "https" {
 		r.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 	}
+
 	resp, err := client.Do(r)
 	if err != nil {
 		return fmt.Errorf("error trying to connect to: %s. Got error: %s ", URL.String(), err)
 	}
 	defer resp.Body.Close() // nolint: errcheck
+
 	if resp.StatusCode == http.StatusOK {
 		return nil
 	}
+
 	return fmt.Errorf("error calling endpoint %s. Got status code: %d", URL.String(), resp.StatusCode)
 }
 

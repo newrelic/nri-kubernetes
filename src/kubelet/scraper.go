@@ -3,6 +3,7 @@ package kubelet
 import (
 	"fmt"
 	"github.com/newrelic/nri-kubernetes/v2/src/apiserver"
+	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/grouper"
 	metric2 "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/network"
@@ -57,6 +58,8 @@ func NewScraper(config *config.Mock, providers Providers, options ...ScraperOpt)
 		}
 	}
 
+	// TODO If this could change without a restart of the pod we should run it each time we scrape data,
+	// possibly with a reasonable cache Es: NewCachedDiscoveryClientForConfig
 	k8sVersion, err := providers.K8s.Discovery().ServerVersion()
 	if err != nil {
 		return nil, fmt.Errorf("fetching K8s version: %w", err)
@@ -64,8 +67,7 @@ func NewScraper(config *config.Mock, providers Providers, options ...ScraperOpt)
 	s.k8sVersion = k8sVersion
 	s.clusterName = config.ClusterName
 
-	// TODO: /proc/net/route was configurable
-	defaultNetworkInterface, err := network.DefaultInterface("/proc/net/route")
+	defaultNetworkInterface, err := network.DefaultInterface(config.NetworkRouteFile)
 	if err != nil {
 		s.logger.Warnf("Error finding default network interface: %v", err)
 	}
@@ -75,7 +77,7 @@ func NewScraper(config *config.Mock, providers Providers, options ...ScraperOpt)
 }
 
 func (s *Scraper) Run(i *integration.Integration) error {
-	kubeletGrouper := NewGrouper(
+	kubeletGrouper := grouper.NewGrouper(
 		s.Kubelet,
 		s.logger,
 		apiserver.NewClient(s.K8s),
@@ -85,8 +87,13 @@ func (s *Scraper) Run(i *integration.Integration) error {
 	)
 
 	job := scrape.NewScrapeJob("kubelet", kubeletGrouper, metric.KubeletSpecs)
-	_ = job.Populate(i, s.clusterName, s.logger, s.k8sVersion)
-	//todo manage proprerly
+	r := job.Populate(i, s.clusterName, s.logger, s.k8sVersion)
+	if r.Errors != nil {
+		s.logger.Debugf("Errors while scraping Kubelet: %q", r.Errors)
+	}
+	if !r.Populated {
+		return fmt.Errorf("kubelet data was not populated after trying all endpoints")
+	}
 
 	return nil
 }
