@@ -1,20 +1,16 @@
-ARG BASE_IMAGE=newrelic/infrastructure-bundle:2.7.4
+FROM alpine:3.14
 
-FROM $BASE_IMAGE
-
-# Set by docker automatically
-# If building with `docker build`, make sure to set GOOS/GOARCH explicitly when calling make:
-# `make compile GOOS=something GOARCH=something`
-# Otherwise the makefile will not append them to the binary name and docker build will fail.
 ARG TARGETOS
 ARG TARGETARCH
 
-# ensure there is no default integration enabled
-RUN rm -rf /etc/newrelic-infra/integrations.d/*
+RUN apk add --no-cache --upgrade && apk add --no-cache tini=0.19.0-r0
+
+ADD --chmod=755 bin/nri-kubernetes-${TARGETOS}-${TARGETARCH} /var/db/newrelic-infra/newrelic-integrations/bin/
+
+RUN mv /var/db/newrelic-infra/newrelic-integrations/bin/nri-kubernetes-${TARGETOS}-${TARGETARCH} \
+       /var/db/newrelic-infra/newrelic-integrations/bin/nri-kubernetes
 
 # creating the nri-agent user used only in unprivileged mode
 RUN addgroup -g 2000 nri-agent && adduser -D -u 1000 -G nri-agent nri-agent
 
-ENV NRIA_HTTP_SERVER_ENABLED true
-
-ENTRYPOINT ["/sbin/tini", "--", "/usr/bin/newrelic-infra"]
+ENTRYPOINT ["/sbin/tini", "--", "/var/db/newrelic-infra/newrelic-integrations/bin/nri-kubernetes"]
