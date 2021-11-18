@@ -13,4 +13,6 @@ RUN mv /var/db/newrelic-infra/newrelic-integrations/bin/nri-kubernetes-${TARGETO
 # creating the nri-agent user used only in unprivileged mode
 RUN addgroup -g 2000 nri-agent && adduser -D -u 1000 -G nri-agent nri-agent
 
+USER nri-agent
+
 ENTRYPOINT ["/sbin/tini", "--", "/var/db/newrelic-infra/newrelic-integrations/bin/nri-kubernetes"]
