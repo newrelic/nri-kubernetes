@@ -2,6 +2,8 @@
 
 set -e
 
+scrapper_selector="app=scraper"
+
 function main() {
     if [[ -z "$1" ]]; then
         echo "Usage: $0 <output_folder>"
@@ -10,7 +12,11 @@ function main() {
 
     bootstrap
 
-    pod=$(scraper_pod)
+    pod=$(scraper_pod "$scrapper_selector")
+    if [[ -z "pod" ]]; then
+        echo "Could not find scraper pod (-l $scrapper_selector)"
+        exit 1
+    fi
 
     mkdir -p "$1" && cd "$1"
 
@@ -39,10 +45,6 @@ function main() {
     kubedump pods
 }
 
-function kubedump() {
-    kubectl get "$1" -o yaml --all-namespaces > "$1".yaml
-}
-
 # bootstrap install the required components in the cluster to generate the testdata
 function bootstrap() {
     echo -e "Using context $(kubectl config current-context), is this ok?\n^C now if it is not."
@@ -62,16 +64,25 @@ function bootstrap() {
     fi
 
     echo "Waiting for scraper pod to be ready"
-    kubectl -n scraper wait --for=condition=Ready pod -l app=scraper
-    pod=$(scraper_pod)
+    kubectl -n scraper wait --for=condition=Ready pod -l "$scrapper_selector"
+    pod=$(scraper_pod "$scrapper_selector")
     if [[ -z "pod" ]]; then
-        echo "Could not find scraper pod (-l app=scraper)"
+        echo "Could not find scraper pod (-l $scrapper_selector)"
         exit 1
     fi
     echo "Found scraper pod $pod"
 
     echo "Copying datagen.sh to scraper pods"
     kubectl cp datagen.sh scraper/$pod:/bin/
+}
+
+function scraper_pod() {
+    kubectl get pods -l $1 -n scraper -o jsonpath='{.items[0].metadata.name}'
+}
+
+function kubedump() {
+    echo "Extracting kubernetes $1"
+    kubectl get "$1" -o yaml --all-namespaces > "$1".yaml
 }
 
 # scrape will curl the specified component and output the response body to standard output
@@ -88,20 +99,10 @@ function scrape() {
     curl -ksSL "${endpoint[@]}"
 }
 
-# manifests will generate .yaml files with the list of pods, services, pvs, etc. that are found in the cluster
-function manifests() {
-    return 0
-}
-
-function scraper_pod() {
-    kubectl get pods -l app=scraper -n scraper -o jsonpath='{.items[0].metadata.name}'
-}
-
-command=main
-
-if [[ -n "$1" ]]; then
-    command=$1
+if [[ $1 = "scrape" ]]; then
     shift
+    scrape $@
+    exit $?
 fi
 
-$command $@
+main $@
