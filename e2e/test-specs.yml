@@ -51,6 +51,11 @@ scenarios:
             - k8s.scheduler.podPreemptionVictims
             - k8s.scheduler.preemptionAttemptsDelta
             - k8s.scheduler.schedulingDurationSeconds_*
+
+            # Network metrics are flaky and sometimes fail
+            - k8s.pod.netErrorsPerSecond
+            - k8s.pod.netRxBytesPerSecond
+            - k8s.pod.netTxBytesPerSecond
   - description: |
       This scenario will verify that metrics from a k8s Cluster are correctly collected without privileges.
     before:
@@ -72,3 +77,8 @@ scenarios:
             - k8s.node.capacity*
             - k8s.node.capacityAttachableVolumes*
             - k8s.node.allocatableAttachableVolumes*
+            
+            # Network metrics are flaky and sometimes fail
+            - k8s.pod.netErrorsPerSecond
+            - k8s.pod.netRxBytesPerSecond
+            - k8s.pod.netTxBytesPerSecond
