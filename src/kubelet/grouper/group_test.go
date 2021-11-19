@@ -153,7 +153,7 @@ func TestGroup(t *testing.T) {
 			NodeGetter: nodeGetter,
 			Client:     mockKubelet,
 			Fetchers: []data.FetchFunc{
-				podsFetcher.FetchFuncWithCache(),
+				podsFetcher.DoPodsFetch,
 				metric.CadvisorFetchFunc(mockKubelet, queries),
 			},
 			DefaultNetworkInterface: "eth0",

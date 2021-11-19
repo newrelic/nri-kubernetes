@@ -170,10 +170,10 @@ func handleResponseWithFilter(resp *http.Response, queries []Query) ([]MetricFam
 
 type MetricsFamiliesGetter func([]Query) ([]MetricFamily, error)
 
-func GetFilteredMetricFamilies(httpClient client.HTTPDoer, url string, queries []Query) ([]MetricFamily, error) {
+func GetFilteredMetricFamilies(httpClient client.HTTPDoer, headers map[string]string, url string, queries []Query) ([]MetricFamily, error) {
 
 	// todo it would be nice to have context with deadline
-	req, err := NewRequest(url)
+	req, err := NewRequest(url, headers)
 	if err != nil {
 		return nil, fmt.Errorf("building request: %w", err)
 	}

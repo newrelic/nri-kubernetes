@@ -70,7 +70,8 @@ type MetricFamiliesGetter interface {
 // MetricFamiliesGetter returns a function that obtains metric families from a list of prometheus queries.
 func (c *Client) MetricFamiliesGetter(url string) prometheus.MetricsFamiliesGetter {
 	return func(queries []prometheus.Query) ([]prometheus.MetricFamily, error) {
-		mFamily, err := prometheus.GetFilteredMetricFamilies(c.http, url, queries)
+		headers := map[string]string{}
+		mFamily, err := prometheus.GetFilteredMetricFamilies(c.http, headers, url, queries)
 		if err != nil {
 			return nil, fmt.Errorf("getting filtered metric families: %w", err)
 		}

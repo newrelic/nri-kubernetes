@@ -23,8 +23,9 @@ import (
 // Providers is a struct holding pointers to all the clients Scraper needs to get data from.
 // TODO: Extract this out of the Kubelet package.
 type Providers struct {
-	K8s     kubernetes.Interface
-	Kubelet kubeletClient.DataClient
+	K8s      kubernetes.Interface
+	Kubelet  kubeletClient.HTTPGetter
+	CAdvisor kubeletClient.MetricFamiliesGetter
 }
 
 // Scraper takes care of getting metrics from an autodiscovered Kubelet instance.
@@ -86,10 +87,11 @@ func NewScraper(config *config.Mock, providers Providers, options ...ScraperOpt)
 func (s *Scraper) Run(i *integration.Integration) error {
 	kubeletGrouper, err := grouper.New(
 		grouper.Config{
-			Client: s.Kubelet,
+			Client:     s.Kubelet,
+			NodeGetter: s.nodeGetter,
 			Fetchers: []data.FetchFunc{
-				metric2.NewPodsFetcher(s.logger, s.Kubelet).FetchFuncWithCache(),
-				metric2.CadvisorFetchFunc(s.Kubelet, metric.CadvisorQueries),
+				metric2.NewPodsFetcher(s.logger, s.Kubelet).DoPodsFetch,
+				metric2.CadvisorFetchFunc(s.CAdvisor, metric.CadvisorQueries),
 			},
 			DefaultNetworkInterface: s.defaultNetworkInterface,
 		}, grouper.WithLogger(s.logger))

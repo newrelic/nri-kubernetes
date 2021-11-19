@@ -35,9 +35,10 @@ const (
 )
 
 type clusterClients struct {
-	k8s     kubernetes.Interface
-	ksm     ksmClient.MetricFamiliesGetter
-	kubelet kubeletClient.DataClient
+	k8s      kubernetes.Interface
+	ksm      ksmClient.MetricFamiliesGetter
+	cAdvisor ksmClient.MetricFamiliesGetter
+	kubelet  kubeletClient.HTTPGetter
 }
 
 func main() {
@@ -138,8 +139,9 @@ func setupKSM(c config.Mock, clients *clusterClients) (*ksm.Scraper, error) {
 func setupKubelet(c config.Mock, clients *clusterClients) (*kubelet.Scraper, error) {
 	providers := kubelet.Providers{
 		// TODO: Get rid of custom client.Kubernetes wrapper and use kubernetes.Interface directly.
-		K8s:     clients.k8s,
-		Kubelet: clients.kubelet,
+		K8s:      clients.k8s,
+		Kubelet:  clients.kubelet,
+		CAdvisor: clients.cAdvisor,
 	}
 	ksmScraper, err := kubelet.NewScraper(&c, providers, kubelet.WithLogger(logger))
 	if err != nil {
@@ -177,9 +179,10 @@ func buildClients(c config.Mock) (*clusterClients, error) {
 	}
 
 	return &clusterClients{
-		k8s:     k8s,
-		ksm:     ksmCli,
-		kubelet: kubeletCli,
+		k8s:      k8s,
+		ksm:      ksmCli,
+		kubelet:  kubeletCli,
+		cAdvisor: kubeletCli,
 	}, nil
 }
 

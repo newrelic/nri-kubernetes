@@ -60,7 +60,7 @@ func RunControlPlane(config *config.Mock, k8s kubernetes.Interface, i *integrati
 		nodeName,
 		defaultTimeout,
 		hostIP,
-		metric2.NewPodsFetcher(logger, kubeletCli).FetchFuncWithCache(),
+		metric2.NewPodsFetcher(logger, kubeletCli).DoPodsFetch,
 		k8s,
 		config.ETCD.EtcdTLSSecretName,
 		config.ETCD.EtcdTLSSecretNamespace,

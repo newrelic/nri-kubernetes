@@ -53,30 +53,8 @@ func TestFetchFunc(t *testing.T) {
 	}
 
 	f := NewPodsFetcher(logrus.StandardLogger(), &c)
-	g, err := f.FetchFuncWithCache()()
+	g, err := f.DoPodsFetch()
 
-	assert.NoError(t, err)
-	assert.Equal(t, testdata.ExpectedRawData, g)
-}
-
-func TestFetchFuncCache(t *testing.T) {
-	// Given an HTTPClient
-	c := testClient{
-		handler: servePayload,
-	}
-
-	// When calling the fetch pods func the results are cached
-	f := NewPodsFetcher(logrus.StandardLogger(), &c)
-	g, err := f.FetchFuncWithCache()()
-	assert.NoError(t, err)
-	assert.Equal(t, testdata.ExpectedRawData, g)
-
-	// Subsequent calls will use the cached data
-	c = testClient{
-		handler: serverPanic,
-	}
-	f.client = &c
-	g, err = f.FetchFuncWithCache()()
 	assert.NoError(t, err)
 	assert.Equal(t, testdata.ExpectedRawData, g)
 }
@@ -135,7 +113,7 @@ func assertError(t *testing.T, errorMessage string, handler http.HandlerFunc) {
 	}
 
 	f := NewPodsFetcher(logrus.StandardLogger(), &c)
-	g, err := f.FetchFuncWithCache()()
+	g, err := f.DoPodsFetch()
 
 	assert.EqualError(t, err, errorMessage)
 	assert.Empty(t, g)

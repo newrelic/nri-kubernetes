@@ -21,7 +21,7 @@ type grouper struct {
 
 type Config struct {
 	NodeGetter              discovery.NodeGetter
-	Client                  kubeletClient.DataClient
+	Client                  kubeletClient.HTTPGetter
 	Fetchers                []data.FetchFunc
 	DefaultNetworkInterface string
 }

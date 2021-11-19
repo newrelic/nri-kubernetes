@@ -43,9 +43,10 @@ func (c *ClientMock) Get(urlPath string) (*http.Response, error) {
 // MetricFamiliesGetter returns a function that obtains metric families from a list of prometheus queries.
 func (c *ClientMock) MetricFamiliesGetter(url string) prometheus.MetricsFamiliesGetter {
 	return func(queries []prometheus.Query) ([]prometheus.MetricFamily, error) {
-		mFamily, err := prometheus.GetFilteredMetricFamilies(c.doer, url, queries)
+		headers := map[string]string{}
+		mFamily, err := prometheus.GetFilteredMetricFamilies(c.doer, headers, url, queries)
 		if err != nil {
-			return nil, fmt.Errorf("getting filtered metric families: %w", err)
+			return nil, fmt.Errorf("getting filtered metric families %q: %w", url, err)
 		}
 
 		return mFamily, nil

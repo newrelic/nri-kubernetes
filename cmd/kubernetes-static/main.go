@@ -112,7 +112,7 @@ func main() {
 			NodeGetter: nodeGetter,
 			Client:     kClient,
 			Fetchers: []data.FetchFunc{
-				podsFetcher.FetchFuncWithCache(),
+				podsFetcher.DoPodsFetch,
 				kubeletmetric.CadvisorFetchFunc(kClient, metric.CadvisorQueries),
 			},
 			DefaultNetworkInterface: "ens5",

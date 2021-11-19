@@ -6,14 +6,12 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
-	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 )
 
@@ -25,14 +23,15 @@ const KubeletPodsPath = "/pods"
 // results and avoid querying the kubelet multiple times in the same
 // integration execution.
 type PodsFetcher struct {
-	once       sync.Once
-	cachedPods definition.RawGroups
-	fetchError error
-	logger     log.Logger
-	client     client.HTTPGetter
+	logger log.Logger
+	client client.HTTPGetter
 }
 
-func (f *PodsFetcher) doPodsFetch() (definition.RawGroups, error) {
+// DoPodsFetch used to have a cache that was invalidated each execution of the integration
+// TODO: could we move this to informers?
+func (f *PodsFetcher) DoPodsFetch() (definition.RawGroups, error) {
+	f.logger.Debugf("Retrieving the list of pods")
+
 	r, err := f.client.Get(KubeletPodsPath)
 	if err != nil {
 		return nil, err
@@ -112,18 +111,6 @@ func (f *PodsFetcher) doPodsFetch() (definition.RawGroups, error) {
 	}
 
 	return raw, nil
-}
-
-// FetchFuncWithCache creates a data.FetchFunc that fetches data from the
-// kubelet pods path. The results are cached in memory, this means that
-// the cache is maintain per integration execution.
-func (f *PodsFetcher) FetchFuncWithCache() data.FetchFunc {
-	return func() (definition.RawGroups, error) {
-		f.once.Do(func() {
-			f.cachedPods, f.fetchError = f.doPodsFetch()
-		})
-		return f.cachedPods, f.fetchError
-	}
 }
 
 // NewPodsFetcher returns a new PodsFetcher.

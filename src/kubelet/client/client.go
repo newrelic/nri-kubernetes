@@ -1,13 +1,9 @@
 package client
 
 import (
-	"context"
-	"crypto/tls"
-	"errors"
 	"fmt"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 	"io"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"net"
 	"net/http"
@@ -27,12 +23,9 @@ const (
 )
 
 // TODO refactor this interface
-// DataClient allows to connect to the discovered Kubernetes services
-type DataClient interface {
+// HTTPGetter allows to connect to the discovered Kubernetes services
+type HTTPGetter interface {
 	Get(path string) (*http.Response, error)
-	// MetricFamiliesGetter returns a prometheus.FilteredFetcher configured to get KSM metrics from and endpoint.
-	// prometheus.FilteredFetcher will be used by the prometheus client to scrape and filter metrics.
-	MetricFamiliesGetter(url string) prometheus.MetricsFamiliesGetter
 }
 
 // httpDoer is a simple interface encapsulating objects capable of making requests.
@@ -94,17 +87,6 @@ func New(kc kubernetes.Interface, nodeName string, nodeIP string, inClusterConfi
 	return c, nil
 }
 
-func getKubeletPort(kc kubernetes.Interface, nodeName string) (error, int32, *Client, error) {
-	//We pay the price of a single call getting a node to avoid asking the user the Kubelet port if different from the standard one
-
-	node, err := kc.CoreV1().Nodes().Get(context.Background(), nodeName, metav1.GetOptions{})
-	if err != nil {
-		return nil, 0, nil, fmt.Errorf("getting info for node %q: %w", nodeName, err)
-	}
-	kubeletPort := node.Status.DaemonEndpoints.KubeletEndpoint.Port
-	return err, kubeletPort, nil, nil
-}
-
 func (c *Client) setupLocalConnection(nodeIP string, portInt int32) error {
 	c.logger.Debugf("trying connecting to kubelet directly with nodeIP")
 
@@ -158,97 +140,6 @@ func (c *Client) setupConnectionAPI(kc kubernetes.Interface, apiServer string, n
 	return nil
 }
 
-type connParams struct {
-	url    url.URL
-	client httpDoer
-}
-
-func connectionHTTP(host string, timeout time.Duration) connParams {
-	return connParams{
-		url: url.URL{
-			Host:   host,
-			Scheme: "http",
-		},
-		client: &http.Client{
-			Timeout: timeout,
-		},
-	}
-}
-
-func connectionHTTPS(host string, timeout time.Duration) connParams {
-	client := &http.Client{
-		Timeout: timeout,
-	}
-	client.Transport = &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	return connParams{
-		url: url.URL{
-			Host:   host,
-			Scheme: "https",
-		},
-		client: client,
-	}
-}
-
-func connectionAPIProxy(kc kubernetes.Interface, apiServer string, nodeName string) (error, connParams) {
-	client, err := GetClientFromRestInterface(kc)
-	if err != nil {
-		err = fmt.Errorf("getting client from rest client interface: %w", err)
-	}
-
-	apiURL, err := url.Parse(apiServer)
-	if err != nil {
-		err = fmt.Errorf("parsing kubernetes api url from in cluster config: %w", err)
-	}
-
-	conn := connParams{
-		url: url.URL{
-			Host:   apiURL.Host,
-			Path:   fmt.Sprintf("/api/v1/nodes/%s/proxy/", nodeName),
-			Scheme: apiURL.Scheme,
-		},
-		client: client,
-	}
-	return err, conn
-}
-
-// GetClientFromInterface it merely an helper to allow using the fake client
-var GetClientFromRestInterface = getClientFromRestInterface
-
-func getClientFromRestInterface(kc kubernetes.Interface) (httpDoer, error) {
-	secureClient, ok := kc.Discovery().RESTClient().(*rest.RESTClient)
-	if !ok {
-		return nil, errors.New("failed to set up a client for connecting to Kubelet through API proxy")
-	}
-	return secureClient.Client, nil
-}
-
-func checkCall(conn connParams, token string) error {
-	conn.url.Path = path.Join(conn.url.Path, healthzPath)
-
-	r, err := http.NewRequest(http.MethodGet, conn.url.String(), nil)
-	if err != nil {
-		return fmt.Errorf("error creating request to: %s. Got error: %s ", conn.url.String(), err)
-	}
-
-	if conn.url.Scheme == "https" {
-		r.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
-	}
-
-	resp, err := conn.client.Do(r)
-	if err != nil {
-		return fmt.Errorf("error trying to connect to: %s. Got error: %s ", conn.url.String(), err)
-	}
-	defer resp.Body.Close() // nolint: errcheck
-
-	if resp.StatusCode == http.StatusOK {
-		return nil
-	}
-
-	return fmt.Errorf("error calling endpoint %s. Got status code: %d", conn.url.String(), resp.StatusCode)
-}
-
 // Get implements HTTPGetter interface by sending GET request using configured client.
 func (c *Client) Get(urlPath string) (*http.Response, error) {
 	// Notice that this is the client to interact with kubelet. In case of CAdvisor the prometheus.Do is used
@@ -270,12 +161,28 @@ func (c *Client) Get(urlPath string) (*http.Response, error) {
 	return c.doer.Do(r)
 }
 
+// MetricFamiliesGetter is the interface satisfied by Client.
+// TODO: This whole flow is too convoluted, we should refactor and rename this.
+type MetricFamiliesGetter interface {
+	// MetricFamiliesGetter returns a prometheus.FilteredFetcher configured to get KSM metrics from and endpoint.
+	// prometheus.FilteredFetcher will be used by the prometheus client to scrape and filter metrics.
+	MetricFamiliesGetter(url string) prometheus.MetricsFamiliesGetter
+}
+
 // MetricFamiliesGetter returns a function that obtains metric families from a list of prometheus queries.
 func (c *Client) MetricFamiliesGetter(url string) prometheus.MetricsFamiliesGetter {
 	return func(queries []prometheus.Query) ([]prometheus.MetricFamily, error) {
-		mFamily, err := prometheus.GetFilteredMetricFamilies(c.doer, url, queries)
+		e := c.endpoint
+		e.Path = path.Join(c.endpoint.Path, url)
+
+		headers := map[string]string{}
+		if c.endpoint.Scheme == "https" {
+			headers["Authorization"] = fmt.Sprintf("Bearer %s", c.bearerToken)
+		}
+
+		mFamily, err := prometheus.GetFilteredMetricFamilies(c.doer, headers, e.String(), queries)
 		if err != nil {
-			return nil, fmt.Errorf("getting filtered metric families: %w", err)
+			return nil, fmt.Errorf("getting filtered metric families %q: %w", e.String(), err)
 		}
 
 		return mFamily, nil

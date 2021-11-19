@@ -34,13 +34,13 @@ func getLabel(labels prometheus.Labels, names ...string) (string, bool) {
 }
 
 // CadvisorFetchFunc creates a FetchFunc that fetches data from the kubelet cadvisor metrics path.
-func CadvisorFetchFunc(c client.DataClient, queries []prometheus.Query) data.FetchFunc {
+func CadvisorFetchFunc(c client.MetricFamiliesGetter, queries []prometheus.Query) data.FetchFunc {
 	familyFetcher := c.MetricFamiliesGetter(KubeletCAdvisorMetricsPath)
 
 	return func() (definition.RawGroups, error) {
 		families, err := familyFetcher(queries)
 		if err != nil {
-			return nil, fmt.Errorf("error requesting cadvisor metrics endpoint. %s. Try setting the CADVISOR_PORT env variable in the configuration", err)
+			return nil, fmt.Errorf("error requesting cadvisor metrics endpoint: %w", err)
 		}
 
 		var errs []error

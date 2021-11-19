@@ -100,10 +100,9 @@ spec:
                   fieldPath: "spec.nodeName"
             - name: "NRK8S_NODE_IP"
               valueFrom:
-                valueFrom:
-                  fieldRef:
-                    apiVersion: "v1"
-                    fieldPath: "status.hostIP"
+                fieldRef:
+                  apiVersion: "v1"
+                  fieldPath: "status.hostIP"
           volumeMounts:
             - mountPath: /var/cache/nr-kubernetes
               name: tmpfs-cache
