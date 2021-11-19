@@ -1,13 +1,13 @@
 package main
 
 import (
-	"embed"
 	"fmt"
-	"io/fs"
-	"net"
+	"github.com/newrelic/nri-kubernetes/v2/src/data"
+	kubletClient "github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
+	"net/url"
 	"os"
-	"path/filepath"
 	"time"
 
 	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
@@ -20,11 +20,10 @@ import (
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
-	"github.com/newrelic/nri-kubernetes/v2/src/apiserver"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
 	ksmClient "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
 	ksmGrouper "github.com/newrelic/nri-kubernetes/v2/src/ksm/grouper"
-	"github.com/newrelic/nri-kubernetes/v2/src/kubelet"
+	kubeletGrouper "github.com/newrelic/nri-kubernetes/v2/src/kubelet/grouper"
 	kubeletmetric "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
@@ -55,58 +54,73 @@ func main() {
 	}
 
 	fakeK8s := fake.NewSimpleClientset(testutil.K8sEverything()...)
-	integration, err := integration.New(integrationName, integrationVersion, integration.Args(&args))
+	i, err := integration.New(integrationName, integrationVersion, integration.Args(&args))
 	if err != nil {
 		logrus.Fatal(err)
 	}
 
 	logger := log.NewStdErr(args.Verbose)
 
-	// ApiServer
-	apiServerClient := apiserver.TestAPIServer{Mem: map[string]*apiserver.NodeInfo{
-		// this nodename should be the same as the ones in the data folder
-		"minikube": {
-			NodeName: "minikube",
-			Labels: map[string]string{
-				"node-role.kubernetes.io/master": "",
-			},
-			Conditions: []v1.NodeCondition{
-				{
-					Type:   "DiskPressure",
-					Status: v1.ConditionFalse,
-				},
-				{
-					Type:   "MemoryPressure",
-					Status: v1.ConditionFalse,
-				},
-				{
-					Type:   "DiskPressure",
-					Status: v1.ConditionFalse,
-				},
-				{
-					Type:   "PIDPressure",
-					Status: v1.ConditionFalse,
-				},
-				{
-					Type:   "Ready",
-					Status: v1.ConditionTrue,
+	nodeGetter := discovery.MockedNodeGetter{
+		Node: &v1.Node{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "minikube",
+				Labels: map[string]string{
+					"node-role.kubernetes.io/master": "",
 				},
 			},
-			Unschedulable: false,
+			Spec: v1.NodeSpec{
+				Unschedulable: false,
+			},
+			Status: v1.NodeStatus{
+				Conditions: []v1.NodeCondition{
+					{
+						Type:   "DiskPressure",
+						Status: v1.ConditionFalse,
+					},
+					{
+						Type:   "MemoryPressure",
+						Status: v1.ConditionFalse,
+					},
+					{
+						Type:   "DiskPressure",
+						Status: v1.ConditionFalse,
+					},
+					{
+						Type:   "PIDPressure",
+						Status: v1.ConditionFalse,
+					},
+					{
+						Type:   "Ready",
+						Status: v1.ConditionTrue,
+					},
+				},
+			},
 		},
-	}}
+	}
+
+	u, err := url.Parse(testSever.KubeletEndpoint())
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Kubelet
-	kubeletClient := newBasicHTTPClient(testSever.KubeletEndpoint())
-	podsFetcher := kubeletmetric.NewPodsFetcher(logger, kubeletClient)
-	kubeletGrouper := kubelet.NewGrouper(
-		kubeletClient,
-		logger,
-		apiServerClient,
-		"ens5",
-		podsFetcher.FetchFuncWithCache(),
-		kubeletmetric.CadvisorFetchFunc(kubeletClient, metric.CadvisorQueries),
-	)
+	kClient := kubletClient.NewClientMock(&http.Client{Timeout: time.Minute * 10}, *u)
+	podsFetcher := kubeletmetric.NewPodsFetcher(logger, kClient)
+	kubeletGrouper, err := kubeletGrouper.New(
+		kubeletGrouper.Config{
+			NodeGetter: nodeGetter,
+			Client:     kClient,
+			Fetchers: []data.FetchFunc{
+				podsFetcher.FetchFuncWithCache(),
+				kubeletmetric.CadvisorFetchFunc(kClient, metric.CadvisorQueries),
+			},
+			DefaultNetworkInterface: "ens5",
+		}, kubeletGrouper.WithLogger(logger))
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	kc, err := ksmClient.New(ksmClient.WithLogger(log.New(true, os.Stderr)))
 	if err != nil {
@@ -156,7 +170,7 @@ func main() {
 
 		logrus.Infof("Starting job: %s", job.Name)
 
-		result := job.Populate(integration, "test-cluster", logger, k8sVersion)
+		result := job.Populate(i, "test-cluster", logger, k8sVersion)
 
 		if result.Populated {
 			logrus.Infof("Successfully populated job: %s", job.Name)
@@ -167,38 +181,11 @@ func main() {
 		}
 	}
 
-	if err := integration.Publish(); err != nil {
+	if err := i.Publish(); err != nil {
 		logrus.Fatalf("Error while publishing: %v", err)
 	}
 
 	fmt.Println()
-}
-
-func startStaticMetricsServer(content embed.FS, k8sMetricsVersion string) string {
-	listenAddress := "127.0.0.1:0"
-	// This will allocate a random port
-	listener, err := net.Listen("tcp", listenAddress)
-	if err != nil {
-		logrus.Fatalf("Error listening on %q: %v", listenAddress, err)
-	}
-
-	endpoint := fmt.Sprintf("http://%s", listener.Addr())
-	logrus.Infof("Hosting Mock Metrics data on %s", endpoint)
-
-	mux := http.NewServeMux()
-
-	path := filepath.Join("data", k8sMetricsVersion)
-	k8sContent, err := fs.Sub(content, path)
-	if err != nil {
-		logrus.Fatalf("Error taking a %q subtree of embedded data: %v", path, err)
-	}
-
-	mux.Handle("/", http.FileServer(http.FS(k8sContent)))
-	go func() {
-		logrus.Fatal(http.Serve(listener, mux))
-	}()
-
-	return endpoint
 }
 
 func newBasicHTTPClient(url string) *basicHTTPClient {

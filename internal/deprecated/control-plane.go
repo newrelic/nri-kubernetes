@@ -3,6 +3,7 @@ package deprecated
 import (
 	"context"
 	"fmt"
+	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	kubeletClient "github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,24 +19,19 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/log"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/src/apiserver"
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
 	clientControlPlane "github.com/newrelic/nri-kubernetes/v2/src/controlplane/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	metric2 "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
-	"github.com/newrelic/nri-kubernetes/v2/src/storage"
 )
 
 var logger log.Logger = log.NewStdErr(true)
 
 func RunControlPlane(config *config.Mock, k8s kubernetes.Interface, i *integration.Integration) error {
 	const (
-		apiserverCacheDir        = "apiserver"
-		defaultAPIServerCacheTTL = time.Minute * 5
-		nodeNameEnvVar           = "NRK8S_NODE_NAME"
-		defaultTimeout           = time.Millisecond * 5000
+		nodeNameEnvVar = "NRK8S_NODE_NAME"
+		defaultTimeout = time.Millisecond * 5000
 	)
 
 	node, err := k8s.CoreV1().Nodes().Get(context.Background(), config.NodeName, metav1.GetOptions{})
@@ -48,32 +44,19 @@ func RunControlPlane(config *config.Mock, k8s kubernetes.Interface, i *integrati
 		return err
 	}
 
-	apiServerClient := apiserver.NewClient(k8s)
-
-	apiServerCacheTTL := defaultAPIServerCacheTTL
-
-	if apiServerCacheTTL != time.Duration(0) {
-		config := client.DiscoveryCacherConfig{
-			TTL:     apiServerCacheTTL,
-			Storage: storage.NewJSONDiskStorage(getCacheDir(apiserverCacheDir)),
-		}
-		apiServerClient = apiserver.NewFileCacheClientWrapper(apiServerClient, config)
-	}
-
 	nodeName := os.Getenv(nodeNameEnvVar)
 	if nodeName == "" {
 		logger.Errorf("%s env var should be provided by Kubernetes and is mandatory", nodeNameEnvVar)
 		os.Exit(1)
 	}
 	K8sConfig, _ := getK8sConfig(true)
-	kubeletCli, err := kubeletClient.New(k8s, config.NodeName, K8sConfig, kubeletClient.WithLogger(logger))
+	kubeletCli, err := kubeletClient.New(k8s, config.NodeName, config.NodeIp, K8sConfig, kubeletClient.WithLogger(logger))
 	if err != nil {
 		return fmt.Errorf("building Kubelet client: %w", err)
 	}
 
 	cpJobs, err := controlPlaneJobs(
 		logger,
-		apiServerClient,
 		nodeName,
 		defaultTimeout,
 		hostIP,
@@ -120,7 +103,6 @@ func RunControlPlane(config *config.Mock, k8s kubernetes.Interface, i *integrati
 
 func controlPlaneJobs(
 	logger log.Logger,
-	apiServerClient apiserver.Client,
 	nodeName string,
 	timeout time.Duration,
 	nodeIP string,
@@ -134,12 +116,17 @@ func controlPlaneJobs(
 	controllerManagerEndpointURL string,
 	apiServerEndpointURL string,
 ) ([]*scrape.Job, error) {
-	nodeInfo, err := apiServerClient.GetNodeInfo(nodeName)
+
+	// TODO No need to have this into the loop, it it a quick fix waiting for the refactor
+	nodegetter, cl := discovery.NewNodesGetter(k8sClient)
+	defer close(cl)
+
+	node, err := nodegetter.Get(nodeName)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't query ApiServer server: %v", err)
 	}
 
-	if !nodeInfo.IsMasterNode() {
+	if !IsMasterNode(node) {
 		return nil, nil
 	}
 
@@ -247,4 +234,16 @@ func getK8sConfig(tryLocalKubeConfig bool) (*rest.Config, error) {
 	}
 	return config, nil
 
+}
+
+// IsMasterNode returns true if the NodeInfo contains the labels that
+// identify a node as master.
+func IsMasterNode(node *v1.Node) bool {
+	if val, ok := node.Labels["kubernetes.io/role"]; ok && val == "master" {
+		return true
+	}
+	if _, ok := node.Labels["node-role.kubernetes.io/master"]; ok {
+		return true
+	}
+	return false
 }

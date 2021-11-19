@@ -37,23 +37,23 @@ const (
 type clusterClients struct {
 	k8s     kubernetes.Interface
 	ksm     ksmClient.MetricFamiliesGetter
-	kubelet kubeletClient.HTTPClient
+	kubelet kubeletClient.DataClient
 }
 
 func main() {
 	c := config.LoadConfig()
 	logger = log.NewStdErr(c.Verbose)
 
-	clients, err := buildClients(c)
-	if err != nil {
-		log.Error(err.Error())
-		os.Exit(ExitClients)
-	}
-
 	i, err := createIntegrationWithHTTPSink(c.HTTPServerPort)
 	if err != nil {
 		logger.Errorf("creating integration with http sink: %w", err)
 		os.Exit(ExitIntegration)
+	}
+
+	clients, err := buildClients(c)
+	if err != nil {
+		log.Error(err.Error())
+		os.Exit(ExitClients)
 	}
 
 	var kubeletScraper *kubelet.Scraper
@@ -136,7 +136,6 @@ func setupKSM(c config.Mock, clients *clusterClients) (*ksm.Scraper, error) {
 }
 
 func setupKubelet(c config.Mock, clients *clusterClients) (*kubelet.Scraper, error) {
-
 	providers := kubelet.Providers{
 		// TODO: Get rid of custom client.Kubernetes wrapper and use kubernetes.Interface directly.
 		K8s:     clients.k8s,
@@ -161,14 +160,20 @@ func buildClients(c config.Mock) (*clusterClients, error) {
 		return nil, fmt.Errorf("building kubernetes client: %w", err)
 	}
 
-	ksmCli, err := ksmClient.New(ksmClient.WithLogger(logger))
-	if err != nil {
-		return nil, fmt.Errorf("building KSM client: %w", err)
+	var ksmCli *ksmClient.Client
+	if c.KSM.Enabled {
+		ksmCli, err = ksmClient.New(ksmClient.WithLogger(logger))
+		if err != nil {
+			return nil, fmt.Errorf("building KSM client: %w", err)
+		}
 	}
 
-	kubeletCli, err := kubeletClient.New(k8s, c.NodeName, k8sConfig, kubeletClient.WithLogger(logger))
-	if err != nil {
-		return nil, fmt.Errorf("building Kubelet client: %w", err)
+	var kubeletCli *kubeletClient.Client
+	if c.Kubelet.Enabled || c.ControlPlane.Enabled {
+		kubeletCli, err = kubeletClient.New(k8s, c.NodeName, c.NodeIp, k8sConfig, kubeletClient.WithLogger(logger))
+		if err != nil {
+			return nil, fmt.Errorf("building Kubelet client: %w", err)
+		}
 	}
 
 	return &clusterClients{

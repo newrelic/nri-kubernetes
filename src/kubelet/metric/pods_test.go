@@ -21,16 +21,15 @@ type testClient struct {
 
 func (c *testClient) Get(path string) (*http.Response, error) {
 	req := httptest.NewRequest(http.MethodGet, path, nil)
+	return c.Do(req)
+}
+
+func (c *testClient) Do(req *http.Request) (*http.Response, error) {
 	w := httptest.NewRecorder()
 
 	c.handler(w, req)
 
 	return w.Result(), nil
-}
-
-func (c *testClient) NodeIP() string {
-	// nothing to do
-	return ""
 }
 
 func servePayload(w http.ResponseWriter, _ *http.Request) {

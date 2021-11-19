@@ -2,7 +2,8 @@ package kubelet
 
 import (
 	"fmt"
-	"github.com/newrelic/nri-kubernetes/v2/src/apiserver"
+	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
+	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/grouper"
 	metric2 "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
@@ -23,7 +24,7 @@ import (
 // TODO: Extract this out of the Kubelet package.
 type Providers struct {
 	K8s     kubernetes.Interface
-	Kubelet kubeletClient.HTTPClient
+	Kubelet kubeletClient.DataClient
 }
 
 // Scraper takes care of getting metrics from an autodiscovered Kubelet instance.
@@ -34,6 +35,8 @@ type Scraper struct {
 	k8sVersion              *version.Info
 	clusterName             string
 	defaultNetworkInterface string
+	nodeGetter              discovery.NodeGetter
+	informerClosers         []chan<- struct{}
 }
 
 // ScraperOpt are options that can be used to configure the Scraper
@@ -67,6 +70,10 @@ func NewScraper(config *config.Mock, providers Providers, options ...ScraperOpt)
 	s.k8sVersion = k8sVersion
 	s.clusterName = config.ClusterName
 
+	nodeGetter, nodeCloser := discovery.NewNodesGetter(providers.K8s)
+	s.nodeGetter = nodeGetter
+	s.informerClosers = append(s.informerClosers, nodeCloser)
+
 	defaultNetworkInterface, err := network.DefaultInterface(config.NetworkRouteFile)
 	if err != nil {
 		s.logger.Warnf("Error finding default network interface: %v", err)
@@ -77,14 +84,18 @@ func NewScraper(config *config.Mock, providers Providers, options ...ScraperOpt)
 }
 
 func (s *Scraper) Run(i *integration.Integration) error {
-	kubeletGrouper := grouper.NewGrouper(
-		s.Kubelet,
-		s.logger,
-		apiserver.NewClient(s.K8s),
-		s.defaultNetworkInterface,
-		metric2.NewPodsFetcher(s.logger, s.Kubelet).FetchFuncWithCache(),
-		metric2.CadvisorFetchFunc(s.Kubelet, metric.CadvisorQueries),
-	)
+	kubeletGrouper, err := grouper.New(
+		grouper.Config{
+			Client: s.Kubelet,
+			Fetchers: []data.FetchFunc{
+				metric2.NewPodsFetcher(s.logger, s.Kubelet).FetchFuncWithCache(),
+				metric2.CadvisorFetchFunc(s.Kubelet, metric.CadvisorQueries),
+			},
+			DefaultNetworkInterface: s.defaultNetworkInterface,
+		}, grouper.WithLogger(s.logger))
+	if err != nil {
+		return fmt.Errorf("creating Kubelet grouper: %w", err)
+	}
 
 	job := scrape.NewScrapeJob("kubelet", kubeletGrouper, metric.KubeletSpecs)
 	r := job.Populate(i, s.clusterName, s.logger, s.k8sVersion)
@@ -102,5 +113,12 @@ func WithLogger(logger log.Logger) ScraperOpt {
 	return func(s *Scraper) error {
 		s.logger = logger
 		return nil
+	}
+}
+
+// Close will signal internal informers to stop running.
+func (s *Scraper) Close() {
+	for _, ch := range s.informerClosers {
+		close(ch)
 	}
 }
