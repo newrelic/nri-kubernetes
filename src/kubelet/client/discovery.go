@@ -97,9 +97,11 @@ func New(kc kubernetes.Interface, nodeName string, inClusterConfig *rest.Config,
 		return nil, fmt.Errorf("getting hostIP: %w", err)
 	}
 
+	c.logger.Debugf("trying connecting to kubelet directly with nodeIP : %v", err)
+
 	err = c.setupConnection(c.nodeIP, node.Status.DaemonEndpoints.KubeletEndpoint.Port)
 	if err == nil {
-		c.logger.Debugf("connected to Kubelet with localhost")
+		c.logger.Debugf("connected to Kubelet directly with nodeIP")
 		return c, nil
 	}
 

@@ -30,7 +30,6 @@ spec:
     spec:
       serviceAccountName: {{ template "newrelic.serviceAccountName" . }}
       {{- if .Values.privileged }}
-      hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       {{- end }}
       {{- if .Values.image.pullSecrets }}
