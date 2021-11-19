@@ -28,7 +28,7 @@ import (
 
 var logger log.Logger = log.NewStdErr(true)
 
-func RunControlPlane(config *config.Mock, k8s kubernetes.Interface, i *integration.Integration) error {
+func RunControlPlane(config config.Mock, k8s kubernetes.Interface, i *integration.Integration) error {
 	const (
 		nodeNameEnvVar = "NRK8S_NODE_NAME"
 		defaultTimeout = time.Millisecond * 5000
@@ -50,7 +50,7 @@ func RunControlPlane(config *config.Mock, k8s kubernetes.Interface, i *integrati
 		os.Exit(1)
 	}
 	K8sConfig, _ := getK8sConfig(true)
-	kubeletCli, err := kubeletClient.New(k8s, config.NodeName, config.NodeIp, K8sConfig, kubeletClient.WithLogger(logger))
+	kubeletCli, err := kubeletClient.New(k8s, config, K8sConfig, kubeletClient.WithLogger(logger))
 	if err != nil {
 		return fmt.Errorf("building Kubelet client: %w", err)
 	}

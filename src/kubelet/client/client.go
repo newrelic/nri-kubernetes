@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 	"io"
 	"k8s.io/client-go/kubernetes"
@@ -22,8 +23,7 @@ const (
 	defaultTimeout          = time.Millisecond * 5000
 )
 
-// TODO refactor this interface
-// HTTPGetter allows to connect to the discovered Kubernetes services
+// HTTPGetter
 type HTTPGetter interface {
 	Get(path string) (*http.Response, error)
 }
@@ -36,10 +36,11 @@ type httpDoer interface {
 // Client implements a client for Kubelet, capable of retrieving prometheus metrics from a given endpoint.
 type Client struct {
 	// TODO: Use a non-sdk logger
-	logger      log.Logger
-	doer        httpDoer
-	endpoint    url.URL
-	bearerToken string
+	logger        log.Logger
+	doer          httpDoer
+	endpoint      url.URL
+	bearerToken   string
+	apiServerHost string
 }
 
 type OptionFunc func(kc *Client) error
@@ -53,9 +54,11 @@ func WithLogger(logger log.Logger) OptionFunc {
 }
 
 // New builds a Client using the given options.
-func New(kc kubernetes.Interface, nodeName string, nodeIP string, inClusterConfig *rest.Config, opts ...OptionFunc) (*Client, error) {
+func New(kc kubernetes.Interface, config config.Mock, inClusterConfig *rest.Config, opts ...OptionFunc) (*Client, error) {
 	c := &Client{
-		logger: log.New(false, io.Discard),
+		logger:        log.New(false, io.Discard),
+		bearerToken:   inClusterConfig.BearerToken,
+		apiServerHost: inClusterConfig.Host,
 	}
 
 	for i, opt := range opts {
@@ -64,27 +67,35 @@ func New(kc kubernetes.Interface, nodeName string, nodeIP string, inClusterConfi
 		}
 	}
 
-	err, kubeletPort, client, err2 := getKubeletPort(kc, nodeName)
-	if err2 != nil {
-		return client, err2
-	}
-
-	c.bearerToken = inClusterConfig.BearerToken
-
-	err = c.setupLocalConnection(nodeIP, kubeletPort)
-	if err == nil {
-		c.logger.Debugf("connected to Kubelet directly with nodeIP")
-		return c, nil
-	}
-	c.logger.Debugf("Kubelet connection with nodeIP failed: %v", err)
-
-	err = c.setupConnectionAPI(kc, inClusterConfig.Host, nodeName)
+	err := c.setupConnection(kc, config)
 	if err != nil {
-		return nil, fmt.Errorf("no connection method was succeeded: %w ", err)
+		return nil, fmt.Errorf("connecting to kubelet: %w", err)
 	}
-	c.logger.Debugf("connected to Kubelet with API proxy")
 
 	return c, nil
+}
+
+func (c *Client) setupConnection(kc kubernetes.Interface, config config.Mock) error {
+	kubeletPort, err := getKubeletPort(kc, config.NodeName)
+	if err != nil {
+		return fmt.Errorf("getting kubelet port: %w", err)
+	}
+
+	err = c.setupLocalConnection(config.NodeIp, kubeletPort)
+	if err == nil {
+		c.logger.Debugf("connected to Kubelet directly with nodeIP")
+		return nil
+	}
+
+	c.logger.Debugf("Kubelet connection with nodeIP failed: %v", err)
+
+	err = c.setupConnectionAPI(kc, c.apiServerHost, config.NodeName)
+	if err == nil {
+		c.logger.Debugf("connected to Kubelet with API proxy")
+		return nil
+	}
+
+	return fmt.Errorf("connection failed both locally and with API server: %w", err)
 }
 
 func (c *Client) setupLocalConnection(nodeIP string, portInt int32) error {

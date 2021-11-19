@@ -104,13 +104,13 @@ func checkCall(conn connParams, token string) error {
 	return fmt.Errorf("error calling endpoint %s. Got status code: %d", conn.url.String(), resp.StatusCode)
 }
 
-func getKubeletPort(kc kubernetes.Interface, nodeName string) (error, int32, *Client, error) {
+func getKubeletPort(kc kubernetes.Interface, nodeName string) (int32, error) {
 	//We pay the price of a single call getting a node to avoid asking the user the Kubelet port if different from the standard one
 
 	node, err := kc.CoreV1().Nodes().Get(context.Background(), nodeName, metav1.GetOptions{})
 	if err != nil {
-		return nil, 0, nil, fmt.Errorf("getting info for node %q: %w", nodeName, err)
+		return 0, fmt.Errorf("getting node %q: %w", nodeName, err)
 	}
-	kubeletPort := node.Status.DaemonEndpoints.KubeletEndpoint.Port
-	return err, kubeletPort, nil, nil
+
+	return node.Status.DaemonEndpoints.KubeletEndpoint.Port, nil
 }
