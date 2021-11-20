@@ -154,7 +154,7 @@ func TestGroup(t *testing.T) {
 			Client:     mockKubelet,
 			Fetchers: []data.FetchFunc{
 				podsFetcher.DoPodsFetch,
-				metric.CadvisorFetchFunc(mockKubelet, queries),
+				metric.CadvisorFetchFunc(mockKubelet.MetricFamiliesGetFunc(metric.KubeletCAdvisorMetricsPath), queries),
 			},
 			DefaultNetworkInterface: "eth0",
 		},

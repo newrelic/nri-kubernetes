@@ -51,7 +51,7 @@ func runCAdvisorFetchFunc(t *testing.T, file string) {
 	}
 
 	mock := client.NewClientMock(c, url.URL{})
-	g, err := CadvisorFetchFunc(mock, cadvisorQueries)()
+	g, err := CadvisorFetchFunc(mock.MetricFamiliesGetFunc(KubeletCAdvisorMetricsPath), cadvisorQueries)()
 
 	assert.NoError(t, err)
 	assert.Equal(t, testdata.ExpectedCadvisorRawData, g)
@@ -79,7 +79,7 @@ container_memory_usage_bytes{container_name="influxdb",id="/kubepods/besteffort/
 		handler: readerToHandler(f),
 	}
 	mock := client.NewClientMock(c, url.URL{})
-	_, err := CadvisorFetchFunc(mock, cadvisorQueries)()
+	_, err := CadvisorFetchFunc(mock.MetricFamiliesGetFunc(KubeletCAdvisorMetricsPath), cadvisorQueries)()
 	assert.Error(t, err)
 
 	expectedErrs := []error{

@@ -76,8 +76,9 @@ func getClientFromRestInterface(kc kubernetes.Interface) (client.HTTPDoer, error
 	// This could fail then writing tests with fake client. A mock can be used instead.
 	secureClient, ok := kc.Discovery().RESTClient().(*rest.RESTClient)
 	if !ok {
-		return nil, fmt.Errorf("failed to set up a client for connecting to Kubelet through API proxy")
+		return nil, fmt.Errorf("failed cast kubernetes.Interface to TESTClient")
 	}
+
 	return secureClient.Client, nil
 }
 

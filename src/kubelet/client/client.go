@@ -83,7 +83,7 @@ func (c *Client) setupConnection(kc kubernetes.Interface, config config.Mock) (*
 
 	c.logger.Debugf("Kubelet connection with nodeIP failed: %v", err)
 
-	conn, err = c.setupConnectionAPI(kc, c.apiServerHost, config.NodeName)
+	conn, err = c.setupAPIConnection(kc, c.apiServerHost, config.NodeName)
 	if err == nil {
 		c.logger.Debugf("connected to Kubelet with API proxy")
 		return conn, nil
@@ -94,36 +94,41 @@ func (c *Client) setupConnection(kc kubernetes.Interface, config config.Mock) (*
 
 func (c *Client) setupLocalConnection(nodeIP string, portInt int32) (*connParams, error) {
 	c.logger.Debugf("trying connecting to kubelet directly with nodeIP")
+	var err error
 
 	port := fmt.Sprintf("%d", portInt)
 	hostURL := net.JoinHostPort(nodeIP, port)
 
-	var connToTest []connParams
+	httpConn := connectionHTTP(hostURL, defaultTimeout)
+	httpsConn := connectionHTTPS(hostURL, defaultTimeout)
+
 	switch portInt {
 	case defaultHTTPKubeletPort:
-		connToTest = []connParams{connectionHTTP(hostURL, defaultTimeout)}
-	case defaultHTTPSKubeletPort:
-		connToTest = []connParams{connectionHTTPS(hostURL, defaultTimeout)}
-	default:
-		// In case the kubelet port is not the standard one, we do not know if the schema is HTTP or HTTPS and
-		// we need to test both
-		connToTest = []connParams{connectionHTTP(hostURL, defaultTimeout), connectionHTTPS(hostURL, defaultTimeout)}
-	}
-
-	for _, conn := range connToTest {
-		err := checkCall(conn, c.bearerToken)
-		if err != nil {
-			c.logger.Debugf("trying connecting to kubelet: %s", err.Error())
-			continue
+		err = checkCall(httpConn, "")
+		if err == nil {
+			return &httpConn, nil
 		}
-
-		return &conn, nil
+	case defaultHTTPSKubeletPort:
+		err = checkCall(httpsConn, c.bearerToken)
+		if err == nil {
+			return &httpsConn, nil
+		}
+	default:
+		// The port is not a standard one and we need to check both schemas.
+		err = checkCall(httpConn, "")
+		if err == nil {
+			return &httpConn, nil
+		}
+		err = checkCall(httpsConn, c.bearerToken)
+		if err == nil {
+			return &httpsConn, nil
+		}
 	}
 
-	return nil, fmt.Errorf("no connection succeded through localhost")
+	return nil, fmt.Errorf("no connection succeded through localhost: %w", err)
 }
 
-func (c *Client) setupConnectionAPI(kc kubernetes.Interface, apiServer string, nodeName string) (*connParams, error) {
+func (c *Client) setupAPIConnection(kc kubernetes.Interface, apiServer string, nodeName string) (*connParams, error) {
 	c.logger.Debugf("trying connecting to kubelet directly with API proxy")
 
 	err, conn := connectionAPIProxy(kc, apiServer, nodeName)
