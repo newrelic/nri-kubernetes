@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 	"net"
 	"os"
 	"path"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/deprecated"
+	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/ksm"
 	ksmClient "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet"
@@ -36,9 +38,9 @@ const (
 
 type clusterClients struct {
 	k8s      kubernetes.Interface
-	ksm      ksmClient.MetricFamiliesGetter
-	cAdvisor ksmClient.MetricFamiliesGetter
-	kubelet  kubeletClient.HTTPGetter
+	ksm      prometheus.MetricFamiliesGetFunc
+	cAdvisor prometheus.MetricFamiliesGetFunc
+	kubelet  client.HTTPGetter
 }
 
 func main() {
@@ -213,16 +215,16 @@ func createIntegrationWithHTTPSink(httpServerPort string) (*integration.Integrat
 }
 
 func getK8sConfig(tryLocalKubeConfig bool) (*rest.Config, error) {
-	config, err := rest.InClusterConfig()
+	c, err := rest.InClusterConfig()
 	if err == nil || !tryLocalKubeConfig {
-		return config, nil
+		return c, nil
 	}
 
 	kubeconf := path.Join(homedir.HomeDir(), ".kube", "config")
-	config, err = clientcmd.BuildConfigFromFlags("", kubeconf)
+	c, err = clientcmd.BuildConfigFromFlags("", kubeconf)
 	if err != nil {
 		return nil, fmt.Errorf("could not load local kube config: %w", err)
 	}
-	return config, nil
+	return c, nil
 
 }

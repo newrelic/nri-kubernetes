@@ -107,13 +107,13 @@ func main() {
 	// Kubelet
 	kClient := kubletClient.NewClientMock(&http.Client{Timeout: time.Minute * 10}, *u)
 	podsFetcher := kubeletmetric.NewPodsFetcher(logger, kClient)
-	kubeletGrouper, err := kubeletGrouper.New(
+	grouper, err := kubeletGrouper.New(
 		kubeletGrouper.Config{
 			NodeGetter: nodeGetter,
 			Client:     kClient,
 			Fetchers: []data.FetchFunc{
 				podsFetcher.DoPodsFetch,
-				kubeletmetric.CadvisorFetchFunc(kClient, metric.CadvisorQueries),
+				kubeletmetric.CadvisorFetchFunc(kClient.MetricFamiliesGetFunc(kubeletmetric.KubeletCAdvisorMetricsPath), metric.CadvisorQueries),
 			},
 			DefaultNetworkInterface: "ens5",
 		}, kubeletGrouper.WithLogger(logger))
@@ -129,7 +129,7 @@ func main() {
 
 	fakeLister, _ := discovery.NewServicesLister(fakeK8s)
 	kg, err := ksmGrouper.New(ksmGrouper.Config{
-		MetricFamiliesGetter: kc.MetricFamiliesGetter(testSever.KSMEndpoint()),
+		MetricFamiliesGetter: kc.MetricFamiliesGetFunc(testSever.KSMEndpoint()),
 		Queries:              metric.KSMQueries,
 		ServicesLister:       fakeLister,
 	}, ksmGrouper.WithLogger(logger))
@@ -138,7 +138,7 @@ func main() {
 	}
 
 	jobs := []*scrape.Job{
-		scrape.NewScrapeJob("kubelet", kubeletGrouper, metric.KubeletSpecs),
+		scrape.NewScrapeJob("kubelet", grouper, metric.KubeletSpecs),
 		scrape.NewScrapeJob("kube-state-metrics", kg, metric.KSMSpecs),
 	}
 

@@ -20,7 +20,6 @@ type MultiDiscoverer interface {
 // HTTPClient allows to connect to the discovered Kubernetes services
 type HTTPClient interface {
 	HTTPGetter
-	NodeIPGetter
 }
 
 // HTTPGetter is an interface for HTTP client with, which should provide
@@ -31,9 +30,4 @@ type HTTPGetter interface {
 
 type HTTPDoer interface {
 	Do(*http.Request) (*http.Response, error)
-}
-
-// NodeIPGetter allows getting discovered Node IP.
-type NodeIPGetter interface {
-	NodeIP() string
 }

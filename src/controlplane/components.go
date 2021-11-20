@@ -91,16 +91,16 @@ func WithEndpointURL(name ComponentName, endpointURL string) ComponentOption {
 			panic(fmt.Sprintf("expected component %s in list of components, but not found", string(name)))
 		}
 
-		url, err := url.Parse(endpointURL)
+		u, err := url.Parse(endpointURL)
 		if err != nil {
 			panic(fmt.Sprintf("Endpoint URL %s for component %s is not a valid URL", endpointURL, string(name)))
 		}
 
-		component.UseServiceAccountAuthentication = strings.ToLower(url.Scheme) == "https"
+		component.UseServiceAccountAuthentication = strings.ToLower(u.Scheme) == "https"
 		if component.UseServiceAccountAuthentication {
-			component.SecureEndpoint = *url
+			component.SecureEndpoint = *u
 		} else {
-			component.Endpoint = *url
+			component.Endpoint = *u
 		}
 	}
 }

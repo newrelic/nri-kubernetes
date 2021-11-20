@@ -2,6 +2,7 @@ package ksm
 
 import (
 	"fmt"
+	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 	"io"
 	"net/url"
 
@@ -12,7 +13,6 @@ import (
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
-	ksmClient "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
 	ksmGrouper "github.com/newrelic/nri-kubernetes/v2/src/ksm/grouper"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
@@ -26,7 +26,7 @@ const ksmMetricsPath = "metrics"
 // TODO: Extract this out of the KSM package.
 type Providers struct {
 	K8s kubernetes.Interface
-	KSM ksmClient.MetricFamiliesGetter
+	KSM prometheus.MetricFamiliesGetFunc
 }
 
 // Scraper takes care of getting metrics from an autodiscovered KSM instance.
@@ -110,7 +110,7 @@ func (s *Scraper) Run(i *integration.Integration) error {
 	for _, endpoint := range endpoints {
 		s.logger.Debugf("Fetching KSM data from %q", endpoint)
 		grouper, err := ksmGrouper.New(ksmGrouper.Config{
-			MetricFamiliesGetter: s.KSM.MetricFamiliesGetter(endpoint),
+			MetricFamiliesGetter: s.KSM.MetricFamiliesGetFunc(endpoint),
 			Queries:              metric.KSMQueries,
 			ServicesLister:       s.servicesLister,
 		}, ksmGrouper.WithLogger(s.logger))

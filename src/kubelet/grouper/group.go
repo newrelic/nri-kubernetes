@@ -3,7 +3,7 @@ package grouper
 import (
 	"fmt"
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
-	kubeletClient "github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"io"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
@@ -21,7 +21,7 @@ type grouper struct {
 
 type Config struct {
 	NodeGetter              discovery.NodeGetter
-	Client                  kubeletClient.HTTPGetter
+	Client                  client.HTTPGetter
 	Fetchers                []data.FetchFunc
 	DefaultNetworkInterface string
 }

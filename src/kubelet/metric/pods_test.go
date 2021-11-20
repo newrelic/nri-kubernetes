@@ -1,7 +1,6 @@
 package metric
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -41,10 +40,6 @@ func servePayload(w http.ResponseWriter, _ *http.Request) {
 	defer f.Close() // nolint: errcheck
 
 	io.Copy(w, f) // nolint: errcheck
-}
-
-func serverPanic(w http.ResponseWriter, _ *http.Request) {
-	panic(fmt.Errorf("server panic"))
 }
 
 func TestFetchFunc(t *testing.T) {

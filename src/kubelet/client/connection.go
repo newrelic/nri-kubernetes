@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -15,7 +16,7 @@ import (
 
 type connParams struct {
 	url    url.URL
-	client httpDoer
+	client client.HTTPDoer
 }
 
 func connectionHTTP(host string, timeout time.Duration) connParams {
@@ -47,7 +48,7 @@ func connectionHTTPS(host string, timeout time.Duration) connParams {
 }
 
 func connectionAPIProxy(kc kubernetes.Interface, apiServer string, nodeName string) (error, connParams) {
-	client, err := GetClientFromRestInterface(kc)
+	c, err := GetClientFromRestInterface(kc)
 	if err != nil {
 		err = fmt.Errorf("getting client from rest client interface: %w", err)
 	}
@@ -63,15 +64,16 @@ func connectionAPIProxy(kc kubernetes.Interface, apiServer string, nodeName stri
 			Path:   fmt.Sprintf("/api/v1/nodes/%s/proxy/", nodeName),
 			Scheme: apiURL.Scheme,
 		},
-		client: client,
+		client: c,
 	}
 	return err, conn
 }
 
-// GetClientFromInterface it merely an helper to allow using the fake client
+// GetClientFromRestInterface is merely an helper to allow using the fake client
 var GetClientFromRestInterface = getClientFromRestInterface
 
-func getClientFromRestInterface(kc kubernetes.Interface) (httpDoer, error) {
+func getClientFromRestInterface(kc kubernetes.Interface) (client.HTTPDoer, error) {
+	// This could fail then writing tests with fake client. A mock can be used instead.
 	secureClient, ok := kc.Discovery().RESTClient().(*rest.RESTClient)
 	if !ok {
 		return nil, fmt.Errorf("failed to set up a client for connecting to Kubelet through API proxy")

@@ -213,26 +213,18 @@ func getHostIP(node *v1.Node) (string, error) {
 	return ip, nil
 }
 
-func getCacheDir(subDirectory string) string {
-	const (
-		defaultCacheDir = "/var/cache/nr-kubernetes"
-	)
-
-	return path.Join(defaultCacheDir, subDirectory)
-}
-
 func getK8sConfig(tryLocalKubeConfig bool) (*rest.Config, error) {
-	config, err := rest.InClusterConfig()
+	c, err := rest.InClusterConfig()
 	if err == nil || !tryLocalKubeConfig {
-		return config, nil
+		return c, nil
 	}
 
 	kubeconf := path.Join(homedir.HomeDir(), ".kube", "config")
-	config, err = clientcmd.BuildConfigFromFlags("", kubeconf)
+	c, err = clientcmd.BuildConfigFromFlags("", kubeconf)
 	if err != nil {
 		return nil, fmt.Errorf("could not load local kube config: %w", err)
 	}
-	return config, nil
+	return c, nil
 
 }
 

@@ -2,6 +2,8 @@ package kubelet
 
 import (
 	"fmt"
+	"github.com/newrelic/nri-kubernetes/v2/src/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 	"io"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
@@ -12,9 +14,8 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
-	kubeletClient "github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/grouper"
-	metric2 "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
+	kubeletMetric "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/network"
 	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
@@ -24,8 +25,8 @@ import (
 // TODO: Extract this out of the Kubelet package.
 type Providers struct {
 	K8s      kubernetes.Interface
-	Kubelet  kubeletClient.HTTPGetter
-	CAdvisor kubeletClient.MetricFamiliesGetter
+	Kubelet  client.HTTPGetter
+	CAdvisor prometheus.MetricFamiliesGetFunc
 }
 
 // Scraper takes care of getting metrics from an autodiscovered Kubelet instance.
@@ -82,13 +83,15 @@ func NewScraper(config *config.Mock, providers Providers, options ...ScraperOpt)
 }
 
 func (s *Scraper) Run(i *integration.Integration) error {
+	fetchAndFilterPrometheus := s.CAdvisor.MetricFamiliesGetFunc(kubeletMetric.KubeletCAdvisorMetricsPath)
+
 	kubeletGrouper, err := grouper.New(
 		grouper.Config{
 			Client:     s.Kubelet,
 			NodeGetter: s.nodeGetter,
 			Fetchers: []data.FetchFunc{
-				metric2.NewPodsFetcher(s.logger, s.Kubelet).DoPodsFetch,
-				metric2.CadvisorFetchFunc(s.CAdvisor, metric.CadvisorQueries),
+				kubeletMetric.NewPodsFetcher(s.logger, s.Kubelet).DoPodsFetch,
+				kubeletMetric.CadvisorFetchFunc(fetchAndFilterPrometheus, metric.CadvisorQueries),
 			},
 			DefaultNetworkInterface: s.defaultNetworkInterface,
 		}, grouper.WithLogger(s.logger))

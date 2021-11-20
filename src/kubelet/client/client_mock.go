@@ -3,6 +3,7 @@ package client
 import (
 	"fmt"
 	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 	"net/http"
 	"net/url"
@@ -10,15 +11,15 @@ import (
 )
 
 // Client implements a client for Kubelet, capable of retrieving prometheus metrics from a given endpoint.
-type ClientMock struct {
+type Mock struct {
 	// TODO: Use a non-sdk logger
 	logger   log.Logger
-	doer     httpDoer
+	doer     client.HTTPDoer
 	endpoint url.URL
 }
 
-func NewClientMock(doer httpDoer, endpoint url.URL) *ClientMock {
-	return &ClientMock{
+func NewClientMock(doer client.HTTPDoer, endpoint url.URL) *Mock {
+	return &Mock{
 		logger:   log.NewStdErr(true),
 		doer:     doer,
 		endpoint: endpoint,
@@ -26,7 +27,7 @@ func NewClientMock(doer httpDoer, endpoint url.URL) *ClientMock {
 }
 
 // Get implements HTTPGetter interface by sending GET request using configured client.
-func (c *ClientMock) Get(urlPath string) (*http.Response, error) {
+func (c *Mock) Get(urlPath string) (*http.Response, error) {
 	// Notice that this is the client to interact with kubelet. In case of CAdvisor the prometheus.Do is used
 
 	e := c.endpoint
@@ -40,11 +41,11 @@ func (c *ClientMock) Get(urlPath string) (*http.Response, error) {
 	return c.doer.Do(r)
 }
 
-// MetricFamiliesGetter returns a function that obtains metric families from a list of prometheus queries.
-func (c *ClientMock) MetricFamiliesGetter(url string) prometheus.MetricsFamiliesGetter {
+// MetricFamiliesGetFunc returns a function that obtains metric families from a list of prometheus queries.
+func (c *Mock) MetricFamiliesGetFunc(url string) prometheus.FetchAndFilterMetricsFamilies {
 	return func(queries []prometheus.Query) ([]prometheus.MetricFamily, error) {
 		headers := map[string]string{}
-		mFamily, err := prometheus.GetFilteredMetricFamilies(c.doer, headers, url, queries)
+		mFamily, err := prometheus.GetFilteredMetricFamilies(c.doer, headers, url, queries, c.logger)
 		if err != nil {
 			return nil, fmt.Errorf("getting filtered metric families %q: %w", url, err)
 		}

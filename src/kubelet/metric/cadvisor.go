@@ -3,7 +3,6 @@ package metric
 import (
 	"errors"
 	"fmt"
-	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
 	"regexp"
 	"strings"
 
@@ -34,11 +33,9 @@ func getLabel(labels prometheus.Labels, names ...string) (string, bool) {
 }
 
 // CadvisorFetchFunc creates a FetchFunc that fetches data from the kubelet cadvisor metrics path.
-func CadvisorFetchFunc(c client.MetricFamiliesGetter, queries []prometheus.Query) data.FetchFunc {
-	familyFetcher := c.MetricFamiliesGetter(KubeletCAdvisorMetricsPath)
-
+func CadvisorFetchFunc(fetchAndFilterPrometheus prometheus.FetchAndFilterMetricsFamilies, queries []prometheus.Query) data.FetchFunc {
 	return func() (definition.RawGroups, error) {
-		families, err := familyFetcher(queries)
+		families, err := fetchAndFilterPrometheus(queries)
 		if err != nil {
 			return nil, fmt.Errorf("error requesting cadvisor metrics endpoint: %w", err)
 		}
