@@ -2,8 +2,6 @@ package kubelet
 
 import (
 	"fmt"
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
-	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 	"io"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
@@ -13,11 +11,13 @@ import (
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
+	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/grouper"
 	kubeletMetric "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/network"
+	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
 )
 
