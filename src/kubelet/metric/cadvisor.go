@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
@@ -15,9 +14,6 @@ import (
 const (
 	// KubeletCAdvisorMetricsPath is the path where kubelet serves information about cadvisor.
 	KubeletCAdvisorMetricsPath = "/metrics/cadvisor"
-
-	// StandaloneCAdvisorMetricsPath is the path where standalone cadvisor serves information.
-	StandaloneCAdvisorMetricsPath = "/metrics"
 )
 
 var (
@@ -37,11 +33,11 @@ func getLabel(labels prometheus.Labels, names ...string) (string, bool) {
 }
 
 // CadvisorFetchFunc creates a FetchFunc that fetches data from the kubelet cadvisor metrics path.
-func CadvisorFetchFunc(c client.HTTPGetter, queries []prometheus.Query) data.FetchFunc {
+func CadvisorFetchFunc(fetchAndFilterPrometheus prometheus.FetchAndFilterMetricsFamilies, queries []prometheus.Query) data.FetchFunc {
 	return func() (definition.RawGroups, error) {
-		families, err := prometheus.Do(c, KubeletCAdvisorMetricsPath, queries)
+		families, err := fetchAndFilterPrometheus(queries)
 		if err != nil {
-			return nil, fmt.Errorf("error requesting cadvisor metrics endpoint. %s. Try setting the CADVISOR_PORT env variable in the configuration", err)
+			return nil, fmt.Errorf("error requesting cadvisor metrics endpoint: %w", err)
 		}
 
 		var errs []error

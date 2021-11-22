@@ -3,19 +3,27 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 	"net"
 	"os"
+	"path"
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/sethgrid/pester"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/deprecated"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/ksm"
 	ksmClient "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/kubelet"
+	kubeletClient "github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/sink"
 )
 
@@ -29,24 +37,35 @@ const (
 )
 
 type clusterClients struct {
-	k8s client.Kubernetes
-	ksm ksmClient.MetricFamiliesGetter
+	k8s      kubernetes.Interface
+	ksm      prometheus.MetricFamiliesGetFunc
+	cAdvisor prometheus.MetricFamiliesGetFunc
+	kubelet  client.HTTPGetter
 }
 
 func main() {
 	c := config.LoadConfig()
 	logger = log.NewStdErr(c.Verbose)
 
-	clients, err := buildClients()
+	i, err := createIntegrationWithHTTPSink(c.HTTPServerPort)
+	if err != nil {
+		logger.Errorf("creating integration with http sink: %w", err)
+		os.Exit(ExitIntegration)
+	}
+
+	clients, err := buildClients(c)
 	if err != nil {
 		log.Error(err.Error())
 		os.Exit(ExitClients)
 	}
 
-	i, err := createIntegrationWithHTTPSink(c.HTTPServerPort)
-	if err != nil {
-		logger.Errorf("creating integration with http sink: %w", err)
-		os.Exit(ExitIntegration)
+	var kubeletScraper *kubelet.Scraper
+	if c.Kubelet.Enabled {
+		kubeletScraper, err = setupKubelet(c, clients)
+		if err != nil {
+			logger.Errorf("setting up ksm scraper: %w", err)
+			os.Exit(ExitSetup)
+		}
 	}
 
 	var ksmScraper *ksm.Scraper
@@ -61,7 +80,7 @@ func main() {
 
 	for {
 		// TODO think carefully to the signature of this function
-		err := runScrapers(c, ksmScraper, i, clients)
+		err := runScrapers(c, ksmScraper, kubeletScraper, i, clients)
 		if err != nil {
 			logger.Errorf("retrieving scraper data: %v", err)
 			os.Exit(ExitLoop)
@@ -77,7 +96,7 @@ func main() {
 	}
 }
 
-func runScrapers(c config.Mock, ksmScraper *ksm.Scraper, i *integration.Integration, clients *clusterClients) error {
+func runScrapers(c config.Mock, ksmScraper *ksm.Scraper, kubeletScraper *kubelet.Scraper, i *integration.Integration, clients *clusterClients) error {
 	if c.KSM.Enabled {
 		err := ksmScraper.Run(i)
 		if err != nil {
@@ -86,8 +105,7 @@ func runScrapers(c config.Mock, ksmScraper *ksm.Scraper, i *integration.Integrat
 	}
 
 	if c.Kubelet.Enabled {
-		// TODO this is merely a stub running old code
-		err := deprecated.RunKubelet(&c, clients.k8s, i)
+		err := kubeletScraper.Run(i)
 		if err != nil {
 			return fmt.Errorf("retrieving kubelet data: %w", err)
 		}
@@ -95,7 +113,7 @@ func runScrapers(c config.Mock, ksmScraper *ksm.Scraper, i *integration.Integrat
 
 	if c.ControlPlane.Enabled {
 		// TODO this is merely a stub running old code
-		err := deprecated.RunControlPlane(&c, clients.k8s, i)
+		err := deprecated.RunControlPlane(c, clients.k8s, i)
 		if err != nil {
 			return fmt.Errorf("retrieving control-plane data: %w", err)
 
@@ -108,7 +126,7 @@ func runScrapers(c config.Mock, ksmScraper *ksm.Scraper, i *integration.Integrat
 func setupKSM(c config.Mock, clients *clusterClients) (*ksm.Scraper, error) {
 	providers := ksm.Providers{
 		// TODO: Get rid of custom client.Kubernetes wrapper and use kubernetes.Interface directly.
-		K8s: clients.k8s.GetClient(),
+		K8s: clients.k8s,
 		KSM: clients.ksm,
 	}
 
@@ -120,20 +138,53 @@ func setupKSM(c config.Mock, clients *clusterClients) (*ksm.Scraper, error) {
 	return ksmScraper, nil
 }
 
-func buildClients() (*clusterClients, error) {
-	k8s, err := client.NewKubernetes(true)
+func setupKubelet(c config.Mock, clients *clusterClients) (*kubelet.Scraper, error) {
+	providers := kubelet.Providers{
+		// TODO: Get rid of custom client.Kubernetes wrapper and use kubernetes.Interface directly.
+		K8s:      clients.k8s,
+		Kubelet:  clients.kubelet,
+		CAdvisor: clients.cAdvisor,
+	}
+	ksmScraper, err := kubelet.NewScraper(&c, providers, kubelet.WithLogger(logger))
+	if err != nil {
+		return nil, fmt.Errorf("building kubelet scraper: %w", err)
+	}
+
+	return ksmScraper, nil
+}
+
+func buildClients(c config.Mock) (*clusterClients, error) {
+	k8sConfig, err := getK8sConfig(true)
+	if err != nil {
+		return nil, fmt.Errorf("retrieving k8s config: %w", err)
+	}
+
+	k8s, err := kubernetes.NewForConfig(k8sConfig)
 	if err != nil {
 		return nil, fmt.Errorf("building kubernetes client: %w", err)
 	}
 
-	ksmCli, err := ksmClient.New(ksmClient.WithLogger(logger))
-	if err != nil {
-		return nil, fmt.Errorf("building KSM client: %w", err)
+	var ksmCli *ksmClient.Client
+	if c.KSM.Enabled {
+		ksmCli, err = ksmClient.New(ksmClient.WithLogger(logger))
+		if err != nil {
+			return nil, fmt.Errorf("building KSM client: %w", err)
+		}
+	}
+
+	var kubeletCli *kubeletClient.Client
+	if c.Kubelet.Enabled || c.ControlPlane.Enabled {
+		kubeletCli, err = kubeletClient.New(k8s, c, k8sConfig, kubeletClient.WithLogger(logger))
+		if err != nil {
+			return nil, fmt.Errorf("building Kubelet client: %w", err)
+		}
 	}
 
 	return &clusterClients{
-		k8s: k8s,
-		ksm: ksmCli,
+		k8s:      k8s,
+		ksm:      ksmCli,
+		kubelet:  kubeletCli,
+		cAdvisor: kubeletCli,
 	}, nil
 }
 
@@ -161,4 +212,19 @@ func createIntegrationWithHTTPSink(httpServerPort string) (*integration.Integrat
 	}
 
 	return integration.New("com.newrelic.kubernetes", "test-ksm", integration.Writer(h))
+}
+
+func getK8sConfig(tryLocalKubeConfig bool) (*rest.Config, error) {
+	c, err := rest.InClusterConfig()
+	if err == nil || !tryLocalKubeConfig {
+		return c, nil
+	}
+
+	kubeconf := path.Join(homedir.HomeDir(), ".kube", "config")
+	c, err = clientcmd.BuildConfigFromFlags("", kubeconf)
+	if err != nil {
+		return nil, fmt.Errorf("could not load local kube config: %w", err)
+	}
+	return c, nil
+
 }
