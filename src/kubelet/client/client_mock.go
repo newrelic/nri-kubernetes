@@ -2,12 +2,14 @@ package client
 
 import (
 	"fmt"
-	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
-	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 	"net/http"
 	"net/url"
 	"path"
+
+	"github.com/newrelic/infra-integrations-sdk/log"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
 
 // Client implements a client for Kubelet, capable of retrieving prometheus metrics from a given endpoint.

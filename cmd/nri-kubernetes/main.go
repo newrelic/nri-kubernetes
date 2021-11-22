@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 	"net"
 	"os"
 	"path"
@@ -24,6 +23,7 @@ import (
 	ksmClient "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet"
 	kubeletClient "github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 	"github.com/newrelic/nri-kubernetes/v2/src/sink"
 )
 
