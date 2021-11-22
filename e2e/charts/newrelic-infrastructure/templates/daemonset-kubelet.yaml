@@ -4,7 +4,7 @@ kind: DaemonSet
 metadata:
   namespace: {{ .Release.Namespace }}
   labels: {{ include "newrelic.labels" . | indent 4 }}
-  name: {{ template "newrelic.fullname" . }}
+  name: {{ template "newrelic.fullname" . }}-kubelet
   {{- if .Values.daemonSet.annotations }}
   annotations: {{ toYaml .Values.daemonSet.annotations | nindent 4 }}
   {{- end }}
@@ -30,7 +30,6 @@ spec:
     spec:
       serviceAccountName: {{ template "newrelic.serviceAccountName" . }}
       {{- if .Values.privileged }}
-      hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       {{- end }}
       {{- if .Values.image.pullSecrets }}
@@ -58,6 +57,11 @@ spec:
                 fieldRef:
                   apiVersion: "v1"
                   fieldPath: "spec.nodeName"
+            - name: "NRK8S_NODE_IP"
+              valueFrom:
+                fieldRef:
+                  apiVersion: "v1"
+                  fieldPath: "status.hostIP"
           volumeMounts:
             - mountPath: /var/cache/nr-kubernetes
               name: tmpfs-cache
@@ -82,6 +86,11 @@ spec:
           ports:
             - containerPort: {{ .Values.kubelet.httpServerPort }}
           env:
+            - name: "NRIA_OVERRIDE_HOSTNAME_SHORT"
+              valueFrom:
+                fieldRef:
+                  apiVersion: "v1"
+                  fieldPath: "spec.nodeName"
             - name: "NRIA_HTTP_SERVER_PORT"
               value: {{ .Values.kubelet.httpServerPort | quote }}
             - name: NRIA_LICENSE_KEY

@@ -98,6 +98,11 @@ spec:
                 fieldRef:
                   apiVersion: "v1"
                   fieldPath: "spec.nodeName"
+            - name: "NRK8S_NODE_IP"
+              valueFrom:
+                fieldRef:
+                  apiVersion: "v1"
+                  fieldPath: "status.hostIP"
           volumeMounts:
             - mountPath: /var/cache/nr-kubernetes
               name: tmpfs-cache
@@ -121,7 +126,7 @@ spec:
             - name: "NRIA_HTTP_SERVER_PORT"
               value: {{ .Values.controlPlane.httpServerPort | quote }}
             - name: "NRIA_CUSTOM_ATTRIBUTES"
-              value: "{\"clusterName\":\"$(CLUSTER_NAME)\",\"test-key\":\"test-value\"}"
+              value: "{\"clusterName\":\"$(CLUSTER_NAME)\"}"
             {{- if .Values.useNodeNameAsDisplayName }}
             - name: "NRIA_DISPLAY_NAME"
             {{- if .Values.prefixDisplayNameWithCluster }}
