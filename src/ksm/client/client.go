@@ -57,9 +57,7 @@ func New(opts ...OptionFunc) (*Client, error) {
 // MetricFamiliesGetFunc returns a function that obtains metric families from a list of prometheus queries.
 func (c *Client) MetricFamiliesGetFunc(url string) prometheus.FetchAndFilterMetricsFamilies {
 	return func(queries []prometheus.Query) ([]prometheus.MetricFamily, error) {
-		headers := map[string]string{}
-
-		mFamily, err := prometheus.GetFilteredMetricFamilies(c.http, headers, url, queries, c.logger)
+		mFamily, err := prometheus.GetFilteredMetricFamilies(c.http, url, queries, c.logger)
 		if err != nil {
 			return nil, fmt.Errorf("getting filtered metric families: %w", err)
 		}
