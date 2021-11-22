@@ -39,12 +39,30 @@ function main() {
     echo "Extracting ksm /metrics"
     kubectl exec -n scraper $pod -- datagen.sh scrape ksm > ksm/metrics
 
+    # Control plane components
+    mkdir -p controlplane/api-server
+    echo "Extracting api-server /metrics"
+    kubectl exec -n scraper $pod -- datagen.sh scrape controlplane apiserver > controlplane/api-server/metrics
+
+    mkdir -p controlplane/etcd
+    echo "Extracting etcd /metrics"
+    #kubectl exec -n scraper $pod -- datagen.sh scrape controlplane etcd > controlplane/etcd/metrics
+
+    mkdir -p controlplane/controller-manager
+    echo "Extracting controller-manager /metrics"
+    kubectl exec -n scraper $pod -- datagen.sh scrape controlplane controllermanager > controlplane/controller-manager/metrics
+
+    mkdir -p controlplane/scheduler
+    echo "Extracting scheduler /metrics"
+    kubectl exec -n scraper $pod -- datagen.sh scrape controlplane scheduler > controlplane/scheduler/metrics
+
     # K8s objects
     echo "Generating list of kubernetes resources"
     kubedump namespaces
     kubedump services
     kubedump pods
 
+    cd -
     cleanup
 }
 
@@ -126,16 +144,46 @@ EOF
 
 # scrape will curl the specified component and output the response body to standard output
 function scrape() {
+    bearer="Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
+    endpoint=unsupported://
+
     case $1 in
     ksm)
-      endpoint=(http://ksm-kube-state-metrics.ksm.svc:8080/metrics)
+      endpoint=http://ksm-kube-state-metrics.ksm.svc:8080/metrics
     ;;
     kubelet)
-      endpoint=(https://localhost:10250/pods -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)")
+      endpoint=https://localhost:10250/pods
     ;;
+    controlplane)
+      case $2 in
+        etcd)
+          # TODO: Support etcd
+          echo "ETCD scrapping is not supported" >&2
+          return 1
+          ;;
+        apiserver)
+          endpoint=https://localhost:8443/metrics
+          ;;
+        controllermanager)
+          endpoint=https://localhost:10257/metrics
+          ;;
+        scheduler)
+          endpoint=https://localhost:10259/metrics
+        ;;
+          *)
+          echo "Unsupported controlplane component $2" >&2
+          return 1
+          ;;
+      esac
+      ;;
+    *)
+      echo "Unknown scrapable $1" >&2
+      return 1
+      ;;
     esac
 
-    curl -ksSL "${endpoint[@]}"
+    curl -ksSL "$endpoint" -H "$bearer"
+    return $?
 }
 
 command=$1
