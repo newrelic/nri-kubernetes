@@ -151,16 +151,6 @@ func (c *cacheAwareClient) Get(path string) (*http.Response, error) {
 	return c.client.Get(path)
 }
 
-// this implementation doesn't guarantee the returned NodeIP is valid in the moment of the function invocation.
-func (c *cacheAwareClient) NodeIP() string {
-	return c.client.NodeIP()
-}
-
-// WrappedClient is only aimed for testing. It allows extracting the wrapped client of a given cacheAwareClient.
-func WrappedClient(caClient HTTPClient) HTTPClient {
-	return caClient.(*cacheAwareClient).client
-}
-
 // MultiDiscoveryCacher is a wrapper for MultiDiscoverer implementations that can cache the results into some storages.
 // It implements the MultiDiscoverer interface.
 // This type is not threadsafe.
