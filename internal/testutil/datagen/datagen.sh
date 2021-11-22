@@ -41,21 +41,15 @@ function main() {
     echo "Extracting ksm /metrics"
     kubectl exec -n scraper $pod -- datagen.sh scrape ksm > ksm/metrics
 
-    if [[ -z "$DISABLE_CONTROLPLANE" ]]; then
-        echo "Skipping control plane metrics"
-    else
+    if [[ "$DISABLE_CONTROLPLANE" != "1" ]]; then
         # Control plane components
         mkdir -p controlplane/api-server
         echo "Extracting api-server /metrics"
         kubectl exec -n scraper $pod -- datagen.sh scrape controlplane apiserver > controlplane/api-server/metrics
 
-        if [[ "$DISABLE_ETCD" != "1" ]]; then
-            mkdir -p controlplane/etcd
-            echo "Extracting etcd /metrics"
-            kubectl exec -n scraper $pod -- datagen.sh scrape controlplane etcd > controlplane/etcd/metrics
-        else
-            echo "Skipping etcd metrics"
-        fi
+        mkdir -p controlplane/etcd
+        echo "Extracting etcd /metrics"
+        kubectl exec -n scraper $pod -- datagen.sh scrape controlplane etcd > controlplane/etcd/metrics
 
         mkdir -p controlplane/controller-manager
         echo "Extracting controller-manager /metrics"
@@ -64,6 +58,8 @@ function main() {
         mkdir -p controlplane/scheduler
         echo "Extracting scheduler /metrics"
         kubectl exec -n scraper $pod -- datagen.sh scrape controlplane scheduler > controlplane/scheduler/metrics
+    else
+        echo "Skipping control plane metrics"
     fi
 
     # K8s objects
@@ -105,16 +101,6 @@ function bootstrap() {
     fi
     echo "Found scraper pod $pod"
 
-    if [[ "$DISABLE_ETCD" != "1" ]]; then
-        if etcd_certs; then
-            echo "Copying etcd certs to scraper pod" >&2
-            kubectl cp etcd_certs scraper/$pod:/
-        else
-            echo "etcd cert collection failed, disabling ETCD scraping" >&2
-            export DISABLE_ETCD=1
-        fi
-    fi
-
     echo "Copying datagen.sh to scraper pods"
     kubectl cp datagen.sh scraper/$pod:/bin/
 }
@@ -133,7 +119,6 @@ function cleanup() {
 function scrape() {
     bearer="Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
     endpoint=unsupported://
-    curlargs=""
 
     case $1 in
     ksm)
@@ -145,8 +130,7 @@ function scrape() {
     controlplane)
       case $2 in
         etcd)
-          endpoint=TODO
-          curlargs="--cert /etcd_certs/etcd.crt --key /etcd_certs/etcd.key"
+          endpoint=http://localhost:2381/metrics
           ;;
         apiserver)
           endpoint=https://localhost:8443/metrics
@@ -182,25 +166,6 @@ function scraper_pod() {
 function kubedump() {
     echo "Extracting kubernetes $1"
     kubectl get "$1" -o yaml --all-namespaces > "$1".yaml
-}
-
-function etcd_certs() {
-    # /var/lib/minikube/certs/etcd/ca.crt /var/lib/minikube/certs/etcd/ca.key /var/lib/minikube/certs/etcd/healthcheck-client.crt /var/lib/minikube/certs/etcd/healthcheck-client.key /var/lib/minikube/certs/etcd/peer.crt /var/lib/minikube/certs/etcd/peer.key /var/lib/minikube/certs/etcd/server.crt /var/lib/minikube/certs/etcd/server.key
-    mkdir -p etcd_certs
-    rm etcd_certs/* &> /dev/null || true
-
-    etcd_pod=$(kubectl get pods -l component=etcd -n kube-system -o jsonpath="{.items[0].metadata.name}")
-    if [[ -z "$etcd_pod" ]]; then
-        echo "Could not find pod with -l component=etcd" >&2
-        return 1
-    fi
-
-    echo "Found etcd pod $etcd_pod" >&2
-
-    # Minikube etcd pod is heavily restricted and does not have `tar`, so we cannot `kubectl cp`.
-    # Fortunately the shell is still capable of doing some nasty tricks.
-    kubectl exec -n kube-system $etcd_pod -- sh -c 'cert=$(</var/lib/minikube/certs/etcd/healthcheck-client.crt); echo $cert' > etcd_certs/etcd.crt
-    kubectl exec -n kube-system $etcd_pod -- sh -c 'cert=$(</var/lib/minikube/certs/etcd/healthcheck-client.key); echo $cert' > etcd_certs/etcd.key
 }
 
 # Testinfo is a helper function that returns a markdown-formatted string with basic info of the environment where this
