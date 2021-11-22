@@ -13,12 +13,14 @@ type Mock struct {
 	KSM
 	ControlPlane
 	Kubelet
-	Verbose        bool
-	NodeName       string
-	HTTPServerPort string
-	Timeout        time.Duration
-	ClusterName    string
-	Interval       time.Duration
+	NodeIP           string
+	Verbose          bool
+	NodeName         string
+	HTTPServerPort   string
+	Timeout          time.Duration
+	ClusterName      string
+	Interval         time.Duration
+	NetworkRouteFile string
 }
 
 type KSM struct {
@@ -100,10 +102,12 @@ func LoadConfig() Mock {
 		Timeout:        time.Millisecond * 5000,
 		Interval:       15 * time.Second,
 		NodeName:       os.Getenv("NRK8S_NODE_NAME"),
+		NodeIP:         os.Getenv("NRK8S_NODE_IP"),
 		HTTPServerPort: httpServerPort,
 		Kubelet: Kubelet{
 			Enabled: kubeleEnabled,
 		},
+		NetworkRouteFile: "/proc/net/route",
 		KSM: KSM{
 			Enabled: ksmEnabled,
 
