@@ -8,9 +8,6 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
 
-// PrometheusMetricsPath is the KSM prometheus metrics endpoint.
-const PrometheusMetricsPath = "/metrics"
-
 // GetDeploymentNameForReplicaSet returns the name of the deployment has created
 // a ReplicaSet.
 func GetDeploymentNameForReplicaSet() definition.FetchFunc {
