@@ -70,7 +70,6 @@ func (r *grouper) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 	for _, f := range r.Fetchers {
 		g, err := f()
 		if err != nil {
-			// TODO We don't have to panic when multiple err
 			if _, ok := err.(data.ErrorGroup); !ok {
 				return nil, &data.ErrorGroup{
 					Errors: []error{fmt.Errorf("error querying Kubelet. %s", err)},
