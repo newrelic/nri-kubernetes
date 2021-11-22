@@ -5,8 +5,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 	"net/http"
 	"net/url"
 	"path"
@@ -15,6 +13,8 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/pkg/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/transport"
 

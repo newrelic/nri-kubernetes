@@ -2,13 +2,13 @@ package client
 
 import (
 	"fmt"
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"io"
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/sethgrid/pester"
 
+	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
 

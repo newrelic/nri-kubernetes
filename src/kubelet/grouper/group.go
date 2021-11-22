@@ -2,13 +2,13 @@ package grouper
 
 import (
 	"fmt"
-	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"io"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
 	v1 "k8s.io/api/core/v1"
 
+	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
+	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
