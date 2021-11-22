@@ -2,8 +2,8 @@ package client
 
 import (
 	"fmt"
+	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"io"
-	"net/http"
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
@@ -15,14 +15,9 @@ import (
 // Client implements a client for KSM, capable of retrieving prometheus metrics from a given endpoint.
 type Client struct {
 	// http is an HttpDoer that the KSM client will use to make requests.
-	http HTTPDoer
+	http client.HTTPDoer
 	// TODO: Use a non-sdk logger
 	logger log.Logger
-}
-
-// HTTPDoer is a simple interface encapsulating objects capable of making requests.
-type HTTPDoer interface {
-	Do(req *http.Request) (*http.Response, error)
 }
 
 type OptionFunc func(kc *Client) error
@@ -31,14 +26,6 @@ type OptionFunc func(kc *Client) error
 func WithLogger(logger log.Logger) OptionFunc {
 	return func(kc *Client) error {
 		kc.logger = logger
-		return nil
-	}
-}
-
-// WithHTTPDoer returns an OptionFunc that changes the HTTP Doer from the default Pester.
-func WithHTTPDoer(doer HTTPDoer) OptionFunc {
-	return func(kc *Client) error {
-		kc.http = doer
 		return nil
 	}
 }
@@ -67,18 +54,12 @@ func New(opts ...OptionFunc) (*Client, error) {
 	return k, nil
 }
 
-// MetricFamiliesGetter is the interface satisfied by Client.
-// TODO: This whole flow is too convoluted, we should refactor and rename this.
-type MetricFamiliesGetter interface {
-	// MetricFamiliesGetter returns a prometheus.FilteredFetcher configured to get KSM metrics from and endpoint.
-	// prometheus.FilteredFetcher will be used by the prometheus client to scrape and filter metrics.
-	MetricFamiliesGetter(url string) prometheus.MetricsFamiliesGetter
-}
-
-// MetricFamiliesGetter returns a function that obtains metric families from a list of prometheus queries.
-func (c *Client) MetricFamiliesGetter(url string) prometheus.MetricsFamiliesGetter {
+// MetricFamiliesGetFunc returns a function that obtains metric families from a list of prometheus queries.
+func (c *Client) MetricFamiliesGetFunc(url string) prometheus.FetchAndFilterMetricsFamilies {
 	return func(queries []prometheus.Query) ([]prometheus.MetricFamily, error) {
-		mFamily, err := prometheus.GetFilteredMetricFamilies(c.http, url, queries)
+		headers := map[string]string{}
+
+		mFamily, err := prometheus.GetFilteredMetricFamilies(c.http, headers, url, queries, c.logger)
 		if err != nil {
 			return nil, fmt.Errorf("getting filtered metric families: %w", err)
 		}
