@@ -1,67 +1,47 @@
 package deprecated
 
 import (
+	"context"
 	"fmt"
+	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
+	kubeletClient "github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 	"os"
+	"path"
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/src/apiserver"
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
 	clientControlPlane "github.com/newrelic/nri-kubernetes/v2/src/controlplane/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
-	clientKubelet "github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
 	metric2 "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
-	"github.com/newrelic/nri-kubernetes/v2/src/storage"
 )
 
-func RunControlPlane(config *config.Mock, k8s client.Kubernetes, i *integration.Integration) error {
+var logger log.Logger = log.NewStdErr(true)
+
+func RunControlPlane(config config.Mock, k8s kubernetes.Interface, i *integration.Integration) error {
 	const (
-		apiserverCacheDir        = "apiserver"
-		discoveryCacheDir        = "discovery"
-		defaultDiscoveryCacheTTL = time.Hour
-		defaultAPIServerCacheTTL = time.Minute * 5
-		nodeNameEnvVar           = "NRK8S_NODE_NAME"
+		nodeNameEnvVar = "NRK8S_NODE_NAME"
+		defaultTimeout = time.Millisecond * 5000
 	)
 
-	innerKubeletDiscoverer, err := clientKubelet.NewDiscoverer(config.NodeName, logger)
+	node, err := k8s.CoreV1().Nodes().Get(context.Background(), config.NodeName, metav1.GetOptions{})
 	if err != nil {
-		logger.Errorf("Error during Kubelet auto discovering process: %v", err)
-		os.Exit(1)
+		return fmt.Errorf("getting info for node %q: %w", config.NodeName, err)
 	}
 
-	configCache := client.DiscoveryCacherConfig{
-		Storage: storage.NewJSONDiskStorage(getCacheDir(discoveryCacheDir)),
-		TTL:     defaultDiscoveryCacheTTL,
-		Logger:  logger,
-	}
-
-	kubeletDiscoverer := clientKubelet.NewDiscoveryCacher(innerKubeletDiscoverer, configCache)
-
-	timeout := config.Timeout
-	kubeletClient, err := kubeletDiscoverer.Discover(timeout)
+	hostIP, err := getHostIP(node)
 	if err != nil {
-		logger.Errorf("Error discovering kubelet: %v", err)
-		os.Exit(1)
-	}
-	kubeletNodeIP := kubeletClient.NodeIP()
-	logger.Debugf("Kubelet node IP = %s", kubeletNodeIP)
-
-	apiServerClient := apiserver.NewClient(k8s)
-
-	apiServerCacheTTL := defaultAPIServerCacheTTL
-
-	if apiServerCacheTTL != time.Duration(0) {
-		config := client.DiscoveryCacherConfig{
-			TTL:     apiServerCacheTTL,
-			Storage: storage.NewJSONDiskStorage(getCacheDir(apiserverCacheDir)),
-		}
-		apiServerClient = apiserver.NewFileCacheClientWrapper(apiServerClient, config)
+		return err
 	}
 
 	nodeName := os.Getenv(nodeNameEnvVar)
@@ -69,14 +49,18 @@ func RunControlPlane(config *config.Mock, k8s client.Kubernetes, i *integration.
 		logger.Errorf("%s env var should be provided by Kubernetes and is mandatory", nodeNameEnvVar)
 		os.Exit(1)
 	}
+	K8sConfig, _ := getK8sConfig(true)
+	kubeletCli, err := kubeletClient.New(k8s, config, K8sConfig, kubeletClient.WithLogger(logger))
+	if err != nil {
+		return fmt.Errorf("building Kubelet client: %w", err)
+	}
 
 	cpJobs, err := controlPlaneJobs(
 		logger,
-		apiServerClient,
 		nodeName,
-		config.Timeout,
-		kubeletClient.NodeIP(),
-		metric2.NewPodsFetcher(logger, kubeletClient).FetchFuncWithCache(),
+		defaultTimeout,
+		hostIP,
+		metric2.NewPodsFetcher(logger, kubeletCli).DoPodsFetch,
 		k8s,
 		config.ETCD.EtcdTLSSecretName,
 		config.ETCD.EtcdTLSSecretNamespace,
@@ -91,7 +75,7 @@ func RunControlPlane(config *config.Mock, k8s client.Kubernetes, i *integration.
 		logger.Errorf("couldn't configure control plane components jobs: %v", err)
 	}
 
-	K8sVersion, _ := k8s.GetClient().Discovery().ServerVersion()
+	K8sVersion, _ := k8s.Discovery().ServerVersion()
 
 	successfulJobs := 0
 	for _, job := range cpJobs {
@@ -119,12 +103,11 @@ func RunControlPlane(config *config.Mock, k8s client.Kubernetes, i *integration.
 
 func controlPlaneJobs(
 	logger log.Logger,
-	apiServerClient apiserver.Client,
 	nodeName string,
 	timeout time.Duration,
 	nodeIP string,
 	podsFetcher data.FetchFunc,
-	k8sClient client.Kubernetes,
+	k8sClient kubernetes.Interface,
 	etcdTLSSecretName string,
 	etcdTLSSecretNamespace string,
 	apiServerSecurePort string,
@@ -133,12 +116,17 @@ func controlPlaneJobs(
 	controllerManagerEndpointURL string,
 	apiServerEndpointURL string,
 ) ([]*scrape.Job, error) {
-	nodeInfo, err := apiServerClient.GetNodeInfo(nodeName)
+
+	// TODO No need to have this into the loop, it it a quick fix waiting for the refactor
+	nodegetter, cl := discovery.NewNodesGetter(k8sClient)
+	defer close(cl)
+
+	node, err := nodegetter.Get(nodeName)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't query ApiServer server: %v", err)
 	}
 
-	if !nodeInfo.IsMasterNode() {
+	if !IsMasterNode(node) {
 		return nil, nil
 	}
 
@@ -206,4 +194,48 @@ func controlPlaneJobs(
 	}
 
 	return jobs, nil
+}
+
+func getHostIP(node *v1.Node) (string, error) {
+	var ip string
+
+	for _, address := range node.Status.Addresses {
+		if address.Type == "InternalIP" {
+			ip = address.Address
+			break
+		}
+	}
+
+	if ip == "" {
+		return "", fmt.Errorf("could not get Kubelet host IP")
+	}
+
+	return ip, nil
+}
+
+func getK8sConfig(tryLocalKubeConfig bool) (*rest.Config, error) {
+	c, err := rest.InClusterConfig()
+	if err == nil || !tryLocalKubeConfig {
+		return c, nil
+	}
+
+	kubeconf := path.Join(homedir.HomeDir(), ".kube", "config")
+	c, err = clientcmd.BuildConfigFromFlags("", kubeconf)
+	if err != nil {
+		return nil, fmt.Errorf("could not load local kube config: %w", err)
+	}
+	return c, nil
+
+}
+
+// IsMasterNode returns true if the NodeInfo contains the labels that
+// identify a node as master.
+func IsMasterNode(node *v1.Node) bool {
+	if val, ok := node.Labels["kubernetes.io/role"]; ok && val == "master" {
+		return true
+	}
+	if _, ok := node.Labels["node-role.kubernetes.io/master"]; ok {
+		return true
+	}
+	return false
 }

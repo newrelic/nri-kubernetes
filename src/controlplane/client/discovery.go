@@ -1,9 +1,12 @@
 package client
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	"net/http"
 	"net/url"
 	"path"
@@ -48,7 +51,7 @@ type ControlPlaneComponentClient struct {
 	tlsSecretNamespace       string
 	logger                   log.Logger
 	IsComponentRunningOnNode bool
-	k8sClient                client.Kubernetes
+	k8sClient                kubernetes.Interface
 	endpoint                 url.URL
 	secureEndpoint           url.URL
 	nodeIP                   string
@@ -100,7 +103,7 @@ func (c *ControlPlaneComponentClient) Get(urlPath string) (*http.Response, error
 
 func (c *ControlPlaneComponentClient) buildPrometheusRequest(e url.URL, urlPath string) (*http.Request, error) {
 	e.Path = path.Join(e.Path, urlPath)
-	r, err := prometheus.NewRequest(e.String())
+	r, err := prometheus.NewRequest(e.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating request to: %s. Got error: %v ", e.String(), err)
 	}
@@ -145,7 +148,7 @@ func (c *ControlPlaneComponentClient) getTLSConfigFromSecret() (*tls.Config, err
 		namespace = "default"
 	}
 
-	secret, err := c.k8sClient.FindSecret(c.tlsSecretName, namespace)
+	secret, err := c.k8sClient.CoreV1().Secrets(namespace).Get(context.Background(), c.tlsSecretName, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not find secret %s containing TLS configuration", c.tlsSecretName)
 	}
@@ -217,7 +220,7 @@ type discoverer struct {
 	component   controlplane.Component
 	nodeIP      string
 	podsFetcher data.FetchFunc
-	k8sClient   client.Kubernetes
+	k8sClient   kubernetes.Interface
 }
 
 func (sd *discoverer) Discover(timeout time.Duration) (client.HTTPClient, error) {
@@ -308,7 +311,7 @@ func NewComponentDiscoverer(
 	logger log.Logger,
 	nodeIP string,
 	podsFetcher data.FetchFunc,
-	k8sClient client.Kubernetes,
+	k8sClient kubernetes.Interface,
 ) client.Discoverer {
 	return &discoverer{
 		logger:      logger,

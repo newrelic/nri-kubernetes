@@ -6,8 +6,10 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/fake"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/apiserver"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 )
@@ -48,26 +50,27 @@ func TestControlPlaneJobs(t *testing.T) {
 		return rawGroups, nil
 	}
 	// Setup the fake api server with the labels belonging to a master node.
-	apiServerClient := apiserver.TestAPIServer{
-		Mem: map[string]*apiserver.NodeInfo{
-			nodeName: {
-				NodeName: nodeName,
-				Labels: map[string]string{
-					"kubernetes.io/role": "master",
-				},
+
+	fakeClient := fake.NewSimpleClientset(&v1.Node{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: nodeName,
+			Labels: map[string]string{
+				"kubernetes.io/role": "master",
 			},
 		},
-	}
+		Spec:   v1.NodeSpec{},
+		Status: v1.NodeStatus{},
+	})
 
 	// When getting the control plane jobs for this node
 	cpJobs, _ := controlPlaneJobs(
 		logger,
-		apiServerClient,
 		nodeName,
 		time.Duration(0),
 		nodeIP,
 		podsFetcher,
-		nil,
+		fakeClient,
 		"test",
 		"",
 		"",
