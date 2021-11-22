@@ -2,7 +2,6 @@ package ksm
 
 import (
 	"fmt"
-	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 	"io"
 	"net/url"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	ksmGrouper "github.com/newrelic/nri-kubernetes/v2/src/ksm/grouper"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
+	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
 )
 
