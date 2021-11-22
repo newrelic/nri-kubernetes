@@ -103,7 +103,7 @@ func (c *ControlPlaneComponentClient) Get(urlPath string) (*http.Response, error
 
 func (c *ControlPlaneComponentClient) buildPrometheusRequest(e url.URL, urlPath string) (*http.Request, error) {
 	e.Path = path.Join(e.Path, urlPath)
-	r, err := prometheus.NewRequest(e.String(), nil)
+	r, err := prometheus.NewRequest(e.String())
 	if err != nil {
 		return nil, fmt.Errorf("Error creating request to: %s. Got error: %v ", e.String(), err)
 	}

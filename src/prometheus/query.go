@@ -2,6 +2,7 @@ package prometheus
 
 import (
 	"fmt"
+	"github.com/newrelic/infra-integrations-sdk/log"
 	"net/http"
 
 	model "github.com/prometheus/client_model/go"
@@ -168,9 +169,19 @@ func handleResponseWithFilter(resp *http.Response, queries []Query) ([]MetricFam
 	return metrics, nil
 }
 
-type MetricsFamiliesGetter func([]Query) ([]MetricFamily, error)
+// MetricFamiliesGetFunc is the interface satisfied by Client.
+// TODO: This whole flow is too convoluted, we should refactor and rename this.
+type MetricFamiliesGetFunc interface {
+	// MetricFamiliesGetFunc returns a prometheus.FilteredFetcher configured to get KSM metrics from and endpoint.
+	// prometheus.FilteredFetcher will be used by the prometheus client to scrape and filter metrics.
+	MetricFamiliesGetFunc(url string) FetchAndFilterMetricsFamilies
+}
 
-func GetFilteredMetricFamilies(httpClient client.HTTPDoer, url string, queries []Query) ([]MetricFamily, error) {
+type FetchAndFilterMetricsFamilies func([]Query) ([]MetricFamily, error)
+
+func GetFilteredMetricFamilies(httpClient client.HTTPDoer, url string, queries []Query, logger log.Logger) ([]MetricFamily, error) {
+
+	logger.Debugf("Calling a prometheus endpoint: %s", url)
 
 	// todo it would be nice to have context with deadline
 	req, err := NewRequest(url)

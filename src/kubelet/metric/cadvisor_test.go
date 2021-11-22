@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"testing"
@@ -12,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
+	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric/testdata"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
@@ -44,11 +46,12 @@ func runCAdvisorFetchFunc(t *testing.T, file string) {
 
 	defer f.Close()
 
-	c := testClient{
+	c := &testClient{
 		handler: readerToHandler(f),
 	}
 
-	g, err := CadvisorFetchFunc(&c, cadvisorQueries)()
+	mock := client.NewClientMock(c, url.URL{})
+	g, err := CadvisorFetchFunc(mock.MetricFamiliesGetFunc(KubeletCAdvisorMetricsPath), cadvisorQueries)()
 
 	assert.NoError(t, err)
 	assert.Equal(t, testdata.ExpectedCadvisorRawData, g)
@@ -72,11 +75,11 @@ container_memory_usage_bytes{container_name="heapster",image="k8s.gcr.io/heapste
 container_memory_usage_bytes{container_name="influxdb",id="/kubepods/besteffort/podbb233a6b-11a3-11e8-a084-080027352a02/fd0ca055e308e5d11b0c8fbf273b733d1166aa2823bf7fd724a6b70c72959774",name="k8s_influxdb_influxdb-grafana-rsmwp_kube-system_bb233a6b-11a3-11e8-a084-080027352a02_17",namespace="kube-system",pod_name="influxdb-grafana-rsmwp"} 7.4510336e+07
 `)
 
-	c := testClient{
+	c := &testClient{
 		handler: readerToHandler(f),
 	}
-
-	_, err := CadvisorFetchFunc(&c, cadvisorQueries)()
+	mock := client.NewClientMock(c, url.URL{})
+	_, err := CadvisorFetchFunc(mock.MetricFamiliesGetFunc(KubeletCAdvisorMetricsPath), cadvisorQueries)()
 	assert.Error(t, err)
 
 	expectedErrs := []error{
