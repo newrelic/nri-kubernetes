@@ -20,7 +20,7 @@ type grouper struct {
 
 type Config struct {
 	Queries              []prometheus.Query
-	MetricFamiliesGetter prometheus.MetricsFamiliesGetter
+	MetricFamiliesGetter prometheus.FetchAndFilterMetricsFamilies
 	ServicesLister       discovery.ServicesLister
 }
 
