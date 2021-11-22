@@ -57,12 +57,8 @@ func New(kc kubernetes.Interface, config config.Mock, inClusterConfig *rest.Conf
 		}
 	}
 
-	tripper, err := rest.TransportFor(inClusterConfig)
-	if err != nil {
-		err = fmt.Errorf("creating transport with in cluster config: %w", err)
-	}
+	conn, err := c.setupConnection(kc, tripperWithBearerToken(inClusterConfig.BearerToken), config)
 
-	conn, err := c.setupConnection(kc, tripper, config)
 	if err != nil {
 		return nil, fmt.Errorf("connecting to kubelet: %w", err)
 	}
@@ -96,39 +92,39 @@ func (c *Client) setupConnection(kc kubernetes.Interface, tripper http.RoundTrip
 	return nil, fmt.Errorf("connection failed both locally and with API server: %w", err)
 }
 
-func (c *Client) setupLocalConnection(tripper http.RoundTripper, nodeIP string, portInt int32) (*connParams, error) {
-	c.logger.Debugf("trying connecting to kubelet directly with nodeIP")
+func (c *Client) setupLocalConnection(tripperWithBearerToken http.RoundTripper, nodeIP string, portInt int32) (*connParams, error) {
+	c.logger.Debugf("connecting to kubelet directly with nodeIP")
 	var err error
 
 	port := fmt.Sprintf("%d", portInt)
 	hostURL := net.JoinHostPort(nodeIP, port)
-	conn := defaultConnParams(tripper, hostURL)
+
+	var conn connParams
 
 	switch portInt {
 	case defaultHTTPKubeletPort:
-		conn.url.Scheme = "http"
-
+		conn = defaultConnParamsHTTP(hostURL)
 		err = checkCall(conn)
 		if err == nil {
 			return &conn, nil
 		}
+
 	case defaultHTTPSKubeletPort:
-		conn.url.Scheme = "https"
-
+		conn = defaultConnParamsHTTPS(hostURL, tripperWithBearerToken)
 		err = checkCall(conn)
 		if err == nil {
 			return &conn, nil
 		}
+
 	default:
 		// The port is not a standard one and we need to check both schemas.
-		conn.url.Scheme = "https"
-
+		conn = defaultConnParamsHTTPS(hostURL, tripperWithBearerToken)
 		err = checkCall(conn)
 		if err == nil {
 			return &conn, nil
 		}
 
-		conn.url.Scheme = "http"
+		conn = defaultConnParamsHTTP(hostURL)
 		err = checkCall(conn)
 		if err == nil {
 			return &conn, nil
@@ -138,10 +134,10 @@ func (c *Client) setupLocalConnection(tripper http.RoundTripper, nodeIP string, 
 	return nil, fmt.Errorf("no connection succeeded through localhost: %w", err)
 }
 
-func (c *Client) setupAPIConnection(tripper http.RoundTripper, apiServer string, nodeName string) (*connParams, error) {
-	c.logger.Debugf("trying connecting to kubelet directly with API proxy")
+func (c *Client) setupAPIConnection(tripperBearerToken http.RoundTripper, apiServer string, nodeName string) (*connParams, error) {
+	c.logger.Debugf("connecting to kubelet directly with API proxy")
 
-	conn, err := connectionAPIProxy(tripper, apiServer, nodeName)
+	conn, err := connectionAPIProxy(apiServer, nodeName, tripperBearerToken)
 	if err != nil {
 		err = fmt.Errorf("creating connection parameters for API proxy: %w", err)
 	}

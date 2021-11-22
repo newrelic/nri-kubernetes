@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -9,6 +10,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/transport"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 )
@@ -22,25 +24,45 @@ type connParams struct {
 	client client.HTTPDoer
 }
 
-func defaultConnParams(tripper http.RoundTripper, hostURL string) connParams {
+func defaultConnParamsHTTP(hostURL string) connParams {
 	httpClient := &http.Client{
 		Timeout: defaultTimeout,
 	}
-	httpClient.Transport = tripper
+
 	u := url.URL{
-		Host: hostURL,
+		Host:   hostURL,
+		Scheme: "http",
 	}
 	return connParams{u, httpClient}
 }
 
-func connectionAPIProxy(tripper http.RoundTripper, apiServer string, nodeName string) (connParams, error) {
+func defaultConnParamsHTTPS(hostURL string, tripperBearerToken http.RoundTripper) connParams {
+	httpClient := &http.Client{
+		Timeout: defaultTimeout,
+	}
+
+	httpClient.Transport = tripperBearerToken
+
+	u := url.URL{
+		Host:   hostURL,
+		Scheme: "https",
+	}
+	return connParams{u, httpClient}
+}
+
+func connectionAPIProxy(apiServer string, nodeName string, tripperBearerToken http.RoundTripper) (connParams, error) {
 	apiURL, err := url.Parse(apiServer)
 	if err != nil {
 		err = fmt.Errorf("parsing kubernetes api url from in cluster config: %w", err)
 	}
 
-	conn := defaultConnParams(tripper, apiURL.Host)
-	conn.url.Scheme = apiURL.Scheme
+	var conn connParams
+	if apiURL.Scheme == "http" {
+		conn = defaultConnParamsHTTP(apiURL.Host)
+	} else {
+		conn = defaultConnParamsHTTPS(apiURL.Host, tripperBearerToken)
+	}
+
 	conn.url.Path = fmt.Sprintf(apiProxyPath, nodeName)
 
 	return conn, nil
@@ -56,7 +78,7 @@ func checkCall(conn connParams) error {
 
 	resp, err := conn.client.Do(r)
 	if err != nil {
-		return fmt.Errorf("error trying to connect to: %s. Got error: %s ", conn.url.String(), err)
+		return fmt.Errorf("trying to connect to: %s. Got error: %s ", conn.url.String(), err)
 	}
 	defer resp.Body.Close() // nolint: errcheck
 
@@ -76,4 +98,16 @@ func getKubeletPort(kc kubernetes.Interface, nodeName string) (int32, error) {
 	}
 
 	return node.Status.DaemonEndpoints.KubeletEndpoint.Port, nil
+}
+
+func tripperWithBearerToken(token string) http.RoundTripper {
+	// Here we're using the default http.Transport configuration, but with a modified TLS config.
+	// The DefaultTransport is casted to an http.RoundTripper interface, so we need to convert it back.
+	t := http.DefaultTransport.(*http.Transport).Clone()
+	t.TLSClientConfig.InsecureSkipVerify = true
+	t.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
+	// Use the default kubernetes Bearer token authentication RoundTripper
+	tripperWithBearer := transport.NewBearerAuthRoundTripper(token, t)
+	return tripperWithBearer
 }
