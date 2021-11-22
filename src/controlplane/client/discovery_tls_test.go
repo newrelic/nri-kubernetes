@@ -5,6 +5,8 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/fake"
 	"net"
 	"net/http"
 	"net/url"
@@ -15,8 +17,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
-
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
 )
 
 const (
@@ -105,11 +105,13 @@ func createClientComponent(endpoint string, cacert, key, cert []byte, insecureSk
 		data["insecureSkipVerify"] = []byte(fmt.Sprintf("%t", *insecureSkipVerify))
 	}
 
-	c := new(client.MockedKubernetes)
-	c.On("FindSecret", secretName).
-		Return(&v1.Secret{
-			Data: data,
-		}, nil)
+	c := fake.NewSimpleClientset(&v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      secretName,
+			Namespace: "default",
+		},
+		Data: data,
+	})
 
 	return &ControlPlaneComponentClient{
 		httpClient:               &http.Client{},
