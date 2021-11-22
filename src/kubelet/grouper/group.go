@@ -1,38 +1,73 @@
-package kubelet
+package grouper
 
 import (
 	"fmt"
+	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
+	"github.com/newrelic/nri-kubernetes/v2/src/client"
+	"io"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
 	v1 "k8s.io/api/core/v1"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/apiserver"
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 )
 
-type kubelet struct {
-	apiServer               apiserver.Client
-	client                  client.HTTPGetter
-	fetchers                []data.FetchFunc
-	logger                  log.Logger
-	defaultNetworkInterface string
+type grouper struct {
+	Config
+	logger log.Logger
+}
+
+type Config struct {
+	NodeGetter              discovery.NodeGetter
+	Client                  client.HTTPGetter
+	Fetchers                []data.FetchFunc
+	DefaultNetworkInterface string
+}
+
+type OptionFunc func(kc *grouper) error
+
+// WithLogger returns an OptionFunc to change the logger from the default noop logger.
+func WithLogger(logger log.Logger) OptionFunc {
+	return func(kc *grouper) error {
+		kc.logger = logger
+		return nil
+	}
+}
+
+// New returns a data.Grouper that groups KSM metrics.
+func New(config Config, opts ...OptionFunc) (data.Grouper, error) {
+	if config.NodeGetter == nil {
+		return nil, fmt.Errorf("NodeGetter must be set")
+	}
+
+	g := &grouper{
+		Config: config,
+		logger: log.New(false, io.Discard),
+	}
+
+	for i, opt := range opts {
+		if err := opt(g); err != nil {
+			return nil, fmt.Errorf("applying option #%d: %w", i, err)
+		}
+	}
+
+	return g, nil
 }
 
 // Group implements Grouper interface by fetching RawGroups using both given fetch functions
 // and hardcoded fetching calls pulling kubelet summary metrics, node information from Kubernetes API
 // and then merging all this information.
-func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.ErrorGroup) {
+func (r *grouper) Group(definition.SpecGroups) (definition.RawGroups, *data.ErrorGroup) {
 	rawGroups := definition.RawGroups{
 		"network": {
 			"interfaces": definition.RawMetrics{
-				"default": r.defaultNetworkInterface,
+				"default": r.DefaultNetworkInterface,
 			},
 		},
 	}
-	for _, f := range r.fetchers {
+	for _, f := range r.Fetchers {
 		g, err := f()
 		if err != nil {
 			// TODO We don't have to panic when multiple err
@@ -46,7 +81,7 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 	}
 
 	// TODO wrap this process in a new fetchFunc
-	response, err := metric.GetMetricsData(r.client)
+	response, err := metric.GetMetricsData(r.Client)
 	if err != nil {
 		return nil, &data.ErrorGroup{
 			Errors: []error{fmt.Errorf("error querying Kubelet. %s", err)},
@@ -63,7 +98,7 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 
 	fillGroupsAndMergeNonExistent(rawGroups, resources)
 
-	nodeInfo, err := r.apiServer.GetNodeInfo(response.Node.NodeName)
+	node, err := r.NodeGetter.Get(response.Node.NodeName)
 	if err != nil {
 		return nil, &data.ErrorGroup{
 			Errors: []error{fmt.Errorf("error querying ApiServer: %v", err)},
@@ -87,9 +122,9 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 	}
 
 	// Convert node conditions to a map so our ValueFuncs can work nicely with them.
-	nodeConditions := make(map[string]int, len(nodeInfo.Conditions))
+	nodeConditions := make(map[string]int, len(node.Status.Conditions))
 
-	for _, condition := range nodeInfo.Conditions {
+	for _, condition := range node.Status.Conditions {
 		conditionValue := -1
 		switch condition.Status {
 		case v1.ConditionTrue:
@@ -115,31 +150,20 @@ func (r *kubelet) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 	g := definition.RawGroups{
 		"node": {
 			response.Node.NodeName: definition.RawMetrics{
-				"labels":               nodeInfo.Labels,
-				"allocatable":          nodeInfo.Allocatable,
-				"capacity":             nodeInfo.Capacity,
+				"labels":               node.Labels,
+				"allocatable":          node.Status.Allocatable,
+				"capacity":             node.Status.Capacity,
 				"memoryRequestedBytes": requestedMemoryBytes,
 				"cpuRequestedCores":    requestedCPUMillis,
 				"conditions":           nodeConditions,
-				"unschedulable":        nodeInfo.Unschedulable,
-				"kubeletVersion":       nodeInfo.KubeletVersion,
+				"unschedulable":        node.Spec.Unschedulable,
+				"kubeletVersion":       node.Status.NodeInfo.KubeletVersion,
 			},
 		},
 	}
 	fillGroupsAndMergeNonExistent(rawGroups, g)
 
 	return rawGroups, nil
-}
-
-// NewGrouper creates a grouper aware of Kubelet raw metrics.
-func NewGrouper(c client.HTTPGetter, logger log.Logger, apiServer apiserver.Client, defaultNetworkInterface string, fetchers ...data.FetchFunc) data.Grouper {
-	return &kubelet{
-		apiServer:               apiServer,
-		client:                  c,
-		logger:                  logger,
-		fetchers:                fetchers,
-		defaultNetworkInterface: defaultNetworkInterface,
-	}
 }
 
 func fillGroupsAndMergeNonExistent(destination definition.RawGroups, from definition.RawGroups) {
