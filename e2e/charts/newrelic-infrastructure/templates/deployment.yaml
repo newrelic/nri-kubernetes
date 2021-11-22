@@ -44,10 +44,15 @@ spec:
           ports:
             - containerPort: {{ .Values.ksm.httpServerPort }}
           env:
+            - name: "NRIA_OVERRIDE_HOSTNAME_SHORT"
+              valueFrom:
+                fieldRef:
+                  apiVersion: "v1"
+                  fieldPath: "spec.nodeName"
             - name: "NRIA_HTTP_SERVER_PORT"
               value: {{ .Values.ksm.httpServerPort | quote }}
             - name: "NRIA_CUSTOM_ATTRIBUTES"
-              value: "{\"clusterName\":\"$(CLUSTER_NAME)\",\"test-key\":\"test-value\"}"
+              value: "{\"clusterName\":\"$(CLUSTER_NAME)\"}"
             {{- if .Values.useNodeNameAsDisplayName }}
             - name: "NRIA_DISPLAY_NAME"
             {{- if .Values.prefixDisplayNameWithCluster }}
