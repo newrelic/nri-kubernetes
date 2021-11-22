@@ -6,11 +6,9 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 )

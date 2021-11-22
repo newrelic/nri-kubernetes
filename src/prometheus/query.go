@@ -2,9 +2,9 @@ package prometheus
 
 import (
 	"fmt"
-	"github.com/newrelic/infra-integrations-sdk/log"
 	"net/http"
 
+	"github.com/newrelic/infra-integrations-sdk/log"
 	model "github.com/prometheus/client_model/go"
 	"github.com/prometheus/prom2json"
 

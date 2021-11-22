@@ -2,9 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/newrelic/nri-kubernetes/v2/src/data"
-	kubletClient "github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
 	"net/url"
 	"os"
@@ -15,14 +12,17 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes/fake"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
+	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	ksmClient "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
 	ksmGrouper "github.com/newrelic/nri-kubernetes/v2/src/ksm/grouper"
+	kubletClient "github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
 	kubeletGrouper "github.com/newrelic/nri-kubernetes/v2/src/kubelet/grouper"
 	kubeletmetric "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
