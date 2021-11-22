@@ -32,10 +32,10 @@ func connectionHTTP(host string, timeout time.Duration) connParams {
 }
 
 func connectionHTTPS(host string, timeout time.Duration) connParams {
-	client := &http.Client{
+	c := &http.Client{
 		Timeout: timeout,
 	}
-	client.Transport = &http.Transport{
+	c.Transport = &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	return connParams{
@@ -43,17 +43,22 @@ func connectionHTTPS(host string, timeout time.Duration) connParams {
 			Host:   host,
 			Scheme: "https",
 		},
-		client: client,
+		client: c,
 	}
 }
 
-func connectionAPIProxy(kc kubernetes.Interface, apiServer string, nodeName string) (error, connParams) {
-	c, err := GetClientFromRestInterface(kc)
-	if err != nil {
-		err = fmt.Errorf("getting client from rest client interface: %w", err)
+func connectionAPIProxy(inClusterConfig *rest.Config, apiServer string, nodeName string, timeout time.Duration) (connParams, error) {
+
+	c := &http.Client{
+		Timeout: timeout,
 	}
 
 	apiURL, err := url.Parse(apiServer)
+	if err != nil {
+		err = fmt.Errorf("parsing kubernetes api url from in cluster config: %w", err)
+	}
+
+	c.Transport, err = rest.TransportFor(inClusterConfig)
 	if err != nil {
 		err = fmt.Errorf("parsing kubernetes api url from in cluster config: %w", err)
 	}
@@ -66,11 +71,8 @@ func connectionAPIProxy(kc kubernetes.Interface, apiServer string, nodeName stri
 		},
 		client: c,
 	}
-	return err, conn
+	return conn, nil
 }
-
-// GetClientFromRestInterface is merely an helper to allow using the fake client
-var GetClientFromRestInterface = getClientFromRestInterface
 
 func getClientFromRestInterface(kc kubernetes.Interface) (client.HTTPDoer, error) {
 	// This could fail then writing tests with fake client. A mock can be used instead.

@@ -58,7 +58,7 @@ func New(kc kubernetes.Interface, config config.Mock, inClusterConfig *rest.Conf
 		}
 	}
 
-	conn, err := c.setupConnection(kc, config)
+	conn, err := c.setupConnection(kc, inClusterConfig, config)
 	if err != nil {
 		return nil, fmt.Errorf("connecting to kubelet: %w", err)
 	}
@@ -69,7 +69,7 @@ func New(kc kubernetes.Interface, config config.Mock, inClusterConfig *rest.Conf
 	return c, nil
 }
 
-func (c *Client) setupConnection(kc kubernetes.Interface, config config.Mock) (*connParams, error) {
+func (c *Client) setupConnection(kc kubernetes.Interface, inClusterConfig *rest.Config, config config.Mock) (*connParams, error) {
 	kubeletPort, err := getKubeletPort(kc, config.NodeName)
 	if err != nil {
 		return nil, fmt.Errorf("getting kubelet port: %w", err)
@@ -83,7 +83,7 @@ func (c *Client) setupConnection(kc kubernetes.Interface, config config.Mock) (*
 
 	c.logger.Debugf("Kubelet connection with nodeIP failed: %v", err)
 
-	conn, err = c.setupAPIConnection(kc, c.apiServerHost, config.NodeName)
+	conn, err = c.setupAPIConnection(inClusterConfig, c.apiServerHost, config.NodeName)
 	if err == nil {
 		c.logger.Debugf("connected to Kubelet with API proxy")
 		return conn, nil
@@ -128,10 +128,10 @@ func (c *Client) setupLocalConnection(nodeIP string, portInt int32) (*connParams
 	return nil, fmt.Errorf("no connection succeded through localhost: %w", err)
 }
 
-func (c *Client) setupAPIConnection(kc kubernetes.Interface, apiServer string, nodeName string) (*connParams, error) {
+func (c *Client) setupAPIConnection(inClusterConfig *rest.Config, apiServer string, nodeName string) (*connParams, error) {
 	c.logger.Debugf("trying connecting to kubelet directly with API proxy")
 
-	err, conn := connectionAPIProxy(kc, apiServer, nodeName)
+	conn, err := connectionAPIProxy(inClusterConfig, apiServer, nodeName, defaultTimeout)
 	if err != nil {
 		err = fmt.Errorf("creating connection parameters for API proxy: %w", err)
 	}

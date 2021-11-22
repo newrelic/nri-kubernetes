@@ -1,15 +1,12 @@
 package client
 
 import (
-	"github.com/stretchr/testify/assert"
-	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/rest"
 	"testing"
 )
 
-
-
 func TestCheckConnection(t *testing.T) {
-	GetClientFromRestInterface=
-	_, err := getClientFromRestInterface(fake.NewSimpleClientset())
-	assert.NoError(t, err)
+	config, _ := rest.InClusterConfig()
+	fake.in
+	rest.TransportFor(config)
 }
