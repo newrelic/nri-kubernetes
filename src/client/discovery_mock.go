@@ -37,9 +37,3 @@ func (m *MockDiscoveredHTTPClient) Get(path string) (*http.Response, error) {
 	}
 	return args.Get(0).(*http.Response), args.Error(1)
 }
-
-// NodeIP provides a mock implementation for HTTPClient interface
-func (m *MockDiscoveredHTTPClient) NodeIP() string {
-	args := m.Called()
-	return args.String(0)
-}
