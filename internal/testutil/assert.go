@@ -9,15 +9,20 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 )
 
-// ExcludeFunc is a function that returns true if a particular metric (spec) should be excluded from being asserted on ent.
+// ExcludeFunc is a function that returns true if a particular metric (spec) should be excluded from being asserted on
+// ent.
+// If an ExcludeFunc returns true for a given group, metric (spec) and entity, Asserter will not fail even if the metric
+// is not found.
 type ExcludeFunc func(group string, spec *definition.Spec, ent *integration.Entity) bool
 
+// ExcludeOptional returns an ExcludeFunc that excludes metrics marked as Optional.
 func ExcludeOptional() ExcludeFunc {
 	return func(group string, spec *definition.Spec, ent *integration.Entity) bool {
 		return spec.Optional
 	}
 }
 
+// ExcludeMetric returns an ExcludeFunc that excludes the specified metric name belonging for the specified group.
 func ExcludeMetric(group, metricName string) ExcludeFunc {
 	return func(g string, spec *definition.Spec, ent *integration.Entity) bool {
 		return g == group && spec.Name == metricName
@@ -36,6 +41,7 @@ type Asserter struct {
 	silent         bool
 }
 
+// NewAsserter returns an empty asserter.
 func NewAsserter() Asserter {
 	return Asserter{}
 }
@@ -52,23 +58,27 @@ func (a Asserter) On(entities []*integration.Entity) Asserter {
 	return a
 }
 
-func (a Asserter) ExcludingGroups(groupNames ...string) Asserter {
-	excludeGroups := make([]string, len(a.excludedGroups)+len(groupNames))
-	copy(excludeGroups, a.excludedGroups)
-
-	a.excludedGroups = append(a.excludedGroups, groupNames...)
-
-	return a
-}
-
-// Excluding returns an asserter that will not fail for the supplied groupName and metricName if they are missing.
-// If no metricNames are specified, Asserter will ignore the whole group.
-// Missing metrics are still logged.
+// Excluding returns an asserter that will not fail for a missing metric for which any of the supplied ExcludeFunc
+// return true.
+// For ignoring whole spec groups, use ExcludingGroups instead.
+// Missing metrics are still logged, unless Silently is used.
 func (a Asserter) Excluding(excludeFuncs ...ExcludeFunc) Asserter {
 	exclude := make([]ExcludeFunc, len(a.exclude)+len(excludeFuncs))
 	copy(exclude, a.exclude)
 
 	a.exclude = append(a.exclude, excludeFuncs...)
+
+	return a
+}
+
+// ExcludingGroups returns an asserter configured to completely exclude the supplied groups.
+// Unlike Excluding, ExcludingGroups will ignore the group _before_ checking if there are any entities at all matching
+// the group, an scenario that would make the asserter fail if the group is not excluded this way.
+func (a Asserter) ExcludingGroups(groupNames ...string) Asserter {
+	excludeGroups := make([]string, len(a.excludedGroups)+len(groupNames))
+	copy(excludeGroups, a.excludedGroups)
+
+	a.excludedGroups = append(a.excludedGroups, groupNames...)
 
 	return a
 }
@@ -80,6 +90,10 @@ func (a Asserter) Silently() Asserter {
 }
 
 // Assert checks whether all metrics defined in the supplied groups are present, and fails the test if any is not.
+// Assert will fail the test if:
+// - No entity at all exists with a type matching a specGroup, unless this specGroup is ignored using ExcludingGroups.
+// - Any entity whose type matches a specGroup lacks any metric defined in the specGroup, unless any ExcludeFunc returns
+//   true for that particular groupName, metric, and entity.
 func (a Asserter) Assert(t *testing.T) {
 	t.Helper()
 
@@ -120,6 +134,7 @@ func (a Asserter) Assert(t *testing.T) {
 	}
 }
 
+// shouldExclude checks all configured ExcludeFunc in the asserter and returns true if any of them return true.
 func (a *Asserter) shouldExclude(group string, spec *definition.Spec, ent *integration.Entity) bool {
 	for _, exclusion := range a.exclude {
 		if exclusion(group, spec, ent) {
@@ -129,6 +144,8 @@ func (a *Asserter) shouldExclude(group string, spec *definition.Spec, ent *integ
 
 	return false
 }
+
+// shouldExcludeGroup returns true if the specified group is present in Asserter.excludedGroups.
 func (a *Asserter) shouldExcludeGroup(group string) bool {
 	for _, exclusion := range a.excludedGroups {
 		if group == exclusion {
