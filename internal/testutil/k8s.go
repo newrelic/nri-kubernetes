@@ -9,13 +9,17 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
-const servicesFile = "services.yaml"
-const namespacesFile = "namespaces.yaml"
+const (
+	servicesFile   = "services.yaml"
+	nodesFile      = "nodes.yaml"
+	namespacesFile = "namespaces.yaml"
+)
 
 func K8sEverything() []runtime.Object {
 	return []runtime.Object{
 		K8sNamespaces(),
 		K8sServices(),
+		K8sNodes(),
 	}
 }
 
@@ -35,6 +39,15 @@ func K8sServices() runtime.Object {
 	}
 
 	return &services
+}
+
+func K8sNodes() runtime.Object {
+	var nodes corev1.NodeList
+	if err := loadYaml(&nodes, nodesFile); err != nil {
+		panic(err)
+	}
+
+	return &nodes
 }
 
 func loadYaml(dst interface{}, path string) error {
