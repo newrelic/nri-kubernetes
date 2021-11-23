@@ -19,10 +19,9 @@ func TestScraper(t *testing.T) {
 	asserter := testutil.NewAsserter().
 		Using(metric.KSMSpecs).
 		// TODO(roobre): We should not exclude Optional, pod or hpa metrics. To be tackled in a follow-up PR.
+		ExcludingGroups("hpa", "pod").
 		Excluding(
 			testutil.ExcludeOptional(),
-			testutil.ExcludeGroup("pod"),
-			testutil.ExcludeGroup("hpa"),
 		)
 
 	for _, version := range testutil.AllVersions() {

@@ -2,7 +2,6 @@ package testutil
 
 import (
 	"strings"
-	"sync"
 	"testing"
 
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
@@ -19,13 +18,7 @@ func ExcludeOptional() ExcludeFunc {
 	}
 }
 
-func ExcludeGroup(group string) ExcludeFunc {
-	return func(g string, spec *definition.Spec, ent *integration.Entity) bool {
-		return g == group
-	}
-}
-
-func ExcludeMetricGroup(group, metricName string) ExcludeFunc {
+func ExcludeMetric(group, metricName string) ExcludeFunc {
 	return func(g string, spec *definition.Spec, ent *integration.Entity) bool {
 		return g == group && spec.Name == metricName
 	}
@@ -36,23 +29,15 @@ func ExcludeMetricGroup(group, metricName string) ExcludeFunc {
 // chainable methods do not modify the previous Asserter, allowing to reuse the chain as a test fans out.
 // Asserter is safe to use concurrently.
 type Asserter struct {
-	*sync.Mutex
-	entities        []*integration.Entity
-	specGroups      definition.SpecGroups
-	exclude         []ExcludeFunc
-	excludeOptional bool
-	silent          bool
+	entities       []*integration.Entity
+	specGroups     definition.SpecGroups
+	excludedGroups []string
+	exclude        []ExcludeFunc
+	silent         bool
 }
 
-// exclusions is a map from groupName to metricName to a boolean which is true if the metric should be excluded.
-// An entry for a groupName with an empty list of metrics to exclude will be interpreted as an exclusion for all metrics
-// in that group.
-type exclusions map[string]map[string]bool
-
 func NewAsserter() Asserter {
-	return Asserter{
-		Mutex: &sync.Mutex{},
-	}
+	return Asserter{}
 }
 
 // Using returns an asserter that will use the supplied specGroups to assert entities.
@@ -64,6 +49,15 @@ func (a Asserter) Using(groups definition.SpecGroups) Asserter {
 // On returns an asserter configured to check for existence on the supplied entities.
 func (a Asserter) On(entities []*integration.Entity) Asserter {
 	a.entities = entities
+	return a
+}
+
+func (a Asserter) ExcludingGroups(groupNames ...string) Asserter {
+	excludeGroups := make([]string, len(a.excludedGroups)+len(groupNames))
+	copy(excludeGroups, a.excludedGroups)
+
+	a.excludedGroups = append(a.excludedGroups, groupNames...)
+
 	return a
 }
 
@@ -95,6 +89,11 @@ func (a Asserter) Assert(t *testing.T) {
 
 	// TODO: Consider paralleling if it's too slow.
 	for groupName, group := range a.specGroups {
+		if a.shouldExcludeGroup(groupName) {
+			t.Logf("Excluding specGroup %q", groupName)
+			continue
+		}
+
 		// Integration will contain many entities, but we are only interested in the one corresponding to this group.
 		entities := entitiesFor(a.entities, groupName)
 		if entities == nil {
@@ -124,6 +123,15 @@ func (a Asserter) Assert(t *testing.T) {
 func (a *Asserter) shouldExclude(group string, spec *definition.Spec, ent *integration.Entity) bool {
 	for _, exclusion := range a.exclude {
 		if exclusion(group, spec, ent) {
+			return true
+		}
+	}
+
+	return false
+}
+func (a *Asserter) shouldExcludeGroup(group string) bool {
+	for _, exclusion := range a.excludedGroups {
+		if group == exclusion {
 			return true
 		}
 	}
