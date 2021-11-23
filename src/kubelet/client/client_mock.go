@@ -30,8 +30,6 @@ func NewClientMock(doer client.HTTPDoer, endpoint url.URL) *Mock {
 
 // Get implements HTTPGetter interface by sending GET request using configured client.
 func (c *Mock) Get(urlPath string) (*http.Response, error) {
-	// Notice that this is the client to interact with kubelet. In case of CAdvisor the prometheus.Do is used
-
 	e := c.endpoint
 	e.Path = path.Join(c.endpoint.Path, urlPath)
 
@@ -46,7 +44,10 @@ func (c *Mock) Get(urlPath string) (*http.Response, error) {
 // MetricFamiliesGetFunc returns a function that obtains metric families from a list of prometheus queries.
 func (c *Mock) MetricFamiliesGetFunc(url string) prometheus.FetchAndFilterMetricsFamilies {
 	return func(queries []prometheus.Query) ([]prometheus.MetricFamily, error) {
-		mFamily, err := prometheus.GetFilteredMetricFamilies(c.doer, url, queries, c.logger)
+		e := c.endpoint
+		e.Path = path.Join(c.endpoint.Path, url)
+
+		mFamily, err := prometheus.GetFilteredMetricFamilies(c.doer, e.String(), queries, c.logger)
 		if err != nil {
 			return nil, fmt.Errorf("getting filtered metric families %q: %w", url, err)
 		}
