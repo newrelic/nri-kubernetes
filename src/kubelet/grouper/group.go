@@ -36,7 +36,7 @@ func WithLogger(logger log.Logger) OptionFunc {
 	}
 }
 
-// New returns a data.Grouper that groups KSM metrics.
+// New returns a data.Grouper that groups Kubelet metrics.
 func New(config Config, opts ...OptionFunc) (data.Grouper, error) {
 	if config.NodeGetter == nil {
 		return nil, fmt.Errorf("NodeGetter must be set")

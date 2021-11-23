@@ -43,6 +43,7 @@ type Scraper struct {
 // ScraperOpt are options that can be used to configure the Scraper
 type ScraperOpt func(s *Scraper) error
 
+// WithLogger returns an OptionFunc to change the logger from the default noop logger.
 func WithLogger(logger log.Logger) ScraperOpt {
 	return func(s *Scraper) error {
 		s.logger = logger

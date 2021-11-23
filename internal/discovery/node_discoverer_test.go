@@ -14,6 +14,8 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 )
 
+const nodeName = "name"
+
 func Test_nodes_discovery(t *testing.T) {
 	t.Parallel()
 
@@ -23,31 +25,51 @@ func Test_nodes_discovery(t *testing.T) {
 	defer close(closeChan)
 
 	// Discovery with no node
-	e, err := d.Get("test-node")
+	e, err := d.Get(nodeName)
 	require.Error(t, err)
+	require.Nil(t, e)
 
 	// Discovery after creating a node
 	_, err = client.CoreV1().Nodes().Create(context.Background(), getFirstNode(), metav1.CreateOptions{})
 	require.NoError(t, err)
 	time.Sleep(time.Second)
 
-	e, err = d.Get("first-node")
+	e, err = d.Get(nodeName)
 	require.NoError(t, err)
 	assert.Equal(t, getFirstNode(), e)
 
 	// Discovery after deleting such node
-	err = client.CoreV1().Nodes().Delete(context.Background(), "first-node", metav1.DeleteOptions{})
+	err = client.CoreV1().Nodes().Delete(context.Background(), nodeName, metav1.DeleteOptions{})
 	require.NoError(t, err)
 	time.Sleep(time.Second)
 
-	e, err = d.Get("first-node")
+	e, err = d.Get(nodeName)
 	require.Error(t, err)
+}
+
+func Test_nodes_stop_channel(t *testing.T) {
+	t.Parallel()
+
+	client := testclient.NewSimpleClientset()
+	d, closeChan := discovery.NewNodesGetter(client)
+
+	close(closeChan)
+
+	// Discovery after creating a node with closed channel
+	_, err := client.CoreV1().Nodes().Create(context.Background(), getFirstNode(), metav1.CreateOptions{})
+	require.NoError(t, err)
+	time.Sleep(time.Second)
+
+	// Discovery with closed informer
+	e, err := d.Get(nodeName)
+	require.Error(t, err)
+	require.Nil(t, e)
 }
 
 func getFirstNode() *corev1.Node {
 	return &corev1.Node{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "first-node",
+			Name: nodeName,
 		},
 	}
 }
