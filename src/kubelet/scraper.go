@@ -74,6 +74,7 @@ func NewScraper(config *config.Mock, providers Providers, options ...ScraperOpt)
 	s.nodeGetter = nodeGetter
 	s.informerClosers = append(s.informerClosers, nodeCloser)
 
+	//TODO we can add a cache and retrieve the data more frequently if we notice this value can change often
 	s.defaultNetworkInterface, err = network.DefaultInterface(config.NetworkRouteFile)
 	if err != nil {
 		s.logger.Warnf("Error finding default network interface: %v", err)
@@ -82,6 +83,7 @@ func NewScraper(config *config.Mock, providers Providers, options ...ScraperOpt)
 	return s, nil
 }
 
+// Run scraper collect the data populating the integration entities
 func (s *Scraper) Run(i *integration.Integration) error {
 	fetchAndFilterPrometheus := s.CAdvisor.MetricFamiliesGetFunc(kubeletMetric.KubeletCAdvisorMetricsPath)
 
@@ -113,6 +115,7 @@ func (s *Scraper) Run(i *integration.Integration) error {
 	return nil
 }
 
+// WithLogger returns an OptionFunc to change the logger from the default noop logger.
 func WithLogger(logger log.Logger) ScraperOpt {
 	return func(s *Scraper) error {
 		s.logger = logger

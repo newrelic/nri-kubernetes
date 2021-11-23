@@ -11,8 +11,6 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/sirupsen/logrus"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes/fake"
 
@@ -61,43 +59,8 @@ func main() {
 
 	logger := log.NewStdErr(args.Verbose)
 
-	nodeGetter := discovery.MockedNodeGetter{
-		Node: &v1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "minikube",
-				Labels: map[string]string{
-					"node-role.kubernetes.io/master": "",
-				},
-			},
-			Spec: v1.NodeSpec{
-				Unschedulable: false,
-			},
-			Status: v1.NodeStatus{
-				Conditions: []v1.NodeCondition{
-					{
-						Type:   "DiskPressure",
-						Status: v1.ConditionFalse,
-					},
-					{
-						Type:   "MemoryPressure",
-						Status: v1.ConditionFalse,
-					},
-					{
-						Type:   "DiskPressure",
-						Status: v1.ConditionFalse,
-					},
-					{
-						Type:   "PIDPressure",
-						Status: v1.ConditionFalse,
-					},
-					{
-						Type:   "Ready",
-						Status: v1.ConditionTrue,
-					},
-				},
-			},
-		},
-	}
+	nodeGetter, closeChan := discovery.NewNodesGetter(fakeK8s)
+	defer close(closeChan)
 
 	u, err := url.Parse(testSever.KubeletEndpoint())
 	if err != nil {

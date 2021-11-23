@@ -2,7 +2,6 @@ package client_test
 
 import (
 	"fmt"
-	"github.com/newrelic/infra-integrations-sdk/log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -11,6 +10,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
@@ -35,7 +35,7 @@ func TestClientCalls(t *testing.T) {
 
 	k8sClient, cf, inClusterConfig := getTestData(s)
 
-	kubeletClient, err := client.New(k8sClient, cf, inClusterConfig)
+	kubeletClient, err := client.New(k8sClient, cf, inClusterConfig, client.WithLogger(log.NewStdErr(true)))
 
 	t.Run("creation_succeeds_receiving_200", func(t *testing.T) {
 		assert.NoError(t, err)
@@ -43,16 +43,15 @@ func TestClientCalls(t *testing.T) {
 
 	t.Run("hits_only_local_kubelet", func(t *testing.T) {
 		require.NotNil(t, requests)
-		require.Len(t, requests, 1)
 
 		_, found := requests[healthz]
 		assert.True(t, found)
 	})
 
 	t.Run("hits_kubelet_metric", func(t *testing.T) {
-		_, err := kubeletClient.Get(kubeletMetric)
-
+		r, err := kubeletClient.Get(kubeletMetric)
 		assert.NoError(t, err)
+		assert.Equal(t, r.StatusCode, http.StatusOK)
 
 		_, found := requests[kubeletMetric]
 		assert.True(t, found)
@@ -65,41 +64,50 @@ func TestClientCalls(t *testing.T) {
 
 		r, found := requests[prometheusMetric]
 		assert.True(t, found)
-
 		assert.Equal(t, "text/plain", r.Header["Accept"][0])
 	})
 }
 
 func TestClientCallsWithAPIProxy(t *testing.T) {
-	s, requests := testHTTPSServerWithEndpoints(t, []string{path.Join(apiProxy, healthz), prometheusMetric, kubeletMetric})
+	t.Parallel()
+
+	s, requests := testHTTPSServerWithEndpoints(t,
+		[]string{path.Join(apiProxy, healthz), path.Join(apiProxy, prometheusMetric), path.Join(apiProxy, kubeletMetric)},
+	)
 
 	k8sClient, cf, inClusterConfig := getTestData(s)
 	cf.NodeIP = "invalid" // disabling local connection
 
-	kubeletClient, err := client.New(k8sClient, cf, inClusterConfig)
+	kubeletClient, err := client.New(k8sClient, cf, inClusterConfig, client.WithLogger(log.NewStdErr(true)))
 
 	t.Run("creation_succeeds_receiving_200", func(t *testing.T) {
+		t.Parallel()
+
 		assert.NoError(t, err)
 	})
 
 	t.Run("hits_api_server_as_fallback", func(t *testing.T) {
+		t.Parallel()
+
 		require.NotNil(t, requests)
-		require.Len(t, requests, 1)
 
 		_, found := requests[path.Join(apiProxy, healthz)]
 		assert.True(t, found)
 	})
 
 	t.Run("hits_kubelet_metric_through_proxy", func(t *testing.T) {
-		_, err := kubeletClient.Get(kubeletMetric)
+		t.Parallel()
 
+		r, err := kubeletClient.Get(kubeletMetric)
 		assert.NoError(t, err)
+		assert.Equal(t, r.StatusCode, http.StatusOK)
 
 		_, found := requests[path.Join(apiProxy, kubeletMetric)]
 		assert.True(t, found)
 	})
 
 	t.Run("hits_prometheus_metric_through_proxy", func(t *testing.T) {
+		t.Parallel()
 
 		f := kubeletClient.MetricFamiliesGetFunc(prometheusMetric)
 		_, err = f(nil)
@@ -109,9 +117,19 @@ func TestClientCallsWithAPIProxy(t *testing.T) {
 
 		assert.Equal(t, "text/plain", r.Header["Accept"][0])
 	})
+
+	t.Run("do_not_hit_prometheus_endpoint", func(t *testing.T) {
+		t.Parallel()
+
+		f := kubeletClient.MetricFamiliesGetFunc("not-existing")
+		_, err = f(nil)
+		assert.Error(t, err)
+	})
 }
 
 func TestClientFailingProbingHTTP(t *testing.T) {
+	t.Parallel()
+
 	s, requests := testHTTPServerWithEndpoints(t, []string{})
 
 	c, cf, inClusterConfig := getTestData(s)
@@ -128,7 +146,6 @@ func TestClientFailingProbingHTTP(t *testing.T) {
 		t.Parallel()
 
 		require.NotNil(t, requests)
-		require.Len(t, requests, 2)
 
 		_, found := requests[path.Join(apiProxy, healthz)]
 		assert.True(t, found)
@@ -148,6 +165,8 @@ func TestClientFailingProbingHTTP(t *testing.T) {
 }
 
 func TestClientFailingProbingHTTPS(t *testing.T) {
+	t.Parallel()
+
 	s, requests := testHTTPSServerWithEndpoints(t, []string{})
 
 	c, cf, inClusterConfig := getTestData(s)
@@ -164,7 +183,6 @@ func TestClientFailingProbingHTTPS(t *testing.T) {
 		t.Parallel()
 
 		require.NotNil(t, requests)
-		require.Len(t, requests, 2)
 
 		_, found := requests[path.Join(apiProxy, healthz)]
 		assert.True(t, found)
@@ -183,6 +201,8 @@ func TestClientFailingProbingHTTPS(t *testing.T) {
 }
 
 func TestClientOptions(t *testing.T) {
+	t.Parallel()
+
 	s, _ := testHTTPSServerWithEndpoints(t, []string{healthz, prometheusMetric, kubeletMetric})
 
 	k8sClient, cf, inClusterConfig := getTestData(s)
@@ -247,7 +267,7 @@ func testHTTPSServerWithEndpoints(t *testing.T, endpoints []string) (*httptest.S
 	return testServer, requestsReceived
 }
 
-func handler(l *sync.Mutex, requestsReceived map[string]*http.Request, endpoints []string) http.HandlerFunc {
+func handler(l sync.Locker, requestsReceived map[string]*http.Request, endpoints []string) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		l.Lock()
 		requestsReceived[r.RequestURI] = r
@@ -256,6 +276,7 @@ func handler(l *sync.Mutex, requestsReceived map[string]*http.Request, endpoints
 		for _, e := range endpoints {
 			if e == r.RequestURI {
 				rw.WriteHeader(200)
+				return
 			}
 		}
 		rw.WriteHeader(404)

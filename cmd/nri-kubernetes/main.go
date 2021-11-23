@@ -30,10 +30,10 @@ import (
 var logger log.Logger
 
 const (
-	ExitClients = iota
-	ExitIntegration
-	ExitLoop
-	ExitSetup
+	exitClients = iota
+	exitIntegration
+	exitLoop
+	exitSetup
 )
 
 type clusterClients struct {
@@ -50,13 +50,13 @@ func main() {
 	i, err := createIntegrationWithHTTPSink(c.HTTPServerPort)
 	if err != nil {
 		logger.Errorf("creating integration with http sink: %w", err)
-		os.Exit(ExitIntegration)
+		os.Exit(exitIntegration)
 	}
 
 	clients, err := buildClients(c)
 	if err != nil {
 		log.Error(err.Error())
-		os.Exit(ExitClients)
+		os.Exit(exitClients)
 	}
 
 	var kubeletScraper *kubelet.Scraper
@@ -64,7 +64,7 @@ func main() {
 		kubeletScraper, err = setupKubelet(c, clients)
 		if err != nil {
 			logger.Errorf("setting up ksm scraper: %w", err)
-			os.Exit(ExitSetup)
+			os.Exit(exitSetup)
 		}
 	}
 
@@ -73,7 +73,7 @@ func main() {
 		ksmScraper, err = setupKSM(c, clients)
 		if err != nil {
 			logger.Errorf("setting up ksm scraper: %w", err)
-			os.Exit(ExitSetup)
+			os.Exit(exitSetup)
 		}
 		defer ksmScraper.Close()
 	}
@@ -83,13 +83,13 @@ func main() {
 		err := runScrapers(c, ksmScraper, kubeletScraper, i, clients)
 		if err != nil {
 			logger.Errorf("retrieving scraper data: %v", err)
-			os.Exit(ExitLoop)
+			os.Exit(exitLoop)
 		}
 
 		err = i.Publish()
 		if err != nil {
 			logger.Errorf("publishing integration: %v", err)
-			os.Exit(ExitLoop)
+			os.Exit(exitLoop)
 		}
 
 		time.Sleep(c.Interval)
@@ -125,7 +125,6 @@ func runScrapers(c config.Mock, ksmScraper *ksm.Scraper, kubeletScraper *kubelet
 
 func setupKSM(c config.Mock, clients *clusterClients) (*ksm.Scraper, error) {
 	providers := ksm.Providers{
-		// TODO: Get rid of custom client.Kubernetes wrapper and use kubernetes.Interface directly.
 		K8s: clients.k8s,
 		KSM: clients.ksm,
 	}
@@ -140,7 +139,6 @@ func setupKSM(c config.Mock, clients *clusterClients) (*ksm.Scraper, error) {
 
 func setupKubelet(c config.Mock, clients *clusterClients) (*kubelet.Scraper, error) {
 	providers := kubelet.Providers{
-		// TODO: Get rid of custom client.Kubernetes wrapper and use kubernetes.Interface directly.
 		K8s:      clients.k8s,
 		Kubelet:  clients.kubelet,
 		CAdvisor: clients.cAdvisor,

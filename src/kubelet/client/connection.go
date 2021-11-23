@@ -50,10 +50,10 @@ func defaultConnParamsHTTPS(hostURL string, tripperBearerToken http.RoundTripper
 	return connParams{u, httpClient}
 }
 
-func connectionAPIProxy(apiServer string, nodeName string, tripperBearerToken http.RoundTripper) (connParams, error) {
+func checkConnectionAPIProxy(apiServer string, nodeName string, tripperBearerToken http.RoundTripper) (*connParams, error) {
 	apiURL, err := url.Parse(apiServer)
 	if err != nil {
-		err = fmt.Errorf("parsing kubernetes api url from in cluster config: %w", err)
+		return nil, fmt.Errorf("parsing kubernetes api url from in cluster config: %w", err)
 	}
 
 	var conn connParams
@@ -63,35 +63,56 @@ func connectionAPIProxy(apiServer string, nodeName string, tripperBearerToken ht
 		conn = defaultConnParamsHTTPS(apiURL.Host, tripperBearerToken)
 	}
 
-	conn.url.Path = fmt.Sprintf(apiProxyPath, nodeName)
+	conn.url.Path = path.Join(fmt.Sprintf(apiProxyPath, nodeName))
 
-	return conn, nil
+	if err = checkConnection(conn); err != nil {
+		return nil, fmt.Errorf("checking connection via API proxy: %w", err)
+	}
+
+	return &conn, nil
 }
 
-func checkCall(conn connParams) error {
+func checkConnectionHTTP(hostURL string) (*connParams, error) {
+	conn := defaultConnParamsHTTP(hostURL)
+	if err := checkConnection(conn); err != nil {
+		return nil, fmt.Errorf("checking connection via API proxy: %w", err)
+	}
+
+	return &conn, nil
+}
+
+func checkConnectionHTTPS(hostURL string, tripperBearer http.RoundTripper) (*connParams, error) {
+	conn := defaultConnParamsHTTPS(hostURL, tripperBearer)
+	if err := checkConnection(conn); err != nil {
+		return nil, fmt.Errorf("checking connection via API proxy: %w", err)
+	}
+
+	return &conn, nil
+}
+
+func checkConnection(conn connParams) error {
 	conn.url.Path = path.Join(conn.url.Path, healthzPath)
 
 	r, err := http.NewRequest(http.MethodGet, conn.url.String(), nil)
 	if err != nil {
-		return fmt.Errorf("error creating request to: %s. Got error: %s ", conn.url.String(), err)
+		return fmt.Errorf("creating request to: %s. Got error: %s ", conn.url.String(), err)
 	}
 
 	resp, err := conn.client.Do(r)
 	if err != nil {
-		return fmt.Errorf("trying to connect to: %s. Got error: %s ", conn.url.String(), err)
+		return fmt.Errorf("connecting to: %s. Got error: %s ", conn.url.String(), err)
 	}
 	defer resp.Body.Close() // nolint: errcheck
 
-	if resp.StatusCode == http.StatusOK {
-		return nil
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("error calling endpoint %s. Got status code: %d", conn.url.String(), resp.StatusCode)
 	}
 
-	return fmt.Errorf("error calling endpoint %s. Got status code: %d", conn.url.String(), resp.StatusCode)
+	return nil
 }
 
 func getKubeletPort(kc kubernetes.Interface, nodeName string) (int32, error) {
 	//We pay the price of a single call getting a node to avoid asking the user the Kubelet port if different from the standard one
-
 	node, err := kc.CoreV1().Nodes().Get(context.Background(), nodeName, metav1.GetOptions{})
 	if err != nil {
 		return 0, fmt.Errorf("getting node %q: %w", nodeName, err)
