@@ -1,28 +1,28 @@
 package discovery
 
 import (
-	"fmt"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 )
 
+// NodeGetter get nodes with informers.
 type NodeGetter interface {
 	Get(name string) (ret *corev1.Node, err error)
 }
 
+// NewNodesGetter returns a NodeGetter to get nodes with informers.
 func NewNodesGetter(client kubernetes.Interface, options ...informers.SharedInformerOption) (NodeGetter, chan<- struct{}) {
 	stopCh := make(chan struct{})
 
 	factory := informers.NewSharedInformerFactoryWithOptions(client, defaultResyncDuration, options...)
 
-	lister := factory.Core().V1().Nodes().Lister()
+	nodeGetter := factory.Core().V1().Nodes().Lister()
 
 	factory.Start(stopCh)
 	factory.WaitForCacheSync(stopCh)
 
-	return lister, stopCh
+	return nodeGetter, stopCh
 }
 
 // MockedServicesLister is a simple lister that returns an hardcoded node.
@@ -33,31 +33,4 @@ type MockedNodeGetter struct {
 
 func (m MockedNodeGetter) Get(name string) (ret *corev1.Node, err error) {
 	return m.Node, nil
-}
-
-type NodeDiscoverer interface {
-	Discover(name string) (*corev1.Node, error)
-}
-
-type nodesDiscoverer struct {
-	NodeGetter NodeGetter
-}
-
-func (d *nodesDiscoverer) Discover(nodeName string) (*corev1.Node, error) {
-
-	node, err := d.NodeGetter.Get(nodeName)
-	if err != nil {
-		return nil, fmt.Errorf("listing services: %w", err)
-	}
-
-	return node, nil
-}
-
-func NewNodeDiscoverer(client kubernetes.Interface) NodeDiscoverer {
-
-	nl, _ := NewNodesGetter(client)
-
-	return &nodesDiscoverer{
-		NodeGetter: nl,
-	}
 }
