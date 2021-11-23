@@ -1,0 +1,83 @@
+apiVersion: v1
+items:
+  - apiVersion: v1
+    kind: Node
+    metadata:
+      annotations:
+        kubeadm.alpha.kubernetes.io/cri-socket: /var/run/dockershim.sock
+        node.alpha.kubernetes.io/ttl: "0"
+        volumes.kubernetes.io/controller-managed-attach-detach: "true"
+      creationTimestamp: "2021-11-18T18:08:20Z"
+      labels:
+        beta.kubernetes.io/arch: amd64
+        beta.kubernetes.io/os: linux
+        kubernetes.io/arch: amd64
+        kubernetes.io/hostname: minikube
+      name: minikube
+      resourceVersion: "80970"
+      uid: 8ea05272-bda2-4ae1-bd7c-de2ecf134478
+    spec:
+      podCIDR: 10.244.0.0/24
+      podCIDRs:
+        - 10.244.0.0/24
+    status:
+      addresses:
+        - address: 192.168.183.33
+          type: InternalIP
+        - address: minikube
+          type: Hostname
+      allocatable:
+        cpu: "2"
+        ephemeral-storage: 17784752Ki
+        hugepages-2Mi: "0"
+        memory: 3935188Ki
+        pods: "110"
+      capacity:
+        cpu: "2"
+        ephemeral-storage: 17784752Ki
+        hugepages-2Mi: "0"
+        memory: 3935188Ki
+        pods: "110"
+      conditions:
+        - lastHeartbeatTime: "2021-11-23T11:06:13Z"
+          lastTransitionTime: "2021-11-21T04:55:03Z"
+          message: kubelet has sufficient memory available
+          reason: KubeletHasSufficientMemory
+          status: "False"
+          type: MemoryPressure
+        - lastHeartbeatTime: "2021-11-23T11:06:13Z"
+          lastTransitionTime: "2021-11-21T04:55:03Z"
+          message: kubelet has no disk pressure
+          reason: KubeletHasNoDiskPressure
+          status: "False"
+          type: DiskPressure
+        - lastHeartbeatTime: "2021-11-23T11:06:13Z"
+          lastTransitionTime: "2021-11-21T04:55:03Z"
+          message: kubelet has sufficient PID available
+          reason: KubeletHasSufficientPID
+          status: "False"
+          type: PIDPressure
+        - lastHeartbeatTime: "2021-11-23T11:06:13Z"
+          lastTransitionTime: "2021-11-21T04:55:03Z"
+          message: kubelet is posting ready status
+          reason: KubeletReady
+          status: "True"
+          type: Ready
+      daemonEndpoints:
+        kubeletEndpoint:
+          Port: 10250
+      nodeInfo:
+        architecture: amd64
+        bootID: 0fe43f9b-204a-44d1-a76a-761304ca2126
+        containerRuntimeVersion: docker://20.10.8
+        kernelVersion: 4.19.202
+        kubeProxyVersion: v1.22.2
+        kubeletVersion: v1.22.2
+        machineID: 92def845a9f14019b01864052bcea13b
+        operatingSystem: linux
+        osImage: Buildroot 2021.02.4
+        systemUUID: 6b6311ec-0000-0000-95bb-faffc2368d15
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""
