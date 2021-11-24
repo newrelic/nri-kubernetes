@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes/fake"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
@@ -13,24 +14,24 @@ import (
 )
 
 func TestAddServiceSpecSelectorToGroup(t *testing.T) {
-	serviceList := []*v1.Service{
-		{
-			Spec: v1.ServiceSpec{
-				Selector: map[string]string{
-					"l1": "v1",
-					"l2": "v2",
-				},
+	svc := &v1.Service{
+		Spec: v1.ServiceSpec{
+			Selector: map[string]string{
+				"l1": "v1",
+				"l2": "v2",
 			},
 		},
 	}
-	serviceList[0].Namespace = "kube-system"
-	serviceList[0].Name = "kube-state-metrics"
+	svc.Namespace = "kube-system"
+	svc.Name = "kube-state-metrics"
+
+	k8sClient := fake.NewSimpleClientset(svc)
+
+	serviceDiscoverer, _ := discovery.NewServicesLister(k8sClient)
 
 	grouper := &grouper{
 		Config: Config{
-			ServicesLister: discovery.MockedServicesLister{
-				Services: serviceList,
-			},
+			ServicesLister: serviceDiscoverer,
 		},
 	}
 

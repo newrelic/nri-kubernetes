@@ -7,11 +7,11 @@ import (
 	"strconv"
 	"time"
 
-	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
+	listersv1 "k8s.io/client-go/listers/core/v1"
 )
 
 type EndpointsDiscoveryConfig struct {
@@ -26,16 +26,12 @@ type EndpointsDiscoveryConfig struct {
 	Client kubernetes.Interface
 }
 
-type EndpointsLister interface {
-	List(selector labels.Selector) (ret []*corev1.Endpoints, err error)
-}
-
 type EndpointsDiscoverer interface {
 	Discover() ([]string, error)
 }
 
 type endpointsDiscoverer struct {
-	endpointsLister     EndpointsLister
+	lister              listersv1.EndpointsLister
 	port                int
 	fixedEndpointSorted []string
 }
@@ -48,7 +44,7 @@ func NewEndpointsDiscoverer(config EndpointsDiscoveryConfig) (EndpointsDiscovere
 	// Arbitrary value, same used in Prometheus.
 	resyncDuration := 10 * time.Minute
 	stopCh := make(chan struct{})
-	el := func(options ...informers.SharedInformerOption) EndpointsLister {
+	el := func(options ...informers.SharedInformerOption) listersv1.EndpointsLister {
 		factory := informers.NewSharedInformerFactoryWithOptions(config.Client, resyncDuration, options...)
 
 		lister := factory.Core().V1().Endpoints().Lister()
@@ -60,7 +56,7 @@ func NewEndpointsDiscoverer(config EndpointsDiscoveryConfig) (EndpointsDiscovere
 	}
 
 	return &endpointsDiscoverer{
-		endpointsLister: el(
+		lister: el(
 			informers.WithNamespace(config.Namespace),
 			informers.WithTweakListOptions(func(options *v1.ListOptions) {
 				options.LabelSelector = config.LabelSelector
@@ -75,7 +71,7 @@ func (d *endpointsDiscoverer) Discover() ([]string, error) {
 		return d.fixedEndpointSorted, nil
 	}
 
-	endpoints, err := d.endpointsLister.List(labels.Everything())
+	endpoints, err := d.lister.List(labels.Everything())
 	if err != nil {
 		return nil, fmt.Errorf("listing endpoints: %w", err)
 	}

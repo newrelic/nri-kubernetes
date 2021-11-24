@@ -118,7 +118,7 @@ func controlPlaneJobs(
 ) ([]*scrape.Job, error) {
 
 	// TODO No need to have this into the loop, it it a quick fix waiting for the refactor
-	nodegetter, cl := discovery.NewNodesGetter(k8sClient)
+	nodegetter, cl := discovery.NewNodeLister(k8sClient)
 	defer close(cl)
 
 	node, err := nodegetter.Get(nodeName)

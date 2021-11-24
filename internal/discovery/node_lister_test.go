@@ -20,7 +20,7 @@ func Test_nodes_discovery(t *testing.T) {
 	t.Parallel()
 
 	client := testclient.NewSimpleClientset()
-	d, closeChan := discovery.NewNodesGetter(client)
+	d, closeChan := discovery.NewNodeLister(client)
 
 	defer close(closeChan)
 
@@ -51,7 +51,7 @@ func Test_nodes_stop_channel(t *testing.T) {
 	t.Parallel()
 
 	client := testclient.NewSimpleClientset()
-	d, closeChan := discovery.NewNodesGetter(client)
+	d, closeChan := discovery.NewNodeLister(client)
 
 	close(closeChan)
 
