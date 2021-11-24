@@ -125,8 +125,6 @@ spec:
           env:
             - name: "NRIA_HTTP_SERVER_PORT"
               value: {{ .Values.controlPlane.httpServerPort | quote }}
-            - name: "NRIA_CUSTOM_ATTRIBUTES"
-              value: "{\"clusterName\":\"$(CLUSTER_NAME)\"}"
             {{- if .Values.useNodeNameAsDisplayName }}
             - name: "NRIA_DISPLAY_NAME"
             {{- if .Values.prefixDisplayNameWithCluster }}
