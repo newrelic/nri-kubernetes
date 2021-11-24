@@ -10,10 +10,13 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/rest"
 
+	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
@@ -146,15 +149,22 @@ func TestGroup(t *testing.T) {
 		logrus.StandardLogger(),
 		&c,
 	)
-	mockKubelet := client.NewClientMock(&c, url.URL{})
+
+	mc := client.MockConnector{
+		URL:    url.URL{},
+		Client: &c,
+		Err:    nil,
+	}
+	kubeletClient, err := client.New(nil, config.Mock{}, &rest.Config{}, client.WithCustomConnector(mc))
+	require.NoError(t, err)
 
 	kubeletGrouper, err := New(
 		Config{
 			NodeGetter: nodeGetter,
-			Client:     mockKubelet,
+			Client:     kubeletClient,
 			Fetchers: []data.FetchFunc{
 				podsFetcher.DoPodsFetch,
-				metric.CadvisorFetchFunc(mockKubelet.MetricFamiliesGetFunc(metric.KubeletCAdvisorMetricsPath), queries),
+				metric.CadvisorFetchFunc(kubeletClient.MetricFamiliesGetFunc(metric.KubeletCAdvisorMetricsPath), queries),
 			},
 			DefaultNetworkInterface: "eth0",
 		},
