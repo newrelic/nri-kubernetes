@@ -83,7 +83,9 @@ function main() {
     kubedump pods
 
     cd -
-    cleanup
+    if [[ "$DISABLE_CLEANUP" != "1" ]]; then
+      cleanup
+    fi
 }
 
 # bootstrap suvcommand installs the required components in the cluster to generate the testdata.
