@@ -13,7 +13,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/rest"
 
+	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
@@ -68,15 +70,24 @@ func main() {
 	}
 
 	// Kubelet
-	kClient := kubletClient.NewClientMock(&http.Client{Timeout: time.Minute * 10}, *u)
-	podsFetcher := kubeletmetric.NewPodsFetcher(logger, kClient)
+	mc := kubletClient.MockConnector{
+		URL:    *u,
+		Client: &http.Client{Timeout: time.Minute * 10},
+		Err:    nil,
+	}
+	kubeletClient, err := kubletClient.New(nil, config.Mock{}, &rest.Config{}, kubletClient.WithCustomConnector(mc))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	podsFetcher := kubeletmetric.NewPodsFetcher(logger, kubeletClient)
 	grouper, err := kubeletGrouper.New(
 		kubeletGrouper.Config{
 			NodeGetter: nodeGetter,
-			Client:     kClient,
+			Client:     kubeletClient,
 			Fetchers: []data.FetchFunc{
 				podsFetcher.DoPodsFetch,
-				kubeletmetric.CadvisorFetchFunc(kClient.MetricFamiliesGetFunc(kubeletmetric.KubeletCAdvisorMetricsPath), metric.CadvisorQueries),
+				kubeletmetric.CadvisorFetchFunc(kubeletClient.MetricFamiliesGetFunc(kubeletmetric.KubeletCAdvisorMetricsPath), metric.CadvisorQueries),
 			},
 			DefaultNetworkInterface: "ens5",
 		}, kubeletGrouper.WithLogger(logger))

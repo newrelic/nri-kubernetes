@@ -25,8 +25,8 @@ func NewNodesGetter(client kubernetes.Interface, options ...informers.SharedInfo
 	return nodeGetter, stopCh
 }
 
-// MockedServicesLister is a simple lister that returns an hardcoded node.
-// For integration testing, it is recommended to use the a MockedNodeGetter with testutil.FakeK8sClient as a backend.
+// MockedNodeGetter is a simple lister that returns an hardcoded node.
+// For integration testing, it is recommended to use a MockedNodeGetter with testutil.FakeK8sClient as a backend.
 type MockedNodeGetter struct {
 	Node *corev1.Node
 }
