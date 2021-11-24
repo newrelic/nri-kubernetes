@@ -13,6 +13,7 @@ type Mock struct {
 	KSM
 	ControlPlane
 	Kubelet
+	KubeconfigPath   string
 	NodeIP           string
 	Verbose          bool
 	NodeName         string
@@ -99,6 +100,7 @@ func LoadConfig() Mock {
 	controlPlanEnabled, _ := strconv.ParseBool(os.Getenv("CONTROL_PLANE_ENABLED"))
 
 	return Mock{
+		KubeconfigPath: os.Getenv("KUBECONFIG_PATH"),
 		ClusterName:    os.Getenv("CLUSTER_NAME"),
 		Verbose:        true,
 		Timeout:        time.Millisecond * 5000,

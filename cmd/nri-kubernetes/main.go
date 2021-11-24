@@ -153,7 +153,7 @@ func setupKubelet(c config.Mock, clients *clusterClients) (*kubelet.Scraper, err
 }
 
 func buildClients(c config.Mock) (*clusterClients, error) {
-	k8sConfig, err := getK8sConfig(true)
+	k8sConfig, err := getK8sConfig(true, c)
 	if err != nil {
 		return nil, fmt.Errorf("retrieving k8s config: %w", err)
 	}
@@ -213,17 +213,21 @@ func createIntegrationWithHTTPSink(httpServerPort string) (*integration.Integrat
 	return integration.New("com.newrelic.kubernetes", "test-ksm", integration.Writer(h))
 }
 
-func getK8sConfig(tryLocalKubeConfig bool) (*rest.Config, error) {
-	c, err := rest.InClusterConfig()
+func getK8sConfig(tryLocalKubeConfig bool, c config.Mock) (*rest.Config, error) {
+	inclusterConfig, err := rest.InClusterConfig()
 	if err == nil || !tryLocalKubeConfig {
-		return c, nil
+		return inclusterConfig, nil
 	}
 
-	kubeconf := path.Join(homedir.HomeDir(), ".kube", "config")
-	c, err = clientcmd.BuildConfigFromFlags("", kubeconf)
+	kubeconf := c.KubeconfigPath
+	if kubeconf == "" {
+		kubeconf = path.Join(homedir.HomeDir(), ".kube", "config")
+	}
+
+	inclusterConfig, err = clientcmd.BuildConfigFromFlags("", kubeconf)
 	if err != nil {
 		return nil, fmt.Errorf("could not load local kube config: %w", err)
 	}
 
-	return c, nil
+	return inclusterConfig, nil
 }
