@@ -198,17 +198,5 @@ func BuildComponentList(options ...ComponentOption) []Component {
 		opt(components)
 	}
 
-	validateComponentConfigurations(components)
-
 	return components
-}
-
-// validateComponentConfiguration will check if the components are properly configured.
-// If they are not, they will be skipped.
-func validateComponentConfigurations(components []Component) {
-	etcd := findComponentByName(Etcd, components)
-	if etcd.TLSSecretName == "" {
-		etcd.Skip = true
-		etcd.SkipReason = "etcd requires TLS configuration, none given"
-	}
 }
