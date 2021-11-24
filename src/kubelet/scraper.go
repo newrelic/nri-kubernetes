@@ -8,6 +8,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
+	listersv1 "k8s.io/client-go/listers/core/v1"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
@@ -36,7 +37,7 @@ type Scraper struct {
 	config                  *config.Mock
 	k8sVersion              *version.Info
 	defaultNetworkInterface string
-	nodeGetter              discovery.NodeGetter
+	nodeGetter              listersv1.NodeLister
 	informerClosers         []chan<- struct{}
 }
 
@@ -70,7 +71,7 @@ func NewScraper(config *config.Mock, providers Providers, options ...ScraperOpt)
 		return nil, fmt.Errorf("fetching K8s version: %w", err)
 	}
 
-	nodeGetter, nodeCloser := discovery.NewNodesGetter(providers.K8s)
+	nodeGetter, nodeCloser := discovery.NewNodeLister(providers.K8s)
 	s.nodeGetter = nodeGetter
 	s.informerClosers = append(s.informerClosers, nodeCloser)
 
