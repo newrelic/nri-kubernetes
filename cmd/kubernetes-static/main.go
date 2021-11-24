@@ -61,7 +61,7 @@ func main() {
 
 	logger := log.NewStdErr(args.Verbose)
 
-	nodeGetter, closeChan := discovery.NewNodesGetter(fakeK8s)
+	nodeGetter, closeChan := discovery.NewNodeLister(fakeK8s)
 	defer close(closeChan)
 
 	u, err := url.Parse(testSever.KubeletEndpoint())

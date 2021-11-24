@@ -6,8 +6,8 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"k8s.io/apimachinery/pkg/labels"
+	listersv1 "k8s.io/client-go/listers/core/v1"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
@@ -21,7 +21,7 @@ type grouper struct {
 type Config struct {
 	Queries              []prometheus.Query
 	MetricFamiliesGetter prometheus.FetchAndFilterMetricsFamilies
-	ServicesLister       discovery.ServicesLister
+	ServicesLister       listersv1.ServiceLister
 }
 
 type OptionFunc func(kc *grouper) error
