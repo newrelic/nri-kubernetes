@@ -225,7 +225,6 @@ func getK8sConfig(tryLocalKubeConfig bool) (*rest.Config, error) {
 		return nil, fmt.Errorf("could not load local kube config: %w", err)
 	}
 	return c, nil
-
 }
 
 // IsMasterNode returns true if the NodeInfo contains the labels that

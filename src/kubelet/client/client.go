@@ -3,7 +3,6 @@ package client
 import (
 	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"net/url"
 	"path"
@@ -28,18 +27,26 @@ const (
 // Client implements a client for Kubelet, capable of retrieving prometheus metrics from a given endpoint.
 type Client struct {
 	// TODO: Use a non-sdk logger
-	logger        log.Logger
-	doer          client.HTTPDoer
-	endpoint      url.URL
-	apiServerHost string
+	logger    log.Logger
+	doer      client.HTTPDoer
+	endpoint  url.URL
+	connector Connector
 }
 
 type OptionFunc func(kc *Client) error
 
 // WithLogger returns an OptionFunc to change the logger from the default noop logger.
 func WithLogger(logger log.Logger) OptionFunc {
-	return func(kc *Client) error {
-		kc.logger = logger
+	return func(kubeletClient *Client) error {
+		kubeletClient.logger = logger
+		return nil
+	}
+}
+
+// WithCustomConnector returns an OptionFunc to change the default connector.
+func WithCustomConnector(connector Connector) OptionFunc {
+	return func(kubeletClient *Client) error {
+		kubeletClient.connector = connector
 		return nil
 	}
 }
@@ -47,8 +54,14 @@ func WithLogger(logger log.Logger) OptionFunc {
 // New builds a Client using the given options.
 func New(kc kubernetes.Interface, config config.Mock, inClusterConfig *rest.Config, opts ...OptionFunc) (*Client, error) {
 	c := &Client{
-		logger:        log.New(false, io.Discard),
-		apiServerHost: inClusterConfig.Host,
+		logger: log.New(false, io.Discard),
+		connector: defaultConnector{
+			logger:             log.NewStdErr(config.Verbose),
+			apiServerHost:      inClusterConfig.Host,
+			kc:                 kc,
+			tripperBearerToken: tripperWithBearerToken(inClusterConfig.BearerToken),
+			config:             config,
+		},
 	}
 
 	for i, opt := range opts {
@@ -57,73 +70,15 @@ func New(kc kubernetes.Interface, config config.Mock, inClusterConfig *rest.Conf
 		}
 	}
 
-	conn, err := c.setupConnection(kc, tripperWithBearerToken(inClusterConfig.BearerToken), config)
-
+	conn, err := c.connector.connect()
 	if err != nil {
-		return nil, fmt.Errorf("connecting to kubelet: %w", err)
+		return nil, fmt.Errorf("connecting to kubelet using the connector: %w", err)
 	}
 
 	c.doer = conn.client
 	c.endpoint = conn.url
 
 	return c, nil
-}
-
-func (c *Client) setupConnection(kc kubernetes.Interface, tripperBearerToken http.RoundTripper, config config.Mock) (*connParams, error) {
-	kubeletPort, err := getKubeletPort(kc, config.NodeName)
-	if err != nil {
-		return nil, fmt.Errorf("getting kubelet port: %w", err)
-	}
-
-	conn, err := c.setupLocalConnection(tripperBearerToken, config.NodeIP, kubeletPort)
-	if err == nil {
-		c.logger.Debugf("connected to Kubelet directly with nodeIP")
-		return conn, nil
-	}
-
-	c.logger.Debugf("Kubelet connection with nodeIP failed: %v", err)
-	c.logger.Debugf("Connecting to kubelet directly with API proxy")
-
-	conn, err = checkConnectionAPIProxy(c.apiServerHost, config.NodeName, tripperBearerToken)
-	if err != nil {
-		return nil, fmt.Errorf("creating connection parameters for API proxy: %w", err)
-	}
-
-	return conn, nil
-}
-
-func (c *Client) setupLocalConnection(tripperWithBearerToken http.RoundTripper, nodeIP string, portInt int32) (*connParams, error) {
-	c.logger.Debugf("connecting to kubelet directly with nodeIP")
-	var err error
-
-	port := fmt.Sprintf("%d", portInt)
-	hostURL := net.JoinHostPort(nodeIP, port)
-
-	var conn *connParams
-
-	switch portInt {
-	case defaultHTTPKubeletPort:
-		if conn, err = checkConnectionHTTP(hostURL); err == nil {
-			return conn, nil
-		}
-
-	case defaultHTTPSKubeletPort:
-		if conn, err = checkConnectionHTTPS(hostURL, tripperWithBearerToken); err == nil {
-			return conn, nil
-		}
-
-	default:
-		// The port is not a standard one and we need to check both schemas.
-		if conn, err = checkConnectionHTTPS(hostURL, tripperWithBearerToken); err == nil {
-			return conn, nil
-		}
-
-		if conn, err = checkConnectionHTTP(hostURL); err == nil {
-			return conn, nil
-		}
-	}
-
-	return nil, fmt.Errorf("no connection succeeded through localhost: %w", err)
 }
 
 // Get implements HTTPGetter interface by sending GET request using configured client.
