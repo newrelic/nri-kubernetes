@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	testclient "k8s.io/client-go/kubernetes/fake"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
@@ -18,10 +19,10 @@ func Test_services_discovery(t *testing.T) {
 	t.Parallel()
 
 	client := testclient.NewSimpleClientset()
-	d := discovery.NewServicesDiscoverer(client)
+	d, _ := discovery.NewServicesLister(client)
 
 	// Discovery with no service
-	e, err := d.Discover()
+	e, err := d.List(labels.Everything())
 	require.NoError(t, err)
 	assert.Len(t, e, 0)
 
@@ -30,7 +31,7 @@ func Test_services_discovery(t *testing.T) {
 	require.NoError(t, err)
 	time.Sleep(time.Second)
 
-	e, err = d.Discover()
+	e, err = d.List(labels.Everything())
 	require.NoError(t, err)
 	assert.Equal(t, []*corev1.Service{getFirstService()}, e)
 
@@ -39,7 +40,7 @@ func Test_services_discovery(t *testing.T) {
 	require.NoError(t, err)
 	time.Sleep(time.Second)
 
-	e, err = d.Discover()
+	e, err = d.List(labels.Everything())
 	require.NoError(t, err)
 	assert.Len(t, e, 0)
 }

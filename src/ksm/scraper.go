@@ -9,6 +9,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
+	listersv1 "k8s.io/client-go/listers/core/v1"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
@@ -36,7 +37,7 @@ type Scraper struct {
 	Providers
 	k8sVersion          *version.Info
 	endpointsDiscoverer discovery.EndpointsDiscoverer
-	servicesLister      discovery.ServicesLister
+	servicesLister      listersv1.ServiceLister
 	informerClosers     []chan<- struct{}
 }
 
