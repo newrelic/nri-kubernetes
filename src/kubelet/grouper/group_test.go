@@ -14,6 +14,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/rest"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
@@ -77,61 +78,9 @@ func TestGroup(t *testing.T) {
 	c := testClient{
 		handler: rawGroupsHandlerFunc,
 	}
-	nodeGetter := discovery.MockedNodeGetter{
-		Node: &v1.Node{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "minikube",
-				Labels: map[string]string{
-					"kubernetes.io/arch":             "amd64",
-					"kubernetes.io/hostname":         "minikube",
-					"kubernetes.io/os":               "linux",
-					"node-role.kubernetes.io/master": "",
-				},
-			},
-			Spec: v1.NodeSpec{
-				Unschedulable: false,
-			},
-			Status: v1.NodeStatus{
-				Allocatable: v1.ResourceList{
-					v1.ResourceCPU:              *resource.NewQuantity(2, resource.DecimalSI),
-					v1.ResourcePods:             *resource.NewQuantity(110, resource.DecimalSI),
-					v1.ResourceEphemeralStorage: *resource.NewQuantity(18211580000, resource.BinarySI),
-					v1.ResourceMemory:           *resource.NewQuantity(2033280000, resource.BinarySI),
-				},
-				Capacity: v1.ResourceList{
-					v1.ResourceCPU:              *resource.NewQuantity(2, resource.DecimalSI),
-					v1.ResourcePods:             *resource.NewQuantity(110, resource.DecimalSI),
-					v1.ResourceEphemeralStorage: *resource.NewQuantity(18211586048, resource.BinarySI),
-					v1.ResourceMemory:           *resource.NewQuantity(2033283072, resource.BinarySI),
-				},
-				Conditions: []v1.NodeCondition{
-					{
-						Type:   "TrueCondition",
-						Status: v1.ConditionTrue,
-					},
-					{
-						Type:   "FalseCondition",
-						Status: v1.ConditionFalse,
-					},
-					{
-						Type:   "UnknownCondition",
-						Status: v1.ConditionUnknown,
-					},
-					{
-						Type:   "DuplicatedCondition",
-						Status: v1.ConditionTrue,
-					},
-					{
-						Type:   "DuplicatedCondition",
-						Status: v1.ConditionFalse,
-					},
-				},
-				NodeInfo: v1.NodeSystemInfo{
-					KubeletVersion: "v1.22.1",
-				},
-			},
-		},
-	}
+
+	k8sClient := fake.NewSimpleClientset(getNode())
+	nodeGetter, _ := discovery.NewNodeLister(k8sClient)
 
 	queries := []prometheus.Query{
 		{
@@ -176,4 +125,60 @@ func TestGroup(t *testing.T) {
 	assert.Nil(t, errGroup)
 	assert.Equal(t, testdata.ExpectedGroupData, r)
 
+}
+
+func getNode() *v1.Node {
+	return &v1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "minikube",
+			Labels: map[string]string{
+				"kubernetes.io/arch":             "amd64",
+				"kubernetes.io/hostname":         "minikube",
+				"kubernetes.io/os":               "linux",
+				"node-role.kubernetes.io/master": "",
+			},
+		},
+		Spec: v1.NodeSpec{
+			Unschedulable: false,
+		},
+		Status: v1.NodeStatus{
+			Allocatable: v1.ResourceList{
+				v1.ResourceCPU:              *resource.NewQuantity(2, resource.DecimalSI),
+				v1.ResourcePods:             *resource.NewQuantity(110, resource.DecimalSI),
+				v1.ResourceEphemeralStorage: *resource.NewQuantity(18211580000, resource.BinarySI),
+				v1.ResourceMemory:           *resource.NewQuantity(2033280000, resource.BinarySI),
+			},
+			Capacity: v1.ResourceList{
+				v1.ResourceCPU:              *resource.NewQuantity(2, resource.DecimalSI),
+				v1.ResourcePods:             *resource.NewQuantity(110, resource.DecimalSI),
+				v1.ResourceEphemeralStorage: *resource.NewQuantity(18211586048, resource.BinarySI),
+				v1.ResourceMemory:           *resource.NewQuantity(2033283072, resource.BinarySI),
+			},
+			Conditions: []v1.NodeCondition{
+				{
+					Type:   "TrueCondition",
+					Status: v1.ConditionTrue,
+				},
+				{
+					Type:   "FalseCondition",
+					Status: v1.ConditionFalse,
+				},
+				{
+					Type:   "UnknownCondition",
+					Status: v1.ConditionUnknown,
+				},
+				{
+					Type:   "DuplicatedCondition",
+					Status: v1.ConditionTrue,
+				},
+				{
+					Type:   "DuplicatedCondition",
+					Status: v1.ConditionFalse,
+				},
+			},
+			NodeInfo: v1.NodeSystemInfo{
+				KubeletVersion: "v1.22.1",
+			},
+		},
+	}
 }
