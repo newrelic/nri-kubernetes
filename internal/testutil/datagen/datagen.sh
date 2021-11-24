@@ -2,6 +2,15 @@
 
 set -e
 
+# Default endpoints for minikube, extensible to some extent to other distros like kubeadm.
+KSM_ENDPOINT=${KSM_ENDPOINT:-http://ksm-kube-state-metrics.ksm.svc:8080/metrics}
+KUBELET_ENDPOINT=${KUBELET_ENDPOINT:-https://localhost:10250/}
+# If control plane is not reachable (e.g. managed k8s), set DISABLE_CONTROLPLANE=1.
+ETCD_ENDPOINT=${ETCD_ENDPOINT:-http://localhost:2381/metrics}
+APISERVER_ENDPOINT=${APISERVER_ENDPOINT:-https://localhost:8443/metrics}
+CONTROLLERMANAGER_ENDPOINT=${CONTROLLERMANAGER_ENDPOINT:-https://localhost:10257/metrics}
+SCHEDULER_ENDPOINT=${SCHEDULER_ENDPOINT:-https://localhost:10259/metrics}
+
 # scrapper_selector is the label with which the scraper deployment is deployed.
 scrapper_selector="app=scraper"
 
@@ -12,14 +21,17 @@ function main() {
         exit 1
     fi
 
+    # Install scraper pod and e2e resources.
     bootstrap
 
+    # Scraper pod is a deployment, so we need to locate it.
     pod=$(scraper_pod "$scrapper_selector")
     if [[ -z "pod" ]]; then
         echo "Could not find scraper pod (-l $scrapper_selector)"
         exit 1
     fi
 
+    # Dump test info
     mkdir -p "$1" && cd "$1"
     testinfo > README.md
 
@@ -122,24 +134,25 @@ function scrape() {
 
     case $1 in
     ksm)
-      endpoint=http://ksm-kube-state-metrics.ksm.svc:8080/metrics
+      endpoint=${KSM_ENDPOINT}
     ;;
     kubelet)
-      endpoint=https://localhost:10250/pods
+      # Callers put the subpath in $2, e.g. `scrape kubelet stats/summary`
+      endpoint=${KUBELET_ENDPOINT}${2}
     ;;
     controlplane)
       case $2 in
         etcd)
-          endpoint=http://localhost:2381/metrics
+          endpoint=${ETCD_ENDPOINT}
           ;;
         apiserver)
-          endpoint=https://localhost:8443/metrics
+          endpoint=${APISERVER_ENDPOINT}
           ;;
         controllermanager)
-          endpoint=https://localhost:10257/metrics
+          endpoint=${CONTROLLERMANAGER_ENDPOINT}
           ;;
         scheduler)
-          endpoint=https://localhost:10259/metrics
+          endpoint=${SCHEDULER_ENDPOINT}
         ;;
           *)
           echo "Unsupported controlplane component $2" >&2
