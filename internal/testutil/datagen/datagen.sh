@@ -76,7 +76,9 @@ function main() {
 
     # K8s objects
     echo "Generating list of kubernetes resources"
+    kubedump nodes
     kubedump namespaces
+    kubedump endpoints
     kubedump services
     kubedump pods
 
