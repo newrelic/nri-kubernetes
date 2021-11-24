@@ -209,7 +209,7 @@ $(kubectl version)
 
 ### Kubernetes nodes
 \`\`\`
-$(kubectl get nodes)
+$(kubectl get nodes -o wide)
 \`\`\`
 EOF
 }
