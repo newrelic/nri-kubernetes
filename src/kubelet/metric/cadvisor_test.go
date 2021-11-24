@@ -9,8 +9,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"k8s.io/client-go/rest"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
@@ -50,8 +52,16 @@ func runCAdvisorFetchFunc(t *testing.T, file string) {
 		handler: readerToHandler(f),
 	}
 
-	mock := client.NewClientMock(c, url.URL{})
-	g, err := CadvisorFetchFunc(mock.MetricFamiliesGetFunc(KubeletCAdvisorMetricsPath), cadvisorQueries)()
+	mc := client.MockConnector{
+		URL:    url.URL{},
+		Client: c,
+		Err:    nil,
+	}
+
+	kubeletClient, err := client.New(nil, config.Mock{}, &rest.Config{}, client.WithCustomConnector(mc))
+	require.NoError(t, err)
+
+	g, err := CadvisorFetchFunc(kubeletClient.MetricFamiliesGetFunc(KubeletCAdvisorMetricsPath), cadvisorQueries)()
 
 	assert.NoError(t, err)
 	assert.Equal(t, testdata.ExpectedCadvisorRawData, g)
@@ -78,8 +88,16 @@ container_memory_usage_bytes{container_name="influxdb",id="/kubepods/besteffort/
 	c := &testClient{
 		handler: readerToHandler(f),
 	}
-	mock := client.NewClientMock(c, url.URL{})
-	_, err := CadvisorFetchFunc(mock.MetricFamiliesGetFunc(KubeletCAdvisorMetricsPath), cadvisorQueries)()
+
+	mc := client.MockConnector{
+		URL:    url.URL{},
+		Client: c,
+		Err:    nil,
+	}
+	kubeletClient, err := client.New(nil, config.Mock{}, &rest.Config{}, client.WithCustomConnector(mc))
+	require.NoError(t, err)
+
+	_, err = CadvisorFetchFunc(kubeletClient.MetricFamiliesGetFunc(KubeletCAdvisorMetricsPath), cadvisorQueries)()
 	assert.Error(t, err)
 
 	expectedErrs := []error{

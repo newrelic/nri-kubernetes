@@ -38,7 +38,7 @@ func TestClientCalls(t *testing.T) {
 	kubeletClient, err := client.New(k8sClient, cf, inClusterConfig, client.WithLogger(log.NewStdErr(true)))
 
 	t.Run("creation_succeeds_receiving_200", func(t *testing.T) {
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 
 	t.Run("hits_only_local_kubelet", func(t *testing.T) {
@@ -68,7 +68,7 @@ func TestClientCalls(t *testing.T) {
 	})
 }
 
-func TestClientCallsWithAPIProxy(t *testing.T) {
+func TestClientCallsViaAPIProxy(t *testing.T) {
 	t.Parallel()
 
 	s, requests := testHTTPSServerWithEndpoints(t,
@@ -83,7 +83,7 @@ func TestClientCallsWithAPIProxy(t *testing.T) {
 	t.Run("creation_succeeds_receiving_200", func(t *testing.T) {
 		t.Parallel()
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 
 	t.Run("hits_api_server_as_fallback", func(t *testing.T) {
@@ -124,6 +124,37 @@ func TestClientCallsWithAPIProxy(t *testing.T) {
 		f := kubeletClient.MetricFamiliesGetFunc("not-existing")
 		_, err = f(nil)
 		assert.Error(t, err)
+	})
+}
+
+func TestConfigPrecedence(t *testing.T) {
+	t.Parallel()
+
+	t.Run("connector_takes_schema_from_config", func(t *testing.T) {
+		t.Parallel()
+
+		s, _ := testHTTPSServerWithEndpoints(t, []string{healthz, prometheusMetric, kubeletMetric})
+		k8sClient, cf, inClusterConfig := getTestData(s)
+		cf.Schema = "http"
+
+		_, err := client.New(k8sClient, cf, inClusterConfig, client.WithLogger(log.NewStdErr(true)))
+		require.Error(t, err)
+	})
+
+	t.Run("connector_takes_port_from_config", func(t *testing.T) {
+		t.Parallel()
+
+		s, _ := testHTTPServerWithEndpoints(t, []string{healthz, prometheusMetric, kubeletMetric})
+		_, cf, inClusterConfig := getTestData(s)
+
+		// We use an empty client, but the connector is retrieving the port from the config.
+		k8sClient := fake.NewSimpleClientset()
+		u, _ := url.Parse(s.URL)
+		port, _ := strconv.Atoi(u.Port())
+		cf.Kubelet.Port = int32(port)
+
+		_, err := client.New(k8sClient, cf, inClusterConfig, client.WithLogger(log.NewStdErr(true)))
+		require.NoError(t, err)
 	})
 }
 
