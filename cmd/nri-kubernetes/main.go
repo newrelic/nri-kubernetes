@@ -30,7 +30,8 @@ import (
 var logger log.Logger
 
 const (
-	exitClients = iota
+	_ = iota
+	exitClients
 	exitIntegration
 	exitLoop
 	exitSetup
@@ -223,6 +224,6 @@ func getK8sConfig(tryLocalKubeConfig bool) (*rest.Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not load local kube config: %w", err)
 	}
-	return c, nil
 
+	return c, nil
 }

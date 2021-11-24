@@ -71,6 +71,8 @@ type ControllerManager struct {
 
 type Kubelet struct {
 	Enabled bool
+	Port    int32
+	Schema  string
 }
 
 func LoadConfig() Mock {

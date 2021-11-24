@@ -9,7 +9,9 @@ import (
 	"testing"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/stretchr/testify/require"
 	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/rest"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
@@ -42,10 +44,13 @@ func TestScraper(t *testing.T) {
 
 			u, _ := url.Parse(testServer.KubeletEndpoint())
 
-			kubeletCli := kubeletClient.NewClientMock(&http.Client{}, *u)
-			if err != nil {
-				t.Fatalf("error creating kubelet client: %v", err)
+			mc := kubeletClient.MockConnector{
+				URL:    *u,
+				Client: &http.Client{},
+				Err:    nil,
 			}
+			kubeletClient, err := kubeletClient.New(nil, config.Mock{}, &rest.Config{}, kubeletClient.WithCustomConnector(mc))
+			require.NoError(t, err)
 
 			fakeK8s := fake.NewSimpleClientset(testutil.K8sEverything()...)
 
@@ -53,8 +58,8 @@ func TestScraper(t *testing.T) {
 				ClusterName: t.Name(),
 			}, kubelet.Providers{
 				K8s:      fakeK8s,
-				Kubelet:  kubeletCli,
-				CAdvisor: kubeletCli,
+				Kubelet:  kubeletClient,
+				CAdvisor: kubeletClient,
 			}, kubelet.WithLogger(log.NewStdErr(true)))
 
 			i := testutil.NewIntegration(t)
