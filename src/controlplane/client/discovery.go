@@ -18,9 +18,9 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/transport"
 
+	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
-	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
@@ -216,19 +216,37 @@ func (c *ControlPlaneComponentClient) NodeIP() string {
 // discoverer implements Discoverer interface by using official
 // Kubernetes' Go client.
 type discoverer struct {
-	logger      log.Logger
-	component   controlplane.Component
-	nodeIP      string
-	podsFetcher data.FetchFunc
-	k8sClient   kubernetes.Interface
+	logger    log.Logger
+	component controlplane.Component
+	nodeIP    string
+	// podsFetcher   data.FetchFunc
+	k8sClient     kubernetes.Interface
+	podDiscoverer discovery.PodsDiscoverer
 }
 
 func (sd *discoverer) Discover(timeout time.Duration) (client.HTTPClient, error) {
-	nodePods, err := sd.podsFetcher()
+	// nodePods, err := sd.podsFetcher()
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// podName, isComponentRunningOnNode := sd.findComponentOnNode(nodePods)
+
+	pods, err := sd.podDiscoverer.Discover()
 	if err != nil {
 		return nil, err
 	}
-	podName, isComponentRunningOnNode := sd.findComponentOnNode(nodePods)
+
+	podName := ""
+	isComponentRunningOnNode := true
+
+	switch {
+	case len(pods) == 1:
+		podName = pods[0].Name
+	case len(pods) == 0:
+		return nil, fmt.Errorf("no pod discovered for component %s", sd.component.Name)
+	case len(pods) > 1:
+		return nil, fmt.Errorf("multiple pods discovered for component %s", sd.component.Name)
+	}
 
 	var authMethod authenticationMethod
 
@@ -310,14 +328,16 @@ func NewComponentDiscoverer(
 	component controlplane.Component,
 	logger log.Logger,
 	nodeIP string,
-	podsFetcher data.FetchFunc,
+	// podsFetcher data.FetchFunc,
+	podDiscoverer discovery.PodsDiscoverer,
 	k8sClient kubernetes.Interface,
 ) client.Discoverer {
 	return &discoverer{
-		logger:      logger,
-		component:   component,
-		nodeIP:      nodeIP,
-		podsFetcher: podsFetcher,
-		k8sClient:   k8sClient,
+		logger:    logger,
+		component: component,
+		nodeIP:    nodeIP,
+		// podsFetcher: podsFetcher,
+		podDiscoverer: podDiscoverer,
+		k8sClient:     k8sClient,
 	}
 }

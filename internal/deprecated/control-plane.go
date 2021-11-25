@@ -11,6 +11,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/log"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -44,6 +45,14 @@ func RunControlPlane(config *config.Config, k8s kubernetes.Interface, i *integra
 	}
 
 	nodeName := config.NodeName
+<<<<<<< HEAD
+=======
+	// nodeName := os.Getenv(nodeNameEnvVar)
+	// if nodeName == "" {
+	// 	logger.Errorf("%s env var should be provided by Kubernetes and is mandatory", nodeNameEnvVar)
+	// 	os.Exit(1)
+	// }
+>>>>>>> cc4382d (feat(discovery): Add PodsLister)
 	K8sConfig, _ := getK8sConfig(true)
 	kubeletCli, err := kubeletClient.New(kubeletClient.DefaultConnector(k8s, config, K8sConfig, logger), kubeletClient.WithLogger(logger))
 	if err != nil {
@@ -65,7 +74,6 @@ func RunControlPlane(config *config.Config, k8s kubernetes.Interface, i *integra
 		config.ControllerManager.StaticEndpoint.URL,
 		config.APIServer.StaticEndpoint.URL,
 	)
-
 	if err != nil {
 		logger.Errorf("couldn't configure control plane components jobs: %v", err)
 	}
@@ -159,8 +167,22 @@ func controlPlaneJobs(
 			logger.Debugf("Skipping job creation for component %s: %s", component.Name, component.SkipReason)
 			continue
 		}
+		// TODO refactor controlplane.label to labels.Set
+		transformedLabels := []labels.Set{}
+		for _, label := range component.Labels {
+			labelsGroup := labels.Set{}
+			for l, v := range label {
+				labelsGroup[l] = v
+			}
+			transformedLabels = append(transformedLabels, labelsGroup)
+		}
 
-		componentDiscoverer := clientControlPlane.NewComponentDiscoverer(component, logger, nodeIP, podsFetcher, k8sClient)
+		// TODO close channel and filter by namespace
+		podDiscoverer, _ := discovery.NewPodsDiscoverer(discovery.PodsDiscoveryConfig{
+			Client:         k8sClient,
+			LabelSelectors: transformedLabels,
+		})
+		componentDiscoverer := clientControlPlane.NewComponentDiscoverer(component, logger, nodeIP, podDiscoverer, k8sClient)
 		componentClient, err := componentDiscoverer.Discover(timeout)
 		if err != nil {
 			logger.Errorf("control plane component %s discovery failed: %v", component.Name, err)
