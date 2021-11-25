@@ -16,7 +16,6 @@ func TestSetEtcdTLSComponentOption(t *testing.T) {
 
 	assert.Equal(t, "", etcd.TLSSecretName)
 	assert.Equal(t, "", etcd.TLSSecretNamespace)
-	assert.True(t, etcd.Skip)
 
 	// now set the TLS Configuration, and assert they are properly set
 	const (
@@ -29,7 +28,6 @@ func TestSetEtcdTLSComponentOption(t *testing.T) {
 
 	assert.Equal(t, tlsSecretName, etcd.TLSSecretName)
 	assert.Equal(t, tlsSecretNamespace, etcd.TLSSecretNamespace)
-	assert.False(t, etcd.Skip)
 }
 
 func TestWithEndpointURL(t *testing.T) {
@@ -56,7 +54,7 @@ func TestWithEndpointURL(t *testing.T) {
 			components: []Component{
 				{
 					Name: Etcd,
-					Labels: []labels{
+					Labels: []componentLabels{
 						{"k8s-app": "etcd-manager-main"},
 						{"tier": "control-plane", "component": "etcd"},
 					},
@@ -81,7 +79,7 @@ func TestWithEndpointURL(t *testing.T) {
 			components: []Component{
 				{
 					Name: Etcd,
-					Labels: []labels{
+					Labels: []componentLabels{
 						{"k8s-app": "etcd-manager-main"},
 						{"tier": "control-plane", "component": "etcd"},
 					},
@@ -107,7 +105,7 @@ func TestWithEndpointURL(t *testing.T) {
 			components: []Component{
 				{
 					Name: Etcd,
-					Labels: []labels{
+					Labels: []componentLabels{
 						{"k8s-app": "etcd-manager-main"},
 						{"tier": "control-plane", "component": "etcd"},
 					},

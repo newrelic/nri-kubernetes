@@ -12,7 +12,6 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
-	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	ksmClient "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
 	ksmGrouper "github.com/newrelic/nri-kubernetes/v2/src/ksm/grouper"
@@ -45,7 +44,7 @@ func main() {
 		testData = testutil.Version(envVersion)
 	}
 
-	testSever, err := testData.Server()
+	testServer, err := testData.Server()
 	if err != nil {
 		logrus.Fatalf("Error building testserver: %v", err)
 	}
@@ -61,7 +60,7 @@ func main() {
 	nodeGetter, closeChan := discovery.NewNodeLister(fakeK8s)
 	defer close(closeChan)
 
-	u, err := url.Parse(testSever.KubeletEndpoint())
+	u, err := url.Parse(testServer.KubeletEndpoint())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -83,7 +82,6 @@ func main() {
 			},
 			DefaultNetworkInterface: "ens5",
 		}, kubeletGrouper.WithLogger(logger))
-
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -95,7 +93,7 @@ func main() {
 
 	fakeLister, _ := discovery.NewServicesLister(fakeK8s)
 	kg, err := ksmGrouper.New(ksmGrouper.Config{
-		MetricFamiliesGetter: kc.MetricFamiliesGetFunc(testSever.KSMEndpoint()),
+		MetricFamiliesGetter: kc.MetricFamiliesGetFunc(testServer.KSMEndpoint()),
 		Queries:              metric.KSMQueries,
 		ServicesLister:       fakeLister,
 	}, ksmGrouper.WithLogger(logger))
@@ -108,27 +106,7 @@ func main() {
 		scrape.NewScrapeJob("kube-state-metrics", kg, metric.KSMSpecs),
 	}
 
-	// controlPlaneComponentPods maps component.Name to the pod name
-	// found in the file `cmd/kubernetes-static/data/kubelet/pods`
-	controlPlaneComponentPods := map[controlplane.ComponentName]string{
-		controlplane.Scheduler:         "kube-scheduler-minikube",
-		controlplane.Etcd:              "etcd-minikube",
-		controlplane.ControllerManager: "kube-controller-manager-minikube",
-		controlplane.APIServer:         "kube-apiserver-minikube",
-	}
-
-	for _, component := range controlplane.BuildComponentList() {
-		componentGrouper := controlplane.NewComponentGrouper(
-			newBasicHTTPClient(testSever.ControlPlaneEndpoint(string(component.Name))),
-			component.Queries,
-			logger,
-			controlPlaneComponentPods[component.Name],
-		)
-		jobs = append(
-			jobs,
-			scrape.NewScrapeJob(string(component.Name), componentGrouper, component.Specs),
-		)
-	}
+	// TODO add control plane scraper.
 
 	k8sVersion := &version.Info{GitVersion: "v1.18.19"}
 

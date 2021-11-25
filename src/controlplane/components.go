@@ -13,10 +13,7 @@ import (
 // Component represents a control plane component from which the
 // integration will fetch metrics.
 type Component struct {
-	Skip                            bool
-	SkipReason                      string
 	Name                            ComponentName
-	LabelValue                      string
 	TLSSecretName                   string
 	TLSSecretNamespace              string
 	Endpoint                        url.URL
@@ -26,7 +23,9 @@ type Component struct {
 	UseMTLSAuthentication           bool
 	Specs                           definition.SpecGroups
 	Queries                         []prometheus.Query
-	Labels                          []labels
+	Labels                          []componentLabels
+	// TODO this will be refactored with config per label group.
+	Namespace string
 }
 
 // ComponentName is a typed name for components
@@ -65,23 +64,6 @@ func WithEtcdTLSConfig(etcdTLSSecretName, etcdTLSSecretNamespace string) Compone
 	}
 }
 
-// WithAPIServerSecurePort configures the API Server component to be query using HTTPS, with the Service Account token
-// as authentication
-func WithAPIServerSecurePort(port string) ComponentOption {
-	return func(components []Component) {
-		apiServer := findComponentByName(APIServer, components)
-		if apiServer == nil {
-			panic(fmt.Sprintf("expected component %s in list of components, but not found", string(APIServer)))
-		}
-
-		apiServer.UseServiceAccountAuthentication = true
-		apiServer.Endpoint = url.URL{
-			Scheme: "https",
-			Host:   fmt.Sprintf("localhost:%s", port),
-		}
-	}
-}
-
 // WithEndpointURL configures the component to be use a specific endpoint URL and enables
 // Service Account token as authentication
 func WithEndpointURL(name ComponentName, endpointURL string) ComponentOption {
@@ -115,15 +97,15 @@ func findComponentByName(name ComponentName, components []Component) *Component 
 	return nil
 }
 
-// labels is a collection of labels, key-value style
-type labels map[string]string
+// componentLabels is a collection of componentLabels, key-value style
+type componentLabels map[string]string
 
 // BuildComponentList returns a list of components that the integration will monitor.
 func BuildComponentList(options ...ComponentOption) []Component {
 	components := []Component{
 		{
 			Name: Scheduler,
-			Labels: []labels{
+			Labels: []componentLabels{
 				// Kops / Kubeadm / ClusterAPI
 				{"k8s-app": "kube-scheduler"},
 				{"tier": "control-plane", "component": "kube-scheduler"},
@@ -139,7 +121,7 @@ func BuildComponentList(options ...ComponentOption) []Component {
 		},
 		{
 			Name: Etcd,
-			Labels: []labels{
+			Labels: []componentLabels{
 				// Kops / Kubeadm / ClusterAPI
 				{"k8s-app": "etcd-manager-main"},
 				{"tier": "control-plane", "component": "etcd"},
@@ -155,7 +137,7 @@ func BuildComponentList(options ...ComponentOption) []Component {
 		},
 		{
 			Name: ControllerManager,
-			Labels: []labels{
+			Labels: []componentLabels{
 				// Kops / Kubeadm / ClusterAPI
 				{"k8s-app": "kube-controller-manager"},
 				{"tier": "control-plane", "component": "kube-controller-manager"},
@@ -172,7 +154,7 @@ func BuildComponentList(options ...ComponentOption) []Component {
 		},
 		{
 			Name: APIServer,
-			Labels: []labels{
+			Labels: []componentLabels{
 				// Kops / Kubeadm / ClusterAPI
 				{"k8s-app": "kube-apiserver"},
 				{"tier": "control-plane", "component": "kube-apiserver"},

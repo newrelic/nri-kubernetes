@@ -1,4 +1,4 @@
-package controlplane
+package grouper
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ import (
 // metrics endpoint
 const prometheusMetricsPath = "/metrics"
 
-type componentGrouper struct {
+type grouper struct {
 	queries []prometheus.Query
 	client  client.HTTPGetter
 	logger  log.Logger
@@ -24,7 +24,7 @@ type componentGrouper struct {
 
 // Group implements Grouper interface by fetching Prometheus metrics from a given component and converting them
 // into metrics of a single entity ID, using controlplane Pod name.
-func (r *componentGrouper) Group(specGroups definition.SpecGroups) (definition.RawGroups, *data.ErrorGroup) {
+func (r *grouper) Group(specGroups definition.SpecGroups) (definition.RawGroups, *data.ErrorGroup) {
 	mFamily, err := prometheus.Do(r.client, prometheusMetricsPath, r.queries)
 	if err != nil {
 		return nil, &data.ErrorGroup{
@@ -45,15 +45,15 @@ func (r *componentGrouper) Group(specGroups definition.SpecGroups) (definition.R
 	return groups, nil
 }
 
-// NewComponentGrouper creates a grouper for the given control plane
+// New creates a grouper for the given control plane
 // component podName.
-func NewComponentGrouper(
+func New(
 	c client.HTTPGetter,
 	queries []prometheus.Query,
 	logger log.Logger,
 	podName string,
 ) data.Grouper {
-	return &componentGrouper{
+	return &grouper{
 		queries: queries,
 		client:  c,
 		logger:  logger,

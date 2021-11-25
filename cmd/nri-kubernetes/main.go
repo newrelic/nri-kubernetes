@@ -17,8 +17,8 @@ import (
 	"k8s.io/client-go/util/homedir"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/internal/deprecated"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
 	"github.com/newrelic/nri-kubernetes/v2/src/ksm"
 	ksmClient "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet"
@@ -84,12 +84,22 @@ func main() {
 		defer ksmScraper.Close()
 	}
 
+	var controlplaneScraper *controlplane.Scraper
+	if c.ControlPlane.Enabled {
+		controlplaneScraper, err = setupControlPlane(c, clients)
+		if err != nil {
+			logger.Errorf("setting up control plane scraper: %w", err)
+			os.Exit(exitSetup)
+		}
+		defer controlplaneScraper.Close()
+	}
+
 	for {
 		logger.Debugf("scraping data from all the scrapers defined: KSM: %t, Kubelet: %t, ControlPlane: %t",
 			c.KSM.Enabled, c.Kubelet.Enabled, c.ControlPlane.Enabled)
 
 		// TODO think carefully to the signature of this function
-		err := runScrapers(c, ksmScraper, kubeletScraper, i, clients)
+		err := runScrapers(c, ksmScraper, kubeletScraper, controlplaneScraper, i, clients)
 		if err != nil {
 			logger.Errorf("retrieving scraper data: %v", err)
 			os.Exit(exitLoop)
@@ -107,7 +117,7 @@ func main() {
 	}
 }
 
-func runScrapers(c *config.Config, ksmScraper *ksm.Scraper, kubeletScraper *kubelet.Scraper, i *integration.Integration, clients *clusterClients) error {
+func runScrapers(c *config.Config, ksmScraper *ksm.Scraper, kubeletScraper *kubelet.Scraper, controlplaneScraper *controlplane.Scraper, i *integration.Integration, clients *clusterClients) error {
 	if c.KSM.Enabled {
 		err := ksmScraper.Run(i)
 		if err != nil {
@@ -123,11 +133,9 @@ func runScrapers(c *config.Config, ksmScraper *ksm.Scraper, kubeletScraper *kube
 	}
 
 	if c.ControlPlane.Enabled {
-		// TODO this is merely a stub running old code
-		err := deprecated.RunControlPlane(c, clients.k8s, i)
+		err := controlplaneScraper.Run(i)
 		if err != nil {
-			return fmt.Errorf("retrieving control-plane data: %w", err)
-
+			return fmt.Errorf("retrieving control plane data: %w", err)
 		}
 	}
 
@@ -135,7 +143,6 @@ func runScrapers(c *config.Config, ksmScraper *ksm.Scraper, kubeletScraper *kube
 }
 
 func setupKSM(c *config.Config, clients *clusterClients) (*ksm.Scraper, error) {
-
 	providers := ksm.Providers{
 		K8s: clients.k8s,
 		KSM: clients.ksm,
@@ -147,6 +154,19 @@ func setupKSM(c *config.Config, clients *clusterClients) (*ksm.Scraper, error) {
 	}
 
 	return ksmScraper, nil
+}
+
+func setupControlPlane(c *config.Config, clients *clusterClients) (*controlplane.Scraper, error) {
+	providers := controlplane.Providers{
+		K8s: clients.k8s,
+	}
+
+	controlplaneScraper, err := controlplane.NewScraper(c, providers, controlplane.WithLogger(logger))
+	if err != nil {
+		return nil, fmt.Errorf("building KSM scraper: %w", err)
+	}
+
+	return controlplaneScraper, nil
 }
 
 func setupKubelet(c *config.Config, clients *clusterClients) (*kubelet.Scraper, error) {
@@ -165,7 +185,6 @@ func setupKubelet(c *config.Config, clients *clusterClients) (*kubelet.Scraper, 
 
 func buildClients(c *config.Config) (*clusterClients, error) {
 	k8sConfig, err := getK8sConfig(c)
-
 	if err != nil {
 		return nil, fmt.Errorf("retrieving k8s config: %w", err)
 	}

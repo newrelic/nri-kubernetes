@@ -18,14 +18,9 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/transport"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
-	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
-	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
-
-const podEntityType = "pod"
 
 type invalidTLSConfig struct {
 	message string
@@ -35,28 +30,55 @@ func (i invalidTLSConfig) Error() string {
 	return i.message
 }
 
-type authenticationMethod string
+type AuthenticationMethod string
 
 const (
-	none           authenticationMethod = "None (http)"
-	mTLS           authenticationMethod = "Mutual TLS"
-	serviceAccount authenticationMethod = "Service account (Bearer token)"
+	None           AuthenticationMethod = "None (http)"
+	MTLS           AuthenticationMethod = "Mutual TLS"
+	ServiceAccount AuthenticationMethod = "Service account (Bearer token)"
 )
 
 // ControlPlaneComponentClient implements Client interface.
 type ControlPlaneComponentClient struct {
-	authenticationMethod     authenticationMethod
-	httpClient               *http.Client
-	tlsSecretName            string
-	tlsSecretNamespace       string
-	logger                   log.Logger
-	IsComponentRunningOnNode bool
-	k8sClient                kubernetes.Interface
-	endpoint                 url.URL
-	secureEndpoint           url.URL
-	nodeIP                   string
-	PodName                  string
-	InsecureFallback         bool
+	authenticationMethod AuthenticationMethod
+	httpClient           *http.Client
+	tlsSecretName        string
+	tlsSecretNamespace   string
+	logger               log.Logger
+	k8sClient            kubernetes.Interface
+	endpoint             url.URL
+	secureEndpoint       url.URL
+	nodeIP               string
+	PodName              string
+	InsecureFallback     bool
+}
+
+func New(
+	authenticationMethod AuthenticationMethod,
+	tlsSecretName string,
+	tlsSecretNamespace string,
+	logger log.Logger,
+	k8sClient kubernetes.Interface,
+	endpoint url.URL,
+	secureEndpoint url.URL,
+	nodeIP string,
+	podName string,
+	insecureFallback bool,
+	timeout time.Duration,
+) client.HTTPClient {
+	return &ControlPlaneComponentClient{
+		authenticationMethod: authenticationMethod,
+		httpClient:           &http.Client{Timeout: timeout},
+		tlsSecretName:        tlsSecretName,
+		tlsSecretNamespace:   tlsSecretNamespace,
+		logger:               logger,
+		k8sClient:            k8sClient,
+		endpoint:             endpoint,
+		secureEndpoint:       secureEndpoint,
+		nodeIP:               nodeIP,
+		PodName:              podName,
+		InsecureFallback:     insecureFallback,
+	}
 }
 
 // Get implements HTTPGetter interface by selecting proper authentication strategy for request
@@ -112,7 +134,7 @@ func (c *ControlPlaneComponentClient) buildPrometheusRequest(e url.URL, urlPath 
 
 func (c *ControlPlaneComponentClient) configureAuthentication() error {
 	switch c.authenticationMethod {
-	case mTLS:
+	case MTLS:
 		tlsConfig, err := c.getTLSConfigFromSecret()
 		if err != nil {
 			return errors.Wrap(err, "could not load TLS configuration")
@@ -121,7 +143,7 @@ func (c *ControlPlaneComponentClient) configureAuthentication() error {
 		c.httpClient.Transport = &http.Transport{
 			TLSClientConfig: tlsConfig,
 		}
-	case serviceAccount:
+	case ServiceAccount:
 		config, err := rest.InClusterConfig()
 		if err != nil {
 			return errors.Wrapf(err, "could not create in cluster Kubernetes configuration to query pod: %s", c.PodName)
@@ -211,133 +233,4 @@ func parseTLSConfig(certPEMBlock, keyPEMBlock, cacertPEMBlock []byte, insecureSk
 
 func (c *ControlPlaneComponentClient) NodeIP() string {
 	return c.nodeIP
-}
-
-// discoverer implements Discoverer interface by using official
-// Kubernetes' Go client.
-type discoverer struct {
-	logger    log.Logger
-	component controlplane.Component
-	nodeIP    string
-	// podsFetcher   data.FetchFunc
-	k8sClient     kubernetes.Interface
-	podDiscoverer discovery.PodsDiscoverer
-}
-
-func (sd *discoverer) Discover(timeout time.Duration) (client.HTTPClient, error) {
-	// nodePods, err := sd.podsFetcher()
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// podName, isComponentRunningOnNode := sd.findComponentOnNode(nodePods)
-
-	pods, err := sd.podDiscoverer.Discover()
-	if err != nil {
-		return nil, err
-	}
-
-	podName := ""
-	isComponentRunningOnNode := true
-
-	switch {
-	case len(pods) == 1:
-		podName = pods[0].Name
-	case len(pods) == 0:
-		return nil, fmt.Errorf("no pod discovered for component %s", sd.component.Name)
-	case len(pods) > 1:
-		return nil, fmt.Errorf("multiple pods discovered for component %s", sd.component.Name)
-	}
-
-	var authMethod authenticationMethod
-
-	// Let mTLS take precedence over service account
-	switch {
-	case sd.component.UseMTLSAuthentication:
-		authMethod = mTLS
-	case sd.component.UseServiceAccountAuthentication:
-		authMethod = serviceAccount
-	default:
-		authMethod = none
-	}
-
-	return &ControlPlaneComponentClient{
-		endpoint:                 sd.component.Endpoint,
-		secureEndpoint:           sd.component.SecureEndpoint,
-		tlsSecretName:            sd.component.TLSSecretName,
-		tlsSecretNamespace:       sd.component.TLSSecretNamespace,
-		InsecureFallback:         sd.component.InsecureFallback,
-		IsComponentRunningOnNode: isComponentRunningOnNode,
-		PodName:                  podName,
-		authenticationMethod:     authMethod,
-		logger:                   sd.logger,
-		nodeIP:                   sd.nodeIP,
-		k8sClient:                sd.k8sClient,
-		httpClient:               &http.Client{Timeout: timeout},
-	}, nil
-}
-
-func (sd *discoverer) findComponentOnNode(nodePods definition.RawGroups) (string, bool) {
-	for _, podData := range nodePods[podEntityType] {
-		rawValueLabels, ok := podData["labels"]
-		if !ok {
-			continue
-		}
-
-		podLabels, ok := rawValueLabels.(map[string]string)
-		if !ok {
-			continue
-		}
-
-		// Loop over the different sets of labels that this component might have, and check if this pod has all the labels from one set.
-		// e.g., for the scheduler, these are the sets:
-		// Labels[0] = {"k8s-app": "kube-scheduler"}
-		// Labels[1] = {"tier": "control-plane", "component": "kube-scheduler"}
-		for _, labels := range sd.component.Labels {
-			foundLabels := 0
-
-			// check if each label of this set is present on the pod
-			for labelKey, labelValue := range labels {
-				if podLabels[labelKey] == labelValue {
-					foundLabels++
-				}
-			}
-
-			// Is every label from this set present on the pod? If not, continue
-			if foundLabels != len(labels) {
-				continue
-			}
-
-			rawValuePodName, ok := podData["podName"]
-			if !ok {
-				continue
-			}
-
-			podName, ok := rawValuePodName.(string)
-			if !ok {
-				continue
-			}
-			return podName, true
-		}
-	}
-	return "", false
-}
-
-// NewComponentDiscoverer returns a `Discoverer` that will find the
-// control plane components that are running on this node.
-func NewComponentDiscoverer(
-	component controlplane.Component,
-	logger log.Logger,
-	nodeIP string,
-	// podsFetcher data.FetchFunc,
-	podDiscoverer discovery.PodsDiscoverer,
-	k8sClient kubernetes.Interface,
-) client.Discoverer {
-	return &discoverer{
-		logger:    logger,
-		component: component,
-		nodeIP:    nodeIP,
-		// podsFetcher: podsFetcher,
-		podDiscoverer: podDiscoverer,
-		k8sClient:     k8sClient,
-	}
 }
