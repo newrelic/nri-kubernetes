@@ -243,13 +243,13 @@ func TestClientOptions(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func getTestData(s *httptest.Server) (*fake.Clientset, config.Mock, *rest.Config) {
+func getTestData(s *httptest.Server) (*fake.Clientset, *config.Mock, *rest.Config) {
 	u, _ := url.Parse(s.URL)
 	port, _ := strconv.Atoi(u.Port())
 
 	c := fake.NewSimpleClientset(getTestNode(port))
 
-	cf := config.Mock{
+	cf := &config.Mock{
 		NodeName: nodeName,
 		NodeIP:   u.Hostname(),
 	}

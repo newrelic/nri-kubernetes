@@ -97,7 +97,7 @@ func main() {
 	}
 }
 
-func runScrapers(c config.Mock, ksmScraper *ksm.Scraper, kubeletScraper *kubelet.Scraper, i *integration.Integration, clients *clusterClients) error {
+func runScrapers(c *config.Mock, ksmScraper *ksm.Scraper, kubeletScraper *kubelet.Scraper, i *integration.Integration, clients *clusterClients) error {
 	if c.KSM.Enabled {
 		err := ksmScraper.Run(i)
 		if err != nil {
@@ -124,13 +124,13 @@ func runScrapers(c config.Mock, ksmScraper *ksm.Scraper, kubeletScraper *kubelet
 	return nil
 }
 
-func setupKSM(c config.Mock, clients *clusterClients) (*ksm.Scraper, error) {
+func setupKSM(c *config.Mock, clients *clusterClients) (*ksm.Scraper, error) {
 	providers := ksm.Providers{
 		K8s: clients.k8s,
 		KSM: clients.ksm,
 	}
 
-	ksmScraper, err := ksm.NewScraper(&c, providers, ksm.WithLogger(logger))
+	ksmScraper, err := ksm.NewScraper(c, providers, ksm.WithLogger(logger))
 	if err != nil {
 		return nil, fmt.Errorf("building KSM scraper: %w", err)
 	}
@@ -138,13 +138,13 @@ func setupKSM(c config.Mock, clients *clusterClients) (*ksm.Scraper, error) {
 	return ksmScraper, nil
 }
 
-func setupKubelet(c config.Mock, clients *clusterClients) (*kubelet.Scraper, error) {
+func setupKubelet(c *config.Mock, clients *clusterClients) (*kubelet.Scraper, error) {
 	providers := kubelet.Providers{
 		K8s:      clients.k8s,
 		Kubelet:  clients.kubelet,
 		CAdvisor: clients.cAdvisor,
 	}
-	ksmScraper, err := kubelet.NewScraper(&c, providers, kubelet.WithLogger(logger))
+	ksmScraper, err := kubelet.NewScraper(c, providers, kubelet.WithLogger(logger))
 	if err != nil {
 		return nil, fmt.Errorf("building kubelet scraper: %w", err)
 	}
@@ -152,8 +152,8 @@ func setupKubelet(c config.Mock, clients *clusterClients) (*kubelet.Scraper, err
 	return ksmScraper, nil
 }
 
-func buildClients(c config.Mock) (*clusterClients, error) {
-	k8sConfig, err := getK8sConfig(true, c)
+func buildClients(c *config.Mock) (*clusterClients, error) {
+	k8sConfig, err := getK8sConfig(c)
 	if err != nil {
 		return nil, fmt.Errorf("retrieving k8s config: %w", err)
 	}

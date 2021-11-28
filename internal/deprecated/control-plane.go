@@ -28,7 +28,7 @@ import (
 
 var logger log.Logger = log.NewStdErr(true)
 
-func RunControlPlane(config config.Mock, k8s kubernetes.Interface, i *integration.Integration) error {
+func RunControlPlane(config *config.Mock, k8s kubernetes.Interface, i *integration.Integration) error {
 	const (
 		nodeNameEnvVar = "NRK8S_NODE_NAME"
 		defaultTimeout = time.Millisecond * 5000
