@@ -47,7 +47,7 @@ func TestScraper(t *testing.T) {
 
 			fakeK8s := fake.NewSimpleClientset(testutil.K8sEverything()...)
 
-			scraper, err := kubelet.NewScraper(&config.Mock{
+			scraper, err := kubelet.NewScraper(&config.Config{
 				ClusterName: t.Name(),
 			}, kubelet.Providers{
 				K8s:      fakeK8s,

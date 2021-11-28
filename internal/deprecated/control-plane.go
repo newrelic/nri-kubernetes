@@ -28,9 +28,8 @@ import (
 
 var logger log.Logger = log.NewStdErr(true)
 
-func RunControlPlane(config *config.Mock, k8s kubernetes.Interface, i *integration.Integration) error {
+func RunControlPlane(config *config.Config, k8s kubernetes.Interface, i *integration.Integration) error {
 	const (
-		nodeNameEnvVar = "NRK8S_NODE_NAME"
 		defaultTimeout = time.Millisecond * 5000
 	)
 
@@ -44,11 +43,7 @@ func RunControlPlane(config *config.Mock, k8s kubernetes.Interface, i *integrati
 		return err
 	}
 
-	nodeName := os.Getenv(nodeNameEnvVar)
-	if nodeName == "" {
-		logger.Errorf("%s env var should be provided by Kubernetes and is mandatory", nodeNameEnvVar)
-		os.Exit(1)
-	}
+	nodeName := config.NodeName
 	K8sConfig, _ := getK8sConfig(true)
 	kubeletCli, err := kubeletClient.New(kubeletClient.DefaultConnector(k8s, config, K8sConfig, logger), kubeletClient.WithLogger(logger))
 	if err != nil {
@@ -62,13 +57,13 @@ func RunControlPlane(config *config.Mock, k8s kubernetes.Interface, i *integrati
 		hostIP,
 		metric2.NewPodsFetcher(logger, kubeletCli).DoPodsFetch,
 		k8s,
-		config.ETCD.EtcdTLSSecretName,
-		config.ETCD.EtcdTLSSecretNamespace,
-		config.APIServer.APIServerSecurePort,
-		config.Scheduler.SchedulerEndpointURL,
-		config.ETCD.EtcdEndpointURL,
-		config.ControllerManager.ControllerManagerEndpointURL,
-		config.APIServer.APIServerEndpointURL,
+		"",
+		"",
+		"",
+		config.Scheduler.StaticEndpoint.URL,
+		config.ETCD.StaticEndpoint.URL,
+		config.ControllerManager.StaticEndpoint.URL,
+		config.APIServer.StaticEndpoint.URL,
 	)
 
 	if err != nil {

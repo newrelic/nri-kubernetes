@@ -33,7 +33,7 @@ type Providers struct {
 // Scraper takes care of getting metrics from an autodiscovered KSM instance.
 type Scraper struct {
 	logger log.Logger
-	config *config.Mock
+	config *config.Config
 	Providers
 	k8sVersion          *version.Info
 	endpointsDiscoverer discovery.EndpointsDiscoverer
@@ -54,7 +54,7 @@ func WithLogger(logger log.Logger) ScraperOpt {
 
 // NewScraper builds a new Scraper, initializing its internal informers. After use, informers should be closed by calling
 // Close() to prevent resource leakage.
-func NewScraper(config *config.Mock, providers Providers, options ...ScraperOpt) (*Scraper, error) {
+func NewScraper(config *config.Config, providers Providers, options ...ScraperOpt) (*Scraper, error) {
 	s := &Scraper{
 		config:    config,
 		Providers: providers,
@@ -168,9 +168,9 @@ func (s *Scraper) buildDiscoverer() (discovery.EndpointsDiscoverer, error) {
 		dc.Namespace = s.config.KSM.Namespace
 	}
 
-	if s.config.KSM.PodLabel != "" {
-		s.logger.Debugf("Overriding default KSM labelSelector (%q) to %q", defaultLabelSelector, s.config.KSM.PodLabel)
-		dc.LabelSelector = s.config.KSM.PodLabel
+	if s.config.KSM.Selector != "" {
+		s.logger.Debugf("Overriding default KSM labelSelector (%q) to %q", defaultLabelSelector, s.config.KSM.Selector)
+		dc.LabelSelector = s.config.KSM.Selector
 	}
 
 	if s.config.KSM.Port != 0 {
