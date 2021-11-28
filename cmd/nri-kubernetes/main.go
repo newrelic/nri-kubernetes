@@ -45,7 +45,12 @@ type clusterClients struct {
 }
 
 func main() {
-	c := config.LoadConfig()
+	c, err := config.LoadConfig(config.FilePath, config.FileName)
+	if err != nil {
+		log.Error(err.Error())
+		os.Exit(exitIntegration)
+	}
+
 	logger = log.NewStdErr(c.Verbose)
 
 	i, err := createIntegrationWithHTTPSink(c.HTTPServerPort)
@@ -56,7 +61,7 @@ func main() {
 
 	clients, err := buildClients(c)
 	if err != nil {
-		log.Error(err.Error())
+		logger.Errorf("building clients: %v", err)
 		os.Exit(exitClients)
 	}
 
@@ -64,7 +69,7 @@ func main() {
 	if c.Kubelet.Enabled {
 		kubeletScraper, err = setupKubelet(c, clients)
 		if err != nil {
-			logger.Errorf("setting up ksm scraper: %w", err)
+			logger.Errorf("setting up ksm scraper: %v", err)
 			os.Exit(exitSetup)
 		}
 	}
@@ -73,13 +78,16 @@ func main() {
 	if c.KSM.Enabled {
 		ksmScraper, err = setupKSM(c, clients)
 		if err != nil {
-			logger.Errorf("setting up ksm scraper: %w", err)
+			logger.Errorf("setting up ksm scraper: %v", err)
 			os.Exit(exitSetup)
 		}
 		defer ksmScraper.Close()
 	}
 
 	for {
+		logger.Debugf("scraping data from all the scrapers defined: KSM: %t, Kubelet: %t, ControlPlane: %t",
+			c.KSM.Enabled, c.Kubelet.Enabled, c.ControlPlane.Enabled)
+
 		// TODO think carefully to the signature of this function
 		err := runScrapers(c, ksmScraper, kubeletScraper, i, clients)
 		if err != nil {
@@ -87,17 +95,19 @@ func main() {
 			os.Exit(exitLoop)
 		}
 
+		logger.Debugf("publishing data")
 		err = i.Publish()
 		if err != nil {
 			logger.Errorf("publishing integration: %v", err)
 			os.Exit(exitLoop)
 		}
 
+		logger.Debugf("waiting %f seconds for next interval", c.Interval.Seconds())
 		time.Sleep(c.Interval)
 	}
 }
 
-func runScrapers(c *config.Mock, ksmScraper *ksm.Scraper, kubeletScraper *kubelet.Scraper, i *integration.Integration, clients *clusterClients) error {
+func runScrapers(c *config.Config, ksmScraper *ksm.Scraper, kubeletScraper *kubelet.Scraper, i *integration.Integration, clients *clusterClients) error {
 	if c.KSM.Enabled {
 		err := ksmScraper.Run(i)
 		if err != nil {
@@ -124,7 +134,8 @@ func runScrapers(c *config.Mock, ksmScraper *ksm.Scraper, kubeletScraper *kubele
 	return nil
 }
 
-func setupKSM(c *config.Mock, clients *clusterClients) (*ksm.Scraper, error) {
+func setupKSM(c *config.Config, clients *clusterClients) (*ksm.Scraper, error) {
+
 	providers := ksm.Providers{
 		K8s: clients.k8s,
 		KSM: clients.ksm,
@@ -138,7 +149,7 @@ func setupKSM(c *config.Mock, clients *clusterClients) (*ksm.Scraper, error) {
 	return ksmScraper, nil
 }
 
-func setupKubelet(c *config.Mock, clients *clusterClients) (*kubelet.Scraper, error) {
+func setupKubelet(c *config.Config, clients *clusterClients) (*kubelet.Scraper, error) {
 	providers := kubelet.Providers{
 		K8s:      clients.k8s,
 		Kubelet:  clients.kubelet,
@@ -152,8 +163,9 @@ func setupKubelet(c *config.Mock, clients *clusterClients) (*kubelet.Scraper, er
 	return ksmScraper, nil
 }
 
-func buildClients(c *config.Mock) (*clusterClients, error) {
+func buildClients(c *config.Config) (*clusterClients, error) {
 	k8sConfig, err := getK8sConfig(c)
+
 	if err != nil {
 		return nil, fmt.Errorf("retrieving k8s config: %w", err)
 	}
@@ -213,7 +225,7 @@ func createIntegrationWithHTTPSink(httpServerPort string) (*integration.Integrat
 	return integration.New("com.newrelic.kubernetes", "test-ksm", integration.Writer(h))
 }
 
-func getK8sConfig(c *config.Mock) (*rest.Config, error) {
+func getK8sConfig(c *config.Config) (*rest.Config, error) {
 	inclusterConfig, err := rest.InClusterConfig()
 	if err == nil {
 		return inclusterConfig, nil

@@ -34,7 +34,7 @@ type Providers struct {
 type Scraper struct {
 	Providers
 	logger                  log.Logger
-	config                  *config.Mock
+	config                  *config.Config
 	k8sVersion              *version.Info
 	defaultNetworkInterface string
 	nodeGetter              listersv1.NodeLister
@@ -46,7 +46,7 @@ type ScraperOpt func(s *Scraper) error
 
 // NewScraper builds a new Scraper, initializing its internal informers. After use, informers should be closed by calling
 // Close() to prevent resource leakage.
-func NewScraper(config *config.Mock, providers Providers, options ...ScraperOpt) (*Scraper, error) {
+func NewScraper(config *config.Config, providers Providers, options ...ScraperOpt) (*Scraper, error) {
 	var err error
 	s := &Scraper{
 		config:    config,

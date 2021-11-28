@@ -50,6 +50,7 @@ func runCAdvisorFetchFunc(t *testing.T, file string) {
 	}
 
 	kubeletClient, err := client.New(client.StaticConnector(c, url.URL{}))
+
 	require.NoError(t, err)
 
 	g, err := CadvisorFetchFunc(kubeletClient.MetricFamiliesGetFunc(KubeletCAdvisorMetricsPath), cadvisorQueries)()
