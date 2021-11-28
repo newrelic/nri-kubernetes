@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
@@ -58,7 +58,7 @@ func NewEndpointsDiscoverer(config EndpointsDiscoveryConfig) (EndpointsDiscovere
 	return &endpointsDiscoverer{
 		lister: el(
 			informers.WithNamespace(config.Namespace),
-			informers.WithTweakListOptions(func(options *v1.ListOptions) {
+			informers.WithTweakListOptions(func(options *metav1.ListOptions) {
 				options.LabelSelector = config.LabelSelector
 			}),
 		),
