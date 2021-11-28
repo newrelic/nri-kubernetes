@@ -11,6 +11,7 @@ require (
 	github.com/segmentio/go-camelcase v0.0.0-20160726192923-7085f1e3c734
 	github.com/sethgrid/pester v1.1.0
 	github.com/sirupsen/logrus v1.8.1
+	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.7.0
 	google.golang.org/protobuf v1.27.1
 	k8s.io/api v0.22.3

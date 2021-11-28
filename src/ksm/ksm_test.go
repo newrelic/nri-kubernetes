@@ -37,7 +37,7 @@ func TestScraper(t *testing.T) {
 			}
 
 			fakeK8s := fake.NewSimpleClientset(testutil.K8sEverything()...)
-			scraper, err := ksm.NewScraper(&config.Mock{
+			scraper, err := ksm.NewScraper(&config.Config{
 				KSM: config.KSM{
 					StaticURL: testServer.KSMEndpoint(),
 				},

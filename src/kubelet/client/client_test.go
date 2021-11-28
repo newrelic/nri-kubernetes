@@ -135,7 +135,7 @@ func TestConfigPrecedence(t *testing.T) {
 
 		s, _ := testHTTPSServerWithEndpoints(t, []string{healthz, prometheusMetric, kubeletMetric})
 		k8sClient, cf, inClusterConfig := getTestData(s)
-		cf.Schema = "http"
+		cf.Kubelet.Scheme = "http"
 
 		_, err := client.New(client.DefaultConnector(k8sClient, cf, inClusterConfig, log.NewStdErr(true)), client.WithLogger(log.NewStdErr(true)))
 		require.Error(t, err)
@@ -243,13 +243,13 @@ func TestClientOptions(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func getTestData(s *httptest.Server) (*fake.Clientset, *config.Mock, *rest.Config) {
+func getTestData(s *httptest.Server) (*fake.Clientset, *config.Config, *rest.Config) {
 	u, _ := url.Parse(s.URL)
 	port, _ := strconv.Atoi(u.Port())
 
 	c := fake.NewSimpleClientset(getTestNode(port))
 
-	cf := &config.Mock{
+	cf := &config.Config{
 		NodeName: nodeName,
 		NodeIP:   u.Hostname(),
 	}
