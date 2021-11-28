@@ -1,4 +1,3 @@
-verboseLog: true
 forwarderImage:
   pullPolicy: IfNotPresent
   tag: 1.20.5
@@ -18,6 +17,27 @@ resources:
   requests:
     cpu: 100m
     memory: 150M
-apiServerEndpointUrl: https://localhost:8443
-schedulerEndpointUrl: https://localhost:10259
-controllerManagerEndpointUrl: https://localhost:10257
+
+scrapersConfig:
+  interval: 15s
+  verbose: true
+  timeout: 30s
+  networkRouteFile: "/proc/net/route"
+
+  kubelet:
+    enabled: true
+
+  ksm:
+    enabled: true
+
+  controlPlane:
+    enabled: true
+    apiServer:
+      staticEndpoint:
+        url: "https://localhost:8443"
+    scheduler:
+      staticEndpoint:
+        url: "https://localhost:10259"
+    controllerManager:
+      staticEndpoint:
+        url: "https://localhost:10257"

@@ -1,4 +1,4 @@
-{{- if and (include "newrelic.areValuesValid" .) .Values.enableLinux }}
+{{- if and (.Values.scrapersConfig.kubelet.enabled) (include "newrelic.areValuesValid" .) .Values.enableLinux }}
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -46,23 +46,30 @@ spec:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
           env:
-            - name: "HTTP_SERVER_PORT"
-              value: {{ .Values.kubelet.httpServerPort | quote }}
-            - name: "KUBELET_ENABLED"
+            - name: "NRI_KUBERNETES_HTTPSERVERPORT"
+              value: "8003"
+            - name: "NRI_KUBERNETES_CONTROLPLANE_ENABLED"
+              value: "false"
+            - name: "NRI_KUBERNETES_KSM_ENABLED"
+              value: "false"
+            - name: "NRI_KUBERNETES_KUBELET_ENABLED"
               value: "true"
-            - name: "CLUSTER_NAME"
+            - name: "NRI_KUBERNETES_CLUSTERNAME"
               value: {{ include "newrelic.cluster" . }}
-            - name: "NRK8S_NODE_NAME"
+            - name: "NRI_KUBERNETES_NODENAME"
               valueFrom:
                 fieldRef:
                   apiVersion: "v1"
                   fieldPath: "spec.nodeName"
-            - name: "NRK8S_NODE_IP"
+            - name: "NRI_KUBERNETES_NODEIP"
               valueFrom:
                 fieldRef:
                   apiVersion: "v1"
                   fieldPath: "status.hostIP"
           volumeMounts:
+            - name: nri-kubernetes-config
+              mountPath: /etc/newrelic-infra/integrations.d/nri-kubernetes-config.yml
+              subPath: nri-kubernetes-config.yml
             - mountPath: /var/cache/nr-kubernetes
               name: tmpfs-cache
             - mountPath: /tmp
@@ -84,7 +91,7 @@ spec:
             readOnlyRootFilesystem: true
             {{- end }}
           ports:
-            - containerPort: {{ .Values.kubelet.httpServerPort }}
+            - containerPort: 8003
           env:
             - name: "NRIA_OVERRIDE_HOSTNAME_SHORT"
               valueFrom:
@@ -92,7 +99,7 @@ spec:
                   apiVersion: "v1"
                   fieldPath: "spec.nodeName"
             - name: "NRIA_HTTP_SERVER_PORT"
-              value: {{ .Values.kubelet.httpServerPort | quote }}
+              value: "8003"
             - name: NRIA_LICENSE_KEY
               valueFrom:
                 secretKeyRef:
@@ -116,10 +123,15 @@ spec:
             - name: "NRIA_STAGING"
               value: "true"
             {{- end }}
+            - name: "NRI_KUBERNETES_NODE_NAME"
+              valueFrom:
+                fieldRef:
+                  apiVersion: "v1"
+                  fieldPath: "spec.nodeName"
             {{- if .Values.useNodeNameAsDisplayName }}
             - name: "NRIA_DISPLAY_NAME"
             {{- if .Values.prefixDisplayNameWithCluster }}
-              value: "{{ include "newrelic.cluster" . }}:$(NRK8S_NODE_NAME)"
+              value: "{{ include "newrelic.cluster" . }}:$(NRI_KUBERNETES_NODE_NAME)"
             {{- else }}
               valueFrom:
                 fieldRef:
@@ -212,6 +224,14 @@ spec:
           emptyDir: {}
         - name: tmpfs-cache
           emptyDir: {}
+        {{- if .Values.scrapersConfig }}
+        - name: nri-kubernetes-config
+          configMap:
+            name: {{ template "newrelic.fullname" . }}-scrapers
+            items:
+            - key: nri-kubernetes-config.yml
+              path: nri-kubernetes-config.yml
+        {{- end }}
         {{- if .Values.config }}
         - name: config
           configMap:
