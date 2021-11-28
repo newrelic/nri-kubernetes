@@ -49,7 +49,7 @@ func TestScraper(t *testing.T) {
 				Client: &http.Client{},
 				Err:    nil,
 			}
-			kubeletClient, err := kubeletClient.New(nil, config.Mock{}, &rest.Config{}, kubeletClient.WithCustomConnector(mc))
+			kubeletClient, err := kubeletClient.New(nil, &config.Mock{}, &rest.Config{}, kubeletClient.WithCustomConnector(mc))
 			require.NoError(t, err)
 
 			fakeK8s := fake.NewSimpleClientset(testutil.K8sEverything()...)

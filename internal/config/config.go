@@ -76,7 +76,7 @@ type Kubelet struct {
 	Schema  string
 }
 
-func LoadConfig() Mock {
+func LoadConfig() *Mock {
 	// strconv.ParseBool(os.Getenv("VERBOSE"))
 	kubeStateMetricsPort, _ := strconv.Atoi(os.Getenv("KUBE_STATE_METRIC_PORT"))
 	distributedKubeStateMetrics, _ := strconv.ParseBool(os.Getenv("DISTRIBUTED_KUBE_STATE_METRIC"))
@@ -99,7 +99,7 @@ func LoadConfig() Mock {
 	kubeleEnabled, _ := strconv.ParseBool(os.Getenv("KUBELET_ENABLED"))
 	controlPlanEnabled, _ := strconv.ParseBool(os.Getenv("CONTROL_PLANE_ENABLED"))
 
-	return Mock{
+	return &Mock{
 		KubeconfigPath: os.Getenv("KUBECONFIG_PATH"),
 		ClusterName:    os.Getenv("CLUSTER_NAME"),
 		Verbose:        true,

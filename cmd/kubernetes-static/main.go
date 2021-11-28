@@ -75,7 +75,7 @@ func main() {
 		Client: &http.Client{Timeout: time.Minute * 10},
 		Err:    nil,
 	}
-	kubeletClient, err := kubletClient.New(nil, config.Mock{}, &rest.Config{}, kubletClient.WithCustomConnector(mc))
+	kubeletClient, err := kubletClient.New(nil, &config.Mock{}, &rest.Config{}, kubletClient.WithCustomConnector(mc))
 	if err != nil {
 		log.Fatal(err)
 	}

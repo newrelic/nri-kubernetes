@@ -104,7 +104,7 @@ func TestGroup(t *testing.T) {
 		Client: &c,
 		Err:    nil,
 	}
-	kubeletClient, err := client.New(nil, config.Mock{}, &rest.Config{}, client.WithCustomConnector(mc))
+	kubeletClient, err := client.New(nil, &config.Mock{}, &rest.Config{}, client.WithCustomConnector(mc))
 	require.NoError(t, err)
 
 	kubeletGrouper, err := New(
