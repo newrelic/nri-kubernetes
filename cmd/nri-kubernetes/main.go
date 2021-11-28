@@ -213,11 +213,12 @@ func createIntegrationWithHTTPSink(httpServerPort string) (*integration.Integrat
 	return integration.New("com.newrelic.kubernetes", "test-ksm", integration.Writer(h))
 }
 
-func getK8sConfig(tryLocalKubeConfig bool, c config.Mock) (*rest.Config, error) {
+func getK8sConfig(c *config.Mock) (*rest.Config, error) {
 	inclusterConfig, err := rest.InClusterConfig()
-	if err == nil || !tryLocalKubeConfig {
+	if err == nil {
 		return inclusterConfig, nil
 	}
+	logger.Errorf("collecting in cluster config: %v", err)
 
 	kubeconf := c.KubeconfigPath
 	if kubeconf == "" {
