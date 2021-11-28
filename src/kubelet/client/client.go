@@ -52,7 +52,7 @@ func WithCustomConnector(connector Connector) OptionFunc {
 }
 
 // New builds a Client using the given options.
-func New(kc kubernetes.Interface, config config.Mock, inClusterConfig *rest.Config, opts ...OptionFunc) (*Client, error) {
+func New(kc kubernetes.Interface, config *config.Mock, inClusterConfig *rest.Config, opts ...OptionFunc) (*Client, error) {
 	c := &Client{
 		logger: log.New(false, io.Discard),
 		connector: defaultConnector{
