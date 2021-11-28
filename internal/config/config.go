@@ -1,144 +1,109 @@
 package config
 
 import (
-	"net"
-	"net/url"
-	"os"
-	"strconv"
+	"strings"
 	"time"
+
+	"github.com/spf13/viper"
 )
 
-// This is only a mock of the new config
-type Mock struct {
-	KSM
-	ControlPlane
-	Kubelet
-	KubeconfigPath   string
-	NodeIP           string
-	Verbose          bool
-	NodeName         string
-	HTTPServerPort   string
-	Timeout          time.Duration
-	ClusterName      string
-	Interval         time.Duration
-	NetworkRouteFile string
+const (
+	FileName = "nri-kubernetes-config"
+	FilePath = "/etc/newrelic-infra/integrations.d/"
+)
+
+type Config struct {
+	Verbose          bool          `mapstructure:"verbose"`
+	ClusterName      string        `mapstructure:"clusterName"`
+	NetworkRouteFile string        `mapstructure:"networkRouteFile"`
+	KubeconfigPath   string        `mapstructure:"kubeconfigPath"`
+	NodeIP           string        `mapstructure:"nodeIP"`
+	NodeName         string        `mapstructure:"nodeName"`
+	HTTPServerPort   string        `mapstructure:"httpServerPort"`
+	Interval         time.Duration `mapstructure:"interval"`
+	Timeout          time.Duration `mapstructure:"timeout"`
+
+	ControlPlane `mapstructure:"controlPlane"`
+	Kubelet      `mapstructure:"kubelet"`
+	KSM          `mapstructure:"ksm"`
 }
 
 type KSM struct {
-	// URL defines a static endpoint for KSM.
-	StaticURL string
-
-	// Autodiscovery settings.
-	// Scheme that will be used to hit the endpoints of discovered KSM services. Defaults to http.
-	Scheme string
-	// If set, Port will discard all endpoints discovered that do not use this specified port. Otherwise, all endpoints will be considered.
-	Port int
-	// PodLabel is the selector used to filter Endpoints.
-	PodLabel string
-	// Namespace can be used to restric the search to a particular namespace.
-	Namespace string
-	// If set, Distributed will instruct the integration to scrape all KSM endpoints rather than just the first one.
-	Distributed bool
-
-	Enabled bool
-}
-
-type ControlPlane struct {
-	ETCD              ETCD
-	APIServer         APIServer
-	Scheduler         Scheduler
-	ControllerManager ControllerManager
-	Enabled           bool
-}
-
-type APIServer struct {
-	APIServerEndpointURL string
-	APIServerSecurePort  string
-}
-
-type ETCD struct {
-	EtcdEndpointURL        string
-	EtcdTLSSecretNamespace string
-	EtcdTLSSecretName      string
-}
-
-type Scheduler struct {
-	SchedulerEndpointURL string
-}
-
-type ControllerManager struct {
-	ControllerManagerEndpointURL string
+	StaticURL   string `mapstructure:"staticURL"`
+	Scheme      string `mapstructure:"scheme"`
+	Port        int    `mapstructure:"port"`
+	Selector    string `mapstructure:"selector"`
+	Namespace   string `mapstructure:"namespace"`
+	Distributed bool   `mapstructure:"distributed"`
+	Enabled     bool   `mapstructure:"enabled"`
 }
 
 type Kubelet struct {
-	Enabled bool
-	Port    int32
-	Schema  string
+	Enabled bool   `mapstructure:"enabled"`
+	Port    int32  `mapstructure:"port"`
+	Scheme  string `mapstructure:"scheme"`
 }
 
-func LoadConfig() *Mock {
-	// strconv.ParseBool(os.Getenv("VERBOSE"))
-	kubeStateMetricsPort, _ := strconv.Atoi(os.Getenv("KUBE_STATE_METRIC_PORT"))
-	distributedKubeStateMetrics, _ := strconv.ParseBool(os.Getenv("DISTRIBUTED_KUBE_STATE_METRIC"))
-	schema := "http"
+type ControlPlane struct {
+	Enabled           bool                  `mapstructure:"enabled"`
+	ETCD              ControlPlaneComponent `mapstructure:"etcd"`
+	APIServer         ControlPlaneComponent `mapstructure:"apiServer"`
+	ControllerManager ControlPlaneComponent `mapstructure:"controllerManager"`
+	Scheduler         ControlPlaneComponent `mapstructure:"scheduler"`
+}
 
-	if os.Getenv("KUBE_STATE_METRIC_SCHEME") != "" {
-		schema = os.Getenv("KUBE_STATE_METRIC_SCHEME")
+type ControlPlaneComponent struct {
+	Enabled        bool                       `mapstructure:"enabled"`
+	StaticEndpoint StaticEndpoint             `mapstructure:"staticEndpoint"`
+	Autodiscover   []AutodiscoverControlPlane `mapstructure:"autodiscover"`
+}
+
+type AutodiscoverControlPlane struct {
+	Namespace string `mapstructure:"namespace"`
+	Selector  string `mapstructure:"selector"`
+	MatchNode bool   `mapstructure:"matchNode"`
+	URL       string `mapstructure:"url"`
+	Auth      Auth   `mapstructure:"auth"`
+}
+
+type StaticEndpoint struct {
+	URL  string `mapstructure:"url"`
+	Auth Auth   `mapstructure:"auth"`
+}
+
+type Auth struct {
+}
+
+func LoadConfig(filePath string, fileName string) (*Config, error) {
+	v := viper.New()
+
+	// We need to assure that defaults have been set in order to bind env variables.
+	// https://github.com/spf13/viper/issues/584
+	v.SetDefault("clusterName", "cluster")
+	v.SetDefault("nodeName", "node")
+	v.SetDefault("nodeIP", "node")
+	v.SetDefault("httpServerPort", 0)
+	v.SetDefault("controlPlane.enabled", false)
+	v.SetDefault("ksm.enabled", false)
+	v.SetDefault("kubelet.enabled", false)
+
+	v.SetEnvPrefix("NRI_KUBERNETES")
+	v.AutomaticEnv()
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+	// Config File
+	v.AddConfigPath(filePath)
+	v.SetConfigName(fileName)
+
+	// If error reading file or file not found, use flag/env variables
+	if err := v.ReadInConfig(); err != nil {
+		return nil, err
 	}
 
-	var ksmURL string
-	if u, err := url.Parse(os.Getenv("KUBE_STATE_METRIC_URL")); err != nil {
-		ksmURL = net.JoinHostPort(u.Host, u.Port())
-		schema = u.Scheme
+	var cfg Config
+	if err := v.UnmarshalExact(&cfg); err != nil {
+		return nil, err
 	}
-	var httpServerPort = "8001"
-	if port := os.Getenv("HTTP_SERVER_PORT"); port != "" {
-		httpServerPort = port
-	}
-	ksmEnabled, _ := strconv.ParseBool(os.Getenv("KUBE_STATE_METRIC_ENABLED"))
-	kubeleEnabled, _ := strconv.ParseBool(os.Getenv("KUBELET_ENABLED"))
-	controlPlanEnabled, _ := strconv.ParseBool(os.Getenv("CONTROL_PLANE_ENABLED"))
 
-	return &Mock{
-		KubeconfigPath: os.Getenv("KUBECONFIG_PATH"),
-		ClusterName:    os.Getenv("CLUSTER_NAME"),
-		Verbose:        true,
-		Timeout:        time.Millisecond * 5000,
-		Interval:       15 * time.Second,
-		NodeName:       os.Getenv("NRK8S_NODE_NAME"),
-		NodeIP:         os.Getenv("NRK8S_NODE_IP"),
-		HTTPServerPort: httpServerPort,
-		Kubelet: Kubelet{
-			Enabled: kubeleEnabled,
-		},
-		NetworkRouteFile: "/proc/net/route",
-		KSM: KSM{
-			Enabled: ksmEnabled,
-
-			StaticURL:   ksmURL,
-			PodLabel:    os.Getenv("KUBE_STATE_METRIC_POD_LABEL"),
-			Scheme:      schema,
-			Port:        kubeStateMetricsPort,
-			Namespace:   os.Getenv("KUBE_STATE_METRIC_NAMESPACE"),
-			Distributed: distributedKubeStateMetrics,
-		},
-		ControlPlane: ControlPlane{
-			Enabled: controlPlanEnabled,
-			ETCD: ETCD{
-				EtcdEndpointURL:        os.Getenv("ETCD_ENDPOINT_URL"),
-				EtcdTLSSecretNamespace: os.Getenv("ETCD_ENDPOINT_SECRET_NAMESPACE"),
-				EtcdTLSSecretName:      os.Getenv("ETCD_ENDPOINT_SECRET_NAME"),
-			},
-			APIServer: APIServer{
-				APIServerEndpointURL: os.Getenv("API_SERVER_ENDPOINT_URL"),
-				APIServerSecurePort:  os.Getenv("API_SERVER_SECURE_PORT"),
-			},
-			Scheduler: Scheduler{
-				SchedulerEndpointURL: os.Getenv("SCHEDULER_ENDPOINT_URL"),
-			},
-			ControllerManager: ControllerManager{
-				ControllerManagerEndpointURL: os.Getenv("CONTROLLER_MANAGER_ENDPOINT_URL"),
-			},
-		},
-	}
+	return &cfg, nil
 }
