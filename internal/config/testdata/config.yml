@@ -1,0 +1,32 @@
+clusterName: dummy_cluster
+interval: 15
+verbose: true
+timeout: 30
+networkRouteFile: /path/to/file
+
+kubelet:
+  enabled: true
+  port: 123
+  scheme: http
+
+ksm:
+  staticURL: http://test.com:8080
+  scheme: https
+  port: 8080
+  namespace: default
+  distributed: true
+  enabled: true
+
+controlPlane:
+   etcd:
+     enabled: true
+     staticEndpoint: {}
+     autodiscover:
+       - namespace: kube-system
+         selector: foo=bar,baz=bar # Match all
+         matchNode: true
+         url: http://localhost:12345
+       - namespace: kube-system
+         selector: foo=baz
+         matchNode: true
+         url: http://localhost:12345

@@ -35,11 +35,11 @@ type defaultConnector struct {
 	logger          log.Logger
 	kc              kubernetes.Interface
 	inClusterConfig *rest.Config
-	config          *config.Mock
+	config          *config.Config
 }
 
 // DefaultConnector returns a defaultConnector that checks connection against local kubelet and api proxy.
-func DefaultConnector(kc kubernetes.Interface, config *config.Mock, inClusterConfig *rest.Config, logger log.Logger) Connector {
+func DefaultConnector(kc kubernetes.Interface, config *config.Config, inClusterConfig *rest.Config, logger log.Logger) Connector {
 	return &defaultConnector{
 		logger:          logger,
 		inClusterConfig: inClusterConfig,
@@ -135,9 +135,9 @@ func (dp *defaultConnector) getPort() (int32, error) {
 }
 
 func (dp *defaultConnector) schemaFor(kubeletPort int32) string {
-	if dp.config.Kubelet.Schema != "" {
-		dp.logger.Debugf("Setting Kubelet Endpoint Schema %s as specified by user config", dp.config.Kubelet.Schema)
-		return dp.config.Kubelet.Schema
+	if dp.config.Kubelet.Scheme != "" {
+		dp.logger.Debugf("Setting Kubelet Endpoint Schema %s as specified by user config", dp.config.Kubelet.Scheme)
+		return dp.config.Kubelet.Scheme
 	}
 
 	switch kubeletPort {
