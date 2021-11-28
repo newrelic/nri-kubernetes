@@ -34,10 +34,10 @@ type defaultConnector struct {
 	apiServerHost      string
 	kc                 kubernetes.Interface
 	tripperBearerToken http.RoundTripper
-	config             config.Mock
+	config             *config.Mock
 }
 
-func (dp defaultConnector) connect() (*connParams, error) {
+func (dp *defaultConnector) connect() (*connParams, error) {
 
 	kubeletPort, err := dp.getKubeletPort()
 	if err != nil {
@@ -63,7 +63,7 @@ func (dp defaultConnector) connect() (*connParams, error) {
 	return conn, nil
 }
 
-func (dp defaultConnector) setupLocalConnection(tripperWithBearerToken http.RoundTripper, schema string, hostURL string) (*connParams, error) {
+func (dp *defaultConnector) setupLocalConnection(tripperWithBearerToken http.RoundTripper, schema string, hostURL string) (*connParams, error) {
 	dp.logger.Debugf("connecting to kubelet directly with nodeIP")
 	var err error
 	var conn *connParams
@@ -91,7 +91,7 @@ func (dp defaultConnector) setupLocalConnection(tripperWithBearerToken http.Roun
 	return nil, fmt.Errorf("no connection succeeded through localhost: %w", err)
 }
 
-func (dp defaultConnector) getKubeletPort() (int32, error) {
+func (dp *defaultConnector) getKubeletPort() (int32, error) {
 	if dp.config.Kubelet.Port != 0 {
 		dp.logger.Debugf("Setting Port %d as specified by user config", dp.config.Kubelet.Port)
 		return dp.config.Kubelet.Port, nil
@@ -109,7 +109,7 @@ func (dp defaultConnector) getKubeletPort() (int32, error) {
 	return port, nil
 }
 
-func (dp defaultConnector) getKubeletSchema(kubeletPort int32) string {
+func (dp *defaultConnector) getKubeletSchema(kubeletPort int32) string {
 	if dp.config.Kubelet.Schema != "" {
 		dp.logger.Debugf("Setting Kubelet Endpoint Schema %s as specified by user config", dp.config.Kubelet.Schema)
 		return dp.config.Kubelet.Schema
@@ -133,7 +133,7 @@ type connParams struct {
 	client client.HTTPDoer
 }
 
-func (dp defaultConnector) checkConnectionAPIProxy(apiServer string, nodeName string, tripperBearerToken http.RoundTripper) (*connParams, error) {
+func (dp *defaultConnector) checkConnectionAPIProxy(apiServer string, nodeName string, tripperBearerToken http.RoundTripper) (*connParams, error) {
 	apiURL, err := url.Parse(apiServer)
 	if err != nil {
 		return nil, fmt.Errorf("parsing kubernetes api url from in cluster config: %w", err)
@@ -157,7 +157,7 @@ func (dp defaultConnector) checkConnectionAPIProxy(apiServer string, nodeName st
 	return &conn, nil
 }
 
-func (dp defaultConnector) checkConnectionHTTP(hostURL string) (*connParams, error) {
+func (dp *defaultConnector) checkConnectionHTTP(hostURL string) (*connParams, error) {
 	dp.logger.Debugf("testing kubelet connection with http to host: %s", hostURL)
 
 	conn := defaultConnParamsHTTP(hostURL)
@@ -168,7 +168,7 @@ func (dp defaultConnector) checkConnectionHTTP(hostURL string) (*connParams, err
 	return &conn, nil
 }
 
-func (dp defaultConnector) checkConnectionHTTPS(hostURL string, tripperBearer http.RoundTripper) (*connParams, error) {
+func (dp *defaultConnector) checkConnectionHTTPS(hostURL string, tripperBearer http.RoundTripper) (*connParams, error) {
 	dp.logger.Debugf("testing kubelet connection with https to host: %s", hostURL)
 
 	conn := defaultConnParamsHTTPS(hostURL, tripperBearer)
