@@ -58,11 +58,15 @@ func (dp *defaultConnector) Connect() (*connParams, error) {
 	kubeletSchema := dp.getKubeletSchema(kubeletPort)
 	hostURL := net.JoinHostPort(dp.config.NodeIP, fmt.Sprint(kubeletPort))
 
-	conn, err := dp.setupLocalConnection(dp.tripperBearerToken, kubeletSchema, hostURL)
+	dp.logger.Infof("Trying to connect to kubelet locally with schema=%q hostURL=%q", kubeletSchema, hostURL)
+
+	conn, err := dp.checkLocalConnection(tripperWithBearerToken(dp.inClusterConfig.BearerToken), kubeletSchema, hostURL)
 	if err == nil {
-		dp.logger.Debugf("connected to Kubelet directly with nodeIP")
+		dp.logger.Infof("Connected to Kubelet through nodeIP with schema=%q hostURL=%q", kubeletSchema, hostURL)
 		return conn, nil
 	}
+	dp.logger.Infof("Kubelet not reachable locally with schema=%q hostURL=%q: %v", kubeletSchema, hostURL, err)
+	dp.logger.Infof("Trying to connect to kubelet through API proxy %q to node %q", dp.inClusterConfig.Host, dp.config.NodeName)
 
 	tripperAPI, err := rest.TransportFor(dp.inClusterConfig)
 	if err != nil {
@@ -91,7 +95,9 @@ func (dp *defaultConnector) setupLocalConnection(tripperWithBearerToken http.Rou
 			return conn, nil
 		}
 	default:
-		// we were not able to infer the schema and the user did not provided it.
+		dp.logger.Errorf("Checking both HTTP and HTTPS since the schema was not detected automatically, " +
+			"you can set set kubelet.schema to avoid this behaviour")
+
 		if conn, err = dp.checkConnectionHTTPS(hostURL, tripperWithBearerToken); err == nil {
 			return conn, nil
 		}
@@ -136,7 +142,7 @@ func (dp *defaultConnector) getKubeletSchema(kubeletPort int32) string {
 		dp.logger.Debugf("Setting Kubelet Endpoint Schema https since kubeletPort is %d", kubeletPort)
 		return httpsSchema
 	default:
-		dp.logger.Debugf("Schema is unknown since kubeletPort is %d", kubeletPort)
+		dp.logger.Errorf("Cannot automatically figure out schema from non-standard port %d, please set kubelet.schema in the config file.", kubeletPort)
 		return ""
 	}
 }
@@ -174,7 +180,7 @@ func (dp *defaultConnector) checkConnectionAPIProxy(apiServer string, nodeName s
 }
 
 func (dp *defaultConnector) checkConnectionHTTP(hostURL string) (*connParams, error) {
-	dp.logger.Debugf("testing kubelet connection with http to host: %s", hostURL)
+	dp.logger.Debugf("testing kubelet connection over plain http to %s", hostURL)
 
 	conn := defaultConnParamsHTTP(hostURL)
 	if err := checkConnection(conn); err != nil {
@@ -185,7 +191,7 @@ func (dp *defaultConnector) checkConnectionHTTP(hostURL string) (*connParams, er
 }
 
 func (dp *defaultConnector) checkConnectionHTTPS(hostURL string, tripperBearer http.RoundTripper) (*connParams, error) {
-	dp.logger.Debugf("testing kubelet connection with https to host: %s", hostURL)
+	dp.logger.Debugf("testing kubelet connection over https to %s", hostURL)
 
 	conn := defaultConnParamsHTTPS(hostURL, tripperBearer)
 	if err := checkConnection(conn); err != nil {
@@ -200,17 +206,17 @@ func checkConnection(conn connParams) error {
 
 	r, err := http.NewRequest(http.MethodGet, conn.url.String(), nil)
 	if err != nil {
-		return fmt.Errorf("creating request to: %s. Got error: %s ", conn.url.String(), err)
+		return fmt.Errorf("creating request to %q : %s ", conn.url.String(), err)
 	}
 
 	resp, err := conn.client.Do(r)
 	if err != nil {
-		return fmt.Errorf("connecting to: %s. Got error: %s ", conn.url.String(), err)
+		return fmt.Errorf("connecting to %q: %w ", conn.url.String(), err)
 	}
 	defer resp.Body.Close() // nolint: errcheck
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("error calling endpoint %s. Got status code: %d", conn.url.String(), resp.StatusCode)
+		return fmt.Errorf("calling %s got non-200 status code: %d", conn.url.String(), resp.StatusCode)
 	}
 
 	return nil
