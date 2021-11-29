@@ -96,7 +96,7 @@ func TestGroup(t *testing.T) {
 		&c,
 	)
 
-	kubeletClient, err := client.New(client.FixedConnector(&c, url.URL{}))
+	kubeletClient, err := client.New(client.StaticConnector(&c, url.URL{}))
 	require.NoError(t, err)
 
 	kubeletGrouper, err := New(
