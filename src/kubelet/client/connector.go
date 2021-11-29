@@ -48,6 +48,12 @@ func DefaultConnector(kc kubernetes.Interface, config *config.Mock, inClusterCon
 	}
 }
 
+// Connect probes the kubelet connection locally and then through the apiServer proxy.
+// It tries to infer the scheme and the port found in node status DaemonEndpoints, if needed the user can set them up.
+// Locally it adds the bearer token to the request if protocol=https sing transport.NewBearerAuthRoundTripper,
+// on the other hand passing through api-proxy, authentication is managed by the kubernetes client itself.
+// Notice that we cannot use the as well rest.TransportFor to connect locally since the certificate sent by kubelet,
+// cannot be verified in the same way we do for the apiServer.
 func (dp *defaultConnector) Connect() (*connParams, error) {
 
 	kubeletPort, err := dp.getPort()
@@ -59,19 +65,19 @@ func (dp *defaultConnector) Connect() (*connParams, error) {
 	hostURL := net.JoinHostPort(dp.config.NodeIP, fmt.Sprint(kubeletPort))
 
 	dp.logger.Infof("Trying to connect to kubelet locally with schema=%q hostURL=%q", kubeletSchema, hostURL)
-
 	conn, err := dp.checkLocalConnection(tripperWithBearerToken(dp.inClusterConfig.BearerToken), kubeletSchema, hostURL)
 	if err == nil {
 		dp.logger.Infof("Connected to Kubelet through nodeIP with schema=%q hostURL=%q", kubeletSchema, hostURL)
 		return conn, nil
 	}
 	dp.logger.Infof("Kubelet not reachable locally with schema=%q hostURL=%q: %v", kubeletSchema, hostURL, err)
-	dp.logger.Infof("Trying to connect to kubelet through API proxy %q to node %q", dp.inClusterConfig.Host, dp.config.NodeName)
 
+	dp.logger.Infof("Trying to connect to kubelet through API proxy %q to node %q", dp.inClusterConfig.Host, dp.config.NodeName)
 	tripperAPI, err := rest.TransportFor(dp.inClusterConfig)
 	if err != nil {
 		return nil, fmt.Errorf("creating tripper connecting to kubelet through API server proxy: %w", err)
 	}
+
 	conn, err = dp.checkConnectionAPIProxy(dp.inClusterConfig.Host, dp.config.NodeName, tripperAPI)
 	if err != nil {
 		return nil, fmt.Errorf("creating connection parameters for API proxy: %w", err)
@@ -265,6 +271,7 @@ type fixedConnector struct {
 	Client client.HTTPDoer
 }
 
+// Connect return connParams without probing any endpoint.
 func (mc *fixedConnector) Connect() (*connParams, error) {
 	return &connParams{
 		url:    mc.URL,
