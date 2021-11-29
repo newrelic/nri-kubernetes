@@ -25,7 +25,6 @@ func TestScraper(t *testing.T) {
 	// Create an asserter with the settings that are shared for all test scenarios.
 	asserter := testutil.NewAsserter().
 		Using(metric.KubeletSpecs).
-		Silently().
 		Excluding(
 			testutil.ExcludeMetrics("pod", commonMetricsToExclude...),
 			testutil.ExcludeMetrics("node", nodeMetricsToExclude...),
