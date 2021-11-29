@@ -13,6 +13,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/transport"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
@@ -63,9 +64,11 @@ func (dp *defaultConnector) Connect() (*connParams, error) {
 		return conn, nil
 	}
 
-	dp.logger.Infof("Kubelet connection with nodeIP not working, falling back to API proxy: %v", err)
-
-	conn, err = dp.checkConnectionAPIProxy(dp.apiServerHost, dp.config.NodeName, dp.tripperBearerToken)
+	tripperAPI, err := rest.TransportFor(dp.inClusterConfig)
+	if err != nil {
+		return nil, fmt.Errorf("creating tripper connecting to kubelet through API server proxy: %w", err)
+	}
+	conn, err = dp.checkConnectionAPIProxy(dp.inClusterConfig.Host, dp.config.NodeName, tripperAPI)
 	if err != nil {
 		return nil, fmt.Errorf("creating connection parameters for API proxy: %w", err)
 	}
@@ -143,22 +146,25 @@ type connParams struct {
 	client client.HTTPDoer
 }
 
-func (dp *defaultConnector) checkConnectionAPIProxy(apiServer string, nodeName string, tripperBearerToken http.RoundTripper) (*connParams, error) {
+func (dp *defaultConnector) checkConnectionAPIProxy(apiServer string, nodeName string, tripperAPIproxy http.RoundTripper) (*connParams, error) {
 	apiURL, err := url.Parse(apiServer)
 	if err != nil {
 		return nil, fmt.Errorf("parsing kubernetes api url from in cluster config: %w", err)
 	}
 
-	var conn connParams
-	if apiURL.Scheme == httpSchema {
-		conn = defaultConnParamsHTTP(apiURL.Host)
-	} else {
-		conn = defaultConnParamsHTTPS(apiURL.Host, tripperBearerToken)
+	conn := connParams{
+		client: &http.Client{
+			Timeout:   defaultTimeout,
+			Transport: tripperAPIproxy,
+		},
+		url: url.URL{
+			Host:   apiURL.Host,
+			Scheme: apiURL.Scheme,
+			Path:   path.Join(fmt.Sprintf(apiProxyPath, nodeName)),
+		},
 	}
 
-	conn.url.Path = path.Join(fmt.Sprintf(apiProxyPath, nodeName))
-
-	dp.logger.Debugf("testing kubelet connection with https to host: %s", conn.url.Path)
+	dp.logger.Debugf("Testing kubelet connection through API proxy: %s%s", apiURL.Host, conn.url.Path)
 
 	if err = checkConnection(conn); err != nil {
 		return nil, fmt.Errorf("checking connection via API proxy: %w", err)
@@ -234,12 +240,12 @@ func defaultConnParamsHTTP(hostURL string) connParams {
 	return connParams{u, httpClient}
 }
 
-func defaultConnParamsHTTPS(hostURL string, tripperBearerToken http.RoundTripper) connParams {
+func defaultConnParamsHTTPS(hostURL string, tripper http.RoundTripper) connParams {
 	httpClient := &http.Client{
 		Timeout: defaultTimeout,
 	}
 
-	httpClient.Transport = tripperBearerToken
+	httpClient.Transport = tripper
 
 	u := url.URL{
 		Host:   hostURL,
