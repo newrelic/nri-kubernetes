@@ -35,7 +35,7 @@ func TestClientCalls(t *testing.T) {
 
 	k8sClient, cf, inClusterConfig := getTestData(s)
 
-	kubeletClient, err := client.New(k8sClient, cf, inClusterConfig, client.WithLogger(log.NewStdErr(true)))
+	kubeletClient, err := client.New(client.DefaultConnector(k8sClient, cf, inClusterConfig, log.NewStdErr(true)), client.WithLogger(log.NewStdErr(true)))
 
 	t.Run("creation_succeeds_receiving_200", func(t *testing.T) {
 		require.NoError(t, err)
@@ -78,7 +78,7 @@ func TestClientCallsViaAPIProxy(t *testing.T) {
 	k8sClient, cf, inClusterConfig := getTestData(s)
 	cf.NodeIP = "invalid" // disabling local connection
 
-	kubeletClient, err := client.New(k8sClient, cf, inClusterConfig, client.WithLogger(log.NewStdErr(true)))
+	kubeletClient, err := client.New(client.DefaultConnector(k8sClient, cf, inClusterConfig, log.NewStdErr(true)), client.WithLogger(log.NewStdErr(true)))
 
 	t.Run("creation_succeeds_receiving_200", func(t *testing.T) {
 		t.Parallel()
@@ -137,7 +137,7 @@ func TestConfigPrecedence(t *testing.T) {
 		k8sClient, cf, inClusterConfig := getTestData(s)
 		cf.Schema = "http"
 
-		_, err := client.New(k8sClient, cf, inClusterConfig, client.WithLogger(log.NewStdErr(true)))
+		_, err := client.New(client.DefaultConnector(k8sClient, cf, inClusterConfig, log.NewStdErr(true)), client.WithLogger(log.NewStdErr(true)))
 		require.Error(t, err)
 	})
 
@@ -153,7 +153,7 @@ func TestConfigPrecedence(t *testing.T) {
 		port, _ := strconv.Atoi(u.Port())
 		cf.Kubelet.Port = int32(port)
 
-		_, err := client.New(k8sClient, cf, inClusterConfig, client.WithLogger(log.NewStdErr(true)))
+		_, err := client.New(client.DefaultConnector(k8sClient, cf, inClusterConfig, log.NewStdErr(true)), client.WithLogger(log.NewStdErr(true)))
 		require.NoError(t, err)
 	})
 }
@@ -165,7 +165,7 @@ func TestClientFailingProbingHTTP(t *testing.T) {
 
 	c, cf, inClusterConfig := getTestData(s)
 
-	_, err := client.New(c, cf, inClusterConfig)
+	_, err := client.New(client.DefaultConnector(c, cf, inClusterConfig, log.NewStdErr(true)))
 
 	t.Run("fails_receiving_404", func(t *testing.T) {
 		t.Parallel()
@@ -202,7 +202,7 @@ func TestClientFailingProbingHTTPS(t *testing.T) {
 
 	c, cf, inClusterConfig := getTestData(s)
 
-	_, err := client.New(c, cf, inClusterConfig)
+	_, err := client.New(client.DefaultConnector(c, cf, inClusterConfig, log.NewStdErr(true)))
 
 	t.Run("fails_receiving_404", func(t *testing.T) {
 		t.Parallel()
@@ -238,7 +238,9 @@ func TestClientOptions(t *testing.T) {
 
 	k8sClient, cf, inClusterConfig := getTestData(s)
 
-	_, err := client.New(k8sClient, cf, inClusterConfig, client.WithLogger(log.NewStdErr(true)))
+	logger := log.NewStdErr(true)
+
+	_, err := client.New(client.DefaultConnector(k8sClient, cf, inClusterConfig, logger), client.WithLogger(logger))
 
 	assert.NoError(t, err)
 }
