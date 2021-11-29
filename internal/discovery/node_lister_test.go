@@ -30,13 +30,13 @@ func Test_nodes_discovery(t *testing.T) {
 	require.Nil(t, e)
 
 	// Discovery after creating a node
-	_, err = client.CoreV1().Nodes().Create(context.Background(), getFirstNode(), metav1.CreateOptions{})
+	_, err = client.CoreV1().Nodes().Create(context.Background(), fakeNode(), metav1.CreateOptions{})
 	require.NoError(t, err)
 	time.Sleep(time.Second)
 
 	e, err = d.Get(nodeName)
 	require.NoError(t, err)
-	assert.Equal(t, getFirstNode(), e)
+	assert.Equal(t, fakeNode(), e)
 
 	// Discovery after deleting such node
 	err = client.CoreV1().Nodes().Delete(context.Background(), nodeName, metav1.DeleteOptions{})
@@ -56,7 +56,7 @@ func Test_nodes_stop_channel(t *testing.T) {
 	close(closeChan)
 
 	// Discovery after creating a node with closed channel
-	_, err := client.CoreV1().Nodes().Create(context.Background(), getFirstNode(), metav1.CreateOptions{})
+	_, err := client.CoreV1().Nodes().Create(context.Background(), fakeNode(), metav1.CreateOptions{})
 	require.NoError(t, err)
 	time.Sleep(time.Second)
 
@@ -66,7 +66,7 @@ func Test_nodes_stop_channel(t *testing.T) {
 	require.Nil(t, e)
 }
 
-func getFirstNode() *corev1.Node {
+func fakeNode() *corev1.Node {
 	return &corev1.Node{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: nodeName,
