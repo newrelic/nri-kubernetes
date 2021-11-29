@@ -130,7 +130,7 @@ func TestClientCallsViaAPIProxy(t *testing.T) {
 func TestConfigPrecedence(t *testing.T) {
 	t.Parallel()
 
-	t.Run("connector_takes_schema_from_config", func(t *testing.T) {
+	t.Run("connector_takes_scheme_from_config", func(t *testing.T) {
 		t.Parallel()
 
 		s, _ := testHTTPSServerWithEndpoints(t, []string{healthz, prometheusMetric, kubeletMetric})
