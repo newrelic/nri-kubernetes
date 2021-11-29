@@ -189,9 +189,7 @@ func TestClientFailingProbingHTTP(t *testing.T) {
 		t.Parallel()
 
 		var expectedEmptySlice []string
-		for _, v := range requests {
-			assert.Equal(t, expectedEmptySlice, v.Header["Authorization"])
-		}
+		assert.Equal(t, expectedEmptySlice, requests[healthz].Header["Authorization"])
 	})
 }
 
@@ -259,6 +257,9 @@ func getTestData(s *httptest.Server) (*fake.Clientset, *config.Mock, *rest.Confi
 	inClusterConfig := &rest.Config{
 		Host:        fmt.Sprintf("%s://%s", u.Scheme, u.Host),
 		BearerToken: "12345",
+		TLSClientConfig: rest.TLSClientConfig{
+			Insecure: true,
+		},
 	}
 	return c, cf, inClusterConfig
 }
