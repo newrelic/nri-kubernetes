@@ -21,8 +21,8 @@ import (
 
 const (
 	apiProxyPath = "/api/v1/nodes/%s/proxy/"
-	httpSchema   = "http"
-	httpsSchema  = "https"
+	httpScheme   = "http"
+	httpsScheme  = "https"
 )
 
 // Connector provides an interface to retrieve connParams to connect to a Kubelet instance.
@@ -61,16 +61,16 @@ func (dp *defaultConnector) Connect() (*connParams, error) {
 		return nil, fmt.Errorf("getting kubelet port: %w", err)
 	}
 
-	kubeletSchema := dp.schemaFor(kubeletPort)
+	kubeletScheme := dp.schemeFor(kubeletPort)
 	hostURL := net.JoinHostPort(dp.config.NodeIP, fmt.Sprint(kubeletPort))
 
-	dp.logger.Infof("Trying to connect to kubelet locally with schema=%q hostURL=%q", kubeletSchema, hostURL)
-	conn, err := dp.checkLocalConnection(tripperWithBearerToken(dp.inClusterConfig.BearerToken), kubeletSchema, hostURL)
+	dp.logger.Infof("Trying to connect to kubelet locally with scheme=%q hostURL=%q", kubeletScheme, hostURL)
+	conn, err := dp.checkLocalConnection(tripperWithBearerToken(dp.inClusterConfig.BearerToken), kubeletScheme, hostURL)
 	if err == nil {
-		dp.logger.Infof("Connected to Kubelet through nodeIP with schema=%q hostURL=%q", kubeletSchema, hostURL)
+		dp.logger.Infof("Connected to Kubelet through nodeIP with scheme=%q hostURL=%q", kubeletScheme, hostURL)
 		return conn, nil
 	}
-	dp.logger.Infof("Kubelet not reachable locally with schema=%q hostURL=%q: %v", kubeletSchema, hostURL, err)
+	dp.logger.Infof("Kubelet not reachable locally with scheme=%q hostURL=%q: %v", kubeletScheme, hostURL, err)
 
 	dp.logger.Infof("Trying to connect to kubelet through API proxy %q to node %q", dp.inClusterConfig.Host, dp.config.NodeName)
 	tripperAPI, err := rest.TransportFor(dp.inClusterConfig)
@@ -86,23 +86,23 @@ func (dp *defaultConnector) Connect() (*connParams, error) {
 	return conn, nil
 }
 
-func (dp *defaultConnector) checkLocalConnection(tripperWithBearerToken http.RoundTripper, schema string, hostURL string) (*connParams, error) {
+func (dp *defaultConnector) checkLocalConnection(tripperWithBearerToken http.RoundTripper, scheme string, hostURL string) (*connParams, error) {
 	dp.logger.Debugf("connecting to kubelet directly with nodeIP")
 	var err error
 	var conn *connParams
 
-	switch schema {
-	case httpSchema:
+	switch scheme {
+	case httpScheme:
 		if conn, err = dp.checkConnectionHTTP(hostURL); err == nil {
 			return conn, nil
 		}
-	case httpsSchema:
+	case httpsScheme:
 		if conn, err = dp.checkConnectionHTTPS(hostURL, tripperWithBearerToken); err == nil {
 			return conn, nil
 		}
 	default:
-		dp.logger.Infof("Checking both HTTP and HTTPS since the schema was not detected automatically, " +
-			"you can set set kubelet.schema to avoid this behaviour")
+		dp.logger.Infof("Checking both HTTP and HTTPS since the scheme was not detected automatically, " +
+			"you can set set kubelet.scheme to avoid this behaviour")
 
 		if conn, err = dp.checkConnectionHTTPS(hostURL, tripperWithBearerToken); err == nil {
 			return conn, nil
@@ -134,21 +134,21 @@ func (dp *defaultConnector) getPort() (int32, error) {
 	return port, nil
 }
 
-func (dp *defaultConnector) schemaFor(kubeletPort int32) string {
+func (dp *defaultConnector) schemeFor(kubeletPort int32) string {
 	if dp.config.Kubelet.Scheme != "" {
-		dp.logger.Debugf("Setting Kubelet Endpoint Schema %s as specified by user config", dp.config.Kubelet.Scheme)
+		dp.logger.Debugf("Setting Kubelet Endpoint Scheme %s as specified by user config", dp.config.Kubelet.Scheme)
 		return dp.config.Kubelet.Scheme
 	}
 
 	switch kubeletPort {
 	case defaultHTTPKubeletPort:
-		dp.logger.Debugf("Setting Kubelet Endpoint Schema http since kubeletPort is %d", kubeletPort)
-		return httpSchema
+		dp.logger.Debugf("Setting Kubelet Endpoint Scheme http since kubeletPort is %d", kubeletPort)
+		return httpScheme
 	case defaultHTTPSKubeletPort:
-		dp.logger.Debugf("Setting Kubelet Endpoint Schema https since kubeletPort is %d", kubeletPort)
-		return httpsSchema
+		dp.logger.Debugf("Setting Kubelet Endpoint Scheme https since kubeletPort is %d", kubeletPort)
+		return httpsScheme
 	default:
-		dp.logger.Infof("Cannot automatically figure out schema from non-standard port %d, please set kubelet.schema in the config file.", kubeletPort)
+		dp.logger.Infof("Cannot automatically figure out scheme from non-standard port %d, please set kubelet.scheme in the config file.", kubeletPort)
 		return ""
 	}
 }
@@ -247,7 +247,7 @@ func defaultConnParamsHTTP(hostURL string) connParams {
 
 	u := url.URL{
 		Host:   hostURL,
-		Scheme: httpSchema,
+		Scheme: httpScheme,
 	}
 	return connParams{u, httpClient}
 }
@@ -261,7 +261,7 @@ func defaultConnParamsHTTPS(hostURL string, tripper http.RoundTripper) connParam
 
 	u := url.URL{
 		Host:   hostURL,
-		Scheme: httpsSchema,
+		Scheme: httpsScheme,
 	}
 	return connParams{u, httpClient}
 }
