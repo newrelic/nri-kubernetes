@@ -26,10 +26,11 @@ func TestScraper(t *testing.T) {
 	asserter := testutil.NewAsserter().
 		Using(metric.KubeletSpecs).
 		Silently().
-		// TODO(roobre): We should not exclude Optional, pod or hpa metrics. To be tackled in a follow-up PR.
-		ExcludingOptional().
-		Excluding("pod", commonMetricsToExclude...).
-		Excluding("node", nodeMetricsToExclude...)
+		Excluding(
+			testutil.ExcludeMetrics("pod", commonMetricsToExclude...),
+			testutil.ExcludeMetrics("node", nodeMetricsToExclude...),
+			testutil.ExcludeOptional(),
+		)
 
 	for _, version := range testutil.AllVersions() {
 		t.Run(fmt.Sprintf("for_version_%s", version), func(t *testing.T) {
