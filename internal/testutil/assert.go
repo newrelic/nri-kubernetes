@@ -22,10 +22,16 @@ func ExcludeOptional() ExcludeFunc {
 	}
 }
 
-// ExcludeMetric returns an ExcludeFunc that excludes the specified metric name belonging for the specified group.
-func ExcludeMetric(group, metricName string) ExcludeFunc {
+// ExcludeMetrics returns an ExcludeFunc that excludes the specified metric names belonging for the specified group.
+func ExcludeMetrics(group string, metricNames ...string) ExcludeFunc {
 	return func(g string, spec *definition.Spec, ent *integration.Entity) bool {
-		return g == group && spec.Name == metricName
+		for _, m := range metricNames {
+			if g == group && spec.Name == m {
+				return true
+			}
+		}
+
+		return false
 	}
 }
 
