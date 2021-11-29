@@ -50,7 +50,7 @@ func RunControlPlane(config *config.Mock, k8s kubernetes.Interface, i *integrati
 		os.Exit(1)
 	}
 	K8sConfig, _ := getK8sConfig(true)
-	kubeletCli, err := kubeletClient.New(k8s, config, K8sConfig, kubeletClient.WithLogger(logger))
+	kubeletCli, err := kubeletClient.New(kubeletClient.DefaultConnector(k8s, config, K8sConfig, logger), kubeletClient.WithLogger(logger))
 	if err != nil {
 		return fmt.Errorf("building Kubelet client: %w", err)
 	}
