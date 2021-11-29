@@ -24,20 +24,30 @@ const (
 	httpsSchema  = "https"
 )
 
+// Connector provides an interface to retrieve connParams to connect to a Kubelet instance.
 type Connector interface {
-	connect() (*connParams, error)
+	Connect() (*connParams, error)
 }
 
 type defaultConnector struct {
 	// TODO: Use a non-sdk logger
-	logger             log.Logger
-	apiServerHost      string
-	kc                 kubernetes.Interface
-	tripperBearerToken http.RoundTripper
-	config             *config.Mock
+	logger          log.Logger
+	kc              kubernetes.Interface
+	inClusterConfig *rest.Config
+	config          *config.Mock
 }
 
-func (dp *defaultConnector) connect() (*connParams, error) {
+// DefaultConnector returns a defaultConnector that checks connection against local kubelet and api proxy.
+func DefaultConnector(kc kubernetes.Interface, config *config.Mock, inClusterConfig *rest.Config, logger log.Logger) Connector {
+	return &defaultConnector{
+		logger:          logger,
+		inClusterConfig: inClusterConfig,
+		kc:              kc,
+		config:          config,
+	}
+}
+
+func (dp *defaultConnector) Connect() (*connParams, error) {
 
 	kubeletPort, err := dp.getKubeletPort()
 	if err != nil {
@@ -238,15 +248,22 @@ func defaultConnParamsHTTPS(hostURL string, tripperBearerToken http.RoundTripper
 	return connParams{u, httpClient}
 }
 
-type MockConnector struct {
+type fixedConnector struct {
 	URL    url.URL
 	Client client.HTTPDoer
-	Err    error
 }
 
-func (mc MockConnector) connect() (*connParams, error) {
+func (mc *fixedConnector) Connect() (*connParams, error) {
 	return &connParams{
 		url:    mc.URL,
 		client: mc.Client,
-	}, mc.Err
+	}, nil
+}
+
+// FixedConnector returns a fixed connector that does not check the connection when calling .Connect().
+func FixedConnector(client client.HTTPDoer, u url.URL) Connector {
+	return &fixedConnector{
+		URL:    u,
+		Client: client,
+	}
 }

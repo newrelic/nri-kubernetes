@@ -9,15 +9,13 @@ import (
 	"testing"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/stretchr/testify/require"
-	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/rest"
-
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet"
 	kubeletClient "github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
+	"github.com/stretchr/testify/require"
+	"k8s.io/client-go/kubernetes/fake"
 )
 
 func TestScraper(t *testing.T) {
@@ -44,12 +42,7 @@ func TestScraper(t *testing.T) {
 
 			u, _ := url.Parse(testServer.KubeletEndpoint())
 
-			mc := kubeletClient.MockConnector{
-				URL:    *u,
-				Client: &http.Client{},
-				Err:    nil,
-			}
-			kubeletClient, err := kubeletClient.New(nil, &config.Mock{}, &rest.Config{}, kubeletClient.WithCustomConnector(mc))
+			kubeletClient, err := kubeletClient.New(kubeletClient.FixedConnector(&http.Client{}, *u))
 			require.NoError(t, err)
 
 			fakeK8s := fake.NewSimpleClientset(testutil.K8sEverything()...)

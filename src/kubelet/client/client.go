@@ -9,10 +9,6 @@ import (
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-
-	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
@@ -27,10 +23,9 @@ const (
 // Client implements a client for Kubelet, capable of retrieving prometheus metrics from a given endpoint.
 type Client struct {
 	// TODO: Use a non-sdk logger
-	logger    log.Logger
-	doer      client.HTTPDoer
-	endpoint  url.URL
-	connector Connector
+	logger   log.Logger
+	doer     client.HTTPDoer
+	endpoint url.URL
 }
 
 type OptionFunc func(kc *Client) error
@@ -43,25 +38,10 @@ func WithLogger(logger log.Logger) OptionFunc {
 	}
 }
 
-// WithCustomConnector returns an OptionFunc to change the default connector.
-func WithCustomConnector(connector Connector) OptionFunc {
-	return func(kubeletClient *Client) error {
-		kubeletClient.connector = connector
-		return nil
-	}
-}
-
 // New builds a Client using the given options.
-func New(kc kubernetes.Interface, config *config.Mock, inClusterConfig *rest.Config, opts ...OptionFunc) (*Client, error) {
+func New(connector Connector, opts ...OptionFunc) (*Client, error) {
 	c := &Client{
 		logger: log.New(false, io.Discard),
-		connector: defaultConnector{
-			logger:             log.NewStdErr(config.Verbose),
-			apiServerHost:      inClusterConfig.Host,
-			kc:                 kc,
-			tripperBearerToken: tripperWithBearerToken(inClusterConfig.BearerToken),
-			config:             config,
-		},
 	}
 
 	for i, opt := range opts {
@@ -70,7 +50,11 @@ func New(kc kubernetes.Interface, config *config.Mock, inClusterConfig *rest.Con
 		}
 	}
 
-	conn, err := c.connector.connect()
+	if connector == nil {
+		return nil, fmt.Errorf("connector should not be nil")
+	}
+
+	conn, err := connector.Connect()
 	if err != nil {
 		return nil, fmt.Errorf("connecting to kubelet using the connector: %w", err)
 	}
