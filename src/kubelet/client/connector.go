@@ -279,8 +279,8 @@ func (mc *fixedConnector) Connect() (*connParams, error) {
 	}, nil
 }
 
-// FixedConnector returns a fixed connector that does not check the connection when calling .Connect().
-func FixedConnector(client client.HTTPDoer, u url.URL) Connector {
+// StaticConnector returns a fixed connector that does not check the connection when calling .Connect().
+func StaticConnector(client client.HTTPDoer, u url.URL) Connector {
 	return &fixedConnector{
 		URL:    u,
 		Client: client,

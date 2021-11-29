@@ -67,7 +67,7 @@ func main() {
 	}
 
 	// Kubelet
-	kubeletClient, err := kubletClient.New(kubletClient.FixedConnector(&http.Client{Timeout: time.Minute * 10}, *u))
+	kubeletClient, err := kubletClient.New(kubletClient.StaticConnector(&http.Client{Timeout: time.Minute * 10}, *u))
 	if err != nil {
 		log.Fatal(err)
 	}
