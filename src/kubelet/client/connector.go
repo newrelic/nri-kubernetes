@@ -101,7 +101,7 @@ func (dp *defaultConnector) checkLocalConnection(tripperWithBearerToken http.Rou
 			return conn, nil
 		}
 	default:
-		dp.logger.Errorf("Checking both HTTP and HTTPS since the schema was not detected automatically, " +
+		dp.logger.Infof("Checking both HTTP and HTTPS since the schema was not detected automatically, " +
 			"you can set set kubelet.schema to avoid this behaviour")
 
 		if conn, err = dp.checkConnectionHTTPS(hostURL, tripperWithBearerToken); err == nil {
@@ -148,7 +148,7 @@ func (dp *defaultConnector) schemaFor(kubeletPort int32) string {
 		dp.logger.Debugf("Setting Kubelet Endpoint Schema https since kubeletPort is %d", kubeletPort)
 		return httpsSchema
 	default:
-		dp.logger.Errorf("Cannot automatically figure out schema from non-standard port %d, please set kubelet.schema in the config file.", kubeletPort)
+		dp.logger.Infof("Cannot automatically figure out schema from non-standard port %d, please set kubelet.schema in the config file.", kubeletPort)
 		return ""
 	}
 }
@@ -212,12 +212,12 @@ func checkConnection(conn connParams) error {
 
 	r, err := http.NewRequest(http.MethodGet, conn.url.String(), nil)
 	if err != nil {
-		return fmt.Errorf("creating request to %q : %s ", conn.url.String(), err)
+		return fmt.Errorf("creating request to %q: %v", conn.url.String(), err)
 	}
 
 	resp, err := conn.client.Do(r)
 	if err != nil {
-		return fmt.Errorf("connecting to %q: %w ", conn.url.String(), err)
+		return fmt.Errorf("connecting to %q: %w", conn.url.String(), err)
 	}
 	defer resp.Body.Close() // nolint: errcheck
 
