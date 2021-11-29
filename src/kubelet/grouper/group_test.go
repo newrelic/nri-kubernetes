@@ -8,6 +8,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
+	"github.com/newrelic/nri-kubernetes/v2/src/data"
+	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
+	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric/testdata"
+	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -15,15 +21,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/rest"
-
-	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
-	"github.com/newrelic/nri-kubernetes/v2/src/data"
-	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
-	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
-	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric/testdata"
-	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
 
 type testClient struct {
@@ -99,12 +96,7 @@ func TestGroup(t *testing.T) {
 		&c,
 	)
 
-	mc := client.MockConnector{
-		URL:    url.URL{},
-		Client: &c,
-		Err:    nil,
-	}
-	kubeletClient, err := client.New(nil, &config.Mock{}, &rest.Config{}, client.WithCustomConnector(mc))
+	kubeletClient, err := client.New(client.FixedConnector(&c, url.URL{}))
 	require.NoError(t, err)
 
 	kubeletGrouper, err := New(

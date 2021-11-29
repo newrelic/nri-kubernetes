@@ -173,7 +173,7 @@ func buildClients(c *config.Mock) (*clusterClients, error) {
 
 	var kubeletCli *kubeletClient.Client
 	if c.Kubelet.Enabled || c.ControlPlane.Enabled {
-		kubeletCli, err = kubeletClient.New(k8s, c, k8sConfig, kubeletClient.WithLogger(logger))
+		kubeletCli, err = kubeletClient.New(kubeletClient.DefaultConnector(k8s, c, k8sConfig, logger), kubeletClient.WithLogger(logger))
 		if err != nil {
 			return nil, fmt.Errorf("building Kubelet client: %w", err)
 		}

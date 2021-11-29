@@ -10,12 +10,6 @@ import (
 	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/sirupsen/logrus"
-	"k8s.io/apimachinery/pkg/version"
-	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/rest"
-
-	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
@@ -27,6 +21,9 @@ import (
 	kubeletmetric "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
+	"github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/version"
+	"k8s.io/client-go/kubernetes/fake"
 )
 
 const (
@@ -70,18 +67,13 @@ func main() {
 	}
 
 	// Kubelet
-	mc := kubletClient.MockConnector{
-		URL:    *u,
-		Client: &http.Client{Timeout: time.Minute * 10},
-		Err:    nil,
-	}
-	kubeletClient, err := kubletClient.New(nil, &config.Mock{}, &rest.Config{}, kubletClient.WithCustomConnector(mc))
+	kubeletClient, err := kubletClient.New(kubletClient.FixedConnector(&http.Client{Timeout: time.Minute * 10}, *u))
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	podsFetcher := kubeletmetric.NewPodsFetcher(logger, kubeletClient)
-	grouper, err := kubeletGrouper.New(
+	kubeletGrouper, err := kubeletGrouper.New(
 		kubeletGrouper.Config{
 			NodeGetter: nodeGetter,
 			Client:     kubeletClient,
@@ -112,7 +104,7 @@ func main() {
 	}
 
 	jobs := []*scrape.Job{
-		scrape.NewScrapeJob("kubelet", grouper, metric.KubeletSpecs),
+		scrape.NewScrapeJob("kubelet", kubeletGrouper, metric.KubeletSpecs),
 		scrape.NewScrapeJob("kube-state-metrics", kg, metric.KSMSpecs),
 	}
 
