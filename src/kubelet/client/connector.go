@@ -50,12 +50,12 @@ func DefaultConnector(kc kubernetes.Interface, config *config.Mock, inClusterCon
 
 func (dp *defaultConnector) Connect() (*connParams, error) {
 
-	kubeletPort, err := dp.getKubeletPort()
+	kubeletPort, err := dp.getPort()
 	if err != nil {
 		return nil, fmt.Errorf("getting kubelet port: %w", err)
 	}
 
-	kubeletSchema := dp.getKubeletSchema(kubeletPort)
+	kubeletSchema := dp.schemaFor(kubeletPort)
 	hostURL := net.JoinHostPort(dp.config.NodeIP, fmt.Sprint(kubeletPort))
 
 	dp.logger.Infof("Trying to connect to kubelet locally with schema=%q hostURL=%q", kubeletSchema, hostURL)
@@ -80,7 +80,7 @@ func (dp *defaultConnector) Connect() (*connParams, error) {
 	return conn, nil
 }
 
-func (dp *defaultConnector) setupLocalConnection(tripperWithBearerToken http.RoundTripper, schema string, hostURL string) (*connParams, error) {
+func (dp *defaultConnector) checkLocalConnection(tripperWithBearerToken http.RoundTripper, schema string, hostURL string) (*connParams, error) {
 	dp.logger.Debugf("connecting to kubelet directly with nodeIP")
 	var err error
 	var conn *connParams
@@ -110,13 +110,13 @@ func (dp *defaultConnector) setupLocalConnection(tripperWithBearerToken http.Rou
 	return nil, fmt.Errorf("no connection succeeded through localhost: %w", err)
 }
 
-func (dp *defaultConnector) getKubeletPort() (int32, error) {
+func (dp *defaultConnector) getPort() (int32, error) {
 	if dp.config.Kubelet.Port != 0 {
 		dp.logger.Debugf("Setting Port %d as specified by user config", dp.config.Kubelet.Port)
 		return dp.config.Kubelet.Port, nil
 	}
 
-	//We pay the price of a single call getting a node to avoid asking the user the Kubelet port if different from the standard one
+	// We pay the price of a single call getting a node to avoid asking the user the Kubelet port.
 	node, err := dp.kc.CoreV1().Nodes().Get(context.Background(), dp.config.NodeName, metav1.GetOptions{})
 	if err != nil {
 		return 0, fmt.Errorf("getting node %q: %w", dp.config.NodeName, err)
@@ -128,7 +128,7 @@ func (dp *defaultConnector) getKubeletPort() (int32, error) {
 	return port, nil
 }
 
-func (dp *defaultConnector) getKubeletSchema(kubeletPort int32) string {
+func (dp *defaultConnector) schemaFor(kubeletPort int32) string {
 	if dp.config.Kubelet.Schema != "" {
 		dp.logger.Debugf("Setting Kubelet Endpoint Schema %s as specified by user config", dp.config.Kubelet.Schema)
 		return dp.config.Kubelet.Schema
