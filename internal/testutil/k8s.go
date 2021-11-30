@@ -10,9 +10,11 @@ import (
 )
 
 const (
-	servicesFile   = "services.yaml"
-	nodesFile      = "nodes.yaml"
+	endpointsFile  = "endpoints.yaml"
 	namespacesFile = "namespaces.yaml"
+	nodesFile      = "nodes.yaml"
+	podsFile       = "pods.yaml"
+	servicesFile   = "services.yaml"
 )
 
 type K8s struct {
@@ -30,9 +32,11 @@ func newK8s(v Version) (K8s, error) {
 
 func (k K8s) Everything() []runtime.Object {
 	return []runtime.Object{
+		k.Endpoints(),
 		k.Namespaces(),
-		k.Services(),
 		k.Nodes(),
+		k.Pods(),
+		k.Services(),
 	}
 }
 
@@ -57,6 +61,24 @@ func (k K8s) Services() runtime.Object {
 func (k K8s) Nodes() runtime.Object {
 	var nodes corev1.NodeList
 	if err := k.loadYaml(&nodes, nodesFile); err != nil {
+		panic(err)
+	}
+
+	return &nodes
+}
+
+func (k K8s) Endpoints() runtime.Object {
+	var nodes corev1.EndpointsList
+	if err := k.loadYaml(&nodes, endpointsFile); err != nil {
+		panic(err)
+	}
+
+	return &nodes
+}
+
+func (k K8s) Pods() runtime.Object {
+	var nodes corev1.PodList
+	if err := k.loadYaml(&nodes, podsFile); err != nil {
 		panic(err)
 	}
 
