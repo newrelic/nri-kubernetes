@@ -4,15 +4,15 @@ metadata:
   name: {{ .Release.Name }}-container-creating
 spec:
   containers:
-  - name: alpine
-    image: alpine:latest
-    resources:
-      limits:
-        memory: 5M
-        cpu: 5m
-      requests:
-        memory: 5M
-        cpu: 5m
+    - name: alpine
+      image: alpine:latest
+      resources:
+        limits:
+          memory: 5M
+          cpu: 5m
+        requests:
+          memory: 5M
+          cpu: 5m
 ---
 apiVersion: v1
 kind: Pod
@@ -51,6 +51,26 @@ spec:
     metadata:
       labels:
         app: statefulset
+    spec:
+      containers:
+        - name: busybox
+          image: busybox
+          args:
+            - sleep
+            - infinity
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ .Release.Name }}-hpa
+spec:
+  selector:
+    matchLabels:
+      app: dummy-daemonset
+  template:
+    metadata:
+      labels:
+        app: dummy-daemonset
     spec:
       containers:
         - name: busybox
