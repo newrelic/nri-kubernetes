@@ -38,7 +38,7 @@ func TestScraper(t *testing.T) {
 		).Excluding(ExcludeMissingMetricsPendingPod)
 
 	for _, v := range testutil.AllVersions() {
-		// Notice that v is the very same variable, therefore the loop is overwriting it each iteration. Causing tests to fail it //
+		// Make a copy of the version variable to use it concurrently
 		version := v
 
 		t.Run(fmt.Sprintf("for_version_%s", version), func(t *testing.T) {
@@ -54,7 +54,12 @@ func TestScraper(t *testing.T) {
 			kubeletClient, err := kubeletClient.New(kubeletClient.StaticConnector(&http.Client{}, *u))
 			require.NoError(t, err)
 
-			fakeK8s := fake.NewSimpleClientset(testutil.K8sEverything()...)
+			k8sData, err := version.K8s()
+			if err != nil {
+				t.Fatalf("error instantiating fake k8s objects: %v", err)
+			}
+
+			fakeK8s := fake.NewSimpleClientset(k8sData.Everything()...)
 
 			scraper, err := kubelet.NewScraper(&config.Config{
 				ClusterName: t.Name(),
