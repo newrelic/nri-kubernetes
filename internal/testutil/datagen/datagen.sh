@@ -13,6 +13,7 @@ SCHEDULER_ENDPOINT=${SCHEDULER_ENDPOINT:-https://localhost:10259/metrics}
 
 # scrapper_selector is the label with which the scraper deployment is deployed.
 scrapper_selector="app=scraper"
+scrapper_namespace="mock"
 
 # main subcommand runs the whole flow of the script: Bootstrap, scrape, and cleanup
 function main() {
@@ -38,38 +39,38 @@ function main() {
     # Kubelet endpoints
     mkdir -p kubelet
     echo "Extracting kubelet /pods"
-    kubectl exec -n scraper $pod -- datagen.sh scrape kubelet pods > kubelet/pods
+    kubectl exec -n $scrapper_namespace $pod -- datagen.sh scrape kubelet pods > kubelet/pods
 
     echo "Extracting kubelet /metrics/cadvisor"
     mkdir -p kubelet/metrics
-    kubectl exec -n scraper $pod -- datagen.sh scrape kubelet metrics/cadvisor > kubelet/metrics/cadvisor
+    kubectl exec -n $scrapper_namespace $pod -- datagen.sh scrape kubelet metrics/cadvisor > kubelet/metrics/cadvisor
 
     echo "Extracting kubelet /stats/summary"
     mkdir -p kubelet/stats
-    kubectl exec -n scraper $pod -- datagen.sh scrape kubelet stats/summary > kubelet/stats/summary
+    kubectl exec -n $scrapper_namespace $pod -- datagen.sh scrape kubelet stats/summary > kubelet/stats/summary
 
     # KSM endpoint
     mkdir -p ksm
     echo "Extracting ksm /metrics"
-    kubectl exec -n scraper $pod -- datagen.sh scrape ksm > ksm/metrics
+    kubectl exec -n $scrapper_namespace $pod -- datagen.sh scrape ksm > ksm/metrics
 
     if [[ "$DISABLE_CONTROLPLANE" != "1" ]]; then
         # Control plane components
         mkdir -p controlplane/api-server
         echo "Extracting api-server /metrics"
-        kubectl exec -n scraper $pod -- datagen.sh scrape controlplane apiserver > controlplane/api-server/metrics
+        kubectl exec -n $scrapper_namespace $pod -- datagen.sh scrape controlplane apiserver > controlplane/api-server/metrics
 
         mkdir -p controlplane/etcd
         echo "Extracting etcd /metrics"
-        kubectl exec -n scraper $pod -- datagen.sh scrape controlplane etcd > controlplane/etcd/metrics
+        kubectl exec -n $scrapper_namespace $pod -- datagen.sh scrape controlplane etcd > controlplane/etcd/metrics
 
         mkdir -p controlplane/controller-manager
         echo "Extracting controller-manager /metrics"
-        kubectl exec -n scraper $pod -- datagen.sh scrape controlplane controllermanager > controlplane/controller-manager/metrics
+        kubectl exec -n $scrapper_namespace $pod -- datagen.sh scrape controlplane controllermanager > controlplane/controller-manager/metrics
 
         mkdir -p controlplane/scheduler
         echo "Extracting scheduler /metrics"
-        kubectl exec -n scraper $pod -- datagen.sh scrape controlplane scheduler > controlplane/scheduler/metrics
+        kubectl exec -n $scrapper_namespace $pod -- datagen.sh scrape controlplane scheduler > controlplane/scheduler/metrics
     else
         echo "Skipping control plane metrics"
     fi
@@ -98,18 +99,16 @@ function bootstrap() {
     if [[ -z $SKIP_INSTALL ]]; then
         echo "Installing e2e-resources chart"
         helm dependency update ../../../e2e/charts/e2e-resources > /dev/null
-        helm upgrade --install e2e ../../../e2e/charts/e2e-resources -n mock --create-namespace
+        helm upgrade --install e2e ../../../e2e/charts/e2e-resources -n $scrapper_namespace --create-namespace \
+          --set persistentvolume.enabled=true --set scraper.enabled=true
 
         echo "Installing KSM"
-        helm dependency update ./deployments/ksm > /dev/null
-        helm upgrade --install ksm ./deployments/ksm -n ksm --create-namespace --wait
-
-        echo "Deploying scraper pods"
-        kubectl apply -f ./deployments/scraper.yaml
+        helm dependency update ../../../e2e/charts/ksm > /dev/null
+        helm upgrade --install ksm ../../../e2e/charts/ksm -n ksm --create-namespace --wait
     fi
 
     echo "Waiting for scraper pod to be ready"
-    kubectl -n scraper wait --for=condition=Ready pod -l "$scrapper_selector"
+    kubectl -n $scrapper_namespace wait --for=condition=Ready pod -l "$scrapper_selector"
     pod=$(scraper_pod "$scrapper_selector")
     if [[ -z "pod" ]]; then
         echo "Could not find scraper pod (-l $scrapper_selector)"
@@ -118,17 +117,16 @@ function bootstrap() {
     echo "Found scraper pod $pod"
 
     echo "Copying datagen.sh to scraper pods"
-    kubectl cp datagen.sh scraper/$pod:/bin/
+    kubectl cp datagen.sh $scrapper_namespace/$pod:/bin/
 }
 
 # cleanup uninstalls the dummy resources and the scraper pod.
 function cleanup() {
     echo "Removing e2e-resources chart"
-    helm uninstall e2e -n mock || true
+    helm uninstall e2e -n $scrapper_namespace || true
     echo "Removing ksm"
     helm uninstall ksm -n ksm || true
     echo "Removing scraper pods"
-    kubectl delete -f ./deployments/scraper.yaml --wait || true
 }
 
 # scrape will curl the specified component and output the response body to standard output.
@@ -176,7 +174,7 @@ function scrape() {
 
 # scraper_pod is a helper function that returns the name of a pod matching the scraper label.
 function scraper_pod() {
-    kubectl get pods -l $1 -n scraper -o jsonpath='{.items[0].metadata.name}'
+    kubectl get pods -l $1 -n $scrapper_namespace -o jsonpath='{.items[0].metadata.name}'
 }
 
 # kubedump is a helper function that dumps the specified Kubernetes resource to a yaml file of the same name.

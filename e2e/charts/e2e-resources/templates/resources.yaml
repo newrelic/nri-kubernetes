@@ -59,20 +59,6 @@ spec:
             - sleep
             - infinity
 ---
-{{- if .Values.persistentVolume.enabled }}
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: {{ .Release.Name }}
-spec:
-  accessModes:
-    - ReadWriteOnce
-  capacity:
-    storage: 5M
-  hostPath:
-    path: /data/pv0001/
-{{ end }}
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
