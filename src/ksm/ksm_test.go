@@ -4,10 +4,13 @@ package ksm_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
+	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 	"github.com/newrelic/nri-kubernetes/v2/src/ksm"
 	ksmClient "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
@@ -18,9 +21,21 @@ func TestScraper(t *testing.T) {
 	// Create an asserter with the settings that are shared for all test scenarios.
 	asserter := testutil.NewAsserter().
 		Using(metric.KSMSpecs).
-		// TODO(roobre): We should not exclude Optional, pod or hpa metrics. To be tackled in a follow-up PR.
-		ExcludingGroups("hpa", "pod").
-		Excluding(testutil.ExcludeOptional())
+		Excluding(
+			// Exclude service.loadBalancerIP unless service is e2e-lb (specially crafted to have a fake one)
+			func(group string, spec *definition.Spec, ent *integration.Entity) bool {
+				return group == "service" && spec.Name == "loadBalancerIP" && ent.Metadata.Name != "e2e-lb"
+			},
+			// pod.isReady and pod.startTime will not be present in some pending pods depending on the schedule status.
+			func(group string, spec *definition.Spec, ent *integration.Entity) bool {
+				return group == "pod" &&
+					(spec.Name == "isReady" || spec.Name == "startTime") &&
+					strings.HasSuffix(ent.Metadata.Name, "-pending")
+			},
+			// The following HPA metrics operate in a true-or-NULL basis, and there won't be present if condition is
+			// false.
+			testutil.ExcludeMetrics("hpa", "isActive", "isAble", "isLimited"),
+		)
 
 	// TODO: use testutil.AllVersions() when all versions are generated with datagen.sh.
 	for _, version := range []testutil.Version{testutil.Testdata120, testutil.Testdata121, testutil.Testdata122} {
