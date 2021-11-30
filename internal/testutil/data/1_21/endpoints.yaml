@@ -1,0 +1,185 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Endpoints
+  metadata:
+    creationTimestamp: "2021-11-30T15:22:45Z"
+    labels:
+      endpointslice.kubernetes.io/skip-mirror: "true"
+    name: kubernetes
+    namespace: default
+    resourceVersion: "213"
+    uid: 44503ca6-ff0c-4359-898b-24d72f2c295a
+  subsets:
+  - addresses:
+    - ip: 192.168.49.2
+    ports:
+    - name: https
+      port: 8443
+      protocol: TCP
+- apiVersion: v1
+  kind: Endpoints
+  metadata:
+    annotations:
+      endpoints.kubernetes.io/last-change-trigger-time: "2021-11-30T15:27:04Z"
+    creationTimestamp: "2021-11-30T15:26:14Z"
+    labels:
+      app.kubernetes.io/instance: ksm
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: kube-state-metrics
+      helm.sh/chart: kube-state-metrics-2.13.2
+    name: ksm-kube-state-metrics
+    namespace: ksm
+    resourceVersion: "864"
+    uid: 3db7dfee-8de9-4fa9-9ab4-d981d5231db3
+  subsets:
+  - addresses:
+    - ip: 172.17.0.8
+      nodeName: minikube
+      targetRef:
+        kind: Pod
+        name: ksm-kube-state-metrics-7db6cf8f78-bcvlm
+        namespace: ksm
+        resourceVersion: "863"
+        uid: 1b8f3092-5d18-4194-bfa3-c3aa39f1b67b
+    ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+- apiVersion: v1
+  kind: Endpoints
+  metadata:
+    annotations:
+      control-plane.alpha.kubernetes.io/leader: '{"holderIdentity":"minikube_e8d6717b-25f7-4018-92fd-cdf3a228e282","leaseDurationSeconds":15,"acquireTime":"2021-11-30T15:23:30Z","renewTime":"2021-11-30T15:27:06Z","leaderTransitions":0}'
+    creationTimestamp: "2021-11-30T15:23:30Z"
+    name: k8s.io-minikube-hostpath
+    namespace: kube-system
+    resourceVersion: "874"
+    uid: 7a512778-0668-4f27-ae25-519ac9d9ff7d
+- apiVersion: v1
+  kind: Endpoints
+  metadata:
+    annotations:
+      endpoints.kubernetes.io/last-change-trigger-time: "2021-11-30T15:23:35Z"
+    creationTimestamp: "2021-11-30T15:22:59Z"
+    labels:
+      k8s-app: kube-dns
+      kubernetes.io/cluster-service: "true"
+      kubernetes.io/name: CoreDNS
+    name: kube-dns
+    namespace: kube-system
+    resourceVersion: "475"
+    uid: 892841d9-71a6-46d5-a25c-13aa1dac65cb
+  subsets:
+  - addresses:
+    - ip: 172.17.0.2
+      nodeName: minikube
+      targetRef:
+        kind: Pod
+        name: coredns-558bd4d5db-qbbsw
+        namespace: kube-system
+        resourceVersion: "474"
+        uid: 3ac5491c-54a1-47bb-bc6b-666f1a8c94e8
+    ports:
+    - name: dns-tcp
+      port: 53
+      protocol: TCP
+    - name: dns
+      port: 53
+      protocol: UDP
+    - name: metrics
+      port: 9153
+      protocol: TCP
+- apiVersion: v1
+  kind: Endpoints
+  metadata:
+    annotations:
+      endpoints.kubernetes.io/last-change-trigger-time: "2021-11-30T15:26:14Z"
+    creationTimestamp: "2021-11-30T15:26:05Z"
+    labels:
+      addonmanager.kubernetes.io/mode: Reconcile
+      kubernetes.io/minikube-addons: metrics-server
+      kubernetes.io/minikube-addons-endpoint: metrics-server
+      kubernetes.io/name: Metrics-server
+    name: metrics-server
+    namespace: kube-system
+    resourceVersion: "728"
+    uid: 6cc2626b-2c77-49b2-8573-d49ad368e94f
+  subsets:
+  - addresses:
+    - ip: 172.17.0.3
+      nodeName: minikube
+      targetRef:
+        kind: Pod
+        name: metrics-server-77c99ccb96-5xv98
+        namespace: kube-system
+        resourceVersion: "727"
+        uid: 265b17d0-3ac5-44f2-91ee-9a438a4c7d3c
+    ports:
+    - name: https
+      port: 4443
+      protocol: TCP
+- apiVersion: v1
+  kind: Endpoints
+  metadata:
+    annotations:
+      endpoints.kubernetes.io/last-change-trigger-time: "2021-11-30T15:26:51Z"
+    creationTimestamp: "2021-11-30T15:26:06Z"
+    labels:
+      app.kubernetes.io/managed-by: Helm
+      run: php-apache
+    name: e2e-hpa
+    namespace: mock
+    resourceVersion: "833"
+    uid: 66bb0618-b954-4742-81bc-f70c2bf5d77c
+  subsets:
+  - addresses:
+    - ip: 172.17.0.7
+      nodeName: minikube
+      targetRef:
+        kind: Pod
+        name: e2e-hpa-557f895878-lfjv8
+        namespace: mock
+        resourceVersion: "830"
+        uid: e0a63534-0473-49af-9c10-f998f62abba5
+    ports:
+    - port: 80
+      protocol: TCP
+- apiVersion: v1
+  kind: Endpoints
+  metadata:
+    annotations:
+      endpoints.kubernetes.io/last-change-trigger-time: "2021-11-30T15:26:58Z"
+    creationTimestamp: "2021-11-30T15:26:06Z"
+    labels:
+      app: statefulset
+      app.kubernetes.io/managed-by: Helm
+    name: e2e-stateful-set
+    namespace: mock
+    resourceVersion: "855"
+    uid: 7c793675-06a1-4aaf-8497-5ca52cc8fad5
+  subsets:
+  - addresses:
+    - ip: 172.17.0.6
+      nodeName: minikube
+      targetRef:
+        kind: Pod
+        name: e2e-stateful-set-0
+        namespace: mock
+        resourceVersion: "777"
+        uid: c5afe3f8-b08a-4b52-b59e-ceb18803ea51
+    - ip: 172.17.0.9
+      nodeName: minikube
+      targetRef:
+        kind: Pod
+        name: e2e-stateful-set-1
+        namespace: mock
+        resourceVersion: "854"
+        uid: 8f1b0eee-7031-41bf-a330-1243c2658616
+    ports:
+    - port: 8089
+      protocol: TCP
+kind: List
+metadata:
+  resourceVersion: ""
+  selfLink: ""
