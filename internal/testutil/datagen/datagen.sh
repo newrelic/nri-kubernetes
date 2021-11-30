@@ -100,7 +100,9 @@ function bootstrap() {
         echo "Installing e2e-resources chart"
         helm dependency update ../../../e2e/charts/e2e-resources > /dev/null
         helm upgrade --install e2e ../../../e2e/charts/e2e-resources -n $scrapper_namespace --create-namespace \
-          --set persistentvolume.enabled=true --set scraper.enabled=true
+          --set persistentVolume.enabled=true \
+          --set persistentVolumeClaim.enabled=true \
+          --set scraper.enabled=true
 
         echo "Installing KSM"
         helm dependency update ../../../e2e/charts/ksm > /dev/null
