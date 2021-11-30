@@ -161,7 +161,17 @@ func setupControlPlane(c *config.Config, clients *clusterClients) (*controlplane
 		K8s: clients.k8s,
 	}
 
-	controlplaneScraper, err := controlplane.NewScraper(c, providers, controlplane.WithLogger(logger))
+	restConfig, err := getK8sConfig(c)
+	if err != nil {
+		return nil, err
+	}
+
+	controlplaneScraper, err := controlplane.NewScraper(
+		c,
+		providers,
+		controlplane.WithLogger(logger),
+		controlplane.WithRestConfig(restConfig),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("building KSM scraper: %w", err)
 	}

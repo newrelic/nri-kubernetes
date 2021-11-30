@@ -1,4 +1,4 @@
-package client
+package client_test
 
 import (
 	"crypto/tls"
@@ -7,16 +7,19 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"net/url"
 	"testing"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/newrelic/nri-kubernetes/v2/internal/config"
+	"github.com/newrelic/nri-kubernetes/v2/src/client"
+	controlplaneClient "github.com/newrelic/nri-kubernetes/v2/src/controlplane/client"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/rest"
 )
 
 const (
@@ -68,26 +71,26 @@ func TestMutualTLSCalls(t *testing.T) {
 				require.Error(t, err)
 			},
 		},
-		{
-			name: "No config should fail",
-			assert: func(t *testing.T, resp *http.Response, err error) {
-				// todo: check if it's really the correct error
-				require.Error(t, err)
-			},
-		},
+		// {
+		// 	name: "No config should fail",
+		// 	assert: func(t *testing.T, resp *http.Response, err error) {
+		// 		// todo: check if it's really the correct error
+		// 		require.Error(t, err)
+		// 	},
+		// },
 	}
 
 	for _, test := range tt {
 		t.Run(test.name, func(t *testing.T) {
 			endpoint := startMTLSServer()
-			c := createClientComponent(endpoint, test.cacert, test.key, test.cert, test.insecureSkipVerify)
+			c := createClientComponent(t, endpoint, test.cacert, test.key, test.cert, test.insecureSkipVerify)
 			resp, err := c.Get("/test")
 			test.assert(t, resp, err)
 		})
 	}
 }
 
-func createClientComponent(endpoint string, cacert, key, cert []byte, insecureSkipVerify *bool) *ControlPlaneComponentClient {
+func createClientComponent(t *testing.T, endpoint string, cacert, key, cert []byte, insecureSkipVerify *bool) client.HTTPClient {
 	// Data will be the contents of the secret holding our TLS config
 	data := map[string][]byte{}
 
@@ -113,19 +116,21 @@ func createClientComponent(endpoint string, cacert, key, cert []byte, insecureSk
 		Data: data,
 	})
 
-	return &ControlPlaneComponentClient{
-		httpClient:           &http.Client{},
-		tlsSecretName:        secretName,
-		authenticationMethod: MTLS,
-		logger:               log.NewStdErr(true),
-		k8sClient:            c,
-		endpoint: url.URL{
-			Scheme: "https",
-			Host:   endpoint,
+	config := controlplaneClient.Config{
+		EndpoinURL: fmt.Sprintf("https://%s", endpoint),
+		Auth: &config.Auth{
+			TLSSecretName:      secretName,
+			TLSSecretNamespace: "default",
 		},
-		nodeIP:  "asd",
-		PodName: "asd",
+		K8sClient:       c,
+		InClusterConfig: &rest.Config{},
+		Logger:          log.NewStdErr(true),
 	}
+
+	client, err := controlplaneClient.New(config)
+	assert.NoError(t, err)
+
+	return client
 }
 
 func startMTLSServer() string {

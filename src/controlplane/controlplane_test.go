@@ -18,6 +18,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/rest"
 )
 
 var (
@@ -67,7 +68,11 @@ func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 
 			testConfig := testConfig(discoveryConfig, masterNodeName)
 
-			scraper, err := controlplane.NewScraper(&testConfig, controlplane.Providers{K8s: fakeK8s})
+			scraper, err := controlplane.NewScraper(
+				&testConfig,
+				controlplane.Providers{K8s: fakeK8s},
+				controlplane.WithRestConfig(&rest.Config{}),
+			)
 
 			if err = scraper.Run(i); err != nil {
 				t.Fatalf("running scraper: %v", err)
@@ -109,7 +114,9 @@ func Test_Scraper_Autodiscover_cp_component_after_start(t *testing.T) {
 		},
 		controlplane.Providers{
 			K8s: fakeK8s,
-		})
+		},
+		controlplane.WithRestConfig(&rest.Config{}),
+	)
 
 	// create a scheduler pod on different node
 	createControlPlainPod(t, fakeK8s, controlplane.Scheduler, discoveryConfig[controlplane.Scheduler], "masterNode2")
@@ -140,25 +147,25 @@ func testConfigAutodiscovery(server *testutil.Server) map[controlplane.Component
 			Namespace: defaultNamespace,
 			MatchNode: true,
 			Selector:  "k8s-app=etcd-manager-main",
-			URL:       []string{server.ControlPlaneEndpoint(string(controlplane.Etcd))},
+			URL:       server.ControlPlaneEndpoint(string(controlplane.Etcd)),
 		},
 		controlplane.APIServer: {
 			Namespace: defaultNamespace,
 			MatchNode: true,
 			Selector:  "k8s-app=kube-apiserver",
-			URL:       []string{server.ControlPlaneEndpoint(string(controlplane.APIServer))},
+			URL:       server.ControlPlaneEndpoint(string(controlplane.APIServer)),
 		},
 		controlplane.Scheduler: {
 			Namespace: defaultNamespace,
 			MatchNode: true,
 			Selector:  "k8s-app=kube-scheduler",
-			URL:       []string{server.ControlPlaneEndpoint(string(controlplane.Scheduler))},
+			URL:       server.ControlPlaneEndpoint(string(controlplane.Scheduler)),
 		},
 		controlplane.ControllerManager: {
 			Namespace: defaultNamespace,
 			MatchNode: true,
 			Selector:  "k8s-app=kube-controller-manager",
-			URL:       []string{server.ControlPlaneEndpoint(string(controlplane.ControllerManager))},
+			URL:       server.ControlPlaneEndpoint(string(controlplane.ControllerManager)),
 		},
 	}
 }

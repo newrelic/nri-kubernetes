@@ -72,6 +72,8 @@ type StaticEndpoint struct {
 }
 
 type Auth struct {
+	TLSSecretName      string
+	TLSSecretNamespace string
 }
 
 func LoadConfig(filePath string, fileName string) (*Config, error) {

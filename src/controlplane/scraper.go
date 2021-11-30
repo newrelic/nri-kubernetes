@@ -3,14 +3,11 @@ package controlplane
 import (
 	"fmt"
 	"io"
-	"net/url"
-	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	controlplaneClient "github.com/newrelic/nri-kubernetes/v2/src/controlplane/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/grouper"
 	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
@@ -18,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 	v1 "k8s.io/client-go/listers/core/v1"
+	"k8s.io/client-go/rest"
 )
 
 // Providers is a struct holding pointers to all the clients Scraper needs to get data from.
@@ -35,6 +33,7 @@ type Scraper struct {
 	components           []component
 	informerClosers      []chan<- struct{}
 	podListerByNamespace map[string]v1.PodLister
+	inClusterConfig      *rest.Config
 }
 
 // ScraperOpt are options that can be used to configure the Scraper
@@ -44,6 +43,14 @@ type ScraperOpt func(s *Scraper) error
 func WithLogger(logger log.Logger) ScraperOpt {
 	return func(s *Scraper) error {
 		s.logger = logger
+		return nil
+	}
+}
+
+// WithLogger returns an OptionFunc to change the logger from the default noop logger.
+func WithRestConfig(restConfig *rest.Config) ScraperOpt {
+	return func(s *Scraper) error {
+		s.inClusterConfig = restConfig
 		return nil
 	}
 }
@@ -101,8 +108,20 @@ func (s *Scraper) Run(i *integration.Integration) error {
 				continue
 			}
 
+			// TODO the fallback mechanism to a different endpoint for the same pod is not implemented.
+			client, err := controlplaneClient.New(controlplaneClient.Config{
+				Logger:          s.logger,
+				K8sClient:       s.K8s,
+				InClusterConfig: s.inClusterConfig,
+				EndpoinURL:      autodiscover.URL,
+				Auth:            &autodiscover.Auth,
+			})
+			if err != nil {
+				return fmt.Errorf("creating client for component %s failed: %v", component.Name, err)
+			}
+
 			grouper := grouper.New(
-				s.deprecatedClient(autodiscover, podName),
+				client,
 				component.Queries,
 				s.logger,
 				podName,
@@ -121,40 +140,6 @@ func (s *Scraper) Run(i *integration.Integration) error {
 	}
 
 	return nil
-}
-
-func (s *Scraper) deprecatedClient(c config.AutodiscoverControlPlane, podName string) client.HTTPClient {
-	timeout := 500 * time.Millisecond
-
-	authMethod := controlplaneClient.None
-	// // Let mTLS take precedence over service account
-	// switch {
-	// case c.UseMTLSAuthentication:
-	// 	authMethod = controlplaneClient.MTLS
-	// case c.UseServiceAccountAuthentication:
-	// 	authMethod = controlplaneClient.ServiceAccount
-	// default:
-	// 	authMethod = controlplaneClient.None
-	// }
-
-	// TODO client probably receives a list of urls and do the try logic
-	var endpointURL *url.URL
-	if len(c.URL) > 0 {
-		endpointURL, _ = url.Parse(c.URL[0])
-	}
-	return controlplaneClient.New(
-		authMethod,
-		"", // c.TLSSecretName,
-		"", // c.TLSSecretNamespace,
-		s.logger,
-		s.K8s,
-		*endpointURL,
-		url.URL{}, // c.SecureEndpoint,
-		s.config.NodeIP,
-		podName,
-		false, // c.InsecureFallback,
-		timeout,
-	)
 }
 
 func (s *Scraper) discoverPod(autodiscover config.AutodiscoverControlPlane) (string, error) {
