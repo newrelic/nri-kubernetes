@@ -708,7 +708,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "targetMetric", ValueFunc: prometheus.FromValue("kube_hpa_spec_target_metric"), Type: sdkMetric.GAUGE},
 			{Name: "currentReplicas", ValueFunc: prometheus.FromValue("kube_hpa_status_current_replicas"), Type: sdkMetric.GAUGE},
 			{Name: "desiredReplicas", ValueFunc: prometheus.FromValue("kube_hpa_status_desired_replicas"), Type: sdkMetric.GAUGE},
-			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_hpa_status_condition", "namespace"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_hpa_metadata_generation", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("hpa", "kube_hpa_labels"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "isActive", ValueFunc: prometheus.FromValue("kube_hpa_status_condition_active")},
 			{Name: "isAble", ValueFunc: prometheus.FromValue("kube_hpa_status_condition_able")},
