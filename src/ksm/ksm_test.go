@@ -6,13 +6,12 @@ import (
 	"fmt"
 	"testing"
 
-	"k8s.io/client-go/kubernetes/fake"
-
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
 	"github.com/newrelic/nri-kubernetes/v2/src/ksm"
 	ksmClient "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
+	"k8s.io/client-go/kubernetes/fake"
 )
 
 func TestScraper(t *testing.T) {
@@ -23,9 +22,8 @@ func TestScraper(t *testing.T) {
 		ExcludingGroups("hpa", "pod").
 		Excluding(testutil.ExcludeOptional())
 
-	for _, v := range testutil.AllVersions() {
-		// Notice that v is the very same variable, therefore the loop is overwriting it each iteration. Causing tests to fail it //
-		version := v
+	// TODO: use testutil.AllVersions() when all versions are generated with datagen.sh.
+	for _, version := range []testutil.Version{testutil.Testdata120, testutil.Testdata121, testutil.Testdata122} {
 		t.Run(fmt.Sprintf("for_version_%s", version), func(t *testing.T) {
 			t.Parallel()
 
@@ -39,8 +37,13 @@ func TestScraper(t *testing.T) {
 				t.Fatalf("error creating ksm client: %v", err)
 			}
 
-			fakeK8s := fake.NewSimpleClientset(testutil.K8sEverything()...)
-			scraper, err := ksm.NewScraper(&config.Config{
+			k8sData, err := version.K8s()
+			if err != nil {
+				t.Fatalf("error instantiating fake k8s objects: %v", err)
+			}
+
+			fakeK8s := fake.NewSimpleClientset(k8sData.Everything()...)
+			scraper, err := ksm.NewScraper(&config.Mock{
 				KSM: config.KSM{
 					StaticURL: testServer.KSMEndpoint(),
 				},

@@ -15,43 +15,56 @@ const (
 	namespacesFile = "namespaces.yaml"
 )
 
-func K8sEverything() []runtime.Object {
+type K8s struct {
+	version Version
+}
+
+func newK8s(v Version) (K8s, error) {
+	_, err := testDataDir.ReadDir(filepath.Join(testDataRootDir, string(v)))
+	if err != nil {
+		return K8s{}, fmt.Errorf("cannot stat testdata dir for version %q: %w", string(v), err)
+	}
+
+	return K8s{v}, nil
+}
+
+func (k K8s) Everything() []runtime.Object {
 	return []runtime.Object{
-		K8sNamespaces(),
-		K8sServices(),
-		K8sNodes(),
+		k.Namespaces(),
+		k.Services(),
+		k.Nodes(),
 	}
 }
 
-func K8sNamespaces() runtime.Object {
+func (k K8s) Namespaces() runtime.Object {
 	var namespaceList corev1.NamespaceList
-	if err := loadYaml(&namespaceList, namespacesFile); err != nil {
+	if err := k.loadYaml(&namespaceList, namespacesFile); err != nil {
 		panic(err)
 	}
 
 	return &namespaceList
 }
 
-func K8sServices() runtime.Object {
+func (k K8s) Services() runtime.Object {
 	var services corev1.ServiceList
-	if err := loadYaml(&services, servicesFile); err != nil {
+	if err := k.loadYaml(&services, servicesFile); err != nil {
 		panic(err)
 	}
 
 	return &services
 }
 
-func K8sNodes() runtime.Object {
+func (k K8s) Nodes() runtime.Object {
 	var nodes corev1.NodeList
-	if err := loadYaml(&nodes, nodesFile); err != nil {
+	if err := k.loadYaml(&nodes, nodesFile); err != nil {
 		panic(err)
 	}
 
 	return &nodes
 }
 
-func loadYaml(dst interface{}, path string) error {
-	yamlFile, err := testDataDir.ReadFile(filepath.Join(testDataRootDir, path))
+func (k K8s) loadYaml(dst interface{}, path string) error {
+	yamlFile, err := testDataDir.ReadFile(filepath.Join(testDataRootDir, string(k.version), path))
 	if err != nil {
 		return fmt.Errorf("reading testdata services.yaml: %w", err)
 	}

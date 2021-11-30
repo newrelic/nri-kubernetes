@@ -11,15 +11,16 @@ import (
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/kubernetes/fake"
+
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/kubernetes/fake"
 )
 
 var (
@@ -64,7 +65,12 @@ func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 				t.Fatalf("Cannot create fake KSM server: %v", err)
 			}
 
-			fakeK8s := fake.NewSimpleClientset(testutil.K8sEverything()...)
+			k8sData, err := version.K8s()
+			if err != nil {
+				t.Fatalf("error instantiating fake k8s objects: %v", err)
+			}
+
+			fakeK8s := fake.NewSimpleClientset(k8sData.Everything()...)
 
 			i := testutil.NewIntegration(t)
 
@@ -107,7 +113,12 @@ func Test_Scraper_Autodiscover_cp_component_after_start(t *testing.T) {
 		t.Fatalf("Cannot create fake KSM server: %v", err)
 	}
 
-	fakeK8s := fake.NewSimpleClientset(testutil.K8sEverything()...)
+	k8sData, err := testutil.LatestVersion().K8s()
+	if err != nil {
+		t.Fatalf("error instantiating fake k8s objects: %v", err)
+	}
+
+	fakeK8s := fake.NewSimpleClientset(k8sData.Everything()...)
 
 	i := testutil.NewIntegration(t)
 
@@ -167,7 +178,12 @@ func Test_Scraper_external_endpoint(t *testing.T) {
 		t.Fatalf("Cannot create fake KSM server: %v", err)
 	}
 
-	fakeK8s := fake.NewSimpleClientset(testutil.K8sEverything()...)
+	k8sData, err := testutil.LatestVersion().K8s()
+	if err != nil {
+		t.Fatalf("error instantiating fake k8s objects: %v", err)
+	}
+
+	fakeK8s := fake.NewSimpleClientset(k8sData.Everything()...)
 
 	i := testutil.NewIntegration(t)
 
