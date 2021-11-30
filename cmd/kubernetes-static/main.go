@@ -10,6 +10,10 @@ import (
 	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/version"
+	"k8s.io/client-go/kubernetes/fake"
+
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
@@ -20,9 +24,6 @@ import (
 	kubeletmetric "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
-	"github.com/sirupsen/logrus"
-	"k8s.io/apimachinery/pkg/version"
-	"k8s.io/client-go/kubernetes/fake"
 )
 
 const (
@@ -49,7 +50,13 @@ func main() {
 		logrus.Fatalf("Error building testserver: %v", err)
 	}
 
-	fakeK8s := fake.NewSimpleClientset(testutil.K8sEverything()...)
+	k8sData, err := testutil.LatestVersion().K8s()
+	if err != nil {
+		logrus.Fatalf("error instantiating fake k8s objects: %v", err)
+	}
+
+	fakeK8s := fake.NewSimpleClientset(k8sData.Everything()...)
+
 	i, err := integration.New(integrationName, integrationVersion, integration.Args(&args))
 	if err != nil {
 		logrus.Fatal(err)
