@@ -110,7 +110,7 @@ function bootstrap() {
         echo "Installing e2e-resources chart"
         if [[ "$IS_MINIKUBE" = "1" ]]; then
             # Enable PVC if we are in minikube
-            pvc="--set persistentVolumeClaim.enabled=true"
+            minikube_args="--set persistentVolumeClaim.enabled=true --set loadBalancerService.fakeIP=127.1.2.3"
             minikube addons enable metrics-server
         fi
 
@@ -118,7 +118,7 @@ function bootstrap() {
         helm upgrade --install e2e ../../../e2e/charts/e2e-resources -n $scrapper_namespace --create-namespace \
           --set scraper.enabled=true \
           --set persistentVolume.enabled=true \
-          $pvc \
+          $minikube_args \
           $HELM_E2E_ARGS
 
         echo "Installing KSM"

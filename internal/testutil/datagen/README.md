@@ -68,9 +68,10 @@ By default, `scraper.sh` will attempt to reach the controlpane endpoints through
 
 #### `IS_MINIKUBE`
 
-By aiming to be extensive by default, `datagen.sh` will assume it runs in a minikube environment. This means it will:
+Aiming to be extensive by default, `datagen.sh` will assume it runs in a minikube environment. This means it will:
 - Try to run `minikube addons enable metrics-server`
 - Deploy some PVCs with storageClass set to standard (minikube default)
+- Deploy the `LoadBalancer` service with a fake `loadBalancerIP`
 
 This can be overridden by setting `IS_MINIKUBE` to `0`, `false`, or basically anything but `1`.
 
