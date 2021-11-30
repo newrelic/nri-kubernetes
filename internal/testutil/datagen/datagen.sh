@@ -11,6 +11,16 @@ APISERVER_ENDPOINT=${APISERVER_ENDPOINT:-https://localhost:8443/metrics}
 CONTROLLERMANAGER_ENDPOINT=${CONTROLLERMANAGER_ENDPOINT:-https://localhost:10257/metrics}
 SCHEDULER_ENDPOINT=${SCHEDULER_ENDPOINT:-https://localhost:10259/metrics}
 
+# Assume we are installing in minikube by default.
+# This will enable PVCs and instruct minikube to enable metricServer for HPA metrics.
+IS_MINIKUBE=${IS_MINIKUBE:-1}
+
+# Extra args that will be appended to the helm install e2e command.
+# Values can be overridden using this and --set commands, or -f and point to a custom values file.
+# Useful to tweak things specific to minikube, or toggle specific features.
+# See  ../../../e2e/charts/e2e-resources/values.yaml for more details.
+HELM_E2E_ARGS=""
+
 # scrapper_selector is the label with which the scraper deployment is deployed.
 scrapper_selector="app=scraper"
 scrapper_namespace="mock"
@@ -98,11 +108,18 @@ function bootstrap() {
 
     if [[ -z $SKIP_INSTALL ]]; then
         echo "Installing e2e-resources chart"
+        if [[ "$IS_MINIKUBE" = "1" ]]; then
+            # Enable PVC if we are in minikube
+            pvc="--set persistentVolumeClaim.enabled=true"
+            minikube addons enable metrics-server
+        fi
+
         helm dependency update ../../../e2e/charts/e2e-resources > /dev/null
         helm upgrade --install e2e ../../../e2e/charts/e2e-resources -n $scrapper_namespace --create-namespace \
+          --set scraper.enabled=true \
           --set persistentVolume.enabled=true \
-          --set persistentVolumeClaim.enabled=true \
-          --set scraper.enabled=true
+          $pvc \
+          $HELM_E2E_ARGS
 
         echo "Installing KSM"
         helm dependency update ../../../e2e/charts/ksm > /dev/null
