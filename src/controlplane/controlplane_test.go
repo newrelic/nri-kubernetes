@@ -65,7 +65,12 @@ func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 				t.Fatalf("Cannot create fake KSM server: %v", err)
 			}
 
-			fakeK8s := fake.NewSimpleClientset(testutil.K8sEverything()...)
+			k8sData, err := version.K8s()
+			if err != nil {
+				t.Fatalf("error instantiating fake k8s objects: %v", err)
+			}
+
+			fakeK8s := fake.NewSimpleClientset(k8sData.Everything()...)
 
 			i := testutil.NewIntegration(t)
 
@@ -108,7 +113,12 @@ func Test_Scraper_Autodiscover_cp_component_after_start(t *testing.T) {
 		t.Fatalf("Cannot create fake KSM server: %v", err)
 	}
 
-	fakeK8s := fake.NewSimpleClientset(testutil.K8sEverything()...)
+	k8sData, err := testutil.LatestVersion().K8s()
+	if err != nil {
+		t.Fatalf("error instantiating fake k8s objects: %v", err)
+	}
+
+	fakeK8s := fake.NewSimpleClientset(k8sData.Everything()...)
 
 	i := testutil.NewIntegration(t)
 
@@ -168,7 +178,12 @@ func Test_Scraper_external_endpoint(t *testing.T) {
 		t.Fatalf("Cannot create fake KSM server: %v", err)
 	}
 
-	fakeK8s := fake.NewSimpleClientset(testutil.K8sEverything()...)
+	k8sData, err := testutil.LatestVersion().K8s()
+	if err != nil {
+		t.Fatalf("error instantiating fake k8s objects: %v", err)
+	}
+
+	fakeK8s := fake.NewSimpleClientset(k8sData.Everything()...)
 
 	i := testutil.NewIntegration(t)
 
