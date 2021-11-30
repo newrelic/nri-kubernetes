@@ -18,6 +18,11 @@ func (v Version) Server() (*Server, error) {
 	return newServer(v)
 }
 
+// K8s returns a helper that provide fake instances of K8s objects, ready to use with the kubernetes fake client.
+func (v Version) K8s() (K8s, error) {
+	return newK8s(v)
+}
+
 // List of all the versions we have testdata for.
 // When adding a new version:
 // - REMEMBER TO ADD IT TO AllVersions() BELOW.
