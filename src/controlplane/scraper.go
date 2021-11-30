@@ -3,6 +3,7 @@ package controlplane
 import (
 	"fmt"
 	"io"
+	"net/url"
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
@@ -13,7 +14,6 @@ import (
 	controlplaneClient "github.com/newrelic/nri-kubernetes/v2/src/controlplane/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/grouper"
 	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
@@ -30,11 +30,11 @@ type Providers struct {
 type Scraper struct {
 	Providers
 	logger               log.Logger
-	config               *config.Mock
+	config               *config.Config
 	k8sVersion           *version.Info
-	components           []Component
+	components           []component
 	informerClosers      []chan<- struct{}
-	PodListerByNamespace map[string]v1.PodLister
+	podListerByNamespace map[string]v1.PodLister
 }
 
 // ScraperOpt are options that can be used to configure the Scraper
@@ -56,14 +56,15 @@ func (s *Scraper) Close() {
 }
 
 // NewScraper builds a new Scraper, initializing its internal informers. After use, informers should be closed by calling
-func NewScraper(config *config.Mock, providers Providers, options ...ScraperOpt) (*Scraper, error) {
+func NewScraper(config *config.Config, providers Providers, options ...ScraperOpt) (*Scraper, error) {
 	var err error
 	s := &Scraper{
 		config:    config,
 		Providers: providers,
 		// TODO: An empty implementation of the logger interface would be better
 		logger:               log.New(false, io.Discard),
-		PodListerByNamespace: make(map[string]v1.PodLister),
+		podListerByNamespace: make(map[string]v1.PodLister),
+		components:           newComponents(config.ControlPlane),
 	}
 
 	for i, opt := range options {
@@ -79,7 +80,7 @@ func NewScraper(config *config.Mock, providers Providers, options ...ScraperOpt)
 		return nil, fmt.Errorf("fetching K8s version: %w", err)
 	}
 
-	s.buildDiscoverer(s.buildComponents())
+	s.buildLister()
 
 	return s, nil
 }
@@ -87,144 +88,113 @@ func NewScraper(config *config.Mock, providers Providers, options ...ScraperOpt)
 // Run scraper collect the data populating the integration entities
 func (s *Scraper) Run(i *integration.Integration) error {
 	for _, component := range s.components {
+		// TODO condition to scrape endpoint directly
 
-		pod, err := s.discoverPod(component)
-		if err != nil {
-			return fmt.Errorf("control plane component %s discovery failed: %v", component.Name, err)
-		}
+		for _, autodiscover := range component.AutodiscoverConfigs {
+			podName, err := s.discoverPod(autodiscover)
+			if err != nil {
+				return fmt.Errorf("control plane component %s discovery failed: %v", component.Name, err)
+			}
 
-		if pod == nil {
-			s.logger.Debugf("No pod found for component: %s", component.Name)
-			continue
-		}
+			if podName == "" {
+				s.logger.Debugf("No pod found for component: %s", component.Name)
+				continue
+			}
 
-		grouper := grouper.New(
-			s.deprecatedClient(component, pod.Name),
-			component.Queries,
-			s.logger,
-			pod.Name,
-		)
+			grouper := grouper.New(
+				s.deprecatedClient(autodiscover, podName),
+				component.Queries,
+				s.logger,
+				podName,
+			)
 
-		job := scrape.NewScrapeJob(string(component.Name), grouper, component.Specs)
+			job := scrape.NewScrapeJob(string(component.Name), grouper, component.Specs)
 
-		s.logger.Debugf("Running job: %s", job.Name)
+			s.logger.Debugf("Running job: %s", job.Name)
 
-		result := job.Populate(i, s.config.ClusterName, s.logger, s.k8sVersion)
+			result := job.Populate(i, s.config.ClusterName, s.logger, s.k8sVersion)
 
-		if len(result.Errors) > 0 {
-			s.logger.Infof("Error populating data from %s: %v", job.Name, result.Error())
+			if len(result.Errors) > 0 {
+				s.logger.Infof("Error populating data from %s: %v", job.Name, result.Error())
+			}
 		}
 	}
 
 	return nil
 }
 
-func (s *Scraper) deprecatedClient(c Component, podName string) client.HTTPClient {
+func (s *Scraper) deprecatedClient(c config.AutodiscoverControlPlane, podName string) client.HTTPClient {
 	timeout := 500 * time.Millisecond
 
 	authMethod := controlplaneClient.None
-	// Let mTLS take precedence over service account
-	switch {
-	case c.UseMTLSAuthentication:
-		authMethod = controlplaneClient.MTLS
-	case c.UseServiceAccountAuthentication:
-		authMethod = controlplaneClient.ServiceAccount
-	default:
-		authMethod = controlplaneClient.None
-	}
+	// // Let mTLS take precedence over service account
+	// switch {
+	// case c.UseMTLSAuthentication:
+	// 	authMethod = controlplaneClient.MTLS
+	// case c.UseServiceAccountAuthentication:
+	// 	authMethod = controlplaneClient.ServiceAccount
+	// default:
+	// 	authMethod = controlplaneClient.None
+	// }
 
+	// TODO client probably receives a list of urls and do the try logic
+	var endpointURL *url.URL
+	if len(c.URL) > 0 {
+		endpointURL, _ = url.Parse(c.URL[0])
+	}
 	return controlplaneClient.New(
 		authMethod,
-		c.TLSSecretName,
-		c.TLSSecretNamespace,
+		"", // c.TLSSecretName,
+		"", // c.TLSSecretNamespace,
 		s.logger,
 		s.K8s,
-		c.Endpoint,
-		c.SecureEndpoint,
+		*endpointURL,
+		url.URL{}, // c.SecureEndpoint,
 		s.config.NodeIP,
 		podName,
-		c.InsecureFallback,
+		false, // c.InsecureFallback,
 		timeout,
 	)
 }
 
-func (s *Scraper) discoverPod(c Component) (*corev1.Pod, error) {
-	var discoveredPod *corev1.Pod
+func (s *Scraper) discoverPod(autodiscover config.AutodiscoverControlPlane) (string, error) {
 	// looks for the pod match a set of defined labels
-	for _, l := range c.Labels {
-		podLister, ok := s.PodListerByNamespace[c.Namespace]
-		if !ok {
-			return nil, fmt.Errorf("pod lister for namespace: %s not found for component: %s", c.Namespace, c.Name)
-		}
+	podLister, ok := s.podListerByNamespace[autodiscover.Namespace]
+	if !ok {
+		return "", fmt.Errorf("pod lister for namespace: %s not found", autodiscover.Namespace)
+	}
 
-		selector := labels.SelectorFromSet(labels.Set(l))
-		pods, err := podLister.List(selector)
-		if err != nil {
-			return nil, fmt.Errorf("fail to list pods for component:%v selector: %v", c.Name, l)
-		}
+	labelsSet, _ := labels.ConvertSelectorToLabelsMap(autodiscover.Selector)
 
-		// Validation of returned pods.
-		for _, pod := range pods {
-			if pod.Spec.NodeName != s.config.NodeName {
-				s.logger.Debugf("discarding pod: %s running outside the node", pod.Name)
-				continue
+	selector := labels.SelectorFromSet(labels.Set(labelsSet))
+	pods, err := podLister.List(selector)
+	if err != nil {
+		return "", fmt.Errorf("fail to list pods for selector: %v", labelsSet)
+	}
+
+	// Validation of returned pods.
+	for _, pod := range pods {
+		if autodiscover.MatchNode && pod.Spec.NodeName != s.config.NodeName {
+			s.logger.Debugf("discarding pod: %s running outside the node", pod.Name)
+			continue
+		}
+		return pod.Name, nil
+	}
+
+	return "", nil
+}
+
+func (s *Scraper) buildLister() {
+	for _, component := range s.components {
+		for _, autodiscover := range component.AutodiscoverConfigs {
+			if _, ok := s.podListerByNamespace[autodiscover.Namespace]; !ok {
+				podLister, informerCloser := discovery.NewPodsLister(discovery.PodsListerConfig{
+					Client:    s.K8s,
+					Namespace: autodiscover.Namespace,
+				})
+				s.podListerByNamespace[autodiscover.Namespace] = podLister
+				s.informerClosers = append(s.informerClosers, informerCloser)
 			}
-			discoveredPod = pod
-			break
 		}
-
 	}
-
-	if discoveredPod == nil {
-		return nil, nil
-	}
-
-	return discoveredPod, nil
-}
-
-func (s *Scraper) buildDiscoverer(components []Component) {
-	for _, component := range components {
-		// TODO will be taken from config for each group of labels
-		// this will became into n discoverers as groups of labels the component have
-		// to allow multiple namespaces and multiple labels sets.
-		component.Namespace = "kube-system"
-
-		if _, ok := s.PodListerByNamespace[component.Namespace]; !ok {
-
-			podLister, informerCloser := discovery.NewPodsLister(discovery.PodsListerConfig{
-				Client:    s.K8s,
-				Namespace: component.Namespace,
-			})
-			s.PodListerByNamespace[component.Namespace] = podLister
-			s.informerClosers = append(s.informerClosers, informerCloser)
-		}
-
-		s.components = append(s.components, component)
-	}
-}
-
-func (s *Scraper) buildComponents() []Component {
-	var opts []ComponentOption
-
-	if s.config.ETCD.EtcdTLSSecretName != "" {
-		opts = append(opts, WithEtcdTLSConfig(s.config.ETCD.EtcdTLSSecretName, s.config.ETCD.EtcdTLSSecretNamespace))
-	}
-
-	if s.config.ETCD.EtcdEndpointURL != "" {
-		opts = append(opts, WithEndpointURL(Etcd, s.config.ETCD.EtcdEndpointURL))
-	}
-
-	if s.config.APIServer.APIServerEndpointURL != "" {
-		opts = append(opts, WithEndpointURL(APIServer, s.config.APIServer.APIServerEndpointURL))
-	}
-
-	if s.config.Scheduler.SchedulerEndpointURL != "" {
-		opts = append(opts, WithEndpointURL(Scheduler, s.config.Scheduler.SchedulerEndpointURL))
-	}
-
-	if s.config.ControllerManager.ControllerManagerEndpointURL != "" {
-		opts = append(opts, WithEndpointURL(ControllerManager, s.config.ControllerManager.ControllerManagerEndpointURL))
-	}
-
-	return BuildComponentList(opts...)
 }

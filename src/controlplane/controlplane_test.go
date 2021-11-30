@@ -5,6 +5,7 @@ package controlplane_test
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"testing"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes/fake"
 )
 
@@ -24,6 +26,8 @@ var (
 	excludeS    = []string{"restClientRequestsDelta", "restClientRequestsRate", "schedulerScheduleAttemptsDelta", "schedulerScheduleAttemptsRate", "schedulerSchedulingDurationSeconds"}
 	excludeAS   = []string{"apiserverRequestsDelta", "apiserverRequestsRate", "restClientRequestsDelta", "restClientRequestsRate", "etcdObjectCounts"}
 )
+
+const masterNodeName = "masterNode"
 
 func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 	t.Parallel()
@@ -57,27 +61,13 @@ func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 
 			i := testutil.NewIntegration(t)
 
-			scraper, err := controlplane.NewScraper(&config.Mock{
-				ControlPlane: config.ControlPlane{
-					ControllerManager: config.ControllerManager{
-						ControllerManagerEndpointURL: testServer.ControlPlaneEndpoint(string(controlplane.ControllerManager)),
-					},
-					ETCD: config.ETCD{
-						EtcdEndpointURL: testServer.ControlPlaneEndpoint(string(controlplane.Etcd)),
-					},
-					APIServer: config.APIServer{
-						APIServerEndpointURL: testServer.ControlPlaneEndpoint(string(controlplane.APIServer)),
-					},
-					Scheduler: config.Scheduler{
-						SchedulerEndpointURL: testServer.ControlPlaneEndpoint(string(controlplane.Scheduler)),
-					},
-				},
-				ClusterName: t.Name(),
-			}, controlplane.Providers{
-				K8s: fakeK8s,
-			})
+			discoveryConfig := testConfigAutodiscovery(testServer)
 
-			createControlPlainPods(t, fakeK8s, standardTestComponents())
+			createControlPlainPods(t, fakeK8s, discoveryConfig, masterNodeName)
+
+			testConfig := testConfig(discoveryConfig, masterNodeName)
+
+			scraper, err := controlplane.NewScraper(&testConfig, controlplane.Providers{K8s: fakeK8s})
 
 			if err = scraper.Run(i); err != nil {
 				t.Fatalf("running scraper: %v", err)
@@ -105,26 +95,35 @@ func Test_Scraper_Autodiscover_cp_component_after_start(t *testing.T) {
 
 	i := testutil.NewIntegration(t)
 
-	scraper, err := controlplane.NewScraper(&config.Mock{
-		ControlPlane: config.ControlPlane{
-			Scheduler: config.Scheduler{
-				SchedulerEndpointURL: testServer.ControlPlaneEndpoint(string(controlplane.Scheduler)),
+	discoveryConfig := testConfigAutodiscovery(testServer)
+
+	testConfig := testConfig(discoveryConfig, masterNodeName)
+
+	scraper, err := controlplane.NewScraper(
+		&config.Config{
+			NodeName: masterNodeName,
+			ControlPlane: config.ControlPlane{
+				Enabled:   true,
+				Scheduler: testConfig.ControlPlane.Scheduler,
 			},
 		},
-		ClusterName: t.Name(),
-	}, controlplane.Providers{
-		K8s: fakeK8s,
-	})
+		controlplane.Providers{
+			K8s: fakeK8s,
+		})
+
+	// create a scheduler pod on different node
+	createControlPlainPod(t, fakeK8s, controlplane.Scheduler, discoveryConfig[controlplane.Scheduler], "masterNode2")
 
 	if err = scraper.Run(i); err != nil {
 		t.Fatalf("running scraper: %v", err)
 	}
 
+	// There is no scheduler on the same node.
 	if len(i.Entities) != 0 {
 		t.Fatalf("No entities should be collected before creating the pods.")
 	}
 
-	createControlPlainPods(t, fakeK8s, standardTestComponents())
+	createControlPlainPod(t, fakeK8s, controlplane.Scheduler, discoveryConfig[controlplane.Scheduler], masterNodeName)
 
 	if err = scraper.Run(i); err != nil {
 		t.Fatalf("running scraper: %v", err)
@@ -133,52 +132,109 @@ func Test_Scraper_Autodiscover_cp_component_after_start(t *testing.T) {
 	asserter.On(i.Entities).Assert(t)
 }
 
-type testComponent struct {
-	Name      controlplane.ComponentName
-	NameSpace string
-	Labels    map[string]string
-}
+func testConfigAutodiscovery(server *testutil.Server) map[controlplane.ComponentName]config.AutodiscoverControlPlane {
+	const defaultNamespace = "kube-system"
 
-func standardTestComponents() []testComponent {
-	return []testComponent{
-		{
-			Name:      controlplane.Scheduler,
-			NameSpace: "kube-system",
-			Labels:    map[string]string{"k8s-app": "kube-scheduler"},
+	return map[controlplane.ComponentName]config.AutodiscoverControlPlane{
+		controlplane.Etcd: {
+			Namespace: defaultNamespace,
+			MatchNode: true,
+			Selector:  "k8s-app=etcd-manager-main",
+			URL:       []string{server.ControlPlaneEndpoint(string(controlplane.Etcd))},
 		},
-		{
-			Name:      controlplane.Etcd,
-			NameSpace: "kube-system",
-			Labels:    map[string]string{"k8s-app": "etcd-manager-main"},
+		controlplane.APIServer: {
+			Namespace: defaultNamespace,
+			MatchNode: true,
+			Selector:  "k8s-app=kube-apiserver",
+			URL:       []string{server.ControlPlaneEndpoint(string(controlplane.APIServer))},
 		},
-		{
-			Name:      controlplane.ControllerManager,
-			NameSpace: "kube-system",
-			Labels:    map[string]string{"k8s-app": "kube-controller-manager"},
+		controlplane.Scheduler: {
+			Namespace: defaultNamespace,
+			MatchNode: true,
+			Selector:  "k8s-app=kube-scheduler",
+			URL:       []string{server.ControlPlaneEndpoint(string(controlplane.Scheduler))},
 		},
-		{
-			Name:      controlplane.APIServer,
-			NameSpace: "kube-system",
-			Labels:    map[string]string{"k8s-app": "kube-apiserver"},
+		controlplane.ControllerManager: {
+			Namespace: defaultNamespace,
+			MatchNode: true,
+			Selector:  "k8s-app=kube-controller-manager",
+			URL:       []string{server.ControlPlaneEndpoint(string(controlplane.ControllerManager))},
 		},
 	}
 }
 
-func createControlPlainPods(t *testing.T, client *fake.Clientset, testComponents []testComponent) {
+func testConfig(
+	autodiscovery map[controlplane.ComponentName]config.AutodiscoverControlPlane,
+	nodeName string,
+) config.Config {
+	return config.Config{
+		NodeName: nodeName,
+		ControlPlane: config.ControlPlane{
+			Enabled: true,
+			ETCD: config.ControlPlaneComponent{
+				Enabled: true,
+				Autodiscover: []config.AutodiscoverControlPlane{
+					autodiscovery[controlplane.Etcd],
+				},
+			},
+			APIServer: config.ControlPlaneComponent{
+				Enabled: true,
+				Autodiscover: []config.AutodiscoverControlPlane{
+					autodiscovery[controlplane.APIServer],
+				},
+			},
+			ControllerManager: config.ControlPlaneComponent{
+				Enabled: true,
+				Autodiscover: []config.AutodiscoverControlPlane{
+					autodiscovery[controlplane.ControllerManager],
+				},
+			},
+			Scheduler: config.ControlPlaneComponent{
+				Enabled: true,
+				Autodiscover: []config.AutodiscoverControlPlane{
+					autodiscovery[controlplane.Scheduler],
+				},
+			},
+		},
+	}
+}
+
+func createControlPlainPods(
+	t *testing.T,
+	client *fake.Clientset,
+	autodiscovery map[controlplane.ComponentName]config.AutodiscoverControlPlane,
+	nodeName string,
+) {
 	t.Helper()
 
-	for _, component := range testComponents {
-
-		pod := &corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      string(component.Name),
-				Namespace: component.NameSpace,
-				Labels:    component.Labels,
-			},
-		}
-		if _, err := client.CoreV1().Pods(component.NameSpace).Create(context.Background(), pod, metav1.CreateOptions{}); err != nil {
-			t.Fail()
-		}
+	for componentName, autodiscovery := range autodiscovery {
+		createControlPlainPod(t, client, componentName, autodiscovery, nodeName)
 	}
+	time.Sleep(time.Second)
+}
+
+func createControlPlainPod(
+	t *testing.T,
+	client *fake.Clientset,
+	componentName controlplane.ComponentName,
+	autodiscovery config.AutodiscoverControlPlane,
+	nodeName string,
+) {
+	t.Helper()
+	labelsSet, _ := labels.ConvertSelectorToLabelsMap(autodiscovery.Selector)
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      string(componentName) + fmt.Sprintf("%d", rand.Int()), // add rand to allow create same component multiple times
+			Namespace: autodiscovery.Namespace,
+			Labels:    labelsSet,
+		},
+		Spec: corev1.PodSpec{
+			NodeName: nodeName,
+		},
+	}
+	if _, err := client.CoreV1().Pods(autodiscovery.Namespace).Create(context.Background(), pod, metav1.CreateOptions{}); err != nil {
+		t.Fail()
+	}
+
 	time.Sleep(time.Second)
 }

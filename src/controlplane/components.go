@@ -1,32 +1,11 @@
 package controlplane
 
 import (
-	"fmt"
-	"net/url"
-	"strings"
-
+	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
-
-// Component represents a control plane component from which the
-// integration will fetch metrics.
-type Component struct {
-	Name                            ComponentName
-	TLSSecretName                   string
-	TLSSecretNamespace              string
-	Endpoint                        url.URL
-	SecureEndpoint                  url.URL
-	InsecureFallback                bool
-	UseServiceAccountAuthentication bool
-	UseMTLSAuthentication           bool
-	Specs                           definition.SpecGroups
-	Queries                         []prometheus.Query
-	Labels                          []componentLabels
-	// TODO this will be refactored with config per label group.
-	Namespace string
-}
 
 // ComponentName is a typed name for components
 type ComponentName string
@@ -42,142 +21,67 @@ const (
 	APIServer ComponentName = "api-server"
 )
 
-// ComponentOption configures the list of components
-type ComponentOption func([]Component)
-
-// WithEtcdTLSConfig configures the etcd component to use (M)TLS using credentials stored in a secret.
-// The secret should contains the following fields:
-// "cert": the client certificate
-// "key": the client's private key
-// "cacert": optional, the cacert of the ETCD server. If omitted, insecureSkipVerify should be set to "true"
-// "insecureSkipVerify": optional, if set to "true", ETCD's server certificate will not be verified
-func WithEtcdTLSConfig(etcdTLSSecretName, etcdTLSSecretNamespace string) ComponentOption {
-	return func(components []Component) {
-		etcd := findComponentByName(Etcd, components)
-		if etcd == nil {
-			panic(fmt.Sprintf("expected component %s in list of components, but not found", string(Etcd)))
-		}
-
-		etcd.TLSSecretName = etcdTLSSecretName
-		etcd.TLSSecretNamespace = etcdTLSSecretNamespace
-		etcd.UseMTLSAuthentication = true
-	}
+// Component represents a control plane component from which the
+// integration will fetch metrics.
+type component struct {
+	Name                 ComponentName
+	Specs                definition.SpecGroups
+	Queries              []prometheus.Query
+	AutodiscoverConfigs  []config.AutodiscoverControlPlane
+	StaticEndpointConfig config.StaticEndpoint
 }
 
-// WithEndpointURL configures the component to be use a specific endpoint URL and enables
-// Service Account token as authentication
-func WithEndpointURL(name ComponentName, endpointURL string) ComponentOption {
-	return func(components []Component) {
-		component := findComponentByName(name, components)
-		if component == nil {
-			panic(fmt.Sprintf("expected component %s in list of components, but not found", string(name)))
+func newComponents(config config.ControlPlane) []component {
+	components := []component{}
+	if config.Scheduler.Enabled {
+		component := component{
+			Name:                 Scheduler,
+			Queries:              metric.SchedulerQueries,
+			Specs:                metric.SchedulerSpecs,
+			StaticEndpointConfig: config.Scheduler.StaticEndpoint,
 		}
-
-		url, err := url.Parse(endpointURL)
-		if err != nil {
-			panic(fmt.Sprintf("Endpoint URL %s for component %s is not a valid URL", endpointURL, string(name)))
+		if config.Scheduler.StaticEndpoint.URL == "" {
+			component.AutodiscoverConfigs = config.Scheduler.Autodiscover
 		}
-
-		component.UseServiceAccountAuthentication = strings.ToLower(url.Scheme) == "https"
-		if component.UseServiceAccountAuthentication {
-			component.SecureEndpoint = *url
-		} else {
-			component.Endpoint = *url
-		}
+		components = append(components, component)
 	}
-}
-
-// findComponentByName will find the component with the given name
-func findComponentByName(name ComponentName, components []Component) *Component {
-	for i := range components {
-		if components[i].Name == name {
-			return &components[i]
+	if config.ETCD.Enabled {
+		component := component{
+			Name:                 Etcd,
+			Queries:              metric.EtcdQueries,
+			Specs:                metric.EtcdSpecs,
+			StaticEndpointConfig: config.ETCD.StaticEndpoint,
 		}
+		if config.ETCD.StaticEndpoint.URL == "" {
+			component.AutodiscoverConfigs = config.ETCD.Autodiscover
+		}
+		components = append(components, component)
 	}
-	return nil
-}
-
-// componentLabels is a collection of componentLabels, key-value style
-type componentLabels map[string]string
-
-// BuildComponentList returns a list of components that the integration will monitor.
-func BuildComponentList(options ...ComponentOption) []Component {
-	components := []Component{
-		{
-			Name: Scheduler,
-			Labels: []componentLabels{
-				// Kops / Kubeadm / ClusterAPI
-				{"k8s-app": "kube-scheduler"},
-				{"tier": "control-plane", "component": "kube-scheduler"},
-				// OpenShift
-				{"app": "openshift-kube-scheduler", "scheduler": "true"},
-			},
-			Queries: metric.SchedulerQueries,
-			Specs:   metric.SchedulerSpecs,
-			Endpoint: url.URL{
-				Scheme: "http",
-				Host:   "localhost:10251",
-			},
-		},
-		{
-			Name: Etcd,
-			Labels: []componentLabels{
-				// Kops / Kubeadm / ClusterAPI
-				{"k8s-app": "etcd-manager-main"},
-				{"tier": "control-plane", "component": "etcd"},
-				// OpenShift
-				{"k8s-app": "etcd"},
-			},
-			Queries: metric.EtcdQueries,
-			Specs:   metric.EtcdSpecs,
-			Endpoint: url.URL{
-				Scheme: "https",
-				Host:   "127.0.0.1:4001",
-			},
-		},
-		{
-			Name: ControllerManager,
-			Labels: []componentLabels{
-				// Kops / Kubeadm / ClusterAPI
-				{"k8s-app": "kube-controller-manager"},
-				{"tier": "control-plane", "component": "kube-controller-manager"},
-				// OpenShift
-				{"app": "kube-controller-manager", "kube-controller-manager": "true"},
-				{"app": "controller-manager", "controller-manager": "true"},
-			},
-			Queries: metric.ControllerManagerQueries,
-			Specs:   metric.ControllerManagerSpecs,
-			Endpoint: url.URL{
-				Scheme: "http",
-				Host:   "localhost:10252",
-			},
-		},
-		{
-			Name: APIServer,
-			Labels: []componentLabels{
-				// Kops / Kubeadm / ClusterAPI
-				{"k8s-app": "kube-apiserver"},
-				{"tier": "control-plane", "component": "kube-apiserver"},
-				// OpenShift
-				{"app": "openshift-kube-apiserver", "apiserver": "true"},
-			},
-			Queries:                         metric.APIServerQueries,
-			Specs:                           metric.APIServerSpecs,
-			UseServiceAccountAuthentication: true,
-			InsecureFallback:                true,
-			Endpoint: url.URL{
-				Scheme: "http",
-				Host:   "localhost:8080",
-			},
-			SecureEndpoint: url.URL{
-				Scheme: "https",
-				Host:   "localhost:443",
-			},
-		},
+	if config.ControllerManager.Enabled {
+		component := component{
+			Name:                 ControllerManager,
+			Queries:              metric.ControllerManagerQueries,
+			Specs:                metric.ControllerManagerSpecs,
+			AutodiscoverConfigs:  config.ControllerManager.Autodiscover,
+			StaticEndpointConfig: config.ControllerManager.StaticEndpoint,
+		}
+		if config.ControllerManager.StaticEndpoint.URL == "" {
+			component.AutodiscoverConfigs = config.ControllerManager.Autodiscover
+		}
+		components = append(components, component)
 	}
-
-	for _, opt := range options {
-		opt(components)
+	if config.APIServer.Enabled {
+		component := component{
+			Name:                 APIServer,
+			Queries:              metric.APIServerQueries,
+			Specs:                metric.APIServerSpecs,
+			AutodiscoverConfigs:  config.APIServer.Autodiscover,
+			StaticEndpointConfig: config.APIServer.StaticEndpoint,
+		}
+		if config.APIServer.StaticEndpoint.URL == "" {
+			component.AutodiscoverConfigs = config.APIServer.Autodiscover
+		}
+		components = append(components, component)
 	}
 
 	return components
