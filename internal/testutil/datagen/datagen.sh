@@ -2,8 +2,12 @@
 
 set -e
 
+# scrapper_selector is the label with which the scraper deployment is deployed.
+scrapper_selector="app=scraper"
+scrapper_namespace="scraper"
+
 # Default endpoints for minikube, extensible to some extent to other distros like kubeadm.
-KSM_ENDPOINT=${KSM_ENDPOINT:-http://ksm-kube-state-metrics.ksm.svc:8080/metrics}
+KSM_ENDPOINT=${KSM_ENDPOINT:-http://e2e-kube-state-metrics.${scrapper_namespace}.svc:8080/metrics}
 KUBELET_ENDPOINT=${KUBELET_ENDPOINT:-https://localhost:10250/}
 # If control plane is not reachable (e.g. managed k8s), set DISABLE_CONTROLPLANE=1.
 ETCD_ENDPOINT=${ETCD_ENDPOINT:-http://localhost:2381/metrics}
@@ -20,10 +24,6 @@ IS_MINIKUBE=${IS_MINIKUBE:-1}
 # Useful to tweak things specific to minikube, or toggle specific features.
 # See  ../../../e2e/charts/e2e-resources/values.yaml for more details.
 HELM_E2E_ARGS=""
-
-# scrapper_selector is the label with which the scraper deployment is deployed.
-scrapper_selector="app=scraper"
-scrapper_namespace="mock"
 
 # main subcommand runs the whole flow of the script: Bootstrap, scrape, and cleanup
 function main() {
@@ -121,9 +121,8 @@ function bootstrap() {
           $minikube_args \
           $HELM_E2E_ARGS
 
-        echo "Installing KSM"
-        helm dependency update ../../../e2e/charts/ksm > /dev/null
-        helm upgrade --install scraper-ksm ../../../e2e/charts/ksm -n scraper-ksm --create-namespace --wait
+        echo "Waiting for KSM to become ready"
+        kubectl -n $scrapper_namespace wait --for=condition=Ready pod -l app.kubernetes.io/name=kube-state-metrics
 
         echo "Waiting for E2E resources to settle"
         kubectl -n $scrapper_namespace wait --for=condition=Ready pod -l app=hpa
