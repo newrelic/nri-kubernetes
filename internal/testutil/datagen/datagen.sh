@@ -123,7 +123,7 @@ function bootstrap() {
 
         echo "Installing KSM"
         helm dependency update ../../../e2e/charts/ksm > /dev/null
-        helm upgrade --install ksm ../../../e2e/charts/ksm -n ksm --create-namespace --wait
+        helm upgrade --install scraper-ksm ../../../e2e/charts/ksm -n scraper-ksm --create-namespace --wait
 
         echo "Waiting for E2E resources to settle"
         kubectl -n $scrapper_namespace wait --for=condition=Ready pod -l app=hpa
