@@ -15,9 +15,9 @@ APISERVER_ENDPOINT=${APISERVER_ENDPOINT:-https://localhost:8443/metrics}
 CONTROLLERMANAGER_ENDPOINT=${CONTROLLERMANAGER_ENDPOINT:-https://localhost:10257/metrics}
 SCHEDULER_ENDPOINT=${SCHEDULER_ENDPOINT:-https://localhost:10259/metrics}
 
-# Assume we are installing in minikube by default.
-# This will enable PVCs and instruct minikube to enable metricServer for HPA metrics.
-IS_MINIKUBE=${IS_MINIKUBE:-1}
+# Script will apply minikube-specific actions if this variable is set to 1.
+# If empty (default), minikube environment will be autodetected based on the name of the context.
+IS_MINIKUBE=""
 
 # Extra args that will be appended to the helm install e2e command.
 # Values can be overridden using this and --set commands, or -f and point to a custom values file.
@@ -103,7 +103,15 @@ function main() {
 # If $SKIP_INSTALL is non-empty, it skips deploying KSM, the dummy resources, and the scrapper pod and just copies
 # script inside an scraper pod that is assumed to exist already.
 function bootstrap() {
-    echo -e "Using context $(kubectl config current-context), is this ok?\n^C now if it is not."
+    ctx=$(kubectl config current-context)
+    if [[ -z "$IS_MINIKUBE" && "$ctx" = "minikube" ]]; then
+        echo "Assuming minikube distribution since context is \"$ctx\""
+        echo "Set IS_MINIKUBE to 0 or 1 to override autodetection"
+        IS_MINIKUBE=1
+    fi
+
+    echo
+    echo -e "Using context $ctx, is this ok?\n^C now if it is not."
     read
 
     if [[ -z $SKIP_INSTALL ]]; then
@@ -114,6 +122,7 @@ function bootstrap() {
             minikube addons enable metrics-server
         fi
 
+        echo "Updating helm dependencies"
         helm dependency update ../../../e2e/charts/e2e-resources > /dev/null
         helm upgrade --install e2e ../../../e2e/charts/e2e-resources -n $scrapper_namespace --create-namespace \
           --set scraper.enabled=true \
@@ -147,9 +156,6 @@ function bootstrap() {
 function cleanup() {
     echo "Removing e2e-resources chart"
     helm uninstall e2e -n $scrapper_namespace || true
-    echo "Removing ksm"
-    helm uninstall ksm -n ksm || true
-    echo "Removing scraper pods"
 }
 
 # scrape will curl the specified component and output the response body to standard output.
