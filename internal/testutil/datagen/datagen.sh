@@ -37,7 +37,7 @@ function main() {
 
     # Scraper pod is a deployment, so we need to locate it.
     pod=$(scraper_pod "$scrapper_selector")
-    if [[ -z "pod" ]]; then
+    if [[ -z "$pod" ]]; then
         echo "Could not find scraper pod (-l $scrapper_selector)"
         exit 1
     fi
@@ -134,7 +134,7 @@ function bootstrap() {
     echo "Waiting for scraper pod to be ready"
     kubectl -n $scrapper_namespace wait --for=condition=Ready pod -l "$scrapper_selector"
     pod=$(scraper_pod "$scrapper_selector")
-    if [[ -z "pod" ]]; then
+    if [[ -z "$pod" ]]; then
         echo "Could not find scraper pod (-l $scrapper_selector)"
         exit 1
     fi
@@ -242,9 +242,9 @@ command=$1
 case $command in
 scrape|bootstrap|cleanup|testinfo|etcd_certs)
     shift
-    $command $@
+    $command "$@"
     exit $?
   ;;
 esac
 
-main $@
+main "$@"
