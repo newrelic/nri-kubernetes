@@ -8,7 +8,7 @@ scrapper_namespace="scraper"
 
 # Default endpoints for minikube, extensible to some extent to other distros like kubeadm.
 KSM_ENDPOINT=${KSM_ENDPOINT:-http://e2e-kube-state-metrics.${scrapper_namespace}.svc:8080/metrics}
-KUBELET_ENDPOINT=${KUBELET_ENDPOINT:-https://localhost:10250/}
+KUBELET_ENDPOINT=${KUBELET_ENDPOINT:-https://localhost:10250}
 # If control plane is not reachable (e.g. managed k8s), set DISABLE_CONTROLPLANE=1.
 ETCD_ENDPOINT=${ETCD_ENDPOINT:-http://localhost:2381/metrics}
 APISERVER_ENDPOINT=${APISERVER_ENDPOINT:-https://localhost:8443/metrics}
@@ -173,7 +173,7 @@ function scrape() {
     ;;
     kubelet)
       # Callers put the subpath in $2, e.g. `scrape kubelet stats/summary`
-      endpoint=${KUBELET_ENDPOINT}${2}
+      endpoint=${KUBELET_ENDPOINT}/${2}
     ;;
     controlplane)
       case $2 in
@@ -201,7 +201,7 @@ function scrape() {
       ;;
     esac
 
-    curl -ksSL "$endpoint" -H "$bearer" $curlargs
+    curl -ksSL "$endpoint" -H "$bearer"
     return $?
 }
 
