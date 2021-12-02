@@ -249,7 +249,7 @@ EOF
 command=$1
 
 case $command in
-scrape|bootstrap|cleanup|testinfo|etcd_certs)
+scrape|bootstrap|cleanup|testinfo)
     shift
     $command "$@"
     exit $?
