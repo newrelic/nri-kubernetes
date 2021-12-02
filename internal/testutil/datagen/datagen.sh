@@ -42,6 +42,15 @@ function main() {
         exit 1
     fi
 
+    # Collect cds to the specified dir so we invoke it on a subshell
+    ( collect "$1" )
+
+    if [[ "$DISABLE_CLEANUP" != "1" ]]; then
+      cleanup
+    fi
+}
+
+function collect() {
     # Dump test info
     mkdir -p "$1" && cd "$1"
     testinfo > README.md
@@ -92,11 +101,6 @@ function main() {
     kubedump endpoints
     kubedump services
     kubedump pods
-
-    cd -
-    if [[ "$DISABLE_CLEANUP" != "1" ]]; then
-      cleanup
-    fi
 }
 
 # bootstrap suvcommand installs the required components in the cluster to generate the testdata.
