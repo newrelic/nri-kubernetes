@@ -82,7 +82,7 @@ func Test_secrets_ignores_different_namespaces(t *testing.T) {
 func Test_secrets_stop_channel(t *testing.T) {
 	t.Parallel()
 
-	client := testclient.NewSimpleClientset(fakeSecret())
+	client := testclient.NewSimpleClientset()
 
 	d, closeChan := discovery.NewSecretNamespaceLister(
 		discovery.SecretListerConfig{
@@ -92,6 +92,11 @@ func Test_secrets_stop_channel(t *testing.T) {
 	)
 
 	close(closeChan)
+
+	// Discovery after creating a secret will fail since we stopped the channel
+	_, err := client.CoreV1().Secrets(secretNamespace).Create(context.Background(), fakeSecret(), metav1.CreateOptions{})
+	require.NoError(t, err)
+	time.Sleep(time.Second)
 
 	e, err := d.Get(secretName)
 	require.Error(t, err)
