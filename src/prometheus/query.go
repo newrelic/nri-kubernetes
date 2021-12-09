@@ -139,6 +139,10 @@ func Do(c client.HTTPGetter, endpoint string, queries []Query) ([]MetricFamily, 
 }
 
 func handleResponseWithFilter(resp *http.Response, queries []Query) ([]MetricFamily, error) {
+	if resp == nil {
+		return nil, fmt.Errorf("response cannot be nil")
+	}
+
 	defer resp.Body.Close() // nolint: errcheck
 
 	if resp.StatusCode != http.StatusOK {
@@ -180,7 +184,6 @@ type MetricFamiliesGetFunc interface {
 type FetchAndFilterMetricsFamilies func([]Query) ([]MetricFamily, error)
 
 func GetFilteredMetricFamilies(httpClient client.HTTPDoer, url string, queries []Query, logger log.Logger) ([]MetricFamily, error) {
-
 	logger.Debugf("Calling a prometheus endpoint: %s", url)
 
 	// todo it would be nice to have context with deadline
