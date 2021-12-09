@@ -20,9 +20,9 @@ rules:
       - "services"
       - "nodes"
       - "pods"
-    verbs: [ "get", "list","watch" ]
+    verbs: [ "get", "list", "watch" ]
   - nonResourceURLs: ["/metrics"]
-    verbs: ["get"]
+    verbs: ["get", "head"]
 {{- if .Values.rbac.pspEnabled }}
   - apiGroups:
       - extensions

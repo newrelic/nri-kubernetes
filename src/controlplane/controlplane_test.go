@@ -147,25 +147,33 @@ func testConfigAutodiscovery(server *testutil.Server) map[controlplane.Component
 			Namespace: defaultNamespace,
 			MatchNode: true,
 			Selector:  "k8s-app=etcd-manager-main",
-			URL:       server.ControlPlaneEndpoint(string(controlplane.Etcd)),
+			Endpoints: []config.Endpoint{
+				{URL: server.ControlPlaneEndpoint(string(controlplane.Etcd))},
+			},
 		},
 		controlplane.APIServer: {
 			Namespace: defaultNamespace,
 			MatchNode: true,
 			Selector:  "k8s-app=kube-apiserver",
-			URL:       server.ControlPlaneEndpoint(string(controlplane.APIServer)),
+			Endpoints: []config.Endpoint{
+				{URL: server.ControlPlaneEndpoint(string(controlplane.APIServer))},
+			},
 		},
 		controlplane.Scheduler: {
 			Namespace: defaultNamespace,
 			MatchNode: true,
 			Selector:  "k8s-app=kube-scheduler",
-			URL:       server.ControlPlaneEndpoint(string(controlplane.Scheduler)),
+			Endpoints: []config.Endpoint{
+				{URL: server.ControlPlaneEndpoint(string(controlplane.Scheduler))},
+			},
 		},
 		controlplane.ControllerManager: {
 			Namespace: defaultNamespace,
 			MatchNode: true,
 			Selector:  "k8s-app=kube-controller-manager",
-			URL:       server.ControlPlaneEndpoint(string(controlplane.ControllerManager)),
+			Endpoints: []config.Endpoint{
+				{URL: server.ControlPlaneEndpoint(string(controlplane.ControllerManager))},
+			},
 		},
 	}
 }

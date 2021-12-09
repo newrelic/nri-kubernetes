@@ -38,25 +38,38 @@ scrapersConfig:
         - namespace: kube-system
           selector: "tier=control-plane,component=etcd"
           matchNode: true
-          url: http://localhost:2381
+          endpoints:
+            - url: http://localhost:2381
     scheduler:
       enabled: true
       autodiscover:
         - namespace: kube-system
           selector: "tier=control-plane,component=kube-scheduler"
           matchNode: true
-          url: https://localhost:10259
+          endpoints:
+            - url: https://localhost:10259
+              insecureSkipVerify: true
+              auth:
+                type: bearer
     controllerManager:
       enabled: true
       autodiscover:
         - namespace: kube-system
           selector: "tier=control-plane,component=kube-controller-manager"
           matchNode: true
-          url: https://localhost:10257
+          endpoints:
+            - url: https://localhost:10257
+              insecureSkipVerify: true
+              auth:
+                type: bearer
     apiServer:
       enabled: true
       autodiscover:
         - namespace: kube-system
           selector: "tier=control-plane,component=kube-apiserver"
           matchNode: true
-          url: https://localhost:8443
+          endpoints:
+            - url: https://localhost:8443
+              insecureSkipVerify: true
+              auth:
+                type: bearer

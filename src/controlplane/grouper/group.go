@@ -11,9 +11,9 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
 
-// prometheusMetricsPath is the control plane component prometheus
-// metrics endpoint
-const prometheusMetricsPath = "/metrics"
+// Default path is set on the connector
+// TODO this should dissapear when refactoring the grouper
+const defaultPath = ""
 
 type grouper struct {
 	queries []prometheus.Query
@@ -25,7 +25,7 @@ type grouper struct {
 // Group implements Grouper interface by fetching Prometheus metrics from a given component and converting them
 // into metrics of a single entity ID, using controlplane Pod name.
 func (r *grouper) Group(specGroups definition.SpecGroups) (definition.RawGroups, *data.ErrorGroup) {
-	mFamily, err := prometheus.Do(r.client, prometheusMetricsPath, r.queries)
+	mFamily, err := prometheus.Do(r.client, defaultPath, r.queries)
 	if err != nil {
 		return nil, &data.ErrorGroup{
 			Errors: []error{

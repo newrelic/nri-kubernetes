@@ -42,6 +42,9 @@ type ScraperOpt func(s *Scraper) error
 // WithLogger returns an OptionFunc to change the logger from the default noop logger.
 func WithLogger(logger log.Logger) ScraperOpt {
 	return func(s *Scraper) error {
+		if logger == nil {
+			return fmt.Errorf("logger canont be nil")
+		}
 		s.logger = logger
 		return nil
 	}
@@ -50,6 +53,9 @@ func WithLogger(logger log.Logger) ScraperOpt {
 // WithLogger returns an OptionFunc to change the logger from the default noop logger.
 func WithRestConfig(restConfig *rest.Config) ScraperOpt {
 	return func(s *Scraper) error {
+		if restConfig == nil {
+			return fmt.Errorf("restConfig canont be nil")
+		}
 		s.inClusterConfig = restConfig
 		return nil
 	}
@@ -100,24 +106,31 @@ func (s *Scraper) Run(i *integration.Integration) error {
 		for _, autodiscover := range component.AutodiscoverConfigs {
 			podName, err := s.discoverPod(autodiscover)
 			if err != nil {
-				return fmt.Errorf("control plane component %s discovery failed: %v", component.Name, err)
+				return fmt.Errorf("control plane component %q discovery failed: %v", component.Name, err)
 			}
 
 			if podName == "" {
-				s.logger.Debugf("No pod found for component: %s", component.Name)
+				s.logger.Debugf("No %q pod found with labels %q ", component.Name, autodiscover.Selector)
 				continue
 			}
 
-			// TODO the fallback mechanism to a different endpoint for the same pod is not implemented.
+			connector, err := controlplaneClient.DefaultConnector(
+				autodiscover.Endpoints,
+				s.K8s,
+				s.inClusterConfig,
+				s.logger,
+			)
+			if err != nil {
+				return fmt.Errorf("control plane component %q failed creating connector: %v", component.Name, err)
+			}
+
 			client, err := controlplaneClient.New(controlplaneClient.Config{
-				Logger:          s.logger,
-				K8sClient:       s.K8s,
-				InClusterConfig: s.inClusterConfig,
-				EndpoinURL:      autodiscover.URL,
-				Auth:            &autodiscover.Auth,
+				Logger:    s.logger,
+				Connector: connector,
 			})
 			if err != nil {
-				return fmt.Errorf("creating client for component %s failed: %v", component.Name, err)
+				s.logger.Debugf("creating client for component %s failed: %v", component.Name, err)
+				continue
 			}
 
 			grouper := grouper.New(

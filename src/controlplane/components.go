@@ -28,7 +28,7 @@ type component struct {
 	Specs                definition.SpecGroups
 	Queries              []prometheus.Query
 	AutodiscoverConfigs  []config.AutodiscoverControlPlane
-	StaticEndpointConfig config.StaticEndpoint
+	StaticEndpointConfig *config.Endpoint
 }
 
 func newComponents(config config.ControlPlane) []component {
@@ -39,9 +39,7 @@ func newComponents(config config.ControlPlane) []component {
 			Queries:              metric.SchedulerQueries,
 			Specs:                metric.SchedulerSpecs,
 			StaticEndpointConfig: config.Scheduler.StaticEndpoint,
-		}
-		if config.Scheduler.StaticEndpoint.URL == "" {
-			component.AutodiscoverConfigs = config.Scheduler.Autodiscover
+			AutodiscoverConfigs:  config.Scheduler.Autodiscover,
 		}
 		components = append(components, component)
 	}
@@ -51,9 +49,7 @@ func newComponents(config config.ControlPlane) []component {
 			Queries:              metric.EtcdQueries,
 			Specs:                metric.EtcdSpecs,
 			StaticEndpointConfig: config.ETCD.StaticEndpoint,
-		}
-		if config.ETCD.StaticEndpoint.URL == "" {
-			component.AutodiscoverConfigs = config.ETCD.Autodiscover
+			AutodiscoverConfigs:  config.ETCD.Autodiscover,
 		}
 		components = append(components, component)
 	}
@@ -62,11 +58,8 @@ func newComponents(config config.ControlPlane) []component {
 			Name:                 ControllerManager,
 			Queries:              metric.ControllerManagerQueries,
 			Specs:                metric.ControllerManagerSpecs,
-			AutodiscoverConfigs:  config.ControllerManager.Autodiscover,
 			StaticEndpointConfig: config.ControllerManager.StaticEndpoint,
-		}
-		if config.ControllerManager.StaticEndpoint.URL == "" {
-			component.AutodiscoverConfigs = config.ControllerManager.Autodiscover
+			AutodiscoverConfigs:  config.ControllerManager.Autodiscover,
 		}
 		components = append(components, component)
 	}
@@ -75,11 +68,8 @@ func newComponents(config config.ControlPlane) []component {
 			Name:                 APIServer,
 			Queries:              metric.APIServerQueries,
 			Specs:                metric.APIServerSpecs,
-			AutodiscoverConfigs:  config.APIServer.Autodiscover,
 			StaticEndpointConfig: config.APIServer.StaticEndpoint,
-		}
-		if config.APIServer.StaticEndpoint.URL == "" {
-			component.AutodiscoverConfigs = config.APIServer.Autodiscover
+			AutodiscoverConfigs:  config.APIServer.Autodiscover,
 		}
 		components = append(components, component)
 	}
