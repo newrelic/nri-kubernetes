@@ -119,7 +119,7 @@ func Test_Scraper_Autodiscover_cp_component_after_start(t *testing.T) {
 	createControlPlainPod(t, fakeK8s, controlplane.Scheduler, discoveryConfig[controlplane.Scheduler], "masterNode2")
 
 	if err = scraper.Run(i); err != nil {
-		t.Fatalf("running scraper: %v", err)
+		t.Fatalf("running scraper shouldn't fail if autodiscovery doesn't found a matching pod: %v", err)
 	}
 
 	// There is no scheduler on the same node.
@@ -134,6 +134,53 @@ func Test_Scraper_Autodiscover_cp_component_after_start(t *testing.T) {
 	}
 	// Call the asserter for the entities of this particular sub-test.
 	asserter.On(i.Entities).Assert(t)
+}
+
+func Test_Scraper_external_endpoint(t *testing.T) {
+	t.Parallel()
+
+	asserter := testutil.NewAsserter().
+		Using(metric.SchedulerSpecs).
+		Excluding(testutil.ExcludeMetrics("scheduler", excludeS...))
+
+	testServer, err := testutil.LatestVersion().Server()
+	if err != nil {
+		t.Fatalf("Cannot create fake KSM server: %v", err)
+	}
+
+	fakeK8s := fake.NewSimpleClientset(testutil.K8sEverything()...)
+
+	i := testutil.NewIntegration(t)
+
+	scraper, err := controlplane.NewScraper(
+		&config.Config{
+			NodeName: masterNodeName,
+			ControlPlane: config.ControlPlane{
+				Enabled: true,
+				Scheduler: config.ControlPlaneComponent{
+					Enabled: true,
+					StaticEndpoint: &config.Endpoint{
+						URL: testServer.ControlPlaneEndpoint(string(controlplane.Scheduler)),
+					},
+				},
+			},
+		},
+		controlplane.Providers{
+			K8s: fakeK8s,
+		},
+	)
+
+	if err = scraper.Run(i); err != nil {
+		t.Fatalf("running scraper: %v", err)
+	}
+	// Call the asserter for the entities of this particular sub-test.
+	asserter.On(i.Entities).Assert(t)
+
+	testServer.Close()
+
+	if err = scraper.Run(i); err == nil {
+		t.Fatalf("scraper should fail if static endpoint cannot be scraped")
+	}
 }
 
 func testConfigAutodiscovery(server *testutil.Server) map[controlplane.ComponentName]config.AutodiscoverControlPlane {

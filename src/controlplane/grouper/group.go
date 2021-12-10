@@ -16,25 +16,25 @@ import (
 const defaultPath = ""
 
 type grouper struct {
-	queries []prometheus.Query
-	client  client.HTTPGetter
-	logger  log.Logger
-	podName string
+	queries  []prometheus.Query
+	client   client.HTTPGetter
+	logger   log.Logger
+	entityID string
 }
 
 // Group implements Grouper interface by fetching Prometheus metrics from a given component and converting them
-// into metrics of a single entity ID, using controlplane Pod name.
+// into metrics of a single entity ID, using controlplane Pod name for autodiscovered and Host for external.
 func (r *grouper) Group(specGroups definition.SpecGroups) (definition.RawGroups, *data.ErrorGroup) {
 	mFamily, err := prometheus.Do(r.client, defaultPath, r.queries)
 	if err != nil {
 		return nil, &data.ErrorGroup{
 			Errors: []error{
-				fmt.Errorf("error querying controlplane component %s: %s", r.podName, err),
+				fmt.Errorf("error querying controlplane component %s: %s", r.entityID, err),
 			},
 		}
 	}
 
-	groups, errs := prometheus.GroupEntityMetricsBySpec(specGroups, mFamily, r.podName)
+	groups, errs := prometheus.GroupEntityMetricsBySpec(specGroups, mFamily, r.entityID)
 	if len(errs) > 0 {
 		return groups, &data.ErrorGroup{
 			Recoverable: true,
@@ -51,12 +51,12 @@ func New(
 	c client.HTTPGetter,
 	queries []prometheus.Query,
 	logger log.Logger,
-	podName string,
+	entityID string,
 ) data.Grouper {
 	return &grouper{
-		queries: queries,
-		client:  c,
-		logger:  logger,
-		podName: podName,
+		queries:  queries,
+		client:   c,
+		logger:   logger,
+		entityID: entityID,
 	}
 }

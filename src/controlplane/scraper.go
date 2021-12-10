@@ -3,6 +3,7 @@ package controlplane
 import (
 	"fmt"
 	"io"
+	"net/url"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
@@ -101,59 +102,129 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 
 // Run scraper collect the data populating the integration entities
 func (s *Scraper) Run(i *integration.Integration) error {
+	var jobs []*scrape.Job
 	for _, component := range s.components {
-		// TODO condition to scrape endpoint directly
 
-		for _, autodiscover := range component.AutodiscoverConfigs {
-			podName, err := s.discoverPod(autodiscover)
+		job, err := s.externalEndpoint(component)
+		if err != nil {
+			return fmt.Errorf("configuring %q external endpoint: %w", component.Name, err)
+		}
+
+		if component.StaticEndpointConfig == nil {
+			job, err = s.autodiscover(component)
 			if err != nil {
-				return fmt.Errorf("control plane component %q discovery failed: %v", component.Name, err)
+				return fmt.Errorf("autodiscovering %q endpoint: %w", component.Name, err)
 			}
+		}
 
-			if podName == "" {
-				s.logger.Debugf("No %q pod found with labels %q ", component.Name, autodiscover.Selector)
-				continue
-			}
-
-			connector, err := controlplaneClient.DefaultConnector(
-				autodiscover.Endpoints,
-				s.K8s,
-				s.inClusterConfig,
-				s.logger,
-			)
-			if err != nil {
-				return fmt.Errorf("control plane component %q failed creating connector: %v", component.Name, err)
-			}
-
-			client, err := controlplaneClient.New(controlplaneClient.Config{
-				Logger:    s.logger,
-				Connector: connector,
-			})
-			if err != nil {
-				s.logger.Debugf("creating client for component %s failed: %v", component.Name, err)
-				continue
-			}
-
-			grouper := grouper.New(
-				client,
-				component.Queries,
-				s.logger,
-				podName,
-			)
-
-			job := scrape.NewScrapeJob(string(component.Name), grouper, component.Specs)
-
-			s.logger.Debugf("Running job: %s", job.Name)
-
-			result := job.Populate(i, s.config.ClusterName, s.logger, s.k8sVersion)
-
-			if len(result.Errors) > 0 {
-				s.logger.Infof("Error populating data from %s: %v", job.Name, result.Error())
-			}
+		if job != nil {
+			jobs = append(jobs, job)
 		}
 	}
 
+	for _, job := range jobs {
+		s.logger.Debugf("Running job: %s", job.Name)
+
+		result := job.Populate(i, s.config.ClusterName, s.logger, s.k8sVersion)
+
+		if len(result.Errors) > 0 {
+			s.logger.Infof("Error populating data from %s: %v", job.Name, result.Error())
+		}
+
+	}
+
 	return nil
+}
+
+// externalEndpoint builds the client based on the StaticEndpointConfig and fails if
+// the client probe cannot reach the endpoint.
+func (s *Scraper) externalEndpoint(c component) (*scrape.Job, error) {
+	if c.StaticEndpointConfig == nil {
+		return nil, nil
+	}
+
+	connector, err := controlplaneClient.DefaultConnector(
+		[]config.Endpoint{*c.StaticEndpointConfig},
+		s.K8s,
+		s.inClusterConfig,
+		s.logger,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("control plane component %q failed creating connector: %v", c.Name, err)
+	}
+
+	client, err := controlplaneClient.New(controlplaneClient.Config{
+		Logger:    s.logger,
+		Connector: connector,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("creating client for component %s failed: %v", c.Name, err)
+	}
+
+	u, err := url.Parse(c.StaticEndpointConfig.URL)
+	if err != nil {
+		return nil, fmt.Errorf("parsing static endpoint url for component %s failed: %v", c.Name, err)
+	}
+
+	grouper := grouper.New(
+		client,
+		c.Queries,
+		s.logger,
+		u.Host,
+	)
+
+	return scrape.NewScrapeJob(string(c.Name), grouper, c.Specs), nil
+}
+
+// autodiscover will iterate over the Autodiscovery configs from a component and for each:
+//  - Discover if any pod matches the selector.
+//  - Build the client, which probes all the endpoints in the list.
+// It uses the first autodiscovery config that can satisfy conditions above.
+// It doesn't fail if no autodiscovery satisfy the contitions.
+func (s *Scraper) autodiscover(c component) (*scrape.Job, error) {
+	for _, autodiscover := range c.AutodiscoverConfigs {
+		podName, err := s.discoverPod(autodiscover)
+		if err != nil {
+			return nil, fmt.Errorf("control plane component %q discovery failed: %v", c.Name, err)
+		}
+
+		if podName == "" {
+			s.logger.Debugf("No %q pod found with labels %q", c.Name, autodiscover.Selector)
+			continue
+		}
+
+		connector, err := controlplaneClient.DefaultConnector(
+			autodiscover.Endpoints,
+			s.K8s,
+			s.inClusterConfig,
+			s.logger,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("control plane component %q failed creating connector: %v", c.Name, err)
+		}
+
+		client, err := controlplaneClient.New(controlplaneClient.Config{
+			Logger:    s.logger,
+			Connector: connector,
+		})
+		if err != nil {
+			s.logger.Debugf("Failed creating %q client: %v", c.Name, err)
+			continue
+		}
+
+		grouper := grouper.New(
+			client,
+			c.Queries,
+			s.logger,
+			podName,
+		)
+
+		return scrape.NewScrapeJob(string(c.Name), grouper, c.Specs), nil
+	}
+
+	s.logger.Debugf("No %q pod has been discovered", c.Name)
+
+	return nil, nil
 }
 
 func (s *Scraper) discoverPod(autodiscover config.AutodiscoverControlPlane) (string, error) {
@@ -174,7 +245,7 @@ func (s *Scraper) discoverPod(autodiscover config.AutodiscoverControlPlane) (str
 	// Validation of returned pods.
 	for _, pod := range pods {
 		if autodiscover.MatchNode && pod.Spec.NodeName != s.config.NodeName {
-			s.logger.Debugf("discarding pod: %s running outside the node", pod.Name)
+			s.logger.Debugf("Discarding pod: %s running outside the node", pod.Name)
 			continue
 		}
 		return pod.Name, nil
