@@ -50,7 +50,7 @@ func WithLogger(logger log.Logger) ScraperOpt {
 	}
 }
 
-// WithLogger returns an OptionFunc to change the logger from the default noop logger.
+// WithRestConfig returns an OptionFunc to change the restConfig from default empty config.
 func WithRestConfig(restConfig *rest.Config) ScraperOpt {
 	return func(s *Scraper) error {
 		if restConfig == nil {
@@ -68,7 +68,7 @@ func (s *Scraper) Close() {
 	}
 }
 
-// NewScraper builds a new Scraper, initializing its internal informers. After use, informers should be closed by calling
+// NewScraper builds a new Scraper, initializing its internal informers. After use, informers should be closed by calling Close().
 func NewScraper(config *config.Config, providers Providers, options ...ScraperOpt) (*Scraper, error) {
 	var err error
 	s := &Scraper{
@@ -78,6 +78,7 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 		logger:               log.New(false, io.Discard),
 		podListerByNamespace: make(map[string]v1.PodLister),
 		components:           newComponents(config.ControlPlane),
+		inClusterConfig:      &rest.Config{},
 	}
 
 	for i, opt := range options {

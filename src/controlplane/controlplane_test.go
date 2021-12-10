@@ -18,7 +18,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/rest"
 )
 
 var (
@@ -71,7 +70,6 @@ func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 			scraper, err := controlplane.NewScraper(
 				&testConfig,
 				controlplane.Providers{K8s: fakeK8s},
-				controlplane.WithRestConfig(&rest.Config{}),
 			)
 
 			if err = scraper.Run(i); err != nil {
@@ -115,7 +113,6 @@ func Test_Scraper_Autodiscover_cp_component_after_start(t *testing.T) {
 		controlplane.Providers{
 			K8s: fakeK8s,
 		},
-		controlplane.WithRestConfig(&rest.Config{}),
 	)
 
 	// create a scheduler pod on different node
