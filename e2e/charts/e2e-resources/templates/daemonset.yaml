@@ -1,0 +1,28 @@
+{{- if .Values.daemonSet.enabled }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ .Release.Name }}-ds
+spec:
+  selector:
+    matchLabels:
+      app: daemonset
+  template:
+    metadata:
+      labels:
+        app: daemonset
+    spec:
+      containers:
+        - name: busybox
+          image: busybox
+          args:
+            - sleep
+            - infinity
+          volumeMounts:
+            - mountPath: /emptydir
+              name: an-empty-dir
+      volumes:
+        - name: an-empty-dir
+          emptyDir:
+            sizeLimit: 128Mi
+  {{- end }}

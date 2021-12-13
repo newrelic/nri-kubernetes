@@ -1,11 +1,36 @@
+# Enable crashing and pending pods
+pending:
+  enabled: true
+
+# Deploy a dummy daemonSet
+daemonSet:
+  enabled: true
+
+# Deploy a dummy statefulSet
+statefulSet:
+  enabled: true
+
+# Deploy a dummy deployment
+deployment:
+  enabled: true
+
+# Enable hpa resources
+hpa:
+  enabled: true
+
+# Create PVs and PVCs
 persistentVolume:
   enabled: false
 persistentVolumeClaim:
   enabled: false
   storageClassName: "standard" # Default for minikube
-scraper:
-  enabled: false
+
+# Deploy a loadBalancer service
 loadBalancerService:
   enabled: true
   annotations: {}
   fakeIP: "" # If set, will deploy service with a loadBalancerIP set to this value
+
+# Deploy the scraper pod
+scraper:
+  enabled: false

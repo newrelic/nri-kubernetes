@@ -1,0 +1,28 @@
+{{- if .Values.pending.enabled }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ .Release.Name }}-container-creating
+spec:
+  containers:
+    - name: alpine
+      image: alpine:latest
+      resources:
+        limits:
+          memory: 5M
+          cpu: 5m
+        requests:
+          memory: 5M
+          cpu: 5m
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ .Release.Name }}-pending
+spec:
+  containers:
+    - name: alpine
+      image: alpine:latest
+  nodeSelector:
+    not-existing: not-existing
+{{- end }}
