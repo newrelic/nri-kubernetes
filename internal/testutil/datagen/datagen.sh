@@ -138,9 +138,11 @@ function bootstrap() {
         kubectl -n $scrapper_namespace wait --for=condition=Ready pod -l app.kubernetes.io/name=kube-state-metrics
 
         echo "Waiting for E2E resources to settle"
-        kubectl -n $scrapper_namespace wait --for=condition=Ready pod -l app=hpa
-        kubectl -n $scrapper_namespace wait --for=condition=Ready pod -l app=daemonset
-        kubectl -n $scrapper_namespace wait --for=condition=Ready pod -l app=statefulset
+        timeout="--timeout=90s"
+        kubectl -n $scrapper_namespace wait $timeout --for=condition=Ready pod -l app=hpa
+        kubectl -n $scrapper_namespace wait $timeout --for=condition=Ready pod -l app=daemonset
+        kubectl -n $scrapper_namespace wait $timeout --for=condition=Ready pod -l app=statefulset
+        kubectl -n $scrapper_namespace wait $timeout --for=condition=Ready pod -l app=deployment
     fi
 
     echo "Waiting for scraper pod to be ready"
