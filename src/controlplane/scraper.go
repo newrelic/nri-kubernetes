@@ -33,7 +33,7 @@ type Scraper struct {
 	k8sVersion           *version.Info
 	components           []component
 	informerClosers      []chan<- struct{}
-	podListerByNamespace map[string]v1.PodLister
+	podListerByNamespace map[string]v1.PodNamespaceLister
 	inClusterConfig      *rest.Config
 }
 
@@ -77,7 +77,7 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 		Providers: providers,
 		// TODO: An empty implementation of the logger interface would be better
 		logger:               log.New(false, io.Discard),
-		podListerByNamespace: make(map[string]v1.PodLister),
+		podListerByNamespace: make(map[string]v1.PodNamespaceLister),
 		components:           newComponents(config.ControlPlane),
 		inClusterConfig:      &rest.Config{},
 	}
@@ -258,7 +258,7 @@ func (s *Scraper) buildLister() {
 	for _, component := range s.components {
 		for _, autodiscover := range component.AutodiscoverConfigs {
 			if _, ok := s.podListerByNamespace[autodiscover.Namespace]; !ok {
-				podLister, informerCloser := discovery.NewPodsLister(discovery.PodsListerConfig{
+				podLister, informerCloser := discovery.NewPodLister(discovery.PodListerConfig{
 					Client:    s.K8s,
 					Namespace: autodiscover.Namespace,
 				})

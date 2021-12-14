@@ -32,46 +32,46 @@ func Test_pods_lister_returns(t *testing.T) {
 	t.Parallel()
 
 	type testData struct {
-		config   discovery.PodsListerConfig
+		config   discovery.PodListerConfig
 		selector labels.Selector
 		result   []*corev1.Pod
 	}
 
 	testCases := map[string]testData{
 		"pod_when_selector_matches": {
-			discovery.PodsListerConfig{},
+			discovery.PodListerConfig{},
 			labels.SelectorFromSet(labelSelector),
 			[]*corev1.Pod{getPodUniqueLabelSelector()},
 		},
 		"pod_when_selector_and_namespace_match": {
-			discovery.PodsListerConfig{Namespace: testNamespace},
+			discovery.PodListerConfig{Namespace: testNamespace},
 			labels.SelectorFromSet(labelSelector),
 			[]*corev1.Pod{getPodUniqueLabelSelector()},
 		},
 		"pod_when_multilabels_match": {
-			discovery.PodsListerConfig{},
+			discovery.PodListerConfig{},
 			labels.SelectorFromSet(multiLabelSelector),
 			[]*corev1.Pod{getPodMultiLabelSelector()},
 		},
 		"pod_when_multilabels_partially_match": {
-			discovery.PodsListerConfig{Namespace: testNamespace},
+			discovery.PodListerConfig{Namespace: testNamespace},
 			labels.SelectorFromSet(labels.Set{
 				"foo": multiLabelSelector["foo"],
 			}),
 			[]*corev1.Pod{getPodMultiLabelSelector()},
 		},
 		"no_pod_when_namespace_not_match": {
-			discovery.PodsListerConfig{Namespace: "not-matching"},
+			discovery.PodListerConfig{Namespace: "not-matching"},
 			labels.SelectorFromSet(labelSelector),
 			nil,
 		},
 		"no_pod_when_labels_no_match": {
-			discovery.PodsListerConfig{Namespace: testNamespace},
+			discovery.PodListerConfig{Namespace: testNamespace},
 			labels.SelectorFromSet(labels.Set{"not-matching": "label"}),
 			nil,
 		},
 		"no_pod_when_partial_multilabellabels_no_match": {
-			discovery.PodsListerConfig{Namespace: testNamespace},
+			discovery.PodListerConfig{Namespace: testNamespace},
 			labels.SelectorFromSet(labels.Set{
 				"baz":          labelSelector["baz"],
 				"not-matching": "label",
@@ -97,7 +97,7 @@ func Test_pods_lister_returns(t *testing.T) {
 
 			testData.config.Client = client
 
-			podLister, closeChan := discovery.NewPodsLister(testData.config)
+			podLister, closeChan := discovery.NewPodLister(testData.config)
 
 			pods, err := podLister.List(testData.selector)
 			require.NoError(t, err)
@@ -111,8 +111,8 @@ func Test_pods_lister_updates(t *testing.T) {
 	t.Parallel()
 
 	client := testclient.NewSimpleClientset()
-	podLister, closeChan := discovery.NewPodsLister(
-		discovery.PodsListerConfig{
+	podLister, closeChan := discovery.NewPodLister(
+		discovery.PodListerConfig{
 			Client:    client,
 			Namespace: testNamespace,
 		},
@@ -149,7 +149,7 @@ func Test_pods_lister_stop_channel(t *testing.T) {
 	t.Parallel()
 
 	client := testclient.NewSimpleClientset()
-	podLister, closeChan := discovery.NewPodsLister(discovery.PodsListerConfig{Client: client})
+	podLister, closeChan := discovery.NewPodLister(discovery.PodListerConfig{Client: client})
 
 	close(closeChan)
 
