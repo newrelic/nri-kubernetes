@@ -25,6 +25,10 @@ IS_MINIKUBE=""
 # See  ../../../e2e/charts/e2e-resources/values.yaml for more details.
 HELM_E2E_ARGS=""
 
+# Time to wait for pods to settle.
+# Might be useful to increase this for freshly spawned clusters on slow machines, e.g. Macbooks.
+WAIT_TIMEOUT=${WAIT_TIMEOUT:-3m}
+
 # main subcommand runs the whole flow of the script: Bootstrap, scrape, and cleanup
 function main() {
     if [[ -z "$1" ]]; then
@@ -134,11 +138,12 @@ function bootstrap() {
           $minikube_args \
           $HELM_E2E_ARGS
 
+        timeout="--timeout=${WAIT_TIMEOUT}"
+
         echo "Waiting for KSM to become ready"
-        kubectl -n $scrapper_namespace wait --for=condition=Ready pod -l app.kubernetes.io/name=kube-state-metrics
+        kubectl -n $scrapper_namespace wait $timeout --for=condition=Ready pod -l app.kubernetes.io/name=kube-state-metrics
 
         echo "Waiting for E2E resources to settle"
-        timeout="--timeout=90s"
         kubectl -n $scrapper_namespace wait $timeout --for=condition=Ready pod -l app=hpa
         kubectl -n $scrapper_namespace wait $timeout --for=condition=Ready pod -l app=daemonset
         kubectl -n $scrapper_namespace wait $timeout --for=condition=Ready pod -l app=statefulset
