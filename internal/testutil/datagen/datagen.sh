@@ -116,11 +116,11 @@ function bootstrap() {
         echo "Assuming minikube distribution since context is \"$ctx\""
         echo "Set IS_MINIKUBE to 0 or 1 to override autodetection"
         IS_MINIKUBE=1
+    else
+        echo
+        echo -e "Using context $ctx, is this ok?\n^C now if it is not."
+        read
     fi
-
-    echo
-    echo -e "Using context $ctx, is this ok?\n^C now if it is not."
-    read
 
     if [[ -z $SKIP_INSTALL ]]; then
         echo "Installing e2e-resources chart"
