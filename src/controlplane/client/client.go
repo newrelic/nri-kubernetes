@@ -30,6 +30,7 @@ func WithLogger(logger log.Logger) OptionFunc {
 		}
 
 		c.logger = logger
+
 		return nil
 	}
 }

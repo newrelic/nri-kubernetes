@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"testing"
@@ -43,7 +43,7 @@ func TestMutualTLSCalls(t *testing.T) {
 			cacert: serverCACert,
 			assert: func(t *testing.T, resp *http.Response, err error) {
 				require.NoError(t, err, "request should not fail (i.e. non-2xx response)")
-				bodyBytes, err := ioutil.ReadAll(resp.Body)
+				bodyBytes, err := io.ReadAll(resp.Body)
 				require.NoError(t, err, "error reading response body")
 				assert.Equal(t, string(bodyBytes), testString, "expected body contents not found")
 			},
@@ -56,7 +56,7 @@ func TestMutualTLSCalls(t *testing.T) {
 			// no cacert...
 			assert: func(t *testing.T, resp *http.Response, err error) {
 				require.NoError(t, err, "request should not fail (i.e. non-2xx response)")
-				bodyBytes, err := ioutil.ReadAll(resp.Body)
+				bodyBytes, err := io.ReadAll(resp.Body)
 				require.NoError(t, err, "error reading response body")
 				assert.Equal(t, string(bodyBytes), testString, "expected body contents not found")
 			},

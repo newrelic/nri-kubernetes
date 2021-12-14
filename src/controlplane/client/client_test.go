@@ -163,6 +163,7 @@ func testHTTPSServer(t *testing.T) *httptest.Server {
 
 func testHTTPSServerBearer(t *testing.T) (*httptest.Server, *http.Header) {
 	t.Helper()
+
 	h := &http.Header{}
 
 	testServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

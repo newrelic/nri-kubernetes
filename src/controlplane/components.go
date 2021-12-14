@@ -7,7 +7,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
 
-// ComponentName is a typed name for components
+// ComponentName is a typed name for components.
 type ComponentName string
 
 const (
@@ -33,6 +33,7 @@ type component struct {
 
 func newComponents(config config.ControlPlane) []component {
 	components := []component{}
+
 	if config.Scheduler.Enabled {
 		component := component{
 			Name:                 Scheduler,
@@ -43,6 +44,7 @@ func newComponents(config config.ControlPlane) []component {
 		}
 		components = append(components, component)
 	}
+
 	if config.ETCD.Enabled {
 		component := component{
 			Name:                 Etcd,
@@ -53,6 +55,7 @@ func newComponents(config config.ControlPlane) []component {
 		}
 		components = append(components, component)
 	}
+
 	if config.ControllerManager.Enabled {
 		component := component{
 			Name:                 ControllerManager,
@@ -63,6 +66,7 @@ func newComponents(config config.ControlPlane) []component {
 		}
 		components = append(components, component)
 	}
+
 	if config.APIServer.Enabled {
 		component := component{
 			Name:                 APIServer,

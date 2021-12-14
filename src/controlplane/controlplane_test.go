@@ -49,6 +49,7 @@ func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 		)
 
 	for _, version := range testutil.AllVersions() {
+		version := version
 		t.Run(fmt.Sprintf("for_version_%s", version), func(t *testing.T) {
 			t.Parallel()
 
@@ -71,6 +72,9 @@ func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 				&testConfig,
 				controlplane.Providers{K8s: fakeK8s},
 			)
+			if err != nil {
+				t.Fatalf("building scraper should not fail: %v", err)
+			}
 
 			if err = scraper.Run(i); err != nil {
 				t.Fatalf("running scraper: %v", err)
@@ -114,6 +118,9 @@ func Test_Scraper_Autodiscover_cp_component_after_start(t *testing.T) {
 			K8s: fakeK8s,
 		},
 	)
+	if err != nil {
+		t.Fatalf("building scraper should not fail: %v", err)
+	}
 
 	// create a scheduler pod on different node
 	createControlPlainPod(t, fakeK8s, controlplane.Scheduler, discoveryConfig[controlplane.Scheduler], "masterNode2")
@@ -169,6 +176,9 @@ func Test_Scraper_external_endpoint(t *testing.T) {
 			K8s: fakeK8s,
 		},
 	)
+	if err != nil {
+		t.Fatalf("building scraper should not fail: %v", err)
+	}
 
 	if err = scraper.Run(i); err != nil {
 		t.Fatalf("running scraper: %v", err)
@@ -269,6 +279,7 @@ func createControlPlainPods(
 	for componentName, autodiscovery := range autodiscovery {
 		createControlPlainPod(t, client, componentName, autodiscovery, nodeName)
 	}
+
 	time.Sleep(time.Second)
 }
 
@@ -283,7 +294,7 @@ func createControlPlainPod(
 	labelsSet, _ := labels.ConvertSelectorToLabelsMap(autodiscovery.Selector)
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      string(componentName) + fmt.Sprintf("%d", rand.Int()), // add rand to allow create same component multiple times
+			Name:      string(componentName) + fmt.Sprintf("%d", rand.Int()), // nosemgrep // add rand to allow create same component multiple times.
 			Namespace: autodiscovery.Namespace,
 			Labels:    labelsSet,
 		},

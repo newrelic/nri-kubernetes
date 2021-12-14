@@ -70,8 +70,8 @@ func DefaultConnector(endpoints []config.Endpoint, kc kubernetes.Interface, inCl
 	}, nil
 }
 
-// Connect iterates over the endpoints list and returns the connection parameters of the
-// first endpoint that respond Status OK.
+// Connect iterates over the endpoints list probing each endpoint with a HEAD request
+// and returns the connection parameters of the first endpoint that respond Status OK.
 func (dp *defaultConnector) Connect() (*connParams, error) {
 	for _, e := range dp.endpoints {
 		dp.logger.Debugf("Configuring autodiscover endpoint %q for probing", e.URL)
@@ -97,7 +97,7 @@ func (dp *defaultConnector) Connect() (*connParams, error) {
 			continue
 		}
 
-		dp.logger.Debugf("Autodiscover endpoint %q probed succesfully", e.URL)
+		dp.logger.Debugf("Autodiscover endpoint %q probed successfully", e.URL)
 
 		return &connParams{url: *u, client: httpClient}, nil
 	}
@@ -110,6 +110,8 @@ func (dp *defaultConnector) probeEndpoint(url string, client *http.Client) error
 	if err != nil {
 		return fmt.Errorf("http request failed with error: %w", err)
 	}
+
+	defer resp.Body.Close() // nolint: errcheck
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("http request failed with status: %v", resp.Status)
@@ -245,7 +247,6 @@ func parseTLSConfig(certPEMBlock, keyPEMBlock, cacertPEMBlock []byte, insecureSk
 
 func validateEndpointConfig(endpoints []config.Endpoint) error {
 	for _, e := range endpoints {
-
 		if _, err := url.Parse(e.URL); err != nil {
 			return fmt.Errorf("parsing endpoint url %q: %w", e.URL, err)
 		}
@@ -283,6 +284,7 @@ func validateMTLS(mTLS *config.MTLS) error {
 	if mTLS.TLSSecretName == "" {
 		return fmt.Errorf("TLSSecretName cannot be empty")
 	}
+
 	return nil
 }
 

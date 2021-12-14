@@ -25,7 +25,7 @@ type Providers struct {
 	K8s kubernetes.Interface
 }
 
-// Scraper takes care of getting metrics from an autodiscovered CP instances.
+// Scraper takes care of getting metrics all control plane instances based on the configuration.
 type Scraper struct {
 	Providers
 	logger               log.Logger
@@ -46,7 +46,9 @@ func WithLogger(logger log.Logger) ScraperOpt {
 		if logger == nil {
 			return fmt.Errorf("logger canont be nil")
 		}
+
 		s.logger = logger
+
 		return nil
 	}
 }
@@ -69,7 +71,8 @@ func (s *Scraper) Close() {
 	}
 }
 
-// NewScraper builds a new Scraper, initializing its internal informers. After use, informers should be closed by calling Close().
+// NewScraper initialize its internal informers and components.
+// After use, informers should be closed by calling Close().
 func NewScraper(config *config.Config, providers Providers, options ...ScraperOpt) (*Scraper, error) {
 	var err error
 	s := &Scraper{
@@ -95,28 +98,40 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 		return nil, fmt.Errorf("fetching K8s version: %w", err)
 	}
 
+	// Building pod lister and closers for pod autodisover.
 	s.buildLister()
 
 	return s, nil
 }
 
-// Run scraper collect the data populating the integration entities
+// Run scraper collect the data populating the integration entities.
 func (s *Scraper) Run(i *integration.Integration) error {
 	var jobs []*scrape.Job
+
 	for _, component := range s.components {
+		var job *scrape.Job
 
-		job, err := s.externalEndpoint(component)
-		if err != nil {
-			return fmt.Errorf("configuring %q external endpoint: %w", component.Name, err)
-		}
+		var err error
 
-		if component.StaticEndpointConfig == nil {
+		// Static endpoint take precedence over autodisover and fails if external endpoint
+		// cannot be scraped.
+		if component.StaticEndpointConfig != nil {
+			s.logger.Debugf("Building %q external endpoint job")
+
+			job, err = s.externalEndpoint(component)
+			if err != nil {
+				return fmt.Errorf("configuring %q external endpoint: %w", component.Name, err)
+			}
+		} else {
+			s.logger.Debugf("Building %q autodiscovered endpoint job")
+
 			job, err = s.autodiscover(component)
 			if err != nil {
 				return fmt.Errorf("autodiscovering %q endpoint: %w", component.Name, err)
 			}
 		}
 
+		// If autodisover do not find any valid endpoint it will return a nil job and no error.
 		if job != nil {
 			jobs = append(jobs, job)
 		}
@@ -130,7 +145,6 @@ func (s *Scraper) Run(i *integration.Integration) error {
 		if len(result.Errors) > 0 {
 			s.logger.Infof("Error populating data from %s: %v", job.Name, result.Error())
 		}
-
 	}
 
 	return nil
@@ -139,10 +153,6 @@ func (s *Scraper) Run(i *integration.Integration) error {
 // externalEndpoint builds the client based on the StaticEndpointConfig and fails if
 // the client probe cannot reach the endpoint.
 func (s *Scraper) externalEndpoint(c component) (*scrape.Job, error) {
-	if c.StaticEndpointConfig == nil {
-		return nil, nil
-	}
-
 	connector, err := controlplaneClient.DefaultConnector(
 		[]config.Endpoint{*c.StaticEndpointConfig},
 		s.K8s,
@@ -190,6 +200,8 @@ func (s *Scraper) autodiscover(c component) (*scrape.Job, error) {
 			continue
 		}
 
+		s.logger.Debugf("Found %q pod %q with labels %q", c.Name, podName, autodiscover.Selector)
+
 		connector, err := controlplaneClient.DefaultConnector(
 			autodiscover.Endpoints,
 			s.K8s,
@@ -230,12 +242,14 @@ func (s *Scraper) discoverPod(autodiscover config.AutodiscoverControlPlane) (str
 
 	labelsSet, _ := labels.ConvertSelectorToLabelsMap(autodiscover.Selector)
 
-	selector := labels.SelectorFromSet(labels.Set(labelsSet))
+	selector := labels.SelectorFromSet(labelsSet)
+
 	pods, err := podLister.List(selector)
 	if err != nil {
 		return "", fmt.Errorf("fail to list pods for selector: %v", labelsSet)
 	}
 
+	s.logger.Debugf("%d pods found with labels %q", len(pods), autodiscover.Selector)
 	// Validation of returned pods.
 	for _, pod := range pods {
 		if autodiscover.MatchNode && pod.Spec.NodeName != s.config.NodeName {
@@ -248,14 +262,18 @@ func (s *Scraper) discoverPod(autodiscover config.AutodiscoverControlPlane) (str
 	return "", nil
 }
 
+// buildLister populates podListerByNamespace with a lister for each autodiscovery entry namespace.
 func (s *Scraper) buildLister() {
 	for _, component := range s.components {
 		for _, autodiscover := range component.AutodiscoverConfigs {
 			if _, ok := s.podListerByNamespace[autodiscover.Namespace]; !ok {
+				s.logger.Debugf("Generating a new Pod lister for namespace %q.", autodiscover.Namespace)
+
 				podLister, informerCloser := discovery.NewPodLister(discovery.PodListerConfig{
 					Client:    s.K8s,
 					Namespace: autodiscover.Namespace,
 				})
+
 				s.podListerByNamespace[autodiscover.Namespace] = podLister
 				s.informerClosers = append(s.informerClosers, informerCloser)
 			}

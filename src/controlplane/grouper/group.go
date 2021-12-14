@@ -12,7 +12,7 @@ import (
 )
 
 // Default path is set on the connector
-// TODO this should dissapear when refactoring the grouper
+// TODO this should disappear when refactoring the grouper
 const defaultPath = ""
 
 type grouper struct {
