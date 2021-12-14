@@ -75,6 +75,10 @@ Aiming to be extensive by default, `datagen.sh` will assume it runs in a minikub
 
 This can be overridden by setting `IS_MINIKUBE` to `0`, `false`, or basically anything but `1`.
 
+#### `WAIT_TIMEOUT`
+
+Controls how long to wait for kubernetes resources to become ready before giving up. Defaults to 3 minutes.
+
 #### `HELM_E2E_ARGS`
 
 Most resources are installed using the [`e2e-resources`](../../../e2e/charts/e2e-resources) chart. `datagen.sh` will append the contents of `HELM_E2E_ARGS` to the `helm install ...` line that installs the chart, where custom values can be defined using `--set` or `-f` and an external values file.
