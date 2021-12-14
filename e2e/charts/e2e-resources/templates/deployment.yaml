@@ -1,0 +1,37 @@
+{{- if .Values.daemonSet.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-depl
+spec:
+  selector:
+    matchLabels:
+      app: deployment
+  template:
+    metadata:
+      labels:
+        app: deployment
+    spec:
+      containers:
+        - name: busybox
+          image: busybox
+          args:
+            - sleep
+            - infinity
+          volumeMounts:
+            {{- if .Values.persistentVolumeClaim.enabled }}
+            - mountPath: /pv
+              name: pv
+            {{- end }}
+            - mountPath: /emptydir
+              name: an-empty-dir
+      volumes:
+        {{- if .Values.persistentVolumeClaim.enabled }}
+        - name: pv
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}
+        {{- end }}
+        - name: an-empty-dir
+          emptyDir:
+            sizeLimit: 128Mi
+{{- end }}
