@@ -81,6 +81,8 @@ func TestMutualTLSCalls(t *testing.T) {
 	}
 
 	for _, test := range tt {
+		test := test
+
 		t.Run(test.name, func(t *testing.T) {
 			endpoint := startMTLSServer()
 
@@ -128,8 +130,7 @@ func createClientComponent(t *testing.T, endpoint string, cacert, key, cert []by
 			Auth: &config.Auth{
 				Type: "mtls",
 				MTLS: &config.MTLS{
-					TLSSecretName:      secretName,
-					TLSSecretNamespace: "default",
+					TLSSecretName: secretName,
 				},
 			},
 		},

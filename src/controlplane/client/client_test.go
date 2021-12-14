@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
@@ -25,11 +26,14 @@ const (
 func Test_Client_scrape_http_endpoint(t *testing.T) {
 	t.Parallel()
 
-	server := testHTTPServer(t)
+	server := testHTTPServer(t, nil)
 
 	endpoints := []config.Endpoint{{URL: server.URL}}
 
-	cpClient, err := client.New(getTestConnector(server, endpoints))
+	cpClient, err := client.New(
+		getTestConnector(server, endpoints),
+		client.WithLogger(log.Discard),
+	)
 	assert.NoError(t, err)
 
 	t.Run("return_ok_when_succeed", func(t *testing.T) {
@@ -42,7 +46,7 @@ func Test_Client_scrape_http_endpoint(t *testing.T) {
 func Test_Client_tries_endpoints_list(t *testing.T) {
 	t.Parallel()
 
-	server := testHTTPServer(t)
+	server := testHTTPServer(t, nil)
 	requestCount := 0
 	failServer := testHTTPServerFail(t, &requestCount)
 
@@ -110,14 +114,84 @@ func Test_Client_scrape_https_endpoint_with_bearer_token_auth(t *testing.T) {
 	assert.Contains(t, h.Get("Authorization"), bearerToken)
 }
 
-func testHTTPServer(t *testing.T) *httptest.Server {
+func Test_Client_fails_scraping_timeout(t *testing.T) {
+	t.Parallel()
+
+	timeout := time.Millisecond
+
+	server := testHTTPServer(t, &timeout)
+
+	cpClient, err := client.New(getTestConnector(server, []config.Endpoint{{URL: server.URL}}))
+	require.NoError(t, err)
+
+	timeout = timeout + client.DefaultTimout
+
+	_, err = cpClient.Get("")
+	require.Error(t, err)
+}
+
+func Test_New_client_fails(t *testing.T) {
+	t.Parallel()
+	t.Run("when_unique_endpoint_fails", func(t *testing.T) {
+		t.Parallel()
+
+		timeout := client.DefaultTimout + time.Millisecond
+		server := testHTTPServer(t, &timeout)
+
+		_, err := client.New(getTestConnector(server, []config.Endpoint{{URL: server.URL}}))
+		require.Error(t, err)
+	})
+
+	t.Run("when_initiated_with", func(t *testing.T) {
+		t.Parallel()
+
+		tt := []struct {
+			name      string
+			connector client.Connector
+			opts      []client.OptionFunc
+			assert    func(*testing.T, error)
+		}{
+			{
+				name: "nil_connector",
+				assert: func(t *testing.T, err error) {
+					require.Error(t, err, "connector is required")
+				},
+			},
+			{
+				name: "nil_logger",
+				opts: []client.OptionFunc{client.WithLogger(nil)},
+				assert: func(t *testing.T, err error) {
+					require.Error(t, err, "logger cannot be nil")
+				},
+			},
+		}
+
+		for _, test := range tt {
+			test := test
+
+			t.Run(test.name, func(t *testing.T) {
+				t.Parallel()
+
+				_, err := client.New(test.connector, test.opts...)
+				test.assert(t, err)
+			})
+		}
+	})
+}
+
+func testHTTPServer(t *testing.T, sleepDuration *time.Duration) *httptest.Server {
 	t.Helper()
 
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if sleepDuration != nil {
+			time.Sleep(*sleepDuration)
+		}
+
 		if r.URL.Path == prometheusPath {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
+
 		w.WriteHeader(http.StatusNotFound)
 	}))
 
