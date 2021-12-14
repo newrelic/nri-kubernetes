@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"net/http"
 	"net/http/httptest"
+	"path"
 	"path/filepath"
 )
 
@@ -22,7 +23,7 @@ func (s *Server) KubeletEndpoint() string {
 }
 
 func (s *Server) ControlPlaneEndpoint(component string) string {
-	return s.Server.URL + "/controlplane/" + component + "/metrics"
+	return s.Server.URL + path.Join("/controlplane", component, "metrics")
 }
 
 func newServer(version Version) (*Server, error) {
