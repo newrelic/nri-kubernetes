@@ -3,9 +3,9 @@ forwarderImage:
   tag: 1.20.5
   repository: newrelic/k8s-events-forwarder
 agentImage:
-  pullPolicy: Never
-  tag: e2e
-  repository: e2e/newrelic-infrastructure
+  pullPolicy: IfNotPresent
+  tag: latest
+  repository: newrelic/infrastructure-bundle
 scraperImage:
   pullPolicy: Never
   tag: e2e
@@ -17,6 +17,9 @@ resources:
   requests:
     cpu: 100m
     memory: 150M
+config:
+  features:
+    docker_enabled: false
 
 scrapersConfig:
   interval: 15s
