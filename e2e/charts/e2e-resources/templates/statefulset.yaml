@@ -1,0 +1,42 @@
+{{- if .Values.statefulSet.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-statefulset
+  labels:
+    app: statefulset
+spec:
+  selector:
+    app: statefulset
+  ports:
+    - port: 8089
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Release.Name }}-statefulset
+spec:
+  serviceName: statefulset
+  replicas: 2
+  selector:
+    matchLabels:
+      app: statefulset
+  template:
+    metadata:
+      labels:
+        app: statefulset
+    spec:
+      containers:
+        - name: busybox
+          image: busybox
+          args:
+            - sleep
+            - infinity
+          volumeMounts:
+            - mountPath: /emptydir
+              name: an-empty-dir
+      volumes:
+        - name: an-empty-dir
+          emptyDir:
+            sizeLimit: 128Mi
+{{- end }}
