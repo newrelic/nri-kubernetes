@@ -63,12 +63,6 @@ jobs:
           echo "S3_PATH=$S3_PATH/test" >> $GITHUB_ENV
 
       - uses: actions/checkout@v2
-
-      # -pre suffix is stripped from yaml consistency check
-      - name: Check consistency of deployment yamls
-        run: |
-          grep -e "$DOCKER_IMAGE_NAME:${DOCKER_IMAGE_TAG/-pre}" deploy/newrelic-infra.yaml
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
