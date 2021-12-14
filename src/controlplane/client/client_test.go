@@ -29,7 +29,7 @@ func Test_Client_scrape_http_endpoint(t *testing.T) {
 
 	endpoints := []config.Endpoint{{URL: server.URL}}
 
-	cpClient, err := client.New(getTestConfig(server, endpoints))
+	cpClient, err := client.New(getTestConnector(server, endpoints))
 	assert.NoError(t, err)
 
 	t.Run("return_ok_when_succeed", func(t *testing.T) {
@@ -59,7 +59,7 @@ func Test_Client_tries_endpoints_list(t *testing.T) {
 		},
 	}
 
-	cpClient, err := client.New(getTestConfig(server, endpoints))
+	cpClient, err := client.New(getTestConnector(server, endpoints))
 	assert.NoError(t, err)
 
 	r, err := cpClient.Get(prometheusPath)
@@ -79,7 +79,7 @@ func Test_Client_scrape_https_endpoint(t *testing.T) {
 		},
 	}
 
-	cpClient, err := client.New(getTestConfig(server, endpoints))
+	cpClient, err := client.New(getTestConnector(server, endpoints))
 	assert.NoError(t, err)
 
 	r, err := cpClient.Get(prometheusPath)
@@ -101,7 +101,7 @@ func Test_Client_scrape_https_endpoint_with_bearer_token_auth(t *testing.T) {
 		},
 	}
 
-	cpClient, err := client.New(getTestConfig(server, endpoints))
+	cpClient, err := client.New(getTestConnector(server, endpoints))
 	assert.NoError(t, err)
 
 	r, err := cpClient.Get(prometheusPath)
@@ -185,7 +185,7 @@ func testHTTPSServerBearer(t *testing.T) (*httptest.Server, *http.Header) {
 	return testServer, h
 }
 
-func getTestConfig(s *httptest.Server, endpoints []config.Endpoint) client.Config {
+func getTestConnector(s *httptest.Server, endpoints []config.Endpoint) client.Connector {
 	u, _ := url.Parse(s.URL)
 
 	c := fake.NewSimpleClientset()
@@ -200,9 +200,5 @@ func getTestConfig(s *httptest.Server, endpoints []config.Endpoint) client.Confi
 
 	connector, _ := client.DefaultConnector(endpoints, c, inClusterConfig, log.NewStdErr(true))
 
-	config := client.Config{
-		Logger:    log.NewStdErr(true),
-		Connector: connector,
-	}
-	return config
+	return connector
 }

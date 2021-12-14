@@ -153,10 +153,7 @@ func (s *Scraper) externalEndpoint(c component) (*scrape.Job, error) {
 		return nil, fmt.Errorf("control plane component %q failed creating connector: %v", c.Name, err)
 	}
 
-	client, err := controlplaneClient.New(controlplaneClient.Config{
-		Logger:    s.logger,
-		Connector: connector,
-	})
+	client, err := controlplaneClient.New(connector, controlplaneClient.WithLogger(s.logger))
 	if err != nil {
 		return nil, fmt.Errorf("creating client for component %s failed: %v", c.Name, err)
 	}
@@ -203,10 +200,7 @@ func (s *Scraper) autodiscover(c component) (*scrape.Job, error) {
 			return nil, fmt.Errorf("control plane component %q failed creating connector: %v", c.Name, err)
 		}
 
-		client, err := controlplaneClient.New(controlplaneClient.Config{
-			Logger:    s.logger,
-			Connector: connector,
-		})
+		client, err := controlplaneClient.New(connector, controlplaneClient.WithLogger(s.logger))
 		if err != nil {
 			s.logger.Debugf("Failed creating %q client: %v", c.Name, err)
 			continue

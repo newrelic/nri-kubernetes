@@ -23,7 +23,6 @@ import (
 const (
 	DefaultTimout      = 5000 * time.Millisecond
 	defaultMetricsPath = "/metrics"
-	plainAuth          = ""
 	mTLSAuth           = "mTLS"
 	bearerAuth         = "bearer"
 )
@@ -43,6 +42,22 @@ type defaultConnector struct {
 
 // DefaultConnector returns a defaultConnector that probes all endpoints in the list and return the first responding status OK.
 func DefaultConnector(endpoints []config.Endpoint, kc kubernetes.Interface, inClusterConfig *rest.Config, logger log.Logger) (Connector, error) {
+	if inClusterConfig == nil {
+		return nil, fmt.Errorf("inClusterConfig cannot be nil")
+	}
+
+	if logger == nil {
+		return nil, fmt.Errorf("logger cannot be nil")
+	}
+
+	if kc == nil {
+		return nil, fmt.Errorf("kubernetes interface cannot be nil")
+	}
+
+	if len(endpoints) == 0 {
+		return nil, fmt.Errorf("endpoints cannot be empty")
+	}
+
 	if err := validateEndpointConfig(endpoints); err != nil {
 		return nil, fmt.Errorf("validating endpoints config: %w", err)
 	}
@@ -59,6 +74,7 @@ func DefaultConnector(endpoints []config.Endpoint, kc kubernetes.Interface, inCl
 // first endpoint that respond Status OK.
 func (dp *defaultConnector) Connect() (*connParams, error) {
 	for _, e := range dp.endpoints {
+		dp.logger.Debugf("Configuring autodiscover endpoint %q for probing", e.URL)
 
 		u, err := url.Parse(e.URL)
 		if err != nil {
@@ -67,6 +83,7 @@ func (dp *defaultConnector) Connect() (*connParams, error) {
 
 		// If no path is defined on the config, default is set.
 		if u.Path == "" || u.Path == "/" {
+			dp.logger.Debugf("Autodiscover endpoint %q does not contain path, adding default %q", e.URL, defaultMetricsPath)
 			u.Path = defaultMetricsPath
 		}
 
@@ -80,7 +97,8 @@ func (dp *defaultConnector) Connect() (*connParams, error) {
 			continue
 		}
 
-		// First endpoint with OK probe results returns.
+		dp.logger.Debugf("Autodiscover endpoint %q probed succesfully", e.URL)
+
 		return &connParams{url: *u, client: httpClient}, nil
 	}
 
@@ -100,51 +118,6 @@ func (dp *defaultConnector) probeEndpoint(url string, client *http.Client) error
 	return nil
 }
 
-func validateEndpointConfig(endpoints []config.Endpoint) error {
-	for _, e := range endpoints {
-
-		if _, err := url.Parse(e.URL); err != nil {
-			return fmt.Errorf("parsing endpoint url %q: %w", e.URL, err)
-		}
-
-		if err := validateAuth(e.Auth); err != nil {
-			return fmt.Errorf("validating auth for endpoint url %q: %w", e.URL, err)
-		}
-	}
-
-	return nil
-}
-
-func validateAuth(auth *config.Auth) error {
-	if auth == nil {
-		return nil
-	}
-
-	switch {
-	case auth.Type == plainAuth:
-		break
-	case strings.EqualFold(auth.Type, bearerAuth):
-		break
-	case strings.EqualFold(auth.Type, mTLSAuth):
-		return validateMTLS(auth.MTLS)
-	default:
-		return fmt.Errorf("authorization type not supported: %q", auth.Type)
-	}
-
-	return nil
-}
-
-func validateMTLS(mTLS *config.MTLS) error {
-	if mTLS == nil {
-		return fmt.Errorf("mTLS config must exist")
-	}
-
-	if mTLS.TLSSecretName == "" {
-		return fmt.Errorf("TLSSecretName cannot be empty")
-	}
-	return nil
-}
-
 func (dp *defaultConnector) newHTTPClient(endpoint config.Endpoint) (*http.Client, error) {
 	client := &http.Client{Timeout: DefaultTimout}
 
@@ -155,7 +128,7 @@ func (dp *defaultConnector) newHTTPClient(endpoint config.Endpoint) (*http.Clien
 	client.Transport = t
 
 	if err := dp.configureAuthentication(client, endpoint); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("configuring auth: %w", err)
 	}
 
 	return client, nil
@@ -163,33 +136,35 @@ func (dp *defaultConnector) newHTTPClient(endpoint config.Endpoint) (*http.Clien
 
 func (dp *defaultConnector) configureAuthentication(httpClient *http.Client, endpoint config.Endpoint) error {
 	if endpoint.Auth == nil {
+		dp.logger.Debugf("Plain auth is used for endpoint %q", endpoint.URL)
+
 		return nil
 	}
 
-	switch {
-	case endpoint.Auth.Type == plainAuth:
-		dp.logger.Debugf("Plain auth is used for endpoint %q", endpoint.URL)
-
-	case strings.EqualFold(endpoint.Auth.Type, bearerAuth):
+	if strings.EqualFold(endpoint.Auth.Type, bearerAuth) {
 		dp.logger.Debugf("kubernetes Bearer token auth is used for endpoint %q", endpoint.URL)
+
 		httpClient.Transport = transport.NewBearerAuthRoundTripper(dp.inClusterConfig.BearerToken, httpClient.Transport)
 
-	case strings.EqualFold(endpoint.Auth.Type, mTLSAuth):
+		return nil
+	}
+
+	if strings.EqualFold(endpoint.Auth.Type, mTLSAuth) {
+		dp.logger.Debugf("MTLS auth is used for endpoint %q", endpoint.URL)
+
 		tlsConfig, err := dp.getTLSConfigFromSecret(endpoint.Auth.MTLS)
 		if err != nil {
 			return fmt.Errorf("could not load TLS configuration: %w", err)
 		}
 
-		dp.logger.Debugf("MTLS auth is used for endpoint %q", endpoint.URL)
 		httpClient.Transport = &http.Transport{
 			TLSClientConfig: tlsConfig,
 		}
 
-	default:
-		return fmt.Errorf("authorization type not supported: %q", endpoint.Auth.Type)
+		return nil
 	}
 
-	return nil
+	return fmt.Errorf("authorization type not supported: %q", endpoint.Auth.Type)
 }
 
 func (dp *defaultConnector) getTLSConfigFromSecret(mTLSConfig *config.MTLS) (*tls.Config, error) {
@@ -266,6 +241,49 @@ func parseTLSConfig(certPEMBlock, keyPEMBlock, cacertPEMBlock []byte, insecureSk
 	tlsConfig.BuildNameToCertificate()
 
 	return tlsConfig, nil
+}
+
+func validateEndpointConfig(endpoints []config.Endpoint) error {
+	for _, e := range endpoints {
+
+		if _, err := url.Parse(e.URL); err != nil {
+			return fmt.Errorf("parsing endpoint url %q: %w", e.URL, err)
+		}
+
+		if err := validateAuth(e.Auth); err != nil {
+			return fmt.Errorf("validating auth for endpoint url %q: %w", e.URL, err)
+		}
+	}
+
+	return nil
+}
+
+func validateAuth(auth *config.Auth) error {
+	if auth == nil {
+		return nil
+	}
+
+	switch {
+	case strings.EqualFold(auth.Type, bearerAuth):
+		break
+	case strings.EqualFold(auth.Type, mTLSAuth):
+		return validateMTLS(auth.MTLS)
+	default:
+		return fmt.Errorf("authorization type not supported: %q", auth.Type)
+	}
+
+	return nil
+}
+
+func validateMTLS(mTLS *config.MTLS) error {
+	if mTLS == nil {
+		return fmt.Errorf("mTLS config must exist")
+	}
+
+	if mTLS.TLSSecretName == "" {
+		return fmt.Errorf("TLSSecretName cannot be empty")
+	}
+	return nil
 }
 
 type connParams struct {

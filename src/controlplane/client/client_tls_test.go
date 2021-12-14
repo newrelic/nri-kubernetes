@@ -61,36 +61,42 @@ func TestMutualTLSCalls(t *testing.T) {
 				assert.Equal(t, string(bodyBytes), testString, "expected body contents not found")
 			},
 		},
-		// {
-		// 	name:               "InsecureSkipVerify or CaCert should be set",
-		// 	insecureSkipVerify: boolPtr(false),
-		// 	cert:               clientCert,
-		// 	key:                clientKey,
-		// 	assert: func(t *testing.T, resp *http.Response, err error) {
-		// 		// todo: check if it's really the correct error
-		// 		require.Error(t, err)
-		// 	},
-		// },
-		// {
-		// 	name: "No config should fail",
-		// 	assert: func(t *testing.T, resp *http.Response, err error) {
-		// 		// todo: check if it's really the correct error
-		// 		require.Error(t, err)
-		// 	},
-		// },
+		{
+			name:               "InsecureSkipVerify or CaCert should be set",
+			insecureSkipVerify: boolPtr(false),
+			cert:               clientCert,
+			key:                clientKey,
+			assert: func(t *testing.T, resp *http.Response, err error) {
+				// todo: check if it's really the correct error
+				require.Error(t, err)
+			},
+		},
+		{
+			name: "No config should fail",
+			assert: func(t *testing.T, resp *http.Response, err error) {
+				// todo: check if it's really the correct error
+				require.Error(t, err)
+			},
+		},
 	}
 
 	for _, test := range tt {
 		t.Run(test.name, func(t *testing.T) {
 			endpoint := startMTLSServer()
-			c := createClientComponent(t, endpoint, test.cacert, test.key, test.cert, test.insecureSkipVerify)
+
+			c, err := createClientComponent(t, endpoint, test.cacert, test.key, test.cert, test.insecureSkipVerify)
+			if err != nil {
+				test.assert(t, nil, err)
+				return
+			}
+
 			resp, err := c.Get("/test")
 			test.assert(t, resp, err)
 		})
 	}
 }
 
-func createClientComponent(t *testing.T, endpoint string, cacert, key, cert []byte, insecureSkipVerify *bool) client.HTTPClient {
+func createClientComponent(t *testing.T, endpoint string, cacert, key, cert []byte, insecureSkipVerify *bool) (client.HTTPClient, error) {
 	// Data will be the contents of the secret holding our TLS config
 	data := map[string][]byte{}
 
@@ -130,17 +136,16 @@ func createClientComponent(t *testing.T, endpoint string, cacert, key, cert []by
 	}
 
 	connector, err := controlplaneClient.DefaultConnector(endpoints, c, &rest.Config{}, log.NewStdErr(true))
-	require.NoError(t, err)
-
-	config := controlplaneClient.Config{
-		Connector: connector,
-		Logger:    log.NewStdErr(true),
+	if err != nil {
+		return nil, err
 	}
 
-	client, err := controlplaneClient.New(config)
-	require.NoError(t, err)
+	client, err := controlplaneClient.New(connector)
+	if err != nil {
+		return nil, err
+	}
 
-	return client
+	return client, nil
 }
 
 func startMTLSServer() string {
