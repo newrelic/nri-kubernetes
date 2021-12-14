@@ -1,0 +1,18 @@
+{{- if .Values.loadBalancerService.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-lb
+  {{- with .Values.loadBalancerService.annotations }}
+  annotations:
+    {{- . | toYaml | nindent 4 }}
+  {{- end }}
+spec:
+  type: LoadBalancer
+  {{- with .Values.loadBalancerService.fakeIP }}
+  loadBalancerIP: {{ . | quote }}
+  {{- end }}
+  externalName: newrelic.com
+  ports:
+    - port: 80
+  {{- end }}
