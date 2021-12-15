@@ -8,20 +8,26 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/newrelic/infra-integrations-sdk/integration"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/definition"
+
 	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/stretchr/testify/require"
+	"k8s.io/client-go/kubernetes/fake"
+
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet"
 	kubeletClient "github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
-	"github.com/stretchr/testify/require"
-	"k8s.io/client-go/kubernetes/fake"
 )
 
 func TestScraper(t *testing.T) {
 
 	commonMetricsToExclude := []string{"net.rxBytesPerSecond", "net.txBytesPerSecond", "net.errorsPerSecond"}
 	nodeMetricsToExclude := append(commonMetricsToExclude, "allocatableCpuCoresUtilization", "allocatableMemoryUtilization")
+
 	// Create an asserter with the settings that are shared for all test scenarios.
 	asserter := testutil.NewAsserter().
 		Using(metric.KubeletSpecs).
@@ -29,9 +35,12 @@ func TestScraper(t *testing.T) {
 			testutil.ExcludeMetrics("pod", commonMetricsToExclude...),
 			testutil.ExcludeMetrics("node", nodeMetricsToExclude...),
 			testutil.ExcludeOptional(),
-		)
+		).Excluding(ExcludeMissingMetricsPendingPod)
 
-	for _, version := range testutil.AllVersions() {
+	for _, v := range testutil.AllVersions() {
+		// Notice that v is the very same variable, therefore the loop is overwriting it each iteration. Causing tests to fail it //
+		version := v
+
 		t.Run(fmt.Sprintf("for_version_%s", version), func(t *testing.T) {
 			t.Parallel()
 
@@ -66,4 +75,21 @@ func TestScraper(t *testing.T) {
 			asserter.On(i.Entities).Assert(t)
 		})
 	}
+}
+
+func ExcludeMissingMetricsPendingPod(_ string, spec *definition.Spec, ent *integration.Entity) bool {
+	metricsToExcludeForPendingPods := []string{"memoryUsedBytes", "memoryWorkingSetBytes", "cpuUsedCores",
+		"fsAvailableBytes", "fsCapacityBytes", "fsUsedBytes", "fsUsedPercent", "fsInodesFree", "fsInodes",
+		"fsInodesUsed", "containerID", "containerImageID", "isReady"}
+
+	for _, metricSet := range ent.Metrics {
+		if metricSet.Metrics["status"] == "Waiting" {
+			for _, m := range metricsToExcludeForPendingPods {
+				if m == spec.Name {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
