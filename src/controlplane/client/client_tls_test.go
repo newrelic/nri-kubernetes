@@ -1,22 +1,25 @@
-package client
+package client_test
 
 import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
-	"net/url"
 	"testing"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/newrelic/nri-kubernetes/v2/internal/config"
+	"github.com/newrelic/nri-kubernetes/v2/src/client"
+	controlplaneClient "github.com/newrelic/nri-kubernetes/v2/src/controlplane/client"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/rest"
 )
 
 const (
@@ -27,7 +30,7 @@ const (
 func boolPtr(b bool) *bool { return &b }
 
 func TestMutualTLSCalls(t *testing.T) {
-	tt := []struct {
+	testCases := []struct {
 		name               string
 		insecureSkipVerify *bool
 		cacert, key, cert  []byte
@@ -40,7 +43,7 @@ func TestMutualTLSCalls(t *testing.T) {
 			cacert: serverCACert,
 			assert: func(t *testing.T, resp *http.Response, err error) {
 				require.NoError(t, err, "request should not fail (i.e. non-2xx response)")
-				bodyBytes, err := ioutil.ReadAll(resp.Body)
+				bodyBytes, err := io.ReadAll(resp.Body)
 				require.NoError(t, err, "error reading response body")
 				assert.Equal(t, string(bodyBytes), testString, "expected body contents not found")
 			},
@@ -53,7 +56,7 @@ func TestMutualTLSCalls(t *testing.T) {
 			// no cacert...
 			assert: func(t *testing.T, resp *http.Response, err error) {
 				require.NoError(t, err, "request should not fail (i.e. non-2xx response)")
-				bodyBytes, err := ioutil.ReadAll(resp.Body)
+				bodyBytes, err := io.ReadAll(resp.Body)
 				require.NoError(t, err, "error reading response body")
 				assert.Equal(t, string(bodyBytes), testString, "expected body contents not found")
 			},
@@ -77,17 +80,25 @@ func TestMutualTLSCalls(t *testing.T) {
 		},
 	}
 
-	for _, test := range tt {
+	for _, tc := range testCases {
+		test := tc
+
 		t.Run(test.name, func(t *testing.T) {
 			endpoint := startMTLSServer()
-			c := createClientComponent(endpoint, test.cacert, test.key, test.cert, test.insecureSkipVerify)
+
+			c, err := createClientComponent(t, endpoint, test.cacert, test.key, test.cert, test.insecureSkipVerify)
+			if err != nil {
+				test.assert(t, nil, err)
+				return
+			}
+
 			resp, err := c.Get("/test")
 			test.assert(t, resp, err)
 		})
 	}
 }
 
-func createClientComponent(endpoint string, cacert, key, cert []byte, insecureSkipVerify *bool) *ControlPlaneComponentClient {
+func createClientComponent(t *testing.T, endpoint string, cacert, key, cert []byte, insecureSkipVerify *bool) (client.HTTPClient, error) {
 	// Data will be the contents of the secret holding our TLS config
 	data := map[string][]byte{}
 
@@ -113,20 +124,29 @@ func createClientComponent(endpoint string, cacert, key, cert []byte, insecureSk
 		Data: data,
 	})
 
-	return &ControlPlaneComponentClient{
-		httpClient:               &http.Client{},
-		tlsSecretName:            secretName,
-		authenticationMethod:     mTLS,
-		logger:                   log.NewStdErr(true),
-		IsComponentRunningOnNode: true,
-		k8sClient:                c,
-		endpoint: url.URL{
-			Scheme: "https",
-			Host:   endpoint,
+	endpoints := []config.Endpoint{
+		{
+			URL: fmt.Sprintf("https://%s/test", endpoint),
+			Auth: &config.Auth{
+				Type: "mtls",
+				MTLS: &config.MTLS{
+					TLSSecretName: secretName,
+				},
+			},
 		},
-		nodeIP:  "asd",
-		PodName: "asd",
 	}
+
+	connector, err := controlplaneClient.DefaultConnector(endpoints, c, &rest.Config{}, log.NewStdErr(true))
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := controlplaneClient.New(connector)
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
 }
 
 func startMTLSServer() string {
