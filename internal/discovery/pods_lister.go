@@ -15,7 +15,7 @@ type PodListerConfig struct {
 	Client kubernetes.Interface
 }
 
-func NewPodLister(config PodListerConfig) (v1.PodNamespaceLister, chan<- struct{}) {
+func NewPodNamespaceLister(config PodListerConfig) (v1.PodNamespaceLister, chan<- struct{}) {
 	// Arbitrary value, same used in Prometheus.
 	resyncDuration := 10 * time.Minute
 	factory := informers.NewSharedInformerFactoryWithOptions(

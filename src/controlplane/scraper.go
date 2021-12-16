@@ -269,7 +269,7 @@ func (s *Scraper) buildLister() {
 			if _, ok := s.podListerByNamespace[autodiscover.Namespace]; !ok {
 				s.logger.Debugf("Generating a new Pod lister for namespace %q.", autodiscover.Namespace)
 
-				podLister, informerCloser := discovery.NewPodLister(discovery.PodListerConfig{
+				podLister, informerCloser := discovery.NewPodNamespaceLister(discovery.PodListerConfig{
 					Client:    s.K8s,
 					Namespace: autodiscover.Namespace,
 				})

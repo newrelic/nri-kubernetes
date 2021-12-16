@@ -97,7 +97,7 @@ func Test_pods_lister_returns(t *testing.T) {
 
 			testData.config.Client = client
 
-			podLister, closeChan := discovery.NewPodLister(testData.config)
+			podLister, closeChan := discovery.NewPodNamespaceLister(testData.config)
 
 			pods, err := podLister.List(testData.selector)
 			require.NoError(t, err)
@@ -111,7 +111,7 @@ func Test_pods_lister_updates(t *testing.T) {
 	t.Parallel()
 
 	client := testclient.NewSimpleClientset()
-	podLister, closeChan := discovery.NewPodLister(
+	podLister, closeChan := discovery.NewPodNamespaceLister(
 		discovery.PodListerConfig{
 			Client:    client,
 			Namespace: testNamespace,
@@ -149,7 +149,7 @@ func Test_pods_lister_stop_channel(t *testing.T) {
 	t.Parallel()
 
 	client := testclient.NewSimpleClientset()
-	podLister, closeChan := discovery.NewPodLister(discovery.PodListerConfig{Client: client})
+	podLister, closeChan := discovery.NewPodNamespaceLister(discovery.PodListerConfig{Client: client})
 
 	close(closeChan)
 
