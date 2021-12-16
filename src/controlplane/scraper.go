@@ -12,6 +12,7 @@ import (
 	controlplaneClient "github.com/newrelic/nri-kubernetes/v2/src/controlplane/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/grouper"
 	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
@@ -192,17 +193,17 @@ func (s *Scraper) externalEndpoint(c component) (*scrape.Job, error) {
 // It doesn't fail if no autodiscovery satisfy the contitions.
 func (s *Scraper) autodiscover(c component) (*scrape.Job, error) {
 	for _, autodiscover := range c.AutodiscoverConfigs {
-		podName, err := s.discoverPod(autodiscover)
+		pod, err := s.discoverPod(autodiscover)
 		if err != nil {
 			return nil, fmt.Errorf("control plane component %q discovery failed: %v", c.Name, err)
 		}
 
-		if podName == "" {
+		if pod == nil {
 			s.logger.Debugf("No %q pod found with labels %q", c.Name, autodiscover.Selector)
 			continue
 		}
 
-		s.logger.Debugf("Found pod %q for %q with labels %q", podName, c.Name, autodiscover.Selector)
+		s.logger.Debugf("Found pod %q for %q with labels %q", pod.Name, c.Name, autodiscover.Selector)
 
 		connector, err := controlplaneClient.DefaultConnector(
 			autodiscover.Endpoints,
@@ -224,7 +225,7 @@ func (s *Scraper) autodiscover(c component) (*scrape.Job, error) {
 			client,
 			c.Queries,
 			s.logger,
-			podName,
+			pod.Name,
 		)
 
 		return scrape.NewScrapeJob(string(c.Name), grouper, c.Specs), nil
@@ -235,11 +236,11 @@ func (s *Scraper) autodiscover(c component) (*scrape.Job, error) {
 	return nil, nil
 }
 
-func (s *Scraper) discoverPod(autodiscover config.AutodiscoverControlPlane) (string, error) {
+func (s *Scraper) discoverPod(autodiscover config.AutodiscoverControlPlane) (*corev1.Pod, error) {
 	// looks for the pod match a set of defined labels
 	podLister, ok := s.podListerByNamespace[autodiscover.Namespace]
 	if !ok {
-		return "", fmt.Errorf("pod lister for namespace: %s not found", autodiscover.Namespace)
+		return nil, fmt.Errorf("pod lister for namespace: %s not found", autodiscover.Namespace)
 	}
 
 	labelsSet, _ := labels.ConvertSelectorToLabelsMap(autodiscover.Selector)
@@ -248,7 +249,7 @@ func (s *Scraper) discoverPod(autodiscover config.AutodiscoverControlPlane) (str
 
 	pods, err := podLister.List(selector)
 	if err != nil {
-		return "", fmt.Errorf("fail to list pods for selector: %v", labelsSet)
+		return nil, fmt.Errorf("fail to list pods for selector: %v", labelsSet)
 	}
 
 	s.logger.Debugf("%d pods found with labels %q", len(pods), autodiscover.Selector)
@@ -258,10 +259,10 @@ func (s *Scraper) discoverPod(autodiscover config.AutodiscoverControlPlane) (str
 			s.logger.Debugf("Discarding pod: %s running outside the node", pod.Name)
 			continue
 		}
-		return pod.Name, nil
+		return pod, nil
 	}
 
-	return "", nil
+	return nil, nil
 }
 
 // buildLister populates podListerByNamespace with a lister for each autodiscovery entry namespace.
