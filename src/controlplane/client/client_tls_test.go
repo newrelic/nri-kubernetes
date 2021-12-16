@@ -30,7 +30,7 @@ const (
 func boolPtr(b bool) *bool { return &b }
 
 func TestMutualTLSCalls(t *testing.T) {
-	tt := []struct {
+	testCases := []struct {
 		name               string
 		insecureSkipVerify *bool
 		cacert, key, cert  []byte
@@ -80,8 +80,8 @@ func TestMutualTLSCalls(t *testing.T) {
 		},
 	}
 
-	for _, test := range tt {
-		test := test
+	for _, tc := range testCases {
+		test := tc
 
 		t.Run(test.name, func(t *testing.T) {
 			endpoint := startMTLSServer()

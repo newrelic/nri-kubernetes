@@ -19,7 +19,7 @@ const (
 func Test_Connect_fails_when(t *testing.T) {
 	t.Parallel()
 
-	tt := []struct {
+	testCases := []struct {
 		name      string
 		endpoints []config.Endpoint
 		assert    func(*testing.T, error)
@@ -90,8 +90,8 @@ func Test_Connect_fails_when(t *testing.T) {
 		},
 	}
 
-	for _, test := range tt {
-		test := test
+	for _, tc := range testCases {
+		test := tc
 
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
