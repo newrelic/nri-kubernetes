@@ -42,26 +42,6 @@ type defaultConnector struct {
 
 // DefaultConnector returns a defaultConnector that probes all endpoints in the list and return the first responding status OK.
 func DefaultConnector(endpoints []config.Endpoint, kc kubernetes.Interface, inClusterConfig *rest.Config, logger log.Logger) (Connector, error) {
-	if inClusterConfig == nil {
-		return nil, fmt.Errorf("inClusterConfig cannot be nil")
-	}
-
-	if logger == nil {
-		return nil, fmt.Errorf("logger cannot be nil")
-	}
-
-	if kc == nil {
-		return nil, fmt.Errorf("kubernetes interface cannot be nil")
-	}
-
-	if len(endpoints) == 0 {
-		return nil, fmt.Errorf("endpoints cannot be empty")
-	}
-
-	if err := validateEndpointConfig(endpoints); err != nil {
-		return nil, fmt.Errorf("validating endpoints config: %w", err)
-	}
-
 	return &defaultConnector{
 		logger:          logger,
 		inClusterConfig: inClusterConfig,
@@ -81,7 +61,7 @@ func (dp *defaultConnector) Connect() (*connParams, error) {
 			return nil, fmt.Errorf("parsing endpoint url %q: %w", e.URL, err)
 		}
 
-		if u.Path == "" || u.Path == "/" {
+		if strings.TrimSuffix(u.Path, "/") == "" {
 			dp.logger.Debugf("Autodiscover endpoint %q does not contain path, adding default %q", e.URL, defaultMetricsPath)
 			u.Path = defaultMetricsPath
 		}
@@ -242,49 +222,6 @@ func parseTLSConfig(certPEMBlock, keyPEMBlock, cacertPEMBlock []byte, insecureSk
 	tlsConfig.BuildNameToCertificate()
 
 	return tlsConfig, nil
-}
-
-func validateEndpointConfig(endpoints []config.Endpoint) error {
-	for _, e := range endpoints {
-		if _, err := url.Parse(e.URL); err != nil {
-			return fmt.Errorf("parsing endpoint url %q: %w", e.URL, err)
-		}
-
-		if err := validateAuth(e.Auth); err != nil {
-			return fmt.Errorf("validating auth for endpoint url %q: %w", e.URL, err)
-		}
-	}
-
-	return nil
-}
-
-func validateAuth(auth *config.Auth) error {
-	if auth == nil {
-		return nil
-	}
-
-	switch {
-	case strings.EqualFold(auth.Type, bearerAuth):
-		break
-	case strings.EqualFold(auth.Type, mTLSAuth):
-		return validateMTLS(auth.MTLS)
-	default:
-		return fmt.Errorf("authorization type not supported: %q", auth.Type)
-	}
-
-	return nil
-}
-
-func validateMTLS(mTLS *config.MTLS) error {
-	if mTLS == nil {
-		return fmt.Errorf("mTLS config must exist")
-	}
-
-	if mTLS.TLSSecretName == "" {
-		return fmt.Errorf("TLSSecretName cannot be empty")
-	}
-
-	return nil
 }
 
 type connParams struct {

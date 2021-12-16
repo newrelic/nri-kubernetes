@@ -6,17 +6,17 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/rest"
 )
 
 const (
-	testValidURL   = "https://test:443"
-	testInvalidURL = ":invalid/url:"
+	testValidURL = "https://test:443"
 )
 
-func Test_DefaultConnector_fails_when_endpoint(t *testing.T) {
+func Test_Connect_fails_when(t *testing.T) {
 	t.Parallel()
 
 	tt := []struct {
@@ -25,27 +25,36 @@ func Test_DefaultConnector_fails_when_endpoint(t *testing.T) {
 		assert    func(*testing.T, error)
 	}{
 		{
-			name:      "no_endpoints_added",
+			name:      "no_endpoint_in_the_list",
 			endpoints: []config.Endpoint{},
 			assert: func(t *testing.T, err error) {
-				require.Error(t, err, "endpoints cannot be empty")
+				require.Error(t, err, "empty endpoint list should fail")
 			},
 		},
 		{
-			name: "has_invalid_url",
+			name: "has_empty_url",
 			endpoints: []config.Endpoint{{
-				URL: testInvalidURL,
+				URL: "",
+			}},
+			assert: func(t *testing.T, err error) {
+				require.Error(t, err, "empty url should fail")
+			},
+		},
+		{
+			name: "has_invalid_url_format",
+			endpoints: []config.Endpoint{{
+				URL: ":invalid/url:",
 			}},
 			assert: func(t *testing.T, err error) {
 				require.Error(t, err, "invalid url should fail")
 			},
 		},
 		{
-			name: "has_invalid_auth",
+			name: "has_unknown_auth_type",
 			endpoints: []config.Endpoint{{
 				URL: testValidURL,
 				Auth: &config.Auth{
-					Type: "invalid",
+					Type: "unknown auth type",
 				},
 			}},
 			assert: func(t *testing.T, err error) {
@@ -53,7 +62,7 @@ func Test_DefaultConnector_fails_when_endpoint(t *testing.T) {
 			},
 		},
 		{
-			name: "mTLS_has_not_config",
+			name: "mTLS_type_is_selected_but_has_not_mTLS_auth_config",
 			endpoints: []config.Endpoint{{
 				URL: testValidURL,
 				Auth: &config.Auth{
@@ -65,7 +74,7 @@ func Test_DefaultConnector_fails_when_endpoint(t *testing.T) {
 			},
 		},
 		{
-			name: "mTLS_has_no_secret",
+			name: "mTLS_auth_config_has_no_TLSSecretName",
 			endpoints: []config.Endpoint{{
 				URL: testValidURL,
 				Auth: &config.Auth{
@@ -87,12 +96,15 @@ func Test_DefaultConnector_fails_when_endpoint(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			_, err := client.DefaultConnector(
+			connector, err := client.DefaultConnector(
 				test.endpoints,
 				fake.NewSimpleClientset(),
 				&rest.Config{},
 				log.Discard,
 			)
+			assert.NoError(t, err)
+
+			_, err = connector.Connect()
 			test.assert(t, err)
 		})
 	}
