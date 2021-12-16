@@ -54,24 +54,31 @@ type ControlPlane struct {
 
 type ControlPlaneComponent struct {
 	Enabled        bool                       `mapstructure:"enabled"`
-	StaticEndpoint StaticEndpoint             `mapstructure:"staticEndpoint"`
+	StaticEndpoint *Endpoint                  `mapstructure:"staticEndpoint"`
 	Autodiscover   []AutodiscoverControlPlane `mapstructure:"autodiscover"`
 }
 
 type AutodiscoverControlPlane struct {
-	Namespace string `mapstructure:"namespace"`
-	Selector  string `mapstructure:"selector"`
-	MatchNode bool   `mapstructure:"matchNode"`
-	URL       string `mapstructure:"url"`
-	Auth      Auth   `mapstructure:"auth"`
+	Namespace string     `mapstructure:"namespace"`
+	Selector  string     `mapstructure:"selector"`
+	MatchNode bool       `mapstructure:"matchNode"`
+	Endpoints []Endpoint `mapstructure:"endpoints"`
 }
 
-type StaticEndpoint struct {
-	URL  string `mapstructure:"url"`
-	Auth Auth   `mapstructure:"auth"`
+type Endpoint struct {
+	URL                string `mapstructure:"url"`
+	Auth               *Auth  `mapstructure:"auth"`
+	InsecureSkipVerify bool   `mapstructure:"insecureSkipVerify"`
 }
 
 type Auth struct {
+	Type string `mapstructure:"type"`
+	MTLS *MTLS  `mapstructure:"mtls"`
+}
+
+type MTLS struct {
+	TLSSecretName      string `mapstructure:"secretName"`
+	TLSSecretNamespace string `mapstructure:"secretNamespace"`
 }
 
 func LoadConfig(filePath string, fileName string) (*Config, error) {

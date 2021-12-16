@@ -20,13 +20,26 @@ ksm:
 controlPlane:
    etcd:
      enabled: true
-     staticEndpoint: {}
+     staticEndpoint:
+       url: https://localhost:12345
+       auth:
+        type: bearer
+       insecureSkipVerify: true 
+       
      autodiscover:
        - namespace: kube-system
          selector: foo=bar,baz=bar # Match all
          matchNode: true
-         url: http://localhost:12345
+         endpoints:
+           - url: https://localhost:12345
+             auth:
+               type: bearer
+             insecureSkipVerify: true 
        - namespace: kube-system
          selector: foo=baz
          matchNode: true
-         url: http://localhost:12345
+         endpoints:
+           - url: https://localhost:12345
+             auth:
+               type: bearer
+             insecureSkipVerify: true 

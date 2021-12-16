@@ -5,8 +5,8 @@ import (
 	"io/fs"
 	"net/http"
 	"net/http/httptest"
+	"path"
 	"path/filepath"
-	"strings"
 )
 
 type Server struct {
@@ -17,11 +17,13 @@ func (s *Server) KSMEndpoint() string {
 	// We must add /metrics to the URL here as the KSM override endpoint must be a full URL
 	return s.Server.URL + "/ksm/metrics"
 }
+
 func (s *Server) KubeletEndpoint() string {
 	return s.Server.URL + "/kubelet"
 }
+
 func (s *Server) ControlPlaneEndpoint(component string) string {
-	return s.Server.URL + "/controlplane/" + strings.ReplaceAll(component, "/", "")
+	return s.Server.URL + path.Join("/controlplane", component, "metrics")
 }
 
 func newServer(version Version) (*Server, error) {

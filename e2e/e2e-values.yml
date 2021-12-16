@@ -32,12 +32,44 @@ scrapersConfig:
 
   controlPlane:
     enabled: true
-    apiServer:
-      staticEndpoint:
-        url: "https://localhost:8443"
+    etcd:
+      enabled: true
+      autodiscover:
+        - namespace: kube-system
+          selector: "tier=control-plane,component=etcd"
+          matchNode: true
+          endpoints:
+            - url: http://localhost:2381
     scheduler:
-      staticEndpoint:
-        url: "https://localhost:10259"
+      enabled: true
+      autodiscover:
+        - namespace: kube-system
+          selector: "tier=control-plane,component=kube-scheduler"
+          matchNode: true
+          endpoints:
+            - url: https://localhost:10259
+              insecureSkipVerify: true
+              auth:
+                type: bearer
     controllerManager:
-      staticEndpoint:
-        url: "https://localhost:10257"
+      enabled: true
+      autodiscover:
+        - namespace: kube-system
+          selector: "tier=control-plane,component=kube-controller-manager"
+          matchNode: true
+          endpoints:
+            - url: https://localhost:10257
+              insecureSkipVerify: true
+              auth:
+                type: bearer
+    apiServer:
+      enabled: true
+      autodiscover:
+        - namespace: kube-system
+          selector: "tier=control-plane,component=kube-apiserver"
+          matchNode: true
+          endpoints:
+            - url: https://localhost:8443
+              insecureSkipVerify: true
+              auth:
+                type: bearer
