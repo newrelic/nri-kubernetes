@@ -6,9 +6,11 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
@@ -21,10 +23,14 @@ import (
 )
 
 var (
-	excludeCM   = []string{"workqueueAddsDelta", "workqueueDepth", "workqueueDepth", "workqueueRetriesDelta"}
+	excludeCM   = []string{"leaderElectionMasterStatus"}
 	excludeETCD = []string{"processFdsUtilization"}
-	excludeS    = []string{"restClientRequestsDelta", "restClientRequestsRate", "schedulerScheduleAttemptsDelta", "schedulerScheduleAttemptsRate", "schedulerSchedulingDurationSeconds"}
-	excludeAS   = []string{"apiserverRequestsDelta", "apiserverRequestsRate", "restClientRequestsDelta", "restClientRequestsRate", "etcdObjectCounts"}
+	excludeS    = []string{
+		"leaderElectionMasterStatus",
+		"schedulerSchedulingDurationSeconds",
+		"schedulerPreemptionAttemptsDelta",
+		"schedulerPodPreemptionVictims",
+	}
 )
 
 const masterNodeName = "masterNode"
@@ -42,10 +48,10 @@ func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 	asserter := testutil.NewAsserter().
 		Using(controlPlaneSpecs).
 		Excluding(
+			ExcludeRenamedMetricsBasedOnLabels,
 			testutil.ExcludeMetrics("controller-manager", excludeCM...),
 			testutil.ExcludeMetrics("etcd", excludeETCD...),
 			testutil.ExcludeMetrics("scheduler", excludeS...),
-			testutil.ExcludeMetrics("api-server", excludeAS...),
 		)
 
 	for _, v := range testutil.AllVersions() {
@@ -91,7 +97,10 @@ func Test_Scraper_Autodiscover_cp_component_after_start(t *testing.T) {
 
 	asserter := testutil.NewAsserter().
 		Using(metric.SchedulerSpecs).
-		Excluding(testutil.ExcludeMetrics("scheduler", excludeS...))
+		Excluding(
+			ExcludeRenamedMetricsBasedOnLabels,
+			testutil.ExcludeMetrics("scheduler", excludeS...),
+		)
 
 	testServer, err := testutil.LatestVersion().Server()
 	if err != nil {
@@ -148,7 +157,10 @@ func Test_Scraper_external_endpoint(t *testing.T) {
 
 	asserter := testutil.NewAsserter().
 		Using(metric.SchedulerSpecs).
-		Excluding(testutil.ExcludeMetrics("scheduler", excludeS...))
+		Excluding(
+			ExcludeRenamedMetricsBasedOnLabels,
+			testutil.ExcludeMetrics("scheduler", excludeS...),
+		)
 
 	testServer, err := testutil.LatestVersion().Server()
 	if err != nil {
@@ -307,4 +319,19 @@ func createControlPlanePod(
 	}
 
 	time.Sleep(time.Second)
+}
+
+// ExcludeRenamedMetricsBasedOnLabels check if any of the metrics exist with a different name starting
+// with 'metricName_'. This covers the case where metric names are changed based on labels
+// ie: metric 'workqueueAddsDelta' can be found as "workqueueAddsDelta_name_garbage_collector_attempt_to_delete"
+// more info about this in prometheus.fetchedValuesFromRawMetrics() function description.
+func ExcludeRenamedMetricsBasedOnLabels(_ string, spec *definition.Spec, ent *integration.Entity) bool {
+	for _, metricSet := range ent.Metrics {
+		for k := range metricSet.Metrics {
+			if strings.HasPrefix(k, spec.Name+"_") {
+				return true
+			}
+		}
+	}
+	return false
 }
