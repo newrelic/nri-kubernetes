@@ -29,13 +29,15 @@ type Providers struct {
 // Scraper takes care of getting metrics all control plane instances based on the configuration.
 type Scraper struct {
 	Providers
-	logger               log.Logger
-	config               *config.Config
-	k8sVersion           *version.Info
-	components           []component
-	informerClosers      []chan<- struct{}
-	podListerByNamespace map[string]v1.PodNamespaceLister
-	inClusterConfig      *rest.Config
+	logger                  log.Logger
+	config                  *config.Config
+	k8sVersion              *version.Info
+	components              []component
+	informerClosers         []chan<- struct{}
+	podListerByNamespace    map[string]v1.PodNamespaceLister
+	secretListerByNamespace map[string]v1.SecretNamespaceLister
+	inClusterConfig         *rest.Config
+	authenticator           controlplaneClient.Authenticator
 }
 
 // ScraperOpt are options that can be used to configure the Scraper
@@ -99,8 +101,10 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 		return nil, fmt.Errorf("fetching K8s version: %w", err)
 	}
 
-	// Building pod lister and closers for pod autodisover.
-	s.buildLister()
+	// Building pod and secret lister and closers.
+	s.buildListers()
+
+	s.authenticator = controlplaneClient.NewAuthenticator(s.logger, s.secretListerByNamespace, s.inClusterConfig)
 
 	return s, nil
 }
@@ -154,15 +158,11 @@ func (s *Scraper) Run(i *integration.Integration) error {
 // externalEndpoint builds the client based on the StaticEndpointConfig and fails if
 // the client probe cannot reach the endpoint.
 func (s *Scraper) externalEndpoint(c component) (*scrape.Job, error) {
-	connector, err := controlplaneClient.DefaultConnector(
+	connector := controlplaneClient.DefaultConnector(
 		[]config.Endpoint{*c.StaticEndpointConfig},
-		s.K8s,
-		s.inClusterConfig,
+		s.authenticator,
 		s.logger,
 	)
-	if err != nil {
-		return nil, fmt.Errorf("control plane component %q failed creating connector: %v", c.Name, err)
-	}
 
 	client, err := controlplaneClient.New(connector, controlplaneClient.WithLogger(s.logger))
 	if err != nil {
@@ -205,15 +205,11 @@ func (s *Scraper) autodiscover(c component) (*scrape.Job, error) {
 
 		s.logger.Debugf("Found pod %q for %q with labels %q", pod.Name, c.Name, autodiscover.Selector)
 
-		connector, err := controlplaneClient.DefaultConnector(
+		connector := controlplaneClient.DefaultConnector(
 			autodiscover.Endpoints,
-			s.K8s,
-			s.inClusterConfig,
+			s.authenticator,
 			s.logger,
 		)
-		if err != nil {
-			return nil, fmt.Errorf("creating connector for %q: %v", c.Name, err)
-		}
 
 		client, err := controlplaneClient.New(connector, controlplaneClient.WithLogger(s.logger))
 		if err != nil {
@@ -265,21 +261,53 @@ func (s *Scraper) discoverPod(autodiscover config.AutodiscoverControlPlane) (*co
 	return nil, nil
 }
 
-// buildLister populates podListerByNamespace with a lister for each autodiscovery entry namespace.
-func (s *Scraper) buildLister() {
+// buildListers populates podListerByNamespace and secretListerByNamespace with a
+// lister for each namespace needed.
+func (s *Scraper) buildListers() {
 	for _, component := range s.components {
+		if component.StaticEndpointConfig != nil {
+			s.addSecretLister(component.StaticEndpointConfig.Auth)
+		}
+
 		for _, autodiscover := range component.AutodiscoverConfigs {
-			if _, ok := s.podListerByNamespace[autodiscover.Namespace]; !ok {
-				s.logger.Debugf("Generating a new Pod lister for namespace %q.", autodiscover.Namespace)
+			s.addPodLister(autodiscover.Namespace)
 
-				podLister, informerCloser := discovery.NewPodNamespaceLister(discovery.PodListerConfig{
-					Client:    s.K8s,
-					Namespace: autodiscover.Namespace,
-				})
-
-				s.podListerByNamespace[autodiscover.Namespace] = podLister
-				s.informerClosers = append(s.informerClosers, informerCloser)
+			for _, endpoint := range autodiscover.Endpoints {
+				s.addSecretLister(endpoint.Auth)
 			}
 		}
+	}
+}
+
+func (s *Scraper) addPodLister(namespace string) {
+	if _, ok := s.podListerByNamespace[namespace]; !ok {
+		s.logger.Debugf("Generating a new Pod lister for namespace %q.", namespace)
+
+		podLister, informerCloser := discovery.NewPodNamespaceLister(discovery.PodListerConfig{
+			Client:    s.K8s,
+			Namespace: namespace,
+		})
+
+		s.podListerByNamespace[namespace] = podLister
+		s.informerClosers = append(s.informerClosers, informerCloser)
+	}
+}
+
+func (s *Scraper) addSecretLister(auth *config.Auth) {
+	if auth != nil && auth.MTLS != nil {
+		namespace := controlplaneClient.DefaultSecretNamespace
+		if auth.MTLS.TLSSecretNamespace != "" {
+			namespace = auth.MTLS.TLSSecretNamespace
+		}
+
+		s.logger.Debugf("Generating a new Secret lister for namespace %q.", namespace)
+
+		secretLister, informerCloser := discovery.NewSecretNamespaceLister(discovery.SecretListerConfig{
+			Client:    s.K8s,
+			Namespace: namespace,
+		})
+
+		s.secretListerByNamespace[namespace] = secretLister
+		s.informerClosers = append(s.informerClosers, informerCloser)
 	}
 }

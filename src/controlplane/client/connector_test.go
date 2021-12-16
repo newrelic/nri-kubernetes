@@ -1,6 +1,8 @@
 package client_test
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
@@ -8,13 +10,73 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/rest"
 )
 
-const (
-	testValidURL = "https://test:443"
-)
+func Test_Connector_probes_endpoints_list(t *testing.T) {
+	t.Parallel()
+
+	hitsOKServer := 0
+	okServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		hitsOKServer++
+		if r.URL.Path == prometheusPath {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer okServer.Close()
+
+	hitsFailServer := 0
+	failServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusForbidden)
+		hitsFailServer++
+	}))
+	defer failServer.Close()
+
+	hitsSkippedServer := 0
+	skippedServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusForbidden)
+		hitsSkippedServer++
+	}))
+	defer skippedServer.Close()
+
+	endpoints := []config.Endpoint{
+		// Failing endpoints.
+		{
+			URL: failServer.URL,
+		},
+		{
+			URL:  failServer.URL,
+			Auth: &config.Auth{Type: "bearer"},
+		},
+		{
+			URL: "http://localhost:1234",
+		},
+		// Working endpoint.
+		{
+			URL: okServer.URL,
+		},
+		// This endpoint must not be hit.
+		{
+			URL: skippedServer.URL,
+		},
+	}
+
+	connector := client.DefaultConnector(
+		endpoints,
+		client.NewAuthenticator(log.Discard, nil, &rest.Config{}),
+		log.Discard,
+	)
+
+	_, err := connector.Connect()
+	assert.NoError(t, err)
+
+	assert.Equal(t, 1, hitsOKServer)
+	assert.Equal(t, 2, hitsFailServer)
+	// Endpoints are not probed after first successful probe.
+	assert.Equal(t, 0, hitsSkippedServer)
+}
 
 func Test_Connect_fails_when(t *testing.T) {
 	t.Parallel()
@@ -25,10 +87,17 @@ func Test_Connect_fails_when(t *testing.T) {
 		assert    func(*testing.T, error)
 	}{
 		{
+			name:      "all_probes_fail",
+			endpoints: []config.Endpoint{{URL: "https://fail:1234"}},
+			assert: func(t *testing.T, err error) {
+				require.Error(t, err, "connect must fail if all probes fails")
+			},
+		},
+		{
 			name:      "no_endpoint_in_the_list",
 			endpoints: []config.Endpoint{},
 			assert: func(t *testing.T, err error) {
-				require.Error(t, err, "empty endpoint list should fail")
+				require.Error(t, err, "empty endpoint list must fail")
 			},
 		},
 		{
@@ -37,7 +106,7 @@ func Test_Connect_fails_when(t *testing.T) {
 				URL: "",
 			}},
 			assert: func(t *testing.T, err error) {
-				require.Error(t, err, "empty url should fail")
+				require.Error(t, err, "empty url must fail")
 			},
 		},
 		{
@@ -46,46 +115,18 @@ func Test_Connect_fails_when(t *testing.T) {
 				URL: ":invalid/url:",
 			}},
 			assert: func(t *testing.T, err error) {
-				require.Error(t, err, "invalid url should fail")
+				require.Error(t, err, "invalid url must fail")
 			},
 		},
 		{
-			name: "has_unknown_auth_type",
+			name: "fails_to_authenticate",
 			endpoints: []config.Endpoint{{
-				URL: testValidURL,
-				Auth: &config.Auth{
-					Type: "unknown auth type",
-				},
+				URL: "https://mTLSendpoint:443",
+				// missing MTLS auth config
+				Auth: &config.Auth{Type: "mTLS"},
 			}},
 			assert: func(t *testing.T, err error) {
-				require.Error(t, err, "invalid auth should fail")
-			},
-		},
-		{
-			name: "mTLS_type_is_selected_but_has_not_mTLS_auth_config",
-			endpoints: []config.Endpoint{{
-				URL: testValidURL,
-				Auth: &config.Auth{
-					Type: "mTLS",
-				},
-			}},
-			assert: func(t *testing.T, err error) {
-				require.Error(t, err, "if type mTLS is set mTLS auth must be set")
-			},
-		},
-		{
-			name: "mTLS_auth_config_has_no_TLSSecretName",
-			endpoints: []config.Endpoint{{
-				URL: testValidURL,
-				Auth: &config.Auth{
-					Type: "mTLS",
-					MTLS: &config.MTLS{
-						TLSSecretName: "",
-					},
-				},
-			}},
-			assert: func(t *testing.T, err error) {
-				require.Error(t, err, "secret cannot be empty")
+				require.Error(t, err, "invalid url must fail")
 			},
 		},
 	}
@@ -96,15 +137,13 @@ func Test_Connect_fails_when(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			connector, err := client.DefaultConnector(
+			connector := client.DefaultConnector(
 				test.endpoints,
-				fake.NewSimpleClientset(),
-				&rest.Config{},
+				client.NewAuthenticator(log.Discard, nil, &rest.Config{}),
 				log.Discard,
 			)
-			assert.NoError(t, err)
 
-			_, err = connector.Connect()
+			_, err := connector.Connect()
 			test.assert(t, err)
 		})
 	}

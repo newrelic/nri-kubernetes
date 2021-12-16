@@ -47,10 +47,6 @@ func New(connector Connector, opts ...OptionFunc) (*Client, error) {
 		}
 	}
 
-	if connector == nil {
-		return nil, fmt.Errorf("connector must not be nil")
-	}
-
 	conn, err := connector.Connect()
 	if err != nil {
 		return nil, fmt.Errorf("connecting to component using the connector: %w", err)
