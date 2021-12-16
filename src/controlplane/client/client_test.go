@@ -46,11 +46,14 @@ func Test_Client_scrape_http_endpoint(t *testing.T) {
 func Test_Client_tries_endpoints_list(t *testing.T) {
 	t.Parallel()
 
-	server := testHTTPServer(t, nil)
-	requestCount := 0
-	failServer := testHTTPServerFail(t, &requestCount)
+	okServer := testHTTPServer(t, nil)
+	requestCountFail := 0
+	failServer := testHTTPServerFail(t, &requestCountFail)
+	requestCountSkipped := 0
+	skippedServer := testHTTPServerFail(t, &requestCountSkipped)
 
 	endpoints := []config.Endpoint{
+		// Failing endpoints.
 		{
 			URL: failServer.URL,
 		},
@@ -59,17 +62,28 @@ func Test_Client_tries_endpoints_list(t *testing.T) {
 			Auth: &config.Auth{Type: "bearer"},
 		},
 		{
-			URL: server.URL,
+			URL: "http://localhost:1234",
+		},
+		// Working endpoint.
+		{
+			URL: okServer.URL,
+		},
+		// This endpoint must not be hit.
+		{
+			URL: skippedServer.URL,
 		},
 	}
 
-	cpClient, err := client.New(getTestConnector(server, endpoints))
+	cpClient, err := client.New(getTestConnector(okServer, endpoints))
 	assert.NoError(t, err)
 
 	r, err := cpClient.Get(prometheusPath)
 	require.NoError(t, err)
 	assert.Equal(t, r.StatusCode, http.StatusOK)
-	assert.Equal(t, 2, requestCount)
+	//
+	assert.Equal(t, 2, requestCountFail)
+	// Endpoints are not probed after first successful probe.
+	assert.Equal(t, 0, requestCountSkipped)
 }
 
 func Test_Client_scrape_https_endpoint(t *testing.T) {
