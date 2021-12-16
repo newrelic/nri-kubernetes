@@ -33,14 +33,14 @@ func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 	t.Parallel()
 
 	// Create an asserter with the settings that are shared for all test scenarios.
-	controlPlainSpecs := definition.SpecGroups{}
-	controlPlainSpecs["controller-manager"] = metric.ControllerManagerSpecs["controller-manager"]
-	controlPlainSpecs["etcd"] = metric.EtcdSpecs["etcd"]
-	controlPlainSpecs["scheduler"] = metric.SchedulerSpecs["scheduler"]
-	controlPlainSpecs["api-server"] = metric.APIServerSpecs["api-server"]
+	controlPlaneSpecs := definition.SpecGroups{}
+	controlPlaneSpecs["controller-manager"] = metric.ControllerManagerSpecs["controller-manager"]
+	controlPlaneSpecs["etcd"] = metric.EtcdSpecs["etcd"]
+	controlPlaneSpecs["scheduler"] = metric.SchedulerSpecs["scheduler"]
+	controlPlaneSpecs["api-server"] = metric.APIServerSpecs["api-server"]
 
 	asserter := testutil.NewAsserter().
-		Using(controlPlainSpecs).
+		Using(controlPlaneSpecs).
 		Excluding(
 			testutil.ExcludeMetrics("controller-manager", excludeCM...),
 			testutil.ExcludeMetrics("etcd", excludeETCD...),
@@ -64,7 +64,7 @@ func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 
 			discoveryConfig := testConfigAutodiscovery(testServer)
 
-			createControlPlainPods(t, fakeK8s, discoveryConfig, masterNodeName)
+			createControlPlanePods(t, fakeK8s, discoveryConfig, masterNodeName)
 
 			testConfig := testConfig(discoveryConfig, masterNodeName)
 
@@ -73,7 +73,7 @@ func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 				controlplane.Providers{K8s: fakeK8s},
 			)
 			if err != nil {
-				t.Fatalf("building scraper should not fail: %v", err)
+				t.Fatalf("error building scraper: %v", err)
 			}
 
 			if err = scraper.Run(i); err != nil {
@@ -119,11 +119,11 @@ func Test_Scraper_Autodiscover_cp_component_after_start(t *testing.T) {
 		},
 	)
 	if err != nil {
-		t.Fatalf("building scraper should not fail: %v", err)
+		t.Fatalf("error building scraper: %v", err)
 	}
 
 	// create a scheduler pod on different node
-	createControlPlainPod(t, fakeK8s, controlplane.Scheduler, discoveryConfig[controlplane.Scheduler], "masterNode2")
+	createControlPlanePod(t, fakeK8s, controlplane.Scheduler, discoveryConfig[controlplane.Scheduler], "masterNode2")
 
 	if err = scraper.Run(i); err != nil {
 		t.Fatalf("running scraper shouldn't fail if autodiscovery doesn't found a matching pod: %v", err)
@@ -134,7 +134,7 @@ func Test_Scraper_Autodiscover_cp_component_after_start(t *testing.T) {
 		t.Fatalf("No entities should be collected before creating the pods.")
 	}
 
-	createControlPlainPod(t, fakeK8s, controlplane.Scheduler, discoveryConfig[controlplane.Scheduler], masterNodeName)
+	createControlPlanePod(t, fakeK8s, controlplane.Scheduler, discoveryConfig[controlplane.Scheduler], masterNodeName)
 
 	if err = scraper.Run(i); err != nil {
 		t.Fatalf("running scraper: %v", err)
@@ -177,7 +177,7 @@ func Test_Scraper_external_endpoint(t *testing.T) {
 		},
 	)
 	if err != nil {
-		t.Fatalf("building scraper should not fail: %v", err)
+		t.Fatalf("error building scraper: %v", err)
 	}
 
 	if err = scraper.Run(i); err != nil {
@@ -268,7 +268,7 @@ func testConfig(
 	}
 }
 
-func createControlPlainPods(
+func createControlPlanePods(
 	t *testing.T,
 	client *fake.Clientset,
 	autodiscovery map[controlplane.ComponentName]config.AutodiscoverControlPlane,
@@ -277,13 +277,13 @@ func createControlPlainPods(
 	t.Helper()
 
 	for componentName, autodiscovery := range autodiscovery {
-		createControlPlainPod(t, client, componentName, autodiscovery, nodeName)
+		createControlPlanePod(t, client, componentName, autodiscovery, nodeName)
 	}
 
 	time.Sleep(time.Second)
 }
 
-func createControlPlainPod(
+func createControlPlanePod(
 	t *testing.T,
 	client *fake.Clientset,
 	componentName controlplane.ComponentName,
@@ -303,7 +303,7 @@ func createControlPlainPod(
 		},
 	}
 	if _, err := client.CoreV1().Pods(autodiscovery.Namespace).Create(context.Background(), pod, metav1.CreateOptions{}); err != nil {
-		t.Fail()
+		t.Fatalf("error creating pods in fake client: %v", err)
 	}
 
 	time.Sleep(time.Second)

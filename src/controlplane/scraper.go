@@ -116,14 +116,14 @@ func (s *Scraper) Run(i *integration.Integration) error {
 		// Static endpoint take precedence over autodisover and fails if external endpoint
 		// cannot be scraped.
 		if component.StaticEndpointConfig != nil {
-			s.logger.Debugf("Building %q external endpoint job")
+			s.logger.Debugf("Using static endpoint for component %q", component.Name)
 
 			job, err = s.externalEndpoint(component)
 			if err != nil {
 				return fmt.Errorf("configuring %q external endpoint: %w", component.Name, err)
 			}
 		} else {
-			s.logger.Debugf("Building %q autodiscovered endpoint job")
+			s.logger.Debugf("Autodiscovering pods for component %q", component.Name)
 
 			job, err = s.autodiscover(component)
 			if err != nil {
@@ -173,6 +173,8 @@ func (s *Scraper) externalEndpoint(c component) (*scrape.Job, error) {
 		return nil, fmt.Errorf("parsing static endpoint url for component %s failed: %v", c.Name, err)
 	}
 
+	// Entity key will be concatenated with host info (agent replace 'localhost' for hostname even in fw mode)
+	// example of etcd configured static (http://localhost:2381) entity key:'k8s:e2e-test:controlplane:etcd:minikube:2381'
 	grouper := grouper.New(
 		client,
 		c.Queries,
@@ -200,7 +202,7 @@ func (s *Scraper) autodiscover(c component) (*scrape.Job, error) {
 			continue
 		}
 
-		s.logger.Debugf("Found %q pod %q with labels %q", c.Name, podName, autodiscover.Selector)
+		s.logger.Debugf("Found pod %q for %q with labels %q", podName, c.Name, autodiscover.Selector)
 
 		connector, err := controlplaneClient.DefaultConnector(
 			autodiscover.Endpoints,
@@ -209,7 +211,7 @@ func (s *Scraper) autodiscover(c component) (*scrape.Job, error) {
 			s.logger,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("control plane component %q failed creating connector: %v", c.Name, err)
+			return nil, fmt.Errorf("creating connector for %q: %v", c.Name, err)
 		}
 
 		client, err := controlplaneClient.New(connector, controlplaneClient.WithLogger(s.logger))

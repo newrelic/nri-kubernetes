@@ -48,7 +48,7 @@ func New(connector Connector, opts ...OptionFunc) (*Client, error) {
 	}
 
 	if connector == nil {
-		return nil, fmt.Errorf("connector should not be nil")
+		return nil, fmt.Errorf("connector must not be nil")
 	}
 
 	conn, err := connector.Connect()

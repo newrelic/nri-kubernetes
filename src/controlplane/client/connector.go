@@ -74,14 +74,13 @@ func DefaultConnector(endpoints []config.Endpoint, kc kubernetes.Interface, inCl
 // and returns the connection parameters of the first endpoint that respond Status OK.
 func (dp *defaultConnector) Connect() (*connParams, error) {
 	for _, e := range dp.endpoints {
-		dp.logger.Debugf("Configuring autodiscover endpoint %q for probing", e.URL)
+		dp.logger.Debugf("Configuring endpoint %q for probing", e.URL)
 
 		u, err := url.Parse(e.URL)
 		if err != nil {
 			return nil, fmt.Errorf("parsing endpoint url %q: %w", e.URL, err)
 		}
 
-		// If no path is defined on the config, default is set.
 		if u.Path == "" || u.Path == "/" {
 			dp.logger.Debugf("Autodiscover endpoint %q does not contain path, adding default %q", e.URL, defaultMetricsPath)
 			u.Path = defaultMetricsPath
@@ -93,22 +92,22 @@ func (dp *defaultConnector) Connect() (*connParams, error) {
 		}
 
 		if err := dp.probeEndpoint(u.String(), httpClient); err != nil {
-			dp.logger.Debugf("Autodiscover endpoint %q probe failed: %v", e.URL, err)
+			dp.logger.Debugf("Endpoint %q probe failed, skipping: %v", e.URL, err)
 			continue
 		}
 
-		dp.logger.Debugf("Autodiscover endpoint %q probed successfully", e.URL)
+		dp.logger.Debugf("Endpoint %q probed successfully", e.URL)
 
 		return &connParams{url: *u, client: httpClient}, nil
 	}
 
-	return nil, fmt.Errorf("all autodiscover endpoints probe failed to response")
+	return nil, fmt.Errorf("all endpoints in the list failed to response")
 }
 
 func (dp *defaultConnector) probeEndpoint(url string, client *http.Client) error {
 	resp, err := client.Head(url)
 	if err != nil {
-		return fmt.Errorf("http request failed with error: %w", err)
+		return fmt.Errorf("http HEAD request failed: %w", err)
 	}
 
 	defer resp.Body.Close() // nolint: errcheck
@@ -138,13 +137,13 @@ func (dp *defaultConnector) newHTTPClient(endpoint config.Endpoint) (*http.Clien
 
 func (dp *defaultConnector) configureAuthentication(httpClient *http.Client, endpoint config.Endpoint) error {
 	if endpoint.Auth == nil {
-		dp.logger.Debugf("Plain auth is used for endpoint %q", endpoint.URL)
+		dp.logger.Debugf("No authentication configured for %q, connection will be attempted anonymously", endpoint.URL)
 
 		return nil
 	}
 
 	if strings.EqualFold(endpoint.Auth.Type, bearerAuth) {
-		dp.logger.Debugf("kubernetes Bearer token auth is used for endpoint %q", endpoint.URL)
+		dp.logger.Debugf("Using kubernetes token to authenticate request to %q", endpoint.URL)
 
 		httpClient.Transport = transport.NewBearerAuthRoundTripper(dp.inClusterConfig.BearerToken, httpClient.Transport)
 
@@ -152,7 +151,7 @@ func (dp *defaultConnector) configureAuthentication(httpClient *http.Client, end
 	}
 
 	if strings.EqualFold(endpoint.Auth.Type, mTLSAuth) {
-		dp.logger.Debugf("MTLS auth is used for endpoint %q", endpoint.URL)
+		dp.logger.Debugf("Using mTLS to authenticate request to %q", endpoint.URL)
 
 		tlsConfig, err := dp.getTLSConfigFromSecret(endpoint.Auth.MTLS)
 		if err != nil {
@@ -166,7 +165,7 @@ func (dp *defaultConnector) configureAuthentication(httpClient *http.Client, end
 		return nil
 	}
 
-	return fmt.Errorf("authorization type not supported: %q", endpoint.Auth.Type)
+	return fmt.Errorf("unknown authorization type %q", endpoint.Auth.Type)
 }
 
 func (dp *defaultConnector) getTLSConfigFromSecret(mTLSConfig *config.MTLS) (*tls.Config, error) {
