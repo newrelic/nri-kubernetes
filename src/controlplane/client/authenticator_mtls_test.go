@@ -131,7 +131,7 @@ func Test_Authenticator_with_mTLS(t *testing.T) {
 				InsecureSkipVerify: test.insecureSkipVerify,
 			}
 
-			rt, authenticateErr := authenticator.Authenticate(e)
+			rt, authenticateErr := authenticator.AuthenticatedTransport(e)
 
 			c := &http.Client{Transport: rt}
 

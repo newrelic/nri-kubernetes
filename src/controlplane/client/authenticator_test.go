@@ -29,7 +29,7 @@ func Test_Authenticate_for_http_endpoint(t *testing.T) {
 
 	authenticator := client.NewAuthenticator(log.Discard, nil, &rest.Config{})
 
-	rt, err := authenticator.Authenticate(config.Endpoint{URL: server.URL})
+	rt, err := authenticator.AuthenticatedTransport(config.Endpoint{URL: server.URL})
 	assert.NoError(t, err)
 
 	c := &http.Client{Transport: rt}
@@ -53,7 +53,7 @@ func Test_Authenticate_for_https_endpoint(t *testing.T) {
 		InsecureSkipVerify: true,
 	}
 
-	rt, err := authenticator.Authenticate(endpoint)
+	rt, err := authenticator.AuthenticatedTransport(endpoint)
 	assert.NoError(t, err)
 
 	c := &http.Client{Transport: rt}
@@ -77,7 +77,7 @@ func Test_Authenticate_for_https_endpoint_with_bearer_token_auth(t *testing.T) {
 		},
 	}
 
-	rt, err := authenticator.Authenticate(endpoint)
+	rt, err := authenticator.AuthenticatedTransport(endpoint)
 	assert.NoError(t, err)
 
 	c := &http.Client{Transport: rt}
@@ -144,7 +144,7 @@ func Test_Authenticator_fails_when(t *testing.T) {
 
 			authenticator := client.NewAuthenticator(log.Discard, nil, &rest.Config{})
 
-			_, err := authenticator.Authenticate(test.endpoint)
+			_, err := authenticator.AuthenticatedTransport(test.endpoint)
 			test.assert(t, err)
 		})
 	}

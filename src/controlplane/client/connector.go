@@ -62,7 +62,7 @@ func (dp *defaultConnector) Connect() (*connParams, error) {
 			u.Path = defaultMetricsPath
 		}
 
-		rt, err := dp.authenticator.Authenticate(e)
+		rt, err := dp.authenticator.AuthenticatedTransport(e)
 		if err != nil {
 			return nil, fmt.Errorf("creating HTTP client for endpoint %q: %w", e.URL, err)
 		}

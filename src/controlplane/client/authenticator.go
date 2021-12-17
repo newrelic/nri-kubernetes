@@ -14,7 +14,7 @@ import (
 
 // Authenticator provides an interface to generate a authorized round tripper.
 type Authenticator interface {
-	Authenticate(endpoint config.Endpoint) (http.RoundTripper, error)
+	AuthenticatedTransport(endpoint config.Endpoint) (http.RoundTripper, error)
 }
 
 type authenticator struct {
@@ -34,7 +34,7 @@ func NewAuthenticator(logger log.Logger, secretListerByNamespace map[string]v1.S
 
 // Authenticate retruns a round tripper according to the endpoint config.
 // For mTLS configuration it fetches the certificates from the secret.
-func (a authenticator) Authenticate(endpoint config.Endpoint) (http.RoundTripper, error) {
+func (a authenticator) AuthenticatedTransport(endpoint config.Endpoint) (http.RoundTripper, error) {
 	transportConfig := &transport.Config{}
 	tlsConfig := transport.TLSConfig{
 		Insecure: endpoint.InsecureSkipVerify,
