@@ -3,9 +3,6 @@ name: Release
 on:
   release:
     types: [prereleased, released]
-  push:
-    branches:
-      - new_images
 
 jobs:
   build:
@@ -52,7 +49,8 @@ jobs:
     steps:
       - name: Generate docker image version from git tag
         run: |
-          DOCKER_IMAGE_TAG=0.1.1
+          echo "${{ github.event.release.tag_name }}" | grep -E '^v[0-9.]*[0-9]$'
+          DOCKER_IMAGE_TAG=$(echo "${{ github.event.release.tag_name }}" | sed 's/^v//')
           echo "DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG" >> $GITHUB_ENV
 
       - if: ${{ github.event.release.prerelease }}
