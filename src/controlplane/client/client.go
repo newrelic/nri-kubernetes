@@ -9,6 +9,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/log"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/connector"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
 
@@ -36,7 +37,7 @@ func WithLogger(logger log.Logger) OptionFunc {
 }
 
 // New builds a Client using the given options.
-func New(connector Connector, opts ...OptionFunc) (*Client, error) {
+func New(connector connector.Connector, opts ...OptionFunc) (*Client, error) {
 	c := &Client{
 		logger: log.New(false, io.Discard),
 	}
@@ -52,8 +53,8 @@ func New(connector Connector, opts ...OptionFunc) (*Client, error) {
 		return nil, fmt.Errorf("connecting to component using the connector: %w", err)
 	}
 
-	c.doer = conn.client
-	c.endpoint = conn.url
+	c.doer = conn.Client
+	c.endpoint = conn.URL
 
 	return c, nil
 }

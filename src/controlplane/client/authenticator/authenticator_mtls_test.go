@@ -1,4 +1,4 @@
-package client_test
+package authenticator_test
 
 import (
 	"crypto/tls"
@@ -9,10 +9,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
-	controlplaneClient "github.com/newrelic/nri-kubernetes/v2/src/controlplane/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/authenticator"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -20,7 +19,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	listersv1 "k8s.io/client-go/listers/core/v1"
-	"k8s.io/client-go/rest"
 )
 
 const (
@@ -114,11 +112,12 @@ func Test_Authenticator_with_mTLS(t *testing.T) {
 				certificates(test.cacert, test.key, test.cert),
 			)
 
-			authenticator := controlplaneClient.NewAuthenticator(
-				log.NewStdErr(true),
-				map[string]listersv1.SecretNamespaceLister{secretNamespace: lister},
-				&rest.Config{},
+			authenticator, err := authenticator.New(
+				authenticator.Config{
+					SecretListerByNamespace: map[string]listersv1.SecretNamespaceLister{secretNamespace: lister},
+				},
 			)
+			require.NoError(t, err)
 
 			e := config.Endpoint{
 				Auth: &config.Auth{

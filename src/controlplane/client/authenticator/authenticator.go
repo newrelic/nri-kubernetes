@@ -1,4 +1,4 @@
-package client
+package authenticator
 
 import (
 	"fmt"
@@ -12,29 +12,58 @@ import (
 	"k8s.io/client-go/transport"
 )
 
+const (
+	DefaultSecretNamespace = "default"
+	mTLSAuth               = "mTLS"
+	bearerAuth             = "bearer"
+)
+
 // Authenticator provides an interface to generate a authorized round tripper.
 type Authenticator interface {
+	// AuthenticatedTransport returns a RoundTripper with the required configuration
+	// to connect to the endpoint.
 	AuthenticatedTransport(endpoint config.Endpoint) (http.RoundTripper, error)
 }
 
-type authenticator struct {
-	logger                  log.Logger
-	secretListerByNamespace map[string]v1.SecretNamespaceLister
-	inClusterConfig         *rest.Config
+type Config struct {
+	SecretListerByNamespace map[string]v1.SecretNamespaceLister
+	InClusterConfig         *rest.Config
 }
 
-// NewAuthenticator returns an Authenticator that supports plain, bearer token and mTLS.
-func NewAuthenticator(logger log.Logger, secretListerByNamespace map[string]v1.SecretNamespaceLister, inClusterConfig *rest.Config) Authenticator {
-	return &authenticator{
-		logger:                  logger,
-		secretListerByNamespace: secretListerByNamespace,
-		inClusterConfig:         inClusterConfig,
+type OptionFunc func(kca *K8sClientAuthenticator) error
+
+// WithLogger returns an OptionFunc to change the logger from the default noop logger.
+func WithLogger(logger log.Logger) OptionFunc {
+	return func(kca *K8sClientAuthenticator) error {
+		kca.logger = logger
+		return nil
 	}
+}
+
+type K8sClientAuthenticator struct {
+	Config
+	logger log.Logger
+}
+
+// New returns an K8sClientAuthenticator that supports plain, bearer token and mTLS.
+func New(config Config, opts ...OptionFunc) (*K8sClientAuthenticator, error) {
+	kca := &K8sClientAuthenticator{
+		logger: log.Discard,
+		Config: config,
+	}
+
+	for i, opt := range opts {
+		if err := opt(kca); err != nil {
+			return nil, fmt.Errorf("applying option #%d: %w", i, err)
+		}
+	}
+
+	return kca, nil
 }
 
 // Authenticate retruns a round tripper according to the endpoint config.
 // For mTLS configuration it fetches the certificates from the secret.
-func (a authenticator) AuthenticatedTransport(endpoint config.Endpoint) (http.RoundTripper, error) {
+func (a K8sClientAuthenticator) AuthenticatedTransport(endpoint config.Endpoint) (http.RoundTripper, error) {
 	transportConfig := &transport.Config{}
 	tlsConfig := transport.TLSConfig{
 		Insecure: endpoint.InsecureSkipVerify,
@@ -47,7 +76,7 @@ func (a authenticator) AuthenticatedTransport(endpoint config.Endpoint) (http.Ro
 	case strings.EqualFold(endpoint.Auth.Type, bearerAuth):
 		a.logger.Debugf("Using kubernetes token to authenticate request to %q", endpoint.URL)
 
-		transportConfig.BearerToken = a.inClusterConfig.BearerToken
+		transportConfig.BearerToken = a.InClusterConfig.BearerToken
 
 	case strings.EqualFold(endpoint.Auth.Type, mTLSAuth) && endpoint.Auth.MTLS != nil:
 		a.logger.Debugf("Using mTLS to authenticate request to %q", endpoint.URL)
@@ -84,7 +113,7 @@ type certificatesData struct {
 }
 
 // getTLSCertificatesFromSecret fetches the certificates from the secrets using the secret lister.
-func (a authenticator) getTLSCertificatesFromSecret(mTLSConfig *config.MTLS) (*certificatesData, error) {
+func (a K8sClientAuthenticator) getTLSCertificatesFromSecret(mTLSConfig *config.MTLS) (*certificatesData, error) {
 	if mTLSConfig.TLSSecretName == "" {
 		return nil, fmt.Errorf("mTLS secret name cannot be empty")
 	}
@@ -100,7 +129,7 @@ func (a authenticator) getTLSCertificatesFromSecret(mTLSConfig *config.MTLS) (*c
 
 	var ok bool
 
-	if secretLister, ok = a.secretListerByNamespace[namespace]; !ok {
+	if secretLister, ok = a.SecretListerByNamespace[namespace]; !ok {
 		return nil, fmt.Errorf("could not find secret lister for namespace %q", namespace)
 	}
 

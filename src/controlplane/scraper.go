@@ -10,6 +10,8 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	controlplaneClient "github.com/newrelic/nri-kubernetes/v2/src/controlplane/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/authenticator"
+	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/connector"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/grouper"
 	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
 	corev1 "k8s.io/api/core/v1"
@@ -37,7 +39,7 @@ type Scraper struct {
 	podListerByNamespace    map[string]v1.PodNamespaceLister
 	secretListerByNamespace map[string]v1.SecretNamespaceLister
 	inClusterConfig         *rest.Config
-	authenticator           controlplaneClient.Authenticator
+	authenticator           authenticator.Authenticator
 }
 
 // ScraperOpt are options that can be used to configure the Scraper
@@ -104,7 +106,16 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 	// Building pod and secret lister and closers.
 	s.buildListers()
 
-	s.authenticator = controlplaneClient.NewAuthenticator(s.logger, s.secretListerByNamespace, s.inClusterConfig)
+	s.authenticator, err = authenticator.New(
+		authenticator.Config{
+			SecretListerByNamespace: s.secretListerByNamespace,
+			InClusterConfig:         s.inClusterConfig,
+		},
+		authenticator.WithLogger(s.logger),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("fetching K8s version: %w", err)
+	}
 
 	return s, nil
 }
@@ -158,7 +169,7 @@ func (s *Scraper) Run(i *integration.Integration) error {
 // externalEndpoint builds the client based on the StaticEndpointConfig and fails if
 // the client probe cannot reach the endpoint.
 func (s *Scraper) externalEndpoint(c component) (*scrape.Job, error) {
-	connector := controlplaneClient.DefaultConnector(
+	connector := connector.DefaultConnector(
 		[]config.Endpoint{*c.StaticEndpointConfig},
 		s.authenticator,
 		s.logger,
@@ -205,7 +216,7 @@ func (s *Scraper) autodiscover(c component) (*scrape.Job, error) {
 
 		s.logger.Debugf("Found pod %q for %q with labels %q", pod.Name, c.Name, autodiscover.Selector)
 
-		connector := controlplaneClient.DefaultConnector(
+		connector := connector.DefaultConnector(
 			autodiscover.Endpoints,
 			s.authenticator,
 			s.logger,
@@ -295,7 +306,7 @@ func (s *Scraper) addPodLister(namespace string) {
 
 func (s *Scraper) addSecretLister(auth *config.Auth) {
 	if auth != nil && auth.MTLS != nil {
-		namespace := controlplaneClient.DefaultSecretNamespace
+		namespace := authenticator.DefaultSecretNamespace
 		if auth.MTLS.TLSSecretNamespace != "" {
 			namespace = auth.MTLS.TLSSecretNamespace
 		}

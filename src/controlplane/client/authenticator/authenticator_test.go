@@ -1,4 +1,4 @@
-package client_test
+package authenticator_test
 
 import (
 	"net/http"
@@ -6,9 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/authenticator"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/client-go/rest"
@@ -27,7 +26,8 @@ func Test_Authenticate_for_http_endpoint(t *testing.T) {
 	}))
 	defer server.Close()
 
-	authenticator := client.NewAuthenticator(log.Discard, nil, &rest.Config{})
+	authenticator, err := authenticator.New(authenticator.Config{})
+	assert.NoError(t, err)
 
 	rt, err := authenticator.AuthenticatedTransport(config.Endpoint{URL: server.URL})
 	assert.NoError(t, err)
@@ -46,7 +46,8 @@ func Test_Authenticate_for_https_endpoint(t *testing.T) {
 	}))
 	defer server.Close()
 
-	authenticator := client.NewAuthenticator(log.Discard, nil, &rest.Config{})
+	authenticator, err := authenticator.New(authenticator.Config{})
+	assert.NoError(t, err)
 
 	endpoint := config.Endpoint{
 		URL:                server.URL,
@@ -67,7 +68,11 @@ func Test_Authenticate_for_https_endpoint_with_bearer_token_auth(t *testing.T) {
 
 	server := testHTTPSServerBearer(t)
 
-	authenticator := client.NewAuthenticator(log.Discard, nil, &rest.Config{BearerToken: bearerToken})
+	authenticator, err := authenticator.New(
+		authenticator.Config{
+			InClusterConfig: &rest.Config{BearerToken: bearerToken},
+		})
+	assert.NoError(t, err)
 
 	endpoint := config.Endpoint{
 		URL:                server.URL,
@@ -142,9 +147,10 @@ func Test_Authenticator_fails_when(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			authenticator := client.NewAuthenticator(log.Discard, nil, &rest.Config{})
+			authenticator, err := authenticator.New(authenticator.Config{})
+			assert.NoError(t, err)
 
-			_, err := authenticator.AuthenticatedTransport(test.endpoint)
+			_, err = authenticator.AuthenticatedTransport(test.endpoint)
 			test.assert(t, err)
 		})
 	}

@@ -1,4 +1,4 @@
-package client_test
+package connector_test
 
 import (
 	"net/http"
@@ -7,10 +7,15 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/authenticator"
+	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/connector"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/client-go/rest"
+)
+
+const (
+	prometheusPath = "/metrics"
 )
 
 func Test_Connector_probes_endpoints_list(t *testing.T) {
@@ -63,13 +68,18 @@ func Test_Connector_probes_endpoints_list(t *testing.T) {
 		},
 	}
 
-	connector := client.DefaultConnector(
+	authenticator, err := authenticator.New(authenticator.Config{
+		InClusterConfig: &rest.Config{},
+	})
+	assert.NoError(t, err)
+
+	connector := connector.DefaultConnector(
 		endpoints,
-		client.NewAuthenticator(log.Discard, nil, &rest.Config{}),
+		authenticator,
 		log.Discard,
 	)
 
-	_, err := connector.Connect()
+	_, err = connector.Connect()
 	assert.NoError(t, err)
 
 	assert.Equal(t, 1, hitsOKServer)
@@ -137,13 +147,16 @@ func Test_Connect_fails_when(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			connector := client.DefaultConnector(
+			authenticator, err := authenticator.New(authenticator.Config{})
+			assert.NoError(t, err)
+
+			connector := connector.DefaultConnector(
 				test.endpoints,
-				client.NewAuthenticator(log.Discard, nil, &rest.Config{}),
+				authenticator,
 				log.Discard,
 			)
 
-			_, err := connector.Connect()
+			_, err = connector.Connect()
 			test.assert(t, err)
 		})
 	}

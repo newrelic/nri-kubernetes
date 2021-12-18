@@ -1,4 +1,4 @@
-package client
+package connector
 
 import (
 	"fmt"
@@ -10,35 +10,33 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/authenticator"
 )
 
 const (
-	DefaultTimout          = 5000 * time.Millisecond
-	DefaultSecretNamespace = "default"
-	defaultMetricsPath     = "/metrics"
-	mTLSAuth               = "mTLS"
-	bearerAuth             = "bearer"
+	DefaultTimout      = 5000 * time.Millisecond
+	defaultMetricsPath = "/metrics"
 )
 
 // Connector provides an interface to retrieve []connParams to connect to a Control Plane instance.
 type Connector interface {
-	Connect() (*connParams, error)
+	Connect() (*ConnParams, error)
 }
 
-type connParams struct {
-	url    url.URL
-	client client.HTTPDoer
+type ConnParams struct {
+	URL    url.URL
+	Client client.HTTPDoer
 }
 
 type defaultConnector struct {
 	// TODO: Use a non-sdk logger
 	logger        log.Logger
-	authenticator Authenticator
+	authenticator authenticator.Authenticator
 	endpoints     []config.Endpoint
 }
 
 // DefaultConnector returns a defaultConnector that probes all endpoints in the list and return the first responding status OK.
-func DefaultConnector(endpoints []config.Endpoint, authenticator Authenticator, logger log.Logger) Connector {
+func DefaultConnector(endpoints []config.Endpoint, authenticator authenticator.Authenticator, logger log.Logger) Connector {
 	return &defaultConnector{
 		logger:        logger,
 		authenticator: authenticator,
@@ -48,7 +46,7 @@ func DefaultConnector(endpoints []config.Endpoint, authenticator Authenticator, 
 
 // Connect iterates over the endpoints list probing each endpoint with a HEAD request
 // and returns the connection parameters of the first endpoint that respond Status OK.
-func (dp *defaultConnector) Connect() (*connParams, error) {
+func (dp *defaultConnector) Connect() (*ConnParams, error) {
 	for _, e := range dp.endpoints {
 		dp.logger.Debugf("Configuring endpoint %q for probing", e.URL)
 
@@ -76,7 +74,7 @@ func (dp *defaultConnector) Connect() (*connParams, error) {
 
 		dp.logger.Debugf("Endpoint %q probed successfully", e.URL)
 
-		return &connParams{url: *u, client: httpClient}, nil
+		return &ConnParams{URL: *u, Client: httpClient}, nil
 	}
 
 	return nil, fmt.Errorf("all endpoints in the list failed to response")

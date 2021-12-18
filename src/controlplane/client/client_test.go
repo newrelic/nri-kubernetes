@@ -9,6 +9,8 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/authenticator"
+	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/connector"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,12 +26,15 @@ func Test_Client(t *testing.T) {
 
 	server := testHTTPServer(t, &timeout)
 
-	connector := client.DefaultConnector(
+	authenticator, err := authenticator.New(authenticator.Config{})
+	assert.NoError(t, err)
+
+	c := connector.DefaultConnector(
 		[]config.Endpoint{{URL: server.URL}},
-		client.NewAuthenticator(log.Discard, nil, nil),
+		authenticator,
 		log.Discard)
 
-	cpClient, err := client.New(connector)
+	cpClient, err := client.New(c)
 	require.NoError(t, err)
 
 	// Scrapes prometheus endpoint
@@ -37,7 +42,7 @@ func Test_Client(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, r.StatusCode)
 
-	timeout = timeout + client.DefaultTimout
+	timeout = timeout + connector.DefaultTimout
 
 	// Fails if timeout
 	_, err = cpClient.Get("")
