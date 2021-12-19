@@ -7,7 +7,7 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	v1 "k8s.io/client-go/listers/core/v1"
+	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/transport"
 )
@@ -26,8 +26,8 @@ type Authenticator interface {
 }
 
 type Config struct {
-	SecretListerByNamespace map[string]v1.SecretNamespaceLister
-	InClusterConfig         *rest.Config
+	SecretListerer  discovery.SecretListerer
+	InClusterConfig *rest.Config
 }
 
 type OptionFunc func(kca *K8sClientAuthenticator) error
@@ -127,11 +127,8 @@ func (a K8sClientAuthenticator) getTLSCertificatesFromSecret(mTLSConfig *config.
 		namespace = DefaultSecretNamespace
 	}
 
-	var secretLister v1.SecretNamespaceLister
-
-	var ok bool
-
-	if secretLister, ok = a.SecretListerByNamespace[namespace]; !ok {
+	secretLister, ok := a.SecretListerer.Lister(namespace)
+	if !ok {
 		return nil, fmt.Errorf("could not find secret lister for namespace %q", namespace)
 	}
 

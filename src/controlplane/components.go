@@ -80,3 +80,39 @@ func newComponents(config config.ControlPlane) []component {
 
 	return components
 }
+
+// secretNamespaces returns all namespaces where secrets are store.
+func secretNamespaces(components []component) (secrets []string) {
+	s := make(map[string]struct{})
+	for _, c := range components {
+		if c.StaticEndpointConfig != nil {
+			s[secretNamespace(c.StaticEndpointConfig.Auth)] = struct{}{}
+		}
+
+		for _, autodiscover := range c.AutodiscoverConfigs {
+			for _, endpoint := range autodiscover.Endpoints {
+				s[secretNamespace(endpoint.Auth)] = struct{}{}
+			}
+		}
+	}
+
+	for namespace := range s {
+		if namespace != "" {
+			secrets = append(secrets, namespace)
+		}
+	}
+
+	return
+}
+
+func secretNamespace(auth *config.Auth) string {
+	if auth == nil || auth.MTLS == nil {
+		return ""
+	}
+
+	if auth.MTLS.TLSSecretNamespace != "" {
+		return auth.MTLS.TLSSecretNamespace
+	}
+
+	return auth.MTLS.TLSSecretNamespace
+}

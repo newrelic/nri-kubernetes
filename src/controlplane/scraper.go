@@ -31,15 +31,14 @@ type Providers struct {
 // Scraper takes care of getting metrics all control plane instances based on the configuration.
 type Scraper struct {
 	Providers
-	logger                  log.Logger
-	config                  *config.Config
-	k8sVersion              *version.Info
-	components              []component
-	informerClosers         []chan<- struct{}
-	podListerByNamespace    map[string]v1.PodNamespaceLister
-	secretListerByNamespace map[string]v1.SecretNamespaceLister
-	inClusterConfig         *rest.Config
-	authenticator           authenticator.Authenticator
+	logger               log.Logger
+	config               *config.Config
+	k8sVersion           *version.Info
+	components           []component
+	informerClosers      []chan<- struct{}
+	podListerByNamespace map[string]v1.PodNamespaceLister
+	inClusterConfig      *rest.Config
+	authenticator        authenticator.Authenticator
 }
 
 // ScraperOpt are options that can be used to configure the Scraper.
@@ -103,19 +102,27 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 		return nil, fmt.Errorf("fetching K8s version: %w", err)
 	}
 
-	// Building pod and secret lister and closers.
-	s.buildListers()
+	secretListerer, informerCloser := discovery.NewSecretNamespaceLister(discovery.SecretListerConfig{
+		Client:     s.K8s,
+		Namespaces: secretNamespaces(s.components),
+	})
+
+	s.informerClosers = append(s.informerClosers, informerCloser)
 
 	s.authenticator, err = authenticator.New(
 		authenticator.Config{
-			SecretListerByNamespace: s.secretListerByNamespace,
-			InClusterConfig:         s.inClusterConfig,
+			SecretListerer:  secretListerer,
+			InClusterConfig: s.inClusterConfig,
 		},
 		authenticator.WithLogger(s.logger),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("creating authenticator: %w", err)
 	}
+
+	// TODO refactor pod discovery to add multiple namespaces and implement similar
+	// as secret.
+	s.buildPodLister()
 
 	return s, nil
 }
@@ -272,20 +279,10 @@ func (s *Scraper) discoverPod(autodiscover config.AutodiscoverControlPlane) (*co
 	return nil, nil
 }
 
-// buildListers populates podListerByNamespace and secretListerByNamespace with a
-// lister for each namespace needed.
-func (s *Scraper) buildListers() {
+func (s *Scraper) buildPodLister() {
 	for _, component := range s.components {
-		if component.StaticEndpointConfig != nil {
-			s.addSecretLister(component.StaticEndpointConfig.Auth)
-		}
-
 		for _, autodiscover := range component.AutodiscoverConfigs {
 			s.addPodLister(autodiscover.Namespace)
-
-			for _, endpoint := range autodiscover.Endpoints {
-				s.addSecretLister(endpoint.Auth)
-			}
 		}
 	}
 }
@@ -300,25 +297,6 @@ func (s *Scraper) addPodLister(namespace string) {
 		})
 
 		s.podListerByNamespace[namespace] = podLister
-		s.informerClosers = append(s.informerClosers, informerCloser)
-	}
-}
-
-func (s *Scraper) addSecretLister(auth *config.Auth) {
-	if auth != nil && auth.MTLS != nil {
-		namespace := authenticator.DefaultSecretNamespace
-		if auth.MTLS.TLSSecretNamespace != "" {
-			namespace = auth.MTLS.TLSSecretNamespace
-		}
-
-		s.logger.Debugf("Generating a new Secret lister for namespace %q.", namespace)
-
-		secretLister, informerCloser := discovery.NewSecretNamespaceLister(discovery.SecretListerConfig{
-			Client:    s.K8s,
-			Namespace: namespace,
-		})
-
-		s.secretListerByNamespace[namespace] = secretLister
 		s.informerClosers = append(s.informerClosers, informerCloser)
 	}
 }

@@ -25,14 +25,17 @@ func Test_secrets_discovery(t *testing.T) {
 
 	client := testclient.NewSimpleClientset()
 
-	d, closeChan := discovery.NewSecretNamespaceLister(
+	listerer, closeChan := discovery.NewSecretNamespaceLister(
 		discovery.SecretListerConfig{
-			Namespace: secretNamespace,
-			Client:    client,
+			Namespaces: []string{secretNamespace},
+			Client:     client,
 		},
 	)
 
 	defer close(closeChan)
+
+	d, ok := listerer.Lister(secretNamespace)
+	require.True(t, ok)
 
 	// Discovery with no secret
 	e, err := d.Get(secretName)
@@ -67,12 +70,15 @@ func Test_secrets_ignores_different_namespaces(t *testing.T) {
 		},
 	})
 
-	d, _ := discovery.NewSecretNamespaceLister(
+	listerer, _ := discovery.NewSecretNamespaceLister(
 		discovery.SecretListerConfig{
-			Namespace: secretNamespace,
-			Client:    client,
+			Namespaces: []string{secretNamespace},
+			Client:     client,
 		},
 	)
+
+	d, ok := listerer.Lister(secretNamespace)
+	require.True(t, ok)
 
 	e, err := d.Get(secretName)
 	require.Error(t, err)
@@ -84,12 +90,15 @@ func Test_secrets_stop_channel(t *testing.T) {
 
 	client := testclient.NewSimpleClientset()
 
-	d, closeChan := discovery.NewSecretNamespaceLister(
+	listerer, closeChan := discovery.NewSecretNamespaceLister(
 		discovery.SecretListerConfig{
-			Namespace: secretNamespace,
-			Client:    client,
+			Namespaces: []string{secretNamespace},
+			Client:     client,
 		},
 	)
+
+	d, ok := listerer.Lister(secretNamespace)
+	require.True(t, ok)
 
 	close(closeChan)
 
@@ -109,12 +118,15 @@ func Test_informer_does_not_hit_multiple_times_backend(t *testing.T) {
 	var err error
 	client := testclient.NewSimpleClientset(fakeSecret())
 
-	d, _ := discovery.NewSecretNamespaceLister(
+	listerer, _ := discovery.NewSecretNamespaceLister(
 		discovery.SecretListerConfig{
-			Namespace: secretNamespace,
-			Client:    client,
+			Namespaces: []string{secretNamespace},
+			Client:     client,
 		},
 	)
+
+	d, ok := listerer.Lister(secretNamespace)
+	require.True(t, ok)
 
 	_, err = d.Get(secretName)
 	assert.Nil(t, err)
@@ -139,7 +151,6 @@ func Test_informer_does_not_hit_multiple_times_backend(t *testing.T) {
 	}
 	assert.Equal(t, 1, counterList)
 	assert.Equal(t, 0, counterGet)
-
 }
 
 func fakeSecret() *corev1.Secret {

@@ -18,7 +18,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
-	listersv1 "k8s.io/client-go/listers/core/v1"
 )
 
 const (
@@ -104,7 +103,7 @@ func Test_Authenticator_with_mTLS(t *testing.T) {
 
 			endpoint := startMTLSServer()
 
-			lister := secretLister(
+			listerer := secretListerer(
 				t,
 				secretName,
 				secretNamespace,
@@ -113,7 +112,7 @@ func Test_Authenticator_with_mTLS(t *testing.T) {
 
 			authenticator, err := authenticator.New(
 				authenticator.Config{
-					SecretListerByNamespace: map[string]listersv1.SecretNamespaceLister{secretNamespace: lister},
+					SecretListerer: listerer,
 				},
 			)
 			require.NoError(t, err)
@@ -158,7 +157,7 @@ func fakeSecrets(cacert, key, cert []byte) map[string][]byte {
 	return data
 }
 
-func secretLister(t *testing.T, name string, namespace string, secrets map[string][]byte) listersv1.SecretNamespaceLister {
+func secretListerer(t *testing.T, name string, namespace string, secrets map[string][]byte) discovery.SecretListerer {
 	c := fake.NewSimpleClientset(&v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -167,14 +166,14 @@ func secretLister(t *testing.T, name string, namespace string, secrets map[strin
 		Data: secrets,
 	})
 
-	secretLister, closer := discovery.NewSecretNamespaceLister(discovery.SecretListerConfig{
-		Client:    c,
-		Namespace: namespace,
+	secretListerer, closer := discovery.NewSecretNamespaceLister(discovery.SecretListerConfig{
+		Client:     c,
+		Namespaces: []string{namespace},
 	})
 
 	t.Cleanup(func() { close(closer) })
 
-	return secretLister
+	return secretListerer
 }
 
 func startMTLSServer() string {
