@@ -30,27 +30,47 @@ type ConnParams struct {
 	Client client.HTTPDoer
 }
 
-type defaultConnector struct {
-	// TODO: Use a non-sdk logger
-	logger        log.Logger
-	authenticator authenticator.Authenticator
-	endpoints     []config.Endpoint
+type Config struct {
+	Authenticator authenticator.Authenticator
+	Endpoints     []config.Endpoint
 }
 
-// DefaultConnector returns a defaultConnector that probes all
-// endpoints in the list and return the first responding status OK.
-func DefaultConnector(endpoints []config.Endpoint, authenticator authenticator.Authenticator, logger log.Logger) Connector {
-	return &defaultConnector{
-		logger:        logger,
-		authenticator: authenticator,
-		endpoints:     endpoints,
+type OptionFunc func(dc *DefaultConnector) error
+
+// WithLogger returns an OptionFunc to change the logger from the default noop logger.
+func WithLogger(logger log.Logger) OptionFunc {
+	return func(dc *DefaultConnector) error {
+		dc.logger = logger
+		return nil
 	}
+}
+
+// DefaultConnector implements Connector interface for the Control Plane components.
+type DefaultConnector struct {
+	Config
+	logger log.Logger
+}
+
+// New returns a DefaultConnector.
+func New(config Config, opts ...OptionFunc) (*DefaultConnector, error) {
+	dc := &DefaultConnector{
+		Config: config,
+		logger: log.Discard,
+	}
+
+	for i, opt := range opts {
+		if err := opt(dc); err != nil {
+			return nil, fmt.Errorf("applying option #%d: %w", i, err)
+		}
+	}
+
+	return dc, nil
 }
 
 // Connect iterates over the endpoints list probing each endpoint with a HEAD request
 // and returns the connection parameters of the first endpoint that respond Status OK.
-func (dp *defaultConnector) Connect() (*ConnParams, error) {
-	for _, e := range dp.endpoints {
+func (dp *DefaultConnector) Connect() (*ConnParams, error) {
+	for _, e := range dp.Endpoints {
 		dp.logger.Debugf("Configuring endpoint %q for probing", e.URL)
 
 		u, err := url.Parse(e.URL)
@@ -63,7 +83,7 @@ func (dp *defaultConnector) Connect() (*ConnParams, error) {
 			u.Path = defaultMetricsPath
 		}
 
-		rt, err := dp.authenticator.AuthenticatedTransport(e)
+		rt, err := dp.Authenticator.AuthenticatedTransport(e)
 		if err != nil {
 			return nil, fmt.Errorf("creating HTTP client for endpoint %q: %w", e.URL, err)
 		}
@@ -85,7 +105,7 @@ func (dp *defaultConnector) Connect() (*ConnParams, error) {
 
 // probeEndpoint executes a HEAD request to the url and fails if the response code
 // is not StatusOK.
-func (dp *defaultConnector) probeEndpoint(url string, client *http.Client) error {
+func (dp *DefaultConnector) probeEndpoint(url string, client *http.Client) error {
 	resp, err := client.Head(url)
 	if err != nil {
 		return fmt.Errorf("http HEAD request failed: %w", err)

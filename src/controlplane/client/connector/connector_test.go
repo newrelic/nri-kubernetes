@@ -5,7 +5,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/authenticator"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/connector"
@@ -73,11 +72,13 @@ func Test_Connector_probes_endpoints_list(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	connector := connector.DefaultConnector(
-		endpoints,
-		authenticator,
-		log.Discard,
+	connector, err := connector.New(
+		connector.Config{
+			Authenticator: authenticator,
+			Endpoints:     endpoints,
+		},
 	)
+	assert.NoError(t, err)
 
 	_, err = connector.Connect()
 	assert.NoError(t, err)
@@ -150,11 +151,13 @@ func Test_Connect_fails_when(t *testing.T) {
 			authenticator, err := authenticator.New(authenticator.Config{})
 			assert.NoError(t, err)
 
-			connector := connector.DefaultConnector(
-				test.endpoints,
-				authenticator,
-				log.Discard,
+			connector, err := connector.New(
+				connector.Config{
+					Authenticator: authenticator,
+					Endpoints:     test.endpoints,
+				},
 			)
+			assert.NoError(t, err)
 
 			_, err = connector.Connect()
 			test.assert(t, err)

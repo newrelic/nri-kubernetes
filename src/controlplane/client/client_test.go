@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/authenticator"
@@ -29,10 +28,13 @@ func Test_Client(t *testing.T) {
 	authenticator, err := authenticator.New(authenticator.Config{})
 	assert.NoError(t, err)
 
-	c := connector.DefaultConnector(
-		[]config.Endpoint{{URL: server.URL}},
-		authenticator,
-		log.Discard)
+	c, err := connector.New(
+		connector.Config{
+			Authenticator: authenticator,
+			Endpoints:     []config.Endpoint{{URL: server.URL}},
+		},
+	)
+	assert.NoError(t, err)
 
 	cpClient, err := client.New(c)
 	require.NoError(t, err)

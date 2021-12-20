@@ -176,11 +176,16 @@ func (s *Scraper) Run(i *integration.Integration) error {
 // externalEndpoint builds the client based on the StaticEndpointConfig and fails if
 // the client probe cannot reach the endpoint.
 func (s *Scraper) externalEndpoint(c component) (*scrape.Job, error) {
-	connector := connector.DefaultConnector(
-		[]config.Endpoint{*c.StaticEndpointConfig},
-		s.authenticator,
-		s.logger,
+	connector, err := connector.New(
+		connector.Config{
+			Authenticator: s.authenticator,
+			Endpoints:     []config.Endpoint{*c.StaticEndpointConfig},
+		},
+		connector.WithLogger(s.logger),
 	)
+	if err != nil {
+		return nil, fmt.Errorf("creating connector for component %s failed: %v", c.Name, err)
+	}
 
 	client, err := controlplaneClient.New(connector, controlplaneClient.WithLogger(s.logger))
 	if err != nil {
@@ -223,11 +228,16 @@ func (s *Scraper) autodiscover(c component) (*scrape.Job, error) {
 
 		s.logger.Debugf("Found pod %q for %q with labels %q", pod.Name, c.Name, autodiscover.Selector)
 
-		connector := connector.DefaultConnector(
-			autodiscover.Endpoints,
-			s.authenticator,
-			s.logger,
+		connector, err := connector.New(
+			connector.Config{
+				Authenticator: s.authenticator,
+				Endpoints:     autodiscover.Endpoints,
+			},
+			connector.WithLogger(s.logger),
 		)
+		if err != nil {
+			return nil, fmt.Errorf("creating connector for component %s failed: %v", c.Name, err)
+		}
 
 		client, err := controlplaneClient.New(connector, controlplaneClient.WithLogger(s.logger))
 		if err != nil {
