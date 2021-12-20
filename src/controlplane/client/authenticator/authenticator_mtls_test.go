@@ -72,8 +72,7 @@ func Test_Authenticator_with_mTLS(t *testing.T) {
 			// no skipVerify
 			secretName: secretName,
 			assert: func(t *testing.T, authenticateErr error, _ *http.Response, getErr error) {
-				require.NoError(t, authenticateErr)
-				require.Error(t, getErr)
+				require.Error(t, authenticateErr)
 			},
 		},
 		{
@@ -109,7 +108,7 @@ func Test_Authenticator_with_mTLS(t *testing.T) {
 				t,
 				secretName,
 				secretNamespace,
-				certificates(test.cacert, test.key, test.cert),
+				fakeSecrets(test.cacert, test.key, test.cert),
 			)
 
 			authenticator, err := authenticator.New(
@@ -141,7 +140,7 @@ func Test_Authenticator_with_mTLS(t *testing.T) {
 	}
 }
 
-func certificates(cacert, key, cert []byte) map[string][]byte {
+func fakeSecrets(cacert, key, cert []byte) map[string][]byte {
 	// Data will be the contents of the secret holding our TLS config
 	data := map[string][]byte{}
 

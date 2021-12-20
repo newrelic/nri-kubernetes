@@ -18,11 +18,13 @@ const (
 	defaultMetricsPath = "/metrics"
 )
 
-// Connector provides an interface to retrieve []connParams to connect to a Control Plane instance.
+// Connector provides an interface to retrieve connParams to connect to a Control Plane instance.
 type Connector interface {
+	// Connect probes the connector endpoints and returns connParams to scrape a valid endpoint.
 	Connect() (*ConnParams, error)
 }
 
+// ConnParams contains the authenticated parameters to scrape an endpoint.
 type ConnParams struct {
 	URL    url.URL
 	Client client.HTTPDoer
@@ -35,7 +37,8 @@ type defaultConnector struct {
 	endpoints     []config.Endpoint
 }
 
-// DefaultConnector returns a defaultConnector that probes all endpoints in the list and return the first responding status OK.
+// DefaultConnector returns a defaultConnector that probes all
+// endpoints in the list and return the first responding status OK.
 func DefaultConnector(endpoints []config.Endpoint, authenticator authenticator.Authenticator, logger log.Logger) Connector {
 	return &defaultConnector{
 		logger:        logger,

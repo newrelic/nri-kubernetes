@@ -42,7 +42,7 @@ type Scraper struct {
 	authenticator           authenticator.Authenticator
 }
 
-// ScraperOpt are options that can be used to configure the Scraper
+// ScraperOpt are options that can be used to configure the Scraper.
 type ScraperOpt func(s *Scraper) error
 
 // WithLogger returns an OptionFunc to change the logger from the default noop logger.
@@ -79,7 +79,6 @@ func (s *Scraper) Close() {
 // NewScraper initialize its internal informers and components.
 // After use, informers should be closed by calling Close().
 func NewScraper(config *config.Config, providers Providers, options ...ScraperOpt) (*Scraper, error) {
-	var err error
 	s := &Scraper{
 		config:    config,
 		Providers: providers,
@@ -96,6 +95,7 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 		}
 	}
 
+	var err error
 	// TODO If this could change without a restart of the pod we should run it each time we scrape data,
 	// possibly with a reasonable cache Es: NewCachedDiscoveryClientForConfig
 	s.k8sVersion, err = providers.K8s.Discovery().ServerVersion()
@@ -114,7 +114,7 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 		authenticator.WithLogger(s.logger),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("fetching K8s version: %w", err)
+		return nil, fmt.Errorf("creating authenticator: %w", err)
 	}
 
 	return s, nil

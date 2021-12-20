@@ -61,12 +61,13 @@ func New(config Config, opts ...OptionFunc) (*K8sClientAuthenticator, error) {
 	return kca, nil
 }
 
-// Authenticate retruns a round tripper according to the endpoint config.
+// AuthenticatedTransport returns a round tripper according to the endpoint config.
 // For mTLS configuration it fetches the certificates from the secret.
 func (a K8sClientAuthenticator) AuthenticatedTransport(endpoint config.Endpoint) (http.RoundTripper, error) {
-	transportConfig := &transport.Config{}
-	tlsConfig := transport.TLSConfig{
-		Insecure: endpoint.InsecureSkipVerify,
+	transportConfig := &transport.Config{
+		TLS: transport.TLSConfig{
+			Insecure: endpoint.InsecureSkipVerify,
+		},
 	}
 
 	switch {
@@ -83,19 +84,20 @@ func (a K8sClientAuthenticator) AuthenticatedTransport(endpoint config.Endpoint)
 
 		certs, err := a.getTLSCertificatesFromSecret(endpoint.Auth.MTLS)
 		if err != nil {
-			return nil, fmt.Errorf("could not load TLS configuration: %w", err)
+			return nil, fmt.Errorf("could not load TLS configuration for endpoint %q: %w", endpoint.URL, err)
 		}
 
-		tlsConfig.CertData = certs.cert
-		tlsConfig.KeyData = certs.key
-		// CAData could be empty if insecureSkipVerify is true.
-		tlsConfig.CAData = certs.ca
+		if certs.ca == nil && !endpoint.InsecureSkipVerify {
+			return nil, fmt.Errorf("insecureSkipVerify is false and CA are missing for endpoint %q", endpoint.URL)
+		}
+
+		transportConfig.TLS.CertData = certs.cert
+		transportConfig.TLS.KeyData = certs.key
+		transportConfig.TLS.CAData = certs.ca
 
 	default:
 		return nil, fmt.Errorf("unknown authorization type %q", endpoint.Auth.Type)
 	}
-
-	transportConfig.TLS = tlsConfig
 
 	rt, err := transport.New(transportConfig)
 	if err != nil {
@@ -105,7 +107,7 @@ func (a K8sClientAuthenticator) AuthenticatedTransport(endpoint config.Endpoint)
 	return rt, nil
 }
 
-// certificatesData contains bytes of the PEM-encoded certificates
+// certificatesData contains bytes of the PEM-encoded certificates.
 type certificatesData struct {
 	cert []byte
 	key  []byte
@@ -140,7 +142,7 @@ func (a K8sClientAuthenticator) getTLSCertificatesFromSecret(mTLSConfig *config.
 		return nil, fmt.Errorf("could not find secret %q containing TLS configuration: %w", mTLSConfig.TLSSecretName, err)
 	}
 
-	var cert, key, cacert []byte
+	var cert, key []byte
 
 	if cert, ok = secret.Data["cert"]; !ok {
 		return nil, fmt.Errorf("could not find TLS certificate in `cert` field in secret %q", mTLSConfig.TLSSecretName)
@@ -150,13 +152,9 @@ func (a K8sClientAuthenticator) getTLSCertificatesFromSecret(mTLSConfig *config.
 		return nil, fmt.Errorf("could not find TLS key in `key` field in secret %q", mTLSConfig.TLSSecretName)
 	}
 
-	if cacert, ok = secret.Data["cacert"]; !ok {
-		a.logger.Debugf("CA certificate is not present in secret %q on namespace %q", mTLSConfig.TLSSecretName, namespace)
-	}
-
 	return &certificatesData{
 		cert: cert,
 		key:  key,
-		ca:   cacert,
+		ca:   secret.Data["cacert"],
 	}, nil
 }
