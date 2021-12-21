@@ -80,8 +80,7 @@ spec:
           {{- end }}
         - name: agent
           image: {{ .Values.agentImage.repository }}:{{ .Values.agentImage.tag }}
-          command: [ "/sbin/tini" ]
-          args: [ "--", "/usr/bin/newrelic-infra" ]
+          command: [ "/sbin/tini", "--", "/usr/bin/newrelic-infra"  ]
           imagePullPolicy: {{ .Values.agentImage.pullPolicy }}
           securityContext:
             {{- if .Values.privileged }}
