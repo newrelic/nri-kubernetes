@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	mTLSAuth   = "mTLS"
-	bearerAuth = "bearer"
+	DefaultSecretNamespace = "default"
+	mTLSAuth               = "mTLS"
+	bearerAuth             = "bearer"
 )
 
 // Authenticator provides an interface to generate a authorized round tripper.
@@ -119,9 +120,14 @@ func (a K8sClientAuthenticator) getTLSCertificatesFromSecret(mTLSConfig *config.
 		return nil, fmt.Errorf("mTLS secret name cannot be empty")
 	}
 
-	namespace := mTLSConfig.SecretNamespace()
+	namespace := mTLSConfig.TLSSecretNamespace
+	if namespace == "" {
+		a.logger.Debugf("TLS Secret name configured, but not TLS Secret namespace. Defaulting to `default` namespace.")
 
-	secretLister, ok := a.SecretListerer.Lister(mTLSConfig.SecretNamespace())
+		namespace = DefaultSecretNamespace
+	}
+
+	secretLister, ok := a.SecretListerer.Lister(namespace)
 	if !ok {
 		return nil, fmt.Errorf("could not find secret lister for namespace %q", namespace)
 	}

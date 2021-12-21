@@ -81,14 +81,6 @@ type MTLS struct {
 	TLSSecretNamespace string `mapstructure:"secretNamespace"`
 }
 
-func (m MTLS) SecretNamespace() string {
-	if m.TLSSecretNamespace == "" {
-		return "default"
-	}
-
-	return m.TLSSecretNamespace
-}
-
 func LoadConfig(filePath string, fileName string) (*Config, error) {
 	v := viper.New()
 
