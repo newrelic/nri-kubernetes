@@ -87,6 +87,8 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	// We need to assure that defaults have been set in order to bind env variables.
 	// https://github.com/spf13/viper/issues/584
 	v.SetDefault("clusterName", "cluster")
+	v.SetDefault("verbose", false)
+	v.SetDefault("networkRouteFile", "/proc/net/route")
 	v.SetDefault("nodeName", "node")
 	v.SetDefault("nodeIP", "node")
 	v.SetDefault("httpServerPort", 0)
