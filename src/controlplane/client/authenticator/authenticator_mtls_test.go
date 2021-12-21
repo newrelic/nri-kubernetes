@@ -85,7 +85,8 @@ func Test_Authenticator_with_mTLS(t *testing.T) {
 			},
 		},
 		{
-			name:       "fail_if_cert_is_missing",
+			name: "fail_if_cert_is_missing",
+			// no cert
 			key:        clientKey,
 			cacert:     serverCACert,
 			secretName: secretName,

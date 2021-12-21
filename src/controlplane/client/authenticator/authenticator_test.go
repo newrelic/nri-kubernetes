@@ -136,7 +136,22 @@ func Test_Authenticator_fails_when(t *testing.T) {
 				},
 			},
 			assert: func(t *testing.T, err error) {
-				require.Error(t, err, "secret cannot be empty")
+				require.Error(t, err, "TLSSecretName cannot be empty")
+			},
+		},
+		{
+			name: "mTLS_auth_config_has_no_TLSSecretNamespace",
+			endpoint: config.Endpoint{
+				URL: testValidURL,
+				Auth: &config.Auth{
+					Type: "mTLS",
+					MTLS: &config.MTLS{
+						TLSSecretName: "secretName",
+					},
+				},
+			},
+			assert: func(t *testing.T, err error) {
+				require.Error(t, err, "TLSSecretNamespace cannot be empty")
 			},
 		},
 	}

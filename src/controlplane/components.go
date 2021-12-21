@@ -110,9 +110,5 @@ func secretNamespace(auth *config.Auth) string {
 		return ""
 	}
 
-	if auth.MTLS.TLSSecretNamespace != "" {
-		return auth.MTLS.TLSSecretNamespace
-	}
-
 	return auth.MTLS.TLSSecretNamespace
 }

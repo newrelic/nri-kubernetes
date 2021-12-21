@@ -120,19 +120,16 @@ func (a K8sClientAuthenticator) getTLSCertificatesFromSecret(mTLSConfig *config.
 		return nil, fmt.Errorf("mTLS secret name cannot be empty")
 	}
 
-	namespace := mTLSConfig.TLSSecretNamespace
-	if namespace == "" {
-		a.logger.Debugf("TLS Secret name configured, but not TLS Secret namespace. Defaulting to `default` namespace.")
-
-		namespace = DefaultSecretNamespace
+	if mTLSConfig.TLSSecretNamespace == "" {
+		return nil, fmt.Errorf("mTLS secret namespace cannot be empty")
 	}
 
-	secretLister, ok := a.SecretListerer.Lister(namespace)
+	secretLister, ok := a.SecretListerer.Lister(mTLSConfig.TLSSecretNamespace)
 	if !ok {
-		return nil, fmt.Errorf("could not find secret lister for namespace %q", namespace)
+		return nil, fmt.Errorf("could not find secret lister for namespace %q", mTLSConfig.TLSSecretNamespace)
 	}
 
-	a.logger.Debugf("Getting TLS certs from secret %q on namespace %q", mTLSConfig.TLSSecretName, namespace)
+	a.logger.Debugf("Getting TLS certs from secret %q on namespace %q", mTLSConfig.TLSSecretName, mTLSConfig.TLSSecretNamespace)
 
 	secret, err := secretLister.Get(mTLSConfig.TLSSecretName)
 	if err != nil {
