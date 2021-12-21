@@ -88,6 +88,7 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	// https://github.com/spf13/viper/issues/584
 	v.SetDefault("clusterName", "cluster")
 	v.SetDefault("verbose", false)
+	v.SetDefault("networkRouteFile", "/proc/net/route")
 	v.SetDefault("nodeName", "node")
 	v.SetDefault("nodeIP", "node")
 	v.SetDefault("httpServerPort", 0)
