@@ -31,21 +31,22 @@ func (l MultiNamespaceSecretListerer) Lister(namespace string) (listersv1.Secret
 func NewSecretNamespaceLister(config SecretListerConfig) (*MultiNamespaceSecretListerer, chan<- struct{}) {
 	stopCh := make(chan struct{})
 
-	factory := informers.NewSharedInformerFactoryWithOptions(
-		config.Client,
-		defaultResyncDuration,
-	)
-
 	multiNamespaceSecretListerer := &MultiNamespaceSecretListerer{
 		listers: make(map[string]listersv1.SecretNamespaceLister),
 	}
 
 	for _, namespace := range config.Namespaces {
-		multiNamespaceSecretListerer.listers[namespace] = factory.Core().V1().Secrets().Lister().Secrets(namespace)
-	}
+		factory := informers.NewSharedInformerFactoryWithOptions(
+			config.Client,
+			defaultResyncDuration,
+			informers.WithNamespace(namespace),
+		)
 
-	factory.Start(stopCh)
-	factory.WaitForCacheSync(stopCh)
+		multiNamespaceSecretListerer.listers[namespace] = factory.Core().V1().Secrets().Lister().Secrets(namespace)
+
+		factory.Start(stopCh)
+		factory.WaitForCacheSync(stopCh)
+	}
 
 	return multiNamespaceSecretListerer, stopCh
 }
