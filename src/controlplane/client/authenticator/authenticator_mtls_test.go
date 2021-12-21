@@ -167,7 +167,7 @@ func secretListerer(t *testing.T, name string, namespace string, secrets map[str
 		Data: secrets,
 	})
 
-	secretListerer, closer := discovery.NewSecretNamespaceLister(discovery.SecretListerConfig{
+	secretListerer, closer := discovery.NewNamespaceSecretListerer(discovery.SecretListererConfig{
 		Client:     c,
 		Namespaces: []string{namespace},
 	})

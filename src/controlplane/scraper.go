@@ -102,7 +102,7 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 		return nil, fmt.Errorf("fetching K8s version: %w", err)
 	}
 
-	secretListerer, informerCloser := discovery.NewSecretNamespaceLister(discovery.SecretListerConfig{
+	secretListerer, informerCloser := discovery.NewNamespaceSecretListerer(discovery.SecretListererConfig{
 		Client:     s.K8s,
 		Namespaces: secretNamespaces(s.components),
 	})

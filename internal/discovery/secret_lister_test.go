@@ -25,8 +25,8 @@ func Test_secrets_discovery(t *testing.T) {
 
 	client := testclient.NewSimpleClientset()
 
-	listerer, closeChan := discovery.NewSecretNamespaceLister(
-		discovery.SecretListerConfig{
+	listerer, closeChan := discovery.NewNamespaceSecretListerer(
+		discovery.SecretListererConfig{
 			Namespaces: []string{secretNamespace},
 			Client:     client,
 		},
@@ -43,7 +43,11 @@ func Test_secrets_discovery(t *testing.T) {
 	require.Nil(t, e)
 
 	// Discovery after creating a secret
-	_, err = client.CoreV1().Secrets(secretNamespace).Create(context.Background(), fakeSecret(secretNamespace), metav1.CreateOptions{})
+	_, err = client.CoreV1().Secrets(secretNamespace).Create(
+		context.Background(),
+		fakeSecret(secretNamespace),
+		metav1.CreateOptions{},
+	)
 	require.NoError(t, err)
 	time.Sleep(time.Second)
 
@@ -68,8 +72,8 @@ func Test_secrets_multi_namespace_discovery(t *testing.T) {
 		fakeSecret(differentNamespace),
 	)
 
-	listerer, _ := discovery.NewSecretNamespaceLister(
-		discovery.SecretListerConfig{
+	listerer, _ := discovery.NewNamespaceSecretListerer(
+		discovery.SecretListererConfig{
 			Namespaces: []string{secretNamespace, differentNamespace},
 			Client:     client,
 		},
@@ -108,8 +112,8 @@ func Test_secrets_ignores_different_namespaces(t *testing.T) {
 		},
 	})
 
-	listerer, _ := discovery.NewSecretNamespaceLister(
-		discovery.SecretListerConfig{
+	listerer, _ := discovery.NewNamespaceSecretListerer(
+		discovery.SecretListererConfig{
 			Namespaces: []string{secretNamespace},
 			Client:     client,
 		},
@@ -128,8 +132,8 @@ func Test_secrets_stop_channel(t *testing.T) {
 
 	client := testclient.NewSimpleClientset()
 
-	listerer, closeChan := discovery.NewSecretNamespaceLister(
-		discovery.SecretListerConfig{
+	listerer, closeChan := discovery.NewNamespaceSecretListerer(
+		discovery.SecretListererConfig{
 			Namespaces: []string{secretNamespace, differentNamespace},
 			Client:     client,
 		},
@@ -172,8 +176,8 @@ func Test_informer_does_not_hit_multiple_times_backend(t *testing.T) {
 
 	client := testclient.NewSimpleClientset(fakeSecret(secretNamespace))
 
-	listerer, _ := discovery.NewSecretNamespaceLister(
-		discovery.SecretListerConfig{
+	listerer, _ := discovery.NewNamespaceSecretListerer(
+		discovery.SecretListererConfig{
 			Namespaces: []string{secretNamespace},
 			Client:     client,
 		},

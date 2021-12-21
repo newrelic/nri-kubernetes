@@ -13,9 +13,8 @@ import (
 )
 
 const (
-	DefaultSecretNamespace = "default"
-	mTLSAuth               = "mTLS"
-	bearerAuth             = "bearer"
+	mTLSAuth   = "mTLS"
+	bearerAuth = "bearer"
 )
 
 // Authenticator provides an interface to generate a authorized round tripper.

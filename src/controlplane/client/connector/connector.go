@@ -90,7 +90,7 @@ func (dp *DefaultConnector) Connect() (*ConnParams, error) {
 
 		httpClient := &http.Client{Timeout: DefaultTimout, Transport: rt}
 
-		if err := dp.probeEndpoint(u.String(), httpClient); err != nil {
+		if err := dp.probe(u.String(), httpClient); err != nil {
 			dp.logger.Debugf("Endpoint %q probe failed, skipping: %v", e.URL, err)
 			continue
 		}
@@ -103,10 +103,10 @@ func (dp *DefaultConnector) Connect() (*ConnParams, error) {
 	return nil, fmt.Errorf("all endpoints in the list failed to response")
 }
 
-// probeEndpoint executes a HEAD request to the url and fails if the response code
+// probe executes a HEAD request to the endpoint and fails if the response code
 // is not StatusOK.
-func (dp *DefaultConnector) probeEndpoint(url string, client *http.Client) error {
-	resp, err := client.Head(url)
+func (dp *DefaultConnector) probe(endpoint string, client *http.Client) error {
+	resp, err := client.Head(endpoint)
 	if err != nil {
 		return fmt.Errorf("http HEAD request failed: %w", err)
 	}
