@@ -8,13 +8,14 @@ import (
 	"testing"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"k8s.io/client-go/kubernetes/fake"
+
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 	"github.com/newrelic/nri-kubernetes/v2/src/ksm"
 	ksmClient "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
-	"k8s.io/client-go/kubernetes/fake"
 )
 
 func TestScraper(t *testing.T) {
@@ -58,7 +59,7 @@ func TestScraper(t *testing.T) {
 			}
 
 			fakeK8s := fake.NewSimpleClientset(k8sData.Everything()...)
-			scraper, err := ksm.NewScraper(&config.Mock{
+			scraper, err := ksm.NewScraper(&config.Config{
 				KSM: config.KSM{
 					StaticURL: testServer.KSMEndpoint(),
 				},
