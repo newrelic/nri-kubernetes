@@ -9,8 +9,6 @@ import (
 	"testing"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/nri-kubernetes/v2/internal/testutil/asserter"
-	"github.com/newrelic/nri-kubernetes/v2/internal/testutil/asserter/exclude"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 
@@ -26,24 +24,40 @@ import (
 )
 
 func TestScraper(t *testing.T) {
-
 	commonMetricsToExclude := []string{"net.rxBytesPerSecond", "net.txBytesPerSecond", "net.errorsPerSecond"}
-	nodeMetricsToExclude := append(commonMetricsToExclude, "allocatableCpuCoresUtilization", "allocatableMemoryUtilization")
+	nodeMetricsToExclude := []string{"allocatableCpuCoresUtilization", "allocatableMemoryUtilization"}
+
+	metricsToExcludeForPendingPods := []string{"memoryUsedBytes", "memoryWorkingSetBytes", "cpuUsedCores",
+		"fsAvailableBytes", "fsCapacityBytes", "fsUsedBytes", "fsUsedPercent", "fsInodesFree", "fsInodes",
+		"fsInodesUsed", "containerID", "containerImageID", "isReady", "podIP"}
+
+	utilizationDependencies := map[string][]string{
+		"cpuLimitCores":        {"cpuCoresUtilization"},
+		"cpuRequestedCores":    {"requestedCpuCoresUtilization"},
+		"memoryLimitBytes":     {"memoryUtilization"},
+		"memoryRequestedBytes": {"requestedMemoryUtilization"},
+	}
 
 	// Create an asserter with the settings that are shared for all test scenarios.
-	asserter := asserter.New().
+	asserter := testutil.NewAsserter().
 		Using(metric.KubeletSpecs).
+		Silently().
 		Excluding(
-			exclude.Exclude(
-				exclude.Groups("pod"),
-				exclude.Metrics(commonMetricsToExclude...),
+			// testutil.ExcludeOptional(),
+			// Common metrics
+			testutil.ExcludeMetrics(commonMetricsToExclude...),
+			// Node metrics
+			testutil.Exclude(testutil.ExcludeGroup("node"), testutil.ExcludeMetrics(nodeMetricsToExclude...)),
+			// Exclude metrics that depend on limits when those limits are not set
+			testutil.Exclude(testutil.ExcludeGroup("pod"), testutil.ExcludeDependent(utilizationDependencies)),
+			// Exclude metrics known to be missing for pods that are pending
+			testutil.Exclude(
+				testutil.ExcludeGroup("pod"),
+				func(_ string, _ *definition.Spec, ent *integration.Entity) bool {
+					return len(ent.Metrics) > 0 && ent.Metrics[0].Metrics["status"] == "Waiting"
+				},
+				testutil.ExcludeMetrics(metricsToExcludeForPendingPods...),
 			),
-			exclude.Exclude(
-				exclude.Groups("node"),
-				exclude.Metrics(nodeMetricsToExclude...),
-			),
-			exclude.Optional(),
-			ExcludeMissingMetricsPendingPod,
 		)
 
 	for _, v := range testutil.AllVersions() {
@@ -89,21 +103,4 @@ func TestScraper(t *testing.T) {
 			asserter.On(i.Entities).Assert(t)
 		})
 	}
-}
-
-func ExcludeMissingMetricsPendingPod(_ string, spec *definition.Spec, ent *integration.Entity) bool {
-	metricsToExcludeForPendingPods := []string{"memoryUsedBytes", "memoryWorkingSetBytes", "cpuUsedCores",
-		"fsAvailableBytes", "fsCapacityBytes", "fsUsedBytes", "fsUsedPercent", "fsInodesFree", "fsInodes",
-		"fsInodesUsed", "containerID", "containerImageID", "isReady"}
-
-	for _, metricSet := range ent.Metrics {
-		if metricSet.Metrics["status"] == "Waiting" {
-			for _, m := range metricsToExcludeForPendingPods {
-				if m == spec.Name {
-					return true
-				}
-			}
-		}
-	}
-	return false
 }
