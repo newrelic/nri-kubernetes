@@ -20,7 +20,7 @@ type SecretListererConfig struct {
 	Client kubernetes.Interface
 }
 
-// MultiNamespaceSecretListerer impelements SecretListerer interface
+// MultiNamespaceSecretListerer implements SecretListerer interface
 // for a group of listers pre-build on initialization.
 type MultiNamespaceSecretListerer struct {
 	listers map[string]listersv1.SecretNamespaceLister

@@ -20,7 +20,7 @@ type PodListererConfig struct {
 	Client kubernetes.Interface
 }
 
-// MultiNamespacePodListerer impelements PodListerer interface
+// MultiNamespacePodListerer implements PodListerer interface
 // for a group of listers pre-build on initialization.
 type MultiNamespacePodListerer struct {
 	listers map[string]listersv1.PodNamespaceLister
