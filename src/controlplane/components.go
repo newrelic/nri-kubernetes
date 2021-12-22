@@ -113,3 +113,15 @@ func secretNamespace(auth *config.Auth) string {
 
 	return auth.MTLS.TLSSecretNamespace
 }
+
+func autodiscoverNamespaces(components []component) (namespaces []string) {
+	for _, c := range components {
+		for _, a := range c.AutodiscoverConfigs {
+			if a.Namespace != "" {
+				namespaces = append(namespaces, a.Namespace)
+			}
+		}
+	}
+
+	return
+}

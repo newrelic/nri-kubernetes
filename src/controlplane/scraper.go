@@ -18,7 +18,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
-	v1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/rest"
 )
 
@@ -31,14 +30,14 @@ type Providers struct {
 // Scraper takes care of getting metrics all control plane instances based on the configuration.
 type Scraper struct {
 	Providers
-	logger               log.Logger
-	config               *config.Config
-	k8sVersion           *version.Info
-	components           []component
-	informerClosers      []chan<- struct{}
-	podListerByNamespace map[string]v1.PodNamespaceLister
-	inClusterConfig      *rest.Config
-	authenticator        authenticator.Authenticator
+	logger          log.Logger
+	config          *config.Config
+	k8sVersion      *version.Info
+	components      []component
+	informerClosers []chan<- struct{}
+	podListerer     discovery.PodListerer
+	inClusterConfig *rest.Config
+	authenticator   authenticator.Authenticator
 }
 
 // ScraperOpt are options that can be used to configure the Scraper.
@@ -82,10 +81,9 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 		config:    config,
 		Providers: providers,
 		// TODO: An empty implementation of the logger interface would be better
-		logger:               log.New(false, io.Discard),
-		podListerByNamespace: make(map[string]v1.PodNamespaceLister),
-		components:           newComponents(config.ControlPlane),
-		inClusterConfig:      &rest.Config{},
+		logger:          log.New(false, io.Discard),
+		components:      newComponents(config.ControlPlane),
+		inClusterConfig: &rest.Config{},
 	}
 
 	for i, opt := range options {
@@ -120,9 +118,12 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 		return nil, fmt.Errorf("creating authenticator: %w", err)
 	}
 
-	// TODO refactor pod discovery to add multiple namespaces and implement similar
-	// as secret.
-	s.buildPodLister()
+	s.podListerer, informerCloser = discovery.NewNamespacePodListerer(discovery.PodListererConfig{
+		Client:     s.K8s,
+		Namespaces: autodiscoverNamespaces(s.components),
+	})
+
+	s.informerClosers = append(s.informerClosers, informerCloser)
 
 	return s, nil
 }
@@ -262,7 +263,7 @@ func (s *Scraper) autodiscover(c component) (*scrape.Job, error) {
 
 func (s *Scraper) discoverPod(autodiscover config.AutodiscoverControlPlane) (*corev1.Pod, error) {
 	// looks for the pod match a set of defined labels
-	podLister, ok := s.podListerByNamespace[autodiscover.Namespace]
+	podLister, ok := s.podListerer.Lister(autodiscover.Namespace)
 	if !ok {
 		return nil, fmt.Errorf("pod lister for namespace: %s not found", autodiscover.Namespace)
 	}
@@ -287,26 +288,4 @@ func (s *Scraper) discoverPod(autodiscover config.AutodiscoverControlPlane) (*co
 	}
 
 	return nil, nil
-}
-
-func (s *Scraper) buildPodLister() {
-	for _, component := range s.components {
-		for _, autodiscover := range component.AutodiscoverConfigs {
-			s.addPodLister(autodiscover.Namespace)
-		}
-	}
-}
-
-func (s *Scraper) addPodLister(namespace string) {
-	if _, ok := s.podListerByNamespace[namespace]; !ok {
-		s.logger.Debugf("Generating a new Pod lister for namespace %q.", namespace)
-
-		podLister, informerCloser := discovery.NewPodNamespaceLister(discovery.PodListerConfig{
-			Client:    s.K8s,
-			Namespace: namespace,
-		})
-
-		s.podListerByNamespace[namespace] = podLister
-		s.informerClosers = append(s.informerClosers, informerCloser)
-	}
 }
