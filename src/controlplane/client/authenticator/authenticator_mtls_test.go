@@ -9,15 +9,16 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
-	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/authenticator"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
+
+	"github.com/newrelic/nri-kubernetes/v2/internal/config"
+	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
+	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/authenticator"
 )
 
 const (

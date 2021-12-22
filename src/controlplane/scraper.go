@@ -7,6 +7,12 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/version"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	controlplaneClient "github.com/newrelic/nri-kubernetes/v2/src/controlplane/client"
@@ -14,11 +20,6 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/connector"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/grouper"
 	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/version"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 )
 
 // Providers is a struct holding pointers to all the clients Scraper needs to get data from.

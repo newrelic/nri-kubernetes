@@ -6,11 +6,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/authenticator"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/client-go/rest"
+
+	"github.com/newrelic/nri-kubernetes/v2/internal/config"
+	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/authenticator"
 )
 
 const (

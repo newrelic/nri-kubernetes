@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
+
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/authenticator"

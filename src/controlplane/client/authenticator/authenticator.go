@@ -6,10 +6,11 @@ import (
 	"strings"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/transport"
+
+	"github.com/newrelic/nri-kubernetes/v2/internal/config"
+	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 )
 
 const (
