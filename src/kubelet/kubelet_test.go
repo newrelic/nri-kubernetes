@@ -10,6 +10,8 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
 
+	"github.com/newrelic/nri-kubernetes/v2/internal/testutil/asserter"
+	"github.com/newrelic/nri-kubernetes/v2/internal/testutil/asserter/exclude"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
@@ -39,25 +41,25 @@ func TestScraper(t *testing.T) {
 	}
 
 	// Create an asserter with the settings that are shared for all test scenarios.
-	asserter := testutil.NewAsserter().
+	asserter := asserter.New().
 		Using(metric.KubeletSpecs).
-		Silently().
 		Excluding(
-			// testutil.ExcludeOptional(),
-			// Common metrics
-			testutil.ExcludeMetrics(commonMetricsToExclude...),
-			// Node metrics
-			testutil.Exclude(testutil.ExcludeGroup("node"), testutil.ExcludeMetrics(nodeMetricsToExclude...)),
-			// Exclude metrics that depend on limits when those limits are not set
-			testutil.Exclude(testutil.ExcludeGroup("pod"), testutil.ExcludeDependent(utilizationDependencies)),
-			// Exclude metrics known to be missing for pods that are pending
-			testutil.Exclude(
-				testutil.ExcludeGroup("pod"),
+			// Common metrics.
+			exclude.Metrics(commonMetricsToExclude...),
+			// Node metrics.
+			exclude.Exclude(exclude.Group("node"), exclude.Metrics(nodeMetricsToExclude...)),
+			// Exclude metrics that depend on limits when those limits are not set.
+			exclude.Exclude(exclude.Group("pod"), exclude.Dependent(utilizationDependencies)),
+			// Exclude metrics known to be missing for pods that are pending.
+			exclude.Exclude(
+				exclude.Group("pod"),
 				func(_ string, _ *definition.Spec, ent *integration.Entity) bool {
 					return len(ent.Metrics) > 0 && ent.Metrics[0].Metrics["status"] == "Waiting"
 				},
-				testutil.ExcludeMetrics(metricsToExcludeForPendingPods...),
+				exclude.Metrics(metricsToExcludeForPendingPods...),
 			),
+			// Optional metrics.
+			exclude.Optional(),
 		)
 
 	for _, v := range testutil.AllVersions() {
