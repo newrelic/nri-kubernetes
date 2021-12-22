@@ -12,6 +12,8 @@ import (
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
+	"github.com/newrelic/nri-kubernetes/v2/internal/testutil/asserter"
+	"github.com/newrelic/nri-kubernetes/v2/internal/testutil/asserter/exclude"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 	"github.com/newrelic/nri-kubernetes/v2/src/ksm"
 	ksmClient "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
@@ -20,7 +22,7 @@ import (
 
 func TestScraper(t *testing.T) {
 	// Create an asserter with the settings that are shared for all test scenarios.
-	asserter := testutil.NewAsserter().
+	asserter := asserter.New().
 		Using(metric.KSMSpecs).
 		Excluding(
 			// Exclude service.loadBalancerIP unless service is e2e-lb (specially crafted to have a fake one)
@@ -35,7 +37,7 @@ func TestScraper(t *testing.T) {
 			},
 			// The following HPA metrics operate in a true-or-NULL basis, and there won't be present if condition is
 			// false.
-			testutil.ExcludeMetricsGroup("hpa", "isActive", "isAble", "isLimited"),
+			exclude.MetricsGroup("hpa", "isActive", "isAble", "isLimited"),
 		)
 
 	// TODO: use testutil.AllVersions() when all versions are generated with datagen.sh.

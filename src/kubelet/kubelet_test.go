@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kubernetes/v2/internal/testutil/asserter"
+	"github.com/newrelic/nri-kubernetes/v2/internal/testutil/asserter/exclude"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 
@@ -29,13 +31,13 @@ func TestScraper(t *testing.T) {
 	nodeMetricsToExclude := append(commonMetricsToExclude, "allocatableCpuCoresUtilization", "allocatableMemoryUtilization")
 
 	// Create an asserter with the settings that are shared for all test scenarios.
-	asserter := testutil.NewAsserter().
+	asserter := asserter.New().
 		Using(metric.KubeletSpecs).
 		Excluding(
-			testutil.ExcludeMetricsGroup("pod", commonMetricsToExclude...),
-			testutil.ExcludeMetricsGroup("node", nodeMetricsToExclude...),
-			testutil.ExcludeOptional(),
-			excludeMissingMetricsPendingPod,
+			exclude.MetricsGroup("pod", commonMetricsToExclude...),
+			exclude.MetricsGroup("node", nodeMetricsToExclude...),
+			exclude.Optional(),
+			ExcludeMissingMetricsPendingPod,
 		)
 
 	for _, v := range testutil.AllVersions() {

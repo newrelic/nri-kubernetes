@@ -18,6 +18,8 @@ import (
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
+	"github.com/newrelic/nri-kubernetes/v2/internal/testutil/asserter"
+	"github.com/newrelic/nri-kubernetes/v2/internal/testutil/asserter/exclude"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
@@ -46,13 +48,13 @@ func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 	controlPlaneSpecs["scheduler"] = metric.SchedulerSpecs["scheduler"]
 	controlPlaneSpecs["api-server"] = metric.APIServerSpecs["api-server"]
 
-	asserter := testutil.NewAsserter().
+	asserter := asserter.New().
 		Using(controlPlaneSpecs).
 		Excluding(
 			ExcludeRenamedMetricsBasedOnLabels,
-			testutil.ExcludeMetricsGroup("controller-manager", excludeCM...),
-			testutil.ExcludeMetricsGroup("etcd", excludeETCD...),
-			testutil.ExcludeMetricsGroup("scheduler", excludeS...),
+			exclude.MetricsGroup("controller-manager", excludeCM...),
+			exclude.MetricsGroup("etcd", excludeETCD...),
+			exclude.MetricsGroup("scheduler", excludeS...),
 		)
 
 	for _, v := range testutil.AllVersions() {
@@ -101,11 +103,11 @@ func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 func Test_Scraper_Autodiscover_cp_component_after_start(t *testing.T) {
 	t.Parallel()
 
-	asserter := testutil.NewAsserter().
+	asserter := asserter.New().
 		Using(metric.SchedulerSpecs).
 		Excluding(
 			ExcludeRenamedMetricsBasedOnLabels,
-			testutil.ExcludeMetricsGroup("scheduler", excludeS...),
+			exclude.MetricsGroup("scheduler", excludeS...),
 		)
 
 	testServer, err := testutil.LatestVersion().Server()
@@ -166,11 +168,11 @@ func Test_Scraper_Autodiscover_cp_component_after_start(t *testing.T) {
 func Test_Scraper_external_endpoint(t *testing.T) {
 	t.Parallel()
 
-	asserter := testutil.NewAsserter().
+	asserter := asserter.New().
 		Using(metric.SchedulerSpecs).
 		Excluding(
 			ExcludeRenamedMetricsBasedOnLabels,
-			testutil.ExcludeMetricsGroup("scheduler", excludeS...),
+			exclude.MetricsGroup("scheduler", excludeS...),
 		)
 
 	testServer, err := testutil.LatestVersion().Server()

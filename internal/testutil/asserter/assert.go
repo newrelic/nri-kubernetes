@@ -1,4 +1,4 @@
-package testutil
+package asserter
 
 import (
 	"strings"
@@ -7,90 +7,9 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 
+	"github.com/newrelic/nri-kubernetes/v2/internal/testutil/asserter/exclude"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 )
-
-// ExcludeFunc is a function that returns true if a particular metric (spec) should be excluded from being asserted on
-// ent.
-// If an ExcludeFunc returns true for a given group, metric (spec) and entity, Asserter will not fail even if the metric
-// is not found.
-type ExcludeFunc func(group string, spec *definition.Spec, ent *integration.Entity) bool
-
-// Exclude returns an ExcludeFunc that returns true if all the supplied ExcludeFuncs return true.
-// Input ExcludeFuncs are evaluated in order, so this function makes easy to compose exclusion rules.
-func Exclude(funcs ...ExcludeFunc) ExcludeFunc {
-	return func(group string, spec *definition.Spec, ent *integration.Entity) bool {
-		for _, f := range funcs {
-			if !f(group, spec, ent) {
-				return false
-			}
-		}
-		return true
-	}
-}
-
-// ExcludeOptional returns an ExcludeFunc that excludes metrics marked as Optional.
-func ExcludeOptional() ExcludeFunc {
-	return func(group string, spec *definition.Spec, ent *integration.Entity) bool {
-		return spec.Optional
-	}
-}
-
-// ExcludeGroup returns an ExcludeFunc that will exclude a metric if group matches the supplied group.
-func ExcludeGroup(group string) ExcludeFunc {
-	return func(g string, spec *definition.Spec, ent *integration.Entity) bool {
-		return g == group
-	}
-}
-
-// ExcludeMetrics returns an ExcludeFunc that excludes the specified metric names.
-func ExcludeMetrics(metricNames ...string) ExcludeFunc {
-	return func(g string, spec *definition.Spec, ent *integration.Entity) bool {
-		for _, m := range metricNames {
-			if strings.EqualFold(spec.Name, m) {
-				return true
-			}
-		}
-
-		return false
-	}
-}
-
-// ExcludeMetricsGroup returns an ExcludeFunc that excludes the specified metric names belonging for the specified group.
-// Deprecated: Use Exclude(ExcludeGroup("group"), ExcludeMetrics("...")) instead.
-func ExcludeMetricsGroup(group string, metricNames ...string) ExcludeFunc {
-	return func(g string, spec *definition.Spec, ent *integration.Entity) bool {
-		for _, m := range metricNames {
-			if g == group && spec.Name == m {
-				return true
-			}
-		}
-
-		return false
-	}
-}
-
-// ExcludeDependent receives a map between a metric name and other metric names that depend on it, and returns an
-// ExcludeFunc that will exclude the dependencies if the dependant is not present.
-func ExcludeDependent(dependencies map[string][]string) ExcludeFunc {
-	return func(group string, spec *definition.Spec, ent *integration.Entity) bool {
-		for parent, children := range dependencies {
-			for _, ms := range ent.Metrics {
-				if _, hasParent := ms.Metrics[parent]; !hasParent {
-					continue
-				}
-
-				for _, child := range children {
-					if spec.Name == child {
-						return true
-					}
-				}
-			}
-		}
-
-		return false
-	}
-}
 
 // Asserter is a helper for checking whether an integration contains all the metrics defined in a specGroup.
 // It provides a chainable API, with each call returning a copy of the asserter. This way, successive calls to the
@@ -100,12 +19,12 @@ type Asserter struct {
 	entities       []*integration.Entity
 	specGroups     definition.SpecGroups
 	excludedGroups []string
-	exclude        []ExcludeFunc
+	exclude        []exclude.Func
 	silent         bool
 }
 
-// NewAsserter returns an empty asserter.
-func NewAsserter() Asserter {
+// New returns an empty asserter.
+func New() Asserter {
 	return Asserter{}
 }
 
@@ -121,12 +40,12 @@ func (a Asserter) On(entities []*integration.Entity) Asserter {
 	return a
 }
 
-// Excluding returns an asserter that will not fail for a missing metric for which any of the supplied ExcludeFunc
+// Excluding returns an asserter that will not fail for a missing metric for which any of the supplied Func
 // return true.
 // For ignoring whole spec groups, use ExcludingGroups instead.
 // Missing metrics are still logged, unless Silently is used.
-func (a Asserter) Excluding(excludeFuncs ...ExcludeFunc) Asserter {
-	exclude := make([]ExcludeFunc, len(a.exclude)+len(excludeFuncs))
+func (a Asserter) Excluding(excludeFuncs ...exclude.Func) Asserter {
+	exclude := make([]exclude.Func, len(a.exclude)+len(excludeFuncs))
 	copy(exclude, a.exclude)
 
 	a.exclude = append(a.exclude, excludeFuncs...)
@@ -155,7 +74,7 @@ func (a Asserter) Silently() Asserter {
 // Assert checks whether all metrics defined in the supplied groups are present, and fails the test if any is not.
 // Assert will fail the test if:
 // - No entity at all exists with a type matching a specGroup, unless this specGroup is ignored using ExcludingGroups.
-// - Any entity whose type matches a specGroup lacks any metric defined in the specGroup, unless any ExcludeFunc returns
+// - Any entity whose type matches a specGroup lacks any metric defined in the specGroup, unless any Func returns
 //   true for that particular groupName, metric, and entity.
 func (a Asserter) Assert(t *testing.T) {
 	t.Helper()
@@ -197,7 +116,7 @@ func (a Asserter) Assert(t *testing.T) {
 	}
 }
 
-// shouldExclude checks all configured ExcludeFunc in the asserter and returns true if any of them return true.
+// shouldExclude checks all configured Func in the asserter and returns true if any of them return true.
 func (a *Asserter) shouldExclude(group string, spec *definition.Spec, ent *integration.Entity) bool {
 	for _, exclusion := range a.exclude {
 		if exclusion(group, spec, ent) {
