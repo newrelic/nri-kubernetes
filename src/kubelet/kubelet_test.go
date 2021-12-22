@@ -32,10 +32,11 @@ func TestScraper(t *testing.T) {
 	asserter := testutil.NewAsserter().
 		Using(metric.KubeletSpecs).
 		Excluding(
-			testutil.ExcludeMetrics("pod", commonMetricsToExclude...),
-			testutil.ExcludeMetrics("node", nodeMetricsToExclude...),
+			testutil.ExcludeMetricsGroup("pod", commonMetricsToExclude...),
+			testutil.ExcludeMetricsGroup("node", nodeMetricsToExclude...),
 			testutil.ExcludeOptional(),
-		).Excluding(ExcludeMissingMetricsPendingPod)
+			excludeMissingMetricsPendingPod,
+		)
 
 	for _, v := range testutil.AllVersions() {
 		// Make a copy of the version variable to use it concurrently

@@ -16,6 +16,19 @@ import (
 // is not found.
 type ExcludeFunc func(group string, spec *definition.Spec, ent *integration.Entity) bool
 
+// Exclude returns an ExcludeFunc that returns true if all the supplied ExcludeFuncs return true.
+// Input ExcludeFuncs are evaluated in order, so this function makes easy to compose exclusion rules.
+func Exclude(funcs ...ExcludeFunc) ExcludeFunc {
+	return func(group string, spec *definition.Spec, ent *integration.Entity) bool {
+		for _, f := range funcs {
+			if !f(group, spec, ent) {
+				return false
+			}
+		}
+		return true
+	}
+}
+
 // ExcludeOptional returns an ExcludeFunc that excludes metrics marked as Optional.
 func ExcludeOptional() ExcludeFunc {
 	return func(group string, spec *definition.Spec, ent *integration.Entity) bool {
@@ -23,12 +36,55 @@ func ExcludeOptional() ExcludeFunc {
 	}
 }
 
-// ExcludeMetrics returns an ExcludeFunc that excludes the specified metric names belonging for the specified group.
-func ExcludeMetrics(group string, metricNames ...string) ExcludeFunc {
+// ExcludeGroup returns an ExcludeFunc that will exclude a metric if group matches the supplied group.
+func ExcludeGroup(group string) ExcludeFunc {
+	return func(g string, spec *definition.Spec, ent *integration.Entity) bool {
+		return g == group
+	}
+}
+
+// ExcludeMetrics returns an ExcludeFunc that excludes the specified metric names.
+func ExcludeMetrics(metricNames ...string) ExcludeFunc {
+	return func(g string, spec *definition.Spec, ent *integration.Entity) bool {
+		for _, m := range metricNames {
+			if strings.EqualFold(spec.Name, m) {
+				return true
+			}
+		}
+
+		return false
+	}
+}
+
+// ExcludeMetricsGroup returns an ExcludeFunc that excludes the specified metric names belonging for the specified group.
+// Deprecated: Use Exclude(ExcludeGroup("group"), ExcludeMetrics("...")) instead.
+func ExcludeMetricsGroup(group string, metricNames ...string) ExcludeFunc {
 	return func(g string, spec *definition.Spec, ent *integration.Entity) bool {
 		for _, m := range metricNames {
 			if g == group && spec.Name == m {
 				return true
+			}
+		}
+
+		return false
+	}
+}
+
+// ExcludeDependent receives a map between a metric name and other metric names that depend on it, and returns an
+// ExcludeFunc that will exclude the dependencies if the dependant is not present.
+func ExcludeDependent(dependencies map[string][]string) ExcludeFunc {
+	return func(group string, spec *definition.Spec, ent *integration.Entity) bool {
+		for parent, children := range dependencies {
+			for _, ms := range ent.Metrics {
+				if _, hasParent := ms.Metrics[parent]; !hasParent {
+					continue
+				}
+
+				for _, child := range children {
+					if spec.Name == child {
+						return true
+					}
+				}
 			}
 		}
 

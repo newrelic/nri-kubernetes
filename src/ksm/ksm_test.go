@@ -35,7 +35,7 @@ func TestScraper(t *testing.T) {
 			},
 			// The following HPA metrics operate in a true-or-NULL basis, and there won't be present if condition is
 			// false.
-			testutil.ExcludeMetrics("hpa", "isActive", "isAble", "isLimited"),
+			testutil.ExcludeMetricsGroup("hpa", "isActive", "isAble", "isLimited"),
 		)
 
 	// TODO: use testutil.AllVersions() when all versions are generated with datagen.sh.

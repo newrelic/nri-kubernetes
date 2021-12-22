@@ -50,9 +50,9 @@ func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 		Using(controlPlaneSpecs).
 		Excluding(
 			ExcludeRenamedMetricsBasedOnLabels,
-			testutil.ExcludeMetrics("controller-manager", excludeCM...),
-			testutil.ExcludeMetrics("etcd", excludeETCD...),
-			testutil.ExcludeMetrics("scheduler", excludeS...),
+			testutil.ExcludeMetricsGroup("controller-manager", excludeCM...),
+			testutil.ExcludeMetricsGroup("etcd", excludeETCD...),
+			testutil.ExcludeMetricsGroup("scheduler", excludeS...),
 		)
 
 	for _, v := range testutil.AllVersions() {
@@ -105,7 +105,7 @@ func Test_Scraper_Autodiscover_cp_component_after_start(t *testing.T) {
 		Using(metric.SchedulerSpecs).
 		Excluding(
 			ExcludeRenamedMetricsBasedOnLabels,
-			testutil.ExcludeMetrics("scheduler", excludeS...),
+			testutil.ExcludeMetricsGroup("scheduler", excludeS...),
 		)
 
 	testServer, err := testutil.LatestVersion().Server()
@@ -170,7 +170,7 @@ func Test_Scraper_external_endpoint(t *testing.T) {
 		Using(metric.SchedulerSpecs).
 		Excluding(
 			ExcludeRenamedMetricsBasedOnLabels,
-			testutil.ExcludeMetrics("scheduler", excludeS...),
+			testutil.ExcludeMetricsGroup("scheduler", excludeS...),
 		)
 
 	testServer, err := testutil.LatestVersion().Server()
