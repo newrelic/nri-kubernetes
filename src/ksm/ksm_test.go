@@ -39,7 +39,9 @@ func TestScraper(t *testing.T) {
 		)
 
 	// TODO: use testutil.AllVersions() when all versions are generated with datagen.sh.
-	for _, version := range []testutil.Version{testutil.Testdata120, testutil.Testdata121, testutil.Testdata122} {
+	for _, v := range testutil.AllVersions() {
+		// Make a copy of the version variable to use it concurrently
+		version := v
 		t.Run(fmt.Sprintf("for_version_%s", version), func(t *testing.T) {
 			t.Parallel()
 
