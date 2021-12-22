@@ -80,6 +80,7 @@ spec:
           {{- end }}
         - name: agent
           image: {{ .Values.agentImage.repository }}:{{ .Values.agentImage.tag }}
+          command: [ "/sbin/tini", "--", "/usr/bin/newrelic-infra"  ]
           imagePullPolicy: {{ .Values.agentImage.pullPolicy }}
           securityContext:
             {{- if .Values.privileged }}
@@ -98,6 +99,10 @@ spec:
                 fieldRef:
                   apiVersion: "v1"
                   fieldPath: "spec.nodeName"
+            - name: "NRIA_FEATURES"
+              value: "docker_enabled:false"
+            - name: "NRIA_HTTP_SERVER_ENABLED"
+              value: "true"
             - name: "NRIA_HTTP_SERVER_PORT"
               value: "8003"
             - name: NRIA_LICENSE_KEY
