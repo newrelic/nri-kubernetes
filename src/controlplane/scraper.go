@@ -47,10 +47,6 @@ type ScraperOpt func(s *Scraper) error
 // WithLogger returns an OptionFunc to change the logger from the default noop logger.
 func WithLogger(logger log.Logger) ScraperOpt {
 	return func(s *Scraper) error {
-		if logger == nil {
-			return fmt.Errorf("logger canont be nil")
-		}
-
 		s.logger = logger
 
 		return nil
@@ -60,10 +56,8 @@ func WithLogger(logger log.Logger) ScraperOpt {
 // WithRestConfig returns an OptionFunc to change the restConfig from default empty config.
 func WithRestConfig(restConfig *rest.Config) ScraperOpt {
 	return func(s *Scraper) error {
-		if restConfig == nil {
-			return fmt.Errorf("restConfig canont be nil")
-		}
 		s.inClusterConfig = restConfig
+
 		return nil
 	}
 }
