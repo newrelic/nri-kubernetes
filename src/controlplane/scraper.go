@@ -1,14 +1,13 @@
 package controlplane
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/url"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -18,6 +17,7 @@ import (
 	controlplaneClient "github.com/newrelic/nri-kubernetes/v2/src/controlplane/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/authenticator"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/connector"
+	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/discoverer"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/grouper"
 	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
 )
@@ -36,7 +36,7 @@ type Scraper struct {
 	k8sVersion      *version.Info
 	components      []component
 	informerClosers []chan<- struct{}
-	podListerer     discovery.PodListerer
+	podDiscoverer   discoverer.PodDiscoverer
 	inClusterConfig *rest.Config
 	authenticator   authenticator.Authenticator
 }
@@ -47,10 +47,6 @@ type ScraperOpt func(s *Scraper) error
 // WithLogger returns an OptionFunc to change the logger from the default noop logger.
 func WithLogger(logger log.Logger) ScraperOpt {
 	return func(s *Scraper) error {
-		if logger == nil {
-			return fmt.Errorf("logger canont be nil")
-		}
-
 		s.logger = logger
 
 		return nil
@@ -60,10 +56,8 @@ func WithLogger(logger log.Logger) ScraperOpt {
 // WithRestConfig returns an OptionFunc to change the restConfig from default empty config.
 func WithRestConfig(restConfig *rest.Config) ScraperOpt {
 	return func(s *Scraper) error {
-		if restConfig == nil {
-			return fmt.Errorf("restConfig canont be nil")
-		}
 		s.inClusterConfig = restConfig
+
 		return nil
 	}
 }
@@ -119,12 +113,23 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 		return nil, fmt.Errorf("creating authenticator: %w", err)
 	}
 
-	s.podListerer, informerCloser = discovery.NewNamespacePodListerer(discovery.PodListererConfig{
+	podListerer, informerCloser := discovery.NewNamespacePodListerer(discovery.PodListererConfig{
 		Client:     s.K8s,
 		Namespaces: autodiscoverNamespaces(s.components),
 	})
 
 	s.informerClosers = append(s.informerClosers, informerCloser)
+
+	s.podDiscoverer, err = discoverer.New(
+		discoverer.Config{
+			PodListerer: podListerer,
+			NodeName:    config.NodeName,
+		},
+		discoverer.WithLogger(s.logger),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("creating pod discoverer: %w", err)
+	}
 
 	return s, nil
 }
@@ -141,14 +146,14 @@ func (s *Scraper) Run(i *integration.Integration) error {
 		// Static endpoint take precedence over autodisover and fails if external endpoint
 		// cannot be scraped.
 		if component.StaticEndpointConfig != nil {
-			s.logger.Debugf("Using static endpoint for component %q", component.Name)
+			s.logger.Debugf("Using static endpoint for %q", component.Name)
 
 			job, err = s.externalEndpoint(component)
 			if err != nil {
 				return fmt.Errorf("configuring %q external endpoint: %w", component.Name, err)
 			}
 		} else {
-			s.logger.Debugf("Autodiscovering pods for component %q", component.Name)
+			s.logger.Debugf("Autodiscovering pods for %q", component.Name)
 
 			job, err = s.autodiscover(component)
 			if err != nil {
@@ -186,17 +191,17 @@ func (s *Scraper) externalEndpoint(c component) (*scrape.Job, error) {
 		connector.WithLogger(s.logger),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("creating connector for component %s failed: %v", c.Name, err)
+		return nil, fmt.Errorf("creating connector for %q failed: %w", c.Name, err)
 	}
 
 	client, err := controlplaneClient.New(connector, controlplaneClient.WithLogger(s.logger))
 	if err != nil {
-		return nil, fmt.Errorf("creating client for component %s failed: %v", c.Name, err)
+		return nil, fmt.Errorf("creating client for %q failed: %w", c.Name, err)
 	}
 
 	u, err := url.Parse(c.StaticEndpointConfig.URL)
 	if err != nil {
-		return nil, fmt.Errorf("parsing static endpoint url for component %s failed: %v", c.Name, err)
+		return nil, fmt.Errorf("parsing static endpoint url for %q failed: %w", c.Name, err)
 	}
 
 	// Entity key will be concatenated with host info (agent replace 'localhost' for hostname even in fw mode)
@@ -218,14 +223,14 @@ func (s *Scraper) externalEndpoint(c component) (*scrape.Job, error) {
 // It doesn't fail if no autodiscovery satisfy the contitions.
 func (s *Scraper) autodiscover(c component) (*scrape.Job, error) {
 	for _, autodiscover := range c.AutodiscoverConfigs {
-		pod, err := s.discoverPod(autodiscover)
-		if err != nil {
-			return nil, fmt.Errorf("control plane component %q discovery failed: %v", c.Name, err)
+		pod, err := s.podDiscoverer.Discover(autodiscover)
+		if errors.Is(err, discoverer.ErrPodNotFound) {
+			s.logger.Debugf("No pod found for %q with labels %q", c.Name, autodiscover.Selector)
+			continue
 		}
 
-		if pod == nil {
-			s.logger.Debugf("No %q pod found with labels %q", c.Name, autodiscover.Selector)
-			continue
+		if err != nil {
+			return nil, fmt.Errorf("discovering pod for %q: %w", c.Name, err)
 		}
 
 		s.logger.Debugf("Found pod %q for %q with labels %q", pod.Name, c.Name, autodiscover.Selector)
@@ -238,7 +243,7 @@ func (s *Scraper) autodiscover(c component) (*scrape.Job, error) {
 			connector.WithLogger(s.logger),
 		)
 		if err != nil {
-			return nil, fmt.Errorf("creating connector for component %s failed: %v", c.Name, err)
+			return nil, fmt.Errorf("creating connector for %q failed: %w", c.Name, err)
 		}
 
 		client, err := controlplaneClient.New(connector, controlplaneClient.WithLogger(s.logger))
@@ -258,35 +263,6 @@ func (s *Scraper) autodiscover(c component) (*scrape.Job, error) {
 	}
 
 	s.logger.Debugf("No %q pod has been discovered", c.Name)
-
-	return nil, nil
-}
-
-func (s *Scraper) discoverPod(autodiscover config.AutodiscoverControlPlane) (*corev1.Pod, error) {
-	// looks for the pod match a set of defined labels
-	podLister, ok := s.podListerer.Lister(autodiscover.Namespace)
-	if !ok {
-		return nil, fmt.Errorf("pod lister for namespace: %s not found", autodiscover.Namespace)
-	}
-
-	labelsSet, _ := labels.ConvertSelectorToLabelsMap(autodiscover.Selector)
-
-	selector := labels.SelectorFromSet(labelsSet)
-
-	pods, err := podLister.List(selector)
-	if err != nil {
-		return nil, fmt.Errorf("fail to list pods for selector: %v", labelsSet)
-	}
-
-	s.logger.Debugf("%d pods found with labels %q", len(pods), autodiscover.Selector)
-	// Validation of returned pods.
-	for _, pod := range pods {
-		if autodiscover.MatchNode && pod.Spec.NodeName != s.config.NodeName {
-			s.logger.Debugf("Discarding pod: %s running outside the node", pod.Name)
-			continue
-		}
-		return pod, nil
-	}
 
 	return nil, nil
 }
