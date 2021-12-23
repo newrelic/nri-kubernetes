@@ -5,13 +5,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	testclient "k8s.io/client-go/kubernetes/fake"
+
+	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 )
 
 const (
@@ -32,46 +33,46 @@ func Test_pods_lister_returns(t *testing.T) {
 	t.Parallel()
 
 	type testData struct {
-		config   discovery.PodListerConfig
-		selector labels.Selector
-		result   []*corev1.Pod
+		namespace string
+		selector  labels.Selector
+		result    []*corev1.Pod
 	}
 
 	testCases := map[string]testData{
 		"pod_when_selector_matches": {
-			discovery.PodListerConfig{},
+			"",
 			labels.SelectorFromSet(labelSelector),
 			[]*corev1.Pod{getPodUniqueLabelSelector()},
 		},
 		"pod_when_selector_and_namespace_match": {
-			discovery.PodListerConfig{Namespace: testNamespace},
+			testNamespace,
 			labels.SelectorFromSet(labelSelector),
 			[]*corev1.Pod{getPodUniqueLabelSelector()},
 		},
 		"pod_when_multilabels_match": {
-			discovery.PodListerConfig{},
+			"",
 			labels.SelectorFromSet(multiLabelSelector),
 			[]*corev1.Pod{getPodMultiLabelSelector()},
 		},
 		"pod_when_multilabels_partially_match": {
-			discovery.PodListerConfig{Namespace: testNamespace},
+			testNamespace,
 			labels.SelectorFromSet(labels.Set{
 				"foo": multiLabelSelector["foo"],
 			}),
 			[]*corev1.Pod{getPodMultiLabelSelector()},
 		},
 		"no_pod_when_namespace_not_match": {
-			discovery.PodListerConfig{Namespace: "not-matching"},
+			"not-matching",
 			labels.SelectorFromSet(labelSelector),
 			nil,
 		},
 		"no_pod_when_labels_no_match": {
-			discovery.PodListerConfig{Namespace: testNamespace},
+			testNamespace,
 			labels.SelectorFromSet(labels.Set{"not-matching": "label"}),
 			nil,
 		},
-		"no_pod_when_partial_multilabellabels_no_match": {
-			discovery.PodListerConfig{Namespace: testNamespace},
+		"no_pod_when_partial_multilabel_no_match": {
+			testNamespace,
 			labels.SelectorFromSet(labels.Set{
 				"baz":          labelSelector["baz"],
 				"not-matching": "label",
@@ -95,9 +96,15 @@ func Test_pods_lister_returns(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			testData.config.Client = client
+			podListerer, closeChan := discovery.NewNamespacePodListerer(
+				discovery.PodListererConfig{
+					Namespaces: []string{testData.namespace},
+					Client:     client,
+				},
+			)
 
-			podLister, closeChan := discovery.NewPodNamespaceLister(testData.config)
+			podLister, ok := podListerer.Lister(testData.namespace)
+			require.True(t, ok)
 
 			pods, err := podLister.List(testData.selector)
 			require.NoError(t, err)
@@ -107,18 +114,72 @@ func Test_pods_lister_returns(t *testing.T) {
 	}
 }
 
-func Test_pods_lister_updates(t *testing.T) {
+func Test_pod_multi_namespace_discovery(t *testing.T) {
 	t.Parallel()
 
-	client := testclient.NewSimpleClientset()
-	podLister, closeChan := discovery.NewPodNamespaceLister(
-		discovery.PodListerConfig{
-			Client:    client,
-			Namespace: testNamespace,
+	differentNamespace := "differentNamespace"
+	labelSelectorFoo := labels.Set{
+		"foo": "matching",
+	}
+
+	client := testclient.NewSimpleClientset(
+		getPodUniqueLabelSelector(),
+		&corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "foo",
+				Namespace: differentNamespace,
+				Labels:    labelSelectorFoo,
+			},
+		},
+	)
+
+	podListerer, closeChan := discovery.NewNamespacePodListerer(
+		discovery.PodListererConfig{
+			Namespaces: []string{testNamespace, differentNamespace},
+			Client:     client,
 		},
 	)
 
 	defer close(closeChan)
+
+	t.Run("get_pod_from_testNamespace", func(t *testing.T) {
+		t.Parallel()
+
+		pl, ok := podListerer.Lister(testNamespace)
+		require.True(t, ok)
+
+		pods, err := pl.List(labels.SelectorFromSet(labelSelector))
+		require.NoError(t, err)
+		assert.Len(t, pods, 1)
+	})
+
+	t.Run("get_pod_from_differentNamespace", func(t *testing.T) {
+		t.Parallel()
+
+		pl, ok := podListerer.Lister(differentNamespace)
+		require.True(t, ok)
+
+		pods, err := pl.List(labels.SelectorFromSet(labelSelectorFoo))
+		require.NoError(t, err)
+		assert.Len(t, pods, 1)
+	})
+}
+
+func Test_pods_lister_updates(t *testing.T) {
+	t.Parallel()
+
+	client := testclient.NewSimpleClientset()
+	podListerer, closeChan := discovery.NewNamespacePodListerer(
+		discovery.PodListererConfig{
+			Client:     client,
+			Namespaces: []string{testNamespace},
+		},
+	)
+
+	defer close(closeChan)
+
+	podLister, ok := podListerer.Lister(testNamespace)
+	require.True(t, ok)
 
 	// List with no pod
 	pods, err := podLister.List(labels.Everything())
@@ -126,7 +187,11 @@ func Test_pods_lister_updates(t *testing.T) {
 	require.Nil(t, pods)
 
 	// List after creating a pod
-	_, err = client.CoreV1().Pods(testNamespace).Create(context.Background(), getPodUniqueLabelSelector(), metav1.CreateOptions{})
+	_, err = client.CoreV1().Pods(testNamespace).Create(
+		context.Background(),
+		getPodUniqueLabelSelector(),
+		metav1.CreateOptions{},
+	)
 	require.NoError(t, err)
 	time.Sleep(time.Second)
 
@@ -149,16 +214,29 @@ func Test_pods_lister_stop_channel(t *testing.T) {
 	t.Parallel()
 
 	client := testclient.NewSimpleClientset()
-	podLister, closeChan := discovery.NewPodNamespaceLister(discovery.PodListerConfig{Client: client})
+	podListerer, closeChan := discovery.NewNamespacePodListerer(
+		discovery.PodListererConfig{
+			Client:     client,
+			Namespaces: []string{testNamespace},
+		},
+	)
 
 	close(closeChan)
 
 	// List after creating a pod
-	_, err := client.CoreV1().Pods(testNamespace).Create(context.Background(), getPodUniqueLabelSelector(), metav1.CreateOptions{})
+	_, err := client.CoreV1().Pods(testNamespace).Create(
+		context.Background(),
+		getPodUniqueLabelSelector(),
+		metav1.CreateOptions{},
+	)
 	require.NoError(t, err)
 	time.Sleep(time.Second)
 
+	podLister, ok := podListerer.Lister(testNamespace)
+	require.True(t, ok)
+
 	pods, err := podLister.List(labels.Everything())
+	require.NoError(t, err)
 	require.Nil(t, pods)
 }
 

@@ -44,6 +44,12 @@ validate:
 	@[ -f .semgrep.yml ] && semgrep_config=".semgrep.yml" || semgrep_config="p/golang" ; \
 	docker run --rm -v "${PWD}:/src:ro" --workdir /src returntocorp/semgrep -c "$$semgrep_config"
 
+.PHONY: codespell
+codespell: CODESPELL_BIN := codespell
+codespell: ## Runs spell checking.
+	@which $(CODESPELL_BIN) >/dev/null 2>&1 || (echo "$(CODESPELL_BIN) binary not found, skipping spell checking"; exit 0)
+	@$(CODESPELL_BIN)
+
 .PHONY: compile
 compile:
 	@echo "[compile] Building $(BINARY_NAME)"
