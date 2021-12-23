@@ -1,4 +1,4 @@
-package client_test
+package authenticator_test
 
 import (
 	"crypto/tls"
@@ -9,73 +9,90 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
-	controlplaneClient "github.com/newrelic/nri-kubernetes/v2/src/controlplane/client"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/rest"
+
+	"github.com/newrelic/nri-kubernetes/v2/internal/config"
+	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
+	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/authenticator"
 )
 
 const (
-	testString = "hello, MTLS world!"
-	secretName = "my-tls-config"
+	testString      = "hello, MTLS world!"
+	secretName      = "my-tls-config"
+	secretNamespace = "custom-namespace"
 )
 
-func boolPtr(b bool) *bool { return &b }
-
-func TestMutualTLSCalls(t *testing.T) {
+func Test_Authenticator_with_mTLS(t *testing.T) {
 	testCases := []struct {
 		name               string
-		insecureSkipVerify *bool
+		insecureSkipVerify bool
 		cacert, key, cert  []byte
-		assert             func(*testing.T, *http.Response, error)
+		secretName         string
+		assert             func(*testing.T, error, *http.Response, error)
 	}{
 		{
-			name:   "Successful call with proper configuration, should succeed",
-			cert:   clientCert,
-			key:    clientKey,
-			cacert: serverCACert,
-			assert: func(t *testing.T, resp *http.Response, err error) {
-				require.NoError(t, err, "request should not fail (i.e. non-2xx response)")
+			name:       "success_if_all_config_is_correct",
+			cert:       clientCert,
+			key:        clientKey,
+			cacert:     serverCACert,
+			secretName: secretName,
+			assert: func(t *testing.T, authenticateErr error, resp *http.Response, getErr error) {
+				require.NoError(t, authenticateErr)
+				require.NoError(t, getErr)
 				bodyBytes, err := io.ReadAll(resp.Body)
 				require.NoError(t, err, "error reading response body")
 				assert.Equal(t, string(bodyBytes), testString, "expected body contents not found")
 			},
 		},
 		{
-			name:               "InsecureSkipVerify should not check the server certificate, so no CaCert is needed.",
-			insecureSkipVerify: boolPtr(true),
+			name:               "success_if_insecureSkipVerify_true_no_cacert_is_needed",
+			insecureSkipVerify: true,
 			cert:               clientCert,
 			key:                clientKey,
 			// no cacert...
-			assert: func(t *testing.T, resp *http.Response, err error) {
-				require.NoError(t, err, "request should not fail (i.e. non-2xx response)")
+			secretName: secretName,
+			assert: func(t *testing.T, authenticateErr error, resp *http.Response, getErr error) {
+				require.NoError(t, authenticateErr)
+				require.NoError(t, getErr)
 				bodyBytes, err := io.ReadAll(resp.Body)
 				require.NoError(t, err, "error reading response body")
 				assert.Equal(t, string(bodyBytes), testString, "expected body contents not found")
 			},
 		},
 		{
-			name:               "InsecureSkipVerify or CaCert should be set",
-			insecureSkipVerify: boolPtr(false),
-			cert:               clientCert,
-			key:                clientKey,
-			assert: func(t *testing.T, resp *http.Response, err error) {
-				// todo: check if it's really the correct error
-				require.Error(t, err)
+			name: "fail_if_insecureSkipVerify_false_and_no_cacert",
+			cert: clientCert,
+			key:  clientKey,
+			// no cacert...
+			// no skipVerify
+			secretName: secretName,
+			assert: func(t *testing.T, authenticateErr error, _ *http.Response, getErr error) {
+				require.Error(t, authenticateErr)
 			},
 		},
 		{
-			name: "No config should fail",
-			assert: func(t *testing.T, resp *http.Response, err error) {
-				// todo: check if it's really the correct error
-				require.Error(t, err)
+			name:       "fail_if_no_secret_is_found",
+			cert:       clientCert,
+			key:        clientKey,
+			cacert:     serverCACert,
+			secretName: "missing-secret",
+			assert: func(t *testing.T, authenticateErr error, _ *http.Response, _ error) {
+				require.Error(t, authenticateErr)
+			},
+		},
+		{
+			name: "fail_if_cert_is_missing",
+			// no cert
+			key:        clientKey,
+			cacert:     serverCACert,
+			secretName: secretName,
+			assert: func(t *testing.T, authenticateErr error, _ *http.Response, _ error) {
+				require.Error(t, authenticateErr)
 			},
 		},
 	}
@@ -84,69 +101,81 @@ func TestMutualTLSCalls(t *testing.T) {
 		test := tc
 
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
 			endpoint := startMTLSServer()
 
-			c, err := createClientComponent(t, endpoint, test.cacert, test.key, test.cert, test.insecureSkipVerify)
-			if err != nil {
-				test.assert(t, nil, err)
-				return
+			listerer := secretListerer(
+				t,
+				secretName,
+				secretNamespace,
+				fakeSecrets(test.cacert, test.key, test.cert),
+			)
+
+			authenticator, err := authenticator.New(
+				authenticator.Config{
+					SecretListerer: listerer,
+				},
+			)
+			require.NoError(t, err)
+
+			e := config.Endpoint{
+				Auth: &config.Auth{
+					Type: "mtls",
+					MTLS: &config.MTLS{
+						TLSSecretName:      test.secretName,
+						TLSSecretNamespace: secretNamespace,
+					},
+				},
+				InsecureSkipVerify: test.insecureSkipVerify,
 			}
 
-			resp, err := c.Get("/test")
-			test.assert(t, resp, err)
+			rt, authenticateErr := authenticator.AuthenticatedTransport(e)
+
+			c := &http.Client{Transport: rt}
+
+			resp, getErr := c.Get(fmt.Sprintf("https://%s/test", endpoint))
+
+			test.assert(t, authenticateErr, resp, getErr)
 		})
 	}
 }
 
-func createClientComponent(t *testing.T, endpoint string, cacert, key, cert []byte, insecureSkipVerify *bool) (client.HTTPClient, error) {
+func fakeSecrets(cacert, key, cert []byte) map[string][]byte {
 	// Data will be the contents of the secret holding our TLS config
 	data := map[string][]byte{}
 
 	if len(cacert) > 0 {
 		data["cacert"] = cacert
 	}
+
 	if len(key) > 0 {
 		data["key"] = key
 	}
+
 	if len(cert) > 0 {
 		data["cert"] = cert
 	}
-	if insecureSkipVerify != nil {
-		// this changes a bool to a byte array containing `true` or `false`
-		data["insecureSkipVerify"] = []byte(fmt.Sprintf("%t", *insecureSkipVerify))
-	}
+	return data
+}
 
+func secretListerer(t *testing.T, name string, namespace string, secrets map[string][]byte) discovery.SecretListerer {
 	c := fake.NewSimpleClientset(&v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      secretName,
-			Namespace: "default",
+			Name:      name,
+			Namespace: namespace,
 		},
-		Data: data,
+		Data: secrets,
 	})
 
-	endpoints := []config.Endpoint{
-		{
-			URL: fmt.Sprintf("https://%s/test", endpoint),
-			Auth: &config.Auth{
-				Type: "mtls",
-				MTLS: &config.MTLS{
-					TLSSecretName: secretName,
-				},
-			},
-		},
-	}
+	secretListerer, closer := discovery.NewNamespaceSecretListerer(discovery.SecretListererConfig{
+		Client:     c,
+		Namespaces: []string{namespace},
+	})
 
-	connector, err := controlplaneClient.DefaultConnector(endpoints, c, &rest.Config{}, log.NewStdErr(true))
-	if err != nil {
-		return nil, err
-	}
+	t.Cleanup(func() { close(closer) })
 
-	client, err := controlplaneClient.New(connector)
-	if err != nil {
-		return nil, err
-	}
-
-	return client, nil
+	return secretListerer
 }
 
 func startMTLSServer() string {
@@ -163,21 +192,23 @@ func startMTLSServer() string {
 	endpoint := fmt.Sprintf("localhost:%d", l.Addr().(*net.TCPAddr).Port)
 
 	clientCAs := x509.NewCertPool()
+
 	clientCAs.AppendCertsFromPEM(clientCACert)
 
 	m := http.NewServeMux()
+
 	m.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
-		_, _ = fmt.Fprintf(w, testString)
+		_, _ = w.Write([]byte(testString))
 	})
+
 	server := &http.Server{Addr: endpoint, Handler: m}
+
 	config := &tls.Config{
 		Certificates: []tls.Certificate{cert},
 		ClientCAs:    clientCAs,
 		ClientAuth:   tls.RequireAndVerifyClientCert,
 		NextProtos:   []string{"http/1.1"},
 	}
-
-	config.BuildNameToCertificate()
 
 	tlsListener := tls.NewListener(l, config)
 
@@ -188,7 +219,7 @@ func startMTLSServer() string {
 	return endpoint
 }
 
-// These certificates are taking from the etcd TLS example
+// These certificates are taking from the etcd TLS example.
 var (
 	clientCACert = []byte(`
 -----BEGIN CERTIFICATE-----
