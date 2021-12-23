@@ -7,17 +7,19 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/infra-integrations-sdk/log"
-	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
-	controlplaneClient "github.com/newrelic/nri-kubernetes/v2/src/controlplane/client"
-	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/grouper"
-	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
-	v1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/rest"
+
+	"github.com/newrelic/nri-kubernetes/v2/internal/config"
+	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
+	controlplaneClient "github.com/newrelic/nri-kubernetes/v2/src/controlplane/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/authenticator"
+	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/connector"
+	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/grouper"
+	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
 )
 
 // Providers is a struct holding pointers to all the clients Scraper needs to get data from.
@@ -29,16 +31,17 @@ type Providers struct {
 // Scraper takes care of getting metrics all control plane instances based on the configuration.
 type Scraper struct {
 	Providers
-	logger               log.Logger
-	config               *config.Config
-	k8sVersion           *version.Info
-	components           []component
-	informerClosers      []chan<- struct{}
-	podListerByNamespace map[string]v1.PodNamespaceLister
-	inClusterConfig      *rest.Config
+	logger          log.Logger
+	config          *config.Config
+	k8sVersion      *version.Info
+	components      []component
+	informerClosers []chan<- struct{}
+	podListerer     discovery.PodListerer
+	inClusterConfig *rest.Config
+	authenticator   authenticator.Authenticator
 }
 
-// ScraperOpt are options that can be used to configure the Scraper
+// ScraperOpt are options that can be used to configure the Scraper.
 type ScraperOpt func(s *Scraper) error
 
 // WithLogger returns an OptionFunc to change the logger from the default noop logger.
@@ -75,15 +78,13 @@ func (s *Scraper) Close() {
 // NewScraper initialize its internal informers and components.
 // After use, informers should be closed by calling Close().
 func NewScraper(config *config.Config, providers Providers, options ...ScraperOpt) (*Scraper, error) {
-	var err error
 	s := &Scraper{
 		config:    config,
 		Providers: providers,
 		// TODO: An empty implementation of the logger interface would be better
-		logger:               log.New(false, io.Discard),
-		podListerByNamespace: make(map[string]v1.PodNamespaceLister),
-		components:           newComponents(config.ControlPlane),
-		inClusterConfig:      &rest.Config{},
+		logger:          log.New(false, io.Discard),
+		components:      newComponents(config.ControlPlane),
+		inClusterConfig: &rest.Config{},
 	}
 
 	for i, opt := range options {
@@ -92,6 +93,7 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 		}
 	}
 
+	var err error
 	// TODO If this could change without a restart of the pod we should run it each time we scrape data,
 	// possibly with a reasonable cache Es: NewCachedDiscoveryClientForConfig
 	s.k8sVersion, err = providers.K8s.Discovery().ServerVersion()
@@ -99,8 +101,30 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 		return nil, fmt.Errorf("fetching K8s version: %w", err)
 	}
 
-	// Building pod lister and closers for pod autodisover.
-	s.buildLister()
+	secretListerer, informerCloser := discovery.NewNamespaceSecretListerer(discovery.SecretListererConfig{
+		Client:     s.K8s,
+		Namespaces: secretNamespaces(s.components),
+	})
+
+	s.informerClosers = append(s.informerClosers, informerCloser)
+
+	s.authenticator, err = authenticator.New(
+		authenticator.Config{
+			SecretListerer:  secretListerer,
+			InClusterConfig: s.inClusterConfig,
+		},
+		authenticator.WithLogger(s.logger),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("creating authenticator: %w", err)
+	}
+
+	s.podListerer, informerCloser = discovery.NewNamespacePodListerer(discovery.PodListererConfig{
+		Client:     s.K8s,
+		Namespaces: autodiscoverNamespaces(s.components),
+	})
+
+	s.informerClosers = append(s.informerClosers, informerCloser)
 
 	return s, nil
 }
@@ -154,14 +178,15 @@ func (s *Scraper) Run(i *integration.Integration) error {
 // externalEndpoint builds the client based on the StaticEndpointConfig and fails if
 // the client probe cannot reach the endpoint.
 func (s *Scraper) externalEndpoint(c component) (*scrape.Job, error) {
-	connector, err := controlplaneClient.DefaultConnector(
-		[]config.Endpoint{*c.StaticEndpointConfig},
-		s.K8s,
-		s.inClusterConfig,
-		s.logger,
+	connector, err := connector.New(
+		connector.Config{
+			Authenticator: s.authenticator,
+			Endpoints:     []config.Endpoint{*c.StaticEndpointConfig},
+		},
+		connector.WithLogger(s.logger),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("control plane component %q failed creating connector: %v", c.Name, err)
+		return nil, fmt.Errorf("creating connector for component %s failed: %v", c.Name, err)
 	}
 
 	client, err := controlplaneClient.New(connector, controlplaneClient.WithLogger(s.logger))
@@ -205,14 +230,15 @@ func (s *Scraper) autodiscover(c component) (*scrape.Job, error) {
 
 		s.logger.Debugf("Found pod %q for %q with labels %q", pod.Name, c.Name, autodiscover.Selector)
 
-		connector, err := controlplaneClient.DefaultConnector(
-			autodiscover.Endpoints,
-			s.K8s,
-			s.inClusterConfig,
-			s.logger,
+		connector, err := connector.New(
+			connector.Config{
+				Authenticator: s.authenticator,
+				Endpoints:     autodiscover.Endpoints,
+			},
+			connector.WithLogger(s.logger),
 		)
 		if err != nil {
-			return nil, fmt.Errorf("creating connector for %q: %v", c.Name, err)
+			return nil, fmt.Errorf("creating connector for component %s failed: %v", c.Name, err)
 		}
 
 		client, err := controlplaneClient.New(connector, controlplaneClient.WithLogger(s.logger))
@@ -238,7 +264,7 @@ func (s *Scraper) autodiscover(c component) (*scrape.Job, error) {
 
 func (s *Scraper) discoverPod(autodiscover config.AutodiscoverControlPlane) (*corev1.Pod, error) {
 	// looks for the pod match a set of defined labels
-	podLister, ok := s.podListerByNamespace[autodiscover.Namespace]
+	podLister, ok := s.podListerer.Lister(autodiscover.Namespace)
 	if !ok {
 		return nil, fmt.Errorf("pod lister for namespace: %s not found", autodiscover.Namespace)
 	}
@@ -263,23 +289,4 @@ func (s *Scraper) discoverPod(autodiscover config.AutodiscoverControlPlane) (*co
 	}
 
 	return nil, nil
-}
-
-// buildLister populates podListerByNamespace with a lister for each autodiscovery entry namespace.
-func (s *Scraper) buildLister() {
-	for _, component := range s.components {
-		for _, autodiscover := range component.AutodiscoverConfigs {
-			if _, ok := s.podListerByNamespace[autodiscover.Namespace]; !ok {
-				s.logger.Debugf("Generating a new Pod lister for namespace %q.", autodiscover.Namespace)
-
-				podLister, informerCloser := discovery.NewPodNamespaceLister(discovery.PodListerConfig{
-					Client:    s.K8s,
-					Namespace: autodiscover.Namespace,
-				})
-
-				s.podListerByNamespace[autodiscover.Namespace] = podLister
-				s.informerClosers = append(s.informerClosers, informerCloser)
-			}
-		}
-	}
 }

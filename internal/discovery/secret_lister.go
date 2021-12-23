@@ -6,27 +6,54 @@ import (
 	listersv1 "k8s.io/client-go/listers/core/v1"
 )
 
-type SecretListerConfig struct {
-	// Namespace can be used to restric the search to a particular namespace.
-	Namespace string
+// SecretListerer return namespaced secret listers.
+type SecretListerer interface {
+	// Lister ruturns the secret lister for the specified namespaces
+	// and true if the lister exist in the listerer.
+	Lister(namespace string) (listersv1.SecretNamespaceLister, bool)
+}
+
+type SecretListererConfig struct {
+	// Namespaces supported by the listerer.
+	Namespaces []string
 	// Client is the Kubernetes client.Interface used to build informers.
 	Client kubernetes.Interface
 }
 
-// NewSecretNamespaceLister returns a SecretGetter to get secrets with informers.
-func NewSecretNamespaceLister(config SecretListerConfig) (listersv1.SecretNamespaceLister, chan<- struct{}) {
+// MultiNamespaceSecretListerer implements SecretListerer interface
+// for a group of listers pre-build on initialization.
+type MultiNamespaceSecretListerer struct {
+	listers map[string]listersv1.SecretNamespaceLister
+}
+
+// Lister returns the available lister based on the namespace if exists in the listerer.
+func (l MultiNamespaceSecretListerer) Lister(namespace string) (listersv1.SecretNamespaceLister, bool) {
+	lister, ok := l.listers[namespace]
+
+	return lister, ok
+}
+
+// NewNamespaceSecretListerer returns a MultiNamespaceSecretListerer with listers for all
+// namespaces on config.Namespaces.
+func NewNamespaceSecretListerer(config SecretListererConfig) (*MultiNamespaceSecretListerer, chan<- struct{}) {
 	stopCh := make(chan struct{})
 
-	factory := informers.NewSharedInformerFactoryWithOptions(
-		config.Client,
-		defaultResyncDuration,
-		informers.WithNamespace(config.Namespace),
-	)
+	multiNamespaceSecretListerer := &MultiNamespaceSecretListerer{
+		listers: make(map[string]listersv1.SecretNamespaceLister),
+	}
 
-	secretLister := factory.Core().V1().Secrets().Lister().Secrets(config.Namespace)
+	for _, namespace := range config.Namespaces {
+		factory := informers.NewSharedInformerFactoryWithOptions(
+			config.Client,
+			defaultResyncDuration,
+			informers.WithNamespace(namespace),
+		)
 
-	factory.Start(stopCh)
-	factory.WaitForCacheSync(stopCh)
+		multiNamespaceSecretListerer.listers[namespace] = factory.Core().V1().Secrets().Lister().Secrets(namespace)
 
-	return secretLister, stopCh
+		factory.Start(stopCh)
+		factory.WaitForCacheSync(stopCh)
+	}
+
+	return multiNamespaceSecretListerer, stopCh
 }
