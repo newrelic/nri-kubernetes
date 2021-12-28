@@ -13,15 +13,14 @@ const (
 )
 
 type Config struct {
-	Verbose          bool          `mapstructure:"verbose"`
-	ClusterName      string        `mapstructure:"clusterName"`
-	NetworkRouteFile string        `mapstructure:"networkRouteFile"`
-	KubeconfigPath   string        `mapstructure:"kubeconfigPath"`
-	NodeIP           string        `mapstructure:"nodeIP"`
-	NodeName         string        `mapstructure:"nodeName"`
-	HTTPServerPort   string        `mapstructure:"httpServerPort"`
-	Interval         time.Duration `mapstructure:"interval"`
-	Timeout          time.Duration `mapstructure:"timeout"`
+	Verbose        bool          `mapstructure:"verbose"`
+	ClusterName    string        `mapstructure:"clusterName"`
+	KubeconfigPath string        `mapstructure:"kubeconfigPath"`
+	NodeIP         string        `mapstructure:"nodeIP"`
+	NodeName       string        `mapstructure:"nodeName"`
+	HTTPServerPort string        `mapstructure:"httpServerPort"`
+	Interval       time.Duration `mapstructure:"interval"`
+	Timeout        time.Duration `mapstructure:"timeout"`
 
 	ControlPlane `mapstructure:"controlPlane"`
 	Kubelet      `mapstructure:"kubelet"`
@@ -39,9 +38,10 @@ type KSM struct {
 }
 
 type Kubelet struct {
-	Enabled bool   `mapstructure:"enabled"`
-	Port    int32  `mapstructure:"port"`
-	Scheme  string `mapstructure:"scheme"`
+	Enabled          bool   `mapstructure:"enabled"`
+	Port             int32  `mapstructure:"port"`
+	Scheme           string `mapstructure:"scheme"`
+	NetworkRouteFile string `mapstructure:"networkRouteFile"`
 }
 
 type ControlPlane struct {
@@ -88,13 +88,10 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	// https://github.com/spf13/viper/issues/584
 	v.SetDefault("clusterName", "cluster")
 	v.SetDefault("verbose", false)
-	v.SetDefault("networkRouteFile", "/proc/net/route")
+	v.SetDefault("kubelet.networkRouteFile", "/proc/net/route")
 	v.SetDefault("nodeName", "node")
 	v.SetDefault("nodeIP", "node")
 	v.SetDefault("httpServerPort", 0)
-	v.SetDefault("controlPlane.enabled", false)
-	v.SetDefault("ksm.enabled", false)
-	v.SetDefault("kubelet.enabled", false)
 
 	v.SetEnvPrefix("NRI_KUBERNETES")
 	v.AutomaticEnv()
