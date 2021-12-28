@@ -278,7 +278,7 @@ func getK8sConfig(c *config.Config) (*rest.Config, error) {
 	if err == nil {
 		return inclusterConfig, nil
 	}
-	logger.Errorf("collecting in cluster config: %v", err)
+	logger.Warnf("collecting in cluster config: %v", err)
 
 	kubeconf := c.KubeconfigPath
 	if kubeconf == "" {
@@ -289,6 +289,8 @@ func getK8sConfig(c *config.Config) (*rest.Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not load local kube config: %w", err)
 	}
+
+	logger.Warnf("using local kube config: %q", kubeconf)
 
 	return inclusterConfig, nil
 }
