@@ -28,13 +28,17 @@ import (
 )
 
 func TestScraper(t *testing.T) {
+	// Network metrics are known to be missing on some environments.
 	networkMetrics := []string{"net.rxBytesPerSecond", "net.txBytesPerSecond", "net.errorsPerSecond"}
+	// TODO
 	nodeUtilizationMetrics := []string{"allocatableCpuCoresUtilization", "allocatableMemoryUtilization"}
 
-	runningMetrics := []string{"memoryUsedBytes", "memoryWorkingSetBytes", "cpuUsedCores",
+	// Pods and containers that are not in a running state will not have these metrics.
+	notRunningMetrics := []string{"memoryUsedBytes", "memoryWorkingSetBytes", "cpuUsedCores",
 		"fsAvailableBytes", "fsCapacityBytes", "fsUsedBytes", "fsUsedPercent", "fsInodesFree", "fsInodes",
 		"fsInodesUsed", "containerID", "containerImageID", "isReady", "podIP"}
 
+	// Utilization metrics will not be present if the corresponding limit/request is not present.
 	utilizationDependencies := map[string][]string{
 		"cpuLimitCores":        {"cpuCoresUtilization"},
 		"cpuRequestedCores":    {"requestedCpuCoresUtilization"},
@@ -42,34 +46,81 @@ func TestScraper(t *testing.T) {
 		"memoryRequestedBytes": {"requestedMemoryUtilization"},
 	}
 
-	limitsRequestedRegex := regexp.MustCompile("(Limit|Requested)(Cores|Bytes)")
+	limitsRequestsRegex := regexp.MustCompile("(Limit|Requested)(Cores|Bytes)$")
 
 	// Create an asserter with the settings that are shared for all test scenarios.
 	asserter := asserter.New().
 		Using(metric.KubeletSpecs).
 		Excluding(
-			// Common metrics.
+			// Network metrics
 			exclude.Metrics(networkMetrics...),
-			// Node metrics.
-			exclude.Exclude(exclude.Group("node"), exclude.Metrics(nodeUtilizationMetrics...)),
+
+			// Node utilization  metrics.
+			exclude.Exclude(exclude.Groups("node"), exclude.Metrics(nodeUtilizationMetrics...)),
+			// Exclude limits/requested metrics for nodes, pods and containers
+			exclude.Exclude(
+				exclude.Groups("node", "pod", "container"),
+				func(group string, spec *definition.Spec, e *integration.Entity) bool {
+					return limitsRequestsRegex.MatchString(spec.Name)
+				},
+			),
 			// Exclude metrics that depend on limits when those limits are not set.
-			exclude.Exclude(exclude.Group("pod"), exclude.Dependent(utilizationDependencies)),
+			exclude.Exclude(exclude.Groups("pod", "container"), exclude.Dependent(utilizationDependencies)),
+
+			// Static pods, typically living in kube-system, do not have creation dates.
+			exclude.Exclude(
+				exclude.Groups("pod"),
+				func(_ string, _ *definition.Spec, ent *integration.Entity) bool {
+					return asserter.EntityHas(ent, "namespace", "kube-system")
+				},
+				exclude.Metrics("createdAt", "createdBy", "createdKind", "deploymentName"),
+			),
+
+			// Exclude deploymentName metric for pods not created by a deployment
+			exclude.Exclude(
+				exclude.Groups("pod", "container"),
+				func(_ string, _ *definition.Spec, ent *integration.Entity) bool {
+					return !asserter.EntityHas(ent, "createdKind", "deployment")
+				},
+				exclude.Metrics("createdAt", "createdBy", "createdKind", "deploymentName"),
+			),
+
 			// Exclude metrics known to be missing for pods that are pending.
 			exclude.Exclude(
+				exclude.Groups("pod", "container"),
 				func(group string, _ *definition.Spec, ent *integration.Entity) bool {
-					if group == "pod" || group == "container" {
-						return len(ent.Metrics) > 0 && !strings.EqualFold(ent.Metrics[0].Metrics["status"].(string), "running")
-					}
-					return false
+					return !asserter.EntityHas(ent, "status", "running")
 				},
-				exclude.Metrics(runningMetrics...),
+				exclude.Metrics(notRunningMetrics...),
 			),
-			// Exclude limits/requested metrics for containers
-			func(group string, spec *definition.Spec, e *integration.Entity) bool {
-				return group == "container" && limitsRequestedRegex.MatchString(spec.Name)
-			},
+
+			// Reason and message are only present where a pod/container is pending or terminated
+			exclude.Exclude(
+				exclude.Groups("pod", "container"),
+				func(_ string, _ *definition.Spec, ent *integration.Entity) bool {
+					return !asserter.EntityHas(ent, "status", "pending") &&
+						!asserter.EntityHas(ent, "status", "terminated")
+				},
+				exclude.Metrics("reason", "message"),
+			),
+
+			// Fair scheduler metrics are not present sometimes.
+			// TODO: Investigate further why.
+			exclude.Exclude(
+				func(_ string, spec *definition.Spec, _ *integration.Entity) bool {
+					return strings.HasPrefix(spec.Name, "containerCpuCfs")
+				},
+			),
+
+			// Exclude PVC metrics for volumes that are not named "pv"
+			exclude.Exclude(
+				exclude.Groups("volume"),
+				func(_ string, spec *definition.Spec, e *integration.Entity) bool {
+					return e.Metadata.Name != "pv" && strings.HasPrefix(spec.Name, "pvc")
+				},
+			),
 			// Optional metrics.
-			exclude.Optional(),
+			//exclude.Optional(),
 		)
 
 	for _, v := range testutil.AllVersions() {
