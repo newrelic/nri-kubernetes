@@ -98,7 +98,7 @@ func (a Asserter) Assert(t *testing.T) {
 
 		for _, spec := range group.Specs {
 			for _, entity := range entities {
-				if entityHas(entity, spec.Name, spec.Type) {
+				if EntityContains(entity, spec.Name, spec.Type) {
 					continue
 				}
 
@@ -150,32 +150,44 @@ func entitiesFor(entities []*integration.Entity, pseudotype string) []*integrati
 	return appropriateEntities
 }
 
-// entityHas returns true if supplied entity has metric m with type _similar_ to mType, false otherwise.
-func entityHas(e *integration.Entity, m string, mType metric.SourceType) bool {
+// entityMetric is a helper function that returns the first metric from an entity that matches the given name.
+func entityMetric(e *integration.Entity, m string) interface{} {
+	for _, ms := range e.Metrics {
+		entityMetric, found := ms.Metrics[m]
+		if found {
+			return entityMetric
+		}
+	}
+
+	return nil
+}
+
+// EntityHas returns true if the specified entity has a metric of name m equal to value.
+func EntityHas(e *integration.Entity, m string, value interface{}) bool {
 	// Wildcard metrics are ignored.
 	// TODO: Improve this and check matching glob patterns.
 	if strings.HasSuffix(m, "*") {
 		return true
 	}
 
-	for _, ms := range e.Metrics {
-		entityMetric, found := ms.Metrics[m]
-		if !found {
-			continue
-		}
+	return entityMetric(e, m) == value
+}
 
-		// Check if metricType is an attribute but metric is not a string
-		_, isString := entityMetric.(string)
-		if isString && mType != metric.ATTRIBUTE {
-			continue
-		}
-
-		if !isString && mType == metric.ATTRIBUTE {
-			continue
-		}
-
+// EntityContains returns true if supplied entity has metric m with type _similar_ to mType, false otherwise.
+func EntityContains(e *integration.Entity, m string, mType metric.SourceType) bool {
+	// Wildcard metrics are ignored.
+	// TODO: Improve this and check matching glob patterns.
+	if strings.HasSuffix(m, "*") {
 		return true
 	}
 
-	return false
+	em := entityMetric(e, m)
+	if em == nil {
+		return false
+	}
+
+	// Check if metricType is an attribute but metric is not a string
+	_, isString := em.(string)
+
+	return (isString && mType == metric.ATTRIBUTE) || (!isString && mType != metric.ATTRIBUTE)
 }
