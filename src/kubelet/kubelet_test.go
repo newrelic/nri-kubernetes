@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
@@ -26,10 +28,10 @@ import (
 )
 
 func TestScraper(t *testing.T) {
-	commonMetricsToExclude := []string{"net.rxBytesPerSecond", "net.txBytesPerSecond", "net.errorsPerSecond"}
-	nodeMetricsToExclude := []string{"allocatableCpuCoresUtilization", "allocatableMemoryUtilization"}
+	networkMetrics := []string{"net.rxBytesPerSecond", "net.txBytesPerSecond", "net.errorsPerSecond"}
+	nodeUtilizationMetrics := []string{"allocatableCpuCoresUtilization", "allocatableMemoryUtilization"}
 
-	metricsToExcludeForPendingPods := []string{"memoryUsedBytes", "memoryWorkingSetBytes", "cpuUsedCores",
+	runningMetrics := []string{"memoryUsedBytes", "memoryWorkingSetBytes", "cpuUsedCores",
 		"fsAvailableBytes", "fsCapacityBytes", "fsUsedBytes", "fsUsedPercent", "fsInodesFree", "fsInodes",
 		"fsInodesUsed", "containerID", "containerImageID", "isReady", "podIP"}
 
@@ -40,24 +42,32 @@ func TestScraper(t *testing.T) {
 		"memoryRequestedBytes": {"requestedMemoryUtilization"},
 	}
 
+	limitsRequestedRegex := regexp.MustCompile("(Limit|Requested)(Cores|Bytes)")
+
 	// Create an asserter with the settings that are shared for all test scenarios.
 	asserter := asserter.New().
 		Using(metric.KubeletSpecs).
 		Excluding(
 			// Common metrics.
-			exclude.Metrics(commonMetricsToExclude...),
+			exclude.Metrics(networkMetrics...),
 			// Node metrics.
-			exclude.Exclude(exclude.Group("node"), exclude.Metrics(nodeMetricsToExclude...)),
+			exclude.Exclude(exclude.Group("node"), exclude.Metrics(nodeUtilizationMetrics...)),
 			// Exclude metrics that depend on limits when those limits are not set.
 			exclude.Exclude(exclude.Group("pod"), exclude.Dependent(utilizationDependencies)),
 			// Exclude metrics known to be missing for pods that are pending.
 			exclude.Exclude(
-				exclude.Group("pod"),
-				func(_ string, _ *definition.Spec, ent *integration.Entity) bool {
-					return len(ent.Metrics) > 0 && ent.Metrics[0].Metrics["status"] == "Waiting"
+				func(group string, _ *definition.Spec, ent *integration.Entity) bool {
+					if group == "pod" || group == "container" {
+						return len(ent.Metrics) > 0 && !strings.EqualFold(ent.Metrics[0].Metrics["status"].(string), "running")
+					}
+					return false
 				},
-				exclude.Metrics(metricsToExcludeForPendingPods...),
+				exclude.Metrics(runningMetrics...),
 			),
+			// Exclude limits/requested metrics for containers
+			func(group string, spec *definition.Spec, e *integration.Entity) bool {
+				return group == "container" && limitsRequestedRegex.MatchString(spec.Name)
+			},
 			// Optional metrics.
 			exclude.Optional(),
 		)
