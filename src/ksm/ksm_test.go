@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"k8s.io/client-go/kubernetes/fake"
 
@@ -70,6 +72,8 @@ func TestScraper(t *testing.T) {
 				K8s: fakeK8s,
 				KSM: ksmCli,
 			})
+
+			require.NoError(t, err)
 
 			i := testutil.NewIntegration(t)
 

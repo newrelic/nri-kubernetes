@@ -71,6 +71,8 @@ func TestScraper(t *testing.T) {
 
 			i := testutil.NewIntegration(t)
 
+			require.NoError(t, err)
+
 			err = scraper.Run(i)
 			if err != nil {
 				t.Fatalf("running scraper: %v", err)
