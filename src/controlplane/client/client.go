@@ -3,7 +3,6 @@ package client
 import (
 	"fmt"
 	"io"
-	"net/http"
 	"net/url"
 
 	"github.com/newrelic/infra-integrations-sdk/log"
@@ -59,18 +58,15 @@ func New(connector connector.Connector, opts ...OptionFunc) (*Client, error) {
 	return c, nil
 }
 
-func (c *Client) Get(urlPath string) (*http.Response, error) {
-	req, err := prometheus.NewRequest(c.endpoint.String())
-	if err != nil {
-		return nil, fmt.Errorf("creating request to: %q. Got error: %v ", c.endpoint.String(), err)
+// MetricFamiliesGetFunc returns a function that obtains metric families from a list of prometheus queries.
+// Notice that it does not satisfy prometheus.MetricFamiliesGetFunc, since the url path is injected by the connector
+func (c *Client) MetricFamiliesGetFunc() prometheus.FetchAndFilterMetricsFamilies {
+	return func(queries []prometheus.Query) ([]prometheus.MetricFamily, error) {
+		mFamily, err := prometheus.GetFilteredMetricFamilies(c.doer, c.endpoint.String(), queries, c.logger)
+		if err != nil {
+			return nil, fmt.Errorf("getting filtered metric families %q: %w", c.endpoint.String(), err)
+		}
+
+		return mFamily, nil
 	}
-
-	c.logger.Debugf("http request created with url: %q", req.URL.String())
-
-	resp, err := c.doer.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("getting response from: %q. Got error: %w ", req.URL.String(), err)
-	}
-
-	return resp, nil
 }

@@ -163,7 +163,7 @@ func handleResponseWithFilter(resp *http.Response, queries []Query) ([]MetricFam
 	return metrics, nil
 }
 
-// MetricFamiliesGetFunc is the interface satisfied by Client.
+// MetricFamiliesGetFunc is the interface satisfied by prometheus Client.
 // TODO: This whole flow is too convoluted, we should refactor and rename this.
 type MetricFamiliesGetFunc interface {
 	// MetricFamiliesGetFunc returns a prometheus.FilteredFetcher configured to get KSM metrics from and endpoint.

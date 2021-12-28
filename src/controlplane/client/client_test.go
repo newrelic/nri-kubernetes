@@ -23,8 +23,8 @@ func Test_Client(t *testing.T) {
 	t.Parallel()
 
 	timeout := time.Millisecond
-
-	server := testHTTPServer(t, &timeout)
+	hit := false
+	server := testHTTPServer(t, &timeout, &hit)
 
 	authenticator, err := authenticator.New(authenticator.Config{})
 	assert.NoError(t, err)
@@ -40,19 +40,21 @@ func Test_Client(t *testing.T) {
 	cpClient, err := client.New(c)
 	require.NoError(t, err)
 
+	familyGetter := cpClient.MetricFamiliesGetFunc()
+
 	// Scrapes prometheus endpoint
-	r, err := cpClient.Get("")
+	_, err = familyGetter(nil)
 	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, r.StatusCode)
+	require.Equal(t, true, hit)
 
 	timeout = timeout + connector.DefaultTimout
 
 	// Fails if timeout
-	_, err = cpClient.Get("")
+	_, err = familyGetter(nil)
 	require.Error(t, err)
 }
 
-func testHTTPServer(t *testing.T, sleepDuration *time.Duration) *httptest.Server {
+func testHTTPServer(t *testing.T, sleepDuration *time.Duration, hit *bool) *httptest.Server {
 	t.Helper()
 
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -61,6 +63,7 @@ func testHTTPServer(t *testing.T, sleepDuration *time.Duration) *httptest.Server
 		}
 
 		if r.URL.Path == prometheusPath {
+			*hit = true
 			w.WriteHeader(http.StatusOK)
 			return
 		}
