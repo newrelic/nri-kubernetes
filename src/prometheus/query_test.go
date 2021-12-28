@@ -16,7 +16,7 @@ type ksm struct {
 	nodeIP string
 }
 
-func (c *ksm) Get(path string) (*http.Response, error) {
+func (c *ksm) Get(_ string) (*http.Response, error) {
 	f, err := os.Open("testdata/metrics_plain.txt")
 	if err != nil {
 		return nil, err

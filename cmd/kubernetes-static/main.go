@@ -139,15 +139,6 @@ func main() {
 	fmt.Println()
 }
 
-func newBasicHTTPClient(url string) *basicHTTPClient {
-	return &basicHTTPClient{
-		url: url,
-		httpClient: http.Client{
-			Timeout: time.Minute * 10, // high for debugging purposes
-		},
-	}
-}
-
 type basicHTTPClient struct {
 	url        string
 	httpClient http.Client
