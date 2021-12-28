@@ -118,7 +118,7 @@ func main() {
 			c.KSM.Enabled, c.Kubelet.Enabled, c.ControlPlane.Enabled)
 
 		// TODO think carefully to the signature of this function
-		err := runScrapers(c, ksmScraper, kubeletScraper, controlplaneScraper, i, clients)
+		err := runScrapers(c, ksmScraper, kubeletScraper, controlplaneScraper, i)
 		if err != nil {
 			logger.Errorf("retrieving scraper data: %v", err)
 			os.Exit(exitLoop)
@@ -136,7 +136,7 @@ func main() {
 	}
 }
 
-func runScrapers(c *config.Config, ksmScraper *ksm.Scraper, kubeletScraper *kubelet.Scraper, controlplaneScraper *controlplane.Scraper, i *integration.Integration, clients *clusterClients) error {
+func runScrapers(c *config.Config, ksmScraper *ksm.Scraper, kubeletScraper *kubelet.Scraper, controlplaneScraper *controlplane.Scraper, i *integration.Integration) error {
 	if c.KSM.Enabled {
 		err := ksmScraper.Run(i)
 		if err != nil {
@@ -232,7 +232,7 @@ func buildClients(c *config.Config) (*clusterClients, error) {
 	}
 
 	var kubeletCli *kubeletClient.Client
-	if c.Kubelet.Enabled || c.ControlPlane.Enabled {
+	if c.Kubelet.Enabled {
 		kubeletCli, err = kubeletClient.New(kubeletClient.DefaultConnector(k8s, c, k8sConfig, logger), kubeletClient.WithLogger(logger))
 		if err != nil {
 			return nil, fmt.Errorf("building Kubelet client: %w", err)
