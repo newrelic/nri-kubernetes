@@ -76,7 +76,7 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 	s.informerClosers = append(s.informerClosers, nodeCloser)
 
 	//TODO we can add a cache and retrieve the data more frequently if we notice this value can change often
-	s.defaultNetworkInterface, err = network.DefaultInterface(config.NetworkRouteFile)
+	s.defaultNetworkInterface, err = network.DefaultInterface(config.Kubelet.NetworkRouteFile)
 	if err != nil {
 		s.logger.Warnf("Error finding default network interface: %v", err)
 	}
