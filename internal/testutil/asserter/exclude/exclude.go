@@ -34,10 +34,16 @@ func Optional() Func {
 	}
 }
 
-// Group returns an Func that will exclude a metric if group matches the supplied group.
-func Group(group string) Func {
+// Groups returns an Func that will exclude a metric if group matches the supplied group.
+func Groups(groups ...string) Func {
 	return func(g string, spec *definition.Spec, ent *integration.Entity) bool {
-		return g == group
+		for _, group := range groups {
+			if g == group {
+				return true
+			}
+		}
+
+		return false
 	}
 }
 
@@ -55,7 +61,7 @@ func Metrics(metricNames ...string) Func {
 }
 
 // MetricsGroup returns an Func that excludes the specified metric names belonging for the specified group.
-// Deprecated: Use Exclude(Group("group"), Metrics("...")) instead.
+// Deprecated: Use Exclude(Groups("group"), Metrics("...")) instead.
 func MetricsGroup(group string, metricNames ...string) Func {
 	return func(g string, spec *definition.Spec, ent *integration.Entity) bool {
 		for _, m := range metricNames {
