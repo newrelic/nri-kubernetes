@@ -6,6 +6,8 @@ import (
 	"net"
 	"os"
 	"path"
+	"runtime"
+	"strings"
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
@@ -30,11 +32,19 @@ import (
 var logger log.Logger
 
 const (
+	integrationName = "com.newrelic.kubernetes"
+
 	_ = iota
 	exitClients
 	exitIntegration
 	exitLoop
 	exitSetup
+)
+
+var (
+	integrationVersion = "0.0.0"
+	gitCommit          = ""
+	buildDate          = ""
 )
 
 type clusterClients struct {
@@ -58,6 +68,15 @@ func main() {
 		logger.Errorf("creating integration with http sink: %w", err)
 		os.Exit(exitIntegration)
 	}
+
+	logger.Debugf(
+		"New Relic %s integration Version: %s, Platform: %s, GoVersion: %s, GitCommit: %s, BuildDate: %s\n",
+		strings.Title(strings.Replace(integrationName, "com.newrelic.", "", 1)),
+		integrationVersion,
+		fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
+		runtime.Version(),
+		gitCommit,
+		buildDate)
 
 	clients, err := buildClients(c)
 	if err != nil {
@@ -251,7 +270,7 @@ func createIntegrationWithHTTPSink(httpServerPort string) (*integration.Integrat
 		return nil, fmt.Errorf("creating HTTPSink: %w", err)
 	}
 
-	return integration.New("com.newrelic.kubernetes", "test-ksm", integration.Writer(h))
+	return integration.New(integrationName, integrationVersion, integration.Writer(h))
 }
 
 func getK8sConfig(c *config.Config) (*rest.Config, error) {
