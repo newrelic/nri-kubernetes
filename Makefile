@@ -12,10 +12,12 @@ GOOS ?=
 GOARCH ?=
 CGO_ENABLED ?= 0
 
+BUILD_DATE := $(shell date)
+COMMIT := $(shell git rev-parse HEAD)
 TAG ?= dev
 COMMIT ?= $(shell git rev-parse HEAD || echo "unknown")
 
-LDFLAGS ?= -ldflags="-X 'main.integrationVersion=$(TAG)' -X 'main.integrationCommitHash=$(COMMIT)'"
+LDFLAGS ?= -ldflags="-X 'main.integrationVersion=$(TAG)' -X 'main.gitCommit=$(COMMIT)' -X 'main.buildDate=$(BUILD_DATE)' "
 
 ifneq ($(strip $(GOOS)), )
 BINARY_NAME := $(BINARY_NAME)-$(GOOS)
