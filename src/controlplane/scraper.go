@@ -207,7 +207,7 @@ func (s *Scraper) externalEndpoint(c component) (*scrape.Job, error) {
 	// Entity key will be concatenated with host info (agent replace 'localhost' for hostname even in fw mode)
 	// example of etcd configured static (http://localhost:2381) entity key:'k8s:e2e-test:controlplane:etcd:minikube:2381'
 	grouper := grouper.New(
-		client,
+		client.MetricFamiliesGetFunc(),
 		c.Queries,
 		s.logger,
 		u.Host,
@@ -253,7 +253,7 @@ func (s *Scraper) autodiscover(c component) (*scrape.Job, error) {
 		}
 
 		grouper := grouper.New(
-			client,
+			client.MetricFamiliesGetFunc(),
 			c.Queries,
 			s.logger,
 			pod.Name,
