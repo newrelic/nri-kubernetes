@@ -128,16 +128,6 @@ func valueFromPrometheus(metricType model.MetricType, metric *model.Metric) Valu
 	}
 }
 
-// Do is the main entry point. It runs queries against the Prometheus metrics provided by the endpoint.
-func Do(c client.HTTPGetter, endpoint string, queries []Query) ([]MetricFamily, error) {
-	resp, err := c.Get(endpoint)
-	if err != nil {
-		return nil, fmt.Errorf("fetching metrics from %q: %w", endpoint, err)
-	}
-
-	return handleResponseWithFilter(resp, queries)
-}
-
 func handleResponseWithFilter(resp *http.Response, queries []Query) ([]MetricFamily, error) {
 	if resp == nil {
 		return nil, fmt.Errorf("response cannot be nil")
