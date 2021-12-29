@@ -80,7 +80,7 @@ func Dependent(dependencies map[string][]string) Func {
 	return func(group string, spec *definition.Spec, ent *integration.Entity) bool {
 		for parent, children := range dependencies {
 			for _, ms := range ent.Metrics {
-				if _, hasParent := ms.Metrics[parent]; !hasParent {
+				if _, hasParent := ms.Metrics[parent]; hasParent {
 					continue
 				}
 
