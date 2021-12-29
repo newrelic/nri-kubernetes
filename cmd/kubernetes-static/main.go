@@ -9,7 +9,6 @@ import (
 
 	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
 	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes/fake"
@@ -45,26 +44,26 @@ func main() {
 		testData = testutil.Version(envVersion)
 	}
 
+	logger := log.StandardLogger()
+	if args.Verbose {
+		logger.SetLevel(log.DebugLevel)
+	}
+
 	testServer, err := testData.Server()
 	if err != nil {
-		logrus.Fatalf("Error building testserver: %v", err)
+		logger.Fatalf("Error building testserver: %v", err)
 	}
 
 	k8sData, err := testutil.LatestVersion().K8s()
 	if err != nil {
-		logrus.Fatalf("error instantiating fake k8s objects: %v", err)
+		logger.Fatalf("error instantiating fake k8s objects: %v", err)
 	}
 
 	fakeK8s := fake.NewSimpleClientset(k8sData.Everything()...)
 
 	i, err := integration.New(integrationName, integrationVersion, integration.Args(&args))
 	if err != nil {
-		logrus.Fatal(err)
-	}
-
-	logger := logrus.StandardLogger()
-	if args.Verbose {
-		logger.SetLevel(logrus.DebugLevel)
+		logger.Fatal(err)
 	}
 
 	nodeGetter, closeChan := discovery.NewNodeLister(fakeK8s)
@@ -72,13 +71,13 @@ func main() {
 
 	u, err := url.Parse(testServer.KubeletEndpoint())
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	// Kubelet
 	kubeletClient, err := kubletClient.New(kubletClient.StaticConnector(&http.Client{Timeout: time.Minute * 10}, *u))
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	podsFetcher := kubeletmetric.NewPodsFetcher(logger, kubeletClient)
@@ -93,12 +92,12 @@ func main() {
 			DefaultNetworkInterface: "ens5",
 		}, kubeletGrouper.WithLogger(logger))
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	kc, err := ksmClient.New(ksmClient.WithLogger(logger))
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	fakeLister, _ := discovery.NewServicesLister(fakeK8s)
@@ -108,7 +107,7 @@ func main() {
 		ServicesLister:       fakeLister,
 	}, ksmGrouper.WithLogger(logger))
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	jobs := []*scrape.Job{
@@ -122,21 +121,21 @@ func main() {
 
 	for _, job := range jobs {
 
-		logrus.Infof("Starting job: %s", job.Name)
+		logger.Infof("Starting job: %s", job.Name)
 
 		result := job.Populate(i, "test-cluster", logger, k8sVersion)
 
 		if result.Populated {
-			logrus.Infof("Successfully populated job: %s", job.Name)
+			logger.Infof("Successfully populated job: %s", job.Name)
 		}
 
 		if len(result.Errors) > 0 {
-			logrus.Warningf("Job %s ran with errors: %s", job.Name, result.Error())
+			logger.Warningf("Job %s ran with errors: %s", job.Name, result.Error())
 		}
 	}
 
 	if err := i.Publish(); err != nil {
-		logrus.Fatalf("Error while publishing: %v", err)
+		logger.Fatalf("Error while publishing: %v", err)
 	}
 
 	fmt.Println()
