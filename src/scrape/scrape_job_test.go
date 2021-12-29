@@ -11,7 +11,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/data/event"
 	"github.com/newrelic/infra-integrations-sdk/data/inventory"
 	sdkMetric "github.com/newrelic/infra-integrations-sdk/data/metric"
-	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/stretchr/testify/assert"
@@ -163,7 +163,7 @@ func TestPopulateK8s(t *testing.T) {
 	testJob := NewScrapeJob("test", &testGrouper{}, kubeletSpecs)
 
 	k8sVersion := &version.Info{GitVersion: "v1.15.42"}
-	err = testJob.Populate(intgr, "test-cluster", log.NewStdErr(true), k8sVersion)
+	err = testJob.Populate(intgr, "test-cluster", logutil.Debug, k8sVersion)
 	require.IsType(t, err, data.PopulateResult{})
 	assert.Empty(t, err.(data.PopulateResult).Errors)
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
@@ -165,7 +164,7 @@ func Test_Discoverer_fails(t *testing.T) {
 				Namespaces: []string{"foo"},
 			},
 		)
-		pd, err := discoverer.New(discoverer.Config{PodListerer: pl}, discoverer.WithLogger(log.Discard))
+		pd, err := discoverer.New(discoverer.Config{PodListerer: pl})
 		require.NoError(t, err)
 
 		_, err = pd.Discover(config.AutodiscoverControlPlane{

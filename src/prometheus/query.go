@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
 	model "github.com/prometheus/client_model/go"
 	"github.com/prometheus/prom2json"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 )
@@ -173,7 +173,7 @@ type MetricFamiliesGetFunc interface {
 
 type FetchAndFilterMetricsFamilies func([]Query) ([]MetricFamily, error)
 
-func GetFilteredMetricFamilies(httpClient client.HTTPDoer, url string, queries []Query, logger log.Logger) ([]MetricFamily, error) {
+func GetFilteredMetricFamilies(httpClient client.HTTPDoer, url string, queries []Query, logger *log.Logger) ([]MetricFamily, error) {
 	logger.Debugf("Calling a prometheus endpoint: %s", url)
 
 	// todo it would be nice to have context with deadline
