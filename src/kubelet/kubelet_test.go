@@ -161,6 +161,7 @@ func kubeletExclusions() []exclude.Func {
 		// Fair scheduler metrics are not present sometimes.
 		// TODO: Investigate further why.
 		exclude.Exclude(
+			exclude.Groups("container"),
 			func(_ string, spec *definition.Spec, _ *integration.Entity) bool {
 				return strings.HasPrefix(spec.Name, "containerCpuCfs")
 			},
