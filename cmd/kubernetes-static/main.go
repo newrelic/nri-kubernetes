@@ -57,7 +57,7 @@ func main() {
 
 	fakeK8s := fake.NewSimpleClientset(k8sData.Everything()...)
 
-	i, err := integration.New(integrationName, integrationVersion, integration.Args(&args))
+	i, err := integration.New(integrationName, integrationVersion, integration.Args(&args), integration.InMemoryStore())
 	if err != nil {
 		logrus.Fatal(err)
 	}
