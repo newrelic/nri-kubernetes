@@ -10,11 +10,11 @@ import (
 
 // Func is a function that returns true if a particular metric (spec) should be excluded from being asserted on
 // ent.
-// If an Func returns true for a given group, metric (spec) and entity, Asserter will not fail even if the metric
+// If a Func returns true for a given group, metric (spec) and entity, Asserter will not fail even if the metric
 // is not found.
 type Func func(group string, spec *definition.Spec, ent *integration.Entity) bool
 
-// Exclude returns an Func that returns true if all the supplied ExcludeFuncs return true.
+// Exclude returns a Func that returns true if all the supplied ExcludeFuncs return true.
 // Input ExcludeFuncs are evaluated in order, so this function makes easy to compose exclusion rules.
 func Exclude(funcs ...Func) Func {
 	return func(group string, spec *definition.Spec, ent *integration.Entity) bool {
@@ -27,14 +27,14 @@ func Exclude(funcs ...Func) Func {
 	}
 }
 
-// Optional returns an Func that excludes metrics marked as Optional.
+// Optional returns a Func that excludes metrics marked as Optional.
 func Optional() Func {
 	return func(group string, spec *definition.Spec, ent *integration.Entity) bool {
 		return spec.Optional
 	}
 }
 
-// Groups returns an Func that will exclude a metric if group matches the supplied group.
+// Groups returns a Func that will exclude a metric if group matches the supplied group.
 func Groups(groups ...string) Func {
 	return func(g string, spec *definition.Spec, ent *integration.Entity) bool {
 		for _, group := range groups {
@@ -47,7 +47,7 @@ func Groups(groups ...string) Func {
 	}
 }
 
-// Metrics returns an Func that excludes the specified metric names.
+// Metrics returns a Func that excludes the specified metric names.
 func Metrics(metricNames ...string) Func {
 	return func(g string, spec *definition.Spec, ent *integration.Entity) bool {
 		for _, m := range metricNames {
@@ -60,7 +60,7 @@ func Metrics(metricNames ...string) Func {
 	}
 }
 
-// MetricsGroup returns an Func that excludes the specified metric names belonging for the specified group.
+// MetricsGroup returns a Func that excludes the specified metric names belonging for the specified group.
 // Deprecated: Use Exclude(Groups("group"), Metrics("...")) instead.
 func MetricsGroup(group string, metricNames ...string) Func {
 	return func(g string, spec *definition.Spec, ent *integration.Entity) bool {
