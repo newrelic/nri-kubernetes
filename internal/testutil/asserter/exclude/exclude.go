@@ -60,20 +60,6 @@ func Metrics(metricNames ...string) Func {
 	}
 }
 
-// MetricsGroup returns a Func that excludes the specified metric names belonging for the specified group.
-// Deprecated: Use Exclude(Groups("group"), Metrics("...")) instead.
-func MetricsGroup(group string, metricNames ...string) Func {
-	return func(g string, spec *definition.Spec, ent *integration.Entity) bool {
-		for _, m := range metricNames {
-			if g == group && spec.Name == m {
-				return true
-			}
-		}
-
-		return false
-	}
-}
-
 // Dependent receives a map between a metric name and other metric names that depend on it, and returns an
 // Func that will exclude the dependencies if the dependent is not present.
 func Dependent(dependencies map[string][]string) Func {

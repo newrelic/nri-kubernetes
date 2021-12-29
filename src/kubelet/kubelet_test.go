@@ -34,8 +34,14 @@ func TestScraper(t *testing.T) {
 	asserter := asserter.New().
 		Using(metric.KubeletSpecs).
 		Excluding(
-			exclude.MetricsGroup("pod", commonMetricsToExclude...),
-			exclude.MetricsGroup("node", nodeMetricsToExclude...),
+			exclude.Exclude(
+				exclude.Groups("pod"),
+				exclude.Metrics(commonMetricsToExclude...),
+			),
+			exclude.Exclude(
+				exclude.Groups("node"),
+				exclude.Metrics(nodeMetricsToExclude...),
+			),
 			exclude.Optional(),
 			ExcludeMissingMetricsPendingPod,
 		)
