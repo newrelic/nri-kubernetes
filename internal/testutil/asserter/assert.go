@@ -98,7 +98,7 @@ func (a Asserter) Assert(t *testing.T) {
 
 		for _, spec := range group.Specs {
 			for _, entity := range entities {
-				if EntityContains(entity, spec.Name, spec.Type) {
+				if EntityMetricTypeIs(entity, spec.Name, spec.Type) {
 					continue
 				}
 
@@ -153,41 +153,41 @@ func entitiesFor(entities []*integration.Entity, pseudotype string) []*integrati
 // entityMetric is a helper function that returns the first metric from an entity that matches the given name.
 func entityMetric(e *integration.Entity, m string) interface{} {
 	for _, ms := range e.Metrics {
-		entityMetric, found := ms.Metrics[m]
-		if found {
-			return entityMetric
+		if entMetric, found := ms.Metrics[m]; found {
+			return entMetric
 		}
 	}
 
 	return nil
 }
 
-// EntityHas returns true if the specified entity has a metric of name m equal to value.
-func EntityHas(e *integration.Entity, m string, value interface{}) bool {
+// EntityMetricIs returns true if the specified entity has a metric named metricName equal to metricValue.
+func EntityMetricIs(e *integration.Entity, metricName string, metricValue interface{}) bool {
 	// Wildcard metrics are ignored.
 	// TODO: Improve this and check matching glob patterns.
-	if strings.HasSuffix(m, "*") {
+	if strings.HasSuffix(metricName, "*") {
 		return true
 	}
 
-	return entityMetric(e, m) == value
+	return entityMetric(e, metricName) == metricValue
 }
 
-// EntityContains returns true if supplied entity has metric m with type _similar_ to mType, false otherwise.
-func EntityContains(e *integration.Entity, m string, mType metric.SourceType) bool {
+// EntityMetricTypeIs returns true if supplied entity has metric named metricName with type _similar_ to metricType.
+func EntityMetricTypeIs(e *integration.Entity, metricName string, metricType metric.SourceType) bool {
 	// Wildcard metrics are ignored.
 	// TODO: Improve this and check matching glob patterns.
-	if strings.HasSuffix(m, "*") {
+	if strings.HasSuffix(metricName, "*") {
 		return true
 	}
 
-	em := entityMetric(e, m)
+	em := entityMetric(e, metricName)
 	if em == nil {
 		return false
 	}
 
-	// Check if metricType is an attribute but metric is not a string
 	_, isString := em.(string)
 
-	return (isString && mType == metric.ATTRIBUTE) || (!isString && mType != metric.ATTRIBUTE)
+	// Return true if metric is a string and metricType is metric.ATTRIBUTE, or
+	// if metric type is not a string and metricType is anything other than metric.ATTRIBUTE.
+	return (isString && metricType == metric.ATTRIBUTE) || (!isString && metricType != metric.ATTRIBUTE)
 }
