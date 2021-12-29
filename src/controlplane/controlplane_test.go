@@ -18,6 +18,8 @@ import (
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
+	"github.com/newrelic/nri-kubernetes/v2/internal/testutil/asserter"
+	"github.com/newrelic/nri-kubernetes/v2/internal/testutil/asserter/exclude"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
@@ -46,13 +48,22 @@ func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 	controlPlaneSpecs["scheduler"] = metric.SchedulerSpecs["scheduler"]
 	controlPlaneSpecs["api-server"] = metric.APIServerSpecs["api-server"]
 
-	asserter := testutil.NewAsserter().
+	asserter := asserter.New().
 		Using(controlPlaneSpecs).
 		Excluding(
 			ExcludeRenamedMetricsBasedOnLabels,
-			testutil.ExcludeMetrics("controller-manager", excludeCM...),
-			testutil.ExcludeMetrics("etcd", excludeETCD...),
-			testutil.ExcludeMetrics("scheduler", excludeS...),
+			exclude.Exclude(
+				exclude.Groups("controller-manager"),
+				exclude.Metrics(excludeCM...),
+			),
+			exclude.Exclude(
+				exclude.Groups("etcd"),
+				exclude.Metrics(excludeETCD...),
+			),
+			exclude.Exclude(
+				exclude.Groups("scheduler"),
+				exclude.Metrics(excludeS...),
+			),
 		)
 
 	for _, v := range testutil.AllVersions() {
@@ -101,11 +112,14 @@ func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 func Test_Scraper_Autodiscover_cp_component_after_start(t *testing.T) {
 	t.Parallel()
 
-	asserter := testutil.NewAsserter().
+	asserter := asserter.New().
 		Using(metric.SchedulerSpecs).
 		Excluding(
 			ExcludeRenamedMetricsBasedOnLabels,
-			testutil.ExcludeMetrics("scheduler", excludeS...),
+			exclude.Exclude(
+				exclude.Groups("scheduler"),
+				exclude.Metrics(excludeS...),
+			),
 		)
 
 	testServer, err := testutil.LatestVersion().Server()
@@ -166,11 +180,14 @@ func Test_Scraper_Autodiscover_cp_component_after_start(t *testing.T) {
 func Test_Scraper_external_endpoint(t *testing.T) {
 	t.Parallel()
 
-	asserter := testutil.NewAsserter().
+	asserter := asserter.New().
 		Using(metric.SchedulerSpecs).
 		Excluding(
 			ExcludeRenamedMetricsBasedOnLabels,
-			testutil.ExcludeMetrics("scheduler", excludeS...),
+			exclude.Exclude(
+				exclude.Groups("scheduler"),
+				exclude.Metrics(excludeS...),
+			),
 		)
 
 	testServer, err := testutil.LatestVersion().Server()
