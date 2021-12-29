@@ -36,7 +36,7 @@ func TestScraper(t *testing.T) {
 	// Pods and containers that are not in a running state will not have these metrics.
 	notRunningMetrics := []string{"memoryUsedBytes", "memoryWorkingSetBytes", "cpuUsedCores",
 		"fsAvailableBytes", "fsCapacityBytes", "fsUsedBytes", "fsUsedPercent", "fsInodesFree", "fsInodes",
-		"fsInodesUsed", "containerID", "containerImageID", "isReady", "podIP"}
+		"fsInodesUsed", "containerMemoryMappedFileBytes", "containerID", "containerImageID", "isReady", "podIP"}
 
 	// Utilization metrics will not be present if the corresponding limit/request is not present.
 	utilizationDependencies := map[string][]string{
@@ -50,6 +50,7 @@ func TestScraper(t *testing.T) {
 
 	// Create an asserter with the settings that are shared for all test scenarios.
 	asserter := asserter.New().
+		Silently().
 		Using(metric.KubeletSpecs).
 		Excluding(
 			// Network metrics
