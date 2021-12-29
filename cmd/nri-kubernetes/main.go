@@ -114,6 +114,8 @@ func main() {
 	}
 
 	for {
+		start := time.Now()
+
 		logger.Debugf("scraping data from all the scrapers defined: KSM: %t, Kubelet: %t, ControlPlane: %t",
 			c.KSM.Enabled, c.Kubelet.Enabled, c.ControlPlane.Enabled)
 
@@ -132,7 +134,9 @@ func main() {
 		}
 
 		logger.Debugf("waiting %f seconds for next interval", c.Interval.Seconds())
-		time.Sleep(c.Interval)
+
+		// Sleep interval minus the time that took to scrape.
+		time.Sleep(c.Interval - time.Since(start))
 	}
 }
 
