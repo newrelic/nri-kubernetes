@@ -20,7 +20,13 @@ jobs:
     env:
       DOCKER_BUILDKIT: '1' # Setting DOCKER_BUILDKIT=1 ensures TARGETOS and TARGETARCH are populated
     steps:
+      # TODO get rid of this as soon as the chart is merged
       - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
+        with:
+          repository: newrelic/helm-charts
+          ref: "newrelic-infrastructure-beta"
+          path: tmp
       - uses: actions/setup-go@v2
         with:
           go-version: '1.17'
@@ -54,7 +60,6 @@ jobs:
           helm repo add newrelic https://helm-charts.newrelic.com
           helm repo add kube-state-metrics https://kubernetes.github.io/kube-state-metrics
           helm repo update
-          helm dependency update ./e2e/charts/e2e-resources
       - name: Run e2e-test
         uses: newrelic/newrelic-integration-e2e-action@v1
         with:
