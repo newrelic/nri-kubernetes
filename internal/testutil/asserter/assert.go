@@ -1,4 +1,4 @@
-package testutil
+package asserter
 
 import (
 	"strings"
@@ -7,34 +7,9 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 
+	"github.com/newrelic/nri-kubernetes/v2/internal/testutil/asserter/exclude"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 )
-
-// ExcludeFunc is a function that returns true if a particular metric (spec) should be excluded from being asserted on
-// ent.
-// If an ExcludeFunc returns true for a given group, metric (spec) and entity, Asserter will not fail even if the metric
-// is not found.
-type ExcludeFunc func(group string, spec *definition.Spec, ent *integration.Entity) bool
-
-// ExcludeOptional returns an ExcludeFunc that excludes metrics marked as Optional.
-func ExcludeOptional() ExcludeFunc {
-	return func(group string, spec *definition.Spec, ent *integration.Entity) bool {
-		return spec.Optional
-	}
-}
-
-// ExcludeMetrics returns an ExcludeFunc that excludes the specified metric names belonging for the specified group.
-func ExcludeMetrics(group string, metricNames ...string) ExcludeFunc {
-	return func(g string, spec *definition.Spec, ent *integration.Entity) bool {
-		for _, m := range metricNames {
-			if g == group && spec.Name == m {
-				return true
-			}
-		}
-
-		return false
-	}
-}
 
 // Asserter is a helper for checking whether an integration contains all the metrics defined in a specGroup.
 // It provides a chainable API, with each call returning a copy of the asserter. This way, successive calls to the
@@ -44,12 +19,12 @@ type Asserter struct {
 	entities       []*integration.Entity
 	specGroups     definition.SpecGroups
 	excludedGroups []string
-	exclude        []ExcludeFunc
+	exclude        []exclude.Func
 	silent         bool
 }
 
-// NewAsserter returns an empty asserter.
-func NewAsserter() Asserter {
+// New returns an empty asserter.
+func New() Asserter {
 	return Asserter{}
 }
 
@@ -65,12 +40,12 @@ func (a Asserter) On(entities []*integration.Entity) Asserter {
 	return a
 }
 
-// Excluding returns an asserter that will not fail for a missing metric for which any of the supplied ExcludeFunc
+// Excluding returns an asserter that will not fail for a missing metric for which any of the supplied Func
 // return true.
 // For ignoring whole spec groups, use ExcludingGroups instead.
 // Missing metrics are still logged, unless Silently is used.
-func (a Asserter) Excluding(excludeFuncs ...ExcludeFunc) Asserter {
-	exclude := make([]ExcludeFunc, len(a.exclude)+len(excludeFuncs))
+func (a Asserter) Excluding(excludeFuncs ...exclude.Func) Asserter {
+	exclude := make([]exclude.Func, len(a.exclude)+len(excludeFuncs))
 	copy(exclude, a.exclude)
 
 	a.exclude = append(a.exclude, excludeFuncs...)
@@ -99,7 +74,7 @@ func (a Asserter) Silently() Asserter {
 // Assert checks whether all metrics defined in the supplied groups are present, and fails the test if any is not.
 // Assert will fail the test if:
 // - No entity at all exists with a type matching a specGroup, unless this specGroup is ignored using ExcludingGroups.
-// - Any entity whose type matches a specGroup lacks any metric defined in the specGroup, unless any ExcludeFunc returns
+// - Any entity whose type matches a specGroup lacks any metric defined in the specGroup, unless any Func returns
 //   true for that particular groupName, metric, and entity.
 func (a Asserter) Assert(t *testing.T) {
 	t.Helper()
@@ -123,7 +98,7 @@ func (a Asserter) Assert(t *testing.T) {
 
 		for _, spec := range group.Specs {
 			for _, entity := range entities {
-				if entityHas(entity, spec.Name, spec.Type) {
+				if EntityMetricTypeIs(entity, spec.Name, spec.Type) {
 					continue
 				}
 
@@ -141,7 +116,7 @@ func (a Asserter) Assert(t *testing.T) {
 	}
 }
 
-// shouldExclude checks all configured ExcludeFunc in the asserter and returns true if any of them return true.
+// shouldExclude checks all configured Func in the asserter and returns true if any of them return true.
 func (a *Asserter) shouldExclude(group string, spec *definition.Spec, ent *integration.Entity) bool {
 	for _, exclusion := range a.exclude {
 		if exclusion(group, spec, ent) {
@@ -175,32 +150,44 @@ func entitiesFor(entities []*integration.Entity, pseudotype string) []*integrati
 	return appropriateEntities
 }
 
-// entityHas returns true if supplied entity has metric m with type _similar_ to mType, false otherwise.
-func entityHas(e *integration.Entity, m string, mType metric.SourceType) bool {
+// entityMetric is a helper function that returns the first metric from an entity that matches the given name.
+func entityMetric(e *integration.Entity, m string) interface{} {
+	for _, ms := range e.Metrics {
+		if entMetric, found := ms.Metrics[m]; found {
+			return entMetric
+		}
+	}
+
+	return nil
+}
+
+// EntityMetricIs returns true if the specified entity has a metric named metricName equal to metricValue.
+func EntityMetricIs(e *integration.Entity, metricName string, metricValue interface{}) bool {
 	// Wildcard metrics are ignored.
 	// TODO: Improve this and check matching glob patterns.
-	if strings.HasSuffix(m, "*") {
+	if strings.HasSuffix(metricName, "*") {
 		return true
 	}
 
-	for _, ms := range e.Metrics {
-		entityMetric, found := ms.Metrics[m]
-		if !found {
-			continue
-		}
+	return entityMetric(e, metricName) == metricValue
+}
 
-		// Check if metricType is an attribute but metric is not a string
-		_, isString := entityMetric.(string)
-		if isString && mType != metric.ATTRIBUTE {
-			continue
-		}
-
-		if !isString && mType == metric.ATTRIBUTE {
-			continue
-		}
-
+// EntityMetricTypeIs returns true if supplied entity has metric named metricName with type _similar_ to metricType.
+func EntityMetricTypeIs(e *integration.Entity, metricName string, metricType metric.SourceType) bool {
+	// Wildcard metrics are ignored.
+	// TODO: Improve this and check matching glob patterns.
+	if strings.HasSuffix(metricName, "*") {
 		return true
 	}
 
-	return false
+	em := entityMetric(e, metricName)
+	if em == nil {
+		return false
+	}
+
+	_, isString := em.(string)
+
+	// Return true if metric is a string and metricType is metric.ATTRIBUTE, or
+	// if metric type is not a string and metricType is anything other than metric.ATTRIBUTE.
+	return (isString && metricType == metric.ATTRIBUTE) || (!isString && metricType != metric.ATTRIBUTE)
 }
