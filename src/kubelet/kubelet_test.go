@@ -125,7 +125,7 @@ func kubeletExclusions() []exclude.Func {
 		exclude.Exclude(
 			exclude.Groups("pod"),
 			func(_ string, _ *definition.Spec, ent *integration.Entity) bool {
-				return asserter.EntityHas(ent, "namespace", "kube-system")
+				return asserter.EntityMetricIs(ent, "namespace", "kube-system")
 			},
 			exclude.Metrics("createdAt", "createdBy", "createdKind", "deploymentName"),
 		),
@@ -134,7 +134,7 @@ func kubeletExclusions() []exclude.Func {
 		exclude.Exclude(
 			exclude.Groups("pod", "container"),
 			func(_ string, _ *definition.Spec, ent *integration.Entity) bool {
-				return !asserter.EntityHas(ent, "createdKind", "deployment")
+				return !asserter.EntityMetricIs(ent, "createdKind", "deployment")
 			},
 			exclude.Metrics("createdAt", "createdBy", "createdKind", "deploymentName"),
 		),
@@ -143,7 +143,7 @@ func kubeletExclusions() []exclude.Func {
 		exclude.Exclude(
 			exclude.Groups("pod", "container"),
 			func(group string, _ *definition.Spec, ent *integration.Entity) bool {
-				return !asserter.EntityHas(ent, "status", "running")
+				return !asserter.EntityMetricIs(ent, "status", "running")
 			},
 			exclude.Metrics(notRunningMetrics...),
 		),
@@ -152,8 +152,8 @@ func kubeletExclusions() []exclude.Func {
 		exclude.Exclude(
 			exclude.Groups("pod", "container"),
 			func(_ string, _ *definition.Spec, ent *integration.Entity) bool {
-				return !asserter.EntityHas(ent, "status", "pending") &&
-					!asserter.EntityHas(ent, "status", "terminated")
+				return !asserter.EntityMetricIs(ent, "status", "pending") &&
+					!asserter.EntityMetricIs(ent, "status", "terminated")
 			},
 			exclude.Metrics("reason", "message"),
 		),
