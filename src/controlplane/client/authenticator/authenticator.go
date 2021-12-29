@@ -5,7 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
+	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/transport"
 
@@ -33,7 +34,7 @@ type Config struct {
 type OptionFunc func(kca *K8sClientAuthenticator) error
 
 // WithLogger returns an OptionFunc to change the logger from the default noop logger.
-func WithLogger(logger log.Logger) OptionFunc {
+func WithLogger(logger *log.Logger) OptionFunc {
 	return func(kca *K8sClientAuthenticator) error {
 		kca.logger = logger
 		return nil
@@ -42,13 +43,13 @@ func WithLogger(logger log.Logger) OptionFunc {
 
 type K8sClientAuthenticator struct {
 	Config
-	logger log.Logger
+	logger *log.Logger
 }
 
 // New returns an K8sClientAuthenticator that supports plain, bearer token and mTLS.
 func New(config Config, opts ...OptionFunc) (*K8sClientAuthenticator, error) {
 	kca := &K8sClientAuthenticator{
-		logger: log.Discard,
+		logger: logutil.Discard,
 		Config: config,
 	}
 

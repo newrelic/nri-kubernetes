@@ -9,8 +9,8 @@ import (
 
 	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
 	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes/fake"
 
@@ -62,7 +62,10 @@ func main() {
 		logrus.Fatal(err)
 	}
 
-	logger := log.NewStdErr(args.Verbose)
+	logger := logrus.StandardLogger()
+	if args.Verbose {
+		logger.SetLevel(logrus.DebugLevel)
+	}
 
 	nodeGetter, closeChan := discovery.NewNodeLister(fakeK8s)
 	defer close(closeChan)
@@ -93,7 +96,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	kc, err := ksmClient.New(ksmClient.WithLogger(log.New(true, os.Stderr)))
+	kc, err := ksmClient.New(ksmClient.WithLogger(logger))
 	if err != nil {
 		log.Fatal(err)
 	}

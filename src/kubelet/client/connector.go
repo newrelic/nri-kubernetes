@@ -9,8 +9,8 @@ import (
 	"net/url"
 	"path"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
+	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -32,14 +32,14 @@ type Connector interface {
 
 type defaultConnector struct {
 	// TODO: Use a non-sdk logger
-	logger          log.Logger
+	logger          *log.Logger
 	kc              kubernetes.Interface
 	inClusterConfig *rest.Config
 	config          *config.Config
 }
 
 // DefaultConnector returns a defaultConnector that checks connection against local kubelet and api proxy.
-func DefaultConnector(kc kubernetes.Interface, config *config.Config, inClusterConfig *rest.Config, logger log.Logger) Connector {
+func DefaultConnector(kc kubernetes.Interface, config *config.Config, inClusterConfig *rest.Config, logger *log.Logger) Connector {
 	return &defaultConnector{
 		logger:          logger,
 		inClusterConfig: inClusterConfig,
