@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
 	"github.com/sethgrid/pester"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
@@ -30,8 +29,6 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/sink"
 )
 
-var logger = logutil.Debug
-
 const (
 	integrationName = "com.newrelic.kubernetes"
 
@@ -48,6 +45,8 @@ var (
 	buildDate          = ""
 )
 
+var logger *log.Logger
+
 type clusterClients struct {
 	k8s      kubernetes.Interface
 	ksm      prometheus.MetricFamiliesGetFunc
@@ -56,10 +55,16 @@ type clusterClients struct {
 }
 
 func main() {
+	logger = log.StandardLogger()
+
 	c, err := config.LoadConfig(config.FilePath, config.FileName)
 	if err != nil {
 		log.Error(err.Error())
 		os.Exit(exitIntegration)
+	}
+
+	if c.Verbose {
+		logger.SetLevel(log.DebugLevel)
 	}
 
 	i, err := createIntegrationWithHTTPSink(c.HTTPServerPort)
