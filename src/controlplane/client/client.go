@@ -7,7 +7,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/common"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/connector"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
@@ -16,7 +16,7 @@ import (
 type Client struct {
 	// TODO: Use a non-sdk logger
 	logger   *log.Logger
-	doer     client.HTTPDoer
+	doer     common.HTTPDoer
 	endpoint url.URL
 }
 

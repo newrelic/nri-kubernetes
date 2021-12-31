@@ -12,7 +12,7 @@ import (
 	sdkIntegration "github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/common"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
 	"github.com/newrelic/nri-kubernetes/v2/src/ksm"
 	ksmClient "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
@@ -48,7 +48,7 @@ type clusterClients struct {
 	k8s      kubernetes.Interface
 	ksm      prometheus.MetricFamiliesGetFunc
 	cAdvisor prometheus.MetricFamiliesGetFunc
-	kubelet  client.HTTPGetter
+	kubelet  common.HTTPGetter
 }
 
 // New returns a new Integration with the provided metadata and a logutil.Discard Logger.
@@ -288,7 +288,7 @@ func (i *Integration) buildClients() (*clusterClients, error) {
 	}, nil
 }
 
-// createIntegrationWithHTTPSink returns an SDK integratio configured to write to the HTTP port of an agent sidecar.
+// createIntegrationWithHTTPSink returns an SDK integratio configured to write to the HTTPClient port of an agent sidecar.
 func (i *Integration) createIntegrationWithHTTPSink(httpServerPort string) (*sdkIntegration.Integration, error) {
 	c := pester.New()
 	c.Backoff = pester.LinearBackoff

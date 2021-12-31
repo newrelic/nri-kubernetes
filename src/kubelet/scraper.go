@@ -12,7 +12,7 @@ import (
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/common"
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/grouper"
 	kubeletMetric "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
@@ -26,7 +26,7 @@ import (
 // TODO: Extract this out of the Kubelet package.
 type Providers struct {
 	K8s      kubernetes.Interface
-	Kubelet  client.HTTPGetter
+	Kubelet  common.HTTPGetter
 	CAdvisor prometheus.MetricFamiliesGetFunc
 }
 

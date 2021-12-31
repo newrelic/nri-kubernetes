@@ -10,7 +10,7 @@ import (
 
 	v1 "k8s.io/kubelet/pkg/apis/stats/v1alpha1"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/common"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 )
 
@@ -18,7 +18,7 @@ import (
 const StatsSummaryPath = "/stats/summary"
 
 // GetMetricsData calls kubelet /stats/summary endpoint and returns unmarshalled response
-func GetMetricsData(c client.HTTPGetter) (*v1.Summary, error) {
+func GetMetricsData(c common.HTTPGetter) (*v1.Summary, error) {
 	resp, err := c.Get(StatsSummaryPath)
 	if err != nil {
 		return nil, fmt.Errorf("performing GET request to kubelet endpoint %q: %w", StatsSummaryPath, err)

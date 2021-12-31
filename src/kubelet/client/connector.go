@@ -3,11 +3,13 @@ package client
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
 	"net/url"
 	"path"
+	"time"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	log "github.com/sirupsen/logrus"
@@ -16,22 +18,27 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/transport"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/common"
 )
 
 const (
 	apiProxyPath = "/api/v1/nodes/%s/proxy/"
 	httpScheme   = "http"
 	httpsScheme  = "https"
+
+	defaultHTTPKubeletPort  = 10255
+	defaultHTTPSKubeletPort = 10250
+	defaultTimeout          = time.Millisecond * 5000
 )
+
+var ErrNoConnection = errors.New("no suitable connection methods found")
 
 // Connector provides an interface to retrieve connParams to connect to a Kubelet instance.
 type Connector interface {
-	Connect() (*connParams, error)
+	Connect() (*Client, error)
 }
 
 type defaultConnector struct {
-	// TODO: Use a non-sdk logger
 	logger          *log.Logger
 	kc              kubernetes.Interface
 	inClusterConfig *rest.Config
@@ -54,8 +61,7 @@ func DefaultConnector(kc kubernetes.Interface, config *config.Config, inClusterC
 // on the other hand passing through api-proxy, authentication is managed by the kubernetes client itself.
 // Notice that we cannot use the as well rest.TransportFor to connect locally since the certificate sent by kubelet,
 // cannot be verified in the same way we do for the apiServer.
-func (dp *defaultConnector) Connect() (*connParams, error) {
-
+func (dp *defaultConnector) Connect() (*Client, error) {
 	kubeletPort, err := dp.getPort()
 	if err != nil {
 		return nil, fmt.Errorf("getting kubelet port: %w", err)
@@ -78,7 +84,7 @@ func (dp *defaultConnector) Connect() (*connParams, error) {
 		return nil, fmt.Errorf("creating tripper connecting to kubelet through API server proxy: %w", err)
 	}
 
-	conn, err = dp.checkConnectionAPIProxy(dp.inClusterConfig.Host, dp.config.NodeName, tripperAPI)
+	conn, err = dp.probeAPIServerProxy(dp.inClusterConfig.Host, dp.config.NodeName, tripperAPI)
 	if err != nil {
 		return nil, fmt.Errorf("creating connection parameters for API proxy: %w", err)
 	}
@@ -86,34 +92,48 @@ func (dp *defaultConnector) Connect() (*connParams, error) {
 	return conn, nil
 }
 
-func (dp *defaultConnector) checkLocalConnection(tripperWithBearerToken http.RoundTripper, scheme string, hostURL string) (*connParams, error) {
-	dp.logger.Debugf("connecting to kubelet directly with nodeIP")
-	var err error
-	var conn *connParams
+func (dp *defaultConnector) checkLocalConnection(tripperWithBearerToken http.RoundTripper, scheme string, hostURL string) (*Client, error) {
+	dp.logger.Debugf("Attempting to connect to kubelet using node IP")
 
 	switch scheme {
 	case httpScheme:
-		if conn, err = dp.checkConnectionHTTP(hostURL); err == nil {
-			return conn, nil
+		dp.logger.Debugf("Testing kubelet connection over http to %s", hostURL)
+
+		cli, err := dp.probeLocalHTTP(hostURL)
+		if err != nil {
+			dp.logger.Debugf("Error probing Kubelet over http: %v", err)
 		}
+
+		return cli, nil
+
 	case httpsScheme:
-		if conn, err = dp.checkConnectionHTTPS(hostURL, tripperWithBearerToken); err == nil {
-			return conn, nil
+		dp.logger.Debugf("Testing kubelet connection over https to %s", hostURL)
+
+		cli, err := dp.probeLocalHTTPS(hostURL, tripperWithBearerToken)
+		if err != nil {
+			dp.logger.Debugf("Error probing Kubelet over https: %v", err)
+			return nil, err
 		}
+
+		return cli, nil
+
 	default:
-		dp.logger.Infof("Checking both HTTP and HTTPS since the scheme was not detected automatically, " +
-			"you can set set kubelet.scheme to avoid this behaviour")
-
-		if conn, err = dp.checkConnectionHTTPS(hostURL, tripperWithBearerToken); err == nil {
-			return conn, nil
+		dp.logger.Debugf("Testing kubelet connection over http to %s", hostURL)
+		cli, err := dp.probeLocalHTTP(hostURL)
+		if err == nil {
+			return cli, nil
 		}
+		dp.logger.Debugf("Error probing Kubelet over http: %v", err)
 
-		if conn, err = dp.checkConnectionHTTP(hostURL); err == nil {
-			return conn, nil
+		dp.logger.Debugf("Testing kubelet connection over https to %s", hostURL)
+		cli, err = dp.probeLocalHTTPS(hostURL, tripperWithBearerToken)
+		if err == nil {
+			return cli, nil
 		}
+		dp.logger.Debugf("Error probing Kubelet over https: %v", err)
 	}
 
-	return nil, fmt.Errorf("no connection succeeded through localhost: %w", err)
+	return nil, ErrNoConnection
 }
 
 func (dp *defaultConnector) getPort() (int32, error) {
@@ -153,79 +173,77 @@ func (dp *defaultConnector) schemeFor(kubeletPort int32) string {
 	}
 }
 
-type connParams struct {
-	url    url.URL
-	client client.HTTPDoer
-}
-
-func (dp *defaultConnector) checkConnectionAPIProxy(apiServer string, nodeName string, tripperAPIproxy http.RoundTripper) (*connParams, error) {
+func (dp *defaultConnector) probeAPIServerProxy(apiServer string, nodeName string, tripperAPIproxy http.RoundTripper) (*Client, error) {
 	apiURL, err := url.Parse(apiServer)
 	if err != nil {
 		return nil, fmt.Errorf("parsing kubernetes api url from in cluster config: %w", err)
 	}
 
-	conn := connParams{
-		client: &http.Client{
+	apiServerPath := path.Join(fmt.Sprintf(apiProxyPath, nodeName))
+	dp.logger.Debugf("Testing kubelet connection through API proxy: %s%s", apiURL.Host, apiServerPath)
+
+	cli := NewClient(
+		url.URL{
+			Host:   apiURL.Host,
+			Scheme: apiURL.Scheme,
+			Path:   apiServerPath,
+		},
+		&http.Client{
 			Timeout:   defaultTimeout,
 			Transport: tripperAPIproxy,
 		},
-		url: url.URL{
-			Host:   apiURL.Host,
-			Scheme: apiURL.Scheme,
-			Path:   path.Join(fmt.Sprintf(apiProxyPath, nodeName)),
+	)
+
+	if err := cli.Probe(); err != nil {
+		return nil, fmt.Errorf("checking connection via API proxy: %w", err)
+	}
+
+	return cli, nil
+}
+
+func (dp *defaultConnector) probeLocalHTTP(hostURL string) (*Client, error) {
+	cli := NewClient(
+		url.URL{
+			Host:   hostURL,
+			Scheme: httpScheme,
 		},
+		http.DefaultClient,
+	)
+
+	if err := cli.Probe(); err != nil {
+		return nil, err
 	}
 
-	dp.logger.Debugf("Testing kubelet connection through API proxy: %s%s", apiURL.Host, conn.url.Path)
-
-	if err = checkConnection(conn); err != nil {
-		return nil, fmt.Errorf("checking connection via API proxy: %w", err)
-	}
-
-	return &conn, nil
+	return cli, nil
 }
 
-func (dp *defaultConnector) checkConnectionHTTP(hostURL string) (*connParams, error) {
-	dp.logger.Debugf("testing kubelet connection over plain http to %s", hostURL)
+func (dp *defaultConnector) probeLocalHTTPS(hostURL string, tripperBearer http.RoundTripper) (*Client, error) {
+	cli := NewClient(
+		url.URL{
+			Host:   hostURL,
+			Scheme: httpsScheme,
+		},
+		&http.Client{
+			Timeout:   defaultTimeout,
+			Transport: tripperBearer,
+		},
+	)
 
-	conn := defaultConnParamsHTTP(hostURL)
-	if err := checkConnection(conn); err != nil {
-		return nil, fmt.Errorf("checking connection via API proxy: %w", err)
+	if err := cli.Probe(); err != nil {
+		return nil, err
 	}
 
-	return &conn, nil
+	return cli, nil
 }
 
-func (dp *defaultConnector) checkConnectionHTTPS(hostURL string, tripperBearer http.RoundTripper) (*connParams, error) {
-	dp.logger.Debugf("testing kubelet connection over https to %s", hostURL)
-
-	conn := defaultConnParamsHTTPS(hostURL, tripperBearer)
-	if err := checkConnection(conn); err != nil {
-		return nil, fmt.Errorf("checking connection via API proxy: %w", err)
-	}
-
-	return &conn, nil
+// connParams holds a client and a base URL for the
+type connParams struct {
+	url    url.URL
+	client common.HTTPDoer
 }
 
-func checkConnection(conn connParams) error {
-	conn.url.Path = path.Join(conn.url.Path, healthzPath)
-
-	r, err := http.NewRequest(http.MethodGet, conn.url.String(), nil)
-	if err != nil {
-		return fmt.Errorf("creating request to %q: %v", conn.url.String(), err)
-	}
-
-	resp, err := conn.client.Do(r)
-	if err != nil {
-		return fmt.Errorf("connecting to %q: %w", conn.url.String(), err)
-	}
-	defer resp.Body.Close() // nolint: errcheck
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("calling %s got non-200 status code: %d", conn.url.String(), resp.StatusCode)
-	}
-
-	return nil
+func (c connParams) Client() common.HTTPClient {
+	return common.NewHTTP(c.client)
 }
 
 func tripperWithBearerToken(token string) http.RoundTripper {
@@ -238,51 +256,4 @@ func tripperWithBearerToken(token string) http.RoundTripper {
 	// Use the default kubernetes Bearer token authentication RoundTripper
 	tripperWithBearer := transport.NewBearerAuthRoundTripper(token, t)
 	return tripperWithBearer
-}
-
-func defaultConnParamsHTTP(hostURL string) connParams {
-	httpClient := &http.Client{
-		Timeout: defaultTimeout,
-	}
-
-	u := url.URL{
-		Host:   hostURL,
-		Scheme: httpScheme,
-	}
-	return connParams{u, httpClient}
-}
-
-func defaultConnParamsHTTPS(hostURL string, tripper http.RoundTripper) connParams {
-	httpClient := &http.Client{
-		Timeout: defaultTimeout,
-	}
-
-	httpClient.Transport = tripper
-
-	u := url.URL{
-		Host:   hostURL,
-		Scheme: httpsScheme,
-	}
-	return connParams{u, httpClient}
-}
-
-type fixedConnector struct {
-	URL    url.URL
-	Client client.HTTPDoer
-}
-
-// Connect return connParams without probing any endpoint.
-func (mc *fixedConnector) Connect() (*connParams, error) {
-	return &connParams{
-		url:    mc.URL,
-		client: mc.Client,
-	}, nil
-}
-
-// StaticConnector returns a fixed connector that does not check the connection when calling .Connect().
-func StaticConnector(client client.HTTPDoer, u url.URL) Connector {
-	return &fixedConnector{
-		URL:    u,
-		Client: client,
-	}
 }

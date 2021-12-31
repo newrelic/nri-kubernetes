@@ -8,14 +8,14 @@ import (
 	"github.com/sethgrid/pester"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/common"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
 
 // Client implements a client for KSM, capable of retrieving prometheus metrics from a given endpoint.
 type Client struct {
 	// http is an HttpDoer that the KSM client will use to make requests.
-	http client.HTTPDoer
+	http common.HTTPDoer
 	// TODO: Use a non-sdk logger
 	logger *log.Logger
 }
@@ -30,7 +30,7 @@ func WithLogger(logger *log.Logger) OptionFunc {
 	}
 }
 
-// New builds a Client using the given options. By default, it will use pester as an HTTP Doer and a noop logger.
+// New builds a Client using the given options. By default, it will use pester as an HTTPClient Doer and a noop logger.
 func New(opts ...OptionFunc) (*Client, error) {
 	k := &Client{
 		logger: logutil.Discard,

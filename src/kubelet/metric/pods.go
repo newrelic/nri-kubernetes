@@ -11,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/common"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 )
 
@@ -24,7 +24,7 @@ const KubeletPodsPath = "/pods"
 // integration execution.
 type PodsFetcher struct {
 	logger *log.Logger
-	client client.HTTPGetter
+	client common.HTTPGetter
 }
 
 // DoPodsFetch used to have a cache that was invalidated each execution of the integration
@@ -114,7 +114,7 @@ func (f *PodsFetcher) DoPodsFetch() (definition.RawGroups, error) {
 }
 
 // NewPodsFetcher returns a new PodsFetcher.
-func NewPodsFetcher(l *log.Logger, c client.HTTPGetter) *PodsFetcher {
+func NewPodsFetcher(l *log.Logger, c common.HTTPGetter) *PodsFetcher {
 	return &PodsFetcher{
 		logger: l,
 		client: c,

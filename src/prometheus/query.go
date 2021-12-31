@@ -6,9 +6,6 @@ import (
 
 	model "github.com/prometheus/client_model/go"
 	"github.com/prometheus/prom2json"
-	log "github.com/sirupsen/logrus"
-
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
 )
 
 // TODO: See https://github.com/prometheus/prom2json/blob/master/prom2json.go#L171 for how to connect, how to parse plain text, etc
@@ -128,7 +125,7 @@ func valueFromPrometheus(metricType model.MetricType, metric *model.Metric) Valu
 	}
 }
 
-func handleResponseWithFilter(resp *http.Response, queries []Query) ([]MetricFamily, error) {
+func Parse(resp *http.Response, queries []Query) ([]MetricFamily, error) {
 	if resp == nil {
 		return nil, fmt.Errorf("response cannot be nil")
 	}
@@ -162,34 +159,6 @@ func handleResponseWithFilter(resp *http.Response, queries []Query) ([]MetricFam
 
 	return metrics, nil
 }
-
-// MetricFamiliesGetFunc is the interface satisfied by prometheus Client.
-// TODO: This whole flow is too convoluted, we should refactor and rename this.
-type MetricFamiliesGetFunc interface {
-	// MetricFamiliesGetFunc returns a prometheus.FilteredFetcher configured to get KSM metrics from and endpoint.
-	// prometheus.FilteredFetcher will be used by the prometheus client to scrape and filter metrics.
-	MetricFamiliesGetFunc(url string) FetchAndFilterMetricsFamilies
-}
-
-type FetchAndFilterMetricsFamilies func([]Query) ([]MetricFamily, error)
-
-func GetFilteredMetricFamilies(httpClient client.HTTPDoer, url string, queries []Query, logger *log.Logger) ([]MetricFamily, error) {
-	logger.Debugf("Calling a prometheus endpoint: %s", url)
-
-	// todo it would be nice to have context with deadline
-	req, err := NewRequest(url)
-	if err != nil {
-		return nil, fmt.Errorf("building request: %w", err)
-	}
-
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("fetching metrics from %q: %w", url, err)
-	}
-
-	return handleResponseWithFilter(resp, queries)
-}
-
 func labelsFromPrometheus(pairs []*model.LabelPair) Labels {
 	labels := make(Labels)
 	for _, p := range pairs {

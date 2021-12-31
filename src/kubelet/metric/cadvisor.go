@@ -3,17 +3,13 @@ package metric
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"regexp"
 	"strings"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
-)
-
-const (
-	// KubeletCAdvisorMetricsPath is the path where kubelet serves information about cadvisor.
-	KubeletCAdvisorMetricsPath = "/metrics/cadvisor"
 )
 
 var (
@@ -33,79 +29,77 @@ func getLabel(labels prometheus.Labels, names ...string) (string, bool) {
 }
 
 // CadvisorFetchFunc creates a FetchFunc that fetches data from the kubelet cadvisor metrics path.
-func CadvisorFetchFunc(fetchAndFilterPrometheus prometheus.FetchAndFilterMetricsFamilies, queries []prometheus.Query) data.FetchFunc {
-	return func() (definition.RawGroups, error) {
-		families, err := fetchAndFilterPrometheus(queries)
-		if err != nil {
-			return nil, fmt.Errorf("error requesting cadvisor metrics endpoint: %w", err)
-		}
-
-		var errs []error
-
-		g := definition.RawGroups{
-			"container": make(map[string]definition.RawMetrics),
-		}
-
-		for _, f := range families {
-			for _, m := range f.Metrics {
-
-				if label, _ := getLabel(m.Labels, "container_name", "container"); label == "POD" {
-					// skipping metrics from pod containers
-					continue
-				}
-
-				rawEntityID, err := createRawEntityID(m)
-				if err != nil {
-					errs = append(errs, err)
-					continue
-				}
-
-				// It does not belong to a container that we care about. Special case that does not warrant an error
-				if rawEntityID == "" {
-					continue
-				}
-
-				containerID := extractContainerID(m.Labels["id"])
-				if containerID == "" {
-					errs = append(errs, errors.New("container id not found in cAdvisor metrics"))
-					continue
-				}
-
-				var (
-					metrics definition.RawMetrics
-					ok      bool
-				)
-
-				if metrics, ok = g["container"][rawEntityID]; !ok {
-					metrics = make(definition.RawMetrics)
-					metrics["containerID"] = containerID
-					g["container"][rawEntityID] = metrics
-				}
-
-				switch f.Name {
-				case "container_memory_usage_bytes":
-					// Special case, where we are only interested in collecting containerId and containerImageID
-					if m.Labels["image"] == "" {
-						errs = append(errs, errors.New("container image not found in cAdvisor metrics"))
-						continue
-					}
-					metrics["containerImageID"] = m.Labels["image"]
-				default:
-					// by default, we want the actual metric
-					metrics[f.Name] = m.Value
-				}
-			}
-		}
-
-		if len(errs) > 0 {
-			return g, data.ErrorGroup{
-				Errors:      errs,
-				Recoverable: true,
-			}
-		}
-
-		return g, nil
+func GroupCadvisor(response *http.Response, queries []prometheus.Query) (definition.RawGroups, error) {
+	families, err := prometheus.Parse(response, queries)
+	if err != nil {
+		return nil, fmt.Errorf("error requesting cadvisor metrics endpoint: %w", err)
 	}
+
+	var errs []error
+
+	g := definition.RawGroups{
+		"container": make(map[string]definition.RawMetrics),
+	}
+
+	for _, f := range families {
+		for _, m := range f.Metrics {
+
+			if label, _ := getLabel(m.Labels, "container_name", "container"); label == "POD" {
+				// skipping metrics from pod containers
+				continue
+			}
+
+			rawEntityID, err := createRawEntityID(m)
+			if err != nil {
+				errs = append(errs, err)
+				continue
+			}
+
+			// It does not belong to a container that we care about. Special case that does not warrant an error
+			if rawEntityID == "" {
+				continue
+			}
+
+			containerID := extractContainerID(m.Labels["id"])
+			if containerID == "" {
+				errs = append(errs, errors.New("container id not found in cAdvisor metrics"))
+				continue
+			}
+
+			var (
+				metrics definition.RawMetrics
+				ok      bool
+			)
+
+			if metrics, ok = g["container"][rawEntityID]; !ok {
+				metrics = make(definition.RawMetrics)
+				metrics["containerID"] = containerID
+				g["container"][rawEntityID] = metrics
+			}
+
+			switch f.Name {
+			case "container_memory_usage_bytes":
+				// Special case, where we are only interested in collecting containerId and containerImageID
+				if m.Labels["image"] == "" {
+					errs = append(errs, errors.New("container image not found in cAdvisor metrics"))
+					continue
+				}
+				metrics["containerImageID"] = m.Labels["image"]
+			default:
+				// by default, we want the actual metric
+				metrics[f.Name] = m.Value
+			}
+		}
+	}
+
+	if len(errs) > 0 {
+		return g, data.ErrorGroup{
+			Errors:      errs,
+			Recoverable: true,
+		}
+	}
+
+	return g, nil
 }
 
 func createRawEntityID(m prometheus.Metric) (string, error) {

@@ -11,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/common"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/authenticator"
 )
 
@@ -29,7 +29,7 @@ type Connector interface {
 // ConnParams contains the authenticated parameters to scrape an endpoint.
 type ConnParams struct {
 	URL    url.URL
-	Client client.HTTPDoer
+	Client common.HTTPDoer
 }
 
 type Config struct {
@@ -87,7 +87,7 @@ func (dp *DefaultConnector) Connect() (*ConnParams, error) {
 
 		rt, err := dp.Authenticator.AuthenticatedTransport(e)
 		if err != nil {
-			return nil, fmt.Errorf("creating HTTP client for endpoint %q: %w", e.URL, err)
+			return nil, fmt.Errorf("creating HTTPClient client for endpoint %q: %w", e.URL, err)
 		}
 
 		httpClient := &http.Client{Timeout: DefaultTimout, Transport: rt}

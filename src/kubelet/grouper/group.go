@@ -4,14 +4,15 @@ import (
 	"fmt"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
+	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
+	"github.com/newrelic/nri-kubernetes/v2/src/metric"
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	listersv1 "k8s.io/client-go/listers/core/v1"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
-	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
+	kubeletmetric "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 )
 
 type grouper struct {
@@ -20,9 +21,8 @@ type grouper struct {
 }
 
 type Config struct {
-	NodeGetter              listersv1.NodeLister
-	Client                  client.HTTPGetter
-	Fetchers                []data.FetchFunc
+	NodeGetter listersv1.NodeLister
+	Client     client.Client
 	DefaultNetworkInterface string
 }
 
@@ -67,6 +67,17 @@ func (r *grouper) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 			},
 		},
 	}
+
+	cadvisorResponse, err := r.Client.MetricsCadvisor()
+	if err != nil {
+		return nil, &data.ErrorGroup{
+			Errors: []error{fmt.Errorf("querying metrics/cadvisor %w", err)},
+		}
+	}
+
+	cadvisorGroups, err := kubeletmetric.GroupCadvisor(, metric.CadvisorQueries)
+
+	fillGroupsAndMergeNonExistent(rawGroups, )
 	for _, f := range r.Fetchers {
 		g, err := f()
 		if err != nil {
@@ -80,14 +91,14 @@ func (r *grouper) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 	}
 
 	// TODO wrap this process in a new fetchFunc
-	response, err := metric.GetMetricsData(r.Client)
+	response, err := kubeletmetric.GetMetricsData(r.Client)
 	if err != nil {
 		return nil, &data.ErrorGroup{
 			Errors: []error{fmt.Errorf("error querying Kubelet. %s", err)},
 		}
 	}
 
-	resources, errs := metric.GroupStatsSummary(response)
+	resources, errs := kubeletmetric.GroupStatsSummary(response)
 	if len(errs) > 0 {
 		return nil, &data.ErrorGroup{
 			Recoverable: true,
