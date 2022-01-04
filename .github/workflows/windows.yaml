@@ -16,9 +16,16 @@ jobs:
       fail-fast: false
       matrix:
         windows:
-          - windows-2019
-          - windows-2022
-    runs-on: ${{ matrix.windows }}
+          # Here we specify the GH runner where the image will be built.
+          # Tag must exist in both https://hub.docker.com/_/microsoft-windows-servercore and
+          # https://hub.docker.com/_/microsoft-windows-nanoserver, and must be matched with the runner.
+          # In theory, newer versions could build old images using --isolation=hyperv, but unfortunately hyperv is not
+          # enabled in GHA.
+          - runner: windows-2019
+            tag: 1809
+          - runner: windows-2022
+            tag: ltsc2022
+    runs-on: ${{ matrix.windows.runner }}
     env:
       AGENT_VERSION: 1.20.7
     steps:
@@ -30,24 +37,7 @@ jobs:
         id: osinfo
         shell: powershell
         run: |
-          $version = Get-ComputerInfo
-          Write-Output $version
-          Write-Output "::set-output name=version::$($version.WindowsVersion)"
-      - name: Compute windows tag
-        id: baseimage
-        shell: bash
-        run: |
-          # Microsoft has an inconsistent tagging scheme, where ltsc2022 is available for both servercore and nanoserver
-          # but ltsc2019 is not.
-          # For this reason we need to uglily use ltsc$year tag for 2022 and older, but need to resort to the version
-          # number for earlier versions.
-          runner=${{ matrix.windows }}
-          year=${runner#windows-}
-          if [[ $year -ge 2022 ]]; then
-            echo "::set-output name=tag::ltsc${year}"
-          else
-            echo "::set-output name=tag::${{ steps.osinfo.outputs.version }}-amd64"
-          fi
+          Get-ComputerInfo
       - name: Build agent container
         shell: powershell
         run: |
@@ -64,14 +54,14 @@ jobs:
 
           docker build `
             --pull `
-            --build-arg base_image_tag="${{ steps.baseimage.outputs.tag }}" `
+            --build-arg base_image_tag="${{ matrix.windows.tag }}" `
             --build-arg image_version=${{ env.AGENT_VERSION }} `
             --build-arg agent_version=${{ env.AGENT_VERSION }} `
             --build-arg agent_bin="./agent/Program Files/New Relic/newrelic-infra/newrelic-infra.exe" `
             --build-arg agent_ctl_bin="./agent/Program Files/New Relic/newrelic-infra/newrelic-infra-ctl.exe" `
             --build-arg agent_service_bin="./agent/Program Files/New Relic/newrelic-infra/newrelic-infra-service.exe" `
             -f Dockerfile.windows `
-            -t newrelic/infrastructure:${{ env.AGENT_VERSION }}-windows-${{ steps.baseimage.outputs.tag }} .
+            -t newrelic/infrastructure:${{ env.AGENT_VERSION }}-windows-${{ matrix.windows.tag }} .
 
       - uses: actions/cache@v2
         with:
@@ -89,8 +79,8 @@ jobs:
         shell: bash
         run: |
           docker build -f Dockerfile.windows \
-            --build-arg IMAGE_TAG=${{ env.AGENT_VERSION }}-windows-${{ steps.baseimage.outputs.tag }} \
-            -t newrelic/infrastructure-k8s:2-windows-${{ steps.baseimage.outputs.tag }}-alpha \
+            --build-arg IMAGE_TAG=${{ env.AGENT_VERSION }}-windows-${{ matrix.windows.tag }} \
+            -t newrelic/infrastructure-k8s:2-windows-${{ matrix.windows.tag }}-alpha \
             .
 
       # Release images if we're pushing to v2
@@ -105,4 +95,4 @@ jobs:
         #if: ${{ ! github.event.pull_request }}
         shell: bash
         run: |
-          docker push newrelic/infrastructure-k8s:2-windows-${{ steps.baseimage.outputs.tag }}-alpha
+          docker push newrelic/infrastructure-k8s:2-windows-${{ matrix.windows.tag }}-alpha
