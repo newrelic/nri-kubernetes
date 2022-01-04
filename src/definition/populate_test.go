@@ -87,7 +87,7 @@ func testConfig(i *integration.Integration) *IntegrationPopulateConfig {
 }
 
 func TestIntegrationPopulator_CorrectValue(t *testing.T) {
-	intgr, err := integration.New("nr.test", "1.0.0")
+	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
 	require.NoError(t, err)
 
 	expectedEntityData1, err := intgr.Entity("entity_id_1", "playground:test")
@@ -140,7 +140,7 @@ func TestIntegrationPopulator_PartialResult(t *testing.T) {
 		},
 	}
 
-	intgr, err := integration.New("nr.test", "1.0.0")
+	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
 	require.NoError(t, err)
 
 	expectedEntityData1, err := intgr.Entity("entity_id_1", "playground:test")
@@ -183,7 +183,7 @@ func TestIntegrationPopulator_PartialResult(t *testing.T) {
 func TestIntegrationPopulator_EntitiesDataNotPopulated_EmptyMetricGroups(t *testing.T) {
 	metricGroupEmpty := RawGroups{}
 
-	intgr, err := integration.New("nr.test", "1.0.0")
+	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
 	require.NoError(t, err)
 
 	expectedData := make([]*integration.Entity, 0)
@@ -198,7 +198,7 @@ func TestIntegrationPopulator_EntitiesDataNotPopulated_EmptyMetricGroups(t *test
 }
 
 func TestIntegrationPopulator_EntitiesDataNotPopulated_ErrorSettingEntities(t *testing.T) {
-	intgr, err := integration.New("nr.test", "1.0.0")
+	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
 	require.NoError(t, err)
 
 	metricGroupEmptyEntityID := RawGroups{
@@ -234,7 +234,7 @@ func TestIntegrationPopulator_MetricsSetsNotPopulated_OnlyEntity(t *testing.T) {
 		},
 	}
 
-	intgr, err := integration.New("nr.test", "1.0.0")
+	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
 	require.NoError(t, err)
 
 	expectedEntityData1, err := intgr.Entity("entity_id_1", "playground:test")
@@ -291,7 +291,7 @@ func TestIntegrationPopulator_EntityIDGenerator(t *testing.T) {
 		},
 	}
 
-	intgr, err := integration.New("nr.test", "1.0.0")
+	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
 	require.NoError(t, err)
 
 	raw := RawGroups{
@@ -363,7 +363,7 @@ func TestIntegrationPopulator_EntityIDGeneratorFuncWithError(t *testing.T) {
 			},
 		},
 	}
-	intgr, err := integration.New("nr.test", "1.0.0")
+	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
 	require.NoError(t, err)
 
 	config := testConfig(intgr)
@@ -418,7 +418,7 @@ func TestIntegrationPopulator_PopulateOnlySpecifiedGroups(t *testing.T) {
 	}
 
 	// Create a dummy integration, used only to create entities easily.
-	intgr, err := integration.New("nr.test", "1.0.0")
+	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
 	require.NoError(t, err)
 
 	expectedEntityData1, err := intgr.Entity("testEntity11-generated", "playground:test")
@@ -525,7 +525,7 @@ func TestIntegrationPopulator_EntityTypeGeneratorFuncWithError(t *testing.T) {
 		},
 	}
 
-	intgr, err := integration.New("nr.test", "1.0.0")
+	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
 	require.NoError(t, err)
 
 	config := testConfig(intgr)
@@ -545,7 +545,7 @@ func TestIntegrationPopulator_msTypeGuesserFuncWithError(t *testing.T) {
 		return "", fmt.Errorf("error setting event type")
 	}
 
-	intgr, err := integration.New("nr.test", "1.0.0")
+	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
 	require.NoError(t, err)
 
 	expectedEntityData1, err := intgr.Entity("entity_id_1", "playground:test")
