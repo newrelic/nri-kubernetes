@@ -9,10 +9,9 @@ scenarios:
     before:
       - helm dependency update ./charts/e2e-resources
       - helm upgrade --install ${SCENARIO_TAG}-resources -n nr-${SCENARIO_TAG} --create-namespace ./charts/e2e-resources --set persistentVolume.enabled=true
-      # TODO as soon as the chart is merged we should point to chart repository
-      - helm upgrade --install ${SCENARIO_TAG} -n nr-${SCENARIO_TAG} --create-namespace ../tmp/charts/newrelic-infrastructure-beta --values e2e-values.yml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG}
+      - helm upgrade --install ${SCENARIO_TAG} -n nr-${SCENARIO_TAG} --create-namespace newrelic/newrelic-infrastructure-v3 --values e2e-values.yml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG}
     after:
-      - kubectl logs -l app.kubernetes.io/name=nri-kubernetes -n nr-${SCENARIO_TAG} --all-containers --prefix=true
+      - kubectl logs -l app.kubernetes.io/name=newrelic-infrastructure-v3 -n nr-${SCENARIO_TAG} --all-containers --prefix=true
       - kubectl get pods -n nr-${SCENARIO_TAG}
       - helm delete ${SCENARIO_TAG}-resources -n nr-${SCENARIO_TAG}
       - helm delete ${SCENARIO_TAG} -n nr-${SCENARIO_TAG}
@@ -45,10 +44,9 @@ scenarios:
     before:
       - helm dependency update ./charts/e2e-resources
       - helm upgrade --install ${SCENARIO_TAG}-resources -n nr-${SCENARIO_TAG} --create-namespace ./charts/e2e-resources --set persistentVolume.enabled=true
-      # TODO as soon as the chart is merged we should point to chart repository
-      - helm upgrade --install ${SCENARIO_TAG} -n nr-${SCENARIO_TAG} --create-namespace ../tmp/charts/newrelic-infrastructure-beta --values e2e-values.yml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG} --set privileged=false
+      - helm upgrade --install ${SCENARIO_TAG} -n nr-${SCENARIO_TAG} --create-namespace newrelic/newrelic-infrastructure-v3 --values e2e-values.yml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG} --set privileged=false
     after:
-      - kubectl logs -l app.kubernetes.io/name=nri-kubernetes -n nr-${SCENARIO_TAG} --all-containers --prefix=true
+      - kubectl logs -l app.kubernetes.io/name=newrelic-infrastructure-v3 -n nr-${SCENARIO_TAG} --all-containers --prefix=true
       - kubectl get pods -n nr-${SCENARIO_TAG}
       - helm delete ${SCENARIO_TAG}-resources -n nr-${SCENARIO_TAG}
       - helm delete ${SCENARIO_TAG} -n nr-${SCENARIO_TAG}
