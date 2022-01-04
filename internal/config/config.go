@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	FileName = "nri-kubernetes-config"
-	FilePath = "/etc/newrelic-infra/integrations.d/"
+	DefaultFileName = "nri-kubernetes"
+	DefaultFilePath = "/etc/newrelic-infra"
 )
 
 type Config struct {
@@ -99,9 +99,10 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 
 	// Config File
 	v.AddConfigPath(filePath)
+	v.AddConfigPath(".")
 	v.SetConfigName(fileName)
 
-	// If error reading file or file not found, use flag/env variables
+	// This could fail not only if file has not been found or has errors in the YAML/missing attributes but also with errors in environment variables.
 	if err := v.ReadInConfig(); err != nil {
 		return nil, err
 	}

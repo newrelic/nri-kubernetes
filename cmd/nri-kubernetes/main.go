@@ -55,7 +55,7 @@ type clusterClients struct {
 }
 
 func main() {
-	c, err := config.LoadConfig(config.FilePath, config.FileName)
+	c, err := config.LoadConfig(config.DefaultFilePath, config.DefaultFileName)
 	if err != nil {
 		log.Error(err.Error())
 		os.Exit(exitIntegration)
