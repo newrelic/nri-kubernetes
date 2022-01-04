@@ -156,7 +156,7 @@ func (tg *testGrouper) Group(definition.SpecGroups) (definition.RawGroups, *data
 }
 
 func TestPopulateK8s(t *testing.T) {
-	intgr, err := integration.New("test", "test")
+	intgr, err := integration.New("test", "test", integration.InMemoryStore())
 	assert.NoError(t, err)
 	intgr.Clear()
 

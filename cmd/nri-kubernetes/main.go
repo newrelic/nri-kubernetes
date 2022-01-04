@@ -274,7 +274,7 @@ func createIntegrationWithHTTPSink(httpServerPort string) (*integration.Integrat
 		return nil, fmt.Errorf("creating HTTPSink: %w", err)
 	}
 
-	return integration.New(integrationName, integrationVersion, integration.Writer(h))
+	return integration.New(integrationName, integrationVersion, integration.Writer(h), integration.InMemoryStore())
 }
 
 func getK8sConfig(c *config.Config) (*rest.Config, error) {
