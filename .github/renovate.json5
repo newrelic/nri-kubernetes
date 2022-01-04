@@ -1,6 +1,9 @@
 {
   "extends": [
-    "config:base"
+    "config:base",
+    // Disable the creation of this issue that renovate updates with the pending issue we follow with Zenhub:
+    // https://github.com/newrelic/nri-kubernetes/issues/205
+    ":disableDependencyDashboard"
   ],
   "enabledManagers": [
     // Enable only the regex manager (for Dockerfile base image bumping). Go dependencies are managed by Dependabot.
