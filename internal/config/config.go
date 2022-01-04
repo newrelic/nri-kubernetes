@@ -36,8 +36,8 @@ type KSM struct {
 	Distributed bool   `mapstructure:"distributed"`
 	Enabled     bool   `mapstructure:"enabled"`
 	Discovery   struct {
-		Wait    time.Duration `mapstructure:"retry"`
-		Retires int           `mapstructure:"retries"`
+		Retry   time.Duration `mapstructure:"retry"`
+		Timeout time.Duration `mapstructure:"timeout"`
 	} `mapstructure:"discovery"`
 }
 
@@ -97,8 +97,8 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	v.SetDefault("nodeIP", "node")
 	v.SetDefault("httpServerPort", 0)
 
-	v.SetDefault("ksm.discovery.retry", 10*time.Second)
-	v.SetDefault("ksm.discovery.retries", 6)
+	v.SetDefault("ksm.discovery.retry", 7*time.Second)
+	v.SetDefault("ksm.discovery.timeout", 60*time.Second)
 
 	v.SetEnvPrefix("NRI_KUBERNETES")
 	v.AutomaticEnv()

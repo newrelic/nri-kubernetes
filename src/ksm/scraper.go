@@ -185,8 +185,8 @@ func (s *Scraper) buildDiscoverer() (discovery.EndpointsDiscoverer, error) {
 	return &discovery.EndpointsDiscovererWithTimeout{
 		EndpointsDiscoverer: discoverer,
 
-		Wait:    s.config.KSM.Discovery.Wait,
-		Retries: s.config.KSM.Discovery.Retires,
+		Retry:   s.config.KSM.Discovery.Retry,
+		Timeout: s.config.KSM.Discovery.Timeout,
 	}, nil
 }
 

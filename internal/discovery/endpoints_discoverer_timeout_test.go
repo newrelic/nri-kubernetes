@@ -36,8 +36,8 @@ func Test_edt_forwards_errors(t *testing.T) {
 		EndpointsDiscoverer: fakeDiscoverer(func() ([]string, error) {
 			return nil, innerErr
 		}),
-		Wait:    0,
-		Retries: 1,
+		Retry:   0,
+		Timeout: 1 * time.Second,
 	}
 
 	_, err := timeouter.Discover()
@@ -55,8 +55,8 @@ func Test_edt_forwards_endpoints(t *testing.T) {
 		EndpointsDiscoverer: fakeDiscoverer(func() ([]string, error) {
 			return innerList, nil
 		}),
-		Wait:    0,
-		Retries: 1,
+		Retry:   0,
+		Timeout: 1 * time.Second,
 	}
 
 	list, err := timeouter.Discover()
@@ -76,26 +76,28 @@ func Test_edt(t *testing.T) {
 		name        string
 		fd          fakeDiscoverer
 		wait        time.Duration
-		retries     int
+		timeout     time.Duration
 		expectedErr error
 	}
 
 	for _, entry := range []testEntry{
 		{
 			name:        "returns_at_once",
-			retries:     1,
+			timeout:     2 * time.Second,
 			fd:          succeedDiscoverAfter(0),
 			expectedErr: nil,
 		},
 		{
 			name:        "returns_within_threshold",
-			retries:     4,
+			wait:        1 * time.Second,
+			timeout:     4 * time.Second,
 			fd:          succeedDiscoverAfter(3),
 			expectedErr: nil,
 		},
 		{
 			name:        "fails_not_in_threshold",
-			retries:     2,
+			wait:        1 * time.Second,
+			timeout:     2 * time.Second,
 			fd:          succeedDiscoverAfter(3),
 			expectedErr: discovery.ErrDiscoveryTimeout,
 		},
@@ -103,10 +105,11 @@ func Test_edt(t *testing.T) {
 		entry := entry
 
 		t.Run(entry.name, func(t *testing.T) {
+			t.Parallel()
 			timeouter := discovery.EndpointsDiscovererWithTimeout{
 				EndpointsDiscoverer: entry.fd,
-				Wait:                entry.wait,
-				Retries:             entry.retries,
+				Retry:               entry.wait,
+				Timeout:             entry.timeout,
 			}
 
 			_, err := timeouter.Discover()

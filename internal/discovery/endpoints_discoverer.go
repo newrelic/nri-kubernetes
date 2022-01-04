@@ -105,15 +105,16 @@ var ErrDiscoveryTimeout = errors.New("timeout discovering endpoints")
 // EndpointsDiscovererWithTimeout implements EndpointsDiscoverer with a retry mechanism if no endpoints are found.
 type EndpointsDiscovererWithTimeout struct {
 	EndpointsDiscoverer
-	Wait    time.Duration
-	Retries int
+	Retry   time.Duration
+	Timeout time.Duration
 }
 
-// Discover will call poll the inner EndpointsDiscoverer every Wait seconds up to a max of Retries times until it
+// Discover will call poll the inner EndpointsDiscoverer every Retry seconds up to a max of Retries times until it
 // returns an error, or a non-empty list of endpoints.
 // If the max number of Retries is exceeded, it will return ErrDiscoveryTimeout.
 func (edt *EndpointsDiscovererWithTimeout) Discover() ([]string, error) {
-	for try := 1; try <= edt.Retries; try++ {
+	start := time.Now()
+	for time.Since(start) < edt.Timeout {
 		endpoints, err := edt.EndpointsDiscoverer.Discover()
 		if err != nil {
 			return nil, err
@@ -123,7 +124,7 @@ func (edt *EndpointsDiscovererWithTimeout) Discover() ([]string, error) {
 			return endpoints, nil
 		}
 
-		time.Sleep(edt.Wait)
+		time.Sleep(edt.Retry)
 	}
 
 	return nil, ErrDiscoveryTimeout
