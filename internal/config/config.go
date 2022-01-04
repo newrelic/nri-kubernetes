@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	FileName = "nri-kubernetes-config"
-	FilePath = "/etc/newrelic-infra/integrations.d/"
+	DefaultFileName = "nri-kubernetes"
+	DefaultFilePath = "/etc/newrelic-infra"
 )
 
 type Config struct {
@@ -84,7 +84,7 @@ type MTLS struct {
 func LoadConfig(filePath string, fileName string) (*Config, error) {
 	v := viper.New()
 
-	// We need to assure that defaults have been set in order to bind env variables.
+	// We need to assure that defaults have been set in order to bind env variables
 	// https://github.com/spf13/viper/issues/584
 	v.SetDefault("clusterName", "cluster")
 	v.SetDefault("verbose", false)
@@ -99,9 +99,10 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 
 	// Config File
 	v.AddConfigPath(filePath)
+	v.AddConfigPath(".")
 	v.SetConfigName(fileName)
 
-	// If error reading file or file not found, use flag/env variables
+	// This could fail not only if file has not been found or has errors in the YAML/missing attributes but also with errors in environment variables
 	if err := v.ReadInConfig(); err != nil {
 		return nil, err
 	}
