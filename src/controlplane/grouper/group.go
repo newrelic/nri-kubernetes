@@ -3,7 +3,7 @@ package grouper
 import (
 	"fmt"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
@@ -13,7 +13,7 @@ import (
 type grouper struct {
 	queries  []prometheus.Query
 	client   prometheus.FetchAndFilterMetricsFamilies
-	logger   log.Logger
+	logger   *log.Logger
 	entityID string
 }
 
@@ -45,7 +45,7 @@ func (r *grouper) Group(specGroups definition.SpecGroups) (definition.RawGroups,
 func New(
 	c prometheus.FetchAndFilterMetricsFamilies,
 	queries []prometheus.Query,
-	logger log.Logger,
+	logger *log.Logger,
 	entityID string,
 ) data.Grouper {
 	return &grouper{

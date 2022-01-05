@@ -9,12 +9,12 @@ import (
 	"testing"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
 	"github.com/newrelic/nri-kubernetes/v2/internal/testutil/asserter"
 	"github.com/newrelic/nri-kubernetes/v2/internal/testutil/asserter/exclude"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/stretchr/testify/require"
 	"k8s.io/client-go/kubernetes/fake"
 
@@ -76,7 +76,7 @@ func TestScraper(t *testing.T) {
 				K8s:      fakeK8s,
 				Kubelet:  kubeletClient,
 				CAdvisor: kubeletClient,
-			}, kubelet.WithLogger(log.NewStdErr(true)))
+			}, kubelet.WithLogger(logutil.Debug))
 
 			i := testutil.NewIntegration(t)
 

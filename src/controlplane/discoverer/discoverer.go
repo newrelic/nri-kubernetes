@@ -4,7 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
+	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 
@@ -29,7 +30,7 @@ type Config struct {
 type OptionFunc func(c *ControlplanePodDiscoverer) error
 
 // WithLogger returns an OptionFunc to change the logger from the default noop logger.
-func WithLogger(logger log.Logger) OptionFunc {
+func WithLogger(logger *log.Logger) OptionFunc {
 	return func(c *ControlplanePodDiscoverer) error {
 		c.logger = logger
 		return nil
@@ -39,13 +40,13 @@ func WithLogger(logger log.Logger) OptionFunc {
 // ControlplanePodDiscoverer implements PodDiscoverer interface.
 type ControlplanePodDiscoverer struct {
 	Config
-	logger log.Logger
+	logger *log.Logger
 }
 
 // New returns an ControlplanePodDiscoverer.
 func New(config Config, opts ...OptionFunc) (*ControlplanePodDiscoverer, error) {
 	c := &ControlplanePodDiscoverer{
-		logger: log.Discard,
+		logger: logutil.Discard,
 		Config: config,
 	}
 

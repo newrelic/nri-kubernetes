@@ -2,9 +2,9 @@ package grouper
 
 import (
 	"fmt"
-	"io"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
+	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	listersv1 "k8s.io/client-go/listers/core/v1"
 
@@ -16,7 +16,7 @@ import (
 
 type grouper struct {
 	Config
-	logger log.Logger
+	logger *log.Logger
 }
 
 type Config struct {
@@ -29,7 +29,7 @@ type Config struct {
 type OptionFunc func(kc *grouper) error
 
 // WithLogger returns an OptionFunc to change the logger from the default noop logger.
-func WithLogger(logger log.Logger) OptionFunc {
+func WithLogger(logger *log.Logger) OptionFunc {
 	return func(kc *grouper) error {
 		kc.logger = logger
 		return nil
@@ -44,7 +44,7 @@ func New(config Config, opts ...OptionFunc) (data.Grouper, error) {
 
 	g := &grouper{
 		Config: config,
-		logger: log.New(false, io.Discard),
+		logger: logutil.Discard,
 	}
 
 	for i, opt := range opts {
