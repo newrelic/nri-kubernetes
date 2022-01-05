@@ -2,10 +2,10 @@ package client
 
 import (
 	"fmt"
-	"io"
 	"net/url"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/connector"
@@ -15,7 +15,7 @@ import (
 // Client implements a client for ControlPlane component.
 type Client struct {
 	// TODO: Use a non-sdk logger
-	logger   log.Logger
+	logger   *log.Logger
 	doer     client.HTTPDoer
 	endpoint url.URL
 }
@@ -23,7 +23,7 @@ type Client struct {
 type OptionFunc func(c *Client) error
 
 // WithLogger returns an OptionFunc to change the logger from the default noop logger.
-func WithLogger(logger log.Logger) OptionFunc {
+func WithLogger(logger *log.Logger) OptionFunc {
 	return func(c *Client) error {
 		if logger == nil {
 			return fmt.Errorf("logger canont be nil")
@@ -38,7 +38,7 @@ func WithLogger(logger log.Logger) OptionFunc {
 // New builds a Client using the given options.
 func New(connector connector.Connector, opts ...OptionFunc) (*Client, error) {
 	c := &Client{
-		logger: log.New(false, io.Discard),
+		logger: logutil.Discard,
 	}
 
 	for i, opt := range opts {

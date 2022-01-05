@@ -14,7 +14,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric/testdata"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
@@ -92,7 +92,7 @@ func TestGroup(t *testing.T) {
 	}
 
 	podsFetcher := metric.NewPodsFetcher(
-		logrus.StandardLogger(),
+		log.StandardLogger(),
 		&c,
 	)
 

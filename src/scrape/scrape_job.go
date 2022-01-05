@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/infra-integrations-sdk/log"
+	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/version"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
@@ -33,7 +33,7 @@ type Job struct {
 func (s *Job) Populate(
 	i *integration.Integration,
 	clusterName string,
-	logger log.Logger,
+	logger *log.Logger,
 	k8sVersion *version.Info,
 ) data.PopulateResult {
 	groups, errs := s.Grouper.Group(s.Specs)

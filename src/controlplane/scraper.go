@@ -3,11 +3,11 @@ package controlplane
 import (
 	"errors"
 	"fmt"
-	"io"
 	"net/url"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
+	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -31,7 +31,7 @@ type Providers struct {
 // Scraper takes care of getting metrics all control plane instances based on the configuration.
 type Scraper struct {
 	Providers
-	logger          log.Logger
+	logger          *log.Logger
 	config          *config.Config
 	k8sVersion      *version.Info
 	components      []component
@@ -45,7 +45,7 @@ type Scraper struct {
 type ScraperOpt func(s *Scraper) error
 
 // WithLogger returns an OptionFunc to change the logger from the default noop logger.
-func WithLogger(logger log.Logger) ScraperOpt {
+func WithLogger(logger *log.Logger) ScraperOpt {
 	return func(s *Scraper) error {
 		s.logger = logger
 
@@ -73,10 +73,9 @@ func (s *Scraper) Close() {
 // After use, informers should be closed by calling Close().
 func NewScraper(config *config.Config, providers Providers, options ...ScraperOpt) (*Scraper, error) {
 	s := &Scraper{
-		config:    config,
-		Providers: providers,
-		// TODO: An empty implementation of the logger interface would be better
-		logger:          log.New(false, io.Discard),
+		config:          config,
+		Providers:       providers,
+		logger:          logutil.Discard,
 		components:      newComponents(config.ControlPlane),
 		inClusterConfig: &rest.Config{},
 	}

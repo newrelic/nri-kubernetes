@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
+	log "github.com/sirupsen/logrus"
 )
 
 const (

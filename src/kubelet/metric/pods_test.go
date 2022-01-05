@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/sirupsen/logrus"
+	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/definition"
@@ -47,7 +47,7 @@ func TestFetchFunc(t *testing.T) {
 		handler: servePayload,
 	}
 
-	f := NewPodsFetcher(logrus.StandardLogger(), &c)
+	f := NewPodsFetcher(logutil.Debug, &c)
 	g, err := f.DoPodsFetch()
 
 	assert.NoError(t, err)
@@ -107,7 +107,7 @@ func assertError(t *testing.T, errorMessage string, handler http.HandlerFunc) {
 		handler: handler,
 	}
 
-	f := NewPodsFetcher(logrus.StandardLogger(), &c)
+	f := NewPodsFetcher(logutil.Debug, &c)
 	g, err := f.DoPodsFetch()
 
 	assert.EqualError(t, err, errorMessage)
