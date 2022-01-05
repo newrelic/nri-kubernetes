@@ -96,7 +96,6 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	v.SetDefault("nodeName", "node")
 	v.SetDefault("nodeIP", "node")
 	v.SetDefault("httpServerPort", 0)
-
 	v.SetDefault("ksm.discovery.retry", 7*time.Second)
 	v.SetDefault("ksm.discovery.timeout", 60*time.Second)
 
