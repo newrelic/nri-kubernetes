@@ -177,8 +177,8 @@ func defaultPesterClient(t *testing.T) *pester.Client {
 	t.Helper()
 
 	c := pester.New()
-	c.Backoff = pester.LinearBackoff
-	c.MaxRetries = 5
+	c.Backoff = pester.ExponentialBackoff
+	c.MaxRetries = 6
 	c.Timeout = sink.DefaultRequestTimeout
 	c.LogHook = func(e pester.ErrEntry) {
 		log.Warn(e)

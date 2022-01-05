@@ -20,7 +20,7 @@ type Config struct {
 	NodeName       string        `mapstructure:"nodeName"`
 	HTTPServerPort string        `mapstructure:"httpServerPort"`
 	Interval       time.Duration `mapstructure:"interval"`
-	Timeout        time.Duration `mapstructure:"timeout"`
+	MaxRetries     int           `mapstructure:"maxRetries"`
 
 	ControlPlane `mapstructure:"controlPlane"`
 	Kubelet      `mapstructure:"kubelet"`
@@ -98,6 +98,7 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	v.SetDefault("nodeName", "node")
 	v.SetDefault("nodeIP", "node")
 	v.SetDefault("httpServerPort", 0)
+	v.SetDefault("maxRetries", 6)
 	v.SetDefault("ksm.discovery.backoffDelay", 7*time.Second)
 	v.SetDefault("ksm.discovery.timeout", 60*time.Second)
 

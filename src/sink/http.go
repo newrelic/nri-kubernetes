@@ -13,7 +13,7 @@ import (
 
 const (
 	// DefaultCtxTimeout is the default IO timeout for the context of the client.
-	DefaultCtxTimeout = 15 * time.Second
+	DefaultCtxTimeout = 60 * time.Second
 	// DefaultRequestTimeout is the default IO timeout for each request.
 	DefaultRequestTimeout = 15 * time.Second
 	// DefaultAgentForwarderhost holds the default endpoint of the agent forwarder.

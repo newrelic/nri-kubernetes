@@ -67,7 +67,7 @@ func main() {
 		logger.SetLevel(log.DebugLevel)
 	}
 
-	i, err := createIntegrationWithHTTPSink(c.HTTPServerPort)
+	i, err := createIntegrationWithHTTPSink(c.HTTPServerPort, c.MaxRetries)
 	if err != nil {
 		logger.Errorf("creating integration with http sink: %v", err)
 		os.Exit(exitIntegration)
@@ -255,10 +255,10 @@ func buildClients(c *config.Config) (*clusterClients, error) {
 	}, nil
 }
 
-func createIntegrationWithHTTPSink(httpServerPort string) (*integration.Integration, error) {
+func createIntegrationWithHTTPSink(httpServerPort string, maxRetries int) (*integration.Integration, error) {
 	c := pester.New()
-	c.Backoff = pester.LinearBackoff
-	c.MaxRetries = 5
+	c.Backoff = pester.ExponentialBackoff
+	c.MaxRetries = maxRetries
 	c.Timeout = sink.DefaultRequestTimeout
 	c.LogHook = func(e pester.ErrEntry) {
 		logger.Debugf("sending data to httpSink: %q", e)
