@@ -7,7 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
@@ -39,7 +40,7 @@ type Config struct {
 type OptionFunc func(dc *DefaultConnector) error
 
 // WithLogger returns an OptionFunc to change the logger from the default noop logger.
-func WithLogger(logger log.Logger) OptionFunc {
+func WithLogger(logger *log.Logger) OptionFunc {
 	return func(dc *DefaultConnector) error {
 		dc.logger = logger
 		return nil
@@ -49,14 +50,14 @@ func WithLogger(logger log.Logger) OptionFunc {
 // DefaultConnector implements Connector interface for the Control Plane components.
 type DefaultConnector struct {
 	Config
-	logger log.Logger
+	logger *log.Logger
 }
 
 // New returns a DefaultConnector.
 func New(config Config, opts ...OptionFunc) (*DefaultConnector, error) {
 	dc := &DefaultConnector{
 		Config: config,
-		logger: log.Discard,
+		logger: logutil.Discard,
 	}
 
 	for i, opt := range opts {

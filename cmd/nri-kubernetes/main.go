@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/sethgrid/pester"
+	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -28,8 +28,6 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 	"github.com/newrelic/nri-kubernetes/v2/src/sink"
 )
-
-var logger log.Logger
 
 const (
 	integrationName = "com.newrelic.kubernetes"
@@ -47,6 +45,8 @@ var (
 	buildDate          = ""
 )
 
+var logger *log.Logger
+
 type clusterClients struct {
 	k8s      kubernetes.Interface
 	ksm      prometheus.MetricFamiliesGetFunc
@@ -55,17 +55,21 @@ type clusterClients struct {
 }
 
 func main() {
+	logger = log.StandardLogger()
+
 	c, err := config.LoadConfig(config.DefaultFilePath, config.DefaultFileName)
 	if err != nil {
 		log.Error(err.Error())
 		os.Exit(exitIntegration)
 	}
 
-	logger = log.NewStdErr(c.Verbose)
+	if c.Verbose {
+		logger.SetLevel(log.DebugLevel)
+	}
 
 	i, err := createIntegrationWithHTTPSink(c.HTTPServerPort)
 	if err != nil {
-		logger.Errorf("creating integration with http sink: %w", err)
+		logger.Errorf("creating integration with http sink: %v", err)
 		os.Exit(exitIntegration)
 	}
 
@@ -107,7 +111,7 @@ func main() {
 	if c.ControlPlane.Enabled {
 		controlplaneScraper, err = setupControlPlane(c, clients)
 		if err != nil {
-			logger.Errorf("setting up control plane scraper: %w", err)
+			logger.Errorf("setting up control plane scraper: %v", err)
 			os.Exit(exitSetup)
 		}
 		defer controlplaneScraper.Close()

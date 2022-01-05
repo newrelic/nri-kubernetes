@@ -2,11 +2,11 @@ package ksm
 
 import (
 	"fmt"
-	"io"
 	"net/url"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
+	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 	listersv1 "k8s.io/client-go/listers/core/v1"
@@ -32,7 +32,7 @@ type Providers struct {
 
 // Scraper takes care of getting metrics from an autodiscovered KSM instance.
 type Scraper struct {
-	logger log.Logger
+	logger *log.Logger
 	config *config.Config
 	Providers
 	k8sVersion          *version.Info
@@ -45,7 +45,7 @@ type Scraper struct {
 type ScraperOpt func(s *Scraper) error
 
 // WithLogger returns an OptionFunc to change the logger from the default noop logger.
-func WithLogger(logger log.Logger) ScraperOpt {
+func WithLogger(logger *log.Logger) ScraperOpt {
 	return func(s *Scraper) error {
 		s.logger = logger
 		return nil
@@ -58,8 +58,7 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 	s := &Scraper{
 		config:    config,
 		Providers: providers,
-		// TODO: An empty implementation of the logger interface would be better
-		logger: log.New(false, io.Discard),
+		logger:    logutil.Discard,
 	}
 
 	// TODO: Sanity check config
@@ -174,7 +173,7 @@ func (s *Scraper) buildDiscoverer() (discovery.EndpointsDiscoverer, error) {
 	}
 
 	if s.config.KSM.Port != 0 {
-		s.logger.Debugf("Overriding default KSM port to %d", defaultLabelSelector, s.config.KSM.Port)
+		s.logger.Debugf("Overriding default KSM port to %d", s.config.KSM.Port)
 		dc.Port = s.config.KSM.Port
 	}
 

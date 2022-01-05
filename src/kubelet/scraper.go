@@ -2,10 +2,10 @@ package kubelet
 
 import (
 	"fmt"
-	"io"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
+	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 	listersv1 "k8s.io/client-go/listers/core/v1"
@@ -33,7 +33,7 @@ type Providers struct {
 // Scraper takes care of getting metrics from an autodiscovered Kubelet instance.
 type Scraper struct {
 	Providers
-	logger                  log.Logger
+	logger                  *log.Logger
 	config                  *config.Config
 	k8sVersion              *version.Info
 	defaultNetworkInterface string
@@ -51,8 +51,7 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 	s := &Scraper{
 		config:    config,
 		Providers: providers,
-		// TODO: An empty implementation of the logger interface would be better
-		logger: log.New(false, io.Discard),
+		logger:    logutil.Discard,
 	}
 
 	// TODO: Sanity check config
@@ -117,7 +116,7 @@ func (s *Scraper) Run(i *integration.Integration) error {
 }
 
 // WithLogger returns an OptionFunc to change the logger from the default noop logger.
-func WithLogger(logger log.Logger) ScraperOpt {
+func WithLogger(logger *log.Logger) ScraperOpt {
 	return func(s *Scraper) error {
 		s.logger = logger
 		return nil
