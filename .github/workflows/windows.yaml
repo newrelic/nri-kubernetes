@@ -85,14 +85,14 @@ jobs:
 
       # Release images if we're pushing to v2
       - name: Login to DockerHub
-        #if: ${{ ! github.event.pull_request }}
+        if: ${{ ! github.event.pull_request }}
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.FSI_DOCKERHUB_USERNAME }}
           password: ${{ secrets.FSI_DOCKERHUB_TOKEN }}
 
       - name: Push image
-        #if: ${{ ! github.event.pull_request }}
+        if: ${{ ! github.event.pull_request }}
         shell: bash
         run: |
           docker push newrelic/infrastructure-k8s:2-windows-${{ matrix.windows.tag }}-alpha
