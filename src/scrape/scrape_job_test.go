@@ -127,6 +127,7 @@ var expectedEntities = []*integration.Entity{
 					"label.controller-revision-hash": "3887482659",
 					"label.name":                     "newrelic-infra",
 					"label.pod-template-generation":  "1",
+					"requestedCpuCoresUtilization":   float64(17.42824),
 				},
 			},
 		},

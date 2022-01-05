@@ -109,6 +109,12 @@ func TestComputePercentage(t *testing.T) {
 
 	v, err = computePercentage(3, 0)
 	assert.EqualError(t, err, "division by zero")
+
+	v, err = computePercentage(3, float64(0))
+	assert.EqualError(t, err, "division by zero")
+
+	v, err = computePercentage(3, uint64(0))
+	assert.EqualError(t, err, "division by zero")
 }
 
 func TestSubtract(t *testing.T) {
@@ -134,11 +140,26 @@ func TestUtilization(t *testing.T) {
 				"dividend": uint64(10),
 				"divisor":  uint64(20),
 			},
+			"entity2": {
+				"dividend": float64(10),
+				"divisor":  float64(20),
+			},
+			"entity3": {
+				"dividend": 10,
+				"divisor":  20,
+			},
+			"entity4": {
+				"dividend": uint64(10),
+				"divisor":  float64(20),
+			},
 		},
 	}
 
-	value, err := toUtilization("dividend", "divisor")("group1", "entity1", raw)
-	assert.NoError(t, err)
-	assert.NotNil(t, value)
-	assert.Equal(t, float64(50), value)
+	for v := range raw["group1"] {
+		value, err := toUtilization(definition.FromRaw("dividend"), definition.FromRaw("divisor"))("group1", v, raw)
+		assert.NoError(t, err)
+		assert.NotNil(t, value)
+		assert.Equal(t, float64(50), value)
+	}
+
 }
