@@ -36,8 +36,8 @@ func Test_edt_forwards_errors(t *testing.T) {
 		EndpointsDiscoverer: fakeDiscoverer(func() ([]string, error) {
 			return nil, innerErr
 		}),
-		Retry:   0,
-		Timeout: 1 * time.Second,
+		BackoffDelay: 0,
+		Timeout:      1 * time.Second,
 	}
 
 	_, err := timeouter.Discover()
@@ -55,8 +55,8 @@ func Test_edt_forwards_endpoints(t *testing.T) {
 		EndpointsDiscoverer: fakeDiscoverer(func() ([]string, error) {
 			return innerList, nil
 		}),
-		Retry:   0,
-		Timeout: 1 * time.Second,
+		BackoffDelay: 0,
+		Timeout:      1 * time.Second,
 	}
 
 	list, err := timeouter.Discover()
@@ -108,7 +108,7 @@ func Test_edt(t *testing.T) {
 			t.Parallel()
 			timeouter := discovery.EndpointsDiscovererWithTimeout{
 				EndpointsDiscoverer: entry.fd,
-				Retry:               entry.wait,
+				BackoffDelay:        entry.wait,
 				Timeout:             entry.timeout,
 			}
 
