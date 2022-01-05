@@ -181,7 +181,7 @@ func defaultPesterClient(t *testing.T) *pester.Client {
 	c.MaxRetries = 5
 	c.Timeout = sink.DefaultRequestTimeout
 	c.LogHook = func(e pester.ErrEntry) {
-		log.Println(e)
+		log.Warn(e)
 	}
 
 	return c
