@@ -20,6 +20,7 @@ type Config struct {
 	NodeName       string        `mapstructure:"nodeName"`
 	HTTPServerPort string        `mapstructure:"httpServerPort"`
 	Interval       time.Duration `mapstructure:"interval"`
+	Timeout        time.Duration `mapstructure:"timeout"` // TODO: Unimplemented/unused
 	MaxRetries     int           `mapstructure:"maxRetries"`
 
 	ControlPlane `mapstructure:"controlPlane"`
