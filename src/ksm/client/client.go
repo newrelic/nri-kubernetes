@@ -2,11 +2,11 @@ package client
 
 import (
 	"fmt"
-	"io"
 	"time"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
 	"github.com/sethgrid/pester"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
@@ -17,13 +17,13 @@ type Client struct {
 	// http is an HttpDoer that the KSM client will use to make requests.
 	http client.HTTPDoer
 	// TODO: Use a non-sdk logger
-	logger log.Logger
+	logger *log.Logger
 }
 
 type OptionFunc func(kc *Client) error
 
 // WithLogger returns an OptionFunc to change the logger from the default noop logger.
-func WithLogger(logger log.Logger) OptionFunc {
+func WithLogger(logger *log.Logger) OptionFunc {
 	return func(kc *Client) error {
 		kc.logger = logger
 		return nil
@@ -33,7 +33,7 @@ func WithLogger(logger log.Logger) OptionFunc {
 // New builds a Client using the given options. By default, it will use pester as an HTTP Doer and a noop logger.
 func New(opts ...OptionFunc) (*Client, error) {
 	k := &Client{
-		logger: log.New(false, io.Discard),
+		logger: logutil.Discard,
 	}
 
 	httpPester := pester.New()

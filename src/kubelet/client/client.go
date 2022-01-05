@@ -2,15 +2,15 @@ package client
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"path"
 	"time"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
+	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -23,7 +23,7 @@ const (
 // Client implements a client for Kubelet, capable of retrieving prometheus metrics from a given endpoint.
 type Client struct {
 	// TODO: Use a non-sdk logger
-	logger   log.Logger
+	logger   *log.Logger
 	doer     client.HTTPDoer
 	endpoint url.URL
 }
@@ -31,7 +31,7 @@ type Client struct {
 type OptionFunc func(kc *Client) error
 
 // WithLogger returns an OptionFunc to change the logger from the default noop logger.
-func WithLogger(logger log.Logger) OptionFunc {
+func WithLogger(logger *log.Logger) OptionFunc {
 	return func(kubeletClient *Client) error {
 		kubeletClient.logger = logger
 		return nil
@@ -41,7 +41,7 @@ func WithLogger(logger log.Logger) OptionFunc {
 // New builds a Client using the given options.
 func New(connector Connector, opts ...OptionFunc) (*Client, error) {
 	c := &Client{
-		logger: log.New(false, io.Discard),
+		logger: logutil.Discard,
 	}
 
 	for i, opt := range opts {

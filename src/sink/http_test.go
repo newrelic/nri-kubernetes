@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
 	"github.com/sethgrid/pester"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -181,7 +181,7 @@ func defaultPesterClient(t *testing.T) *pester.Client {
 	c.MaxRetries = 5
 	c.Timeout = sink.DefaultRequestTimeout
 	c.LogHook = func(e pester.ErrEntry) {
-		log.NewStdErr(false)
+		log.Warn(e)
 	}
 
 	return c

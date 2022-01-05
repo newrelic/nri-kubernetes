@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/newrelic/infra-integrations-sdk/log"
+	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
@@ -23,7 +23,7 @@ const KubeletPodsPath = "/pods"
 // results and avoid querying the kubelet multiple times in the same
 // integration execution.
 type PodsFetcher struct {
-	logger log.Logger
+	logger *log.Logger
 	client client.HTTPGetter
 }
 
@@ -114,7 +114,7 @@ func (f *PodsFetcher) DoPodsFetch() (definition.RawGroups, error) {
 }
 
 // NewPodsFetcher returns a new PodsFetcher.
-func NewPodsFetcher(l log.Logger, c client.HTTPGetter) *PodsFetcher {
+func NewPodsFetcher(l *log.Logger, c client.HTTPGetter) *PodsFetcher {
 	return &PodsFetcher{
 		logger: l,
 		client: c,
