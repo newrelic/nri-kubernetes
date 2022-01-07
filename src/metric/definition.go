@@ -1058,10 +1058,11 @@ func convertValue(v interface{}) (float64, error) {
 	case float64:
 		return v, nil
 	case definition.FetchedValues:
-		if len(v) == 1 {
-			for _, k := range v {
-				return convertValue(k)
-			}
+		if len(v) != 1 {
+			return 0, fmt.Errorf("unable to convert FetchedValues")
+		}
+		for _, k := range v {
+			return convertValue(k)
 		}
 		return 0, fmt.Errorf("unable to convert FetchedValues")
 	default:
