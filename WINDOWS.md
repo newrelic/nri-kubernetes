@@ -30,52 +30,74 @@
   
 ## Missing metrics
 
-This are the metrics that are not being exposed by the Windows kubelet.
+### Host metrics
 
-### Node
+The following metrics will be missing from most samples as they are host metrics:
+```
+coreCount
+processorCount
+kernelVersion
+```
 
-/stats/summary
+### `K8sContainerSample`
+```
+containerID
+containerImageID
 
-- memoryRssBytes: zero
-- memoryPageFaults: zero
-- memoryMajorPageFaultsPerSecond: zero
-- net.rxBytesPerSecond
-- net.txBytesPerSecond
-- net.errorsPerSecond
-- fsInodesFree
-- fsInodes
-- fsInodesUsed
-- runtimeInodesFree
-- runtimeInodes
-- runtimeInodesUsed
+containerMemoryMappedFileBytes
 
-### Pod
+fsInodes
+fsInodesFree
+fsInodesUsed
+fsUsedBytes*
+fsUsedPercent*
 
-/stats/summary
+memoryUsedBytes
+memoryUtilization
+```
+`memoryWorkingSetBytes` and `memoryWorkingSetUtilization` can be used as alternatives to `memoryUsedBytes` and `memoryUtilization`.
 
-- net.errorsPerSecond
-- fsInodesFree
-- fsInodes
-- fsInodesUsed
-- We still need to make a test for the pvc metrics
+### `K8sPodSample`:
+```
+net.errorsPerSecond
+```
 
-### Container
+### `K8sNodeSample`
 
-/stats/summary
+```
+memoryRssBytes*
+memoryPageFaults*
+memoryMajorPageFaultsPerSecond*
+allocatableHugepages1Gi
+allocatableHugepages2Mi
+capacityHugepages1Gi
+capacityHugepages2Mi
+condition.CorruptDockerOverlay2
+condition.FrequentContainerdRestart
+condition.FrequentDockerRestart
+condition.FrequentKubeletRestart
+condition.FrequentUnregisterNetDevice
+condition.KernelDeadlock
+condition.ReadonlyFilesystem
+fsInodes
+fsInodesFree
+fsInodesUsed
+linuxDistribution
+net.errorsPerSecond
+net.rxBytesPerSecond
+net.txBytesPerSecond
+runtimeInodes
+runtimeInodesFree
+runtimeInodesUsed
+```
 
-- memoryUsedBytes
-- fsUsedBytes: zero, so fsUsedPercent is zero
-- fsInodesFree
-- fsInodes
-- fsInodesUsed
+### `K8sVolumeSample`
+```
+fsInodes*
+fsInodesFree*
+fsInodesUsed*
+```
 
-/metrics/cadvisor
+> *: These metrics are reported, but always have the value `0`.
 
-- containerID
-- containerImageID
-
-### Pod
-
-/stats/summary
-
-- net.errorsPerSecond
+Metrics for other samples should be the same, as they are gathered from cluster-wide state broker `kube-state-metrics`.

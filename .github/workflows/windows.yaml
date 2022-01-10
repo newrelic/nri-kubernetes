@@ -1,0 +1,98 @@
+name: Windows build
+
+on:
+  push:
+    branches:
+      - v2
+  pull_request:
+    branches:
+      - v2
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build integration for
+    strategy:
+      fail-fast: false
+      matrix:
+        windows:
+          # Here we specify the GH runner where the image will be built.
+          # Tag must exist in both https://hub.docker.com/_/microsoft-windows-servercore and
+          # https://hub.docker.com/_/microsoft-windows-nanoserver, and must be matched with the runner.
+          # In theory, newer versions could build old images using --isolation=hyperv, but unfortunately hyperv is not
+          # enabled in GHA.
+          - runner: windows-2019
+            tag: 1809
+          - runner: windows-2022
+            tag: ltsc2022
+    runs-on: ${{ matrix.windows.runner }}
+    env:
+      AGENT_VERSION: 1.20.7
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.16'
+      - name: Get windows build
+        id: osinfo
+        shell: powershell
+        run: |
+          Get-ComputerInfo
+      - name: Build agent container
+        shell: powershell
+        run: |
+          mkdir infrastructure-agent
+          cd infrastructure-agent
+
+          # Get Dockerfile from https://github.com/newrelic/infrastructure-agent/pull/315/
+          Invoke-WebRequest https://raw.githubusercontent.com/newrelic/infrastructure-agent/26f92f4c504222e0558b80ac46e784369fe27117/build/container/Dockerfile.windows `
+            -OutFile Dockerfile.windows          
+
+          Invoke-WebRequest https://download.newrelic.com/infrastructure_agent/binaries/windows/amd64/newrelic-infra-amd64.${{ env.AGENT_VERSION }}.zip `
+            -OutFile agent.zip
+          Expand-Archive agent.zip
+
+          docker build `
+            --pull `
+            --build-arg base_image_tag="${{ matrix.windows.tag }}" `
+            --build-arg image_version=${{ env.AGENT_VERSION }} `
+            --build-arg agent_version=${{ env.AGENT_VERSION }} `
+            --build-arg agent_bin="./agent/Program Files/New Relic/newrelic-infra/newrelic-infra.exe" `
+            --build-arg agent_ctl_bin="./agent/Program Files/New Relic/newrelic-infra/newrelic-infra-ctl.exe" `
+            --build-arg agent_service_bin="./agent/Program Files/New Relic/newrelic-infra/newrelic-infra-service.exe" `
+            -f Dockerfile.windows `
+            -t newrelic/infrastructure:${{ env.AGENT_VERSION }}-windows-${{ matrix.windows.tag }} .
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            %LocalAppData%\go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Build integration
+        shell: bash
+        run: |
+          make compile CGO_ENABLED=1
+      - name: Build integration container
+        shell: bash
+        run: |
+          docker build -f Dockerfile.windows \
+            --build-arg IMAGE_TAG=${{ env.AGENT_VERSION }}-windows-${{ matrix.windows.tag }} \
+            -t newrelic/infrastructure-k8s:2-windows-${{ matrix.windows.tag }}-alpha \
+            .
+
+      # Release images if we're pushing to v2
+      - name: Login to DockerHub
+        if: ${{ ! github.event.pull_request }}
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.FSI_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.FSI_DOCKERHUB_TOKEN }}
+
+      - name: Push image
+        if: ${{ ! github.event.pull_request }}
+        shell: bash
+        run: |
+          docker push newrelic/infrastructure-k8s:2-windows-${{ matrix.windows.tag }}-alpha
