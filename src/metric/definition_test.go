@@ -134,7 +134,7 @@ func TestSubtract(t *testing.T) {
 }
 
 func TestUtilization(t *testing.T) {
-	raw := definition.RawGroups{
+	var raw = definition.RawGroups{
 		"group1": {
 			"entity1": {
 				"dividend": uint64(10),
@@ -149,8 +149,14 @@ func TestUtilization(t *testing.T) {
 				"divisor":  20,
 			},
 			"entity4": {
-				"dividend": uint64(10),
-				"divisor":  float64(20),
+				"dividend": definition.FetchedValues{
+					"metric1": definition.FetchedValue(float64(10)),
+				},
+				"divisor": float64(20),
+			},
+			"entity5": {
+				"dividend": prometheus.GaugeValue(10),
+				"divisor":  prometheus.GaugeValue(20),
 			},
 		},
 	}
@@ -162,4 +168,32 @@ func TestUtilization(t *testing.T) {
 		assert.Equal(t, float64(50), value)
 	}
 
+}
+
+func TestUtilizationNotSupported(t *testing.T) {
+	var raw = definition.RawGroups{
+		"group1": {
+			"entity1": {
+				"dividend": definition.FetchedValues{},
+				"divisor":  float64(20),
+			},
+			"entity2": {
+				"dividend": definition.FetchedValues{
+					"metric1": definition.FetchedValue(float64(10)),
+					"metric2": definition.FetchedValue(float64(10)),
+				},
+				"divisor": float64(20),
+			},
+			"entity3": {
+				"dividend": "15",
+				"divisor":  float64(20),
+			},
+		},
+	}
+
+	for v := range raw["group1"] {
+		value, err := toUtilization(definition.FromRaw("dividend"), definition.FromRaw("divisor"))("group1", v, raw)
+		assert.Error(t, err)
+		assert.Nil(t, value)
+	}
 }
