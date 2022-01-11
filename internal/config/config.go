@@ -32,7 +32,7 @@ type Config struct {
 
 type HTTPSink struct {
 	Port              int           `mapstructure:"port"`
-	ConnectionTimeout time.Duration `mapstructure:"connectionTimeout"` // Give up ConnectionTimeout each connection attempt to the agent.
+	ConnectionTimeout time.Duration `mapstructure:"connectionTimeout"` // Give up on a connection if it takes more than ConnectionTimeout to complete.
 	BackoffDelay      time.Duration `mapstructure:"backoffDelay"`      // Wait BackoffDelay between connection attempts to the agent.
 	Timeout           time.Duration `mapstructure:"timeout"`           // Give up and fail if Timeout has passed since first attempt.
 }

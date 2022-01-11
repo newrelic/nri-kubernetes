@@ -261,7 +261,10 @@ func createIntegrationWithHTTPSink(config *config.Config) (*integration.Integrat
 	c.Backoff = func(retry int) time.Duration {
 		return config.Sink.HTTP.BackoffDelay
 	}
-	c.MaxRetries = int(config.Sink.HTTP.Timeout / time.Second) // As many attempts as the Context timeout allows
+	// Allow as many attempts as seconds are in the global timeout.
+	// This is a rough and conservative approximation as we don't actually need to enforce a number of retries:
+	// We simply rely on the global timeout instead. However, pester requires this value to be set regardless.
+	c.MaxRetries = int(config.Sink.HTTP.Timeout / time.Second)
 	c.Timeout = config.Sink.HTTP.ConnectionTimeout
 	c.LogHook = func(e pester.ErrEntry) {
 		logger.Debugf("sending data to httpSink: %q", e)
