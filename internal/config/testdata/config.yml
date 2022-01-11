@@ -1,7 +1,13 @@
 clusterName: dummy_cluster
 interval: 15
 verbose: true
-timeout: 30
+
+sink:
+  http:
+    port: 8081
+    connectionTimeout: 15s
+    backoffDelay: 7s
+    timeout: 60s
 
 kubelet:
   enabled: true

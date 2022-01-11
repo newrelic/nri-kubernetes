@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -67,7 +68,7 @@ func main() {
 		logger.SetLevel(log.DebugLevel)
 	}
 
-	i, err := createIntegrationWithHTTPSink(c.HTTPServerPort)
+	i, err := createIntegrationWithHTTPSink(c)
 	if err != nil {
 		logger.Errorf("creating integration with http sink: %v", err)
 		os.Exit(exitIntegration)
@@ -255,21 +256,26 @@ func buildClients(c *config.Config) (*clusterClients, error) {
 	}, nil
 }
 
-func createIntegrationWithHTTPSink(httpServerPort string) (*integration.Integration, error) {
+func createIntegrationWithHTTPSink(config *config.Config) (*integration.Integration, error) {
 	c := pester.New()
-	c.Backoff = pester.LinearBackoff
-	c.MaxRetries = 5
-	c.Timeout = sink.DefaultRequestTimeout
+	c.Backoff = func(retry int) time.Duration {
+		return config.Sink.HTTP.BackoffDelay
+	}
+	// Allow as many attempts as seconds are in the global timeout.
+	// This is a rough and conservative approximation as we don't actually need to enforce a number of retries:
+	// We simply rely on the global timeout instead. However, pester requires this value to be set regardless.
+	c.MaxRetries = int(config.Sink.HTTP.Timeout / time.Second)
+	c.Timeout = config.Sink.HTTP.ConnectionTimeout
 	c.LogHook = func(e pester.ErrEntry) {
 		logger.Debugf("sending data to httpSink: %q", e)
 	}
 
-	endpoint := net.JoinHostPort(sink.DefaultAgentForwarderhost, httpServerPort)
+	endpoint := net.JoinHostPort(sink.DefaultAgentForwarderhost, strconv.Itoa(config.Sink.HTTP.Port))
 
 	sinkOptions := sink.HTTPSinkOptions{
 		URL:        fmt.Sprintf("http://%s%s", endpoint, sink.DefaultAgentForwarderPath),
 		Client:     c,
-		CtxTimeout: sink.DefaultCtxTimeout,
+		CtxTimeout: config.Sink.HTTP.Timeout,
 		Ctx:        context.Background(),
 	}
 
