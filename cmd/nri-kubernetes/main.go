@@ -261,7 +261,7 @@ func createIntegrationWithHTTPSink(config *config.Config) (*integration.Integrat
 	c.Backoff = func(retry int) time.Duration {
 		return config.Sink.HTTP.BackoffDelay
 	}
-	c.MaxRetries = int(config.Sink.HTTP.Timeout/time.Second) // As many attempts as the Context timeout allows
+	c.MaxRetries = int(config.Sink.HTTP.Timeout / time.Second) // As many attempts as the Context timeout allows
 	c.Timeout = config.Sink.HTTP.ConnectionTimeout
 	c.LogHook = func(e pester.ErrEntry) {
 		logger.Debugf("sending data to httpSink: %q", e)

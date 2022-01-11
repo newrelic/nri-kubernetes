@@ -32,12 +32,9 @@ type Config struct {
 
 type HTTPSink struct {
 	Port              int           `mapstructure:"port"`
-	// Give up ConnectionTimeout each connection attempt to the agent.
-	ConnectionTimeout time.Duration `mapstructure:"connectionTimeout"`
-	// Wait BackoffDelay between connection attempts to the agent.
-	BackoffDelay      time.Duration `mapstructure:"backoffDelay"`
-	// Give up and fail if Timeout has passed since first attempt.
-	Timeout           time.Duration `mapstructure:"timeout"`
+	ConnectionTimeout time.Duration `mapstructure:"connectionTimeout"` // Give up ConnectionTimeout each connection attempt to the agent.
+	BackoffDelay      time.Duration `mapstructure:"backoffDelay"`      // Wait BackoffDelay between connection attempts to the agent.
+	Timeout           time.Duration `mapstructure:"timeout"`           // Give up and fail if Timeout has passed since first attempt.
 }
 
 type KSM struct {
@@ -49,10 +46,8 @@ type KSM struct {
 	Distributed bool   `mapstructure:"distributed"`
 	Enabled     bool   `mapstructure:"enabled"`
 	Discovery   struct {
-		// Wait BackoffDelay between discovery attempts.
-		BackoffDelay time.Duration `mapstructure:"backoffDelay"`
-		// Give up discovery and fail if Timeout has passed since first attempt.
-		Timeout time.Duration `mapstructure:"timeout"`
+		BackoffDelay time.Duration `mapstructure:"backoffDelay"` // Wait BackoffDelay between discovery attempts.
+		Timeout      time.Duration `mapstructure:"timeout"`      // Give up discovery and fail if Timeout has passed since first attempt.
 	} `mapstructure:"discovery"`
 }
 

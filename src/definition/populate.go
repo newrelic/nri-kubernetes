@@ -18,14 +18,22 @@ func populateCluster(i *integration.Integration, clusterName string, k8sVersion 
 	}
 	ms := e.NewMetricSet("K8sClusterSample")
 
-	e.Inventory.SetItem("cluster", "name", clusterName)
+	err = e.Inventory.SetItem("cluster", "name", clusterName)
+	if err != nil {
+		return err
+	}
+
 	err = ms.SetMetric("clusterName", clusterName, metric.ATTRIBUTE)
 	if err != nil {
 		return err
 	}
 
 	k8sVersionStr := k8sVersion.String()
-	e.Inventory.SetItem("cluster", "k8sVersion", k8sVersionStr)
+	err = e.Inventory.SetItem("cluster", "k8sVersion", k8sVersionStr)
+	if err != nil {
+		return err
+	}
+
 	return ms.SetMetric("clusterK8sVersion", k8sVersionStr, metric.ATTRIBUTE)
 }
 
