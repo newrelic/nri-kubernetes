@@ -24,7 +24,7 @@ type testData struct {
 	result         []string
 }
 
-func Test_endpoints_discovery_whit(t *testing.T) {
+func Test_endpoints_discovery_with(t *testing.T) {
 	t.Parallel()
 
 	client := testclient.NewSimpleClientset(getFirstEndpoints(), getSecondEndpoints())
