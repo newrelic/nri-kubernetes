@@ -18,14 +18,22 @@ type Config struct {
 	KubeconfigPath string        `mapstructure:"kubeconfigPath"`
 	NodeIP         string        `mapstructure:"nodeIP"`
 	NodeName       string        `mapstructure:"nodeName"`
-	HTTPServerPort string        `mapstructure:"httpServerPort"`
 	Interval       time.Duration `mapstructure:"interval"`
-	Timeout        time.Duration `mapstructure:"timeout"` // TODO: Unimplemented/unused
-	MaxRetries     int           `mapstructure:"maxRetries"`
+	Timeout        time.Duration `mapstructure:"timeout"` // TODO: Unimplemented/unused (issue #322)
+
+	Sink struct {
+		HTTP HTTPSink `mapstructure:"http"`
+	} `mapstructure:"sink"`
 
 	ControlPlane `mapstructure:"controlPlane"`
 	Kubelet      `mapstructure:"kubelet"`
 	KSM          `mapstructure:"ksm"`
+}
+
+type HTTPSink struct {
+	Port       int           `mapstructure:"port"`
+	MaxRetries int           `mapstructure:"maxRetries"`
+	Timeout    time.Duration `mapstructure:"timeout"`
 }
 
 type KSM struct {
@@ -98,8 +106,9 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	v.SetDefault("kubelet.networkRouteFile", "/proc/net/route")
 	v.SetDefault("nodeName", "node")
 	v.SetDefault("nodeIP", "node")
-	v.SetDefault("httpServerPort", 0)
-	v.SetDefault("maxRetries", 6)
+	v.SetDefault("sink.http.maxRetries", 6)
+	v.SetDefault("sink.http.timeout", "60s")
+
 	v.SetDefault("ksm.discovery.backoffDelay", 7*time.Second)
 	v.SetDefault("ksm.discovery.timeout", 60*time.Second)
 

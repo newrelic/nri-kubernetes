@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -258,13 +259,13 @@ func buildClients(c *config.Config) (*clusterClients, error) {
 func createIntegrationWithHTTPSink(config *config.Config) (*integration.Integration, error) {
 	c := pester.New()
 	c.Backoff = pester.ExponentialBackoff
-	c.MaxRetries = config.MaxRetries
+	c.MaxRetries = config.Sink.HTTP.MaxRetries
 	c.Timeout = sink.DefaultRequestTimeout
 	c.LogHook = func(e pester.ErrEntry) {
 		logger.Debugf("sending data to httpSink: %q", e)
 	}
 
-	endpoint := net.JoinHostPort(sink.DefaultAgentForwarderhost, config.HTTPServerPort)
+	endpoint := net.JoinHostPort(sink.DefaultAgentForwarderhost, strconv.Itoa(config.Sink.HTTP.Port))
 
 	sinkOptions := sink.HTTPSinkOptions{
 		URL:        fmt.Sprintf("http://%s%s", endpoint, sink.DefaultAgentForwarderPath),
