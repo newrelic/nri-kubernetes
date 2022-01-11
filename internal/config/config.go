@@ -31,9 +31,13 @@ type Config struct {
 }
 
 type HTTPSink struct {
-	Port       int           `mapstructure:"port"`
-	MaxRetries int           `mapstructure:"maxRetries"`
-	Timeout    time.Duration `mapstructure:"timeout"`
+	Port              int           `mapstructure:"port"`
+	// Give up ConnectionTimeout each connection attempt to the agent.
+	ConnectionTimeout time.Duration `mapstructure:"connectionTimeout"`
+	// Wait BackoffDelay between connection attempts to the agent.
+	BackoffDelay      time.Duration `mapstructure:"backoffDelay"`
+	// Give up and fail if Timeout has passed since first attempt.
+	Timeout           time.Duration `mapstructure:"timeout"`
 }
 
 type KSM struct {
@@ -106,8 +110,9 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	v.SetDefault("kubelet.networkRouteFile", "/proc/net/route")
 	v.SetDefault("nodeName", "node")
 	v.SetDefault("nodeIP", "node")
-	v.SetDefault("sink.http.maxRetries", 6)
-	v.SetDefault("sink.http.timeout", "60s")
+	v.SetDefault("sink.http.connectionTimeout", 15*time.Second)
+	v.SetDefault("sink.http.backoffDelay", 7*time.Second)
+	v.SetDefault("sink.http.timeout", 60*time.Second)
 
 	v.SetDefault("ksm.discovery.backoffDelay", 7*time.Second)
 	v.SetDefault("ksm.discovery.timeout", 60*time.Second)

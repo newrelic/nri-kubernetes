@@ -258,9 +258,11 @@ func buildClients(c *config.Config) (*clusterClients, error) {
 
 func createIntegrationWithHTTPSink(config *config.Config) (*integration.Integration, error) {
 	c := pester.New()
-	c.Backoff = pester.ExponentialBackoff
-	c.MaxRetries = config.Sink.HTTP.MaxRetries
-	c.Timeout = sink.DefaultRequestTimeout
+	c.Backoff = func(retry int) time.Duration {
+		return config.Sink.HTTP.BackoffDelay
+	}
+	c.MaxRetries = int(config.Sink.HTTP.Timeout/time.Second) // As many attempts as the Context timeout allows
+	c.Timeout = config.Sink.HTTP.ConnectionTimeout
 	c.LogHook = func(e pester.ErrEntry) {
 		logger.Debugf("sending data to httpSink: %q", e)
 	}
@@ -270,7 +272,7 @@ func createIntegrationWithHTTPSink(config *config.Config) (*integration.Integrat
 	sinkOptions := sink.HTTPSinkOptions{
 		URL:        fmt.Sprintf("http://%s%s", endpoint, sink.DefaultAgentForwarderPath),
 		Client:     c,
-		CtxTimeout: sink.DefaultCtxTimeout,
+		CtxTimeout: config.Sink.HTTP.Timeout,
 		Ctx:        context.Background(),
 	}
 
