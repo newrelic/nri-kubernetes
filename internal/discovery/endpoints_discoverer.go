@@ -1,6 +1,7 @@
 package discovery
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"sort"
@@ -96,4 +97,35 @@ func (d *endpointsDiscoverer) Discover() ([]string, error) {
 	sort.Strings(hosts)
 
 	return hosts, nil
+}
+
+// ErrDiscoveryTimeout is returned by EndpointsDiscovererWithTimeout when discovery times out
+var ErrDiscoveryTimeout = errors.New("timeout discovering endpoints")
+
+// EndpointsDiscovererWithTimeout implements EndpointsDiscoverer with a retry mechanism if no endpoints are found.
+type EndpointsDiscovererWithTimeout struct {
+	EndpointsDiscoverer
+	BackoffDelay time.Duration
+	Timeout      time.Duration
+}
+
+// Discover will call poll the inner EndpointsDiscoverer every BackoffDelay seconds up to a max of Retries times until it
+// returns an error, or a non-empty list of endpoints.
+// If the max number of Retries is exceeded, it will return ErrDiscoveryTimeout.
+func (edt *EndpointsDiscovererWithTimeout) Discover() ([]string, error) {
+	start := time.Now()
+	for time.Since(start) < edt.Timeout {
+		endpoints, err := edt.EndpointsDiscoverer.Discover()
+		if err != nil {
+			return nil, err
+		}
+
+		if len(endpoints) > 0 {
+			return endpoints, nil
+		}
+
+		time.Sleep(edt.BackoffDelay)
+	}
+
+	return nil, ErrDiscoveryTimeout
 }

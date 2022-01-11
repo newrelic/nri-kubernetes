@@ -32,9 +32,9 @@ type Providers struct {
 
 // Scraper takes care of getting metrics from an autodiscovered KSM instance.
 type Scraper struct {
-	logger *log.Logger
-	config *config.Config
 	Providers
+	logger              *log.Logger
+	config              *config.Config
 	k8sVersion          *version.Info
 	endpointsDiscoverer discovery.EndpointsDiscoverer
 	servicesLister      listersv1.ServiceLister
@@ -177,7 +177,17 @@ func (s *Scraper) buildDiscoverer() (discovery.EndpointsDiscoverer, error) {
 		dc.Port = s.config.KSM.Port
 	}
 
-	return discovery.NewEndpointsDiscoverer(dc)
+	discoverer, err := discovery.NewEndpointsDiscoverer(dc)
+	if err != nil {
+		return nil, err
+	}
+
+	return &discovery.EndpointsDiscovererWithTimeout{
+		EndpointsDiscoverer: discoverer,
+
+		BackoffDelay: s.config.KSM.Discovery.BackoffDelay,
+		Timeout:      s.config.KSM.Discovery.Timeout,
+	}, nil
 }
 
 func (s *Scraper) ksmURLs() ([]string, error) {
