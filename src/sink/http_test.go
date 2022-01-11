@@ -16,6 +16,11 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/sink"
 )
 
+const (
+	defaultRequestTimeout = 15 * time.Second
+	defaultCtxTimeout     = 15 * time.Second
+)
+
 func Test_http_Sink_creation_fails_when_there_is(t *testing.T) {
 	t.Parallel()
 
@@ -100,14 +105,14 @@ func Test_http_sink_fails_writing_data_when(t *testing.T) {
 			testHandler: func(w http.ResponseWriter, req *http.Request) {
 				w.WriteHeader(503)
 			},
-			requestTimeout: sink.DefaultRequestTimeout,
+			requestTimeout: defaultRequestTimeout,
 		},
 		"server_replies_after_context_deadline": {
 			testHandler: func(w http.ResponseWriter, req *http.Request) {
 				time.Sleep(3 * time.Second)
 				w.WriteHeader(204)
 			},
-			requestTimeout: sink.DefaultRequestTimeout,
+			requestTimeout: defaultRequestTimeout,
 		},
 		"server_replies_to_each_request_after_request_timeout": {
 			testHandler: func(w http.ResponseWriter, req *http.Request) {
@@ -168,7 +173,7 @@ func getHTTPSinkOptions(t *testing.T) sink.HTTPSinkOptions {
 	return sink.HTTPSinkOptions{
 		URL:        sink.DefaultAgentForwarderhost,
 		Client:     defaultPesterClient(t),
-		CtxTimeout: sink.DefaultCtxTimeout,
+		CtxTimeout: defaultCtxTimeout,
 		Ctx:        context.Background(),
 	}
 }
@@ -177,9 +182,9 @@ func defaultPesterClient(t *testing.T) *pester.Client {
 	t.Helper()
 
 	c := pester.New()
-	c.Backoff = pester.LinearBackoff
-	c.MaxRetries = 5
-	c.Timeout = sink.DefaultRequestTimeout
+	c.Backoff = pester.ExponentialBackoff
+	c.MaxRetries = 6
+	c.Timeout = defaultRequestTimeout
 	c.LogHook = func(e pester.ErrEntry) {
 		log.Warn(e)
 	}
