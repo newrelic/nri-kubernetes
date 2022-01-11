@@ -110,6 +110,9 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	v.SetDefault("kubelet.networkRouteFile", "/proc/net/route")
 	v.SetDefault("nodeName", "node")
 	v.SetDefault("nodeIP", "node")
+	v.SetDefault("sink.http.port", 0)
+
+	// Sane connection defaults
 	v.SetDefault("sink.http.connectionTimeout", 15*time.Second)
 	v.SetDefault("sink.http.backoffDelay", 7*time.Second)
 	v.SetDefault("sink.http.timeout", 60*time.Second)
