@@ -35,6 +35,12 @@ type KSM struct {
 	Namespace   string `mapstructure:"namespace"`
 	Distributed bool   `mapstructure:"distributed"`
 	Enabled     bool   `mapstructure:"enabled"`
+	Discovery   struct {
+		// Wait BackoffDelay between discovery attempts.
+		BackoffDelay time.Duration `mapstructure:"backoffDelay"`
+		// Give up discovery and fail if Timeout has passed since first attempt.
+		Timeout time.Duration `mapstructure:"timeout"`
+	} `mapstructure:"discovery"`
 }
 
 type Kubelet struct {
@@ -92,6 +98,8 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	v.SetDefault("nodeName", "node")
 	v.SetDefault("nodeIP", "node")
 	v.SetDefault("httpServerPort", 0)
+	v.SetDefault("ksm.discovery.backoffDelay", 7*time.Second)
+	v.SetDefault("ksm.discovery.timeout", 60*time.Second)
 
 	v.SetEnvPrefix("NRI_KUBERNETES")
 	v.AutomaticEnv()
