@@ -7,6 +7,8 @@ on:
     branches:
       - master
       - main
+# TODO once develop is merged this will be not needed anymore
+      - develop
 
 jobs:
   build:
@@ -47,7 +49,7 @@ jobs:
     needs: [ build ]
     runs-on: ubuntu-latest
     env:
-      DOCKER_IMAGE_NAME: newrelic/infrastructure-k8s
+      DOCKER_IMAGE_NAME: newrelic/nri-kubernetes
       DOCKER_IMAGE_TAG: nightly
       DOCKER_PLATFORMS: "linux/amd64,linux/arm64,linux/arm" # Must be consistent with the matrix from the job above
     steps:
@@ -71,7 +73,6 @@ jobs:
       - name: Build docker images
         run: |
           docker buildx build --platform=$DOCKER_PLATFORMS \
-            --build-arg 'BASE_IMAGE=newrelic/infrastructure-bundle:nightly' \
             -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG \
             .
 
@@ -90,9 +91,8 @@ jobs:
           ignore-unfixed: true
           severity: 'CRITICAL,HIGH'
 
-      - name: Push images
+      - name: Push versioned images
         run: |
           docker buildx build --push --platform=$DOCKER_PLATFORMS \
-            --build-arg 'BASE_IMAGE=newrelic/infrastructure-bundle:nightly' \
             -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG \
             .
