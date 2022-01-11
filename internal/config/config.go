@@ -18,13 +18,23 @@ type Config struct {
 	KubeconfigPath string        `mapstructure:"kubeconfigPath"`
 	NodeIP         string        `mapstructure:"nodeIP"`
 	NodeName       string        `mapstructure:"nodeName"`
-	HTTPServerPort string        `mapstructure:"httpServerPort"`
 	Interval       time.Duration `mapstructure:"interval"`
-	Timeout        time.Duration `mapstructure:"timeout"`
+	Timeout        time.Duration `mapstructure:"timeout"` // TODO: Unimplemented/unused (issue #322)
+
+	Sink struct {
+		HTTP HTTPSink `mapstructure:"http"`
+	} `mapstructure:"sink"`
 
 	ControlPlane `mapstructure:"controlPlane"`
 	Kubelet      `mapstructure:"kubelet"`
 	KSM          `mapstructure:"ksm"`
+}
+
+type HTTPSink struct {
+	Port              int           `mapstructure:"port"`
+	ConnectionTimeout time.Duration `mapstructure:"connectionTimeout"` // Give up on a connection if it takes more than ConnectionTimeout to complete.
+	BackoffDelay      time.Duration `mapstructure:"backoffDelay"`      // Wait BackoffDelay between connection attempts to the agent.
+	Timeout           time.Duration `mapstructure:"timeout"`           // Give up and fail if Timeout has passed since first attempt.
 }
 
 type KSM struct {
@@ -36,10 +46,8 @@ type KSM struct {
 	Distributed bool   `mapstructure:"distributed"`
 	Enabled     bool   `mapstructure:"enabled"`
 	Discovery   struct {
-		// Wait BackoffDelay between discovery attempts.
-		BackoffDelay time.Duration `mapstructure:"backoffDelay"`
-		// Give up discovery and fail if Timeout has passed since first attempt.
-		Timeout time.Duration `mapstructure:"timeout"`
+		BackoffDelay time.Duration `mapstructure:"backoffDelay"` // Wait BackoffDelay between discovery attempts.
+		Timeout      time.Duration `mapstructure:"timeout"`      // Give up discovery and fail if Timeout has passed since first attempt.
 	} `mapstructure:"discovery"`
 }
 
@@ -97,7 +105,13 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	v.SetDefault("kubelet.networkRouteFile", "/proc/net/route")
 	v.SetDefault("nodeName", "node")
 	v.SetDefault("nodeIP", "node")
-	v.SetDefault("httpServerPort", 0)
+	v.SetDefault("sink.http.port", 0)
+
+	// Sane connection defaults
+	v.SetDefault("sink.http.connectionTimeout", 15*time.Second)
+	v.SetDefault("sink.http.backoffDelay", 7*time.Second)
+	v.SetDefault("sink.http.timeout", 60*time.Second)
+
 	v.SetDefault("ksm.discovery.backoffDelay", 7*time.Second)
 	v.SetDefault("ksm.discovery.timeout", 60*time.Second)
 
