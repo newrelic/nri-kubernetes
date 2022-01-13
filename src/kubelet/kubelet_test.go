@@ -152,11 +152,15 @@ func kubeletExclusions() []exclude.Func {
 
 		// Reason and message are only present where a pod/container is pending or terminated
 		exclude.Exclude(
-			exclude.Groups("pod", "container"),
+			exclude.Groups("container"),
 			func(_ string, _ *definition.Spec, ent *integration.Entity) bool {
-				return !asserter.EntityMetricIs(ent, "status", "pending") &&
-					!asserter.EntityMetricIs(ent, "status", "terminated")
+				return asserter.EntityMetricIs(ent, "status", "running")
 			},
+			exclude.Metrics("reason", "message"),
+		),
+		// Reason and message are not reported properly by the kubelet API, and they come up empty.
+		exclude.Exclude(
+			exclude.Groups("pod"),
 			exclude.Metrics("reason", "message"),
 		),
 
