@@ -950,8 +950,8 @@ var KubeletSpecs = definition.SpecGroups{
 			// computed
 			{Name: "cpuCoresUtilization", ValueFunc: toUtilization(cpuUsedCores, cpuLimitCores), Type: sdkMetric.GAUGE, Optional: true},
 			{Name: "requestedCpuCoresUtilization", ValueFunc: toUtilization(cpuUsedCores, cpuRequestedCores), Type: sdkMetric.GAUGE, Optional: true},
-			{Name: "memoryUtilization", ValueFunc: toUtilization(definition.FromRaw("memoryUsedBytes"), definition.FromRaw("memoryLimitBytes")), Type: sdkMetric.GAUGE, Optional: true},
-			{Name: "requestedMemoryUtilization", ValueFunc: toUtilization(definition.FromRaw("memoryUsedBytes"), definition.FromRaw("memoryRequestedBytes")), Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "memoryUtilization", ValueFunc: toUtilization(definition.FromRaw("usageBytes"), definition.FromRaw("memoryLimitBytes")), Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "requestedMemoryUtilization", ValueFunc: toUtilization(definition.FromRaw("usageBytes"), definition.FromRaw("memoryRequestedBytes")), Type: sdkMetric.GAUGE, Optional: true},
 		},
 	},
 	"node": {
@@ -1049,9 +1049,13 @@ func computePercentage(dividend, divisor interface{}) (definition.FetchedValue, 
 
 func convertValue(v interface{}) (float64, error) {
 	switch v := v.(type) {
+	case uint:
+		return float64(v), nil
 	case uint64:
 		return float64(v), nil
 	case int:
+		return float64(v), nil
+	case int64:
 		return float64(v), nil
 	case prometheus.GaugeValue:
 		return float64(v), nil
