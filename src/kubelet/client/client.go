@@ -7,10 +7,11 @@ import (
 	"path"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -22,7 +23,6 @@ const (
 
 // Client implements a client for Kubelet, capable of retrieving prometheus metrics from a given endpoint.
 type Client struct {
-	// TODO: Use a non-sdk logger
 	logger   *log.Logger
 	doer     client.HTTPDoer
 	endpoint url.URL

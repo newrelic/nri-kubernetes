@@ -6,15 +6,15 @@ New Relic's Kubernetes integration gives you full observability into the health 
 no matter whether you run Kubernetes on-premises or in the cloud.
 It gives you visibility about Kubernetes namespaces, deployments, replica sets, nodes, pods, and containers.
 Metrics are collected from different sources:
-* [kube-state-metrics service](https://github.com/kubernetes/kube-state-metrics) provides information about state of 
+* [kube-state-metrics service](https://github.com/kubernetes/kube-state-metrics) provides information about state of
 Kubernetes objects like namespace, replicaset, deployments and pods (when they are not in running state)
 * `/stats/summary` kubelet endpoint gives information about network, errors, memory and CPU usage
 * `/pods` kubelet endpoint provides information about state of running pods and containers
 * `/metrics/cadvisor` cAdvisor endpoint provides missing data that is not included in the previous sources.
 * `/metrics` from control plane components: `ETCD`,`controllerManager`, `apiServer` and `scheduler`
 
-Check out our [documentation](https://docs.newrelic.com/docs/kubernetes-integration-new-relic-infrastructure) 
-in order to find out more how to install and configure the integration, learn what metrics are captured 
+Check out our [documentation](https://docs.newrelic.com/docs/kubernetes-integration-new-relic-infrastructure)
+in order to find out more how to install and configure the integration, learn what metrics are captured
 and how to query them.
 
 ## Table of contents
@@ -33,19 +33,19 @@ and how to query them.
 
 ## Installation
 
-Start by checking the 
+Start by checking the
 [compatibility and requirements](https://docs.newrelic.com/docs/integrations/kubernetes-integration/get-started/kubernetes-integration-compatibility-requirements) 
 and then follow the
 [installation steps](https://docs.newrelic.com/docs/kubernetes-monitoring-integration).
 
-For troubleshooting, see 
-[Not seeing data](https://docs.newrelic.com/docs/integrations/host-integrations/troubleshooting/kubernetes-integration-troubleshooting-not-seeing-data) 
+For troubleshooting, see
+[Not seeing data](https://docs.newrelic.com/docs/integrations/host-integrations/troubleshooting/kubernetes-integration-troubleshooting-not-seeing-data)
 or [Error messages](https://docs.newrelic.com/docs/integrations/host-integrations/troubleshooting/kubernetes-integration-troubleshooting-error-messages).
 
 ## Usage
 
 Learn how to 
-[find and use data](https://docs.newrelic.com/docs/integrations/kubernetes-integration/understand-use-data/understand-use-data) 
+[find and use data](https://docs.newrelic.com/docs/integrations/kubernetes-integration/understand-use-data/understand-use-data)
 and review the description of all 
 [captured data](https://docs.newrelic.com/docs/integrations/kubernetes-integration/understand-use-data/understand-use-data#event-types).
 
