@@ -30,6 +30,7 @@ import (
 func TestScraper(t *testing.T) {
 	// Create an asserter with the settings that are shared for all test scenarios.
 	asserter := asserter.New().
+		Silently().
 		Using(metric.KubeletSpecs).
 		Excluding(kubeletExclusions()...)
 
@@ -93,6 +94,14 @@ func kubeletExclusions() []exclude.Func {
 		"fsInodesUsed", "containerMemoryMappedFileBytes", "containerID", "containerImageID", "isReady", "podIP",
 		"cpuCoresUtilization", "requestedCpuCoresUtilization"}
 
+	// Utilization metrics will not be present if the corresponding limit/request is not present.
+	utilizationDependencies := map[string][]string{
+		"cpuLimitCores":        {"cpuCoresUtilization"},
+		"cpuRequestedCores":    {"requestedCpuCoresUtilization"},
+		"memoryLimitBytes":     {"memoryUtilization"},
+		"memoryRequestedBytes": {"requestedMemoryUtilization"},
+	}
+
 	// Regex to match limits/requests for CPU and Memory.
 	limitsRequestsRegex := regexp.MustCompile("(Limit|Requested)(Cores|Bytes)$")
 
@@ -110,6 +119,9 @@ func kubeletExclusions() []exclude.Func {
 				return limitsRequestsRegex.MatchString(spec.Name)
 			},
 		),
+
+		// Exclude metrics that depend on limits when those limits are not set.
+		exclude.Exclude(exclude.Groups("pod", "container"), exclude.Dependent(utilizationDependencies)),
 
 		// Static pods, typically living in kube-system, do not have creation dates.
 		exclude.Exclude(
