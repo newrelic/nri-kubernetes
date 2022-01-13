@@ -91,9 +91,10 @@ func kubeletExclusions() []exclude.Func {
 	nodeUtilizationMetrics := []string{"allocatableCpuCoresUtilization", "allocatableMemoryUtilization"}
 
 	// Pods and containers that are not in a running state will not have these metrics.
-	notRunningMetrics := []string{"memoryUsedBytes", "memoryWorkingSetBytes", "cpuUsedCores",
-		"fsAvailableBytes", "fsCapacityBytes", "fsUsedBytes", "fsUsedPercent", "fsInodesFree", "fsInodes",
-		"fsInodesUsed", "containerMemoryMappedFileBytes", "containerID", "containerImageID", "isReady", "podIP"}
+	notRunningMetrics := []string{"memoryUsedBytes", "memoryWorkingSetBytes", "cpuUsedCores", "requestedMemoryUtilization",
+		"fsAvailableBytes", "fsCapacityBytes", "fsUsedBytes", "fsUsedPercent", "fsInodesFree", "fsInodes", "memoryUtilization",
+		"fsInodesUsed", "containerMemoryMappedFileBytes", "containerID", "containerImageID", "isReady", "podIP",
+		"cpuCoresUtilization", "requestedCpuCoresUtilization"}
 
 	// Utilization metrics will not be present if the corresponding limit/request is not present.
 	utilizationDependencies := map[string][]string{
@@ -120,6 +121,7 @@ func kubeletExclusions() []exclude.Func {
 				return limitsRequestsRegex.MatchString(spec.Name)
 			},
 		),
+
 		// Exclude metrics that depend on limits when those limits are not set.
 		exclude.Exclude(exclude.Groups("pod", "container"), exclude.Dependent(utilizationDependencies)),
 
@@ -152,11 +154,15 @@ func kubeletExclusions() []exclude.Func {
 
 		// Reason and message are only present where a pod/container is pending or terminated
 		exclude.Exclude(
-			exclude.Groups("pod", "container"),
+			exclude.Groups("container"),
 			func(_ string, _ *definition.Spec, ent *integration.Entity) bool {
-				return !asserter.EntityMetricIs(ent, "status", "pending") &&
-					!asserter.EntityMetricIs(ent, "status", "terminated")
+				return asserter.EntityMetricIs(ent, "status", "running")
 			},
+			exclude.Metrics("reason", "message"),
+		),
+		// Reason and message are not reported properly by the kubelet API, and they come up empty.
+		exclude.Exclude(
+			exclude.Groups("pod"),
 			exclude.Metrics("reason", "message"),
 		),
 

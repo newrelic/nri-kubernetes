@@ -169,7 +169,19 @@ func EntityMetricIs(e *integration.Entity, metricName string, metricValue interf
 		return true
 	}
 
-	return entityMetric(e, metricName) == metricValue
+	switch mv := metricValue.(type) {
+	case string:
+		emv := entityMetric(e, metricName)
+		emvString, isString := emv.(string)
+		if !isString {
+			return false
+		}
+
+		return strings.EqualFold(emvString, mv)
+
+	default:
+		return entityMetric(e, metricName) == metricValue
+	}
 }
 
 // EntityMetricTypeIs returns true if supplied entity has metric named metricName with type _similar_ to metricType.
