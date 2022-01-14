@@ -69,33 +69,13 @@ compile-dev:
 	@echo "[compile-dev] Building $(BINARY_NAME) for development environment"
 	@GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o $(BIN_DIR)/$(BINARY_NAME) ./src
 
-.PHONY: deploy-dev
-deploy-dev: compile-dev
-	@echo "[deploy-dev] Deploying dev container image containing $(BINARY_NAME) in Kubernetes"
-	@skaffold run
-
-.PHONY: deploy-dev-openshift
-deploy-dev-openshift: compile-dev
-	@echo "[deploy-dev-openshift] Deploying dev container image containing $(BINARY_NAME) in Openshift"
-	@skaffold -v debug run -p openshift
-
 .PHONY: test
 test:
 	@echo "[test] Running unit tests"
 	@go test ./...
 
-guard-%:
-	@ if [ "${${*}}" = "" ]; then \
-		echo "Environment variable $* not set"; \
-		exit 1; \
-	fi
-
 buildLicenseNotice:
 	@go list -mod=mod -m -json all | go-licence-detector -noticeOut=NOTICE.txt -rules ./assets/licence/rules.json  -noticeTemplate ./assets/licence/THIRD_PARTY_NOTICES.md.tmpl -noticeOut THIRD_PARTY_NOTICES.md -overrides ./assets/licence/overrides -includeIndirect
-
-.PHONY: e2e
-e2e: guard-CLUSTER_NAME guard-NR_LICENSE_KEY
-	@go run e2e/cmd/e2e.go --verbose
 
 .PHONY: run-static
 run-static:
