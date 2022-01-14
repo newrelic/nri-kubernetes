@@ -13,6 +13,16 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
 
+// Fetch Functions for computed metrics
+var (
+	workingSetBytes   = definition.FromRaw("workingSetBytes")
+	cpuUsedCores      = definition.Transform(definition.FromRaw("usageNanoCores"), fromNano)
+	cpuLimitCores     = definition.Transform(definition.FromRaw("cpuLimitCores"), toCores)
+	cpuRequestedCores = definition.Transform(definition.FromRaw("cpuRequestedCores"), toCores)
+	processOpenFds    = prometheus.FromValueWithOverriddenName("process_open_fds", "processOpenFds")
+	processMaxFds     = prometheus.FromValueWithOverriddenName("process_max_fds", "processMaxFds")
+)
+
 // APIServerSpecs are the metric specifications we want to collect
 // from the control plane API server.
 var APIServerSpecs = definition.SpecGroups{
@@ -368,12 +378,12 @@ var EtcdSpecs = definition.SpecGroups{
 			},
 			{
 				Name:      "processOpenFds",
-				ValueFunc: prometheus.FromValueWithOverriddenName("process_open_fds", "processOpenFds"),
+				ValueFunc: processOpenFds,
 				Type:      sdkMetric.GAUGE,
 			},
 			{
 				Name:      "processMaxFds",
-				ValueFunc: prometheus.FromValueWithOverriddenName("process_max_fds", "processMaxFds"),
+				ValueFunc: processMaxFds,
 				Type:      sdkMetric.GAUGE,
 			},
 			{
@@ -409,7 +419,7 @@ var EtcdSpecs = definition.SpecGroups{
 			// computed
 			{
 				Name:      "processFdsUtilization",
-				ValueFunc: toUtilization("processOpenFds", "processMaxFds"),
+				ValueFunc: toUtilization(processOpenFds, processMaxFds),
 				Type:      sdkMetric.GAUGE,
 			},
 		},
@@ -895,8 +905,8 @@ var KubeletSpecs = definition.SpecGroups{
 		Specs: []definition.Spec{
 			// /stats/summary endpoint
 			{Name: "memoryUsedBytes", ValueFunc: definition.FromRaw("usageBytes"), Type: sdkMetric.GAUGE},
-			{Name: "memoryWorkingSetBytes", ValueFunc: definition.FromRaw("workingSetBytes"), Type: sdkMetric.GAUGE},
-			{Name: "cpuUsedCores", ValueFunc: definition.Transform(definition.FromRaw("usageNanoCores"), fromNano), Type: sdkMetric.GAUGE},
+			{Name: "memoryWorkingSetBytes", ValueFunc: workingSetBytes, Type: sdkMetric.GAUGE},
+			{Name: "cpuUsedCores", ValueFunc: cpuUsedCores, Type: sdkMetric.GAUGE},
 			{Name: "fsAvailableBytes", ValueFunc: definition.FromRaw("fsAvailableBytes"), Type: sdkMetric.GAUGE},
 			{Name: "fsCapacityBytes", ValueFunc: definition.FromRaw("fsCapacityBytes"), Type: sdkMetric.GAUGE},
 			{Name: "fsUsedBytes", ValueFunc: definition.FromRaw("fsUsedBytes"), Type: sdkMetric.GAUGE},
@@ -926,8 +936,8 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "nodeName", ValueFunc: definition.FromRaw("nodeName"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "nodeIP", ValueFunc: definition.FromRaw("nodeIP"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "restartCount", ValueFunc: definition.FromRaw("restartCount"), Type: sdkMetric.GAUGE},
-			{Name: "cpuRequestedCores", ValueFunc: definition.Transform(definition.FromRaw("cpuRequestedCores"), toCores), Type: sdkMetric.GAUGE, Optional: true},
-			{Name: "cpuLimitCores", ValueFunc: definition.Transform(definition.FromRaw("cpuLimitCores"), toCores), Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "cpuRequestedCores", ValueFunc: cpuRequestedCores, Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "cpuLimitCores", ValueFunc: cpuLimitCores, Type: sdkMetric.GAUGE, Optional: true},
 			{Name: "memoryRequestedBytes", ValueFunc: definition.FromRaw("memoryRequestedBytes"), Type: sdkMetric.GAUGE, Optional: true},
 			{Name: "memoryLimitBytes", ValueFunc: definition.FromRaw("memoryLimitBytes"), Type: sdkMetric.GAUGE, Optional: true},
 			{Name: "status", ValueFunc: definition.FromRaw("status"), Type: sdkMetric.ATTRIBUTE},
@@ -938,17 +948,17 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "label.*", ValueFunc: definition.Transform(definition.FromRaw("labels"), kubeletMetric.OneMetricPerLabel), Type: sdkMetric.ATTRIBUTE},
 
 			// computed
-			{Name: "cpuCoresUtilization", ValueFunc: toUtilization("cpuUsedCores", "cpuLimitCores"), Type: sdkMetric.GAUGE, Optional: true},
-			{Name: "requestedCpuCoresUtilization", ValueFunc: toUtilization("cpuUsedCores", "cpuRequestedCores"), Type: sdkMetric.GAUGE, Optional: true},
-			{Name: "memoryUtilization", ValueFunc: toUtilization("memoryUsedBytes", "memoryLimitBytes"), Type: sdkMetric.GAUGE, Optional: true},
-			{Name: "requestedMemoryUtilization", ValueFunc: toUtilization("memoryUsedBytes", "memoryRequestedBytes"), Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "cpuCoresUtilization", ValueFunc: toUtilization(cpuUsedCores, cpuLimitCores), Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "requestedCpuCoresUtilization", ValueFunc: toUtilization(cpuUsedCores, cpuRequestedCores), Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "memoryUtilization", ValueFunc: toUtilization(definition.FromRaw("usageBytes"), definition.FromRaw("memoryLimitBytes")), Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "requestedMemoryUtilization", ValueFunc: toUtilization(definition.FromRaw("usageBytes"), definition.FromRaw("memoryRequestedBytes")), Type: sdkMetric.GAUGE, Optional: true},
 		},
 	},
 	"node": {
 		TypeGenerator: kubeletMetric.FromRawGroupsEntityTypeGenerator,
 		Specs: []definition.Spec{
 			{Name: "nodeName", ValueFunc: definition.FromRaw("nodeName"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "cpuUsedCores", ValueFunc: definition.Transform(definition.FromRaw("usageNanoCores"), fromNano), Type: sdkMetric.GAUGE},
+			{Name: "cpuUsedCores", ValueFunc: cpuUsedCores, Type: sdkMetric.GAUGE},
 			{Name: "cpuUsedCoreMilliseconds", ValueFunc: definition.Transform(definition.FromRaw("usageCoreNanoSeconds"), fromNanoToMilli), Type: sdkMetric.GAUGE},
 			{Name: "memoryUsedBytes", ValueFunc: definition.FromRaw("memoryUsageBytes"), Type: sdkMetric.GAUGE},
 			{Name: "memoryAvailableBytes", ValueFunc: definition.FromRaw("memoryAvailableBytes"), Type: sdkMetric.GAUGE},
@@ -977,12 +987,12 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "condition.*", ValueFunc: definition.Transform(definition.FromRaw("conditions"), kubeletMetric.PrefixFromMapInt("condition.")), Type: sdkMetric.GAUGE},
 			{Name: "unschedulable", ValueFunc: definition.Transform(definition.FromRaw("unschedulable"), toNumericBoolean), Type: sdkMetric.GAUGE},
 			{Name: "memoryRequestedBytes", ValueFunc: definition.FromRaw("memoryRequestedBytes"), Type: sdkMetric.GAUGE},
-			{Name: "cpuRequestedCores", ValueFunc: definition.Transform(definition.FromRaw("cpuRequestedCores"), toCores), Type: sdkMetric.GAUGE},
+			{Name: "cpuRequestedCores", ValueFunc: cpuRequestedCores, Type: sdkMetric.GAUGE},
 			{Name: "kubeletVersion", ValueFunc: definition.FromRaw("kubeletVersion"), Type: sdkMetric.ATTRIBUTE},
 			// computed
-			{Name: "fsCapacityUtilization", ValueFunc: toUtilization("fsUsedBytes", "fsCapacityBytes"), Type: sdkMetric.GAUGE},
-			{Name: "allocatableCpuCoresUtilization", ValueFunc: toUtilization("cpuUsedCores", "allocatableCpuCores"), Type: sdkMetric.GAUGE},
-			{Name: "allocatableMemoryUtilization", ValueFunc: toUtilization("memoryWorkingSetBytes", "allocatableMemoryBytes"), Type: sdkMetric.GAUGE},
+			{Name: "fsCapacityUtilization", ValueFunc: toUtilization(definition.FromRaw("fsUsedBytes"), definition.FromRaw("fsCapacityBytes")), Type: sdkMetric.GAUGE},
+			{Name: "allocatableCpuCoresUtilization", ValueFunc: toUtilization(cpuUsedCores, definition.FromRaw("allocatableCpuCores")), Type: sdkMetric.GAUGE},
+			{Name: "allocatableMemoryUtilization", ValueFunc: toUtilization(workingSetBytes, definition.FromRaw("allocatableMemoryBytes")), Type: sdkMetric.GAUGE},
 		},
 	},
 	"volume": {
@@ -1017,11 +1027,51 @@ func isPersistentVolume() definition.FetchFunc {
 	}
 }
 
-func computePercentage(current, all uint64) (definition.FetchedValue, error) {
-	if all == uint64(0) {
-		return nil, errors.New("division by zero")
+func computePercentage(dividend, divisor interface{}) (definition.FetchedValue, error) {
+	var a, b float64
+
+	a, err := convertValue(dividend)
+	if err != nil {
+		return nil, fmt.Errorf("casting dividend: %w", err)
 	}
-	return (float64(current) / float64(all)) * 100, nil
+
+	b, err = convertValue(divisor)
+	if err != nil {
+		return nil, fmt.Errorf("casting divisor: %w", err)
+	}
+
+	if b == float64(0) {
+		return nil, fmt.Errorf("division by zero")
+	}
+
+	return a / b * 100, nil
+}
+
+func convertValue(v interface{}) (float64, error) {
+	switch v := v.(type) {
+	case uint:
+		return float64(v), nil
+	case uint64:
+		return float64(v), nil
+	case int:
+		return float64(v), nil
+	case int64:
+		return float64(v), nil
+	case prometheus.GaugeValue:
+		return float64(v), nil
+	case float64:
+		return v, nil
+	case definition.FetchedValues:
+		if len(v) != 1 {
+			return 0, fmt.Errorf("unable to convert FetchedValues")
+		}
+		for _, k := range v {
+			return convertValue(k)
+		}
+		return 0, fmt.Errorf("unable to convert FetchedValues")
+	default:
+		return 0, fmt.Errorf("type not supported %T", v)
+	}
 }
 
 func toComplementPercentage(desiredMetric, complementMetric string) definition.FetchFunc {
@@ -1030,29 +1080,39 @@ func toComplementPercentage(desiredMetric, complementMetric string) definition.F
 		if err != nil {
 			return nil, err
 		}
+
 		desired, err := definition.FromRaw(desiredMetric)(groupLabel, entityID, groups)
 		if err != nil {
 			return nil, err
 		}
+
 		v, err := computePercentage(desired.(uint64), desired.(uint64)+complement.(uint64))
 		if err != nil {
 			return nil, fmt.Errorf("error computing percentage for %s & %s: %s", desiredMetric, complementMetric, err)
 		}
+
 		return v, nil
 	}
 }
 
-func toUtilization(dividendMetric, divisorMetric string) definition.FetchFunc {
+func toUtilization(dividendFunc, divisorFunc definition.FetchFunc) definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
-		dividend, err := definition.FromRaw(dividendMetric)(groupLabel, entityID, groups)
+		dividend, err := dividendFunc(groupLabel, entityID, groups)
 		if err != nil {
-			return nil, fmt.Errorf("getting divident metric %q: %w", dividendMetric, err)
+			return nil, fmt.Errorf("getting divident metric: %w", err)
 		}
-		divisor, err := definition.FromRaw(divisorMetric)(groupLabel, entityID, groups)
+
+		divisor, err := divisorFunc(groupLabel, entityID, groups)
 		if err != nil {
-			return nil, fmt.Errorf("getting divisor metric %q: %w", divisorMetric, err)
+			return nil, fmt.Errorf("getting divisor metric: %w", err)
 		}
-		return computePercentage(dividend.(uint64), divisor.(uint64))
+
+		value, err := computePercentage(dividend, divisor)
+		if err != nil {
+			return nil, fmt.Errorf("computing utilization: %w", err)
+		}
+
+		return value, nil
 	}
 }
 
