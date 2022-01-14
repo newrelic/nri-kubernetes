@@ -26,9 +26,8 @@ import (
 )
 
 var (
-	excludeCM   = []string{"leaderElectionMasterStatus"}
-	excludeETCD = []string{"processFdsUtilization"}
-	excludeS    = []string{
+	excludeCM = []string{"leaderElectionMasterStatus"}
+	excludeS  = []string{
 		"leaderElectionMasterStatus",
 		"schedulerSchedulingDurationSeconds",
 		"schedulerPreemptionAttemptsDelta",
@@ -36,7 +35,10 @@ var (
 	}
 )
 
-const masterNodeName = "masterNode"
+const (
+	masterNodeName = "masterNode"
+	clusterName    = "testClusterName"
+)
 
 func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 	t.Parallel()
@@ -55,10 +57,6 @@ func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 			exclude.Exclude(
 				exclude.Groups("controller-manager"),
 				exclude.Metrics(excludeCM...),
-			),
-			exclude.Exclude(
-				exclude.Groups("etcd"),
-				exclude.Metrics(excludeETCD...),
 			),
 			exclude.Exclude(
 				exclude.Groups("scheduler"),
@@ -142,7 +140,8 @@ func Test_Scraper_Autodiscover_cp_component_after_start(t *testing.T) {
 
 	scraper, err := controlplane.NewScraper(
 		&config.Config{
-			NodeName: masterNodeName,
+			ClusterName: clusterName,
+			NodeName:    masterNodeName,
 			ControlPlane: config.ControlPlane{
 				Enabled:   true,
 				Scheduler: testConfig.ControlPlane.Scheduler,
@@ -206,7 +205,8 @@ func Test_Scraper_external_endpoint(t *testing.T) {
 
 	scraper, err := controlplane.NewScraper(
 		&config.Config{
-			NodeName: masterNodeName,
+			ClusterName: clusterName,
+			NodeName:    masterNodeName,
 			ControlPlane: config.ControlPlane{
 				Enabled: true,
 				Scheduler: config.ControlPlaneComponent{
@@ -282,7 +282,8 @@ func testConfig(
 	nodeName string,
 ) config.Config {
 	return config.Config{
-		NodeName: nodeName,
+		ClusterName: clusterName,
+		NodeName:    nodeName,
 		ControlPlane: config.ControlPlane{
 			Enabled: true,
 			ETCD: config.ControlPlaneComponent{
