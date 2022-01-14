@@ -3,7 +3,7 @@ FROM alpine:3.14
 ARG TARGETOS
 ARG TARGETARCH
 
-RUN apk add --no-cache --upgrade && apk add --no-cache tini=0.19.0-r0
+RUN apk add --no-cache --upgrade && apk add --no-cache tini=0.19.0-r0 curl bind-tools
 
 ADD --chmod=755 bin/nri-kubernetes-${TARGETOS}-${TARGETARCH} /var/db/newrelic-infra/newrelic-integrations/bin/
 
