@@ -1,6 +1,9 @@
 # E2E tests
+You can run e2e tests on any cluster, please notice that scraping control plane could be not possible or needing 
+specific values depending on the flavour. The following instructions assume as developing environment `Minikube`
 
-In order to run it locally you can do the following
+
+In order to run e2e tests locally you can do the following
 ```shell
 eval $(minikube -p minikube docker-env)
 minikube addons enable metrics-server

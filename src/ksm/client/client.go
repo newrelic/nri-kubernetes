@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
 	"github.com/sethgrid/pester"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 )
@@ -16,7 +16,7 @@ import (
 type Client struct {
 	// http is an HttpDoer that the KSM client will use to make requests.
 	http client.HTTPDoer
-	// TODO: Use a non-sdk logger
+
 	logger *log.Logger
 }
 
