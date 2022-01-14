@@ -14,7 +14,7 @@ can be found at https://github.com/newrelic/nri-kubernetes/.
 
 
 
-## [github.com/golang/protobuf](https://github.com/golang/protobuf)
+## [github.com/google/go-cmp](https://github.com/google/go-cmp)
 
 Distributed under the following license(s):
 
@@ -62,7 +62,23 @@ Distributed under the following license(s):
 
 
 
+## [github.com/sethgrid/pester](https://github.com/sethgrid/pester)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
 ## [github.com/sirupsen/logrus](https://github.com/sirupsen/logrus)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/spf13/viper](https://github.com/spf13/viper)
 
 Distributed under the following license(s):
 
@@ -78,23 +94,7 @@ Distributed under the following license(s):
 
 
 
-## [github.com/xeipuuv/gojsonschema](https://github.com/xeipuuv/gojsonschema)
-
-Distributed under the following license(s):
-
-* Apache-2.0
-
-
-
-## [golang.org/x/net](https://golang.org/x/net)
-
-Distributed under the following license(s):
-
-* BSD-3-Clause
-
-
-
-## [golang.org/x/oauth2](https://golang.org/x/oauth2)
+## [google.golang.org/protobuf](https://google.golang.org/protobuf)
 
 Distributed under the following license(s):
 
@@ -157,6 +157,14 @@ Distributed under the following license(s):
 
 
 ## [cloud.google.com/go/datastore](https://cloud.google.com/go/datastore)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [cloud.google.com/go/firestore](https://cloud.google.com/go/firestore)
 
 Distributed under the following license(s):
 
@@ -276,6 +284,14 @@ Distributed under the following license(s):
 
 
 
+## [github.com/OneOfOne/xxhash](https://github.com/OneOfOne/xxhash)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
 ## [github.com/PuerkitoBio/purell](https://github.com/PuerkitoBio/purell)
 
 Distributed under the following license(s):
@@ -308,6 +324,38 @@ Distributed under the following license(s):
 
 
 
+## [github.com/antihax/optional](https://github.com/antihax/optional)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/armon/circbuf](https://github.com/armon/circbuf)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/armon/go-metrics](https://github.com/armon/go-metrics)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/armon/go-radix](https://github.com/armon/go-radix)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
 ## [github.com/asaskevich/govalidator](https://github.com/asaskevich/govalidator)
 
 Distributed under the following license(s):
@@ -316,7 +364,31 @@ Distributed under the following license(s):
 
 
 
+## [github.com/benbjohnson/clock](https://github.com/benbjohnson/clock)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
 ## [github.com/beorn7/perks](https://github.com/beorn7/perks)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/bgentry/speakeasy](https://github.com/bgentry/speakeasy)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/bketelsen/crypt](https://github.com/bketelsen/crypt)
 
 Distributed under the following license(s):
 
@@ -337,6 +409,14 @@ Distributed under the following license(s):
 Distributed under the following license(s):
 
 * Apache-2.0
+
+
+
+## [github.com/cespare/xxhash](https://github.com/cespare/xxhash)
+
+Distributed under the following license(s):
+
+* MIT
 
 
 
@@ -388,6 +468,54 @@ Distributed under the following license(s):
 
 
 
+## [github.com/coreos/bbolt](https://github.com/coreos/bbolt)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/coreos/etcd](https://github.com/coreos/etcd)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [github.com/coreos/go-semver](https://github.com/coreos/go-semver)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [github.com/coreos/go-systemd](https://github.com/coreos/go-systemd)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [github.com/coreos/pkg](https://github.com/coreos/pkg)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [github.com/cpuguy83/go-md2man/v2](https://github.com/cpuguy83/go-md2man)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
 ## [github.com/creack/pty](https://github.com/creack/pty)
 
 Distributed under the following license(s):
@@ -401,6 +529,22 @@ Distributed under the following license(s):
 Distributed under the following license(s):
 
 * ISC
+
+
+
+## [github.com/dgrijalva/jwt-go](https://github.com/dgrijalva/jwt-go)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/dgryski/go-sip13](https://github.com/dgryski/go-sip13)
+
+Distributed under the following license(s):
+
+* MIT
 
 
 
@@ -452,6 +596,22 @@ Distributed under the following license(s):
 
 
 
+## [github.com/fatih/color](https://github.com/fatih/color)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/felixge/httpsnoop](https://github.com/felixge/httpsnoop)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
 ## [github.com/form3tech-oss/jwt-go](https://github.com/form3tech-oss/jwt-go)
 
 Distributed under the following license(s):
@@ -465,6 +625,14 @@ Distributed under the following license(s):
 Distributed under the following license(s):
 
 * BSD-3-Clause
+
+
+
+## [github.com/ghodss/yaml](https://github.com/ghodss/yaml)
+
+Distributed under the following license(s):
+
+* MIT
 
 
 
@@ -485,6 +653,14 @@ Distributed under the following license(s):
 
 
 ## [github.com/go-kit/kit](https://github.com/go-kit/kit)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/go-kit/log](https://github.com/go-kit/log)
 
 Distributed under the following license(s):
 
@@ -517,14 +693,6 @@ Distributed under the following license(s):
 
 
 ## [github.com/go-openapi/jsonreference](https://github.com/go-openapi/jsonreference)
-
-Distributed under the following license(s):
-
-* Apache-2.0
-
-
-
-## [github.com/go-openapi/spec](https://github.com/go-openapi/spec)
 
 Distributed under the following license(s):
 
@@ -580,19 +748,19 @@ Distributed under the following license(s):
 
 
 
+## [github.com/golang/protobuf](https://github.com/golang/protobuf)
+
+Distributed under the following license(s):
+
+* BSD-3-Clause
+
+
+
 ## [github.com/google/btree](https://github.com/google/btree)
 
 Distributed under the following license(s):
 
 * Apache-2.0
-
-
-
-## [github.com/google/go-cmp](https://github.com/google/go-cmp)
-
-Distributed under the following license(s):
-
-* BSD-3-Clause
 
 
 
@@ -605,14 +773,6 @@ Distributed under the following license(s):
 
 
 ## [github.com/google/martian](https://github.com/google/martian)
-
-Distributed under the following license(s):
-
-* Apache-2.0
-
-
-
-## [github.com/google/martian/v3](https://github.com/google/martian)
 
 Distributed under the following license(s):
 
@@ -660,6 +820,14 @@ Distributed under the following license(s):
 
 
 
+## [github.com/gopherjs/gopherjs](https://github.com/gopherjs/gopherjs)
+
+Distributed under the following license(s):
+
+* BSD-2-Clause
+
+
+
 ## [github.com/gorilla/websocket](https://github.com/gorilla/websocket)
 
 Distributed under the following license(s):
@@ -676,11 +844,171 @@ Distributed under the following license(s):
 
 
 
+## [github.com/grpc-ecosystem/go-grpc-middleware](https://github.com/grpc-ecosystem/go-grpc-middleware)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [github.com/grpc-ecosystem/go-grpc-prometheus](https://github.com/grpc-ecosystem/go-grpc-prometheus)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [github.com/grpc-ecosystem/grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway)
+
+Distributed under the following license(s):
+
+* BSD-3-Clause
+
+
+
+## [github.com/hashicorp/consul/api](https://github.com/hashicorp/consul)
+
+Distributed under the following license(s):
+
+* MPL-2.0
+
+
+
+## [github.com/hashicorp/consul/sdk](https://github.com/hashicorp/consul)
+
+Distributed under the following license(s):
+
+* MPL-2.0
+
+
+
+## [github.com/hashicorp/errwrap](https://github.com/hashicorp/errwrap)
+
+Distributed under the following license(s):
+
+* MPL-2.0
+
+
+
+## [github.com/hashicorp/go-cleanhttp](https://github.com/hashicorp/go-cleanhttp)
+
+Distributed under the following license(s):
+
+* MPL-2.0
+
+
+
+## [github.com/hashicorp/go-immutable-radix](https://github.com/hashicorp/go-immutable-radix)
+
+Distributed under the following license(s):
+
+* MPL-2.0
+
+
+
+## [github.com/hashicorp/go-msgpack](https://github.com/hashicorp/go-msgpack)
+
+Distributed under the following license(s):
+
+* BSD-3-Clause
+
+
+
+## [github.com/hashicorp/go-multierror](https://github.com/hashicorp/go-multierror)
+
+Distributed under the following license(s):
+
+* MPL-2.0
+
+
+
+## [github.com/hashicorp/go-rootcerts](https://github.com/hashicorp/go-rootcerts)
+
+Distributed under the following license(s):
+
+* MPL-2.0
+
+
+
+## [github.com/hashicorp/go-sockaddr](https://github.com/hashicorp/go-sockaddr)
+
+Distributed under the following license(s):
+
+* MPL-2.0
+
+
+
+## [github.com/hashicorp/go-syslog](https://github.com/hashicorp/go-syslog)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/hashicorp/go-uuid](https://github.com/hashicorp/go-uuid)
+
+Distributed under the following license(s):
+
+* MPL-2.0
+
+
+
+## [github.com/hashicorp/go.net](https://github.com/hashicorp/go.net)
+
+Distributed under the following license(s):
+
+* BSD-3-Clause
+
+
+
 ## [github.com/hashicorp/golang-lru](https://github.com/hashicorp/golang-lru)
 
 Distributed under the following license(s):
 
 * MPL-2.0 License
+
+
+
+## [github.com/hashicorp/hcl](https://github.com/hashicorp/hcl)
+
+Distributed under the following license(s):
+
+* MPL-2.0
+
+
+
+## [github.com/hashicorp/logutils](https://github.com/hashicorp/logutils)
+
+Distributed under the following license(s):
+
+* MPL-2.0
+
+
+
+## [github.com/hashicorp/mdns](https://github.com/hashicorp/mdns)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/hashicorp/memberlist](https://github.com/hashicorp/memberlist)
+
+Distributed under the following license(s):
+
+* MPL-2.0
+
+
+
+## [github.com/hashicorp/serf](https://github.com/hashicorp/serf)
+
+Distributed under the following license(s):
+
+* MPL-2.0
 
 
 
@@ -708,6 +1036,30 @@ Distributed under the following license(s):
 
 
 
+## [github.com/inconshreveable/mousetrap](https://github.com/inconshreveable/mousetrap)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [github.com/jonboulle/clockwork](https://github.com/jonboulle/clockwork)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [github.com/jpillora/backoff](https://github.com/jpillora/backoff)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
 ## [github.com/json-iterator/go](https://github.com/json-iterator/go)
 
 Distributed under the following license(s):
@@ -717,6 +1069,14 @@ Distributed under the following license(s):
 
 
 ## [github.com/jstemmer/go-junit-report](https://github.com/jstemmer/go-junit-report)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/jtolds/gls](https://github.com/jtolds/gls)
 
 Distributed under the following license(s):
 
@@ -788,7 +1148,31 @@ Distributed under the following license(s):
 
 
 
+## [github.com/magiconair/properties](https://github.com/magiconair/properties)
+
+Distributed under the following license(s):
+
+* BSD-2-Clause
+
+
+
 ## [github.com/mailru/easyjson](https://github.com/mailru/easyjson)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/mattn/go-colorable](https://github.com/mattn/go-colorable)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/mattn/go-isatty](https://github.com/mattn/go-isatty)
 
 Distributed under the following license(s):
 
@@ -801,6 +1185,54 @@ Distributed under the following license(s):
 Distributed under the following license(s):
 
 * Apache-2.0
+
+
+
+## [github.com/miekg/dns](https://github.com/miekg/dns)
+
+Distributed under the following license(s):
+
+* MPL-2.0 License
+
+
+
+## [github.com/mitchellh/cli](https://github.com/mitchellh/cli)
+
+Distributed under the following license(s):
+
+* MPL-2.0
+
+
+
+## [github.com/mitchellh/go-homedir](https://github.com/mitchellh/go-homedir)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/mitchellh/go-testing-interface](https://github.com/mitchellh/go-testing-interface)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/mitchellh/gox](https://github.com/mitchellh/gox)
+
+Distributed under the following license(s):
+
+* MPL-2.0
+
+
+
+## [github.com/mitchellh/iochan](https://github.com/mitchellh/iochan)
+
+Distributed under the following license(s):
+
+* MIT
 
 
 
@@ -876,6 +1308,22 @@ Distributed under the following license(s):
 
 
 
+## [github.com/nxadm/tail](https://github.com/nxadm/tail)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/oklog/ulid](https://github.com/oklog/ulid)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
 ## [github.com/onsi/ginkgo](https://github.com/onsi/ginkgo)
 
 Distributed under the following license(s):
@@ -885,6 +1333,22 @@ Distributed under the following license(s):
 
 
 ## [github.com/onsi/gomega](https://github.com/onsi/gomega)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/pascaldekloe/goe](https://github.com/pascaldekloe/goe)
+
+Distributed under the following license(s):
+
+* MPL-2.0 License
+
+
+
+## [github.com/pelletier/go-toml](https://github.com/pelletier/go-toml)
 
 Distributed under the following license(s):
 
@@ -905,6 +1369,14 @@ Distributed under the following license(s):
 Distributed under the following license(s):
 
 * BSD-3-Clause
+
+
+
+## [github.com/posener/complete](https://github.com/posener/complete)
+
+Distributed under the following license(s):
+
+* MIT
 
 
 
@@ -932,7 +1404,87 @@ Distributed under the following license(s):
 
 
 
+## [github.com/prometheus/tsdb](https://github.com/prometheus/tsdb)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [github.com/rogpeppe/fastuuid](https://github.com/rogpeppe/fastuuid)
+
+Distributed under the following license(s):
+
+* BSD-3-Clause
+
+
+
 ## [github.com/rogpeppe/go-internal](https://github.com/rogpeppe/go-internal)
+
+Distributed under the following license(s):
+
+* BSD-3-Clause
+
+
+
+## [github.com/russross/blackfriday/v2](https://github.com/russross/blackfriday)
+
+Distributed under the following license(s):
+
+* BSD-2-Clause
+
+
+
+## [github.com/ryanuber/columnize](https://github.com/ryanuber/columnize)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/sean-/seed](https://github.com/sean-/seed)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/shurcooL/sanitized_anchor_name](https://github.com/shurcooL/sanitized_anchor_name)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/smartystreets/assertions](https://github.com/smartystreets/assertions)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/smartystreets/goconvey](https://github.com/smartystreets/goconvey)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/soheilhy/cmux](https://github.com/soheilhy/cmux)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [github.com/spaolacci/murmur3](https://github.com/spaolacci/murmur3)
 
 Distributed under the following license(s):
 
@@ -948,11 +1500,43 @@ Distributed under the following license(s):
 
 
 
+## [github.com/spf13/cast](https://github.com/spf13/cast)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/spf13/cobra](https://github.com/spf13/cobra)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [github.com/spf13/jwalterweatherman](https://github.com/spf13/jwalterweatherman)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
 ## [github.com/spf13/pflag](https://github.com/spf13/pflag)
 
 Distributed under the following license(s):
 
 * BSD-3-Clause
+
+
+
+## [github.com/stoewer/go-strcase](https://github.com/stoewer/go-strcase)
+
+Distributed under the following license(s):
+
+* MIT
 
 
 
@@ -964,19 +1548,27 @@ Distributed under the following license(s):
 
 
 
-## [github.com/xeipuuv/gojsonpointer](https://github.com/xeipuuv/gojsonpointer)
+## [github.com/subosito/gotenv](https://github.com/subosito/gotenv)
 
 Distributed under the following license(s):
 
-* Apache-2.0
+* MIT
 
 
 
-## [github.com/xeipuuv/gojsonreference](https://github.com/xeipuuv/gojsonreference)
+## [github.com/tmc/grpc-websocket-proxy](https://github.com/tmc/grpc-websocket-proxy)
 
 Distributed under the following license(s):
 
-* Apache-2.0
+* MIT
+
+
+
+## [github.com/xiang90/probing](https://github.com/xiang90/probing)
+
+Distributed under the following license(s):
+
+* MIT
 
 
 
@@ -988,7 +1580,103 @@ Distributed under the following license(s):
 
 
 
+## [go.etcd.io/bbolt](https://go.etcd.io/bbolt)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
 ## [go.opencensus.io](https://go.opencensus.io)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [go.opentelemetry.io/contrib](https://go.opentelemetry.io/contrib)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp](https://go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [go.opentelemetry.io/otel](https://go.opentelemetry.io/otel)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [go.opentelemetry.io/otel/exporters/otlp](https://go.opentelemetry.io/otel/exporters/otlp)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [go.opentelemetry.io/otel/metric](https://go.opentelemetry.io/otel/metric)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [go.opentelemetry.io/otel/oteltest](https://go.opentelemetry.io/otel/oteltest)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [go.opentelemetry.io/otel/sdk](https://go.opentelemetry.io/otel/sdk)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [go.opentelemetry.io/otel/sdk/export/metric](https://go.opentelemetry.io/otel/sdk/export/metric)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [go.opentelemetry.io/otel/sdk/metric](https://go.opentelemetry.io/otel/sdk/metric)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [go.opentelemetry.io/otel/trace](https://go.opentelemetry.io/otel/trace)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [go.opentelemetry.io/proto/otlp](https://go.opentelemetry.io/proto/otlp)
 
 Distributed under the following license(s):
 
@@ -1061,6 +1749,22 @@ Distributed under the following license(s):
 
 
 ## [golang.org/x/mod](https://golang.org/x/mod)
+
+Distributed under the following license(s):
+
+* BSD-3-Clause
+
+
+
+## [golang.org/x/net](https://golang.org/x/net)
+
+Distributed under the following license(s):
+
+* BSD-3-Clause
+
+
+
+## [golang.org/x/oauth2](https://golang.org/x/oauth2)
 
 Distributed under the following license(s):
 
@@ -1156,14 +1860,6 @@ Distributed under the following license(s):
 
 
 
-## [google.golang.org/protobuf](https://google.golang.org/protobuf)
-
-Distributed under the following license(s):
-
-* BSD-3-Clause
-
-
-
 ## [gopkg.in/alecthomas/kingpin.v2](https://gopkg.in/alecthomas/kingpin.v2)
 
 Distributed under the following license(s):
@@ -1201,6 +1897,22 @@ Distributed under the following license(s):
 Distributed under the following license(s):
 
 * BSD-3-Clause
+
+
+
+## [gopkg.in/ini.v1](https://gopkg.in/ini.v1)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [gopkg.in/resty.v1](https://gopkg.in/resty.v1)
+
+Distributed under the following license(s):
+
+* MIT
 
 
 
