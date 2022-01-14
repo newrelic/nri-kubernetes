@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
+	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/grouper"
