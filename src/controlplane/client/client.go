@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/connector"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
@@ -14,7 +14,6 @@ import (
 
 // Client implements a client for ControlPlane component.
 type Client struct {
-	// TODO: Use a non-sdk logger
 	logger   *log.Logger
 	doer     client.HTTPDoer
 	endpoint url.URL

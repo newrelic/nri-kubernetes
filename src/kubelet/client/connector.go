@@ -9,13 +9,13 @@ import (
 	"net/url"
 	"path"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/transport"
 
+	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 )
 
@@ -31,7 +31,6 @@ type Connector interface {
 }
 
 type defaultConnector struct {
-	// TODO: Use a non-sdk logger
 	logger          *log.Logger
 	kc              kubernetes.Interface
 	inClusterConfig *rest.Config
