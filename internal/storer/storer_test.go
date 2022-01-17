@@ -95,4 +95,20 @@ func Test_Cache(t *testing.T) {
 			assert.Equal(t, val, float64(0))
 		}
 	})
+
+	t.Run("does_not_delete_old_entries_if_stopped", func(t *testing.T) {
+		t.Parallel()
+		var val float64
+		cache := storer.NewInMemoryStore(time.Millisecond, time.Millisecond*50, logrus.New())
+		cache.StopVacuum()
+
+		for i := 0; i < 5; i++ {
+			cache.Set(testKey, testValue)
+			time.Sleep(time.Millisecond * 200)
+			_, err := cache.Get(testKey, &val)
+
+			assert.NoError(t, err)
+			assert.Equal(t, val, testValue)
+		}
+	})
 }

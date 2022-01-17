@@ -20,10 +20,12 @@ const (
 
 // InMemoryStore is similar to the sdk one, the main difference is cleanCache method executed each interval.
 type InMemoryStore struct {
-	cachedData map[string]jsonEntry
-	locker     sync.Locker
-	ttl        time.Duration
-	logger     *logrus.Logger
+	cachedData  map[string]jsonEntry
+	locker      *sync.RWMutex
+	ttl         time.Duration
+	logger      *logrus.Logger
+	ticker      *time.Ticker
+	stopChannel chan struct{}
 }
 
 // Holder for any entry in the JSON storage.
@@ -36,18 +38,22 @@ type jsonEntry struct {
 // NewInMemoryStore will create and initialize an InMemoryStore.
 func NewInMemoryStore(ttl time.Duration, interval time.Duration, logger *logrus.Logger) *InMemoryStore {
 	ims := &InMemoryStore{
-		cachedData: make(map[string]jsonEntry),
-		locker:     &sync.Mutex{},
-		ttl:        ttl,
-		logger:     logger,
+		cachedData:  make(map[string]jsonEntry),
+		locker:      &sync.RWMutex{},
+		ttl:         ttl,
+		logger:      logger,
+		ticker:      time.NewTicker(interval),
+		stopChannel: make(chan struct{}),
 	}
-
-	tk := time.NewTicker(interval)
 
 	go func() {
 		for {
-			<-tk.C
-			ims.cleanCache()
+			select {
+			case <-ims.ticker.C:
+				ims.vacuum()
+			case <-ims.stopChannel:
+				return
+			}
 		}
 	}()
 
@@ -55,12 +61,12 @@ func NewInMemoryStore(ttl time.Duration, interval time.Duration, logger *logrus.
 }
 
 // Set stores a value for a given key.
-func (j InMemoryStore) Set(key string, value interface{}) int64 {
-	j.locker.Lock()
-	defer j.locker.Unlock()
+func (ims InMemoryStore) Set(key string, value interface{}) int64 {
+	ims.locker.Lock()
+	defer ims.locker.Unlock()
 
 	ts := time.Now()
-	j.cachedData[key] = jsonEntry{
+	ims.cachedData[key] = jsonEntry{
 		timestamp: ts,
 		value:     value,
 	}
@@ -69,16 +75,16 @@ func (j InMemoryStore) Set(key string, value interface{}) int64 {
 
 // Get gets the value associated to a given key and stores it in the value referenced by the pointer passed as
 // second argument.
-func (j InMemoryStore) Get(key string, valuePtr interface{}) (int64, error) {
-	j.locker.Lock()
-	defer j.locker.Unlock()
+func (ims InMemoryStore) Get(key string, valuePtr interface{}) (int64, error) {
+	ims.locker.RLock()
+	defer ims.locker.RUnlock()
 
 	rv := reflect.ValueOf(valuePtr)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
 		return 0, errors.New("destination argument must be an empty pointer")
 	}
 
-	entry, ok := j.cachedData[key]
+	entry, ok := ims.cachedData[key]
 	if !ok {
 		// Notice that we have to return persist.ErrNotFound, any other error will be interpreted
 		// as a generic error exiting. The data would be never set.
@@ -91,28 +97,35 @@ func (j InMemoryStore) Get(key string, valuePtr interface{}) (int64, error) {
 	return entry.timestamp.Unix(), nil
 }
 
-// cleanCache removes the cached data entries if older than TTL.
-func (j InMemoryStore) cleanCache() {
-	j.locker.Lock()
-	defer j.locker.Unlock()
+// vacuum removes the cached data entries if older than TTL.
+func (ims InMemoryStore) vacuum() {
+	ims.locker.Lock()
+	defer ims.locker.Unlock()
 
-	j.logger.Errorf("cleaning cache: len %d ...", len(j.cachedData))
-	for k, v := range j.cachedData {
-		if time.Since(v.timestamp).Seconds() > j.ttl.Seconds() {
-			delete(j.cachedData, k)
+	ims.logger.Debugf("cleaning cache: len %d ...", len(ims.cachedData))
+	for k, v := range ims.cachedData {
+		if time.Since(v.timestamp).Seconds() > ims.ttl.Seconds() {
+			delete(ims.cachedData, k)
 		}
 	}
-	j.logger.Errorf("cache cleaned: len %d ...", len(j.cachedData))
+	ims.logger.Debugf("cache cleaned: len %d ...", len(ims.cachedData))
+}
+
+// StopVacuum Stops the goroutine in charge of the vacuum of the cache.
+func (ims InMemoryStore) StopVacuum() {
+	ims.logger.Debugf("stopping vacuum goroutine")
+	ims.ticker.Stop()
+	close(ims.stopChannel)
 }
 
 //Save implementation to respect interface.
-func (j *InMemoryStore) Save() error {
+func (ims *InMemoryStore) Save() error {
 	// It does nothing, not needed in this implementation
 	return nil
 }
 
 // Delete implementation to respect interface.
-func (j InMemoryStore) Delete(_ string) error {
+func (ims InMemoryStore) Delete(_ string) error {
 	// It does nothing, not needed in this implementation
 	return nil
 }

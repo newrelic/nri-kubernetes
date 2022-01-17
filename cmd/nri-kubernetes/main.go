@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/infra-integrations-sdk/persist"
 	"github.com/sethgrid/pester"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
@@ -70,9 +69,7 @@ func main() {
 		logger.SetLevel(log.DebugLevel)
 	}
 
-	cache := storer.NewInMemoryStore(storer.DefaultTTL, storer.DefaultInterval, logger)
-
-	i, err := createIntegrationWithHTTPSink(c, cache)
+	i, err := createIntegrationWithHTTPSink(c)
 	if err != nil {
 		logger.Errorf("creating integration with http sink: %v", err)
 		os.Exit(exitIntegration)
@@ -260,7 +257,7 @@ func buildClients(c *config.Config) (*clusterClients, error) {
 	}, nil
 }
 
-func createIntegrationWithHTTPSink(config *config.Config, cache persist.Storer) (*integration.Integration, error) {
+func createIntegrationWithHTTPSink(config *config.Config) (*integration.Integration, error) {
 	c := pester.New()
 	c.Backoff = func(retry int) time.Duration {
 		return config.Sink.HTTP.BackoffDelay
@@ -287,6 +284,8 @@ func createIntegrationWithHTTPSink(config *config.Config, cache persist.Storer) 
 	if err != nil {
 		return nil, fmt.Errorf("creating HTTPSink: %w", err)
 	}
+
+	cache := storer.NewInMemoryStore(storer.DefaultTTL, storer.DefaultInterval, logger)
 
 	return integration.New(integrationName, integrationVersion, integration.Writer(h), integration.Storer(cache))
 }
