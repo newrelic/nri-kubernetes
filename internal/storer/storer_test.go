@@ -69,7 +69,7 @@ func Test_Cache(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	t.Run("whithout_a_hit_returns_zero_and_err_not_found", func(t *testing.T) {
+	t.Run("without_a_hit_returns_zero_and_err_not_found", func(t *testing.T) {
 		t.Parallel()
 		var val float64
 
@@ -78,6 +78,21 @@ func Test_Cache(t *testing.T) {
 		assert.ErrorIs(t, err, persist.ErrNotFound)
 		assert.Equal(t, val, float64(0))
 		assert.Equal(t, timestamp, int64(0))
+	})
 
+	t.Run("cleans_itself_periodically", func(t *testing.T) {
+		t.Parallel()
+		var val float64
+		cache := storer.NewInMemoryStore(time.Millisecond, time.Millisecond*50, logrus.New())
+
+		for i := 0; i < 5; i++ {
+			cache.Set(testKey, testValue)
+			time.Sleep(time.Millisecond * 200)
+			timestamp, err := cache.Get(testKey, &val)
+
+			assert.ErrorIs(t, err, persist.ErrNotFound)
+			assert.Equal(t, timestamp, int64(0))
+			assert.Equal(t, val, float64(0))
+		}
 	})
 }
