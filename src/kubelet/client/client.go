@@ -7,6 +7,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/sethgrid/pester"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
@@ -59,7 +60,23 @@ func New(connector Connector, opts ...OptionFunc) (*Client, error) {
 		return nil, fmt.Errorf("connecting to kubelet using the connector: %w", err)
 	}
 
-	c.doer = conn.client
+	var doer client.HTTPDoer
+	if client, ok := conn.client.(*http.Client); ok {
+		httpPester := pester.NewExtendedClient(client)
+		httpPester.Backoff = pester.LinearBackoff
+		//Note that httpPester.Timeout overwrites the timeout inside the client
+		httpPester.Timeout = defaultTimeout
+		httpPester.MaxRetries = 3
+		httpPester.LogHook = func(e pester.ErrEntry) {
+			c.logger.Debugf("getting data from kubelet: %v", e)
+		}
+		doer = httpPester
+	} else {
+		c.logger.Debugf("running kubelet client without pester")
+		doer = conn.client
+	}
+
+	c.doer = doer
 	c.endpoint = conn.url
 
 	return c, nil
