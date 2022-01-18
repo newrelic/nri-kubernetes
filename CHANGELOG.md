@@ -5,9 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased
+## 2.9.0
 
 ### Added
+
+- Upgrade infrastructure-bundle to 2.8.1
+    - See https://github.com/newrelic/infrastructure-bundle/releases/tag/2.8.1 for more details about the upgraded integrations in this release of the infrastructure-bundle
 
 - Moved default config.sample to [V4](https://docs.newrelic.com/docs/create-integrations/infrastructure-integrations-sdk/specifications/host-integrations-newer-configuration-format/), added a dependency for infra-agent version 1.20.0
 
