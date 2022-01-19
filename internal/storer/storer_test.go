@@ -63,9 +63,22 @@ func Test_Cache(t *testing.T) {
 		t.Parallel()
 
 		cache := storer.NewInMemoryStore(time.Second*50, time.Second*1, logrus.New())
+		_ = cache.Set(testKey, testValue)
+
 		_, err := cache.Get(testKey, nil)
 		assert.Error(t, err)
 		_, err = cache.Get(testKey, testKey)
+		assert.Error(t, err)
+	})
+
+	t.Run("fails_if_value_is_a_different_pointer", func(t *testing.T) {
+		t.Parallel()
+
+		var val string
+		cache := storer.NewInMemoryStore(time.Second*50, time.Second*1, logrus.New())
+		_ = cache.Set(testKey, testValue)
+
+		_, err := cache.Get(testKey, &val)
 		assert.Error(t, err)
 	})
 

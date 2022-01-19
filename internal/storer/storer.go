@@ -3,6 +3,7 @@ package storer
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"sync"
 	"time"
@@ -92,7 +93,13 @@ func (ims InMemoryStore) Get(key string, valuePtr interface{}) (int64, error) {
 	}
 
 	// Using reflection to indirectly set the value passed as reference
-	reflect.Indirect(rv).Set(reflect.Indirect(reflect.ValueOf(entry.value)))
+	varToPopulate := reflect.Indirect(reflect.ValueOf(valuePtr))
+	valueToSet := reflect.Indirect(reflect.ValueOf(entry.value))
+
+	if !valueToSet.Type().AssignableTo(varToPopulate.Type()) {
+		return 0, fmt.Errorf("the types of cache source and dst are different: %q %q", valueToSet.Type(), varToPopulate.Type())
+	}
+	varToPopulate.Set(valueToSet)
 
 	return entry.timestamp.Unix(), nil
 }
