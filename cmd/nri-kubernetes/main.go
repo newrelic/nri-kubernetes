@@ -20,6 +20,7 @@ import (
 	"k8s.io/client-go/util/homedir"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
+	"github.com/newrelic/nri-kubernetes/v2/internal/storer"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
 	"github.com/newrelic/nri-kubernetes/v2/src/ksm"
@@ -284,7 +285,9 @@ func createIntegrationWithHTTPSink(config *config.Config) (*integration.Integrat
 		return nil, fmt.Errorf("creating HTTPSink: %w", err)
 	}
 
-	return integration.New(integrationName, integrationVersion, integration.Writer(h), integration.InMemoryStore())
+	cache := storer.NewInMemoryStore(storer.DefaultTTL, storer.DefaultInterval, logger)
+
+	return integration.New(integrationName, integrationVersion, integration.Writer(h), integration.Storer(cache))
 }
 
 func getK8sConfig(c *config.Config) (*rest.Config, error) {
