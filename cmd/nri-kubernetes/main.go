@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"os"
@@ -12,13 +11,6 @@ import (
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/sethgrid/pester"
-	log "github.com/sirupsen/logrus"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
-
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
@@ -28,6 +20,12 @@ import (
 	kubeletClient "github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 	"github.com/newrelic/nri-kubernetes/v2/src/sink"
+	"github.com/sethgrid/pester"
+	log "github.com/sirupsen/logrus"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 )
 
 const (
@@ -234,7 +232,11 @@ func buildClients(c *config.Config) (*clusterClients, error) {
 
 	var ksmCli *ksmClient.Client
 	if c.KSM.Enabled {
-		ksmCli, err = ksmClient.New(ksmClient.WithLogger(logger))
+		ksmCli, err = ksmClient.New(
+			ksmClient.WithLogger(logger),
+			ksmClient.WithTimeout(c.KSM.Timeout),
+			ksmClient.WithMaxRetries(c.KSM.Retries),
+		)
 		if err != nil {
 			return nil, fmt.Errorf("building KSM client: %w", err)
 		}
@@ -242,7 +244,11 @@ func buildClients(c *config.Config) (*clusterClients, error) {
 
 	var kubeletCli *kubeletClient.Client
 	if c.Kubelet.Enabled {
-		kubeletCli, err = kubeletClient.New(kubeletClient.DefaultConnector(k8s, c, k8sConfig, logger), kubeletClient.WithLogger(logger))
+		kubeletCli, err = kubeletClient.New(
+			kubeletClient.DefaultConnector(k8s, c, k8sConfig, logger),
+			kubeletClient.WithLogger(logger),
+			kubeletClient.WithMaxRetries(c.Kubelet.Retries),
+		)
 		if err != nil {
 			return nil, fmt.Errorf("building Kubelet client: %w", err)
 		}
@@ -258,14 +264,9 @@ func buildClients(c *config.Config) (*clusterClients, error) {
 
 func createIntegrationWithHTTPSink(config *config.Config) (*integration.Integration, error) {
 	c := pester.New()
-	c.Backoff = func(retry int) time.Duration {
-		return config.Sink.HTTP.BackoffDelay
-	}
-	// Allow as many attempts as seconds are in the global timeout.
-	// This is a rough and conservative approximation as we don't actually need to enforce a number of retries:
-	// We simply rely on the global timeout instead. However, pester requires this value to be set regardless.
-	c.MaxRetries = int(config.Sink.HTTP.Timeout / time.Second)
-	c.Timeout = config.Sink.HTTP.ConnectionTimeout
+	c.Backoff = pester.LinearBackoff
+	c.MaxRetries = config.Sink.HTTP.Retries
+	c.Timeout = config.Sink.HTTP.Timeout
 	c.LogHook = func(e pester.ErrEntry) {
 		logger.Debugf("sending data to httpSink: %q", e)
 	}
@@ -273,10 +274,8 @@ func createIntegrationWithHTTPSink(config *config.Config) (*integration.Integrat
 	endpoint := net.JoinHostPort(sink.DefaultAgentForwarderhost, strconv.Itoa(config.Sink.HTTP.Port))
 
 	sinkOptions := sink.HTTPSinkOptions{
-		URL:        fmt.Sprintf("http://%s%s", endpoint, sink.DefaultAgentForwarderPath),
-		Client:     c,
-		CtxTimeout: config.Sink.HTTP.Timeout,
-		Ctx:        context.Background(),
+		URL:    fmt.Sprintf("http://%s%s", endpoint, sink.DefaultAgentForwarderPath),
+		Client: c,
 	}
 
 	h, err := sink.NewHTTPSink(sinkOptions)

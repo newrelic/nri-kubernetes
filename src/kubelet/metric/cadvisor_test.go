@@ -49,7 +49,7 @@ func runCAdvisorFetchFunc(t *testing.T, file string) {
 		handler: readerToHandler(f),
 	}
 
-	kubeletClient, err := client.New(client.StaticConnector(c, url.URL{}))
+	kubeletClient, err := client.New(client.StaticConnector(c, url.URL{}), client.WithMaxRetries(3))
 
 	require.NoError(t, err)
 
@@ -81,7 +81,7 @@ container_memory_usage_bytes{container_name="influxdb",id="/kubepods/besteffort/
 		handler: readerToHandler(f),
 	}
 
-	kubeletClient, err := client.New(client.StaticConnector(c, url.URL{}))
+	kubeletClient, err := client.New(client.StaticConnector(c, url.URL{}), client.WithMaxRetries(3))
 	require.NoError(t, err)
 
 	_, err = CadvisorFetchFunc(kubeletClient.MetricFamiliesGetFunc(KubeletCAdvisorMetricsPath), cadvisorQueries)()

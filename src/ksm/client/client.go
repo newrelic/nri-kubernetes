@@ -4,20 +4,20 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/sethgrid/pester"
-	log "github.com/sirupsen/logrus"
-
 	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
+	"github.com/sethgrid/pester"
+	log "github.com/sirupsen/logrus"
 )
 
 // Client implements a client for KSM, capable of retrieving prometheus metrics from a given endpoint.
 type Client struct {
 	// http is an HttpDoer that the KSM client will use to make requests.
-	http client.HTTPDoer
-
-	logger *log.Logger
+	http    client.HTTPDoer
+	logger  *log.Logger
+	retries int
+	timeout time.Duration
 }
 
 type OptionFunc func(kc *Client) error
@@ -30,26 +30,42 @@ func WithLogger(logger *log.Logger) OptionFunc {
 	}
 }
 
+// WithTimeout returns an OptionFunc to change the timeout for Pester Client.
+func WithTimeout(timeout time.Duration) OptionFunc {
+	return func(kubeletClient *Client) error {
+		kubeletClient.timeout = timeout
+		return nil
+	}
+}
+
+// WithMaxRetries returns an OptionFunc to change the number of retries for Pester Client.
+func WithMaxRetries(retries int) OptionFunc {
+	return func(kubeletClient *Client) error {
+		kubeletClient.retries = retries
+		return nil
+	}
+}
+
 // New builds a Client using the given options. By default, it will use pester as an HTTP Doer and a noop logger.
 func New(opts ...OptionFunc) (*Client, error) {
 	k := &Client{
 		logger: logutil.Discard,
 	}
 
-	httpPester := pester.New()
-	httpPester.Backoff = pester.LinearBackoff
-	httpPester.MaxRetries = 3
-	httpPester.Timeout = 10 * time.Second
-	httpPester.LogHook = func(e pester.ErrEntry) {
-		k.logger.Debugf("getting data from ksm: %v", e)
-	}
-	k.http = httpPester
-
 	for i, opt := range opts {
 		if err := opt(k); err != nil {
 			return nil, fmt.Errorf("applying option #%d: %w", i, err)
 		}
 	}
+
+	httpPester := pester.New()
+	httpPester.Backoff = pester.LinearBackoff
+	httpPester.MaxRetries = k.retries
+	httpPester.Timeout = k.timeout
+	httpPester.LogHook = func(e pester.ErrEntry) {
+		k.logger.Debugf("getting data from ksm: %v", e)
+	}
+	k.http = httpPester
 
 	return k, nil
 }

@@ -186,6 +186,7 @@ func (s *Scraper) externalEndpoint(c component) (*scrape.Job, error) {
 		connector.Config{
 			Authenticator: s.authenticator,
 			Endpoints:     []config.Endpoint{*c.StaticEndpointConfig},
+			Timeout:       s.config.ControlPlane.Timeout,
 		},
 		connector.WithLogger(s.logger),
 	)
@@ -193,7 +194,11 @@ func (s *Scraper) externalEndpoint(c component) (*scrape.Job, error) {
 		return nil, fmt.Errorf("creating connector for %q failed: %w", c.Name, err)
 	}
 
-	client, err := controlplaneClient.New(connector, controlplaneClient.WithLogger(s.logger))
+	client, err := controlplaneClient.New(
+		connector,
+		controlplaneClient.WithLogger(s.logger),
+		controlplaneClient.WithMaxRetries(s.config.ControlPlane.Retries),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("creating client for %q failed: %w", c.Name, err)
 	}
@@ -238,6 +243,7 @@ func (s *Scraper) autodiscover(c component) (*scrape.Job, error) {
 			connector.Config{
 				Authenticator: s.authenticator,
 				Endpoints:     autodiscover.Endpoints,
+				Timeout:       s.config.ControlPlane.Timeout,
 			},
 			connector.WithLogger(s.logger),
 		)
@@ -245,7 +251,11 @@ func (s *Scraper) autodiscover(c component) (*scrape.Job, error) {
 			return nil, fmt.Errorf("creating connector for %q failed: %w", c.Name, err)
 		}
 
-		client, err := controlplaneClient.New(connector, controlplaneClient.WithLogger(s.logger))
+		client, err := controlplaneClient.New(
+			connector,
+			controlplaneClient.WithLogger(s.logger),
+			controlplaneClient.WithMaxRetries(s.config.ControlPlane.Retries),
+		)
 		if err != nil {
 			s.logger.Debugf("Failed creating %q client: %v", c.Name, err)
 			continue

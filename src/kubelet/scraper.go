@@ -4,11 +4,6 @@ import (
 	"fmt"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
-	log "github.com/sirupsen/logrus"
-	"k8s.io/apimachinery/pkg/version"
-	"k8s.io/client-go/kubernetes"
-	listersv1 "k8s.io/client-go/listers/core/v1"
-
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
@@ -20,6 +15,10 @@ import (
 	"github.com/newrelic/nri-kubernetes/v2/src/network"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
+	log "github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/version"
+	"k8s.io/client-go/kubernetes"
+	listersv1 "k8s.io/client-go/listers/core/v1"
 )
 
 // Providers is a struct holding pointers to all the clients Scraper needs to get data from.

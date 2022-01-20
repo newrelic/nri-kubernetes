@@ -9,20 +9,20 @@ import (
 
 	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
 	"github.com/newrelic/infra-integrations-sdk/integration"
-	log "github.com/sirupsen/logrus"
-	"k8s.io/apimachinery/pkg/version"
-	"k8s.io/client-go/kubernetes/fake"
-
+	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	ksmClient "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
 	ksmGrouper "github.com/newrelic/nri-kubernetes/v2/src/ksm/grouper"
-	kubletClient "github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
+	kubeletClient "github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
 	kubeletGrouper "github.com/newrelic/nri-kubernetes/v2/src/kubelet/grouper"
 	kubeletmetric "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
+	log "github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/version"
+	"k8s.io/client-go/kubernetes/fake"
 )
 
 const (
@@ -75,7 +75,10 @@ func main() {
 	}
 
 	// Kubelet
-	kubeletClient, err := kubletClient.New(kubletClient.StaticConnector(&http.Client{Timeout: time.Minute * 10}, *u))
+	kubeletClient, err := kubeletClient.New(
+		kubeletClient.StaticConnector(&http.Client{Timeout: time.Minute * 10}, *u),
+		kubeletClient.WithMaxRetries(config.DefaultRetries),
+	)
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -95,7 +98,11 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	kc, err := ksmClient.New(ksmClient.WithLogger(logger))
+	kc, err := ksmClient.New(
+		ksmClient.WithLogger(logger),
+		ksmClient.WithTimeout(config.DefaultTimeout),
+		ksmClient.WithMaxRetries(config.DefaultRetries),
+	)
 	if err != nil {
 		logger.Fatal(err)
 	}

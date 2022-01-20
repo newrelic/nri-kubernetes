@@ -33,11 +33,12 @@ func Test_Client(t *testing.T) {
 		connector.Config{
 			Authenticator: authenticator,
 			Endpoints:     []config.Endpoint{{URL: server.URL}},
+			Timeout:       2000 * time.Millisecond,
 		},
 	)
 	assert.NoError(t, err)
 
-	cpClient, err := client.New(c)
+	cpClient, err := client.New(c, client.WithMaxRetries(0))
 	require.NoError(t, err)
 
 	familyGetter := cpClient.MetricFamiliesGetFunc()
@@ -47,11 +48,25 @@ func Test_Client(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, true, hit)
 
-	timeout = timeout + connector.DefaultTimout
+	// Overwrite httpServer timeout to be higher than client's
+	timeout = timeout + c.Timeout
 
 	// Fails if timeout
 	_, err = familyGetter(nil)
 	require.Error(t, err)
+
+	// Test calling retry
+	cpClientWithReries, err := client.New(c, client.WithMaxRetries(2))
+	require.NoError(t, err)
+
+	familyGetter = cpClientWithReries.MetricFamiliesGetFunc()
+
+	// Overwrite httpServer timeout to be higher than client's
+	timeout = timeout + c.Timeout
+
+	// Should not fail because of second retry
+	_, err = familyGetter(nil)
+	require.NoError(t, err)
 }
 
 func testHTTPServer(t *testing.T, sleepDuration *time.Duration, hit *bool) *httptest.Server {
@@ -60,6 +75,8 @@ func testHTTPServer(t *testing.T, sleepDuration *time.Duration, hit *bool) *http
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if sleepDuration != nil {
 			time.Sleep(*sleepDuration)
+			// resetting the duration to 1 millisecond for second client retry to succeed if timeout is higher
+			*sleepDuration = time.Millisecond
 		}
 
 		if r.URL.Path == prometheusPath {

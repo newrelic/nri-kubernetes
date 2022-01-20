@@ -48,7 +48,10 @@ func TestScraper(t *testing.T) {
 
 			u, _ := url.Parse(testServer.KubeletEndpoint())
 
-			kubeletClient, err := kubeletClient.New(kubeletClient.StaticConnector(&http.Client{}, *u))
+			kubeletClient, err := kubeletClient.New(
+				kubeletClient.StaticConnector(&http.Client{}, *u),
+				kubeletClient.WithMaxRetries(3),
+			)
 			require.NoError(t, err)
 
 			k8sData, err := version.K8s()

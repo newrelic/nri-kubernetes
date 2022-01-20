@@ -5,21 +5,18 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"time"
-
-	"github.com/sethgrid/pester"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
+	"github.com/sethgrid/pester"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
 	healthzPath             = "/healthz"
 	defaultHTTPKubeletPort  = 10255
 	defaultHTTPSKubeletPort = 10250
-	defaultTimeout          = time.Millisecond * 5000
 )
 
 // Client implements a client for Kubelet, capable of retrieving prometheus metrics from a given endpoint.
@@ -27,6 +24,7 @@ type Client struct {
 	logger   *log.Logger
 	doer     client.HTTPDoer
 	endpoint url.URL
+	retries  int
 }
 
 type OptionFunc func(kc *Client) error
@@ -35,6 +33,14 @@ type OptionFunc func(kc *Client) error
 func WithLogger(logger *log.Logger) OptionFunc {
 	return func(kubeletClient *Client) error {
 		kubeletClient.logger = logger
+		return nil
+	}
+}
+
+// WithMaxRetries returns an OptionFunc to change the number of retries used int Pester Client.
+func WithMaxRetries(retries int) OptionFunc {
+	return func(kubeletClient *Client) error {
+		kubeletClient.retries = retries
 		return nil
 	}
 }
@@ -64,9 +70,7 @@ func New(connector Connector, opts ...OptionFunc) (*Client, error) {
 	if client, ok := conn.client.(*http.Client); ok {
 		httpPester := pester.NewExtendedClient(client)
 		httpPester.Backoff = pester.LinearBackoff
-		//Note that httpPester.Timeout overwrites the timeout inside the client
-		httpPester.Timeout = defaultTimeout
-		httpPester.MaxRetries = 3
+		httpPester.MaxRetries = c.retries
 		httpPester.LogHook = func(e pester.ErrEntry) {
 			c.logger.Debugf("getting data from kubelet: %v", e)
 		}

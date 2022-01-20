@@ -5,15 +5,15 @@ verbose: true
 sink:
   http:
     port: 8081
-    connectionTimeout: 15s
-    backoffDelay: 7s
     timeout: 60s
+    retries: 3
 
 kubelet:
   enabled: true
   port: 123
   networkRouteFile: /path/to/file
   scheme: http
+  retries: 3
 
 ksm:
   staticURL: http://test.com:8080
@@ -22,30 +22,34 @@ ksm:
   namespace: default
   distributed: true
   enabled: true
+  timeout: 7s
+  retries: 3
 
 controlPlane:
-   etcd:
-     enabled: true
-     staticEndpoint:
-       url: https://localhost:12345
-       auth:
-        type: bearer
-       insecureSkipVerify: true 
-       
-     autodiscover:
-       - namespace: kube-system
-         selector: foo=bar,baz=bar # Match all
-         matchNode: true
-         endpoints:
-           - url: https://localhost:12345
-             auth:
-               type: bearer
-             insecureSkipVerify: true 
-       - namespace: kube-system
-         selector: foo=baz
-         matchNode: true
-         endpoints:
-           - url: https://localhost:12345
-             auth:
-               type: bearer
-             insecureSkipVerify: true 
+  timeout: 6s
+  retries: 3
+  etcd:
+    enabled: true
+    staticEndpoint:
+      url: https://localhost:12345
+      auth:
+       type: bearer
+      insecureSkipVerify: true
+
+    autodiscover:
+      - namespace: kube-system
+        selector: foo=bar,baz=bar # Match all
+        matchNode: true
+        endpoints:
+          - url: https://localhost:12345
+            auth:
+              type: bearer
+            insecureSkipVerify: true
+      - namespace: kube-system
+        selector: foo=baz
+        matchNode: true
+        endpoints:
+          - url: https://localhost:12345
+            auth:
+              type: bearer
+            insecureSkipVerify: true

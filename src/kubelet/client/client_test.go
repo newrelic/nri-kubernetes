@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
 	"github.com/stretchr/testify/assert"
@@ -23,19 +24,26 @@ import (
 )
 
 const (
-	healthz          = "/healthz"
-	apiProxy         = "/api/v1/nodes/test-node/proxy"
-	prometheusMetric = "/metric"
-	kubeletMetric    = "/kubelet-metric"
-	nodeName         = "test-node"
+	healthz                = "/healthz"
+	apiProxy               = "/api/v1/nodes/test-node/proxy"
+	prometheusMetric       = "/metric"
+	kubeletMetric          = "/kubelet-metric"
+	kubeletMetricWithDelay = "/kubelet-metric-delay"
+	nodeName               = "test-node"
+	retries                = 3
 )
 
 func TestClientCalls(t *testing.T) {
-	s, requests := testHTTPSServerWithEndpoints(t, []string{healthz, prometheusMetric, kubeletMetric})
+	timeout := time.Millisecond
+	s, requests := testHTTPSServerWithEndpoints(t, &timeout, []string{healthz, prometheusMetric, kubeletMetric})
 
 	k8sClient, cf, inClusterConfig := getTestData(s)
 
-	kubeletClient, err := client.New(client.DefaultConnector(k8sClient, cf, inClusterConfig, logutil.Debug), client.WithLogger(logutil.Debug))
+	kubeletClient, err := client.New(
+		client.DefaultConnector(k8sClient, cf, inClusterConfig, logutil.Debug),
+		client.WithLogger(logutil.Debug),
+		client.WithMaxRetries(retries),
+	)
 
 	t.Run("creation_succeeds_receiving_200", func(t *testing.T) {
 		require.NoError(t, err)
@@ -71,14 +79,21 @@ func TestClientCalls(t *testing.T) {
 func TestClientCallsViaAPIProxy(t *testing.T) {
 	t.Parallel()
 
-	s, requests := testHTTPSServerWithEndpoints(t,
+	timeout := time.Millisecond
+	s, requests := testHTTPSServerWithEndpoints(
+		t,
+		&timeout,
 		[]string{path.Join(apiProxy, healthz), path.Join(apiProxy, prometheusMetric), path.Join(apiProxy, kubeletMetric)},
 	)
 
 	k8sClient, cf, inClusterConfig := getTestData(s)
 	cf.NodeIP = "invalid" // disabling local connection
 
-	kubeletClient, err := client.New(client.DefaultConnector(k8sClient, cf, inClusterConfig, logutil.Debug), client.WithLogger(logutil.Debug))
+	kubeletClient, err := client.New(
+		client.DefaultConnector(k8sClient, cf, inClusterConfig, logutil.Debug),
+		client.WithLogger(logutil.Debug),
+		client.WithMaxRetries(retries),
+	)
 
 	t.Run("creation_succeeds_receiving_200", func(t *testing.T) {
 		t.Parallel()
@@ -133,18 +148,24 @@ func TestConfigPrecedence(t *testing.T) {
 	t.Run("connector_takes_scheme_from_config", func(t *testing.T) {
 		t.Parallel()
 
-		s, _ := testHTTPSServerWithEndpoints(t, []string{healthz, prometheusMetric, kubeletMetric})
+		timeout := time.Millisecond
+		s, _ := testHTTPSServerWithEndpoints(t, &timeout, []string{healthz, prometheusMetric, kubeletMetric})
 		k8sClient, cf, inClusterConfig := getTestData(s)
 		cf.Kubelet.Scheme = "http"
 
-		_, err := client.New(client.DefaultConnector(k8sClient, cf, inClusterConfig, logutil.Debug), client.WithLogger(logutil.Debug))
+		_, err := client.New(
+			client.DefaultConnector(k8sClient, cf, inClusterConfig, logutil.Debug),
+			client.WithLogger(logutil.Debug),
+			client.WithMaxRetries(retries),
+		)
 		require.Error(t, err)
 	})
 
 	t.Run("connector_takes_port_from_config", func(t *testing.T) {
 		t.Parallel()
 
-		s, _ := testHTTPServerWithEndpoints(t, []string{healthz, prometheusMetric, kubeletMetric})
+		timeout := time.Millisecond
+		s, _ := testHTTPServerWithEndpoints(t, &timeout, []string{healthz, prometheusMetric, kubeletMetric})
 		_, cf, inClusterConfig := getTestData(s)
 
 		// We use an empty client, but the connector is retrieving the port from the config.
@@ -153,7 +174,11 @@ func TestConfigPrecedence(t *testing.T) {
 		port, _ := strconv.Atoi(u.Port())
 		cf.Kubelet.Port = int32(port)
 
-		_, err := client.New(client.DefaultConnector(k8sClient, cf, inClusterConfig, logutil.Debug), client.WithLogger(logutil.Debug))
+		_, err := client.New(
+			client.DefaultConnector(k8sClient, cf, inClusterConfig, logutil.Debug),
+			client.WithLogger(logutil.Debug),
+			client.WithMaxRetries(retries),
+		)
 		require.NoError(t, err)
 	})
 }
@@ -161,11 +186,15 @@ func TestConfigPrecedence(t *testing.T) {
 func TestClientFailingProbingHTTP(t *testing.T) {
 	t.Parallel()
 
-	s, requests := testHTTPServerWithEndpoints(t, []string{})
+	timeout := time.Millisecond
+	s, requests := testHTTPServerWithEndpoints(t, &timeout, []string{})
 
 	c, cf, inClusterConfig := getTestData(s)
 
-	_, err := client.New(client.DefaultConnector(c, cf, inClusterConfig, logutil.Debug))
+	_, err := client.New(
+		client.DefaultConnector(c, cf, inClusterConfig, logutil.Debug),
+		client.WithMaxRetries(retries),
+	)
 
 	t.Run("fails_receiving_404", func(t *testing.T) {
 		t.Parallel()
@@ -196,11 +225,15 @@ func TestClientFailingProbingHTTP(t *testing.T) {
 func TestClientFailingProbingHTTPS(t *testing.T) {
 	t.Parallel()
 
-	s, requests := testHTTPSServerWithEndpoints(t, []string{})
+	timeout := time.Millisecond
+	s, requests := testHTTPSServerWithEndpoints(t, &timeout, []string{})
 
 	c, cf, inClusterConfig := getTestData(s)
 
-	_, err := client.New(client.DefaultConnector(c, cf, inClusterConfig, logutil.Debug))
+	_, err := client.New(
+		client.DefaultConnector(c, cf, inClusterConfig, logutil.Debug),
+		client.WithMaxRetries(retries),
+	)
 
 	t.Run("fails_receiving_404", func(t *testing.T) {
 		t.Parallel()
@@ -229,14 +262,47 @@ func TestClientFailingProbingHTTPS(t *testing.T) {
 	})
 }
 
+func TestClientTimeoutAndRetries(t *testing.T) {
+	timeout := time.Millisecond
+	s, requests := testHTTPServerWithEndpoints(t, &timeout, []string{healthz, kubeletMetricWithDelay})
+
+	c, cf, inClusterConfig := getTestData(s)
+
+	cf.Kubelet.Timeout = 200 * time.Millisecond
+
+	kubeletClient, err := client.New(
+		client.DefaultConnector(c, cf, inClusterConfig, logutil.Debug),
+		client.WithMaxRetries(2),
+	)
+
+	require.NoError(t, err)
+
+	// We overwrite the server handler timeout to force the client to retry
+	timeout = time.Second
+
+	t.Run("gets_200_after_retry", func(t *testing.T) {
+		r, err := kubeletClient.Get(kubeletMetricWithDelay)
+		require.NoError(t, err)
+		assert.Equal(t, r.StatusCode, http.StatusOK)
+
+		_, found := requests[kubeletMetricWithDelay]
+		assert.True(t, found)
+	})
+}
+
 func TestClientOptions(t *testing.T) {
 	t.Parallel()
 
-	s, _ := testHTTPSServerWithEndpoints(t, []string{healthz, prometheusMetric, kubeletMetric})
+	timeout := time.Millisecond
+	s, _ := testHTTPSServerWithEndpoints(t, &timeout, []string{healthz, prometheusMetric, kubeletMetric})
 
 	k8sClient, cf, inClusterConfig := getTestData(s)
 
-	_, err := client.New(client.DefaultConnector(k8sClient, cf, inClusterConfig, logutil.Debug), client.WithLogger(logutil.Debug))
+	_, err := client.New(
+		client.DefaultConnector(k8sClient, cf, inClusterConfig, logutil.Debug),
+		client.WithLogger(logutil.Debug),
+		client.WithMaxRetries(retries),
+	)
 
 	assert.NoError(t, err)
 }
@@ -277,29 +343,29 @@ func getTestNode(port int) *v1.Node {
 	}
 }
 
-func testHTTPServerWithEndpoints(t *testing.T, endpoints []string) (*httptest.Server, map[string]*http.Request) {
+func testHTTPServerWithEndpoints(t *testing.T, sleepDuration *time.Duration, endpoints []string) (*httptest.Server, map[string]*http.Request) {
 	t.Helper()
 
 	requestsReceived := map[string]*http.Request{}
 	l := sync.Mutex{}
 
-	testServer := httptest.NewServer(handler(&l, requestsReceived, endpoints))
+	testServer := httptest.NewServer(handler(&l, sleepDuration, requestsReceived, endpoints))
 
 	return testServer, requestsReceived
 }
 
-func testHTTPSServerWithEndpoints(t *testing.T, endpoints []string) (*httptest.Server, map[string]*http.Request) {
+func testHTTPSServerWithEndpoints(t *testing.T, sleepDuration *time.Duration, endpoints []string) (*httptest.Server, map[string]*http.Request) {
 	t.Helper()
 
 	requestsReceived := map[string]*http.Request{}
 	l := sync.Mutex{}
 
-	testServer := httptest.NewTLSServer(handler(&l, requestsReceived, endpoints))
+	testServer := httptest.NewTLSServer(handler(&l, sleepDuration, requestsReceived, endpoints))
 
 	return testServer, requestsReceived
 }
 
-func handler(l sync.Locker, requestsReceived map[string]*http.Request, endpoints []string) http.HandlerFunc {
+func handler(l sync.Locker, sleepDuration *time.Duration, requestsReceived map[string]*http.Request, endpoints []string) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		l.Lock()
 		requestsReceived[r.RequestURI] = r
@@ -307,6 +373,11 @@ func handler(l sync.Locker, requestsReceived map[string]*http.Request, endpoints
 
 		for _, e := range endpoints {
 			if e == r.RequestURI {
+				if sleepDuration != nil {
+					time.Sleep(*sleepDuration)
+					// resetting the duration to 1 millisecond for second client retry to succeed if timeout is higher
+					*sleepDuration = time.Millisecond
+				}
 				rw.WriteHeader(200)
 				return
 			}
