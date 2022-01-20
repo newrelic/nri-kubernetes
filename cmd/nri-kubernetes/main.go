@@ -11,6 +11,13 @@ import (
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/sethgrid/pester"
+	log "github.com/sirupsen/logrus"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
+
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
@@ -20,12 +27,6 @@ import (
 	kubeletClient "github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
 	"github.com/newrelic/nri-kubernetes/v2/src/sink"
-	"github.com/sethgrid/pester"
-	log "github.com/sirupsen/logrus"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
 )
 
 const (

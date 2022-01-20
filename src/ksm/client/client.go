@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/sethgrid/pester"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
-	"github.com/sethgrid/pester"
-	log "github.com/sirupsen/logrus"
 )
 
 // Client implements a client for KSM, capable of retrieving prometheus metrics from a given endpoint.

@@ -6,11 +6,12 @@ import (
 	"net/url"
 	"path"
 
+	"github.com/sethgrid/pester"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
-	"github.com/sethgrid/pester"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -66,7 +67,6 @@ func New(connector Connector, opts ...OptionFunc) (*Client, error) {
 		return nil, fmt.Errorf("connecting to kubelet using the connector: %w", err)
 	}
 
-	var doer client.HTTPDoer
 	if client, ok := conn.client.(*http.Client); ok {
 		httpPester := pester.NewExtendedClient(client)
 		httpPester.Backoff = pester.LinearBackoff
@@ -74,13 +74,12 @@ func New(connector Connector, opts ...OptionFunc) (*Client, error) {
 		httpPester.LogHook = func(e pester.ErrEntry) {
 			c.logger.Debugf("getting data from kubelet: %v", e)
 		}
-		doer = httpPester
+		c.doer = httpPester
 	} else {
 		c.logger.Debugf("running kubelet client without pester")
-		doer = conn.client
+		c.doer = conn.client
 	}
 
-	c.doer = doer
 	c.endpoint = conn.url
 
 	return c, nil

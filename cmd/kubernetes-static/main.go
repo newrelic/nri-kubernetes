@@ -9,6 +9,10 @@ import (
 
 	sdkArgs "github.com/newrelic/infra-integrations-sdk/args"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	log "github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/version"
+	"k8s.io/client-go/kubernetes/fake"
+
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
 	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
@@ -20,9 +24,6 @@ import (
 	kubeletmetric "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/metric"
 	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
-	log "github.com/sirupsen/logrus"
-	"k8s.io/apimachinery/pkg/version"
-	"k8s.io/client-go/kubernetes/fake"
 )
 
 const (

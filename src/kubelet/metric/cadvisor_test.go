@@ -9,12 +9,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/newrelic/nri-kubernetes/v2/src/data"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric/testdata"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 var cadvisorQueries = []prometheus.Query{
@@ -49,7 +50,7 @@ func runCAdvisorFetchFunc(t *testing.T, file string) {
 		handler: readerToHandler(f),
 	}
 
-	kubeletClient, err := client.New(client.StaticConnector(c, url.URL{}), client.WithMaxRetries(3))
+	kubeletClient, err := client.New(client.StaticConnector(c, url.URL{}))
 
 	require.NoError(t, err)
 
@@ -81,7 +82,7 @@ container_memory_usage_bytes{container_name="influxdb",id="/kubepods/besteffort/
 		handler: readerToHandler(f),
 	}
 
-	kubeletClient, err := client.New(client.StaticConnector(c, url.URL{}), client.WithMaxRetries(3))
+	kubeletClient, err := client.New(client.StaticConnector(c, url.URL{}))
 	require.NoError(t, err)
 
 	_, err = CadvisorFetchFunc(kubeletClient.MetricFamiliesGetFunc(KubeletCAdvisorMetricsPath), cadvisorQueries)()
