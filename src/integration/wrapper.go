@@ -67,6 +67,15 @@ func WithHTTPSink(sinkConfig config.HTTPSink) OptionFunc {
 		}
 
 		c := pester.New()
+		if sinkConfig.TLS.Enabled {
+			tlsClient, err := sink.NewTLSClient(sinkConfig.TLS)
+			if err != nil {
+				return fmt.Errorf("creating TLS client: %w", err)
+			}
+
+			c.EmbedHTTPClient(tlsClient)
+		}
+
 		c.Backoff = pester.LinearBackoff
 		c.MaxRetries = sinkConfig.Retries
 		c.Timeout = sinkConfig.Timeout
