@@ -80,3 +80,15 @@ buildLicenseNotice:
 .PHONY: run-static
 run-static:
 	@go run cmd/kubernetes-static/main.go
+
+.PHONY: local-env-start
+local-env-start:
+	minikube start
+	helm repo add newrelic https://helm-charts.newrelic.com
+	helm dependency update ./charts/newrelic-infrastructure
+	helm dependency update ./charts/internal/e2e-resources
+	$(MAKE) tilt-up
+
+.PHONY: tilt-up
+tilt-up:
+	eval $$(minikube docker-env); tilt up ; tilt down
