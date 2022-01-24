@@ -6,17 +6,20 @@ import (
 	"testing"
 	"time"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
 	"github.com/stretchr/testify/require"
+
+	"github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
 )
 
 func Test_Client(t *testing.T) {
 	t.Parallel()
 
-	timeout := 1 * time.Second
-	server := testHTTPServer(t, &timeout)
+	var requestsReceived int
 
-	cpClient, err := client.New(client.WithMaxRetries(0), client.WithTimeout(200*time.Millisecond))
+	timeout := 200 * time.Millisecond
+	server := testHTTPServer(t, &requestsReceived, timeout*2)
+
+	cpClient, err := client.New(client.WithMaxRetries(0), client.WithTimeout(timeout))
 	require.NoError(t, err)
 
 	familyGetter := cpClient.MetricFamiliesGetFunc(server.URL)
@@ -26,27 +29,26 @@ func Test_Client(t *testing.T) {
 	require.Error(t, err)
 
 	// Test calling retry
-	cpClient, err = client.New(client.WithMaxRetries(4), client.WithTimeout(200*time.Millisecond))
+	cpClient, err = client.New(client.WithMaxRetries(4), client.WithTimeout(timeout))
 	require.NoError(t, err)
 
 	familyGetter = cpClient.MetricFamiliesGetFunc(server.URL)
 
-	// Overwrite httpServer timeout to be higher than client's
-	timeout = 2 * time.Second
-
 	// Should retry and not fail with timeout
 	_, err = familyGetter(nil)
 	require.NoError(t, err)
+
+	require.Equal(t, 3, requestsReceived)
 }
 
-func testHTTPServer(t *testing.T, sleepDuration *time.Duration) *httptest.Server {
+func testHTTPServer(t *testing.T, requestsReceived *int, timeout time.Duration) *httptest.Server {
 	t.Helper()
 
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if sleepDuration != nil {
-			time.Sleep(*sleepDuration)
-			// resetting the duration to 1 millisecond for second client retry to succeed if timeout is higher
-			*sleepDuration = time.Millisecond
+		*requestsReceived++
+		if *requestsReceived < 3 {
+			time.Sleep(timeout)
+			return
 		}
 
 		w.WriteHeader(http.StatusOK)
