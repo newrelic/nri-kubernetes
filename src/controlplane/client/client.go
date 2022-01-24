@@ -2,8 +2,10 @@ package client
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 
+	"github.com/sethgrid/pester"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
@@ -17,6 +19,7 @@ type Client struct {
 	logger   *log.Logger
 	doer     client.HTTPDoer
 	endpoint url.URL
+	retries  int
 }
 
 type OptionFunc func(c *Client) error
@@ -30,6 +33,14 @@ func WithLogger(logger *log.Logger) OptionFunc {
 
 		c.logger = logger
 
+		return nil
+	}
+}
+
+// WithMaxRetries returns an OptionFunc to change the number of retries used int Pester Client.
+func WithMaxRetries(retries int) OptionFunc {
+	return func(kubeletClient *Client) error {
+		kubeletClient.retries = retries
 		return nil
 	}
 }
@@ -51,7 +62,19 @@ func New(connector connector.Connector, opts ...OptionFunc) (*Client, error) {
 		return nil, fmt.Errorf("connecting to component using the connector: %w", err)
 	}
 
-	c.doer = conn.Client
+	if client, ok := conn.Client.(*http.Client); ok {
+		httpPester := pester.NewExtendedClient(client)
+		httpPester.Backoff = pester.LinearBackoff
+		httpPester.MaxRetries = c.retries
+		httpPester.LogHook = func(e pester.ErrEntry) {
+			c.logger.Debugf("getting data from control plane: %v", e)
+		}
+		c.doer = httpPester
+	} else {
+		c.logger.Debugf("running control plane client without pester")
+		c.doer = conn.Client
+	}
+
 	c.endpoint = conn.URL
 
 	return c, nil

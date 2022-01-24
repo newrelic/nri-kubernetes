@@ -10,6 +10,8 @@ import (
 const (
 	DefaultFileName = "nri-kubernetes"
 	DefaultFilePath = "/etc/newrelic-infra"
+	DefaultTimeout  = 10000 * time.Millisecond
+	DefaultRetries  = 4
 )
 
 type Config struct {
@@ -19,7 +21,6 @@ type Config struct {
 	NodeIP         string        `mapstructure:"nodeIP"`
 	NodeName       string        `mapstructure:"nodeName"`
 	Interval       time.Duration `mapstructure:"interval"`
-	Timeout        time.Duration `mapstructure:"timeout"` // TODO: Unimplemented/unused (issue #322)
 
 	Sink struct {
 		HTTP HTTPSink `mapstructure:"http"`
@@ -31,20 +32,21 @@ type Config struct {
 }
 
 type HTTPSink struct {
-	Port              int           `mapstructure:"port"`
-	ConnectionTimeout time.Duration `mapstructure:"connectionTimeout"` // Give up on a connection if it takes more than ConnectionTimeout to complete.
-	BackoffDelay      time.Duration `mapstructure:"backoffDelay"`      // Wait BackoffDelay between connection attempts to the agent.
-	Timeout           time.Duration `mapstructure:"timeout"`           // Give up and fail if Timeout has passed since first attempt.
+	Port    int           `mapstructure:"port"`
+	Timeout time.Duration `mapstructure:"timeout"`
+	Retries int           `mapstructure:"retries"`
 }
 
 type KSM struct {
-	StaticURL   string `mapstructure:"staticURL"`
-	Scheme      string `mapstructure:"scheme"`
-	Port        int    `mapstructure:"port"`
-	Selector    string `mapstructure:"selector"`
-	Namespace   string `mapstructure:"namespace"`
-	Distributed bool   `mapstructure:"distributed"`
-	Enabled     bool   `mapstructure:"enabled"`
+	Enabled     bool          `mapstructure:"enabled"`
+	StaticURL   string        `mapstructure:"staticURL"`
+	Scheme      string        `mapstructure:"scheme"`
+	Port        int           `mapstructure:"port"`
+	Selector    string        `mapstructure:"selector"`
+	Namespace   string        `mapstructure:"namespace"`
+	Distributed bool          `mapstructure:"distributed"`
+	Timeout     time.Duration `mapstructure:"timeout"`
+	Retries     int           `mapstructure:"retries"`
 	Discovery   struct {
 		BackoffDelay time.Duration `mapstructure:"backoffDelay"` // Wait BackoffDelay between discovery attempts.
 		Timeout      time.Duration `mapstructure:"timeout"`      // Give up discovery and fail if Timeout has passed since first attempt.
@@ -52,10 +54,12 @@ type KSM struct {
 }
 
 type Kubelet struct {
-	Enabled          bool   `mapstructure:"enabled"`
-	Port             int32  `mapstructure:"port"`
-	Scheme           string `mapstructure:"scheme"`
-	NetworkRouteFile string `mapstructure:"networkRouteFile"`
+	Enabled          bool          `mapstructure:"enabled"`
+	Port             int32         `mapstructure:"port"`
+	Scheme           string        `mapstructure:"scheme"`
+	NetworkRouteFile string        `mapstructure:"networkRouteFile"`
+	Timeout          time.Duration `mapstructure:"timeout"`
+	Retries          int           `mapstructure:"retries"`
 }
 
 type ControlPlane struct {
@@ -64,6 +68,8 @@ type ControlPlane struct {
 	APIServer         ControlPlaneComponent `mapstructure:"apiServer"`
 	ControllerManager ControlPlaneComponent `mapstructure:"controllerManager"`
 	Scheduler         ControlPlaneComponent `mapstructure:"scheduler"`
+	Timeout           time.Duration         `mapstructure:"timeout"`
+	Retries           int                   `mapstructure:"retries"`
 }
 
 type ControlPlaneComponent struct {
@@ -105,12 +111,20 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	v.SetDefault("kubelet.networkRouteFile", "/proc/net/route")
 	v.SetDefault("nodeName", "node")
 	v.SetDefault("nodeIP", "node")
-	v.SetDefault("sink.http.port", 0)
 
 	// Sane connection defaults
-	v.SetDefault("sink.http.connectionTimeout", 15*time.Second)
-	v.SetDefault("sink.http.backoffDelay", 7*time.Second)
-	v.SetDefault("sink.http.timeout", 60*time.Second)
+	v.SetDefault("sink.http.port", 0)
+	v.SetDefault("sink.http.timeout", DefaultTimeout)
+	v.SetDefault("sink.http.retries", DefaultRetries)
+
+	v.SetDefault("kubelet.timeout", DefaultTimeout)
+	v.SetDefault("kubelet.retries", DefaultRetries)
+
+	v.SetDefault("controlPlane.timeout", DefaultTimeout)
+	v.SetDefault("controlPlane.retries", DefaultRetries)
+
+	v.SetDefault("ksm.timeout", DefaultTimeout)
+	v.SetDefault("ksm.retries", DefaultRetries)
 
 	v.SetDefault("ksm.discovery.backoffDelay", 7*time.Second)
 	v.SetDefault("ksm.discovery.timeout", 60*time.Second)

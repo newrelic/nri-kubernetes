@@ -7,16 +7,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/newrelic/nri-kubernetes/v2/internal/config"
+	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/authenticator"
 )
 
 const (
-	DefaultTimout      = 5000 * time.Millisecond
 	defaultMetricsPath = "/metrics"
 )
 
@@ -35,6 +34,7 @@ type ConnParams struct {
 type Config struct {
 	Authenticator authenticator.Authenticator
 	Endpoints     []config.Endpoint
+	Timeout       time.Duration
 }
 
 type OptionFunc func(dc *DefaultConnector) error
@@ -90,7 +90,7 @@ func (dp *DefaultConnector) Connect() (*ConnParams, error) {
 			return nil, fmt.Errorf("creating HTTP client for endpoint %q: %w", e.URL, err)
 		}
 
-		httpClient := &http.Client{Timeout: DefaultTimout, Transport: rt}
+		httpClient := &http.Client{Timeout: dp.Timeout, Transport: rt}
 
 		if err := dp.probe(u.String(), httpClient); err != nil {
 			dp.logger.Debugf("Endpoint %q probe failed, skipping: %v", e.URL, err)

@@ -165,7 +165,7 @@ func (dp *defaultConnector) checkConnectionAPIProxy(apiServer string, nodeName s
 
 	conn := connParams{
 		client: &http.Client{
-			Timeout:   defaultTimeout,
+			Timeout:   dp.config.Kubelet.Timeout,
 			Transport: tripperAPIproxy,
 		},
 		url: url.URL{
@@ -187,7 +187,7 @@ func (dp *defaultConnector) checkConnectionAPIProxy(apiServer string, nodeName s
 func (dp *defaultConnector) checkConnectionHTTP(hostURL string) (*connParams, error) {
 	dp.logger.Debugf("testing kubelet connection over plain http to %s", hostURL)
 
-	conn := defaultConnParamsHTTP(hostURL)
+	conn := dp.defaultConnParamsHTTP(hostURL)
 	if err := checkConnection(conn); err != nil {
 		return nil, fmt.Errorf("checking connection via API proxy: %w", err)
 	}
@@ -198,7 +198,7 @@ func (dp *defaultConnector) checkConnectionHTTP(hostURL string) (*connParams, er
 func (dp *defaultConnector) checkConnectionHTTPS(hostURL string, tripperBearer http.RoundTripper) (*connParams, error) {
 	dp.logger.Debugf("testing kubelet connection over https to %s", hostURL)
 
-	conn := defaultConnParamsHTTPS(hostURL, tripperBearer)
+	conn := dp.defaultConnParamsHTTPS(hostURL, tripperBearer)
 	if err := checkConnection(conn); err != nil {
 		return nil, fmt.Errorf("checking connection via API proxy: %w", err)
 	}
@@ -239,9 +239,9 @@ func tripperWithBearerToken(token string) http.RoundTripper {
 	return tripperWithBearer
 }
 
-func defaultConnParamsHTTP(hostURL string) connParams {
+func (dp *defaultConnector) defaultConnParamsHTTP(hostURL string) connParams {
 	httpClient := &http.Client{
-		Timeout: defaultTimeout,
+		Timeout: dp.config.Kubelet.Timeout,
 	}
 
 	u := url.URL{
@@ -251,9 +251,9 @@ func defaultConnParamsHTTP(hostURL string) connParams {
 	return connParams{u, httpClient}
 }
 
-func defaultConnParamsHTTPS(hostURL string, tripper http.RoundTripper) connParams {
+func (dp *defaultConnector) defaultConnParamsHTTPS(hostURL string, tripper http.RoundTripper) connParams {
 	httpClient := &http.Client{
-		Timeout: defaultTimeout,
+		Timeout: dp.config.Kubelet.Timeout,
 	}
 
 	httpClient.Transport = tripper

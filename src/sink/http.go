@@ -2,11 +2,9 @@ package sink
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -17,25 +15,21 @@ const (
 	DefaultAgentForwarderPath = "/v1/data"
 )
 
+// Doer is the interface that httpSink client should satisfy.
+type Doer interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 // httpSink holds the configuration of the HTTP sink used by the integration.
 type httpSink struct {
-	url        string
-	client     Doer
-	ctxTimeout time.Duration
-	ctx        context.Context
+	url    string
+	client Doer
 }
 
 // HTTPSinkOptions holds the configuration of the HTTP sink used by the integration.
 type HTTPSinkOptions struct {
-	URL        string
-	Client     Doer
-	CtxTimeout time.Duration
-	Ctx        context.Context
-}
-
-// Doer is the interface that httpSink client should satisfy.
-type Doer interface {
-	Do(req *http.Request) (*http.Response, error)
+	URL    string
+	Client Doer
 }
 
 //NewHTTPSink initialize httpSink struct.
@@ -48,28 +42,15 @@ func NewHTTPSink(options HTTPSinkOptions) (io.Writer, error) {
 		return nil, fmt.Errorf("url cannot be empty")
 	}
 
-	if options.CtxTimeout == 0 {
-		return nil, fmt.Errorf("contextTimeout cannot be zero")
-	}
-
-	if options.Ctx == nil {
-		return nil, fmt.Errorf("ctx cannot be nil")
-	}
-
 	return &httpSink{
-		url:        options.URL,
-		client:     options.Client,
-		ctxTimeout: options.CtxTimeout,
-		ctx:        options.Ctx,
+		url:    options.URL,
+		client: options.Client,
 	}, nil
 }
 
 // Write is the function signature needed by the infrastructure SDK package.
 func (h httpSink) Write(p []byte) (n int, err error) {
-	ctx, cancel := context.WithTimeout(h.ctx, h.ctxTimeout)
-	defer cancel()
-
-	request, err := http.NewRequestWithContext(ctx, "POST", h.url, bytes.NewBuffer(p))
+	request, err := http.NewRequest("POST", h.url, bytes.NewBuffer(p))
 	if err != nil {
 		return 0, fmt.Errorf("preparing request: %w", err)
 	}
