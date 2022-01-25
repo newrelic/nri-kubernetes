@@ -90,7 +90,7 @@ func (a K8sClientAuthenticator) AuthenticatedTransport(endpoint config.Endpoint)
 		}
 
 		if certs.ca == nil && !endpoint.InsecureSkipVerify {
-			return nil, fmt.Errorf("insecureSkipVerify is false and CA are missing for endpoint %q", endpoint.URL)
+			return nil, fmt.Errorf("insecureSkipVerify is false and CA cert is missing from secret %q", endpoint.URL)
 		}
 
 		transportConfig.TLS.CertData = certs.cert
@@ -116,6 +116,23 @@ type certificatesData struct {
 	ca   []byte
 }
 
+// certificateSecretKeys contains the name of the keys inside the secret where the certificate, private key, and CA
+// certificates are stored.
+type certificateSecretKeys struct {
+	cert string
+	key  string
+	ca   string
+}
+
+// opaqueCertName is the key for the secret data where the PEM-encoded certificate is located.
+const opaqueCertName = "cert"
+
+// opaqueKeyName is the key for the secret data where the PEM-encoded private key is located.
+const opaqueKeyName = "key"
+
+// opaqueCaName is the key for the secret data where the PEM-encoded CA certificate key is located.
+const opaqueCaName = "cacert"
+
 // getTLSCertificatesFromSecret fetches the certificates from the secrets using the secret lister.
 func (a K8sClientAuthenticator) getTLSCertificatesFromSecret(mTLSConfig *config.MTLS) (*certificatesData, error) {
 	if mTLSConfig.TLSSecretName == "" {
@@ -138,19 +155,25 @@ func (a K8sClientAuthenticator) getTLSCertificatesFromSecret(mTLSConfig *config.
 		return nil, fmt.Errorf("could not find secret %q containing TLS configuration: %w", mTLSConfig.TLSSecretName, err)
 	}
 
+	keynames := certificateSecretKeys{
+		cert: opaqueCertName,
+		key:  opaqueKeyName,
+		ca:   opaqueCaName,
+	}
+
 	var cert, key []byte
 
-	if cert, ok = secret.Data["cert"]; !ok {
+	if cert, ok = secret.Data[keynames.cert]; !ok {
 		return nil, fmt.Errorf("could not find TLS certificate in `cert` field in secret %q", mTLSConfig.TLSSecretName)
 	}
 
-	if key, ok = secret.Data["key"]; !ok {
+	if key, ok = secret.Data[keynames.key]; !ok {
 		return nil, fmt.Errorf("could not find TLS key in `key` field in secret %q", mTLSConfig.TLSSecretName)
 	}
 
 	return &certificatesData{
 		cert: cert,
 		key:  key,
-		ca:   secret.Data["cacert"],
+		ca:   secret.Data[keynames.ca],
 	}, nil
 }
