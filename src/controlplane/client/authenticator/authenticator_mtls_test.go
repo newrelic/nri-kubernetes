@@ -12,7 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 
@@ -109,7 +109,7 @@ func Test_Authenticator_with_mTLS(t *testing.T) {
 				t,
 				secretName,
 				secretNamespace,
-				v1.SecretTypeOpaque,
+				corev1.SecretTypeOpaque,
 				fakeSecrets(test.cacert, test.key, test.cert),
 			)
 
@@ -149,17 +149,17 @@ func Test_Authenticator_fetches_certs(t *testing.T) {
 	}{
 		{
 			name: "from_tls_secret_with_k8s_keys",
-			listerer: secretListerer(t, secretName, secretNamespace, v1.SecretTypeTLS, map[string][]byte{
-				v1.TLSCertKey:       clientCert,
-				v1.TLSPrivateKeyKey: clientKey,
-				"ca.crt":            clientCACert,
+			listerer: secretListerer(t, secretName, secretNamespace, corev1.SecretTypeTLS, map[string][]byte{
+				corev1.TLSCertKey:       clientCert,
+				corev1.TLSPrivateKeyKey: clientKey,
+				"ca.crt":                clientCACert,
 			}),
 		},
 		{
 			// This test case is the same as above, but key names are hardcoded.
 			// This test case should fail if Kubernetes constants change unexpectedly.
 			name: "from_tls_secret_with_standard_names",
-			listerer: secretListerer(t, secretName, secretNamespace, v1.SecretTypeTLS, map[string][]byte{
+			listerer: secretListerer(t, secretName, secretNamespace, corev1.SecretTypeTLS, map[string][]byte{
 				"tls.crt": clientCert,
 				"tls.key": clientKey,
 				"ca.crt":  clientCACert,
@@ -167,7 +167,7 @@ func Test_Authenticator_fetches_certs(t *testing.T) {
 		},
 		{
 			name: "from_opaque_secret_with_nr_names",
-			listerer: secretListerer(t, secretName, secretNamespace, v1.SecretTypeOpaque, map[string][]byte{
+			listerer: secretListerer(t, secretName, secretNamespace, corev1.SecretTypeOpaque, map[string][]byte{
 				"cert":   clientCert,
 				"key":    clientKey,
 				"cacert": clientCACert,
@@ -222,8 +222,8 @@ func fakeSecrets(cacert, key, cert []byte) map[string][]byte {
 	return data
 }
 
-func secretListerer(t *testing.T, name string, namespace string, secretType v1.SecretType, secrets map[string][]byte) discovery.SecretListerer {
-	c := fake.NewSimpleClientset(&v1.Secret{
+func secretListerer(t *testing.T, name string, namespace string, secretType corev1.SecretType, secrets map[string][]byte) discovery.SecretListerer {
+	c := fake.NewSimpleClientset(&corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,

@@ -7,7 +7,7 @@ import (
 
 	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
 	log "github.com/sirupsen/logrus"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/transport"
 
@@ -168,12 +168,12 @@ func (a K8sClientAuthenticator) getTLSCertificatesFromSecret(mTLSConfig *config.
 		ca:   opaqueCacertKey,
 	}
 
-	if secret.Type == v1.SecretTypeTLS {
+	if secret.Type == corev1.SecretTypeTLS {
 		a.logger.Debugf("Secret %q has type %q, using standard key names", secret.Name, secret.Type)
 
 		keynames = certificateSecretKeys{
-			cert: v1.TLSCertKey,
-			key:  v1.TLSPrivateKeyKey,
+			cert: corev1.TLSCertKey,
+			key:  corev1.TLSPrivateKeyKey,
 			ca:   tlsCacertKey,
 		}
 	}
