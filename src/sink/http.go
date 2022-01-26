@@ -13,6 +13,7 @@ const (
 	// DefaultAgentForwarderhost holds the default endpoint of the agent forwarder.
 	DefaultAgentForwarderhost = "localhost"
 	DefaultAgentForwarderPath = "/v1/data"
+	DefaultAgentReadyPath     = "/v1/data/ready"
 )
 
 // Doer is the interface that httpSink client should satisfy.

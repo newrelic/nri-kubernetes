@@ -77,7 +77,7 @@ func main() {
 		}
 	}
 
-	i, err := createIntegrationWithHTTPSink(c)
+	i, err := createIntegrationWithHTTPSink(c, logger)
 	if err != nil {
 		logger.Errorf("creating integration with http sink: %v", err)
 		os.Exit(exitIntegration)
@@ -273,7 +273,15 @@ func buildClients(c *config.Config) (*clusterClients, error) {
 	}, nil
 }
 
-func createIntegrationWithHTTPSink(config *config.Config) (*integration.Integration, error) {
+func createIntegrationWithHTTPSink(config *config.Config, logger *log.Logger) (*integration.Integration, error) {
+	endpoint := net.JoinHostPort(sink.DefaultAgentForwarderhost, strconv.Itoa(config.Sink.HTTP.Port))
+
+	logger.Info("Waiting for agent container to be ready...")
+	err := sink.WaitForEndpoint(fmt.Sprintf("http://%s%s", endpoint, sink.DefaultAgentReadyPath), 2*time.Minute)
+	if err != nil {
+		return nil, fmt.Errorf("timeout waiting for agent: %w", err)
+	}
+
 	c := pester.New()
 	c.Backoff = pester.LinearBackoff
 	c.MaxRetries = config.Sink.HTTP.Retries
@@ -281,8 +289,6 @@ func createIntegrationWithHTTPSink(config *config.Config) (*integration.Integrat
 	c.LogHook = func(e pester.ErrEntry) {
 		logger.Debugf("sending data to httpSink: %q", e)
 	}
-
-	endpoint := net.JoinHostPort(sink.DefaultAgentForwarderhost, strconv.Itoa(config.Sink.HTTP.Port))
 
 	sinkOptions := sink.HTTPSinkOptions{
 		URL:    fmt.Sprintf("http://%s%s", endpoint, sink.DefaultAgentForwarderPath),
