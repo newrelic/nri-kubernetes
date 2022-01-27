@@ -7,8 +7,8 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/testutil/asserter/exclude"
-	"github.com/newrelic/nri-kubernetes/v2/src/definition"
+	"github.com/newrelic/nri-kubernetes/v3/internal/testutil/asserter/exclude"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 )
 
 // Asserter is a helper for checking whether an integration contains all the metrics defined in a specGroup.

@@ -1,10 +1,10 @@
 package controlplane
 
 import (
-	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/src/definition"
-	"github.com/newrelic/nri-kubernetes/v2/src/metric"
-	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
+	"github.com/newrelic/nri-kubernetes/v3/internal/config"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
+	"github.com/newrelic/nri-kubernetes/v3/src/metric"
+	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
 )
 
 // ComponentName is a typed name for components.

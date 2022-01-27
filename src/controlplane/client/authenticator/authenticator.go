@@ -5,13 +5,14 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
+	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/transport"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
+	"github.com/newrelic/nri-kubernetes/v3/internal/config"
+
+	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
 )
 
 const (

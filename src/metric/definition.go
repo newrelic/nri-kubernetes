@@ -7,10 +7,10 @@ import (
 
 	sdkMetric "github.com/newrelic/infra-integrations-sdk/data/metric"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/definition"
-	ksmMetric "github.com/newrelic/nri-kubernetes/v2/src/ksm/metric"
-	kubeletMetric "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
-	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
+	ksmMetric "github.com/newrelic/nri-kubernetes/v3/src/ksm/metric"
+	kubeletMetric "github.com/newrelic/nri-kubernetes/v3/src/kubelet/metric"
+	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
 )
 
 // Fetch Functions for computed metrics

@@ -8,10 +8,10 @@ import (
 	"github.com/sethgrid/pester"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
-	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/connector"
-	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
+	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
+	"github.com/newrelic/nri-kubernetes/v3/src/client"
+	"github.com/newrelic/nri-kubernetes/v3/src/controlplane/client/connector"
+	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
 )
 
 // Client implements a client for ControlPlane component.

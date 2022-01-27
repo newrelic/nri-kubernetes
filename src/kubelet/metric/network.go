@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/definition"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 )
 
 // FromRawWithFallbackToDefaultInterface fetches network metrics from the raw

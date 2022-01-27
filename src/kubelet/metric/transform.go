@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/definition"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 )
 
 // PrefixFromMapInt does the same as OneMetricPerLabel but for map[string]int and with configurable prefix.

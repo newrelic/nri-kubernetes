@@ -9,10 +9,10 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
-	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/authenticator"
+	"github.com/newrelic/nri-kubernetes/v3/internal/config"
+	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
+	"github.com/newrelic/nri-kubernetes/v3/src/client"
+	"github.com/newrelic/nri-kubernetes/v3/src/controlplane/client/authenticator"
 )
 
 const (

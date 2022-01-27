@@ -10,8 +10,8 @@ import (
 
 	v1 "k8s.io/kubelet/pkg/apis/stats/v1alpha1"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
-	"github.com/newrelic/nri-kubernetes/v2/src/definition"
+	"github.com/newrelic/nri-kubernetes/v3/src/client"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 )
 
 // StatsSummaryPath is the path where kubelet serves a summary with several information.

@@ -11,20 +11,20 @@ import (
 	"testing"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
+	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/testutil/asserter"
-	"github.com/newrelic/nri-kubernetes/v2/internal/testutil/asserter/exclude"
-	"github.com/newrelic/nri-kubernetes/v2/src/definition"
+	"github.com/newrelic/nri-kubernetes/v3/internal/testutil/asserter"
+	"github.com/newrelic/nri-kubernetes/v3/internal/testutil/asserter/exclude"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 
 	"github.com/stretchr/testify/require"
 	"k8s.io/client-go/kubernetes/fake"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
-	"github.com/newrelic/nri-kubernetes/v2/src/kubelet"
-	kubeletClient "github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
-	"github.com/newrelic/nri-kubernetes/v2/src/metric"
+	"github.com/newrelic/nri-kubernetes/v3/internal/config"
+	"github.com/newrelic/nri-kubernetes/v3/internal/testutil"
+	"github.com/newrelic/nri-kubernetes/v3/src/kubelet"
+	kubeletClient "github.com/newrelic/nri-kubernetes/v3/src/kubelet/client"
+	"github.com/newrelic/nri-kubernetes/v3/src/metric"
 )
 
 func TestScraper(t *testing.T) {

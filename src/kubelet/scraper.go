@@ -9,17 +9,17 @@ import (
 	"k8s.io/client-go/kubernetes"
 	listersv1 "k8s.io/client-go/listers/core/v1"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
-	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
-	"github.com/newrelic/nri-kubernetes/v2/src/data"
-	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/grouper"
-	kubeletMetric "github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric"
-	"github.com/newrelic/nri-kubernetes/v2/src/metric"
-	"github.com/newrelic/nri-kubernetes/v2/src/network"
-	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
-	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
+	"github.com/newrelic/nri-kubernetes/v3/internal/config"
+	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
+	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
+	"github.com/newrelic/nri-kubernetes/v3/src/client"
+	"github.com/newrelic/nri-kubernetes/v3/src/data"
+	"github.com/newrelic/nri-kubernetes/v3/src/kubelet/grouper"
+	kubeletMetric "github.com/newrelic/nri-kubernetes/v3/src/kubelet/metric"
+	"github.com/newrelic/nri-kubernetes/v3/src/metric"
+	"github.com/newrelic/nri-kubernetes/v3/src/network"
+	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
+	"github.com/newrelic/nri-kubernetes/v3/src/scrape"
 )
 
 // Providers is a struct holding pointers to all the clients Scraper needs to get data from.

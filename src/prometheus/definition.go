@@ -10,7 +10,7 @@ import (
 
 	model "github.com/prometheus/client_model/go"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/definition"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 )
 
 // ControlPlaneComponentTypeGenerator generates the entity type of a

@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/kubelet/pkg/apis/stats/v1alpha1"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/definition"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 )
 
 var (

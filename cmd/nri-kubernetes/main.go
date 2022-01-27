@@ -18,16 +18,16 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/internal/storer"
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
-	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
-	"github.com/newrelic/nri-kubernetes/v2/src/ksm"
-	ksmClient "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
-	"github.com/newrelic/nri-kubernetes/v2/src/kubelet"
-	kubeletClient "github.com/newrelic/nri-kubernetes/v2/src/kubelet/client"
-	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
-	"github.com/newrelic/nri-kubernetes/v2/src/sink"
+	"github.com/newrelic/nri-kubernetes/v3/internal/config"
+	"github.com/newrelic/nri-kubernetes/v3/internal/storer"
+	"github.com/newrelic/nri-kubernetes/v3/src/client"
+	"github.com/newrelic/nri-kubernetes/v3/src/controlplane"
+	"github.com/newrelic/nri-kubernetes/v3/src/ksm"
+	ksmClient "github.com/newrelic/nri-kubernetes/v3/src/ksm/client"
+	"github.com/newrelic/nri-kubernetes/v3/src/kubelet"
+	kubeletClient "github.com/newrelic/nri-kubernetes/v3/src/kubelet/client"
+	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
+	"github.com/newrelic/nri-kubernetes/v3/src/sink"
 )
 
 const (

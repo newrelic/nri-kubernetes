@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
+	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
 )
 
 type fakeDiscoverer func() ([]string, error)
