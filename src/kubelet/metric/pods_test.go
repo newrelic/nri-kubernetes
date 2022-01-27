@@ -7,11 +7,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
+	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/definition"
-	"github.com/newrelic/nri-kubernetes/v2/src/kubelet/metric/testdata"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
+	"github.com/newrelic/nri-kubernetes/v3/src/kubelet/metric/testdata"
 )
 
 type testClient struct {

@@ -6,9 +6,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/data"
-	"github.com/newrelic/nri-kubernetes/v2/src/definition"
-	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
+	"github.com/newrelic/nri-kubernetes/v3/src/data"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
+	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
 )
 
 const (

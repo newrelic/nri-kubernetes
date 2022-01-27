@@ -5,7 +5,7 @@ import (
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/definition"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 )
 
 // Func is a function that returns true if a particular metric (spec) should be excluded from being asserted on

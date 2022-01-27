@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
+	"github.com/newrelic/nri-kubernetes/v3/src/ksm/client"
 )
 
 func Test_Client(t *testing.T) {

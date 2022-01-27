@@ -5,18 +5,18 @@ import (
 	"net/url"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
+	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 	listersv1 "k8s.io/client-go/listers/core/v1"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
-	ksmGrouper "github.com/newrelic/nri-kubernetes/v2/src/ksm/grouper"
-	"github.com/newrelic/nri-kubernetes/v2/src/metric"
-	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
-	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
+	"github.com/newrelic/nri-kubernetes/v3/internal/config"
+	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
+	ksmGrouper "github.com/newrelic/nri-kubernetes/v3/src/ksm/grouper"
+	"github.com/newrelic/nri-kubernetes/v3/src/metric"
+	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
+	"github.com/newrelic/nri-kubernetes/v3/src/scrape"
 )
 
 const defaultLabelSelector = "app.kubernetes.io/name=kube-state-metrics"

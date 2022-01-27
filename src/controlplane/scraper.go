@@ -6,20 +6,20 @@ import (
 	"net/url"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
+	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
-	controlplaneClient "github.com/newrelic/nri-kubernetes/v2/src/controlplane/client"
-	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/authenticator"
-	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/connector"
-	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/discoverer"
-	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/grouper"
-	"github.com/newrelic/nri-kubernetes/v2/src/scrape"
+	"github.com/newrelic/nri-kubernetes/v3/internal/config"
+	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
+	controlplaneClient "github.com/newrelic/nri-kubernetes/v3/src/controlplane/client"
+	"github.com/newrelic/nri-kubernetes/v3/src/controlplane/client/authenticator"
+	"github.com/newrelic/nri-kubernetes/v3/src/controlplane/client/connector"
+	"github.com/newrelic/nri-kubernetes/v3/src/controlplane/discoverer"
+	"github.com/newrelic/nri-kubernetes/v3/src/controlplane/grouper"
+	"github.com/newrelic/nri-kubernetes/v3/src/scrape"
 )
 
 // Providers is a struct holding pointers to all the clients Scraper needs to get data from.

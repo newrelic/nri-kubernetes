@@ -8,7 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/storer"
+	"github.com/newrelic/nri-kubernetes/v3/internal/storer"
 )
 
 const (

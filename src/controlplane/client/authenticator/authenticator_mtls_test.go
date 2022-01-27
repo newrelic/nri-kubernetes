@@ -16,9 +16,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
-	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/client/authenticator"
+	"github.com/newrelic/nri-kubernetes/v3/internal/config"
+	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
+	"github.com/newrelic/nri-kubernetes/v3/src/controlplane/client/authenticator"
 )
 
 const (

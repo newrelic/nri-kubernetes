@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/sink"
+	"github.com/newrelic/nri-kubernetes/v3/src/sink"
 )
 
 const (

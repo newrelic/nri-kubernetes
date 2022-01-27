@@ -4,13 +4,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
+	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
+	"github.com/newrelic/nri-kubernetes/v3/internal/config"
+	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
 )
 
 var ErrPodNotFound = errors.New("pod not found")

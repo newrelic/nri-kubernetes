@@ -11,8 +11,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
-	"github.com/newrelic/nri-kubernetes/v2/src/definition"
+	"github.com/newrelic/nri-kubernetes/v3/src/client"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 )
 
 // KubeletPodsPath is the path where kubelet serves information about pods.

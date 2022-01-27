@@ -3,14 +3,14 @@ package grouper
 import (
 	"fmt"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/logutil"
+	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/labels"
 	listersv1 "k8s.io/client-go/listers/core/v1"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/data"
-	"github.com/newrelic/nri-kubernetes/v2/src/definition"
-	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
+	"github.com/newrelic/nri-kubernetes/v3/src/data"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
+	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
 )
 
 type grouper struct {

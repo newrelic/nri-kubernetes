@@ -8,9 +8,9 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/fake"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
-	"github.com/newrelic/nri-kubernetes/v2/src/definition"
-	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
+	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
+	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
 )
 
 func TestAddServiceSpecSelectorToGroup(t *testing.T) {

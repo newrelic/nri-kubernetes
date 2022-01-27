@@ -8,7 +8,7 @@ import (
 	"github.com/prometheus/prom2json"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/client"
+	"github.com/newrelic/nri-kubernetes/v3/src/client"
 )
 
 // TODO: See https://github.com/prometheus/prom2json/blob/master/prom2json.go#L171 for how to connect, how to parse plain text, etc

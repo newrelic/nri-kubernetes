@@ -16,13 +16,13 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes/fake"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
-	"github.com/newrelic/nri-kubernetes/v2/internal/testutil/asserter"
-	"github.com/newrelic/nri-kubernetes/v2/internal/testutil/asserter/exclude"
-	"github.com/newrelic/nri-kubernetes/v2/src/controlplane"
-	"github.com/newrelic/nri-kubernetes/v2/src/definition"
-	"github.com/newrelic/nri-kubernetes/v2/src/metric"
+	"github.com/newrelic/nri-kubernetes/v3/internal/config"
+	"github.com/newrelic/nri-kubernetes/v3/internal/testutil"
+	"github.com/newrelic/nri-kubernetes/v3/internal/testutil/asserter"
+	"github.com/newrelic/nri-kubernetes/v3/internal/testutil/asserter/exclude"
+	"github.com/newrelic/nri-kubernetes/v3/src/controlplane"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
+	"github.com/newrelic/nri-kubernetes/v3/src/metric"
 )
 
 var (

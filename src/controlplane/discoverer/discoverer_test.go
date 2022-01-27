@@ -11,9 +11,9 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes/fake"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/internal/discovery"
-	"github.com/newrelic/nri-kubernetes/v2/src/controlplane/discoverer"
+	"github.com/newrelic/nri-kubernetes/v3/internal/config"
+	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
+	"github.com/newrelic/nri-kubernetes/v3/src/controlplane/discoverer"
 )
 
 func Test_Discoverer_does_not_fail(t *testing.T) {

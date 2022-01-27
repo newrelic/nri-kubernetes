@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/definition"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 )
 
 func TestFromRawWithFallbackToDefaultInterface_UsesRaw(t *testing.T) {

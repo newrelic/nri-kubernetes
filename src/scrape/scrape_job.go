@@ -9,8 +9,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/version"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/data"
-	"github.com/newrelic/nri-kubernetes/v2/src/definition"
+	"github.com/newrelic/nri-kubernetes/v3/src/data"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 )
 
 // NewScrapeJob creates a new Scrape Job with the given attributes

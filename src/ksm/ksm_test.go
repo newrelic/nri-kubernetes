@@ -12,14 +12,14 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"k8s.io/client-go/kubernetes/fake"
 
-	"github.com/newrelic/nri-kubernetes/v2/internal/config"
-	"github.com/newrelic/nri-kubernetes/v2/internal/testutil"
-	"github.com/newrelic/nri-kubernetes/v2/internal/testutil/asserter"
-	"github.com/newrelic/nri-kubernetes/v2/internal/testutil/asserter/exclude"
-	"github.com/newrelic/nri-kubernetes/v2/src/definition"
-	"github.com/newrelic/nri-kubernetes/v2/src/ksm"
-	ksmClient "github.com/newrelic/nri-kubernetes/v2/src/ksm/client"
-	"github.com/newrelic/nri-kubernetes/v2/src/metric"
+	"github.com/newrelic/nri-kubernetes/v3/internal/config"
+	"github.com/newrelic/nri-kubernetes/v3/internal/testutil"
+	"github.com/newrelic/nri-kubernetes/v3/internal/testutil/asserter"
+	"github.com/newrelic/nri-kubernetes/v3/internal/testutil/asserter/exclude"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
+	"github.com/newrelic/nri-kubernetes/v3/src/ksm"
+	ksmClient "github.com/newrelic/nri-kubernetes/v3/src/ksm/client"
+	"github.com/newrelic/nri-kubernetes/v3/src/metric"
 )
 
 func TestScraper(t *testing.T) {

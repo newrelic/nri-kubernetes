@@ -4,8 +4,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/newrelic/nri-kubernetes/v2/src/definition"
-	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
+	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
 )
 
 // GetDeploymentNameForReplicaSet returns the name of the deployment has created
