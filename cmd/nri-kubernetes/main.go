@@ -68,6 +68,15 @@ func main() {
 		logger.SetLevel(log.DebugLevel)
 	}
 
+	if c.LogLevel != "" {
+		level, err := log.ParseLevel(c.LogLevel)
+		if err != nil {
+			log.Warnf("Cannot parse log level %q: %v", c.LogLevel, err)
+		} else {
+			logger.SetLevel(level)
+		}
+	}
+
 	i, err := createIntegrationWithHTTPSink(c)
 	if err != nil {
 		logger.Errorf("creating integration with http sink: %v", err)

@@ -16,6 +16,7 @@ const (
 
 type Config struct {
 	Verbose        bool          `mapstructure:"verbose"`
+	LogLevel       string        `mapstructure:"logLevel"`
 	ClusterName    string        `mapstructure:"clusterName"`
 	KubeconfigPath string        `mapstructure:"kubeconfigPath"`
 	NodeIP         string        `mapstructure:"nodeIP"`
