@@ -44,7 +44,7 @@ func (s *Job) Populate(
 			}
 		}
 
-		logger.Warnf("%s", errs)
+		logger.Tracef("%s", errs)
 	}
 
 	config := &definition.IntegrationPopulateConfig{
