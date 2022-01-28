@@ -107,7 +107,7 @@ func (iw *Wrapper) Integration(sinkConfig config.HTTPSink) (*sdk.Integration, er
 	c.Timeout = sinkConfig.Timeout
 	c.LogHook = func(e pester.ErrEntry) {
 		// LogHook is invoked only when an error happens
-		iw.logger.Debugf("Error sending data to agent sink: %q", e)
+		iw.logger.Warnf("Error sending data to agent sink: %q", e)
 	}
 
 	h, err := sink.New(sink.HTTPSinkOptions{
