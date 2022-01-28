@@ -10,6 +10,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// Prober is an object that polls and http URL and returns an error if it does not return 200 Ok within the specified
+// timeout.
 type Prober struct {
 	timeout time.Duration
 	backoff time.Duration
@@ -19,6 +21,7 @@ type Prober struct {
 var ErrProbeTimeout = errors.New("probe timed out")
 var errProbeNotOk = errors.New("probe did not return 200 Ok")
 
+// New creates a Prober that will check an endpoint every backoff seconds.
 func New(timeout, backoff time.Duration) *Prober {
 	return &Prober{
 		timeout: timeout,
@@ -27,6 +30,8 @@ func New(timeout, backoff time.Duration) *Prober {
 	}
 }
 
+// Probe repeatedly hits the specified url with a GET request every Prober.backoff, and blocks until a request returns
+// 200, or Prober.timeout passes.
 func (p *Prober) Probe(url string) error {
 	start := time.Now()
 	for {
@@ -44,6 +49,7 @@ func (p *Prober) Probe(url string) error {
 	}
 }
 
+// attempt makes a request to the specified URL and returns an error if it does not return 200.
 func (p *Prober) attempt(url string) error {
 	resp, err := http.Get(url)
 	if err != nil {
