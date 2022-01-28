@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/newrelic/nri-kubernetes/v3/src/sink"
+	"github.com/newrelic/nri-kubernetes/v3/src/integration/sink"
 )
 
 const (
@@ -41,7 +41,7 @@ func Test_http_Sink_creation_fails_when_there_is(t *testing.T) {
 			options := getHTTPSinkOptions(t)
 			modifyFunc(&options)
 
-			_, err := sink.NewHTTPSink(options)
+			_, err := sink.New(options)
 			assert.Error(t, err, "error expected since client is nil")
 		})
 	}
@@ -78,7 +78,7 @@ func Test_http_sink_writes_data_successfully_when_within_ctxDeadline(t *testing.
 			options := getHTTPSinkOptions(t)
 			options.URL = testURL
 
-			h, err := sink.NewHTTPSink(options)
+			h, err := sink.New(options)
 			require.NoError(t, err, "no error expected")
 
 			_, err = h.Write([]byte("random data"))
@@ -121,7 +121,7 @@ func Test_http_sink_fails_writing_data_when(t *testing.T) {
 			c := defaultPesterClient(t)
 			c.Timeout = tc.requestTimeout
 
-			h, err := sink.NewHTTPSink(sink.HTTPSinkOptions{
+			h, err := sink.New(sink.HTTPSinkOptions{
 				URL:    testURL,
 				Client: c,
 			})

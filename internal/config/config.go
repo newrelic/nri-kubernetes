@@ -10,8 +10,8 @@ import (
 const (
 	DefaultFileName = "nri-kubernetes"
 	DefaultFilePath = "/etc/newrelic-infra"
-	DefaultTimeout  = 10000 * time.Millisecond
-	DefaultRetries  = 4
+	DefaultTimeout  = 3 * time.Second
+	DefaultRetries  = 3
 )
 
 type Config struct {

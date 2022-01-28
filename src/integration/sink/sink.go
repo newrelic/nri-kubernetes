@@ -13,16 +13,15 @@ const (
 	// DefaultAgentForwarderhost holds the default endpoint of the agent forwarder.
 	DefaultAgentForwarderhost = "localhost"
 	DefaultAgentForwarderPath = "/v1/data"
-	DefaultAgentReadyPath     = "/v1/data/ready"
 )
 
-// Doer is the interface that httpSink client should satisfy.
+// Doer is the interface that HTTPSink client should satisfy.
 type Doer interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-// httpSink holds the configuration of the HTTP sink used by the integration.
-type httpSink struct {
+// HTTPSink holds the configuration of the HTTP sink used by the integration.
+type HTTPSink struct {
 	url    string
 	client Doer
 }
@@ -33,8 +32,8 @@ type HTTPSinkOptions struct {
 	Client Doer
 }
 
-//NewHTTPSink initialize httpSink struct.
-func NewHTTPSink(options HTTPSinkOptions) (io.Writer, error) {
+//New initialize HTTPSink struct.
+func New(options HTTPSinkOptions) (io.Writer, error) {
 	if options.Client == nil {
 		return nil, fmt.Errorf("client cannot be nil")
 	}
@@ -43,14 +42,14 @@ func NewHTTPSink(options HTTPSinkOptions) (io.Writer, error) {
 		return nil, fmt.Errorf("url cannot be empty")
 	}
 
-	return &httpSink{
+	return &HTTPSink{
 		url:    options.URL,
 		client: options.Client,
 	}, nil
 }
 
 // Write is the function signature needed by the infrastructure SDK package.
-func (h httpSink) Write(p []byte) (n int, err error) {
+func (h HTTPSink) Write(p []byte) (n int, err error) {
 	request, err := http.NewRequest("POST", h.url, bytes.NewBuffer(p))
 	if err != nil {
 		return 0, fmt.Errorf("preparing request: %w", err)
