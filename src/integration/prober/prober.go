@@ -42,6 +42,8 @@ func (p *Prober) Probe(url string) error {
 		err := p.attempt(url)
 		if err != nil {
 			p.Logger.Debug(err)
+			p.Logger.Debugf("Retrying in %s", p.backoff)
+			time.Sleep(p.backoff)
 			continue
 		}
 
@@ -53,7 +55,7 @@ func (p *Prober) Probe(url string) error {
 func (p *Prober) attempt(url string) error {
 	resp, err := http.Get(url)
 	if err != nil {
-		return fmt.Errorf("probe attempt to %s failed, retrying in %s: %w", url, p.backoff, err)
+		return fmt.Errorf("probe attempt to %s failed: %w", url, err)
 	}
 
 	_ = resp.Body.Close()
