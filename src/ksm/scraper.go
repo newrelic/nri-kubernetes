@@ -125,7 +125,11 @@ func (s *Scraper) Run(i *integration.Integration) error {
 		s.logger.Debugf("Running KSM job")
 		r := job.Populate(i, s.config.ClusterName, s.logger, s.k8sVersion)
 		if r.Errors != nil {
-			s.logger.Warnf("Error populating KSM metrics: %v", r.Error())
+			if r.Populated {
+				s.logger.Debugf("Error populating KSM metrics: %v", r.Error())
+			} else {
+				s.logger.Warnf("Error populating KSM metrics: %v", r.Error())
+			}
 		}
 
 		if !r.Populated {
