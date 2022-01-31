@@ -33,7 +33,7 @@ type HTTPSinkOptions struct {
 }
 
 //New initialize HTTPSink struct.
-func New(options HTTPSinkOptions) (io.Writer, error) {
+func New(options HTTPSinkOptions) (*HTTPSink, error) {
 	if options.Client == nil {
 		return nil, fmt.Errorf("client cannot be nil")
 	}
