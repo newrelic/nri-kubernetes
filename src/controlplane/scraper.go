@@ -172,7 +172,11 @@ func (s *Scraper) Run(i *integration.Integration) error {
 		result := job.Populate(i, s.config.ClusterName, s.logger, s.k8sVersion)
 
 		if len(result.Errors) > 0 {
-			s.logger.Infof("Error populating data from %s: %v", job.Name, result.Error())
+			if result.Populated {
+				s.logger.Tracef("Error populating data from %s: %v", job.Name, result.Error())
+			} else {
+				s.logger.Warnf("Error populating data from %s: %v", job.Name, result.Error())
+			}
 		}
 	}
 
