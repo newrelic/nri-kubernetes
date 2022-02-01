@@ -40,22 +40,6 @@ func WithLogger(logger *log.Logger) OptionFunc {
 	}
 }
 
-// WithProbeTimeout configures the integration wrapper to wait at most timeout for the HTTP endpoint to respond.
-func WithProbeTimeout(timeout time.Duration) OptionFunc {
-	return func(i *Wrapper) error {
-		i.probeTimeout = timeout
-		return nil
-	}
-}
-
-// WithProbeBackoff configures the time the internal prober waits between HTTP endpoint checks.
-func WithProbeBackoff(backoff time.Duration) OptionFunc {
-	return func(i *Wrapper) error {
-		i.probeBackoff = backoff
-		return nil
-	}
-}
-
 // WithMetadata allows to configure the integration name and version that is passed down to the integration SDK.
 func WithMetadata(metadata Metadata) OptionFunc {
 	return func(i *Wrapper) error {
