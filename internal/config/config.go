@@ -8,10 +8,11 @@ import (
 )
 
 const (
-	DefaultFileName = "nri-kubernetes"
-	DefaultFilePath = "/etc/newrelic-infra"
-	DefaultTimeout  = 10000 * time.Millisecond
-	DefaultRetries  = 4
+	DefaultFileName     = "nri-kubernetes"
+	DefaultFilePath     = "/etc/newrelic-infra"
+	DefaultTimeout      = 10 * time.Second
+	DefaultRetries      = 3
+	DefaultAgentTimeout = 3 * time.Second
 )
 
 type Config struct {
@@ -115,7 +116,7 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 
 	// Sane connection defaults
 	v.SetDefault("sink.http.port", 0)
-	v.SetDefault("sink.http.timeout", DefaultTimeout)
+	v.SetDefault("sink.http.timeout", DefaultAgentTimeout)
 	v.SetDefault("sink.http.retries", DefaultRetries)
 
 	v.SetDefault("kubelet.timeout", DefaultTimeout)

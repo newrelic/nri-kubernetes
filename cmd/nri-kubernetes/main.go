@@ -2,16 +2,13 @@ package main
 
 import (
 	"fmt"
-	"net"
 	"os"
 	"path"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 
-	"github.com/newrelic/infra-integrations-sdk/integration"
-	"github.com/sethgrid/pester"
+	sdk "github.com/newrelic/infra-integrations-sdk/integration"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -19,15 +16,14 @@ import (
 	"k8s.io/client-go/util/homedir"
 
 	"github.com/newrelic/nri-kubernetes/v3/internal/config"
-	"github.com/newrelic/nri-kubernetes/v3/internal/storer"
 	"github.com/newrelic/nri-kubernetes/v3/src/client"
 	"github.com/newrelic/nri-kubernetes/v3/src/controlplane"
+	"github.com/newrelic/nri-kubernetes/v3/src/integration"
 	"github.com/newrelic/nri-kubernetes/v3/src/ksm"
 	ksmClient "github.com/newrelic/nri-kubernetes/v3/src/ksm/client"
 	"github.com/newrelic/nri-kubernetes/v3/src/kubelet"
 	kubeletClient "github.com/newrelic/nri-kubernetes/v3/src/kubelet/client"
 	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
-	"github.com/newrelic/nri-kubernetes/v3/src/sink"
 )
 
 const (
@@ -77,7 +73,19 @@ func main() {
 		}
 	}
 
-	i, err := createIntegrationWithHTTPSink(c)
+	iw, err := integration.NewWrapper(
+		integration.WithLogger(logger),
+		integration.WithMetadata(integration.Metadata{
+			Name:    integrationName,
+			Version: integrationVersion,
+		}),
+	)
+	if err != nil {
+		logger.Errorf("creating integration wrapper: %v", err)
+		os.Exit(exitIntegration)
+	}
+
+	i, err := iw.Integration(c.Sink.HTTP)
 	if err != nil {
 		logger.Errorf("creating integration with http sink: %v", err)
 		os.Exit(exitIntegration)
@@ -154,7 +162,7 @@ func main() {
 	}
 }
 
-func runScrapers(c *config.Config, ksmScraper *ksm.Scraper, kubeletScraper *kubelet.Scraper, controlplaneScraper *controlplane.Scraper, i *integration.Integration) error {
+func runScrapers(c *config.Config, ksmScraper *ksm.Scraper, kubeletScraper *kubelet.Scraper, controlplaneScraper *controlplane.Scraper, i *sdk.Integration) error {
 	if c.KSM.Enabled {
 		err := ksmScraper.Run(i)
 		if err != nil {
@@ -271,32 +279,6 @@ func buildClients(c *config.Config) (*clusterClients, error) {
 		kubelet:  kubeletCli,
 		cAdvisor: kubeletCli,
 	}, nil
-}
-
-func createIntegrationWithHTTPSink(config *config.Config) (*integration.Integration, error) {
-	c := pester.New()
-	c.Backoff = pester.LinearBackoff
-	c.MaxRetries = config.Sink.HTTP.Retries
-	c.Timeout = config.Sink.HTTP.Timeout
-	c.LogHook = func(e pester.ErrEntry) {
-		logger.Debugf("sending data to httpSink: %q", e)
-	}
-
-	endpoint := net.JoinHostPort(sink.DefaultAgentForwarderhost, strconv.Itoa(config.Sink.HTTP.Port))
-
-	sinkOptions := sink.HTTPSinkOptions{
-		URL:    fmt.Sprintf("http://%s%s", endpoint, sink.DefaultAgentForwarderPath),
-		Client: c,
-	}
-
-	h, err := sink.NewHTTPSink(sinkOptions)
-	if err != nil {
-		return nil, fmt.Errorf("creating HTTPSink: %w", err)
-	}
-
-	cache := storer.NewInMemoryStore(storer.DefaultTTL, storer.DefaultInterval, logger)
-
-	return integration.New(integrationName, integrationVersion, integration.Writer(h), integration.Storer(cache))
 }
 
 func getK8sConfig(c *config.Config) (*rest.Config, error) {
