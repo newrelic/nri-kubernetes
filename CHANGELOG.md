@@ -41,7 +41,18 @@ For more information about what has changed in v3 check the following [documenta
 
 Please notice that old [V3](https://docs.newrelic.com/docs/create-integrations/infrastructure-integrations-sdk/specifications/host-integrations-standard-configuration-format/) configuration format is deprecated, but still supported.
 
----
+
+## 2.8.3
+
+### Changed
+
+- Updated agent and integrations to their latest version.
+
+## 2.8.2
+
+### Changed
+
+- Updated agent and integrations to their latest version.
 
 ## 2.8.1
 
