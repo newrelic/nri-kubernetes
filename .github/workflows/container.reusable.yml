@@ -1,0 +1,96 @@
+name: Build container image
+on:
+  workflow_call:
+    inputs:
+      name:
+        description: Name of the image to build
+        required: true
+        type: string
+      tag:
+        description: Tag of the image to build
+        required: true
+        type: string
+      push:
+        description: Whether to push the image after building it
+        default: false
+        required: false
+        type: boolean
+      latest:
+        description: Whether to also build (and push, if push == true) the `latest` tag
+        default: false
+        required: false
+        type: boolean
+      artifact:
+        description: Name of the artifact where the binaries have been uploaded
+        required: false
+        default: nri-kubernetes
+        type: string
+      platforms:
+        description: Comma-separated platforms to build for
+        required: false
+        default: linux/amd64,linux/arm64,linux/arm
+        type: string
+
+jobs:
+  container:
+    name: Build container image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Download all artifacts from build job
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ inputs.artifact }}
+          path: bin
+
+      # It is common for branch names to have / characters, which cannot be used as container tags.
+      - name: Sanitize tag
+        id: tag
+        run: |
+          tag="${{ inputs.tag }}"
+          echo "::set-output name=name::${tag//\//-}"
+
+      - name: Build container images
+        run: |
+          docker buildx build --platform=${{ inputs.platforms }} \
+            -t ${{ inputs.name }}:${{ steps.tag.outputs.name }} \
+            .
+
+      - name: Build and load x64 image for security scanning
+        # We need to build a single-arch image again to be able to --load it into the host
+        run: |
+          docker buildx build --load --platform=linux/amd64 \
+            -t ${{ inputs.name }}:ci-scan \
+            .
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.2.2
+        with:
+          image-ref: ${{ inputs.name }}:ci-scan
+          format: table
+          exit-code: '0'
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+
+      - uses: docker/login-action@v1
+        if: ${{ inputs.push }}
+        with:
+          username: ${{ secrets.FSI_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.FSI_DOCKERHUB_TOKEN }}
+
+      - name: Push versioned images
+        if: ${{ inputs.push }}
+        run: |
+          docker buildx build --push --platform="${{ inputs.platforms }}" \
+            -t "${{ inputs.name }}:${{ steps.tag.outputs.name }}" \
+            .
+      - name: Push :latest images
+        if: ${{ inputs.push && inputs.latest }}
+        run: |
+          docker buildx build --push --platform=${{ inputs.platforms }} \
+            -t ${{ inputs.name }}:latest \
+            .

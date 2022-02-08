@@ -1,0 +1,41 @@
+name: Build
+on:
+  workflow_call:
+    inputs:
+      upload:
+        description: Whether to upload the binaries as artifacts to reuse later
+        default: false
+        required: false
+        type: boolean
+      artifact:
+        description: Name for the uploaded artifact
+        default: nri-kubernetes
+        required: false
+        type: string
+jobs:
+  build:
+    name: Build integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.17'
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Build integration
+        run: |
+          make compile-multiarch
+      - name: Upload artifact for docker build step
+        if: inputs.upload
+        uses: actions/upload-artifact@v2
+        with:
+          retention-days: 1
+          name: ${{ inputs.artifact }}
+          path: bin/nri-kubernetes*

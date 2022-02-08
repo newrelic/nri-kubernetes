@@ -4,33 +4,28 @@ on:
     branches:
       - main
   pull_request:
+
 jobs:
   build:
-    name: Build integration for
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        goos: [ linux ]
-        goarch: [ amd64, arm64, arm ]
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
-        with:
-          go-version: '1.17'
-      - uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-      - name: Build integration
-        env:
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
-        run: |
-          make compile
+    # Should be just:
+    # uses: ./.github/workflows/build.reusable.yml
+    # but https://github.com/github/feedback/discussions/10679
+    uses: newrelic/nri-kubernetes/.github/workflows/build.reusable.yml@ci/reusable-workflows
+    with:
+      upload: true
+      artifact: nri-kubernetes-${{ github.sha }}
+
+  build-container:
+    # Should be just:
+    # uses: ./.github/workflows/build.reusable.yml
+    # but https://github.com/github/feedback/discussions/10679
+    uses: newrelic/nri-kubernetes/.github/workflows/container.reusable.yml@ci/reusable-workflows
+    needs: [ build ]
+    with:
+      name: ghcr.io/newrelic/nri-kubernetes
+      tag: ${{ github.head_ref }}
+      artifact: nri-kubernetes-${{ github.sha }}
+
   test:
     name: Run tests
     needs: [ build ]
