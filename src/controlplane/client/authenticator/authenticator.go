@@ -119,19 +119,22 @@ type certificatesData struct {
 
 // certificateSecretKeys contains the name of the keys inside the secret where the certificate, private key, and CA
 // certificates are stored.
+// Earlier versions of the integration allowed to define a secret of type corev1.SecretTypeOpaque, with the required
+// certs and keys stored in keys named as the constants below.
+// New versions can also consume a secret of type corev1.SecretTypeTLS, using standard names for certificate and key.
 type certificateSecretKeys struct {
 	cert string
 	key  string
 	ca   string
 }
 
-// opaqueCertKey is the key for the secret data where the PEM-encoded certificate is located.
+// opaqueCertKey is the key for the secret data where the PEM-encoded certificate is located in Opaque secrets.
 const opaqueCertKey = "cert"
 
-// opaqueKeyKey is the key for the secret data where the PEM-encoded private key is located.
+// opaqueKeyKey is the key for the secret data where the PEM-encoded private key is located  Opaque secrets.
 const opaqueKeyKey = "key"
 
-// opaqueCacertKey is the key for the secret data where the PEM-encoded CA certificate key is located.
+// opaqueCacertKey is the key for the secret data where the PEM-encoded CA certificate key is located Opaque secrets .
 const opaqueCacertKey = "cacert"
 
 // tlsCertCaName is the key name for the CA Certificate inside the secret data.
