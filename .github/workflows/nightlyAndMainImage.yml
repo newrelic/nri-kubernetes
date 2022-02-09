@@ -1,14 +1,11 @@
-name: Nightly build
+name: Nightly and main build
 
 on:
   schedule:
     - cron: "0 4 * * *"
   push:
     branches:
-      - master
       - main
-# TODO once develop is merged this will be not needed anymore
-      - develop
 
 jobs:
   build:
@@ -50,11 +47,13 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DOCKER_IMAGE_NAME: newrelic/nri-kubernetes
-      DOCKER_IMAGE_TAG: nightly
+      DOCKER_IMAGE_TAG: main
       DOCKER_PLATFORMS: "linux/amd64,linux/arm64,linux/arm" # Must be consistent with the matrix from the job above
     steps:
       - uses: actions/checkout@v2
-
+      - name: Setting nightly tag if schedule
+        if: ${{ github.event.schedule }}
+        run: echo "DOCKER_IMAGE_TAG=nightly" >> $GITHUB_ENV
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
