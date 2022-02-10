@@ -91,7 +91,7 @@ func main() {
 		os.Exit(exitIntegration)
 	}
 
-	logger.Debugf(
+	logger.Infof(
 		"New Relic %s integration Version: %s, Platform: %s, GoVersion: %s, GitCommit: %s, BuildDate: %s\n",
 		strings.Title(strings.Replace(integrationName, "com.newrelic.", "", 1)),
 		integrationVersion,

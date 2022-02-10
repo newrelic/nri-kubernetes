@@ -102,7 +102,7 @@ func (dp *DefaultConnector) Connect() (*ConnParams, error) {
 		return &ConnParams{URL: *u, Client: httpClient}, nil
 	}
 
-	return nil, fmt.Errorf("all endpoints in the list failed to response")
+	return nil, fmt.Errorf("all endpoints in the list failed to respond")
 }
 
 // probe executes a HEAD request to the endpoint and fails if the response code

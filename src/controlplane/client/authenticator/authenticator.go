@@ -7,6 +7,7 @@ import (
 
 	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
 	log "github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/transport"
 
@@ -90,7 +91,7 @@ func (a K8sClientAuthenticator) AuthenticatedTransport(endpoint config.Endpoint)
 		}
 
 		if certs.ca == nil && !endpoint.InsecureSkipVerify {
-			return nil, fmt.Errorf("insecureSkipVerify is false and CA are missing for endpoint %q", endpoint.URL)
+			return nil, fmt.Errorf("insecureSkipVerify is false and CA cert is missing from secret %q", endpoint.URL)
 		}
 
 		transportConfig.TLS.CertData = certs.cert
@@ -116,6 +117,32 @@ type certificatesData struct {
 	ca   []byte
 }
 
+// certificateSecretKeys contains the name of the keys inside the secret where the certificate, private key, and CA
+// certificates are stored.
+// Earlier versions of the integration allowed to define a secret of type corev1.SecretTypeOpaque, with the required
+// certs and keys stored in keys named as the constants below.
+// New versions can also consume a secret of type corev1.SecretTypeTLS, using standard names for certificate and key.
+type certificateSecretKeys struct {
+	cert string
+	key  string
+	ca   string
+}
+
+// opaqueCertKey is the key for the secret data where the PEM-encoded certificate is located in Opaque secrets.
+const opaqueCertKey = "cert"
+
+// opaqueKeyKey is the key for the secret data where the PEM-encoded private key is located  Opaque secrets.
+const opaqueKeyKey = "key"
+
+// opaqueCacertKey is the key for the secret data where the PEM-encoded CA certificate key is located Opaque secrets .
+const opaqueCacertKey = "cacert"
+
+// tlsCertCaName is the key name for the CA Certificate inside the secret data.
+// Unlike v1.TLSCertKey and v1.TLSPrivateKeyKey, the key for the CA certificate is not standard. Here we mirror the
+// one Cert manager is using:
+// https://github.com/jetstack/cert-manager/blob/83d722f267c4dbc69d2e1c274bfb2eac5a49ca9c/internal/apis/meta/types.go#L74
+const tlsCacertKey = "ca.crt"
+
 // getTLSCertificatesFromSecret fetches the certificates from the secrets using the secret lister.
 func (a K8sClientAuthenticator) getTLSCertificatesFromSecret(mTLSConfig *config.MTLS) (*certificatesData, error) {
 	if mTLSConfig.TLSSecretName == "" {
@@ -138,19 +165,35 @@ func (a K8sClientAuthenticator) getTLSCertificatesFromSecret(mTLSConfig *config.
 		return nil, fmt.Errorf("could not find secret %q containing TLS configuration: %w", mTLSConfig.TLSSecretName, err)
 	}
 
-	var cert, key []byte
-
-	if cert, ok = secret.Data["cert"]; !ok {
-		return nil, fmt.Errorf("could not find TLS certificate in `cert` field in secret %q", mTLSConfig.TLSSecretName)
+	keynames := certificateSecretKeys{
+		cert: opaqueCertKey,
+		key:  opaqueKeyKey,
+		ca:   opaqueCacertKey,
 	}
 
-	if key, ok = secret.Data["key"]; !ok {
-		return nil, fmt.Errorf("could not find TLS key in `key` field in secret %q", mTLSConfig.TLSSecretName)
+	if secret.Type == corev1.SecretTypeTLS {
+		a.logger.Debugf("Secret %q has type %q, using standard key names", secret.Name, secret.Type)
+
+		keynames = certificateSecretKeys{
+			cert: corev1.TLSCertKey,
+			key:  corev1.TLSPrivateKeyKey,
+			ca:   tlsCacertKey,
+		}
 	}
 
-	return &certificatesData{
-		cert: cert,
-		key:  key,
-		ca:   secret.Data["cacert"],
-	}, nil
+	certdata := &certificatesData{}
+
+	if certdata.cert, ok = secret.Data[keynames.cert]; !ok {
+		return nil, fmt.Errorf("could not find TLS certificate in %q field in secret %q", keynames.cert, secret.Name)
+	}
+
+	if certdata.key, ok = secret.Data[keynames.key]; !ok {
+		return nil, fmt.Errorf("could not find TLS key in %q field in secret %q", keynames.key, secret.Name)
+	}
+
+	if certdata.ca, ok = secret.Data[keynames.ca]; !ok {
+		a.logger.Debugf("CA certificate not found in %q field in secret %q. CA will not be validated.", keynames.ca, secret.Name)
+	}
+
+	return certdata, nil
 }
