@@ -218,7 +218,7 @@ func setupControlPlane(c *config.Config, clients *clusterClients) (*controlplane
 		controlplane.WithRestConfig(restConfig),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("building KSM scraper: %w", err)
+		return nil, fmt.Errorf("building control plane scraper: %w", err)
 	}
 
 	return controlplaneScraper, nil
