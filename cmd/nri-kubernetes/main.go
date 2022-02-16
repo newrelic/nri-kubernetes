@@ -31,6 +31,7 @@ const (
 
 	_ = iota
 	exitClients
+	exitConfig
 	exitIntegration
 	exitLoop
 	exitSetup
@@ -54,7 +55,7 @@ type clusterClients struct {
 func main() {
 	logger = log.StandardLogger()
 
-	c, err := config.LoadConfig(config.DefaultFilePath, config.DefaultFileName)
+	c, err := config.LoadConfig(config.DefaultConfigFolderName, config.DefaultConfigFileName)
 	if err != nil {
 		log.Error(err.Error())
 		os.Exit(exitIntegration)
@@ -73,19 +74,31 @@ func main() {
 		}
 	}
 
-	iw, err := integration.NewWrapper(
+	integrationOptions := []integration.OptionFunc{
 		integration.WithLogger(logger),
 		integration.WithMetadata(integration.Metadata{
 			Name:    integrationName,
 			Version: integrationVersion,
 		}),
-	)
+	}
+
+	switch c.Sink.Type {
+	case config.SinkTypeHTTP:
+		integrationOptions = append(integrationOptions, integration.WithHTTPSink(c.Sink.HTTP))
+	case config.SinkTypeStdout:
+		logger.Warn("Sinking metrics to stdout")
+	default:
+		log.Errorf("Unknown sink type %s", c.Sink.Type)
+		os.Exit(exitConfig)
+	}
+
+	iw, err := integration.NewWrapper(integrationOptions...)
 	if err != nil {
 		logger.Errorf("creating integration wrapper: %v", err)
 		os.Exit(exitIntegration)
 	}
 
-	i, err := iw.Integration(c.Sink.HTTP)
+	i, err := iw.Integration()
 	if err != nil {
 		logger.Errorf("creating integration with http sink: %v", err)
 		os.Exit(exitIntegration)

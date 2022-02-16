@@ -8,11 +8,17 @@ import (
 )
 
 const (
-	DefaultFileName     = "nri-kubernetes"
-	DefaultFilePath     = "/etc/newrelic-infra"
+	DefaultConfigFileName   = "nri-kubernetes"
+	DefaultConfigFolderName = "/etc/newrelic-infra"
+
 	DefaultTimeout      = 10 * time.Second
 	DefaultRetries      = 3
 	DefaultAgentTimeout = 3 * time.Second
+
+	DefaultNetworkRouteFile = "/proc/net/route"
+
+	SinkTypeHTTP   = "http"
+	SinkTypeStdout = "stdout"
 )
 
 type Config struct {
@@ -34,6 +40,9 @@ type Config struct {
 
 	// Sink defines where the integration will report the metrics to.
 	Sink struct {
+		// Type allows selecting which of the supported sinks will be used by the integration.
+		// Supported values are `http` and `stdout`.
+		Type string `mapstructure:"type"`
 		// HTTP stores the configuration for the HTTP sink.
 		HTTP HTTPSink `mapstructure:"http"`
 	} `mapstructure:"sink"`
@@ -203,11 +212,12 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	// https://github.com/spf13/viper/issues/584
 	v.SetDefault("clusterName", "cluster")
 	v.SetDefault("verbose", false)
-	v.SetDefault("kubelet.networkRouteFile", "/proc/net/route")
+	v.SetDefault("kubelet.networkRouteFile", DefaultNetworkRouteFile)
 	v.SetDefault("nodeName", "node")
 	v.SetDefault("nodeIP", "node")
 
 	// Sane connection defaults
+	v.SetDefault("sink.type", SinkTypeHTTP)
 	v.SetDefault("sink.http.port", 0)
 	v.SetDefault("sink.http.timeout", DefaultAgentTimeout)
 	v.SetDefault("sink.http.retries", DefaultRetries)
