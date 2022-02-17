@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"strconv"
 	"time"
 
@@ -97,6 +98,7 @@ type Metadata struct {
 func NewWrapper(opts ...OptionFunc) (*Wrapper, error) {
 	intgr := &Wrapper{
 		logger:       logutil.Discard,
+		sink:         os.Stdout,
 		probeTimeout: defaultProbeTimeout,
 		probeBackoff: defaultProbeBackoff,
 	}
@@ -115,11 +117,5 @@ func NewWrapper(opts ...OptionFunc) (*Wrapper, error) {
 // Integration will block and wait until the specified server is ready, up to a maximum timeout.
 func (iw *Wrapper) Integration() (*sdk.Integration, error) {
 	cache := storer.NewInMemoryStore(storer.DefaultTTL, storer.DefaultInterval, iw.logger)
-
-	if iw.sink == nil {
-		iw.logger.Warn("Configuring integration to write metrics to stdout rather than agent sidecar")
-		return sdk.New(iw.metadata.Name, iw.metadata.Version, sdk.Storer(cache))
-	}
-
 	return sdk.New(iw.metadata.Name, iw.metadata.Version, sdk.Writer(iw.sink), sdk.Storer(cache))
 }
