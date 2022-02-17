@@ -86,6 +86,7 @@ func main() {
 	case config.SinkTypeHTTP:
 		integrationOptions = append(integrationOptions, integration.WithHTTPSink(c.Sink.HTTP))
 	case config.SinkTypeStdout:
+		// We don't need to do anything here to sink to stdout, as it's the default behavior of integration.Wrapper.
 		logger.Warn("Sinking metrics to stdout")
 	default:
 		log.Errorf("Unknown sink type %s", c.Sink.Type)
