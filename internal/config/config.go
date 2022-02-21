@@ -28,6 +28,7 @@ type Config struct {
 		HTTP HTTPSink `mapstructure:"http"`
 	} `mapstructure:"sink"`
 
+	Operator     `mapstructure:"operator"`
 	ControlPlane `mapstructure:"controlPlane"`
 	Kubelet      `mapstructure:"kubelet"`
 	KSM          `mapstructure:"ksm"`
@@ -37,6 +38,10 @@ type HTTPSink struct {
 	Port    int           `mapstructure:"port"`
 	Timeout time.Duration `mapstructure:"timeout"`
 	Retries int           `mapstructure:"retries"`
+}
+
+type Operator struct {
+	Enabled bool `mapstructure:"enabled"`
 }
 
 type KSM struct {

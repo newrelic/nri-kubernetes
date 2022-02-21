@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path"
@@ -8,7 +9,16 @@ import (
 	"strings"
 	"time"
 
-	sdk "github.com/newrelic/infra-integrations-sdk/integration"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	corev1 "k8s.io/api/core/v1"
+
+	"k8s.io/apimachinery/pkg/labels"
+
+	v1 "k8s.io/client-go/listers/core/v1"
+
+	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
+
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -18,7 +28,6 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/internal/config"
 	"github.com/newrelic/nri-kubernetes/v3/src/client"
 	"github.com/newrelic/nri-kubernetes/v3/src/controlplane"
-	"github.com/newrelic/nri-kubernetes/v3/src/integration"
 	"github.com/newrelic/nri-kubernetes/v3/src/ksm"
 	ksmClient "github.com/newrelic/nri-kubernetes/v3/src/ksm/client"
 	"github.com/newrelic/nri-kubernetes/v3/src/kubelet"
@@ -32,7 +41,6 @@ const (
 	_ = iota
 	exitClients
 	exitIntegration
-	exitLoop
 	exitSetup
 )
 
@@ -73,24 +81,6 @@ func main() {
 		}
 	}
 
-	iw, err := integration.NewWrapper(
-		integration.WithLogger(logger),
-		integration.WithMetadata(integration.Metadata{
-			Name:    integrationName,
-			Version: integrationVersion,
-		}),
-	)
-	if err != nil {
-		logger.Errorf("creating integration wrapper: %v", err)
-		os.Exit(exitIntegration)
-	}
-
-	i, err := iw.Integration(c.Sink.HTTP)
-	if err != nil {
-		logger.Errorf("creating integration with http sink: %v", err)
-		os.Exit(exitIntegration)
-	}
-
 	logger.Infof(
 		"New Relic %s integration Version: %s, Platform: %s, GoVersion: %s, GitCommit: %s, BuildDate: %s\n",
 		strings.Title(strings.Replace(integrationName, "com.newrelic.", "", 1)),
@@ -104,15 +94,6 @@ func main() {
 	if err != nil {
 		logger.Errorf("building clients: %v", err)
 		os.Exit(exitClients)
-	}
-
-	var kubeletScraper *kubelet.Scraper
-	if c.Kubelet.Enabled {
-		kubeletScraper, err = setupKubelet(c, clients)
-		if err != nil {
-			logger.Errorf("setting up ksm scraper: %v", err)
-			os.Exit(exitSetup)
-		}
 	}
 
 	var ksmScraper *ksm.Scraper
@@ -135,24 +116,23 @@ func main() {
 		defer controlplaneScraper.Close()
 	}
 
+	var o *operator
+	if c.Operator.Enabled {
+		o = createOperator(clients.k8s)
+		o.log = logger
+	}
+
 	for {
 		start := time.Now()
 
 		logger.Debugf("scraping data from all the scrapers defined: KSM: %t, Kubelet: %t, ControlPlane: %t",
 			c.KSM.Enabled, c.Kubelet.Enabled, c.ControlPlane.Enabled)
 
-		// TODO think carefully to the signature of this function
-		err := runScrapers(c, ksmScraper, kubeletScraper, controlplaneScraper, i)
-		if err != nil {
-			logger.Errorf("retrieving scraper data: %v", err)
-			os.Exit(exitLoop)
-		}
-
 		logger.Debugf("publishing data")
-		err = i.Publish()
-		if err != nil {
-			logger.Errorf("publishing integration: %v", err)
-			os.Exit(exitLoop)
+
+		if c.Operator.Enabled {
+			o.run()
+			o.log = logger
 		}
 
 		logger.Debugf("waiting %f seconds for next interval", c.Interval.Seconds())
@@ -162,29 +142,195 @@ func main() {
 	}
 }
 
-func runScrapers(c *config.Config, ksmScraper *ksm.Scraper, kubeletScraper *kubelet.Scraper, controlplaneScraper *controlplane.Scraper, i *sdk.Integration) error {
-	if c.KSM.Enabled {
-		err := ksmScraper.Run(i)
-		if err != nil {
-			return fmt.Errorf("retrieving ksm data: %w", err)
+type operator struct {
+	lister v1.PodNamespaceLister
+	client kubernetes.Interface
+	log    *log.Logger
+}
+
+const operatorNamespace = "nginx"
+
+func createOperator(client kubernetes.Interface) *operator {
+	listMap, _ := discovery.NewNamespacePodListerer(discovery.PodListererConfig{Client: client, Namespaces: []string{operatorNamespace}})
+
+	l, _ := listMap.Lister(operatorNamespace)
+
+	return &operator{
+		lister: l,
+		client: client,
+	}
+}
+
+func (o operator) run() {
+	logger.Debugf("running operator")
+
+	listWorkLoads, listIntegrations := o.listInterestingPods()
+
+	logger.Debugf("CREATING INTEGRATIONS")
+
+	for _, w := range listWorkLoads {
+		found := false
+		for _, i := range listIntegrations {
+			if strings.Contains(i.Name, w.Name) {
+				logger.Debugf("workload already monitored %s by %s", w.Name, i.Name)
+
+				found = true
+			} else {
+				logger.Debugf("%q does not contain %q", i.Name, w.Name)
+			}
+		}
+
+		if w.Status.PodIP == "" {
+			logger.Warnf("SKIPPIN FOR NOW %q since IP is empty", w.Name)
+		}
+
+		if !found && w.Status.PodIP != "" {
+			o.deployIntegration(w)
 		}
 	}
 
-	if c.Kubelet.Enabled {
-		err := kubeletScraper.Run(i)
-		if err != nil {
-			return fmt.Errorf("retrieving kubelet data: %w", err)
+	logger.Debugf("CLEANING INTEGRAIONS")
+
+	for _, i := range listIntegrations {
+		found := false
+		for _, w := range listWorkLoads {
+			if strings.Contains(i.Name, w.Name) { //TODO this is an example, we should also check that config did not change
+				logger.Debugf("integration monitoring workload %s by %s", w.Name, i.Name)
+
+				found = true
+			}
 		}
+
+		if !found {
+			o.deleteIntegration(i)
+		}
+
+	}
+}
+
+func (o operator) listInterestingPods() ([]*corev1.Pod, []*corev1.Pod) {
+	listWorkLoads, err := o.lister.List(
+		labels.SelectorFromSet(labels.Set{
+			"monitoring-role": "workload-to-monitor",
+		}))
+	if err != nil {
+		o.log.Errorf("listing workloads %v", err)
 	}
 
-	if c.ControlPlane.Enabled {
-		err := controlplaneScraper.Run(i)
-		if err != nil {
-			return fmt.Errorf("retrieving control plane data: %w", err)
-		}
+	logger.Debugf("found pods %d", len(listWorkLoads))
+
+	listIntegrations, err := o.lister.List(
+		labels.SelectorFromSet(labels.Set{
+			"monitoring-role": "integration-monitoring-workload",
+		}))
+	if err != nil {
+		o.log.Errorf("listing integrations %v", err)
 	}
 
-	return nil
+	logger.Debugf("found integrations %d", len(listIntegrations))
+
+	return listWorkLoads, listIntegrations
+}
+
+func (o operator) deleteIntegration(pod *corev1.Pod) {
+	logger.Debugf("deleting integrations and secret %q", pod.Name)
+	err := o.client.CoreV1().Pods(operatorNamespace).Delete(context.Background(), pod.Name, metav1.DeleteOptions{})
+	if err != nil {
+		o.log.Errorf("deleting integration %v", err)
+	}
+	err = o.client.CoreV1().Secrets(operatorNamespace).Delete(context.Background(), pod.Name, metav1.DeleteOptions{})
+	if err != nil {
+		o.log.Errorf("deleting secret %v", err)
+	}
+}
+
+func (o operator) deployIntegration(pod *corev1.Pod) {
+	o.log.Infof("creating a new integration for %s", pod.Name)
+
+	containerIntegration := corev1.Container{
+		Name:  "integration",
+		Image: "pgallina/nginx:latest",
+		Env: []corev1.EnvVar{
+			{
+				Name:  "WORKLOAD_NODE_IP",
+				Value: pod.Status.HostIP,
+			},
+		},
+		EnvFrom: []corev1.EnvFromSource{
+			{
+				SecretRef: &corev1.SecretEnvSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: pod.Name + "-integration",
+					},
+				},
+			},
+		},
+		Resources: corev1.ResourceRequirements{},
+	}
+
+	p := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      pod.Name + "-integration",
+			Namespace: operatorNamespace,
+			Labels: map[string]string{
+				"monitoring-role": "integration-monitoring-workload",
+			},
+		},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				containerIntegration,
+			},
+			Volumes: []corev1.Volume{
+				{
+					Name: "forwarder-tmpfs-tmp",
+					VolumeSource: corev1.VolumeSource{
+						EmptyDir: &corev1.EmptyDirVolumeSource{},
+					},
+				},
+				{
+					Name: "forwarder-tmpfs-user-data",
+					VolumeSource: corev1.VolumeSource{
+						EmptyDir: &corev1.EmptyDirVolumeSource{},
+					},
+				},
+				{
+					Name: "forwarder-tmpfs-data",
+					VolumeSource: corev1.VolumeSource{
+						EmptyDir: &corev1.EmptyDirVolumeSource{},
+					},
+				},
+			},
+		},
+	}
+
+	_, err := o.client.CoreV1().Pods(operatorNamespace).Create(context.Background(), p, metav1.CreateOptions{})
+	if err != nil {
+		o.log.Errorf("creating pod %v", err)
+	}
+
+	data := map[string][]byte{}
+	populatedString := strings.Replace(pod.Annotations["config"], "${discovery.ip}", pod.Status.PodIP, 100)
+	rows := strings.Split(populatedString, "\n")
+	for _, r := range rows {
+		val := strings.Split(r, ": ")
+		if len(val) == 2 {
+			data[val[0]] = []byte(val[1])
+		} else {
+			o.log.Errorf("Unexpected string %q", rows)
+		}
+
+	}
+
+	_, err = o.client.CoreV1().Secrets(operatorNamespace).Create(context.Background(), &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      pod.Name + "-integration",
+			Namespace: operatorNamespace,
+		},
+		Data: data,
+	}, metav1.CreateOptions{})
+	if err != nil {
+		o.log.Errorf("creating secret %v", err)
+	}
 }
 
 func setupKSM(c *config.Config, clients *clusterClients) (*ksm.Scraper, error) {
