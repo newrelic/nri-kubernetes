@@ -7,19 +7,13 @@ on:
 
 jobs:
   build:
-    # Should be just:
-    # uses: ./.github/workflows/build.reusable.yml
-    # but https://github.com/github/feedback/discussions/10679
-    uses: newrelic/nri-kubernetes/.github/workflows/build.reusable.yml@ci/reusable-workflows
+    uses: ./.github/reusable/build.yml
     with:
       upload: true
       artifact: nri-kubernetes-${{ github.sha }}
 
   build-container:
-    # Should be just:
-    # uses: ./.github/workflows/build.reusable.yml
-    # but https://github.com/github/feedback/discussions/10679
-    uses: newrelic/nri-kubernetes/.github/workflows/container.reusable.yml@ci/reusable-workflows
+    uses: ./.github/reusable/container.yml
     needs: [ build ]
     with:
       name: ghcr.io/newrelic/nri-kubernetes
