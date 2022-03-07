@@ -192,7 +192,7 @@ func TestPopulateK8s(t *testing.T) {
 	sort.Slice(intgr.Entities, entitySliceLesser(intgr.Entities))
 	sort.Slice(expectedEntities, entitySliceLesser(expectedEntities))
 
-	compareIgnoreFields := cmpopts.IgnoreUnexported(integration.Entity{}, sdkMetric.Set{}, inventory.Inventory{})
+	compareIgnoreFields := cmpopts.IgnoreUnexported(integration.Entity{}, integration.EntityMetadata{}, sdkMetric.Set{}, inventory.Inventory{})
 	for j := range expectedEntities {
 		if diff := cmp.Diff(intgr.Entities[j], expectedEntities[j], compareIgnoreFields); diff != "" {
 			t.Errorf("Entities[%d] mismatch: %s", j, diff)

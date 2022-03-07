@@ -482,7 +482,7 @@ func TestIntegrationPopulator_PopulateOnlySpecifiedGroups(t *testing.T) {
 	assert.Empty(t, errs)
 	assert.Len(t, intgr.Entities, 3)
 
-	compareIgnoreFields := cmpopts.IgnoreUnexported(integration.Entity{}, metric.Set{}, inventory.Inventory{})
+	compareIgnoreFields := cmpopts.IgnoreUnexported(integration.Entity{}, integration.EntityMetadata{}, metric.Set{}, inventory.Inventory{})
 	for _, expectedEntity := range []*integration.Entity{
 		expectedEntityData1,
 		expectedEntityData2,
