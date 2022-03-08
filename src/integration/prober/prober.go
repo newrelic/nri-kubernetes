@@ -15,19 +15,47 @@ import (
 type Prober struct {
 	timeout time.Duration
 	backoff time.Duration
-	Logger  *log.Logger
+	logger  *log.Logger
+	client  *http.Client
 }
 
 var ErrProbeTimeout = errors.New("probe timed out")
 var errProbeNotOk = errors.New("probe did not return 200 Ok")
 
+type OptionFunc func(p *Prober) error
+
+// WithLogger returns an OptionFunc which tells the Prober to use the specified logger.
+func WithLogger(logger *log.Logger) OptionFunc {
+	return func(p *Prober) error {
+		p.logger = logger
+		return nil
+	}
+}
+
+// WithClient returns an OptionFunc which tells the Prober to use the specified client for probing.
+func WithClient(client *http.Client) OptionFunc {
+	return func(p *Prober) error {
+		p.client = client
+		return nil
+	}
+}
+
 // New creates a Prober that will check an endpoint every backoff seconds.
-func New(timeout, backoff time.Duration) *Prober {
-	return &Prober{
+func New(timeout, backoff time.Duration, options ...OptionFunc) (*Prober, error) {
+	p := &Prober{
 		timeout: timeout,
 		backoff: backoff,
-		Logger:  logutil.Discard,
+		logger:  logutil.Discard,
+		client:  http.DefaultClient,
 	}
+
+	for _, opt := range options {
+		if err := opt(p); err != nil {
+			return nil, fmt.Errorf("configuring prober: %w", err)
+		}
+	}
+
+	return p, nil
 }
 
 // Probe repeatedly hits the specified url with a GET request every Prober.backoff, and blocks until a request returns
@@ -41,8 +69,8 @@ func (p *Prober) Probe(url string) error {
 
 		err := p.attempt(url)
 		if err != nil {
-			p.Logger.Debug(err)
-			p.Logger.Debugf("Retrying in %s", p.backoff)
+			p.logger.Debug(err)
+			p.logger.Debugf("Retrying in %s", p.backoff)
 			time.Sleep(p.backoff)
 			continue
 		}
