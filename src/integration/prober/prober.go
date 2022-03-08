@@ -1,6 +1,7 @@
 package prober
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -81,7 +82,20 @@ func (p *Prober) Probe(url string) error {
 
 // attempt makes a request to the specified URL and returns an error if it does not return 200.
 func (p *Prober) attempt(url string) error {
-	resp, err := http.Get(url)
+	// As the prober can use a custom HTTP client with an independent, potentially unbound timeout, we need to ensure
+	// that requests will not hang forever, hence the need of a custom context.
+	// requestTimeout is set to the global timeout /3 to guarantee that we will be able to probe at least twice within
+	// the global timeout, so a stuck request does not eat the whole timeout and cause a probe to fail.
+	requestTimeout := p.timeout / 3
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+	defer cancel()
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return fmt.Errorf("building GET %q: %w", url, err)
+	}
+
+	resp, err := p.client.Do(request)
 	if err != nil {
 		return fmt.Errorf("probe attempt to %s failed: %w", url, err)
 	}
