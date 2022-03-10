@@ -69,7 +69,7 @@ func WithHTTPSink(sinkConfig config.HTTPSink) OptionFunc {
 			}
 		}
 
-		prober, err := prober.New(iw.probeTimeout, iw.probeBackoff, prober.WithClient(client))
+		prober, err := prober.New(iw.probeTimeout, iw.probeBackoff, prober.WithLogger(iw.logger), prober.WithClient(client))
 		if err != nil {
 			return fmt.Errorf("building prober: %w", err)
 		}
