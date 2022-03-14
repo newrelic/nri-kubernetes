@@ -3,7 +3,6 @@ package sink_test
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -14,7 +13,9 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/src/integration/sink"
 )
 
-func testServer() (*httptest.Server, error) {
+func testServer(t *testing.T) *httptest.Server {
+	t.Helper()
+
 	server := httptest.NewUnstartedServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		_, _ = io.Copy(io.Discard, r.Body)
 		rw.WriteHeader(http.StatusOK)
@@ -22,12 +23,14 @@ func testServer() (*httptest.Server, error) {
 
 	serverCert, err := tls.LoadX509KeyPair("testdata/server+3.pem", "testdata/server+3-key.pem")
 	if err != nil {
-		return nil, fmt.Errorf("loading server certificate: %w", err)
+		t.Fatalf("loading server certificate: %v", err)
+		return nil
 	}
 
 	caCert, err := os.ReadFile("testdata/rootCA.pem")
 	if err != nil {
-		return nil, fmt.Errorf("loading CA certificate: %w", err)
+		t.Fatalf("loading CA certificate: %v", err)
+		return nil
 	}
 	caPool := x509.NewCertPool()
 	caPool.AppendCertsFromPEM(caCert)
@@ -40,14 +43,11 @@ func testServer() (*httptest.Server, error) {
 	server.TLS = &tlsConfig
 	server.StartTLS()
 
-	return server, nil
+	return server
 }
 
 func TestTlsClient(t *testing.T) {
-	server, err := testServer()
-	if err != nil {
-		t.Fatalf("Cannot create test server: %v", err)
-	}
+	server := testServer(t)
 
 	defer server.Close()
 
