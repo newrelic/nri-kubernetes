@@ -64,6 +64,19 @@ type HTTPSink struct {
 	// Retries is the maximum number of attempts to connect to the HTTP sink if the connection fails before giving up
 	// and exiting.
 	Retries int `mapstructure:"retries"`
+	// TLS allows to configure TLS encryption and authentication for the HTTP sink.
+	TLS TLSConfig `mapstructure:"tls"`
+}
+
+type TLSConfig struct {
+	// Enabled dictates whether TLS is used to connect to the HTTP sink.
+	Enabled bool `mapstructure:"enabled"`
+	// CertPath is the path to a PEM-encoded TLS certificate that will be presented to the server.
+	CertPath string `mapstructure:"certPath"`
+	// KeyPath is the path to the PEM-encoded private key for CertPath.
+	KeyPath string `mapstructure:"keyPath"`
+	// CAPath is the path to the PEM-encoded CA certificate that will be used to validate the server certificate.
+	CAPath string `mapstructure:"caPath"`
 }
 
 // KSM contains configuration options for the KSM scraper.

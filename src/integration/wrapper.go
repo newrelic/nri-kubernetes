@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/http"
 	"os"
 	"strconv"
 	"time"
@@ -56,17 +57,31 @@ func WithMetadata(metadata Metadata) OptionFunc {
 // If this option is not specified, Wrapper will configure the integration.Integration to sink metrics to stdout.
 func WithHTTPSink(sinkConfig config.HTTPSink) OptionFunc {
 	return func(iw *Wrapper) error {
-		hostPort := net.JoinHostPort(sink.DefaultAgentForwarderhost, strconv.Itoa(sinkConfig.Port))
+		scheme := "http"
+		client := http.DefaultClient
+		var err error
 
-		prober := prober.New(iw.probeTimeout, iw.probeBackoff)
+		if sinkConfig.TLS.Enabled {
+			scheme = "https"
+			client, err = sink.NewTLSClient(sinkConfig.TLS)
+			if err != nil {
+				return fmt.Errorf("creating TLS client: %w", err)
+			}
+		}
+
+		prober, err := prober.New(iw.probeTimeout, iw.probeBackoff, prober.WithLogger(iw.logger), prober.WithClient(client))
+		if err != nil {
+			return fmt.Errorf("building prober: %w", err)
+		}
+
 		iw.logger.Info("Waiting for agent container to be ready...")
-
-		err := prober.Probe(fmt.Sprintf("http://%s%s", hostPort, agentReadyPath))
+		hostPort := net.JoinHostPort(sink.DefaultAgentForwarderhost, strconv.Itoa(sinkConfig.Port))
+		err = prober.Probe(fmt.Sprintf("%s://%s%s", scheme, hostPort, agentReadyPath))
 		if err != nil {
 			return fmt.Errorf("timeout waiting for agent: %w", err)
 		}
 
-		c := pester.New()
+		c := pester.NewExtendedClient(client)
 		c.Backoff = pester.LinearBackoff
 		c.MaxRetries = sinkConfig.Retries
 		c.Timeout = sinkConfig.Timeout

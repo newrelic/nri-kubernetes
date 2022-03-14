@@ -25,10 +25,14 @@ func succeedAfter(duration time.Duration) http.HandlerFunc {
 func TestProber_fails_as_expected(t *testing.T) {
 	t.Parallel()
 
-	p := prober.New(4*time.Second, 300*time.Millisecond)
+	p, err := prober.New(4*time.Second, 300*time.Millisecond)
+	if err != nil {
+		t.Fatalf("Error building prober: %v", err)
+	}
+
 	server := httptest.NewServer(succeedAfter(5 * time.Second))
 
-	err := p.Probe(server.URL)
+	err = p.Probe(server.URL)
 	if !errors.Is(err, prober.ErrProbeTimeout) {
 		t.Fatalf("Expected timeout error, got %v", err)
 	}
@@ -37,10 +41,14 @@ func TestProber_fails_as_expected(t *testing.T) {
 func TestProber_succeeds(t *testing.T) {
 	t.Parallel()
 
-	p := prober.New(15*time.Second, 300*time.Millisecond)
+	p, err := prober.New(15*time.Second, 300*time.Millisecond)
+	if err != nil {
+		t.Fatalf("Error building prober: %v", err)
+	}
+
 	server := httptest.NewServer(succeedAfter(5 * time.Second))
 
-	err := p.Probe(server.URL)
+	err = p.Probe(server.URL)
 	if errors.Is(err, prober.ErrProbeTimeout) {
 		t.Fatalf("Expected timeout error, got %v", err)
 	}
