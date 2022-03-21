@@ -118,6 +118,7 @@ var expectedEntities = []*integration.Entity{
 					"nodeName":                   "minikube",
 					"nodeIP":                     "192.168.99.100",
 					"restartCount":               float64(6),
+					"restartCountDelta":          float64(0), // 0 the first time as it is PDELTA
 					"cpuRequestedCores":          0.1,
 					"memoryRequestedBytes":       float64(104857600),
 					"memoryLimitBytes":           float64(104857600),
@@ -228,6 +229,40 @@ func TestPopulateK8s(t *testing.T) {
 	for j := range expectedEntities {
 		if diff := cmp.Diff(intgr.Entities[j], expectedEntities[j], compareIgnoreFields); diff != "" {
 			t.Errorf("Entities[%d] mismatch: %s", j, diff)
+		}
+	}
+}
+
+func TestRestartCountDeltaValues(t *testing.T) {
+	intgr, err := integration.New("test", "test", integration.InMemoryStore())
+	assert.NoError(t, err)
+	intgr.Clear()
+
+	expectedRestartCountDeltas := []float64{0, 3, 0, 1}
+
+	grouper := &testGrouper{
+		ContainerValuesInTime: map[string][]interface{}{
+			"restartCount": {0, 3, 3, 4},
+		},
+	}
+	testJob := NewScrapeJob("test", grouper, kubeletSpecs)
+
+	k8sVersion := &version.Info{GitVersion: "v1.15.42"}
+	// Populate data several times to check expected deltas
+	for i := 0; i < len(expectedRestartCountDeltas); i++ {
+		err = testJob.Populate(intgr, "test-cluster", logutil.Debug, k8sVersion)
+		require.IsType(t, err, data.PopulateResult{})
+		assert.Empty(t, err.(data.PopulateResult).Errors)
+		time.Sleep(time.Second)
+	}
+
+	for _, entity := range intgr.Entities {
+		if entity.Metadata.Name == "newrelic-infra" {
+			lenExpectedDeltas := len(expectedRestartCountDeltas)
+			require.Equal(t, lenExpectedDeltas, len(entity.Metrics))
+			for i := 0; i < lenExpectedDeltas; i++ {
+				assert.Equal(t, expectedRestartCountDeltas[i], entity.Metrics[i].Metrics["restartCountDelta"])
+			}
 		}
 	}
 }
