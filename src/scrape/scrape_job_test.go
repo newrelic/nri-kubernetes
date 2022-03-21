@@ -144,18 +144,50 @@ var kubeletSpecs = definition.SpecGroups{
 	"container": metric.KubeletSpecs["container"],
 }
 
-type testGrouper struct{}
+type testGrouper struct {
+	// PodValuesInTime allows to overwrite some metrics value in each Group execution. Ex: {"isReady": {0, 1, 2, 3}}
+	PodValuesInTime map[string][]interface{}
+	// ContainerValuesInTime allows to overwrite some metrics value in each Group execution. Ex: {"restartCount": {0, 1, 2, 3}}
+	ContainerValuesInTime map[string][]interface{}
+
+	groupCallsCount int
+}
 
 func (tg *testGrouper) Group(definition.SpecGroups) (definition.RawGroups, *data.ErrorGroup) {
+	podData := tg.buildMetrics(
+		testdata.ExpectedGroupData["pod"]["kube-system_newrelic-infra-rz225"],
+		tg.PodValuesInTime,
+	)
+	containerData := tg.buildMetrics(
+		testdata.ExpectedGroupData["container"]["kube-system_newrelic-infra-rz225_newrelic-infra"],
+		tg.ContainerValuesInTime,
+	)
 	// We reduce the test fixtures in order to simplify testing.
-	return definition.RawGroups{
+	groups := definition.RawGroups{
 		"pod": {
-			"kube-system_newrelic-infra-rz225": testdata.ExpectedGroupData["pod"]["kube-system_newrelic-infra-rz225"],
+			"kube-system_newrelic-infra-rz225": podData,
 		},
 		"container": {
-			"kube-system_newrelic-infra-rz225_newrelic-infra": testdata.ExpectedGroupData["container"]["kube-system_newrelic-infra-rz225_newrelic-infra"],
+			"kube-system_newrelic-infra-rz225_newrelic-infra": containerData,
 		},
-	}, nil
+	}
+	tg.groupCallsCount++
+	return groups, nil
+}
+
+func (tg *testGrouper) buildMetrics(
+	baseData definition.RawMetrics, valuesInTime map[string][]interface{},
+) definition.RawMetrics {
+	metrics := definition.RawMetrics{}
+	for k, v := range baseData {
+		metrics[k] = v
+	}
+	for k, values := range valuesInTime {
+		if lenValues := len(values); lenValues > 0 {
+			metrics[k] = values[tg.groupCallsCount%lenValues]
+		}
+	}
+	return metrics
 }
 
 func TestPopulateK8s(t *testing.T) {
