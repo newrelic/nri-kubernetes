@@ -11,6 +11,6 @@ roleRef:
   name: {{ include "common.naming.fullname" . }}
 subjects:
 - kind: ServiceAccount
-  name: {{ template "newrelic.serviceAccountName" . }}
+  name: {{ include "common.serviceAccount.name" . }}
   namespace: {{ .Release.Namespace }}
 {{- end -}}

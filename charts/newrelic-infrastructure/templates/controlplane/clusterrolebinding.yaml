@@ -11,6 +11,6 @@ roleRef:
   name: {{ include "common.naming.fullname" . }}-controlplane
 subjects:
   - kind: ServiceAccount
-    name: {{ template "newrelic.serviceAccountName" . }}-controlplane
+    name: {{ include "common.serviceAccount.name" . }}-controlplane
     namespace: {{ .Release.Namespace }}
 {{- end -}}

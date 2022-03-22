@@ -34,7 +34,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "newrelic.serviceAccountName" . }}
+      serviceAccountName: {{ include "common.serviceAccount.name" . }}
       {{- if .Values.ksm.initContainers }}
       initContainers: {{- tpl (.Values.ksm.initContainers | toYaml) . | nindent 8 }}
       {{- end }}

@@ -38,7 +38,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ template "newrelic.serviceAccountName" . }}
+      serviceAccountName: {{ include "common.serviceAccount.name" . }}
       {{- if .Values.kubelet.initContainers }}
       initContainers: {{- tpl (.Values.kubelet.initContainers | toYaml) . | nindent 8 }}
       {{- end }}
