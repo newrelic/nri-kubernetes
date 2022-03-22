@@ -5,7 +5,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "newrelic.labels" . | nindent 4 }}
-  name: {{ template "newrelic.fullname" . }}-kubelet
+  name: {{ include "common.naming.fullname" . }}-kubelet
   {{- $legacyAnnotation:= fromYaml (include "newrelic.compatibility.annotations" .) -}}
   {{- with  include "newrelic.compatibility.valueWithFallback" (dict "legacy" $legacyAnnotation "supported" .Values.kubelet.annotations )}}
   annotations: {{ . | nindent 4 }}
@@ -227,19 +227,19 @@ spec:
           emptyDir: {}
         - name: nri-kubernetes-config
           configMap:
-            name: {{ template "newrelic.fullname" . }}-kubelet
+            name: {{ include "common.naming.fullname" . }}-kubelet
             items:
               - key: nri-kubernetes.yml
                 path: nri-kubernetes.yml
         - name: config
           configMap:
-            name: {{ template "newrelic.fullname" . }}-agent
+            name: {{ include "common.naming.fullname" . }}-agent
             items:
               - key: newrelic-infra.yml
                 path: newrelic-infra.yml
         - name: nri-integrations-cfg-volume
           configMap:
-            name: {{ template "newrelic.fullname" . }}-integrations-cfg
+            name: {{ include "common.naming.fullname" . }}-integrations-cfg
         {{- with .Values.kubelet.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}

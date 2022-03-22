@@ -4,11 +4,11 @@ kind: ClusterRoleBinding
 metadata:
   labels:
     {{- include "newrelic.labels" . | nindent 4 }}
-  name: {{ template "newrelic.fullname" . }}
+  name: {{ include "common.naming.fullname" . }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ template "newrelic.fullname" . }}
+  name: {{ include "common.naming.fullname" . }}
 subjects:
 - kind: ServiceAccount
   name: {{ template "newrelic.serviceAccountName" . }}

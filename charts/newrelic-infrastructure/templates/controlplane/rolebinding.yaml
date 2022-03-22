@@ -7,12 +7,12 @@ kind: RoleBinding
 metadata:
   labels:
     {{- include "newrelic.labels" $ | nindent 4 }}
-  name: {{ template "newrelic.fullname" $ }}-{{ . }}
+  name: {{ include "common.naming.fullname" $ }}-{{ . }}
   namespace: {{ . }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ template "newrelic.fullname" $ }}-secrets
+  name: {{ include "common.naming.fullname" $ }}-secrets
 subjects:
 - kind: ServiceAccount
   name: {{ template "newrelic.serviceAccountName" $ }}-controlplane
