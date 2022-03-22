@@ -59,7 +59,7 @@ spec:
             - name: "NRI_KUBERNETES_SINK_HTTP_PORT"
               value: "8001"
             - name: "NRI_KUBERNETES_CLUSTERNAME"
-              value: {{ include "newrelic.cluster" . | required "cluster name must be set" }}
+              value: {{ include "common.cluster" . }}
             - name: "NRI_KUBERNETES_NODENAME"
               valueFrom:
                 fieldRef:
@@ -117,7 +117,7 @@ spec:
             {{- if .Values.useNodeNameAsDisplayName }}
             - name: "NRIA_DISPLAY_NAME"
             {{- if .Values.prefixDisplayNameWithCluster }}
-              value: "{{ include "newrelic.cluster" . }}:$(K8S_NODE_NAME)"
+              value: "{{ include "common.cluster" . }}:$(K8S_NODE_NAME)"
             {{- else }}
               valueFrom:
                 fieldRef:

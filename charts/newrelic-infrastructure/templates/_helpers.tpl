@@ -16,18 +16,6 @@ unprivileged
 {{- end }}
 {{- end }}
 
-{{/*
-Return the cluster name
-*/}}
-{{- define "newrelic.cluster" -}}
-{{- if .Values.cluster -}}
-  {{- .Values.cluster -}}
-{{- else if .Values.global -}}
-  {{- if .Values.global.cluster -}}
-    {{- .Values.global.cluster -}}
-  {{- end -}}
-{{- end -}}
-{{- end -}}
 
 {{/*
 Return local licenseKey if set, global otherwise
@@ -185,7 +173,7 @@ Returns Custom Attributes even if formatted as a json string
 {{- end -}}
 
 {{- define "newrelic.customAttributes" -}}
-{{- merge (include "newrelic.customAttributesWithoutClusterName" . | fromJson) (dict "clusterName" (include "newrelic.cluster" .)) | toJson }}
+{{- merge (include "newrelic.customAttributesWithoutClusterName" . | fromJson) (dict "clusterName" (include "common.cluster" .)) | toJson }}
 {{- end -}}
 
 {{- define "newrelic.integrationConfigDefaults" -}}

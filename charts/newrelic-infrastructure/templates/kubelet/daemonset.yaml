@@ -54,7 +54,7 @@ spec:
             - name: "NRI_KUBERNETES_SINK_HTTP_PORT"
               value: "8003"
             - name: "NRI_KUBERNETES_CLUSTERNAME"
-              value: {{ include "newrelic.cluster" . | required "cluster name must be set" }}
+              value: {{ include "common.cluster" . }}
             {{- if .Values.verboseLog }}
             - name: NRI_KUBERNETES_VERBOSE
               value: "1"
@@ -133,7 +133,7 @@ spec:
             {{- if .Values.useNodeNameAsDisplayName }}
             - name: "NRIA_DISPLAY_NAME"
             {{- if .Values.prefixDisplayNameWithCluster }}
-              value: "{{ include "newrelic.cluster" . }}:$(NRI_KUBERNETES_NODE_NAME)"
+              value: "{{ include "common.cluster" . }}:$(NRI_KUBERNETES_NODE_NAME)"
             {{- else }}
               valueFrom:
                 fieldRef:
@@ -161,7 +161,7 @@ spec:
             {{- end }}
             {{- /* Needed to populate clustername in integration metrics */}}
             - name: "CLUSTER_NAME"
-              value: {{ include "newrelic.cluster" . | required "cluster name must be set" }}
+              value: {{ include "common.cluster" . }}
             - name: "NRIA_PASSTHROUGH_ENVIRONMENT"
               value: "CLUSTER_NAME"
             {{- /* Needed for autodiscovery since hostNetwork=false */}}
