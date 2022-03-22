@@ -16,7 +16,7 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      {{- include "newrelic.selectorLabels" . | nindent 6 }}
+      {{- include "common.labels.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: kubelet
   template:
     metadata:
@@ -31,7 +31,7 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
-        {{- include "newrelic.selectorLabels" . | nindent 8 }}
+        {{- include "common.labels.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: kubelet
         {{- with .Values.podLabels }}
           {{- toYaml . | nindent 8 }}

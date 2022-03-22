@@ -7,16 +7,10 @@ unprivileged
 {{- end }}
 {{- end -}}
 
-{{/* Selector labels */}}
-{{- define "newrelic.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "common.naming.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
-{{- end }}
-
 {{/* Common labels */}}
 {{- define "newrelic.labels" -}}
 helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-{{ include "newrelic.selectorLabels" . }}
+{{ include "common.labels.selectorLabels" . }}
 mode: {{ template "newrelic.mode" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
