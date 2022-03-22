@@ -18,59 +18,6 @@ unprivileged
 
 
 {{/*
-Return local licenseKey if set, global otherwise
-*/}}
-{{- define "newrelic.licenseKey" -}}
-{{- if .Values.licenseKey -}}
-  {{- .Values.licenseKey -}}
-{{- else if .Values.global -}}
-  {{- if .Values.global.licenseKey -}}
-    {{- .Values.global.licenseKey -}}
-  {{- end -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Return the name of the secret holding the License Key
-*/}}
-{{- define "newrelic.licenseCustomSecretName" -}}
-{{- if .Values.customSecretName -}}
-  {{- .Values.customSecretName -}}
-{{- else if .Values.global -}}
-  {{- if .Values.global.customSecretName -}}
-    {{- .Values.global.customSecretName -}}
-  {{- end -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Return the name of the secret holding the License Key
-*/}}
-{{- define "newrelic.licenseSecretName" -}}
-{{ include "newrelic.licenseCustomSecretName" . | default (printf "%s-license" (include "common.naming.fullname" . )) }}
-{{- end -}}
-
-{{/*
-Return the name key for the License Key inside the secret
-*/}}
-{{- define "newrelic.licenseCustomSecretKey" -}}
-{{- if .Values.customSecretLicenseKey -}}
-  {{- .Values.customSecretLicenseKey -}}
-{{- else if .Values.global -}}
-  {{- if .Values.global.customSecretLicenseKey }}
-    {{- .Values.global.customSecretLicenseKey -}}
-  {{- end -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Return the name key for the License Key inside the secret
-*/}}
-{{- define "newrelic.licenseSecretKey" -}}
-{{ include "newrelic.licenseCustomSecretKey" . | default "licenseKey" }}
-{{- end -}}
-
-{{/*
 Returns nrStaging
 */}}
 {{- define "newrelic.nrStaging" -}}

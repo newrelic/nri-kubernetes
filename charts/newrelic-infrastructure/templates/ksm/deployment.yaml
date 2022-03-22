@@ -19,9 +19,7 @@ spec:
     metadata:
       annotations:
         checksum/nri-kubernetes: {{ include (print $.Template.BasePath "/ksm/configmap.yaml") . | sha256sum }}
-        {{- if not (include "newrelic.licenseCustomSecretName" .) }}
-        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
-        {{- end }}
+        checksum/license-secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
         checksum/agent-config: {{ include (print $.Template.BasePath "/agent-configmap.yaml") . | sha256sum }}
         {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
@@ -119,8 +117,8 @@ spec:
             - name: NRIA_LICENSE_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "newrelic.licenseSecretName" . | required "licenseKey or customSecretName and customSecretLicenseKey must be set" }}
-                  key: {{ include "newrelic.licenseSecretKey" . | required "licenseKey or customSecretName and customSecretLicenseKey must be set" }}
+                  name: {{ include "common.license.secretName" . }}
+                  key: {{ include "common.license.secretKeyName" . }}
             {{- if (include "newrelic.nrStaging" .) }}
             - name: NRIA_STAGING
               value: "true"
