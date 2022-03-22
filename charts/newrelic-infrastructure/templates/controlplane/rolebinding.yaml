@@ -6,7 +6,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   labels:
-    {{- include "newrelic.labels" $ | nindent 4 }}
+    {{- include "common.labels" $ | nindent 4 }}
   name: {{ include "common.naming.fullname" $ }}-{{ . }}
   namespace: {{ . }}
 roleRef:

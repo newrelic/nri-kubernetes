@@ -7,18 +7,6 @@ unprivileged
 {{- end }}
 {{- end -}}
 
-{{/* Common labels */}}
-{{- define "newrelic.labels" -}}
-helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-{{ include "common.labels.selectorLabels" . }}
-mode: {{ template "newrelic.mode" . }}
-{{- if .Chart.AppVersion }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- end }}
-
-
 {{/* Create the name of the service account to use */}}
 {{- define "newrelic.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
