@@ -1,9 +1,10 @@
 name: Push/PR pipeline
 on:
+  pull_request:
   push:
     branches:
       - main
-  pull_request:
+
 jobs:
   build:
     name: Build integration for
@@ -31,9 +32,43 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
         run: |
           make compile
+
+  chart-lint:
+    name: Helm chart Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: helm/chart-testing-action@v2.2.1
+
+      - name: Lint charts
+        run: ct --config .github/ct.yaml lint --debug --all
+
+      - name: Check for changed installable charts
+        id: list-changed
+        run: |
+          changed=$(ct --config .github/ct.yaml list-changed)
+          if [[ -n "$changed" ]]; then
+            echo "::set-output name=changed::true"
+          fi
+      - name: Set up helm-unittest
+        if: steps.list-changed.outputs.changed == 'true'
+        run: |
+          helm plugin install https://github.com/quintush/helm-unittest
+      - name: Run unit tests
+        if: steps.list-changed.outputs.changed == 'true'
+        run: |
+          for chart in $(ct --config .github/ct.yaml list-changed); do
+            if [ -d "$chart/tests/" ]; then
+              helm unittest -3 $chart
+            fi
+          done
+
   test:
     name: Run tests
-    needs: [ build ]
+    needs: [ build, chart-lint ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
