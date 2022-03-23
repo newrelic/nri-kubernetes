@@ -1,4 +1,4 @@
-name: Release
+name: Release nri-kubernetes image
 
 on:
   release:
@@ -39,46 +39,32 @@ jobs:
           name: nri-kubernetes-${{ matrix.goos }}-${{ matrix.goarch }}
           path: bin/nri-kubernetes-${{ matrix.goos }}-${{ matrix.goarch }}
 
-  release:
-    name: Release docker images and config
+  docker-release:
+    name: Release docker images
     needs: [ build ]
     runs-on: ubuntu-latest
     env:
       DOCKER_IMAGE_NAME: newrelic/nri-kubernetes
       DOCKER_PLATFORMS: "linux/amd64,linux/arm64,linux/arm" # Must be consistent with the matrix from the job above
     steps:
-      - name: Generate docker image version from git tag
-        run: |
-          echo "${{ github.event.release.tag_name }}" | grep -E '^v[0-9.]*[0-9]$'
-          DOCKER_IMAGE_TAG=$(echo "${{ github.event.release.tag_name }}" | sed 's/^v//')
-          echo "DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG" >> $GITHUB_ENV
-
-      - if: ${{ github.event.release.prerelease }}
-        run: |
-          echo "DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG}-pre" >> $GITHUB_ENV
-          echo "S3_PATH=$S3_PATH/test" >> $GITHUB_ENV
-
       - uses: actions/checkout@v2
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
-
       - name: Download all artifacts from build job
         uses: actions/download-artifact@v2
         with:
           path: bin
-
       - uses: docker/login-action@v1
         with:
           username: ${{ secrets.FSI_DOCKERHUB_USERNAME }}
           password: ${{ secrets.FSI_DOCKERHUB_TOKEN }}
-
-      - name: Build docker images
+      - name: Generate docker image version from git tag
         run: |
-          docker buildx build --platform=$DOCKER_PLATFORMS \
-            -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG \
-            .
+          echo "${{ github.event.release.tag_name }}" | grep -E '^v[0-9.]*[0-9]$'
+          DOCKER_IMAGE_TAG=$(echo "${{ github.event.release.tag_name }}" | sed 's/^v//')
+          echo "DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG" >> $GITHUB_ENV
 
       - name: Build and load x64 image for security scanning
         # We need to build a single-arch image again to be able to --load it into the host
@@ -91,18 +77,21 @@ jobs:
         with:
           image-ref: '${{ env.DOCKER_IMAGE_NAME }}:ci-scan'
           format: 'table'
-          exit-code: '0'
+          exit-code: '1'
           ignore-unfixed: true
           severity: 'CRITICAL,HIGH'
 
-      - name: Push versioned images
+      - name: Push pre-release images
+        if: ${{ github.event.release.prerelease }}
         run: |
+          DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG}-pre"
           docker buildx build --push --platform=$DOCKER_PLATFORMS \
             -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG \
             .
-      - name: Push :latest images
+      - name: Push release images
         if: ${{ ! github.event.release.prerelease }}
         run: |
           docker buildx build --push --platform=$DOCKER_PLATFORMS \
+            -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG \
             -t $DOCKER_IMAGE_NAME:latest \
             .

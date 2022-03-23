@@ -1,0 +1,48 @@
+name: Release newrelic infrastructure chart
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+#   Sometimes chart-releaser might fetch an outdated index.yaml from gh-pages, causing a WAW hazard on the repo
+#   This job checks the remote file is up to date with the local one on release
+  validate-gh-pages-index:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: gh-pages
+      - name: Download remote index file and check equality
+        run: |
+          curl -vsSL https://newrelic.github.io/nri-kubernetes/index.yaml > index.yaml.remote
+          LOCAL="$(md5sum < index.yaml)"
+          REMOTE="$(md5sum < index.yaml.remote)"
+          echo "$LOCAL" = "$REMOTE"
+          test "$LOCAL" = "$REMOTE"
+
+  chart-release:
+    runs-on: ubuntu-latest
+    needs: [ validate-gh-pages-index ]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      # As of today, there is no way to filter/exclude charts to be released. Config does not support it:
+      # https://github.com/helm/chart-releaser/blob/4eb598f96aa53d1c0b8234af2087834e1f2275e1/pkg/config/config.go#L40-L61
+      # So we delete the Chart.yaml to filter the chart: https://github.com/helm/chart-releaser-action/pull/18
+      - name: remove the chart template as it should not be deployed
+        run: |
+          rm ./charts/e2e-resources/Chart.yaml
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Release workload charts
+        uses: helm/chart-releaser-action@v1.3.0
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
