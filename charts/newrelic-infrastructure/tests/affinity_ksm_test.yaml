@@ -1,0 +1,181 @@
+suite: test ksm's affinity
+templates:
+  - templates/ksm/deployment.yaml
+  - templates/ksm/configmap.yaml
+  - templates/agent-configmap.yaml
+  - templates/secret.yaml
+tests:
+  - it: affinity empty by default
+    set:
+      licenseKey: test
+      cluster: test
+      global: {}
+      affinity: {}
+      nodeAffinity: {}
+      ksm.affinity: {}
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            podAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - podAffinityTerm:
+                    topologyKey: kubernetes.io/hostname
+                    labelSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: kube-state-metrics
+                  weight: 100
+            nodeAffinity: {}
+        template: templates/ksm/deployment.yaml
+
+  - it: affinity is set by common-library's global
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity:
+        global: global
+      affinity: {}
+      nodeAffinity: {}
+      ksm.affinity: {}
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            global: global
+        template: templates/ksm/deployment.yaml
+
+  - it: affinity is set by common-library's local
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity: {}
+      affinity:
+        local: local
+      nodeAffinity: {}
+      ksm.affinity: {}
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            local: local
+        template: templates/ksm/deployment.yaml
+
+  - it: affinity is set by legacy value
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity: {}
+      affinity: {}
+      nodeAffinity:
+        legacy: legacy
+      ksm.affinity: {}
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            nodeAffinity:  # Legacy value is nodeAffinity and templates affinity objects
+              legacy: legacy
+        template: templates/ksm/deployment.yaml
+
+  - it: affinity is set by supported value
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity: {}
+      affinity: {}
+      nodeAffinity: {}
+      ksm.affinity:
+        supported: supported
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            supported: supported
+        template: templates/ksm/deployment.yaml
+
+  - it: global is overridable by local in common-library
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity:
+        global: global
+      affinity:
+        local: local
+      nodeAffinity: {}
+      ksm.affinity: {}
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            local: local
+        template: templates/ksm/deployment.yaml
+
+  - it: global is overridable by legacy value
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity:
+        global: global
+      affinity: {}
+      nodeAffinity:
+        legacy: legacy
+      ksm.affinity: {}
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            nodeAffinity:  # Legacy value is nodeAffinity and templates affinity objects
+              legacy: legacy
+        template: templates/ksm/deployment.yaml
+
+  - it: global is overridable by supported value
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity:
+        global: global
+      affinity: {}
+      nodeAffinity: {}
+      ksm.affinity:
+        supported: supported
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            supported: supported
+        template: templates/ksm/deployment.yaml
+
+  - it: common-library's local is overridable by legacy value
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity: {}
+      affinity:
+        local: local
+      nodeAffinity:
+        legacy: legacy
+      ksm.affinity: {}
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            nodeAffinity:  # Legacy value is nodeAffinity and templates affinity objects
+              legacy: legacy
+        template: templates/ksm/deployment.yaml
+
+  - it: common-library's local is overridable by supported value
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity: {}
+      affinity:
+        local: local
+      nodeAffinity: {}
+      ksm.affinity:
+        supported: supported
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            supported: supported
+        template: templates/ksm/deployment.yaml

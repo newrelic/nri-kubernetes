@@ -72,6 +72,16 @@ Returns agent configmap merged with legacy config and legacy eventQueueDepth con
 {{- end -}}
 {{- end -}}
 
+{{- /*
+Return a valid podSpec.affinity object from the old `.Values.nodeAffinity`.
+*/ -}}
+{{- define "newrelic.compatibility.nodeAaffinity" -}}
+{{- if .Values.nodeAffinity -}}
+nodeAffinity:
+  {{- toYaml .Values.nodeAffinity | nindent 2 }}
+{{- end -}}
+{{- end -}}
+
 {{/*
 Returns legacy integrations_config configmap data
 */}}

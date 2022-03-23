@@ -30,7 +30,7 @@ You can enable hostNetwork for control plane scraper pods only by setting `contr
 or alternative disable control plane monitoring altogether with `controlPlane.enabled: false`.
 {{- end }}
 
-{{- if and (include "newrelic.fargate" .) .Values.kubelet.affinity.nodeAffinity }}
+{{- if and (include "newrelic.fargate" .) .Values.kubelet.affinity }}
 Warning:
 ========
 
@@ -39,7 +39,7 @@ nodeAffinity rules, so we couldn't automatically exclude the kubelet daemonSet f
 Fargate nodes. In order for the integration to work, you MUST manually exclude
 the daemonSet from Fargate nodes.
 
-Please make sure your custom .Values.kubelet.affinity.nodeAffinity achieve the same effect as:
+Please make sure your `values.yaml' contains a .kubelet.affinity.nodeAffinity that achieve the same effect as:
 
 affinity:
   nodeAffinity:

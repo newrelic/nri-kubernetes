@@ -1,0 +1,173 @@
+suite: test kubelet's affinity
+templates:
+  - templates/kubelet/daemonset.yaml
+  - templates/kubelet/configmap.yaml
+  - templates/kubelet/integrations-configmap.yaml
+  - templates/agent-configmap.yaml
+  - templates/secret.yaml
+tests:
+  - it: affinity empty by default
+    set:
+      licenseKey: test
+      cluster: test
+      global: {}
+      affinity: {}
+      nodeAffinity: {}
+      kubelet.affinity: {}
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value: null
+        template: templates/kubelet/daemonset.yaml
+
+  - it: affinity is set by common-library's global
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity:
+        global: global
+      affinity: {}
+      nodeAffinity: {}
+      kubelet.affinity: {}
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            global: global
+        template: templates/kubelet/daemonset.yaml
+
+  - it: affinity is set by common-library's local
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity: {}
+      affinity:
+        local: local
+      nodeAffinity: {}
+      kubelet.affinity: {}
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            local: local
+        template: templates/kubelet/daemonset.yaml
+
+  - it: affinity is set by legacy value
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity: {}
+      affinity: {}
+      nodeAffinity:
+        legacy: legacy
+      kubelet.affinity: {}
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            nodeAffinity:  # Legacy value is nodeAffinity and templates affinity objects
+              legacy: legacy
+        template: templates/kubelet/daemonset.yaml
+
+  - it: affinity is set by supported value
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity: {}
+      affinity: {}
+      nodeAffinity: {}
+      kubelet.affinity:
+        supported: supported
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            supported: supported
+        template: templates/kubelet/daemonset.yaml
+
+  - it: global is overridable by local in common-library
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity:
+        global: global
+      affinity:
+        local: local
+      nodeAffinity: {}
+      kubelet.affinity: {}
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            local: local
+        template: templates/kubelet/daemonset.yaml
+
+  - it: global is overridable by legacy value
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity:
+        global: global
+      affinity: {}
+      nodeAffinity:
+        legacy: legacy
+      kubelet.affinity: {}
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            nodeAffinity:  # Legacy value is nodeAffinity and templates affinity objects
+              legacy: legacy
+        template: templates/kubelet/daemonset.yaml
+
+  - it: global is overridable by supported value
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity:
+        global: global
+      affinity: {}
+      nodeAffinity: {}
+      kubelet.affinity:
+        supported: supported
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            supported: supported
+        template: templates/kubelet/daemonset.yaml
+
+  - it: common-library's local is overridable by legacy value
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity: {}
+      affinity:
+        local: local
+      nodeAffinity:
+        legacy: legacy
+      kubelet.affinity: {}
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            nodeAffinity:  # Legacy value is nodeAffinity and templates affinity objects
+              legacy: legacy
+        template: templates/kubelet/daemonset.yaml
+
+  - it: common-library's local is overridable by supported value
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity: {}
+      affinity:
+        local: local
+      nodeAffinity: {}
+      kubelet.affinity:
+        supported: supported
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            supported: supported
+        template: templates/kubelet/daemonset.yaml

@@ -242,27 +242,14 @@ spec:
       {{- with .Values.priorityClassName }}
       priorityClassName: {{ . }}
       {{- end }}
-      {{- $nodeAffinity:=(include "newrelic.compatibility.valueWithFallback" (dict "legacy" .Values.nodeAffinity "supported" .Values.kubelet.affinity.nodeAffinity )) -}}
-      {{- if $nodeAffinity }}
+      {{- with include "nriKubernetes.kubelet.affinity" . }}
       affinity:
-        nodeAffinity:
-          {{- $nodeAffinity | nindent 10 }}
-      {{- else if include "newrelic.fargate" . }}
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: eks.amazonaws.com/compute-type
-                    operator: NotIn
-                    values:
-                      - fargate
+        {{- . | nindent 8 }}
       {{- end }}
       {{- with include "nriKubernetes.kubelet.tolerations" . }}
       tolerations:
         {{- . | nindent 8 }}
       {{- end }}
-
       {{- with (include "newrelic.compatibility.valueWithFallback" (dict "legacy" .Values.nodeSelector "supported" .Values.kubelet.nodeSelector )) }}
       nodeSelector:
         {{- . | nindent 8}}

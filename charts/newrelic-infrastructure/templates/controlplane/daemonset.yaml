@@ -186,10 +186,9 @@ spec:
       {{- with .Values.priorityClassName }}
       priorityClassName: {{ . }}
       {{- end }}
-      {{- if .Values.controlPlane.affinity.nodeAffinity }}
+      {{- with include "nriKubernetes.controlPlane.affinity" . }}
       affinity:
-        nodeAffinity:
-          {{- .Values.controlPlane.affinity.nodeAffinity | toYaml | nindent 10 }}
+        {{- . | nindent 8 }}
       {{- end }}
       {{- with include "nriKubernetes.controlPlane.tolerations" . }}
       tolerations:

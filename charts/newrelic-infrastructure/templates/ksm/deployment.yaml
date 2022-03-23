@@ -172,16 +172,9 @@ spec:
       {{- with $.Values.priorityClassName }}
       priorityClassName: {{ . }}
       {{- end }}
-      {{- $nodeAffinity:=(include "newrelic.compatibility.valueWithFallback" (dict "legacy" .Values.nodeAffinity "supported" .Values.ksm.affinity.nodeAffinity )) -}}
-      {{- if (or .Values.ksm.affinity.podAffinity $nodeAffinity) }}
+      {{- with include "nriKubernetes.ksm.affinity" . }}
       affinity:
-        {{- with .Values.ksm.affinity.podAffinity }}
-        podAffinity: {{ . | toYaml | nindent 10 }}
-        {{- end }}
-        {{- with $nodeAffinity }}
-        nodeAffinity:
-          {{- . | nindent 10 }}
-        {{- end }}
+        {{- . | nindent 8 }}
       {{- end }}
       {{- with include "nriKubernetes.ksm.tolerations" . }}
       tolerations:
