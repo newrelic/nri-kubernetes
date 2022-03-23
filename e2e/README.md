@@ -17,10 +17,16 @@ and `TARGETOS` args to be populated.
 ```shell
 GOOS=linux GOARCH=amd64 make compile # Set GOOS and GOARCH explicitly since Dockerfile expects them in the binary name
 export  DOCKER_BUILDKIT=1
-docker build -t e2e/newrelic-infrastructure:e2e -f Dockerfile-infra .
 docker build -t e2e/nri-kubernetes:e2e  .
-minikube image load e2e/newrelic-infrastructure:e2e
 minikube image load e2e/nri-kubernetes:e2e
+```
+
+Then, include helm needed repositories.
+```shell
+helm repo add stable https://charts.helm.sh/stable
+helm repo add newrelic https://helm-charts.newrelic.com
+helm repo add kube-state-metrics https://kubernetes.github.io/kube-state-metrics
+helm repo update
 ```
 
 You need to install the binary `https://github.com/newrelic/newrelic-integration-e2e-action/tree/main/newrelic-integration-e2e` used in the e2e test
@@ -36,3 +42,5 @@ LICENSE_KEY=${LICENSE_KEY} newrelic-integration-e2e --commit_sha=test-string --r
 	 --account_id=${ACCOUNT_ID} --api_key=${API_KEY} --license_key=${LICENSE_KEY} \
 	 --spec_path=./e2e/test-specs.yml --verbose_mode=true --agent_enabled="false"
 ```
+
+You may check [e2e workflow](../.github/workflows/e2e.yaml) to have more details about how this is used in development workflow.
