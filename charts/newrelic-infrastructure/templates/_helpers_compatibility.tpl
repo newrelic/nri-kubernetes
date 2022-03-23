@@ -102,17 +102,6 @@ Please use
 ------
 {{- end -}}
 
-{{- define "newrelic.compatibility.message.tolerations" -}}
-You have specified the legacy 'tolerations' option in your values, which is not fully compatible with the v3 version.
-This version deploys three different components and therefore you'll need to specify tolerations for each of them.
-Please use
- - ksm.tolerations,
- - controlPlane.tolerations,
- - kubelet.tolerations.
-
-------
-{{- end -}}
-
 {{- define "newrelic.compatibility.message.apiServerSecurePort" -}}
 You have specified the legacy 'apiServerSecurePort' option in your values, which is not fully compatible with the v3
 version.

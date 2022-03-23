@@ -90,11 +90,7 @@ ksm:
   # Advanced users only. Setting this to `false` is not supported and will break the New Relic experience.
   enabled: true
   annotations: {}
-  tolerations:
-    - operator: "Exists"
-      effect: "NoSchedule"
-    - operator: "Exists"
-      effect: "NoExecute"
+  tolerations: []
   nodeSelector: {}
   affinity:
     podAffinity:
@@ -146,11 +142,7 @@ controlPlane:
   # `hostNetwork` is required for most control plane configurations, as they only accept connections from localhost.
   unprivilegedHostNetwork: false
   annotations: {}
-  tolerations:
-    - operator: "Exists"
-      effect: "NoSchedule"
-    - operator: "Exists"
-      effect: "NoExecute"
+  tolerations: []
   nodeSelector: {}
   # -- Affinity for the control plane DaemonSet.
   # @default -- Deployed only in master nodes.

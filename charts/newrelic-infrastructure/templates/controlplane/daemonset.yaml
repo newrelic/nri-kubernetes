@@ -191,10 +191,10 @@ spec:
         nodeAffinity:
           {{- .Values.controlPlane.affinity.nodeAffinity | toYaml | nindent 10 }}
       {{- end }}
-      {{- with .Values.controlPlane.tolerations }}
+      {{- with include "nriKubernetes.controlPlane.tolerations" . }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end -}}
+        {{- . | nindent 8 }}
+      {{- end }}
 
       {{- with (include "newrelic.compatibility.valueWithFallback" (dict "legacy" .Values.nodeSelector "supported" .Values.controlPlane.nodeSelector )) }}
       nodeSelector:

@@ -258,10 +258,10 @@ spec:
                     values:
                       - fargate
       {{- end }}
-      {{- with .Values.kubelet.tolerations }}
+      {{- with include "nriKubernetes.kubelet.tolerations" . }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end -}}
+        {{- . | nindent 8 }}
+      {{- end }}
 
       {{- with (include "newrelic.compatibility.valueWithFallback" (dict "legacy" .Values.nodeSelector "supported" .Values.kubelet.nodeSelector )) }}
       nodeSelector:

@@ -183,10 +183,10 @@ spec:
           {{- . | nindent 10 }}
         {{- end }}
       {{- end }}
-      {{- with .Values.ksm.tolerations }}
+      {{- with include "nriKubernetes.ksm.tolerations" . }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end -}}
+        {{- . | nindent 8 }}
+      {{- end }}
 
       {{- with (include "newrelic.compatibility.valueWithFallback" (dict "legacy" .Values.nodeSelector "supported" .Values.ksm.nodeSelector )) }}
       nodeSelector:

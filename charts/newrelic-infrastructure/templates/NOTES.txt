@@ -101,10 +101,6 @@ future. Please migrate your agent config to the new format in the `common.agentC
 {{ $errors = printf "%s\n\n%s" $errors (include "newrelic.compatibility.message.logFile" . ) }}
 {{- end }}
 
-{{- if .Values.tolerations }}
-{{ $errors = printf "%s\n\n%s" $errors (include "newrelic.compatibility.message.tolerations" . ) }}
-{{- end }}
-
 {{- if .Values.resources }}
 {{ $errors = printf "%s\n\n%s" $errors (include "newrelic.compatibility.message.resources" . ) }}
 {{- end }}
