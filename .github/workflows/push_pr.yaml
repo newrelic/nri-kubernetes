@@ -53,13 +53,11 @@ jobs:
           if [[ -n "$changed" ]]; then
             echo "::set-output name=changed::true"
           fi
-      - name: Set up helm-unittest
+      - name: Run helm unit tests
         if: steps.list-changed.outputs.changed == 'true'
         run: |
           helm plugin install https://github.com/quintush/helm-unittest
-      - name: Run unit tests
-        if: steps.list-changed.outputs.changed == 'true'
-        run: |
+
           for chart in $(ct --config .github/ct.yaml list-changed); do
             if [ -d "$chart/tests/" ]; then
               helm unittest -3 $chart
