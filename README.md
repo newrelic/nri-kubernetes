@@ -67,6 +67,33 @@ For running unit tests, run
 make test
 ```
 
+### Run locally
+
+Compile, build docker image and setup helm repositories as described in [e2e/README](./e2e/README.md).
+
+Setup custom values to run locally. Example (custom-values.yaml).
+
+```yml
+licenseKey: fake
+cluster: minikube
+
+images:
+  integration:
+    tag: e2e
+    repository: e2e/nri-kubernetes
+
+common:
+  config:
+    sink:
+      type: stdout # report to standard output instead to agent endpoint.
+```
+
+Run the integration.
+
+```shell
+helm upgrade --install nri newrelic/newrelic-infrastructure-v3 -f custom-values.yaml --namespace newrelic
+```
+
 ## Running OpenShift locally using CodeReady Containers
 
 - See [OpenShift.md](./OpenShift.md) for more details regarding running locally OpenShift environments.
