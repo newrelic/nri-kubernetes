@@ -12,6 +12,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/data/inventory"
 	sdkMetric "github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
+	"github.com/newrelic/nri-kubernetes/v3/internal/testutil"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/stretchr/testify/assert"
@@ -192,20 +193,18 @@ func (tg *testGrouper) buildMetrics(
 }
 
 func TestPopulateK8s(t *testing.T) {
-	intgr, err := integration.New("test", "test", integration.InMemoryStore())
-	assert.NoError(t, err)
-	intgr.Clear()
+	t.Parallel()
+	intgr := testutil.NewIntegration(t)
 
 	testJob := NewScrapeJob("test", &testGrouper{}, kubeletSpecs)
 
 	k8sVersion := &version.Info{GitVersion: "v1.15.42"}
-	err = testJob.Populate(intgr, "test-cluster", logutil.Debug, k8sVersion)
-	require.IsType(t, err, data.PopulateResult{})
-	assert.Empty(t, err.(data.PopulateResult).Errors)
+	errPopulate := testJob.Populate(intgr, "test-cluster", logutil.Debug, k8sVersion)
+	assert.Empty(t, errPopulate.Errors)
 
 	expectedInventory := inventory.New()
 
-	err = expectedInventory.SetItem("cluster", "name", expectedEntities[0].Metadata.Name)
+	err := expectedInventory.SetItem("cluster", "name", expectedEntities[0].Metadata.Name)
 	require.NoError(t, err)
 
 	err = expectedInventory.SetItem("cluster", "k8sVersion", k8sVersion.String())
@@ -234,9 +233,8 @@ func TestPopulateK8s(t *testing.T) {
 }
 
 func TestRestartCountDeltaValues(t *testing.T) {
-	intgr, err := integration.New("test", "test", integration.InMemoryStore())
-	assert.NoError(t, err)
-	intgr.Clear()
+	t.Parallel()
+	intgr := testutil.NewIntegration(t)
 
 	expectedRestartCountDeltas := []float64{0, 3, 0, 1}
 
@@ -250,9 +248,8 @@ func TestRestartCountDeltaValues(t *testing.T) {
 	k8sVersion := &version.Info{GitVersion: "v1.15.42"}
 	// Populate data several times to check expected deltas
 	for i := 0; i < len(expectedRestartCountDeltas); i++ {
-		err = testJob.Populate(intgr, "test-cluster", logutil.Debug, k8sVersion)
-		require.IsType(t, err, data.PopulateResult{})
-		assert.Empty(t, err.(data.PopulateResult).Errors)
+		errPopulate := testJob.Populate(intgr, "test-cluster", logutil.Debug, k8sVersion)
+		assert.Empty(t, errPopulate.Errors)
 		time.Sleep(time.Second)
 	}
 
