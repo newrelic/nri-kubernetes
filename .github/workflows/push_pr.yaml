@@ -61,6 +61,8 @@ jobs:
           for chart in $(ct --config .github/ct.yaml list-changed); do
             if [ -d "$chart/tests/" ]; then
               helm unittest -3 $chart
+            else
+              echo "No unit tests found for $chart"
             fi
           done
 
