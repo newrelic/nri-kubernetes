@@ -12,6 +12,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/data/inventory"
 	sdkMetric "github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
+	"github.com/newrelic/nri-kubernetes/v3/internal/testutil"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/stretchr/testify/assert"
@@ -118,6 +119,7 @@ var expectedEntities = []*integration.Entity{
 					"nodeName":                   "minikube",
 					"nodeIP":                     "192.168.99.100",
 					"restartCount":               float64(6),
+					"restartCountDelta":          float64(0), // 0 the first time as it is PDELTA
 					"cpuRequestedCores":          0.1,
 					"memoryRequestedBytes":       float64(104857600),
 					"memoryLimitBytes":           float64(104857600),
@@ -144,35 +146,66 @@ var kubeletSpecs = definition.SpecGroups{
 	"container": metric.KubeletSpecs["container"],
 }
 
-type testGrouper struct{}
+// grouperMock implements Grouper interface returning mocked metrics which might change over subsequent calls.
+type grouperMock struct {
+	// ValuesInGroupCalls overwrite some metrics in subsequent calls using {"<path>": {subsequent-values} Examples:
+	// {"pod.kube-system_newrelic-infra-rz225.isReady": {0, 1, 2, 3}},
+	// {"container.kube-system_newrelic-infra-rz225.restartCount": {0, 1, 2, 3}}
+	ValuesInGroupCalls map[string][]interface{}
 
-func (tg *testGrouper) Group(definition.SpecGroups) (definition.RawGroups, *data.ErrorGroup) {
+	groupCallsCount int
+}
+
+func (g *grouperMock) Group(definition.SpecGroups) (definition.RawGroups, *data.ErrorGroup) {
 	// We reduce the test fixtures in order to simplify testing.
-	return definition.RawGroups{
-		"pod": {
-			"kube-system_newrelic-infra-rz225": testdata.ExpectedGroupData["pod"]["kube-system_newrelic-infra-rz225"],
-		},
-		"container": {
-			"kube-system_newrelic-infra-rz225_newrelic-infra": testdata.ExpectedGroupData["container"]["kube-system_newrelic-infra-rz225_newrelic-infra"],
-		},
-	}, nil
+	groupsDefinition := map[string]string{
+		"pod":       "kube-system_newrelic-infra-rz225",
+		"container": "kube-system_newrelic-infra-rz225_newrelic-infra",
+	}
+	groups := definition.RawGroups{}
+	for entityType, entityName := range groupsDefinition {
+		if groups[entityType] == nil {
+			groups[entityType] = map[string]definition.RawMetrics{}
+		}
+		groups[entityType][entityName] = g.metricsForCurrentCall(entityType, entityName)
+	}
+	g.groupCallsCount++
+	return groups, nil
+}
+
+// metricsForCurrentCall returns a copy of metrics from `testdata.ExpectedGroupData` corresponding to the provided
+// parameters with values changes as configured for the current group call.
+func (g *grouperMock) metricsForCurrentCall(entityType, entityName string) definition.RawMetrics {
+	metrics := definition.RawMetrics{}
+	for k, v := range testdata.ExpectedGroupData[entityType][entityName] {
+		metrics[k] = v
+	}
+	for rawPath, values := range g.ValuesInGroupCalls {
+		path := strings.Split(rawPath, ".")
+		lenValues := len(values)
+		if len(path) != 3 || path[0] != entityType || path[1] != entityName || lenValues < 1 {
+			continue
+		}
+		metricName := path[2]
+		valueToUse := g.groupCallsCount % lenValues
+		metrics[metricName] = values[valueToUse]
+	}
+	return metrics
 }
 
 func TestPopulateK8s(t *testing.T) {
-	intgr, err := integration.New("test", "test", integration.InMemoryStore())
-	assert.NoError(t, err)
-	intgr.Clear()
+	t.Parallel()
+	intgr := testutil.NewIntegration(t)
 
-	testJob := NewScrapeJob("test", &testGrouper{}, kubeletSpecs)
+	testJob := NewScrapeJob("test", &grouperMock{}, kubeletSpecs)
 
 	k8sVersion := &version.Info{GitVersion: "v1.15.42"}
-	err = testJob.Populate(intgr, "test-cluster", logutil.Debug, k8sVersion)
-	require.IsType(t, err, data.PopulateResult{})
-	assert.Empty(t, err.(data.PopulateResult).Errors)
+	errPopulate := testJob.Populate(intgr, "test-cluster", logutil.Debug, k8sVersion)
+	assert.Empty(t, errPopulate.Errors)
 
 	expectedInventory := inventory.New()
 
-	err = expectedInventory.SetItem("cluster", "name", expectedEntities[0].Metadata.Name)
+	err := expectedInventory.SetItem("cluster", "name", expectedEntities[0].Metadata.Name)
 	require.NoError(t, err)
 
 	err = expectedInventory.SetItem("cluster", "k8sVersion", k8sVersion.String())
@@ -196,6 +229,38 @@ func TestPopulateK8s(t *testing.T) {
 	for j := range expectedEntities {
 		if diff := cmp.Diff(intgr.Entities[j], expectedEntities[j], compareIgnoreFields); diff != "" {
 			t.Errorf("Entities[%d] mismatch: %s", j, diff)
+		}
+	}
+}
+
+func TestRestartCountDeltaValues(t *testing.T) {
+	t.Parallel()
+	intgr := testutil.NewIntegration(t)
+
+	expectedRestartCountDeltas := []float64{0, 3, 0, 1}
+
+	grouper := &grouperMock{
+		ValuesInGroupCalls: map[string][]interface{}{
+			"container.kube-system_newrelic-infra-rz225_newrelic-infra.restartCount": {0, 3, 3, 4},
+		},
+	}
+	testJob := NewScrapeJob("test", grouper, kubeletSpecs)
+
+	k8sVersion := &version.Info{GitVersion: "v1.15.42"}
+	// Populate data several times to check expected deltas
+	for i := 0; i < len(expectedRestartCountDeltas); i++ {
+		errPopulate := testJob.Populate(intgr, "test-cluster", logutil.Debug, k8sVersion)
+		assert.Empty(t, errPopulate.Errors)
+		time.Sleep(time.Second)
+	}
+
+	for _, entity := range intgr.Entities {
+		if entity.Metadata.Name == "newrelic-infra" {
+			lenExpectedDeltas := len(expectedRestartCountDeltas)
+			require.Equal(t, lenExpectedDeltas, len(entity.Metrics))
+			for i := 0; i < lenExpectedDeltas; i++ {
+				assert.Equal(t, expectedRestartCountDeltas[i], entity.Metrics[i].Metrics["restartCountDelta"])
+			}
 		}
 	}
 }
