@@ -32,7 +32,6 @@ spec:
         {{- include "common.labels.selectorLabels" . | nindent 8 }}
         {{- include "common.labels.podLabels" . | nindent 8 }}
         app.kubernetes.io/component: kubelet
-        mode: {{ include "newrelic.mode" . }}
     spec:
       {{- with .Values.images.pullSecrets }}
       imagePullSecrets:

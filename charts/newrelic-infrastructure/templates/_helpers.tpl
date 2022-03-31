@@ -1,14 +1,3 @@
-{{/* Generate mode label */}}
-{{- define "newrelic.mode" }}
-{{- if .Values.privileged -}}
-privileged
-{{- else -}}
-unprivileged
-{{- end }}
-{{- end -}}
-
-
-
 {{/*
 Returns fargate
 */}}

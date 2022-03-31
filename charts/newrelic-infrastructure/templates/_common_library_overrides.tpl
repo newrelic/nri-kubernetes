@@ -30,3 +30,14 @@ readOnlyRootFilesystem: true
 {{- /* Allow to change pod defaults dynamically based if we are running in privileged mode or not */ -}}
 {{- define "common.securityContext.podDefaults" -}}
 {{- end -}}
+
+
+
+{{- /* Add mode to each object create */ -}}
+{{- define "common.labels.overrides.addLabels" -}}
+{{- if ( include "common.privileged" . ) -}}
+mode: privileged
+{{- else -}}
+mode: unprivileged
+{{- end -}}
+{{- end -}}
