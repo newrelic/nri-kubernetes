@@ -119,10 +119,9 @@ spec:
                   fieldPath: "spec.nodeName"
             {{- end }}
             {{- end }}
-            {{- if (include "newrelic.customAttributes" .) }}
+            {{- with fromYaml ( include "common.customAttributes" . ) }}
             - name: "NRIA_CUSTOM_ATTRIBUTES"
-              value: >-
-                {{- include "newrelic.customAttributes" . | nindent 16 }}
+              value: {{ . | toJson | quote }}
             {{- end }}
             - name: NRIA_LICENSE_KEY
               valueFrom:

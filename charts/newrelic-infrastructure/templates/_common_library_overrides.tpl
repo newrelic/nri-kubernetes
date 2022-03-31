@@ -41,3 +41,12 @@ mode: privileged
 mode: unprivileged
 {{- end -}}
 {{- end -}}
+
+
+
+{{/*
+This function allows easily to overwrite custom attributes to the function "common.customAttributes"
+*/}}
+{{- define "common.customAttributes.overrideAttributes" -}}
+clusterName: {{ include "common.cluster" . }}
+{{- end }}
