@@ -65,6 +65,9 @@ spec:
               value: {{ get (fromYaml (include "nriKubernetes.controlPlane.agentConfig" .)) "http_server_port" | quote }}
             - name: "NRI_KUBERNETES_CLUSTERNAME"
               value: {{ include "common.cluster" . }}
+            - name: "NRI_KUBERNETES_VERBOSE"
+              value: {{ include "common.verboseLog.value" . | quote }}
+
             - name: "NRI_KUBERNETES_NODENAME"
               valueFrom:
                 fieldRef:
@@ -75,10 +78,7 @@ spec:
                 fieldRef:
                   apiVersion: "v1"
                   fieldPath: "status.hostIP"
-            {{- if .Values.verboseLog }}
-            - name: NRI_KUBERNETES_VERBOSE
-              value: "1"
-            {{- end }}
+
             {{- with .Values.controlPlane.env }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -106,7 +106,7 @@ spec:
           ports:
             - containerPort: {{ get (fromYaml (include "nriKubernetes.controlPlane.agentConfig" .)) "http_server_port" }}
           env:
-            - name: NRIA_LICENSE_KEY
+            - name: "NRIA_LICENSE_KEY"
               valueFrom:
                 secretKeyRef:
                   name: {{ include "common.license.secretName" . }}

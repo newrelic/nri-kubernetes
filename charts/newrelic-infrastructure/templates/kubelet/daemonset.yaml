@@ -60,10 +60,9 @@ spec:
               value: {{ get (fromYaml (include "nriKubernetes.kubelet.agentConfig" .)) "http_server_port" | quote }}
             - name: "NRI_KUBERNETES_CLUSTERNAME"
               value: {{ include "common.cluster" . }}
-            {{- if .Values.verboseLog }}
-            - name: NRI_KUBERNETES_VERBOSE
-              value: "1"
-            {{- end }}
+            - name: "NRI_KUBERNETES_VERBOSE"
+              value: {{ include "common.verboseLog.value" . | quote }}
+
             - name: "NRI_KUBERNETES_NODENAME"
               valueFrom:
                 fieldRef:
@@ -75,6 +74,7 @@ spec:
                 fieldRef:
                   apiVersion: "v1"
                   fieldPath: "status.hostIP"
+
             {{- with .Values.kubelet.env }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
