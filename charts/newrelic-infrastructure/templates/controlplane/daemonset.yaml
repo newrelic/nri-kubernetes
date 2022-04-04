@@ -38,6 +38,9 @@ spec:
       imagePullSecrets:
           {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with include "common.priorityClassName" . }}
+      priorityClassName: {{ . }}
+      {{- end }}
       {{- with include "common.securityContext.pod" . }}
       securityContext:
         {{- . | nindent 8 }}
@@ -181,9 +184,6 @@ spec:
         {{- with .Values.controlPlane.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- with .Values.priorityClassName }}
-      priorityClassName: {{ . }}
-      {{- end }}
       {{- with include "nriKubernetes.controlPlane.affinity" . }}
       affinity:
         {{- . | nindent 8 }}
