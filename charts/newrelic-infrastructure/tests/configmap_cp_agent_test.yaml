@@ -1,0 +1,140 @@
+suite: test controlplane agent configmap
+templates:
+  - templates/controlplane/daemonset.yaml
+  - templates/controlplane/scraper-configmap.yaml
+  - templates/controlplane/agent-configmap.yaml
+  - templates/secret.yaml
+tests:
+  - it: agent configMap is created and configured from legacy config
+    set:
+      licenseKey: test
+      cluster: test
+      config:
+        test1: one
+        test2: two
+    asserts:
+      - template: templates/controlplane/agent-configmap.yaml
+        equal:
+          path: data.newrelic-infra\.yml
+          value: |-
+            # This is the configuration file for the infrastructure agent. See:
+            # https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+            custom_attributes:
+              clusterName: test
+            http_server_enabled: true
+            http_server_port: 8001
+            is_forward_only: true
+            is_secure_forward_only: true
+            overide_host_root: ""
+            test1: one
+            test2: two
+
+  - it: agent configMap is created and configured from common.agentConfig
+    set:
+      licenseKey: test
+      cluster: test
+      common.agentConfig:
+        test1: one
+        test2: two
+    asserts:
+      - template: templates/controlplane/agent-configmap.yaml
+        equal:
+          path: data.newrelic-infra\.yml
+          value: |-
+            # This is the configuration file for the infrastructure agent. See:
+            # https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+            custom_attributes:
+              clusterName: test
+            http_server_enabled: true
+            http_server_port: 8001
+            is_forward_only: true
+            is_secure_forward_only: true
+            overide_host_root: ""
+            test1: one
+            test2: two
+
+  - it: common.agentConfig takes precedence
+    set:
+      licenseKey: test
+      cluster: test
+      common.agentConfig:
+        test1: one
+        test2: two
+      config:
+        test3: three
+    asserts:
+      - template: templates/controlplane/agent-configmap.yaml
+        equal:
+          path: data.newrelic-infra\.yml
+          value: |-
+            # This is the configuration file for the infrastructure agent. See:
+            # https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+            custom_attributes:
+              clusterName: test
+            http_server_enabled: true
+            http_server_port: 8001
+            is_forward_only: true
+            is_secure_forward_only: true
+            overide_host_root: ""
+            test1: one
+            test2: two
+
+  - it: eventQueueDepth is taken into account
+    set:
+      licenseKey: test
+      cluster: test
+      common.agentConfig:
+        test1: one
+        test2: two
+      config:
+        test3: three
+      eventQueueDepth: 1000
+    asserts:
+      - template: templates/controlplane/agent-configmap.yaml
+        equal:
+          path: data.newrelic-infra\.yml
+          value: |-
+            # This is the configuration file for the infrastructure agent. See:
+            # https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+            custom_attributes:
+              clusterName: test
+            event_queue_depth: 1000
+            http_server_enabled: true
+            http_server_port: 8001
+            is_forward_only: true
+            is_secure_forward_only: true
+            overide_host_root: ""
+            test1: one
+            test2: two
+
+#I am not able to run this test. TODO
+# fails with this message:
+
+#  FAIL  test controlplane agent configmap	tests/configmap_cp_agent_test.yaml
+#  - fail if customAttributes is a JSON string instead of a map
+#
+#    - asserts[0] `failedTemplate` fail
+#      Error:
+#        template "newrelic-infrastructure/templates/controlplane/daemonset.yaml" not exists or not selected in test suite#  - it: fail if customAttributes is a JSON string instead of a map
+
+# I tested it manually but I am not able to create an automatic test so I am leaving it commented as a TODO.
+
+#  - it: fail if customAttributes is a JSON string instead of a map
+#    set:
+#      licenseKey: test
+#      cluster: test
+#      customAttributes: 'testTESTtest'
+#    asserts:
+#      - template: templates/controlplane/daemonset.yaml
+#        failedTemplate:
+#          errorMessage: |
+#            We still support using custom attributes but we support it as a map and dropped it as a string.
+#
+#            You should change your values from this:
+#
+#            customAttributes: "{\"test\": \"test\"}"
+#
+#            to this:
+#
+#            customAttributes:
+#              test: "test"

@@ -63,8 +63,8 @@ kubelet:
       effect: "NoExecute"
   nodeSelector: {}
   affinity: {}
-  extraEnv: []
-  extraEnvFrom: []
+  env: []
+  envFrom: []
   extraVolumes: []
   extraVolumeMounts: []
   initContainers: []
@@ -92,8 +92,8 @@ ksm:
   tolerations: []
   nodeSelector: {}
   affinity: {}
-  extraEnv: []
-  extraEnvFrom: []
+  env: []
+  envFrom: []
   extraVolumes: []
   extraVolumeMounts: []
   initContainers: []
@@ -140,8 +140,8 @@ controlPlane:
   # -- How to deploy the control plane scraper. If autodiscovery is in use, it should be `DaemonSet`.
   # Advanced users using static endpoints set this to `Deployment` to avoid reporting metrics twice.
   kind: DaemonSet
-  extraEnv: []
-  extraEnvFrom: []
+  env: []
+  envFrom: []
   extraVolumes: []
   extraVolumeMounts: []
   initContainers: []
@@ -358,7 +358,7 @@ updateStrategy:
     maxUnavailable: 1
 
 # -- Custom attributes to be added to the data reported by all integrations reporting in the cluster.
-customAttributes: {}
+customAttributes:
 
 # -- Enable verbose logging for all components.
 verboseLog: false

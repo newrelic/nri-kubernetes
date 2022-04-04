@@ -68,7 +68,7 @@ Returns agent configmap merged with legacy config and legacy eventQueueDepth con
 {{- if .Values.eventQueueDepth -}}
 {{- mustMergeOverwrite $config (dict "event_queue_depth" .Values.eventQueueDepth ) | toYaml }}
 {{- else -}}
-{{- $config | toYaml}}
+{{- $config | toYaml }}
 {{- end -}}
 {{- end -}}
 
@@ -173,6 +173,20 @@ Please set:
  - images.integration.* to configure the image in charge of scraping k8s data.
 
 ------
+{{- end -}}
+
+{{- define "newrelic.compatibility.message.customAttributes" -}}
+We still support using custom attributes but we support it as a map and dropped it as a string.
+customAttributes: {{ .Values.customAttributes | quote }}
+
+You should change your values to something like this:
+
+customAttributes:
+{{- range $k, $v := fromJson .Values.customAttributes -}}
+  {{- $k | nindent 2 }}: {{ $v | quote }}
+{{- end }}
+
+**NOTE**: If you read above errors like "invalid character ':' after top-level value" or "json: cannot unmarshal string into Go value of type map[string]interface {}" means that the string you have in your values is not a valid JSON, Helm is not able to parse it and we could not show you how you should change it. Sorry.
 {{- end -}}
 
 {{- define "newrelic.compatibility.message.common" -}}

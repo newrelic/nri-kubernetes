@@ -21,9 +21,9 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/nri-kubernetes: {{ include (print $.Template.BasePath "/kubelet/configmap.yaml") . | sha256sum }}
+        checksum/nri-kubernetes: {{ include (print $.Template.BasePath "/kubelet/scraper-configmap.yaml") . | sha256sum }}
+        checksum/agent-config: {{ include (print $.Template.BasePath "/kubelet/agent-configmap.yaml") . | sha256sum }}
         checksum/license-secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
-        checksum/agent-config: {{ include (print $.Template.BasePath "/agent-configmap.yaml") . | sha256sum }}
         checksum/integrations_config: {{ include (print $.Template.BasePath "/kubelet/integrations-configmap.yaml") . | sha256sum }}
         {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
@@ -57,7 +57,7 @@ spec:
                     | toYaml | nindent 12 }}
           env:
             - name: "NRI_KUBERNETES_SINK_HTTP_PORT"
-              value: "8003"
+              value: {{ get (fromYaml (include "nriKubernetes.kubelet.agentConfig" .)) "http_server_port" | quote }}
             - name: "NRI_KUBERNETES_CLUSTERNAME"
               value: {{ include "common.cluster" . }}
             {{- if .Values.verboseLog }}
@@ -75,10 +75,10 @@ spec:
                 fieldRef:
                   apiVersion: "v1"
                   fieldPath: "status.hostIP"
-            {{- with .Values.kubelet.extraEnv }}
+            {{- with .Values.kubelet.env }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- with .Values.kubelet.extraEnvFrom }}
+          {{- with .Values.kubelet.envFrom }}
           envFrom: {{ toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
@@ -98,38 +98,26 @@ spec:
           securityContext:
             {{- include "nriKubernetes.kubelet.securityContext.agentContainer" . | nindent 12 }}
           ports:
-            - containerPort: 8003
+            - containerPort: {{ get (fromYaml (include "nriKubernetes.kubelet.agentConfig" .)) "http_server_port" }}
           env:
-            - name: "NRIA_OVERRIDE_HOSTNAME_SHORT"
-              valueFrom:
-                fieldRef:
-                  apiVersion: "v1"
-                  fieldPath: "spec.nodeName"
-            - name: "NRIA_FEATURES"
-              value: "docker_enabled:false"
-            - name: "NRIA_HTTP_SERVER_ENABLED"
-              value: "true"
-            - name: "NRIA_HTTP_SERVER_PORT"
-              value: "8003"
             - name: NRIA_LICENSE_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ include "common.license.secretName" . }}
                   key: {{ include "common.license.secretKeyName" . }}
-            {{- /* Check if enableProcessMetrics is present in the map */}}
-            {{- if .Values.enableProcessMetrics | kindIs "bool" }}
-            - name: "NRIA_ENABLE_PROCESS_METRICS"
-              value: {{ .Values.enableProcessMetrics | quote }}
-            {{- end }}
-            {{- if (include "common.nrStaging" .) }}
-            - name: "NRIA_STAGING"
-              value: "true"
-            {{- end }}
+
+            - name: "NRIA_OVERRIDE_HOSTNAME_SHORT"
+              valueFrom:
+                fieldRef:
+                  apiVersion: "v1"
+                  fieldPath: "spec.nodeName"
+
             - name: "NRI_KUBERNETES_NODE_NAME"
               valueFrom:
                 fieldRef:
                   apiVersion: "v1"
                   fieldPath: "spec.nodeName"
+
             {{- if .Values.useNodeNameAsDisplayName }}
             - name: "NRIA_DISPLAY_NAME"
             {{- if .Values.prefixDisplayNameWithCluster }}
@@ -141,35 +129,24 @@ spec:
                   fieldPath: "spec.nodeName"
             {{- end }}
             {{- end }}
-            {{- with fromYaml ( include "common.customAttributes" . ) }}
-            - name: "NRIA_CUSTOM_ATTRIBUTES"
-              value: {{ . | toJson | quote }}
-            {{- end }}
-            {{- if .Values.verboseLog }}
-            - name: NRIA_VERBOSE
-              value: "1"
-            {{- end }}
-            {{- if not .Values.privileged }}
-            - name: "NRIA_OVERRIDE_HOST_ROOT"
-              value: ""
-            - name: "NRIA_IS_SECURE_FORWARD_ONLY"
-              value: "true"
-            {{- end }}
-            {{- with .Values.kubelet.extraEnv }}
-            {{- toYaml . | nindent 12 }}
-            {{- end }}
+
             {{- /* Needed to populate clustername in integration metrics */}}
             - name: "CLUSTER_NAME"
               value: {{ include "common.cluster" . }}
             - name: "NRIA_PASSTHROUGH_ENVIRONMENT"
               value: "CLUSTER_NAME"
+
             {{- /* Needed for autodiscovery since hostNetwork=false */}}
             - name: "NRIA_HOST"
               valueFrom:
                 fieldRef:
                   apiVersion: "v1"
                   fieldPath: "status.hostIP"
-          {{- with .Values.kubelet.extraEnvFrom }}
+
+            {{- with .Values.kubelet.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.kubelet.envFrom }}
           envFrom: {{ toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
@@ -230,7 +207,7 @@ spec:
                 path: nri-kubernetes.yml
         - name: config
           configMap:
-            name: {{ include "common.naming.fullname" . }}-agent
+            name: {{ include "common.naming.fullname" . }}-agent-kubelet
             items:
               - key: newrelic-infra.yml
                 path: newrelic-infra.yml
