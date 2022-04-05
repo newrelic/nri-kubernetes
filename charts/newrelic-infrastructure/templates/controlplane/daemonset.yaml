@@ -60,7 +60,7 @@ spec:
       {{- end }}
       containers:
         - name: controlplane
-          image: "{{ .Values.images.integration.registry }}/{{ .Values.images.integration.repository }}:{{ .Values.images.integration.tag | default .Chart.AppVersion }}"
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.images.integration "context" .) }}
           imagePullPolicy: {{ .Values.images.integration.pullPolicy }}
           securityContext:
             {{- mustMergeOverwrite
@@ -103,7 +103,7 @@ spec:
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
         - name: forwarder
-          image: "{{ .Values.images.forwarder.registry }}/{{ .Values.images.forwarder.repository }}:{{ .Values.images.forwarder.tag }}"
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.images.forwarder "context" .) }}
           imagePullPolicy: {{ .Values.images.forwarder.pullPolicy }}
           securityContext:
             {{- mustMergeOverwrite

@@ -55,7 +55,7 @@ spec:
       {{- end }}
       containers:
         - name: kubelet
-          image: "{{ .Values.images.integration.registry }}/{{ .Values.images.integration.repository }}:{{ .Values.images.integration.tag | default .Chart.AppVersion }}"
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.images.integration "context" .) }}
           imagePullPolicy: {{ .Values.images.integration.pullPolicy }}
           securityContext:
             {{- mustMergeOverwrite
@@ -99,8 +99,8 @@ spec:
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
         - name: agent
-          image: "{{ .Values.images.agent.registry }}/{{ .Values.images.agent.repository }}:{{ .Values.images.agent.tag }}"
-          command: [ "/sbin/tini", "--", "/usr/bin/newrelic-infra" ]
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.images.agent "context" .) }}
+          args: [ "newrelic-infra" ]
           imagePullPolicy: {{ .Values.images.agent.pullPolicy }}
           securityContext:
             {{- include "nriKubernetes.kubelet.securityContext.agentContainer" . | nindent 12 }}
