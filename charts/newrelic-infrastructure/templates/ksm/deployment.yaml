@@ -33,6 +33,11 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with include "common.dnsConfig" . }}
+      dnsConfig:
+        {{- . | nindent 8 }}
+      {{- end }}
+
       {{- with include "common.priorityClassName" . }}
       priorityClassName: {{ . }}
       {{- end }}
