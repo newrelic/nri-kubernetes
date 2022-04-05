@@ -42,6 +42,10 @@ spec:
       dnsConfig:
         {{- . | nindent 8 }}
       {{- end }}
+      {{- if ( include "common.hostNetwork" . ) | default .Values.controlPlane.hostNetwork }}
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- end }}
       {{- with include "common.priorityClassName" . }}
       priorityClassName: {{ . }}
       {{- end }}
@@ -51,10 +55,6 @@ spec:
       {{- end }}
       serviceAccountName: {{ include "common.serviceAccount.name" . }}-controlplane
 
-      {{- if include "newrelic.controlPlane.hostNetwork" . }}
-      hostNetwork: true
-      dnsPolicy: ClusterFirstWithHostNet
-      {{- end }}
       {{- if .Values.controlPlane.initContainers }}
       initContainers: {{- tpl (.Values.controlPlane.initContainers | toYaml) . | nindent 8 }}
       {{- end }}

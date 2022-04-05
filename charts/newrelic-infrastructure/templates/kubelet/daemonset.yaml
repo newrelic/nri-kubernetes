@@ -49,6 +49,7 @@ spec:
         {{- . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "common.serviceAccount.name" . }}
+      hostNetwork: {{ include "common.hostNetwork.value" . }}
 
       {{- if .Values.kubelet.initContainers }}
       initContainers: {{- tpl (.Values.kubelet.initContainers | toYaml) . | nindent 8 }}

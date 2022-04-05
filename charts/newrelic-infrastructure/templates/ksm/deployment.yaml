@@ -37,7 +37,6 @@ spec:
       dnsConfig:
         {{- . | nindent 8 }}
       {{- end }}
-
       {{- with include "common.priorityClassName" . }}
       priorityClassName: {{ . }}
       {{- end }}
@@ -46,6 +45,7 @@ spec:
         {{- . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "common.serviceAccount.name" . }}
+      hostNetwork: {{ include "common.hostNetwork.value" . }}
 
       {{- if .Values.ksm.initContainers }}
       initContainers: {{- tpl (.Values.ksm.initContainers | toYaml) . | nindent 8 }}
