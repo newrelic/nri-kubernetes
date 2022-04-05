@@ -29,9 +29,9 @@ spec:
         {{- include "common.labels.podLabels" . | nindent 8 }}
         app.kubernetes.io/component: ksm
     spec:
-      {{- with .Values.images.pullSecrets }}
+      {{- with include "common.images.renderPullSecrets" ( dict "pullSecrets" (list .Values.images.pullSecrets) "context" .) }}
       imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
+        {{- . | nindent 8 }}
       {{- end }}
       {{- with include "common.dnsConfig" . }}
       dnsConfig:
