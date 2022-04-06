@@ -18,7 +18,6 @@ import (
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/rest"
 
 	"github.com/newrelic/nri-kubernetes/v2/src/client"
 	"github.com/newrelic/nri-kubernetes/v2/src/prometheus"
@@ -60,9 +59,6 @@ func TestDiscover_portThroughDNS(t *testing.T) {
 		Return(&v1.PodList{Items: []v1.Pod{{
 			Status: v1.PodStatus{HostIP: "6.7.8.9"},
 		}}}, nil)
-	c.On("Config").Return(
-		&rest.Config{BearerToken: "foobar"},
-	)
 	// And an Discoverer implementation
 	config := DiscovererConfig{
 		LookupSRV: fakeLookupSRV,
@@ -93,9 +89,6 @@ func TestDiscover_portThroughDNSAndGuessedNodeIPFromMultiplePods(t *testing.T) {
 			{Status: v1.PodStatus{HostIP: "162.178.1.1"}},
 			{Status: v1.PodStatus{HostIP: "4.3.2.1"}},
 		}}, nil)
-	c.On("Config").Return(
-		&rest.Config{BearerToken: "foobar"},
-	)
 
 	// and an Discoverer implementation
 	config := DiscovererConfig{
@@ -167,10 +160,6 @@ func TestDiscover_metricsPortThroughAPIWhenDNSFails(t *testing.T) {
 			c.On("FindPodsByLabel", mock.Anything, mock.Anything).
 				Return(&v1.PodList{}, nil)
 
-			c.On("Config").Return(
-				&rest.Config{BearerToken: "foobar"},
-			)
-
 			// and an Discoverer implementation whose DNS returns empty response
 			config := DiscovererConfig{
 				LookupSRV: emptyLookupSRV,
@@ -214,9 +203,6 @@ func TestDiscover_metricsPortThroughAPIWhenDNSError(t *testing.T) {
 		Return(&v1.PodList{Items: []v1.Pod{{
 			Status: v1.PodStatus{HostIP: "6.7.8.9"},
 		}}}, nil)
-	c.On("Config").Return(
-		&rest.Config{BearerToken: "foobar"},
-	)
 
 	// and an Discoverer implementation whose DNS returns an error
 	config := DiscovererConfig{
@@ -261,9 +247,6 @@ func TestDiscover_guessedTCPPortThroughAPIWhenDNSEmptyResponse(t *testing.T) {
 		Return(&v1.PodList{Items: []v1.Pod{{
 			Status: v1.PodStatus{HostIP: "6.7.8.9"},
 		}}}, nil)
-	c.On("Config").Return(
-		&rest.Config{BearerToken: "foobar"},
-	)
 
 	// and an Discoverer implementation whose DNS returns empty response
 	config := DiscovererConfig{
@@ -297,9 +280,6 @@ func TestDiscover_errorRetrievingPortWhenDNSAndAPIResponsesEmpty(t *testing.T) {
 		Return(&v1.PodList{Items: []v1.Pod{{
 			Status: v1.PodStatus{HostIP: "6.7.8.9"},
 		}}}, nil)
-	c.On("Config").Return(
-		&rest.Config{BearerToken: "foobar"},
-	)
 
 	// and an Discoverer implementation whose DNS returns empty response
 	config := DiscovererConfig{
@@ -330,9 +310,6 @@ func TestDiscover_errorRetrievingPortWhenDNSAndAPIErrors(t *testing.T) {
 		Return(&v1.PodList{Items: []v1.Pod{{
 			Status: v1.PodStatus{HostIP: "6.7.8.9"},
 		}}}, nil)
-	c.On("Config").Return(
-		&rest.Config{BearerToken: "foobar"},
-	)
 
 	// and an Discoverer implementation whose DNS returns an error
 	config := DiscovererConfig{
@@ -359,9 +336,6 @@ func TestDiscover_errorRetrievingNodeIPWhenPodListEmpty(t *testing.T) {
 	// And FindPodsByLabel returns empty list
 	c.On("FindPodsByLabel", mock.Anything, mock.Anything).
 		Return(&v1.PodList{}, nil)
-	c.On("Config").Return(
-		&rest.Config{BearerToken: "foobar"},
-	)
 
 	// And an Discoverer implementation
 	config := DiscovererConfig{
@@ -388,9 +362,6 @@ func TestDiscover_errorRetrievingNodeIPWhenErrorFindingPod(t *testing.T) {
 	// And FindPodsByLabel returns error
 	c.On("FindPodsByLabel", mock.Anything, mock.Anything).
 		Return(&v1.PodList{}, errors.New("failure"))
-	c.On("Config").Return(
-		&rest.Config{BearerToken: "foobar"},
-	)
 
 	// And an Discoverer implementation
 	config := DiscovererConfig{
@@ -450,32 +421,44 @@ func TestNodeIP(t *testing.T) {
 }
 
 // Testing Do() method
-func TestDo(t *testing.T) {
-	r := strings.NewReader("Foo")
-	s := httptest.NewServer(mockResponseHandler(r))
-	endpoint, err := url.Parse(s.URL)
-	if err != nil {
-		assert.FailNow(t, err.Error())
+func TestDoOn(t *testing.T) {
+	cases := map[string]struct {
+		server *httptest.Server
+	}{
+		"https endpoint": {server: httptest.NewTLSServer(mockResponseHandler(strings.NewReader("Foo")))},
+		"http endpoint":  {server: httptest.NewServer(mockResponseHandler(strings.NewReader("Foo")))},
 	}
 
-	c := &ksm{
-		nodeIP:     "1.2.3.4",
-		endpoint:   *endpoint,
-		httpClient: s.Client(),
-		logger:     logger,
+	for testCaseName, testData := range cases {
+		testData := testData
+
+		t.Run(testCaseName, func(t *testing.T) {
+			t.Parallel()
+			endpoint, err := url.Parse(testData.server.URL)
+			if err != nil {
+				assert.FailNow(t, err.Error())
+			}
+			c, err := newKSMClient(
+				time.Second,
+				"1.2.3.4",
+				*endpoint,
+				logger,
+			)
+			assert.NoError(t, err)
+
+			// When retrieving http response
+			resp, err := c.Do("GET", "foo")
+
+			// The call works correctly
+			assert.NoError(t, err)
+			// The request was created with updated path for URL
+			assert.Equal(t, fmt.Sprintf("%s/foo", testData.server.URL), resp.Request.URL.String())
+			// Accept Header was added to the request
+			assert.Equal(t, prometheus.AcceptHeader, resp.Request.Header.Get("Accept"))
+			// Correct http method was used
+			assert.Equal(t, "GET", resp.Request.Method)
+		})
 	}
-
-	// When retrieving http response
-	resp, err := c.Do("GET", "foo")
-
-	// The call works correctly
-	assert.NoError(t, err)
-	// The request was created with updated path for URL
-	assert.Equal(t, fmt.Sprintf("%s/foo", s.URL), resp.Request.URL.String())
-	// Accept Header was added to the request
-	assert.Equal(t, prometheus.AcceptHeader, resp.Request.Header.Get("Accept"))
-	// Correct http method was used
-	assert.Equal(t, "GET", resp.Request.Method)
 }
 
 func TestDo_error(t *testing.T) {
