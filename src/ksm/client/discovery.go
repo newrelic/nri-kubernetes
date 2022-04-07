@@ -1,7 +1,6 @@
 package client
 
 import (
-	"crypto/tls"
 	"fmt"
 	"net"
 	"net/http"
@@ -118,12 +117,20 @@ func (sd *discoverer) Discover(timeout time.Duration) (client.HTTPClient, error)
 	}
 
 	sd.logger.Debugf("KSM client created with endpoint=%v and nodeIP=%v", endpoint, nodeIP)
-	return newKSMClient(timeout, nodeIP, endpoint, sd.logger, sd.k8sClient), nil
+
+	KSMClient, err := newKSMClient(timeout, nodeIP, endpoint, sd.logger)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create KSM http client: %w", err)
+	}
+
+	return KSMClient, nil
 }
 
-func newKSMClient(timeout time.Duration, nodeIP string, endpoint url.URL, logger *logrus.Logger, k8s client.Kubernetes) *ksm {
-	bearer := k8s.Config().BearerToken
-	rt := newBearerRoundTripper(bearer)
+func newKSMClient(timeout time.Duration, nodeIP string, endpoint url.URL, logger *logrus.Logger) (*ksm, error) {
+	rt, err := transport.New(&transport.Config{TLS: transport.TLSConfig{Insecure: true}})
+	if err != nil {
+		return nil, fmt.Errorf("creating the round tripper: %w", err)
+	}
 
 	return &ksm{
 		nodeIP:   nodeIP,
@@ -133,13 +140,7 @@ func newKSMClient(timeout time.Duration, nodeIP string, endpoint url.URL, logger
 			Transport: rt,
 		},
 		logger: logger,
-	}
-}
-
-func newBearerRoundTripper(bearer string) http.RoundTripper {
-	baseTransport := http.DefaultTransport.(*http.Transport).Clone()
-	baseTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	return transport.NewBearerAuthRoundTripper(bearer, baseTransport)
+	}, nil
 }
 
 func (c *ksm) NodeIP() string {

@@ -61,13 +61,15 @@ func (p *distributedPodLabelDiscoverer) Discover(timeout time.Duration) ([]clien
 			Scheme: "http",
 			Host:   fmt.Sprintf("%s:8080", pod.Status.PodIP),
 		}
-		ksmClient := newKSMClient(
+		ksmClient, err := newKSMClient(
 			timeout,
 			pod.Status.HostIP,
 			endpoint,
 			p.logger,
-			p.k8sClient,
 		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create KSM http client: %w", err)
+		}
 		clients = append(clients, ksmClient)
 	}
 	return clients, nil

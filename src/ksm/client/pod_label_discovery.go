@@ -64,13 +64,16 @@ func (p *podLabelDiscoverer) Discover(timeout time.Duration) (client.HTTPClient,
 		Host:   fmt.Sprintf("%s:%d", pod.Status.PodIP, p.ksmPodPort),
 	}
 
-	ksmClient := newKSMClient(
+	ksmClient, err := newKSMClient(
 		timeout,
 		pod.Status.HostIP,
 		endpoint,
 		p.logger,
-		p.k8sClient,
 	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create KSM http client: %w", err)
+	}
+
 	return ksmClient, nil
 }
 
