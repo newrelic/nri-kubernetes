@@ -15,7 +15,7 @@ As this chart deploys what it should be three charts to maintain the transition 
 This means that this chart has 3 tolerations so a helper should be done per scraper.
 */ -}}
 {{- define "nriKubernetes.controlPlane.tolerations" -}}
-{{- if gt (len .Values.controlPlane.tolerations) 0  -}}
+{{- if .Values.controlPlane.tolerations -}}
     {{- toYaml .Values.controlPlane.tolerations -}}
 {{- else if include "common.tolerations" . -}}
     {{- include "common.tolerations" . -}}
