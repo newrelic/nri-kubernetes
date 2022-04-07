@@ -5,7 +5,7 @@ templates:
   - templates/ksm/agent-configmap.yaml
   - templates/secret.yaml
 tests:
-  - it: KSM tolerations uses its defaults with everything null/empty
+  - it: KSM tolerations empty with everything null/empty
     set:
       licenseKey: test
       cluster: test
@@ -14,13 +14,8 @@ tests:
       ksm.tolerations: []
     asserts:
       - template: templates/ksm/deployment.yaml
-        equal:
+        isNull:
           path: spec.template.spec.tolerations
-          value:
-            - operator: "Exists"
-              effect: "NoSchedule"
-            - operator: "Exists"
-              effect: "NoExecute"
 
   - it: KSM tolerations uses globals
     set:
