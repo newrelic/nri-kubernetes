@@ -83,10 +83,10 @@ spec:
                   apiVersion: "v1"
                   fieldPath: "status.hostIP"
 
-            {{- with .Values.kubelet.env }}
+            {{- with .Values.kubelet.extraEnv }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- with .Values.kubelet.envFrom }}
+          {{- with .Values.kubelet.extraEnvFrom }}
           envFrom: {{ toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
@@ -151,10 +151,10 @@ spec:
                   apiVersion: "v1"
                   fieldPath: "status.hostIP"
 
-            {{- with .Values.kubelet.env }}
+            {{- with .Values.kubelet.extraEnv }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- with .Values.kubelet.envFrom }}
+          {{- with .Values.kubelet.extraEnvFrom }}
           envFrom: {{ toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:

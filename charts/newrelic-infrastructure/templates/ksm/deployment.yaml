@@ -73,10 +73,10 @@ spec:
                   apiVersion: "v1"
                   fieldPath: "spec.nodeName"
 
-            {{- with .Values.ksm.env }}
+            {{- with .Values.ksm.extraEnv }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- with .Values.ksm.envFrom }}
+          {{- with .Values.ksm.extraEnvFrom }}
           envFrom: {{ toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
@@ -133,7 +133,7 @@ spec:
             {{- with .Values.ksm.env }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- with .Values.ksm.envFrom }}
+          {{- with .Values.ksm.extraEnvFrom }}
           envFrom: {{ toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
