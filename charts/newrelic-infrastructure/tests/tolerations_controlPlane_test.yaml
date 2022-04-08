@@ -5,13 +5,10 @@ templates:
   - templates/controlplane/agent-configmap.yaml
   - templates/secret.yaml
 tests:
-  - it: Controlplane tolerations uses its defaults with everything null/empty
+  - it: Controlplane tolerations has defaults
     set:
       licenseKey: test
       cluster: test
-      global: {}
-      tolerations: []
-      controlPlane.tolerations: []
     asserts:
       - template: templates/controlplane/daemonset.yaml
         equal:

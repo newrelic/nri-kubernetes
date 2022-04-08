@@ -129,7 +129,11 @@ controlPlane:
   # -- Deploy control plane monitoring component.
   enabled: true
   annotations: {}
-  tolerations: []
+  tolerations:
+    - operator: "Exists"
+      effect: "NoSchedule"
+    - operator: "Exists"
+      effect: "NoExecute"
   nodeSelector: {}
   # -- Affinity for the control plane DaemonSet.
   # @default -- Deployed only in master nodes.
