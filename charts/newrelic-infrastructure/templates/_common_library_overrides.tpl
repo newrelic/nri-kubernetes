@@ -8,15 +8,6 @@ nrk8s
 
 
 
-{{- /*
-This allows to change the default user setting for `privileged`.
-*/ -}}
-{{- define "common.privileged.defaultOverride" -}}
-true
-{{- end -}}
-
-
-
 {{- /* Allow to change container defaults dynamically based if we are running in privileged mode or not */ -}}
 {{- define "common.securityContext.containerDefaults" -}}
 runAsUser: 1000
