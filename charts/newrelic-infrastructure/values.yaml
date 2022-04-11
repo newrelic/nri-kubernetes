@@ -89,7 +89,11 @@ ksm:
   # Advanced users only. Setting this to `false` is not supported and will break the New Relic experience.
   enabled: true
   annotations: {}
-  tolerations: []
+  tolerations:
+    - operator: "Exists"
+      effect: "NoSchedule"
+    - operator: "Exists"
+      effect: "NoExecute"
   nodeSelector: {}
   affinity:
     podAffinity:
