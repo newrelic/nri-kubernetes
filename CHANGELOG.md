@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ---
 
+## 2.11.0
+
+### Added
+- Removed bearer token from KSM http request.
+- Bumped all dependencies.
+- Use Go version 1.18
+- Upgrade infrastructure-bundle to 2.8.8
+    - See https://github.com/newrelic/infrastructure-bundle/releases/tag/2.8.8 for more details about the upgraded integrations in this release of the infrastructure-bundle
+    
+---
+
 ## 2.10.0
 
 ### Added
