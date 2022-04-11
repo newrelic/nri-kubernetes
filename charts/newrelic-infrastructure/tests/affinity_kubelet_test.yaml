@@ -7,50 +7,32 @@ templates:
   - templates/agent-configmap.yaml
   - templates/secret.yaml
 tests:
-  - it: affinity empty by default
+  - it: affinity has defaults
     set:
       licenseKey: test
       cluster: test
-      global: {}
-      affinity: {}
-      nodeAffinity: {}
-      kubelet.affinity: {}
     asserts:
-      - equal:
+      - isNull:
           path: spec.template.spec.affinity
-          value: null
         template: templates/kubelet/daemonset.yaml
 
-  - it: affinity is set by common-library's global
+  - it: affinity in fargate mode has defaults
     set:
       licenseKey: test
       cluster: test
-      global.affinity:
-        global: global
-      affinity: {}
-      nodeAffinity: {}
-      kubelet.affinity: {}
+      fargate: true
     asserts:
       - equal:
           path: spec.template.spec.affinity
           value:
-            global: global
-        template: templates/kubelet/daemonset.yaml
-
-  - it: affinity is set by common-library's local
-    set:
-      licenseKey: test
-      cluster: test
-      global.affinity: {}
-      affinity:
-        local: local
-      nodeAffinity: {}
-      kubelet.affinity: {}
-    asserts:
-      - equal:
-          path: spec.template.spec.affinity
-          value:
-            local: local
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchExpressions:
+                  - key: eks.amazonaws.com/compute-type
+                    operator: NotIn
+                    values:
+                    - fargate
         template: templates/kubelet/daemonset.yaml
 
   - it: affinity is set by legacy value
@@ -86,6 +68,8 @@ tests:
             supported: supported
         template: templates/kubelet/daemonset.yaml
 
+# This is an expected behavior from the common library and tested there but as we are overwriting this
+# helper is a good idea to retest it in case any library update brakes our expected behavior
   - it: global is overridable by local in common-library
     set:
       licenseKey: test

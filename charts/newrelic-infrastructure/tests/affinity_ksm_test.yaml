@@ -6,14 +6,10 @@ templates:
   - templates/agent-configmap.yaml
   - templates/secret.yaml
 tests:
-  - it: affinity empty by default
+  - it: affinity has defaults
     set:
       licenseKey: test
       cluster: test
-      global: {}
-      affinity: {}
-      nodeAffinity: {}
-      ksm.affinity: {}
     asserts:
       - equal:
           path: spec.template.spec.affinity
@@ -26,39 +22,6 @@ tests:
                       matchLabels:
                         app.kubernetes.io/name: kube-state-metrics
                   weight: 100
-            nodeAffinity: {}
-        template: templates/ksm/deployment.yaml
-
-  - it: affinity is set by common-library's global
-    set:
-      licenseKey: test
-      cluster: test
-      global.affinity:
-        global: global
-      affinity: {}
-      nodeAffinity: {}
-      ksm.affinity: {}
-    asserts:
-      - equal:
-          path: spec.template.spec.affinity
-          value:
-            global: global
-        template: templates/ksm/deployment.yaml
-
-  - it: affinity is set by common-library's local
-    set:
-      licenseKey: test
-      cluster: test
-      global.affinity: {}
-      affinity:
-        local: local
-      nodeAffinity: {}
-      ksm.affinity: {}
-    asserts:
-      - equal:
-          path: spec.template.spec.affinity
-          value:
-            local: local
         template: templates/ksm/deployment.yaml
 
   - it: affinity is set by legacy value
@@ -76,6 +39,14 @@ tests:
           value:
             nodeAffinity:  # Legacy value is nodeAffinity and templates affinity objects
               legacy: legacy
+            podAffinity:  # Default podAffinity is not overridden
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - podAffinityTerm:
+                    topologyKey: kubernetes.io/hostname
+                    labelSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: kube-state-metrics
+                  weight: 100
         template: templates/ksm/deployment.yaml
 
   - it: affinity is set by supported value
@@ -86,14 +57,20 @@ tests:
       affinity: {}
       nodeAffinity: {}
       ksm.affinity:
-        supported: supported
+        podAffinity:  # We have to override the whole tree if we want to override the defaults
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - test: test
     asserts:
       - equal:
           path: spec.template.spec.affinity
           value:
-            supported: supported
+            podAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - test: test
         template: templates/ksm/deployment.yaml
 
+# This is an expected behavior from the common library and tested there but as we are overwriting this
+# helper is a good idea to retest it in case any library update brakes our expected behavior
   - it: global is overridable by local in common-library
     set:
       licenseKey: test
@@ -103,7 +80,7 @@ tests:
       affinity:
         local: local
       nodeAffinity: {}
-      ksm.affinity: {}
+      ksm.affinity: null
     asserts:
       - equal:
           path: spec.template.spec.affinity
@@ -120,7 +97,7 @@ tests:
       affinity: {}
       nodeAffinity:
         legacy: legacy
-      ksm.affinity: {}
+      ksm.affinity: null
     asserts:
       - equal:
           path: spec.template.spec.affinity
@@ -129,7 +106,7 @@ tests:
               legacy: legacy
         template: templates/ksm/deployment.yaml
 
-  - it: global is overridable by supported value
+  - it: common-library's affinity is overridable by supported value
     set:
       licenseKey: test
       cluster: test
@@ -138,19 +115,24 @@ tests:
       affinity: {}
       nodeAffinity: {}
       ksm.affinity:
-        supported: supported
+        podAffinity:  # We have to override the whole tree if we want to override the defaults
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - test: test
     asserts:
       - equal:
           path: spec.template.spec.affinity
           value:
-            supported: supported
+            podAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - test: test
         template: templates/ksm/deployment.yaml
 
-  - it: common-library's local is overridable by legacy value
+  - it: common-library's affinity is overridable by legacy value
     set:
       licenseKey: test
       cluster: test
-      global.affinity: {}
+      global.affinity:
+        global: global
       affinity:
         local: local
       nodeAffinity:
@@ -162,6 +144,14 @@ tests:
           value:
             nodeAffinity:  # Legacy value is nodeAffinity and templates affinity objects
               legacy: legacy
+            podAffinity:  # Default podAffinity is not overridden
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - podAffinityTerm:
+                    topologyKey: kubernetes.io/hostname
+                    labelSelector:
+                      matchLabels:
+                        app.kubernetes.io/name: kube-state-metrics
+                  weight: 100
         template: templates/ksm/deployment.yaml
 
   - it: common-library's local is overridable by supported value
@@ -170,13 +160,19 @@ tests:
       cluster: test
       global.affinity: {}
       affinity:
-        local: local
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - local: local
       nodeAffinity: {}
       ksm.affinity:
-        supported: supported
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - test: test
     asserts:
       - equal:
           path: spec.template.spec.affinity
           value:
-            supported: supported
+            podAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - test: test
         template: templates/ksm/deployment.yaml

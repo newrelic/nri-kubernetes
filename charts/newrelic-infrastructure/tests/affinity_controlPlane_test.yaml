@@ -6,7 +6,7 @@ templates:
   - templates/agent-configmap.yaml
   - templates/secret.yaml
 tests:
-  - it: affinity empty by default
+  - it: empty affinity defaults to master nodes
     set:
       licenseKey: test
       cluster: test
@@ -43,7 +43,7 @@ tests:
         global: global
       affinity: {}
       nodeAffinity: {}
-      controlPlane.affinity: {}
+      controlPlane.affinity: null
     asserts:
       - equal:
           path: spec.template.spec.affinity
@@ -59,7 +59,7 @@ tests:
       affinity:
         local: local
       nodeAffinity: {}
-      controlPlane.affinity: {}
+      controlPlane.affinity: null
     asserts:
       - equal:
           path: spec.template.spec.affinity
@@ -105,14 +105,22 @@ tests:
       affinity: {}
       nodeAffinity: {}
       controlPlane.affinity:
-        supported: supported
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:  # We have to override the whole tree if we want to override the defaults
+              - test: test
     asserts:
       - equal:
           path: spec.template.spec.affinity
           value:
-            supported: supported
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - test: test
         template: templates/controlplane/daemonset.yaml
 
+# This is an expected behavior from the common library and tested there but as we are overwriting this
+# helper is a good idea to retest it in case any library update brakes our expected behavior
   - it: global is overridable by local in common-library
     set:
       licenseKey: test
@@ -122,7 +130,7 @@ tests:
       affinity:
         local: local
       nodeAffinity: {}
-      controlPlane.affinity: {}
+      controlPlane.affinity: null
     asserts:
       - equal:
           path: spec.template.spec.affinity
@@ -130,24 +138,7 @@ tests:
             local: local
         template: templates/controlplane/daemonset.yaml
 
-  - it: global is overridable by supported value
-    set:
-      licenseKey: test
-      cluster: test
-      global.affinity:
-        global: global
-      affinity: {}
-      nodeAffinity: {}
-      controlPlane.affinity:
-        supported: supported
-    asserts:
-      - equal:
-          path: spec.template.spec.affinity
-          value:
-            supported: supported
-        template: templates/controlplane/daemonset.yaml
-
-  - it: common-library's local is overridable by supported value
+  - it: common-library's local is overridable
     set:
       licenseKey: test
       cluster: test
@@ -156,10 +147,16 @@ tests:
         local: local
       nodeAffinity: {}
       controlPlane.affinity:
-        supported: supported
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:  # We have to override the whole tree if we want to override the defaults
+              - test: test
     asserts:
       - equal:
           path: spec.template.spec.affinity
           value:
-            supported: supported
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:  # We have to override the whole tree if we want to override the defaults
+                  - test: test
         template: templates/controlplane/daemonset.yaml

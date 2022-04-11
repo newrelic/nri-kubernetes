@@ -1,12 +1,4 @@
 {{- /*
-Defaults for kubelet while keeping then overridable.
-*/ -}}
-{{- define "nriKubernetes.kubelet.affinity.defaults" -}}
-{{- end -}}
-
-
-
-{{- /*
 Patch to add affinity in case we are running in fargate mode
 */ -}}
 {{- define "nriKubernetes.kubelet.affinity.fargateDefaults" -}}
@@ -27,15 +19,15 @@ As this chart deploys what it should be three charts to maintain the transition 
 This means that this chart has 3 affinity so a helper should be done per scraper.
 */ -}}
 {{- define "nriKubernetes.kubelet.affinity" -}}
-{{- if .Values.kubelet.affinity -}}
-    {{- toYaml .Values.kubelet.affinity -}}
-{{- else if include "newrelic.compatibility.nodeAaffinity" . -}}
-    {{- include "newrelic.compatibility.nodeAaffinity" . -}}
+
+{{- if or .Values.kubelet.affinity .Values.nodeAffinity  -}}
+    {{- $legacyNodeAffinity := fromYaml ( include "newrelic.compatibility.nodeAffinity" . ) | default dict -}}
+    {{- $valuesAffinity := .Values.kubelet.affinity | default dict -}}
+    {{- $affinity := mustMergeOverwrite $legacyNodeAffinity $valuesAffinity -}}
+    {{- toYaml $affinity -}}
 {{- else if include "common.affinity" . -}}
     {{- include "common.affinity" . -}}
 {{- else if include "newrelic.fargate" . -}}
     {{- include "nriKubernetes.kubelet.affinity.fargateDefaults" . -}}
-{{- else -}}
-    {{- include "nriKubernetes.kubelet.affinity.defaults" . -}}
 {{- end -}}
 {{- end -}}

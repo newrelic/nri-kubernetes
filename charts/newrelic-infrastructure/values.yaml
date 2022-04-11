@@ -91,7 +91,15 @@ ksm:
   annotations: {}
   tolerations: []
   nodeSelector: {}
-  affinity: {}
+  affinity:
+    podAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: kube-state-metrics
+          weight: 100
   extraEnv: []
   extraEnvFrom: []
   extraVolumes: []
@@ -137,7 +145,22 @@ controlPlane:
   nodeSelector: {}
   # -- Affinity for the control plane DaemonSet.
   # @default -- Deployed only in master nodes.
-  affinity: {}
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+          - matchExpressions:
+              - key: node-role.kubernetes.io/controlplane
+                operator: Exists
+          - matchExpressions:
+              - key: node-role.kubernetes.io/etcd
+                operator: Exists
+          - matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: Exists
   # -- How to deploy the control plane scraper. If autodiscovery is in use, it should be `DaemonSet`.
   # Advanced users using static endpoints set this to `Deployment` to avoid reporting metrics twice.
   kind: DaemonSet
