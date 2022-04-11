@@ -37,6 +37,9 @@ jobs:
     name: Helm chart Lint
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      matrix:
+        kubernetes-version: [ "v1.16.15", "v1.22.0" ]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -65,6 +68,30 @@ jobs:
               echo "No unit tests found for $chart"
             fi
           done
+      - name: Setup Minikube
+        uses: manusa/actions-setup-minikube@v2.4.3
+        if: steps.list-changed.outputs.changed == 'true'
+        with:
+          minikube version: v1.20.0
+          kubernetes version: ${{ matrix.kubernetes-version }}
+          github token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-go@v2
+        if: steps.list-changed.outputs.changed == 'true'
+        with:
+          go-version: '1.17'
+      - name: Create image for chart testing
+        if: steps.list-changed.outputs.changed == 'true'
+        run: |
+          GOOS=linux GOARCH=amd64 make compile
+          DOCKER_BUILDKIT=1 docker build -t e2e/nri-kubernetes:test  .
+          minikube image load e2e/nri-kubernetes:test
+          kubectl create ns ct
+      - name: Test install charts
+        if: steps.list-changed.outputs.changed == 'true'
+        run: ct install --namespace ct --config .github/ct.yaml --debug
+      - name: Test upgrade charts
+        if: steps.list-changed.outputs.changed == 'true'
+        run: ct install --namespace ct --config .github/ct.yaml --debug --upgrade
 
   test:
     name: Run tests
