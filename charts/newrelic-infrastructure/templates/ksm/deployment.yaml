@@ -20,7 +20,9 @@ spec:
       annotations:
         checksum/nri-kubernetes: {{ include (print $.Template.BasePath "/ksm/scraper-configmap.yaml") . | sha256sum }}
         checksum/agent-config: {{ include (print $.Template.BasePath "/ksm/agent-configmap.yaml") . | sha256sum }}
+        {{- if include "common.license.secret" . }}{{- /* If the is secret to template */}}
         checksum/license-secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- end }}
         {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
