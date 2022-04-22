@@ -1,9 +1,22 @@
-{{- /*
-By default the common library uses .Chart.Name for creating the name.
-This chart's name is too long so we shorted to `nrk8s`
-*/ -}}
-{{- define "common.naming.chartnameOverride" -}}
-nrk8s
+{{/*
+This is a copy and paste from the common-library's name helper.
+Create a default fully qualified app name.
+By default the full name will be "<release_name>" just in if it has "nrk8s" included in that, if not
+it will be concatenated like "<release_name>-nrk8s". This could change if fullnameOverride or
+nameOverride are set.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+*/}}
+{{- define "newrelic.common.naming.fullname" -}}
+{{- $name := .Values.nameOverride | default "nrk8s" -}}
+
+{{- if .Values.fullnameOverride -}}
+    {{- $name = .Values.fullnameOverride  -}}
+{{- else if not (contains $name .Release.Name) -}}
+    {{- $name = printf "%s-%s" .Release.Name $name -}}
+{{- end -}}
+
+{{- include "newrelic.common.naming.trucateToDNS" $name -}}
+
 {{- end -}}
 
 
