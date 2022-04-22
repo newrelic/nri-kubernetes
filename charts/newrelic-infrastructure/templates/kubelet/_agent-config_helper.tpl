@@ -6,7 +6,7 @@ http_server_enabled: true
 http_server_port: 8003
 features:
   docker_enabled: false
-{{- if not ( include "common.privileged" . ) }}
+{{- if not ( include "newrelic.common.privileged" . ) }}
 is_secure_forward_only: true
 overide_host_root: ""  # Typo from here: https://github.com/newrelic/infrastructure-agent/blob/master/pkg/config/config.go#L267
 {{- end }}
@@ -22,7 +22,7 @@ enable_process_metrics: {{ .Values.enableProcessMetrics }}
 
 
 {{- define "nriKubernetes.kubelet.agentConfig" -}}
-{{- $agentDefaults := fromYaml ( include "common.agentConfig.defaults" . ) -}}
+{{- $agentDefaults := fromYaml ( include "newrelic.common.agentConfig.defaults" . ) -}}
 {{- $kubelet := fromYaml ( include "nriKubernetes.kubelet.agentConfig.defaults" . ) -}}
 {{- $agentConfig := fromYaml ( include "newrelic.compatibility.agentConfig" . ) -}}
 

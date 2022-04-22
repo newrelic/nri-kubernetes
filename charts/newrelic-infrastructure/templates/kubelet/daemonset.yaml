@@ -4,8 +4,8 @@ kind: DaemonSet
 metadata:
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "common.labels" . | nindent 4 }}
-  name: {{ include "common.naming.fullname" . }}-kubelet
+    {{- include "newrelic.common.labels" . | nindent 4 }}
+  name: {{ include "newrelic.common.naming.fullname" . }}-kubelet
   {{- $legacyAnnotation:= fromYaml (include "newrelic.compatibility.annotations" .) -}}
   {{- with  include "newrelic.compatibility.valueWithFallback" (dict "legacy" $legacyAnnotation "supported" .Values.kubelet.annotations )}}
   annotations: {{ . | nindent 4 }}
@@ -16,14 +16,14 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      {{- include "common.labels.selectorLabels" . | nindent 6 }}
+      {{- include "newrelic.common.labels.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: kubelet
   template:
     metadata:
       annotations:
         checksum/nri-kubernetes: {{ include (print $.Template.BasePath "/kubelet/scraper-configmap.yaml") . | sha256sum }}
         checksum/agent-config: {{ include (print $.Template.BasePath "/kubelet/agent-configmap.yaml") . | sha256sum }}
-        {{- if include "common.license.secret" . }}{{- /* If the is secret to template */}}
+        {{- if include "newrelic.common.license.secret" . }}{{- /* If the is secret to template */}}
         checksum/license-secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
         {{- end }}
         checksum/integrations_config: {{ include (print $.Template.BasePath "/kubelet/integrations-configmap.yaml") . | sha256sum }}
@@ -31,26 +31,26 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
-        {{- include "common.labels.podLabels" . | nindent 8 }}
+        {{- include "newrelic.common.labels.podLabels" . | nindent 8 }}
         app.kubernetes.io/component: kubelet
     spec:
-      {{- with include "common.images.renderPullSecrets" ( dict "pullSecrets" (list .Values.images.pullSecrets) "context" .) }}
+      {{- with include "newrelic.common.images.renderPullSecrets" ( dict "pullSecrets" (list .Values.images.pullSecrets) "context" .) }}
       imagePullSecrets:
         {{- . | nindent 8 }}
       {{- end }}
-      {{- with include "common.dnsConfig" . }}
+      {{- with include "newrelic.common.dnsConfig" . }}
       dnsConfig:
         {{- . | nindent 8 }}
       {{- end }}
-      {{- with include "common.priorityClassName" . }}
+      {{- with include "newrelic.common.priorityClassName" . }}
       priorityClassName: {{ . }}
       {{- end }}
-      {{- with include "common.securityContext.pod" . }}
+      {{- with include "newrelic.common.securityContext.pod" . }}
       securityContext:
         {{- . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "common.serviceAccount.name" . }}
-      hostNetwork: {{ include "common.hostNetwork.value" . }}
+      serviceAccountName: {{ include "newrelic.common.serviceAccount.name" . }}
+      hostNetwork: {{ include "newrelic.common.hostNetwork.value" . }}
       {{- if include "nriKubernetes.controlPlane.hostNetwork" . }}
       dnsPolicy: ClusterFirstWithHostNet
       {{- end }}
@@ -60,20 +60,20 @@ spec:
       {{- end }}
       containers:
         - name: kubelet
-          image: {{ include "common.images.image" ( dict "imageRoot" .Values.images.integration "context" .) }}
+          image: {{ include "newrelic.common.images.image" ( dict "imageRoot" .Values.images.integration "context" .) }}
           imagePullPolicy: {{ .Values.images.integration.pullPolicy }}
           securityContext:
             {{- mustMergeOverwrite
-                    (include "common.securityContext.container" . | fromYaml )
+                    (include "newrelic.common.securityContext.container" . | fromYaml )
                     (include "newrelic.compatibility.securityContext" . | fromYaml )
                     | toYaml | nindent 12 }}
           env:
             - name: "NRI_KUBERNETES_SINK_HTTP_PORT"
               value: {{ get (fromYaml (include "nriKubernetes.kubelet.agentConfig" .)) "http_server_port" | quote }}
             - name: "NRI_KUBERNETES_CLUSTERNAME"
-              value: {{ include "common.cluster" . }}
+              value: {{ include "newrelic.common.cluster" . }}
             - name: "NRI_KUBERNETES_VERBOSE"
-              value: {{ include "common.verboseLog.value" . | quote }}
+              value: {{ include "newrelic.common.verboseLog.valueAsBoolean" . | quote }}
 
             - name: "NRI_KUBERNETES_NODENAME"
               valueFrom:
@@ -104,7 +104,7 @@ spec:
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
         - name: agent
-          image: {{ include "common.images.image" ( dict "imageRoot" .Values.images.agent "context" .) }}
+          image: {{ include "newrelic.common.images.image" ( dict "imageRoot" .Values.images.agent "context" .) }}
           args: [ "newrelic-infra" ]
           imagePullPolicy: {{ .Values.images.agent.pullPolicy }}
           securityContext:
@@ -115,8 +115,8 @@ spec:
             - name: NRIA_LICENSE_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "common.license.secretName" . }}
-                  key: {{ include "common.license.secretKeyName" . }}
+                  name: {{ include "newrelic.common.license.secretName" . }}
+                  key: {{ include "newrelic.common.license.secretKeyName" . }}
 
             - name: "NRIA_OVERRIDE_HOSTNAME_SHORT"
               valueFrom:
@@ -133,7 +133,7 @@ spec:
             {{- if .Values.useNodeNameAsDisplayName }}
             - name: "NRIA_DISPLAY_NAME"
             {{- if .Values.prefixDisplayNameWithCluster }}
-              value: "{{ include "common.cluster" . }}:$(NRI_KUBERNETES_NODE_NAME)"
+              value: "{{ include "newrelic.common.cluster" . }}:$(NRI_KUBERNETES_NODE_NAME)"
             {{- else }}
               valueFrom:
                 fieldRef:
@@ -144,7 +144,7 @@ spec:
 
             {{- /* Needed to populate clustername in integration metrics */}}
             - name: "CLUSTER_NAME"
-              value: {{ include "common.cluster" . }}
+              value: {{ include "newrelic.common.cluster" . }}
             - name: "NRIA_PASSTHROUGH_ENVIRONMENT"
               value: "CLUSTER_NAME"
 
@@ -213,19 +213,19 @@ spec:
           emptyDir: {}
         - name: nri-kubernetes-config
           configMap:
-            name: {{ include "common.naming.fullname" . }}-kubelet
+            name: {{ include "newrelic.common.naming.fullname" . }}-kubelet
             items:
               - key: nri-kubernetes.yml
                 path: nri-kubernetes.yml
         - name: config
           configMap:
-            name: {{ include "common.naming.fullname" . }}-agent-kubelet
+            name: {{ include "newrelic.common.naming.fullname" . }}-agent-kubelet
             items:
               - key: newrelic-infra.yml
                 path: newrelic-infra.yml
         - name: nri-integrations-cfg-volume
           configMap:
-            name: {{ include "common.naming.fullname" . }}-integrations-cfg
+            name: {{ include "newrelic.common.naming.fullname" . }}-integrations-cfg
         {{- with .Values.kubelet.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -237,7 +237,7 @@ spec:
       tolerations:
         {{- . | nindent 8 }}
       {{- end }}
-      {{- with .Values.kubelet.nodeSelector | default (fromYaml (include "common.nodeSelector" .)) }}
+      {{- with .Values.kubelet.nodeSelector | default (fromYaml (include "newrelic.common.nodeSelector" .)) }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end -}}

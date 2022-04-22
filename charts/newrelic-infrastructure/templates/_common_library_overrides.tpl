@@ -26,7 +26,7 @@ readOnlyRootFilesystem: true
 
 {{- /* Add mode to each object create */ -}}
 {{- define "common.labels.overrides.addLabels" -}}
-{{- if ( include "common.privileged" . ) -}}
+{{- if ( include "newrelic.common.privileged" . ) -}}
 mode: privileged
 {{- else -}}
 mode: unprivileged
@@ -39,5 +39,5 @@ mode: unprivileged
 This function allows easily to overwrite custom attributes to the function "common.customAttributes"
 */}}
 {{- define "common.customAttributes.overrideAttributes" -}}
-clusterName: {{ include "common.cluster" . }}
+clusterName: {{ include "newrelic.common.cluster" . }}
 {{- end }}

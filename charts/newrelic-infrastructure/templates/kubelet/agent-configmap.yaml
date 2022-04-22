@@ -7,8 +7,8 @@ kind: ConfigMap
 metadata:
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "common.labels" . | nindent 4 }}
-  name: {{ include "common.naming.fullname" . }}-agent-kubelet
+    {{- include "newrelic.common.labels" . | nindent 4 }}
+  name: {{ include "newrelic.common.naming.fullname" . }}-agent-kubelet
 data:
   newrelic-infra.yml: |-
     # This is the configuration file for the infrastructure agent. See:

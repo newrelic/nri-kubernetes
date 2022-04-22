@@ -3,8 +3,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
-    {{- include "common.labels" . | nindent 4 }}
-  name: {{ include "common.naming.fullname" . }}-controlplane
+    {{- include "newrelic.common.labels" . | nindent 4 }}
+  name: {{ include "newrelic.common.naming.fullname" . }}-controlplane
 rules:
   - apiGroups: [""]
     resources:
@@ -25,7 +25,7 @@ rules:
     resources:
       - podsecuritypolicies
     resourceNames:
-      - privileged-{{ include "common.naming.fullname" . }}
+      - privileged-{{ include "newrelic.common.naming.fullname" . }}
     verbs:
       - use
   {{- end -}}
@@ -36,8 +36,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
-    {{- include "common.labels" . | nindent 4 }}
-  name: {{ include "common.naming.fullname" . }}-secrets
+    {{- include "newrelic.common.labels" . | nindent 4 }}
+  name: {{ include "newrelic.common.naming.fullname" . }}-secrets
 rules:
   - apiGroups: [""]
     resources:

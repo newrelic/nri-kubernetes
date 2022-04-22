@@ -6,16 +6,16 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   labels:
-    {{- include "common.labels" $ | nindent 4 }}
-  name: {{ include "common.naming.fullname" $ }}-{{ . }}
+    {{- include "newrelic.common.labels" $ | nindent 4 }}
+  name: {{ include "newrelic.common.naming.fullname" $ }}-{{ . }}
   namespace: {{ . }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "common.naming.fullname" $ }}-secrets
+  name: {{ include "newrelic.common.naming.fullname" $ }}-secrets
 subjects:
 - kind: ServiceAccount
-  name: {{ include "common.serviceAccount.name" $ }}-controlplane
+  name: {{ include "newrelic.common.serviceAccount.name" $ }}-controlplane
   namespace: {{ $.Release.Namespace }}
 {{- end -}}
 {{- end }}

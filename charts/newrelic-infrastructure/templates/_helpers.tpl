@@ -56,7 +56,7 @@ roleBindingNamespaces: {{- uniq $namespaceList | toYaml | nindent 0 }}
 
 
 {{- define "newrelic.integrationConfigDefaults" -}}
-{{- if include "common.lowDataMode" . -}}
+{{- if include "newrelic.common.lowDataMode" . -}}
 interval: 30s
 {{- else  -}}
 interval: 15s

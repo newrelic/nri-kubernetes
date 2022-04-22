@@ -5,7 +5,7 @@ This means that this chart has 3 tolerations so a helper should be done per scra
 {{- define "nriKubernetes.kubelet.tolerations" -}}
 {{- if .Values.kubelet.tolerations -}}
     {{- toYaml .Values.kubelet.tolerations -}}
-{{- else if include "common.tolerations" . -}}
-    {{- include "common.tolerations" . -}}
+{{- else if include "newrelic.common.tolerations" . -}}
+    {{- include "newrelic.common.tolerations" . -}}
 {{- end -}}
 {{- end -}}

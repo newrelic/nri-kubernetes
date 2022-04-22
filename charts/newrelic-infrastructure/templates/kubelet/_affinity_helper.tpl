@@ -25,8 +25,8 @@ This means that this chart has 3 affinity so a helper should be done per scraper
     {{- $valuesAffinity := .Values.kubelet.affinity | default dict -}}
     {{- $affinity := mustMergeOverwrite $legacyNodeAffinity $valuesAffinity -}}
     {{- toYaml $affinity -}}
-{{- else if include "common.affinity" . -}}
-    {{- include "common.affinity" . -}}
+{{- else if include "newrelic.common.affinity" . -}}
+    {{- include "newrelic.common.affinity" . -}}
 {{- else if include "newrelic.fargate" . -}}
     {{- include "nriKubernetes.kubelet.affinity.fargateDefaults" . -}}
 {{- end -}}

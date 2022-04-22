@@ -10,12 +10,12 @@ readOnlyRootFilesystem: true
 
 {{- define "nriKubernetes.kubelet.securityContext.agentContainer" -}}
 {{- $privileged := dict -}}
-{{- if include "common.privileged" . -}}
+{{- if include "newrelic.common.privileged" . -}}
 {{- $privileged = fromYaml ( include "nriKubernetes.kubelet.securityContext.privileged" . ) -}}
 {{- end -}}
 {{- $privileged
         | mustMergeOverwrite (include "newrelic.compatibility.securityContext" . | fromYaml )
-        | mustMergeOverwrite (include "common.securityContext.container" . | fromYaml )
+        | mustMergeOverwrite (include "newrelic.common.securityContext.container" . | fromYaml )
         | toYaml
 -}}
 {{- end -}}

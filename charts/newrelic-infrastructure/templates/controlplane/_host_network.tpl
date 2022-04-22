@@ -5,8 +5,8 @@
     {{- if .Values.controlPlane.hostNetwork -}}
         {{- .Values.controlPlane.hostNetwork -}}
     {{- end -}}
-{{- else if include "common.hostNetwork" . -}}
-    {{- include "common.hostNetwork" . -}}
+{{- else if include "newrelic.common.hostNetwork" . -}}
+    {{- include "newrelic.common.hostNetwork" . -}}
 {{- end -}}
 {{- end -}}
 
