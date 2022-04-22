@@ -43,8 +43,8 @@ spec:
       dnsConfig:
         {{- . | nindent 8 }}
       {{- end }}
-      {{- if ( include "common.hostNetwork" . ) | default .Values.controlPlane.hostNetwork }}
-      hostNetwork: true
+      hostNetwork: {{ include "nriKubernetes.controlPlane.hostNetwork.value" . }}
+      {{- if include "nriKubernetes.controlPlane.hostNetwork" . }}
       dnsPolicy: ClusterFirstWithHostNet
       {{- end }}
       {{- with include "common.priorityClassName" . }}

@@ -20,7 +20,7 @@ You have specified ksm or kubelet integration components as not enabled.
 Those components are needed to have the full experience on NROne kubernetes explorer.
 {{- end }}
 
-{{- if and .Values.controlPlane.enabled (not (include "common.hostNetwork" . | default .Values.controlPlane.hostNetwork)) }}
+{{- if and .Values.controlPlane.enabled (not (include "nriKubernetes.controlPlane.hostNetwork" .)) }}
 Warning:
 ========
 

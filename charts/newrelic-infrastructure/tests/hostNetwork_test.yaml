@@ -1,0 +1,116 @@
+suite: test hostNetwork
+templates:
+  - templates/controlplane/daemonset.yaml
+  - templates/controlplane/scraper-configmap.yaml
+  - templates/controlplane/agent-configmap.yaml
+  - templates/kubelet/daemonset.yaml
+  - templates/kubelet/scraper-configmap.yaml
+  - templates/kubelet/agent-configmap.yaml
+  - templates/kubelet/integrations-configmap.yaml
+  - templates/ksm/deployment.yaml
+  - templates/ksm/scraper-configmap.yaml
+  - templates/ksm/agent-configmap.yaml
+  - templates/agent-configmap.yaml
+  - templates/secret.yaml
+tests:
+  - it: hostNetwork defaults (includes the values.yaml)
+    set:
+      licenseKey: test
+      cluster: test
+    asserts:
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: false
+        template: templates/ksm/deployment.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: true
+        template: templates/controlplane/daemonset.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: false
+        template: templates/kubelet/daemonset.yaml
+
+  - it: hostNetwork is false if nothing is set
+    set:
+      licenseKey: test
+      cluster: test
+      global.hostNetwork: null
+      hostNetwork: null
+      controlPlane.hostNetwork: null
+    asserts:
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: false
+        template: templates/ksm/deployment.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: false
+        template: templates/controlplane/daemonset.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: false
+        template: templates/kubelet/daemonset.yaml
+
+  - it: hostNetwork is set by the common library
+    set:
+      licenseKey: test
+      cluster: test
+      global.hostNetwork: null
+      hostNetwork: true
+      controlPlane.hostNetwork: null
+    asserts:
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: true
+        template: templates/ksm/deployment.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: true
+        template: templates/controlplane/daemonset.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: true
+        template: templates/kubelet/daemonset.yaml
+
+  - it: controlPlane hostNetwork is overridable to true
+    set:
+      licenseKey: test
+      cluster: test
+      global.hostNetwork: null
+      hostNetwork: false
+      controlPlane.hostNetwork: true
+    asserts:
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: false
+        template: templates/ksm/deployment.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: true
+        template: templates/controlplane/daemonset.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: false
+        template: templates/kubelet/daemonset.yaml
+
+  - it: controlPlane hostNetwork is overridable to false
+    set:
+      licenseKey: test
+      cluster: test
+      global.hostNetwork: null
+      hostNetwork: true
+      controlPlane.hostNetwork: false
+    asserts:
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: true
+        template: templates/ksm/deployment.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: false
+        template: templates/controlplane/daemonset.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: true
+        template: templates/kubelet/daemonset.yaml

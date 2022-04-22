@@ -47,6 +47,9 @@ spec:
       {{- end }}
       serviceAccountName: {{ include "common.serviceAccount.name" . }}
       hostNetwork: {{ include "common.hostNetwork.value" . }}
+      {{- if include "nriKubernetes.controlPlane.hostNetwork" . }}
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- end }}
 
       {{- if .Values.ksm.initContainers }}
       initContainers: {{- tpl (.Values.ksm.initContainers | toYaml) . | nindent 8 }}
