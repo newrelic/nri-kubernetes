@@ -1,0 +1,145 @@
+suite: test tolerations for KSM
+templates:
+  - templates/ksm/deployment.yaml
+  - templates/ksm/scraper-configmap.yaml
+  - templates/ksm/agent-configmap.yaml
+  - templates/secret.yaml
+tests:
+  - it: KSM tolerations empty with everything null/empty
+    set:
+      licenseKey: test
+      cluster: test
+      global: {}
+      tolerations: []
+      ksm.tolerations: []
+    asserts:
+      - template: templates/ksm/deployment.yaml
+        isNull:
+          path: spec.template.spec.tolerations
+
+  - it: KSM tolerations uses globals
+    set:
+      licenseKey: test
+      cluster: test
+      global.tolerations:
+        - test: test
+        - test2: test2
+      tolerations: []
+      ksm.tolerations: []
+    asserts:
+      - template: templates/ksm/deployment.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - test: test
+            - test2: test2
+
+  - it: KSM tolerations uses local tolerations
+    set:
+      licenseKey: test
+      cluster: test
+      global: {}
+      tolerations:
+        - test: test
+        - test2: test2
+      ksm.tolerations: []
+    asserts:
+      - template: templates/ksm/deployment.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - test: test
+            - test2: test2
+
+  - it: KSM tolerations uses KSM tolerations
+    set:
+      licenseKey: test
+      cluster: test
+      global: {}
+      tolerations: []
+      ksm.tolerations:
+        - test: test
+        - test2: test2
+    asserts:
+      - template: templates/ksm/deployment.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - test: test
+            - test2: test2
+
+  - it: KSM global tolerations overridable by local
+    set:
+      licenseKey: test
+      cluster: test
+      global.tolerations:
+        - test: test
+        - test2: test2
+      tolerations:
+        - local: local
+        - local2: local2
+      ksm.tolerations: []
+    asserts:
+      - template: templates/ksm/deployment.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - local: local
+            - local2: local2
+
+  - it: KSM global tolerations overridable by ksm tolerations
+    set:
+      licenseKey: test
+      cluster: test
+      global.tolerations:
+        - test: test
+        - test2: test2
+      tolerations: []
+      ksm.tolerations:
+        - ksm: ksm
+        - ksm2: ksm2
+    asserts:
+      - template: templates/ksm/deployment.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - ksm: ksm
+            - ksm2: ksm2
+
+  - it: KSM local tolerations overridable by ksm tolerations
+    set:
+      licenseKey: test
+      cluster: test
+      global.tolerations: []
+      tolerations:
+        - local: local
+        - local2: local2
+      ksm.tolerations:
+        - ksm: ksm
+        - ksm2: ksm2
+    asserts:
+      - template: templates/ksm/deployment.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - ksm: ksm
+            - ksm2: ksm2
+
+  - it: With every toleration, KSM gets precedence
+    set:
+      licenseKey: test
+      cluster: test
+      global.tolerations: []
+      tolerations:
+        - local: local
+        - local2: local2
+      ksm.tolerations:
+        - ksm: ksm
+        - ksm2: ksm2
+    asserts:
+      - template: templates/ksm/deployment.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - ksm: ksm
+            - ksm2: ksm2

@@ -1,0 +1,148 @@
+suite: test tolerations for controlplane
+templates:
+  - templates/controlplane/daemonset.yaml
+  - templates/controlplane/scraper-configmap.yaml
+  - templates/controlplane/agent-configmap.yaml
+  - templates/secret.yaml
+tests:
+  - it: Controlplane tolerations has defaults
+    set:
+      licenseKey: test
+      cluster: test
+    asserts:
+      - template: templates/controlplane/daemonset.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - operator: "Exists"
+              effect: "NoSchedule"
+            - operator: "Exists"
+              effect: "NoExecute"
+
+  - it: Controlplane tolerations uses globals
+    set:
+      licenseKey: test
+      cluster: test
+      global.tolerations:
+        - test: test
+        - test2: test2
+      tolerations: []
+      controlPlane.tolerations: []
+    asserts:
+      - template: templates/controlplane/daemonset.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+          - test: test
+          - test2: test2
+
+  - it: Controlplane tolerations uses local tolerations
+    set:
+      licenseKey: test
+      cluster: test
+      global: {}
+      tolerations:
+        - test: test
+        - test2: test2
+      controlPlane.tolerations: []
+    asserts:
+      - template: templates/controlplane/daemonset.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - test: test
+            - test2: test2
+
+  - it: Controlplane tolerations uses controlplane tolerations
+    set:
+      licenseKey: test
+      cluster: test
+      global: {}
+      tolerations: []
+      controlPlane.tolerations:
+        - test: test
+        - test2: test2
+    asserts:
+      - template: templates/controlplane/daemonset.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - test: test
+            - test2: test2
+
+  - it: Controlplane global tolerations overridable by local
+    set:
+      licenseKey: test
+      cluster: test
+      global.tolerations:
+        - test: test
+        - test2: test2
+      tolerations:
+        - local: local
+        - local2: local2
+      controlPlane.tolerations: []
+    asserts:
+      - template: templates/controlplane/daemonset.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - local: local
+            - local2: local2
+
+  - it: Controlplane global tolerations overridable by controlPlane tolerations
+    set:
+      licenseKey: test
+      cluster: test
+      global.tolerations:
+        - test: test
+        - test2: test2
+      tolerations: []
+      controlPlane.tolerations:
+        - controlPlane: controlPlane
+        - controlPlane2: controlPlane2
+    asserts:
+      - template: templates/controlplane/daemonset.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - controlPlane: controlPlane
+            - controlPlane2: controlPlane2
+
+  - it: Controlplane local tolerations overridable by controlPlane tolerations
+    set:
+      licenseKey: test
+      cluster: test
+      global.tolerations: []
+      tolerations:
+        - local: local
+        - local2: local2
+      controlPlane.tolerations:
+        - controlPlane: controlPlane
+        - controlPlane2: controlPlane2
+    asserts:
+      - template: templates/controlplane/daemonset.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - controlPlane: controlPlane
+            - controlPlane2: controlPlane2
+
+
+  - it: With every toleration, controlplane gets precedence
+    set:
+      licenseKey: test
+      cluster: test
+      global.tolerations: []
+      tolerations:
+        - local: local
+        - local2: local2
+      controlPlane.tolerations:
+        - controlPlane: controlPlane
+        - controlPlane2: controlPlane2
+    asserts:
+      - template: templates/controlplane/daemonset.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - controlPlane: controlPlane
+            - controlPlane2: controlPlane2

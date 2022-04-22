@@ -1,14 +1,21 @@
 apiVersion: v2
 name: newrelic-infrastructure
 description: A Helm chart to deploy the New Relic Kubernetes monitoring solution
-version: 3.2.0
-appVersion: 3.2.0
-kubeVersion: ">=1.16.0-0"
 home: https://docs.newrelic.com/docs/kubernetes-pixie/kubernetes-integration/get-started/introduction-kubernetes-integration/
+icon: https://newrelic.com/themes/custom/curio/assets/mediakit/NR_logo_Horizontal.svg
 sources:
   - https://github.com/newrelic/nri-kubernetes/
   - https://github.com/newrelic/helm-charts/tree/master/charts/newrelic-infrastructure
-icon: https://newrelic.com/themes/custom/curio/assets/mediakit/NR_logo_Horizontal.svg
+
+version: 3.3.0
+appVersion: 3.1.1
+kubeVersion: ">=1.16.0-0"
+
+dependencies:
+  - name: common-library
+    version: 0.17.2
+    repository: "https://helm-charts.newrelic.com"
+
 maintainers:
   - name: alvarocabanas
     url: https://github.com/alvarocabanas
@@ -22,6 +29,7 @@ maintainers:
     url: https://github.com/paologallinaharbur
   - name: roobre
     url: https://github.com/roobre
+
 keywords:
   - infrastructure
   - newrelic

@@ -1,6 +1,6 @@
-suite: test configmap
+suite: test ksm agent configmap
 templates:
-  - templates/agent-configmap.yaml
+  - templates/ksm/agent-configmap.yaml
 tests:
   - it: agent configMap is created and configured from legacy config
     set:
@@ -15,8 +15,15 @@ tests:
           value: |-
             # This is the configuration file for the infrastructure agent. See:
             # https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+            custom_attributes:
+              clusterName: test
+            http_server_enabled: true
+            http_server_port: 8002
+            is_forward_only: true
+            overide_host_root: ""
             test1: one
             test2: two
+
   - it: agent configMap is created and configured from common.agentConfig
     set:
       licenseKey: test
@@ -30,8 +37,15 @@ tests:
           value: |-
             # This is the configuration file for the infrastructure agent. See:
             # https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+            custom_attributes:
+              clusterName: test
+            http_server_enabled: true
+            http_server_port: 8002
+            is_forward_only: true
+            overide_host_root: ""
             test1: one
             test2: two
+
   - it: common.agentConfig takes precedence
     set:
       licenseKey: test
@@ -47,8 +61,15 @@ tests:
           value: |-
             # This is the configuration file for the infrastructure agent. See:
             # https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+            custom_attributes:
+              clusterName: test
+            http_server_enabled: true
+            http_server_port: 8002
+            is_forward_only: true
+            overide_host_root: ""
             test1: one
             test2: two
+
   - it: eventQueueDepth is taken into account
     set:
       licenseKey: test
@@ -65,6 +86,12 @@ tests:
           value: |-
             # This is the configuration file for the infrastructure agent. See:
             # https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+            custom_attributes:
+              clusterName: test
             event_queue_depth: 1000
+            http_server_enabled: true
+            http_server_port: 8002
+            is_forward_only: true
+            overide_host_root: ""
             test1: one
             test2: two

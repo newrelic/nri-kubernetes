@@ -1,0 +1,152 @@
+suite: test tolerations for kubelet
+templates:
+  - templates/kubelet/daemonset.yaml
+  - templates/kubelet/scraper-configmap.yaml
+  - templates/kubelet/agent-configmap.yaml
+  - templates/kubelet/integrations-configmap.yaml
+  - templates/agent-configmap.yaml
+  - templates/secret.yaml
+tests:
+  - it: kubelet tolerations uses its defaults with everything null/empty
+    set:
+      licenseKey: test
+      cluster: test
+      global: {}
+      tolerations: []
+      ksm.tolerations: []
+    asserts:
+      - template: templates/kubelet/daemonset.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - operator: "Exists"
+              effect: "NoSchedule"
+            - operator: "Exists"
+              effect: "NoExecute"
+
+  - it: kubelet tolerations uses globals
+    set:
+      licenseKey: test
+      cluster: test
+      global.tolerations:
+        - test: test
+        - test2: test2
+      tolerations: []
+      kubelet.tolerations: []
+    asserts:
+      - template: templates/kubelet/daemonset.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - test: test
+            - test2: test2
+
+  - it: kubelet tolerations uses local tolerations
+    set:
+      licenseKey: test
+      cluster: test
+      global: {}
+      tolerations:
+        - test: test
+        - test2: test2
+      kubelet.tolerations: []
+    asserts:
+      - template: templates/kubelet/daemonset.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - test: test
+            - test2: test2
+
+  - it: kubelet tolerations uses kubelet tolerations
+    set:
+      licenseKey: test
+      cluster: test
+      global: {}
+      tolerations: []
+      kubelet.tolerations:
+        - test: test
+        - test2: test2
+    asserts:
+      - template: templates/kubelet/daemonset.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - test: test
+            - test2: test2
+
+  - it: kubelet global tolerations overridable by local
+    set:
+      licenseKey: test
+      cluster: test
+      global.tolerations:
+        - test: test
+        - test2: test2
+      tolerations:
+        - local: local
+        - local2: local2
+      kubelet.tolerations: []
+    asserts:
+      - template: templates/kubelet/daemonset.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - local: local
+            - local2: local2
+
+  - it: kubelet global tolerations overridable by kubelet tolerations
+    set:
+      licenseKey: test
+      cluster: test
+      global.tolerations:
+        - test: test
+        - test2: test2
+      tolerations: []
+      kubelet.tolerations:
+        - kubelet: kubelet
+        - kubelet2: kubelet2
+    asserts:
+      - template: templates/kubelet/daemonset.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - kubelet: kubelet
+            - kubelet2: kubelet2
+
+  - it: kubelet local tolerations overridable by kubelet tolerations
+    set:
+      licenseKey: test
+      cluster: test
+      global.tolerations: []
+      tolerations:
+        - local: local
+        - local2: local2
+      kubelet.tolerations:
+        - kubelet: kubelet
+        - kubelet2: kubelet2
+    asserts:
+      - template: templates/kubelet/daemonset.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - kubelet: kubelet
+            - kubelet2: kubelet2
+
+  - it: With every toleration, kubelet gets precedence
+    set:
+      licenseKey: test
+      cluster: test
+      global.tolerations: []
+      tolerations:
+        - local: local
+        - local2: local2
+      kubelet.tolerations:
+        - kubelet: kubelet
+        - kubelet2: kubelet2
+    asserts:
+      - template: templates/kubelet/daemonset.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - kubelet: kubelet
+            - kubelet2: kubelet2

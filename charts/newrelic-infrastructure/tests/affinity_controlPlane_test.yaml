@@ -1,0 +1,162 @@
+suite: test controlplane's affinity
+templates:
+  - templates/controlplane/daemonset.yaml
+  - templates/controlplane/scraper-configmap.yaml
+  - templates/controlplane/agent-configmap.yaml
+  - templates/agent-configmap.yaml
+  - templates/secret.yaml
+tests:
+  - it: empty affinity defaults to master nodes
+    set:
+      licenseKey: test
+      cluster: test
+      global: {}
+      affinity: {}
+      nodeAffinity: {}
+      controlPlane.affinity: {}
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: node-role.kubernetes.io/control-plane
+                        operator: Exists
+                  - matchExpressions:
+                      - key: node-role.kubernetes.io/controlplane
+                        operator: Exists
+                  - matchExpressions:
+                      - key: node-role.kubernetes.io/etcd
+                        operator: Exists
+                  - matchExpressions:
+                      - key: node-role.kubernetes.io/master
+                        operator: Exists
+        template: templates/controlplane/daemonset.yaml
+
+  - it: affinity is set by common-library's global
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity:
+        global: global
+      affinity: {}
+      nodeAffinity: {}
+      controlPlane.affinity: null
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            global: global
+        template: templates/controlplane/daemonset.yaml
+
+  - it: affinity is set by common-library's local
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity: {}
+      affinity:
+        local: local
+      nodeAffinity: {}
+      controlPlane.affinity: null
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            local: local
+        template: templates/controlplane/daemonset.yaml
+
+  - it: legacy affinity is ignored
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity: {}
+      affinity: {}
+      nodeAffinity:
+        legacy: legacy
+      controlPlane.affinity: {}
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: node-role.kubernetes.io/control-plane
+                        operator: Exists
+                  - matchExpressions:
+                      - key: node-role.kubernetes.io/controlplane
+                        operator: Exists
+                  - matchExpressions:
+                      - key: node-role.kubernetes.io/etcd
+                        operator: Exists
+                  - matchExpressions:
+                      - key: node-role.kubernetes.io/master
+                        operator: Exists
+        template: templates/controlplane/daemonset.yaml
+
+  - it: affinity is set by supported value
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity: {}
+      affinity: {}
+      nodeAffinity: {}
+      controlPlane.affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:  # We have to override the whole tree if we want to override the defaults
+              - test: test
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - test: test
+        template: templates/controlplane/daemonset.yaml
+
+# This is an expected behavior from the common library and tested there but as we are overwriting this
+# helper is a good idea to retest it in case any library update brakes our expected behavior
+  - it: global is overridable by local in common-library
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity:
+        global: global
+      affinity:
+        local: local
+      nodeAffinity: {}
+      controlPlane.affinity: null
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            local: local
+        template: templates/controlplane/daemonset.yaml
+
+  - it: common-library's local is overridable
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity: {}
+      affinity:
+        local: local
+      nodeAffinity: {}
+      controlPlane.affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:  # We have to override the whole tree if we want to override the defaults
+              - test: test
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:  # We have to override the whole tree if we want to override the defaults
+                  - test: test
+        template: templates/controlplane/daemonset.yaml

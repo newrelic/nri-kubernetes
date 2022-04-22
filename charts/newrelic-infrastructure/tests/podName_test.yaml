@@ -1,12 +1,15 @@
 suite: test object names
 templates:
   - templates/controlplane/daemonset.yaml
-  - templates/controlplane/configmap.yaml
+  - templates/controlplane/scraper-configmap.yaml
+  - templates/controlplane/agent-configmap.yaml
   - templates/kubelet/daemonset.yaml
-  - templates/kubelet/configmap.yaml
+  - templates/kubelet/scraper-configmap.yaml
+  - templates/kubelet/agent-configmap.yaml
   - templates/kubelet/integrations-configmap.yaml
   - templates/ksm/deployment.yaml
-  - templates/ksm/configmap.yaml
+  - templates/ksm/scraper-configmap.yaml
+  - templates/ksm/agent-configmap.yaml
   - templates/agent-configmap.yaml
   - templates/secret.yaml
 tests:
@@ -14,34 +17,35 @@ tests:
     set:
       licenseKey: test
       cluster: test
+      # common-library adds `nri-` prefix when release name is not prefixed with it.
     asserts:
       - equal:
           path: metadata.name
-          value: RELEASE-NAME-nrk8s-ksm
+          value: nri-RELEASE-NAME-nrk8s-ksm
         template: templates/ksm/deployment.yaml
       - equal:
           path: metadata.name
-          value: RELEASE-NAME-nrk8s-controlplane
+          value: nri-RELEASE-NAME-nrk8s-controlplane
         template: templates/controlplane/daemonset.yaml
       - equal:
           path: metadata.name
-          value: RELEASE-NAME-nrk8s-kubelet
+          value: nri-RELEASE-NAME-nrk8s-kubelet
         template: templates/kubelet/daemonset.yaml
   - it: name is overridden as expected
     set:
       licenseKey: test
       cluster: test
-      fullnameOverride: nri-kubernetes
+      fullnameOverride: fno
     asserts:
       - equal:
           path: metadata.name
-          value: nri-kubernetes-ksm
+          value: fno-ksm
         template: templates/ksm/deployment.yaml
       - equal:
           path: metadata.name
-          value: nri-kubernetes-controlplane
+          value: fno-controlplane
         template: templates/controlplane/daemonset.yaml
       - equal:
           path: metadata.name
-          value: nri-kubernetes-kubelet
+          value: fno-kubelet
         template: templates/kubelet/daemonset.yaml

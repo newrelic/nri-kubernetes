@@ -3,8 +3,8 @@ kind: ConfigMap
 metadata:
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "newrelic.labels" . | nindent 4 }}
-  name: {{ template "newrelic.fullname" . }}-integrations-cfg
+    {{- include "common.labels" . | nindent 4 }}
+  name: {{ include "common.naming.fullname" . }}-integrations-cfg
 data:
   # This ConfigMap holds config files for integrations. They should have the following format:
   #redis-config.yml: |

@@ -12,7 +12,7 @@ images:
     tag: 1.24.1
     # -- Image for the agent sidecar.
     repository: newrelic/k8s-events-forwarder
-    registry: docker.io
+    registry: ""
   # Image for the New Relic Infrastructure Agent plus integrations.
   agent:
     pullPolicy: IfNotPresent
@@ -20,7 +20,7 @@ images:
     tag: 2.8.8
     # -- Image for the agent and integrations bundle.
     repository: newrelic/infrastructure-bundle
-    registry: docker.io
+    registry: ""
   # Image for the New Relic Kubernetes integration.
   integration:
     pullPolicy: IfNotPresent
@@ -28,7 +28,7 @@ images:
     tag: 3.1.0
     # -- Image for the kubernetes integration.
     repository: newrelic/nri-kubernetes
-    registry: docker.io
+    registry: ""
 
 # -- Config that applies to all instances of the solution: kubelet, ksm, control plane and sidecars.
 # @default -- See `values.yaml`
@@ -62,8 +62,7 @@ kubelet:
     - operator: "Exists"
       effect: "NoExecute"
   nodeSelector: {}
-  affinity:
-    nodeAffinity: {}
+  affinity: {}
   extraEnv: []
   extraEnvFrom: []
   extraVolumes: []
@@ -105,7 +104,6 @@ ksm:
               matchLabels:
                 app.kubernetes.io/name: kube-state-metrics
           weight: 100
-    nodeAffinity: {}
   extraEnv: []
   extraEnvFrom: []
   extraVolumes: []
@@ -142,9 +140,6 @@ ksm:
 controlPlane:
   # -- Deploy control plane monitoring component.
   enabled: true
-  # -- Run Control Plane scraper with `hostNetwork` even if `privileged` is set to false.
-  # `hostNetwork` is required for most control plane configurations, as they only accept connections from localhost.
-  unprivilegedHostNetwork: false
   annotations: {}
   tolerations:
     - operator: "Exists"
@@ -173,6 +168,9 @@ controlPlane:
   # -- How to deploy the control plane scraper. If autodiscovery is in use, it should be `DaemonSet`.
   # Advanced users using static endpoints set this to `Deployment` to avoid reporting metrics twice.
   kind: DaemonSet
+  # -- Run Control Plane scraper with `hostNetwork`.
+  # `hostNetwork` is required for most control plane configurations, as they only accept connections from localhost.
+  hostNetwork: true
   extraEnv: []
   extraEnvFrom: []
   extraVolumes: []
@@ -391,7 +389,7 @@ updateStrategy:
     maxUnavailable: 1
 
 # -- Custom attributes to be added to the data reported by all integrations reporting in the cluster.
-customAttributes: {}
+customAttributes:
 
 # -- Enable verbose logging for all components.
 verboseLog: false
@@ -412,17 +410,16 @@ podLabels: {}
 
 # -- Pod scheduling priority
 # Ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
-priorityClassName: ""
+priorityClassName:
 
-# -- Security context used in all the containers of the pods
-# When `privileged == true`, the Kubelet scraper will run as root and ignore these settings.
-# @default -- See `values.yaml`
-securityContext:
-  # OpenShift users might want to change the default UID:GID to be inside the allowed range.
-  runAsUser: 1000
-  runAsGroup: 2000
-  allowPrivilegeEscalation: false
-  readOnlyRootFilesystem: true
+# -- This is still to be decided in a follow-up PR regarding privileged mode and defaults changing in an evil way
+podSecurityContext:
+# -- This is still to be decided in a follow-up PR regarding privileged mode and defaults changing in an evil way
+containerSecurityContext:
+
+# -- Pod dns configuration
+# Ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config
+dnsConfig:
 
 # -- Run the integration with full access to the host filesystem and network.
 # Running in this mode allows reporting fine-grained cpu, memory, process and network metrics for your nodes.

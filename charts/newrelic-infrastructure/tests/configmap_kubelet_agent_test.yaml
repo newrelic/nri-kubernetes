@@ -1,0 +1,173 @@
+suite: test kubelet agent configmap
+templates:
+  - templates/kubelet/agent-configmap.yaml
+tests:
+  - it: agent configMap is created and configured from legacy config
+    set:
+      licenseKey: test
+      cluster: test
+      config:
+        test1: one
+        test2: two
+    asserts:
+      - equal:
+          path: data.newrelic-infra\.yml
+          value: |-
+            # This is the configuration file for the infrastructure agent. See:
+            # https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+            custom_attributes:
+              clusterName: test
+            features:
+              docker_enabled: false
+            http_server_enabled: true
+            http_server_port: 8003
+            test1: one
+            test2: two
+
+  - it: agent configMap is created and configured from common.agentConfig
+    set:
+      licenseKey: test
+      cluster: test
+      common.agentConfig:
+        test1: one
+        test2: two
+    asserts:
+      - equal:
+          path: data.newrelic-infra\.yml
+          value: |-
+            # This is the configuration file for the infrastructure agent. See:
+            # https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+            custom_attributes:
+              clusterName: test
+            features:
+              docker_enabled: false
+            http_server_enabled: true
+            http_server_port: 8003
+            test1: one
+            test2: two
+
+  - it: common.agentConfig takes precedence
+    set:
+      licenseKey: test
+      cluster: test
+      common.agentConfig:
+        test1: one
+        test2: two
+      config:
+        test3: three
+    asserts:
+      - equal:
+          path: data.newrelic-infra\.yml
+          value: |-
+            # This is the configuration file for the infrastructure agent. See:
+            # https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+            custom_attributes:
+              clusterName: test
+            features:
+              docker_enabled: false
+            http_server_enabled: true
+            http_server_port: 8003
+            test1: one
+            test2: two
+
+  - it: eventQueueDepth is taken into account
+    set:
+      licenseKey: test
+      cluster: test
+      common.agentConfig:
+        test1: one
+        test2: two
+      config:
+        test3: three
+      eventQueueDepth: 1000
+    asserts:
+      - equal:
+          path: data.newrelic-infra\.yml
+          value: |-
+            # This is the configuration file for the infrastructure agent. See:
+            # https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+            custom_attributes:
+              clusterName: test
+            event_queue_depth: 1000
+            features:
+              docker_enabled: false
+            http_server_enabled: true
+            http_server_port: 8003
+            test1: one
+            test2: two
+
+  - it: unprivileged sets secure forward mode
+    set:
+      licenseKey: test
+      cluster: test
+      privileged: false
+    asserts:
+      - equal:
+          path: data.newrelic-infra\.yml
+          value: |-
+            # This is the configuration file for the infrastructure agent. See:
+            # https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+            custom_attributes:
+              clusterName: test
+            features:
+              docker_enabled: false
+            http_server_enabled: true
+            http_server_port: 8003
+            is_secure_forward_only: true
+            overide_host_root: ""
+
+  - it: null enableProcessMetrics does not set enableProcessMetrics
+    set:
+      licenseKey: test
+      cluster: test
+      enableProcessMetrics: null
+    asserts:
+      - equal:
+          path: data.newrelic-infra\.yml
+          value: |-
+            # This is the configuration file for the infrastructure agent. See:
+            # https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+            custom_attributes:
+              clusterName: test
+            features:
+              docker_enabled: false
+            http_server_enabled: true
+            http_server_port: 8003
+
+  - it: true enableProcessMetrics populates enableProcessMetrics as true
+    set:
+      licenseKey: test
+      cluster: test
+      enableProcessMetrics: true
+    asserts:
+      - equal:
+          path: data.newrelic-infra\.yml
+          value: |-
+            # This is the configuration file for the infrastructure agent. See:
+            # https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+            custom_attributes:
+              clusterName: test
+            enable_process_metrics: true
+            features:
+              docker_enabled: false
+            http_server_enabled: true
+            http_server_port: 8003
+
+  - it: false enableProcessMetrics populates enableProcessMetrics as false
+    set:
+      licenseKey: test
+      cluster: test
+      enableProcessMetrics: false
+    asserts:
+      - equal:
+          path: data.newrelic-infra\.yml
+          value: |-
+            # This is the configuration file for the infrastructure agent. See:
+            # https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+            custom_attributes:
+              clusterName: test
+            enable_process_metrics: false
+            features:
+              docker_enabled: false
+            http_server_enabled: true
+            http_server_port: 8003

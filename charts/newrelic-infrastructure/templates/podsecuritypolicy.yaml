@@ -2,7 +2,7 @@
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
-  name: privileged-{{ template "newrelic.fullname" . }}
+  name: privileged-{{ include "common.naming.fullname" . }}
 spec:
   allowedCapabilities:
   - '*'
