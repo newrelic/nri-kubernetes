@@ -5,6 +5,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "newrelic.common.labels" . | nindent 4 }}
+    mode: {{ if not ( include "newrelic.common.privileged" . ) }}un{{ end }}privileged
   name: {{ include "nriKubernetes.ksm.fullname" . }}
   {{- $legacyAnnotation:= fromYaml (include "newrelic.compatibility.annotations" .) -}}
   {{- with  include "newrelic.compatibility.valueWithFallback" (dict "legacy" $legacyAnnotation "supported" .Values.ksm.annotations )}}
@@ -29,6 +30,7 @@ spec:
       labels:
         {{- include "newrelic.common.labels.podLabels" . | nindent 8 }}
         app.kubernetes.io/component: ksm
+        mode: {{ if not ( include "newrelic.common.privileged" . ) }}un{{ end }}privileged
     spec:
       {{- with include "newrelic.common.images.renderPullSecrets" ( dict "pullSecrets" (list .Values.images.pullSecrets) "context" .) }}
       imagePullSecrets:

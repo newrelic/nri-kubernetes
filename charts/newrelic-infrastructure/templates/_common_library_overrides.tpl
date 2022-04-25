@@ -43,17 +43,6 @@ readOnlyRootFilesystem: true
 
 
 
-{{- /* Add mode to each object create */ -}}
-{{- define "common.labels.overrides.addLabels" -}}
-{{- if ( include "newrelic.common.privileged" . ) -}}
-mode: privileged
-{{- else -}}
-mode: unprivileged
-{{- end -}}
-{{- end -}}
-
-
-
 {{/*
 This function allows easily to overwrite custom attributes to the function "common.customAttributes"
 */}}
