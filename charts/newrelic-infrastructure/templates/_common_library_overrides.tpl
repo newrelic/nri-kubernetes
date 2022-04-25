@@ -40,12 +40,3 @@ readOnlyRootFilesystem: true
 {{- /* Allow to change pod defaults dynamically based if we are running in privileged mode or not */ -}}
 {{- define "common.securityContext.podDefaults" -}}
 {{- end -}}
-
-
-
-{{/*
-This function allows easily to overwrite custom attributes to the function "common.customAttributes"
-*/}}
-{{- define "common.customAttributes.overrideAttributes" -}}
-clusterName: {{ include "newrelic.common.cluster" . }}
-{{- end }}

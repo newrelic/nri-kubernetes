@@ -25,6 +25,7 @@ enable_process_metrics: {{ .Values.enableProcessMetrics }}
 {{- $agentDefaults := fromYaml ( include "newrelic.common.agentConfig.defaults" . ) -}}
 {{- $kubelet := fromYaml ( include "nriKubernetes.kubelet.agentConfig.defaults" . ) -}}
 {{- $agentConfig := fromYaml ( include "newrelic.compatibility.agentConfig" . ) -}}
+{{- $customAttributes := dict "custom_attributes" (dict "clusterName" (include "newrelic.common.cluster" . )) -}}
 
-{{- mustMergeOverwrite $agentDefaults $kubelet $agentConfig | toYaml -}}
+{{- mustMergeOverwrite $agentDefaults $kubelet $agentConfig $customAttributes | toYaml -}}
 {{- end -}}
