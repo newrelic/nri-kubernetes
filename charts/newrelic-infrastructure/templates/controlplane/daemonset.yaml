@@ -65,11 +65,10 @@ spec:
         - name: controlplane
           image: {{ include "newrelic.common.images.image" ( dict "imageRoot" .Values.images.integration "context" .) }}
           imagePullPolicy: {{ .Values.images.integration.pullPolicy }}
+          {{- with include "nriKubernetes.securityContext.container" . | fromYaml }}
           securityContext:
-            {{- mustMergeOverwrite
-                    (include "newrelic.common.securityContext.container" . | fromYaml )
-                    (include "newrelic.compatibility.securityContext" . | fromYaml )
-                    | toYaml | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           env:
             - name: "NRI_KUBERNETES_SINK_HTTP_PORT"
               value: {{ get (fromYaml (include "nriKubernetes.controlPlane.agentConfig" .)) "http_server_port" | quote }}
@@ -108,11 +107,10 @@ spec:
         - name: forwarder
           image: {{ include "newrelic.common.images.image" ( dict "imageRoot" .Values.images.forwarder "context" .) }}
           imagePullPolicy: {{ .Values.images.forwarder.pullPolicy }}
+          {{- with include "nriKubernetes.securityContext.container" . | fromYaml }}
           securityContext:
-            {{- mustMergeOverwrite
-                    (include "newrelic.common.securityContext.container" . | fromYaml )
-                    (include "newrelic.compatibility.securityContext" . | fromYaml )
-                    | toYaml | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           ports:
             - containerPort: {{ get (fromYaml (include "nriKubernetes.controlPlane.agentConfig" .)) "http_server_port" }}
           env:

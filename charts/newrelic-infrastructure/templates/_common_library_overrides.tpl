@@ -27,8 +27,8 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 
 
 
-{{- /* Allow to change container defaults dynamically based if we are running in privileged mode or not */ -}}
-{{- define "common.securityContext.containerDefaults" -}}
+{{- /* These are the defaults that are used for all the containers in this chart (except the kubelet's agent */ -}}
+{{- define "nriKubernetes.securityContext.containerDefaults" -}}
 runAsUser: 1000
 runAsGroup: 2000
 allowPrivilegeEscalation: false
@@ -38,5 +38,17 @@ readOnlyRootFilesystem: true
 
 
 {{- /* Allow to change pod defaults dynamically based if we are running in privileged mode or not */ -}}
-{{- define "common.securityContext.podDefaults" -}}
+{{- define "nriKubernetes.securityContext.container" -}}
+{{- $defaults := fromYaml ( include "nriKubernetes.securityContext.containerDefaults" . ) -}}
+{{- $compatibilityLayer := include "newrelic.compatibility.securityContext" . | fromYaml -}}
+{{- $commonLibrary := include "newrelic.common.securityContext.container" . | fromYaml -}}
+
+{{- $finalSecurityContext := dict -}}
+{{- if $commonLibrary -}}
+    {{- $finalSecurityContext = mustMergeOverwrite $commonLibrary $compatibilityLayer  -}}
+{{- else -}}
+    {{- $finalSecurityContext = mustMergeOverwrite $defaults $compatibilityLayer  -}}
+{{- end -}}
+
+{{- toYaml $finalSecurityContext -}}
 {{- end -}}
