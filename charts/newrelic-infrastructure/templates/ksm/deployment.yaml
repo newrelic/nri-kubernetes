@@ -5,7 +5,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "newrelic.common.labels" . | nindent 4 }}
-  name: {{ include "newrelic.common.naming.fullname" . }}-ksm
+  name: {{ include "nriKubernetes.ksm.fullname" . }}
   {{- $legacyAnnotation:= fromYaml (include "newrelic.compatibility.annotations" .) -}}
   {{- with  include "newrelic.compatibility.valueWithFallback" (dict "legacy" $legacyAnnotation "supported" .Values.ksm.annotations )}}
   annotations: {{ . | nindent 4 }}
@@ -159,7 +159,7 @@ spec:
       volumes:
         - name: nri-kubernetes-config
           configMap:
-            name: {{ include "newrelic.common.naming.fullname" . }}-ksm
+            name: {{ include "nriKubernetes.ksm.fullname" . }}
             items:
               - key: nri-kubernetes.yml
                 path: nri-kubernetes.yml
@@ -171,7 +171,7 @@ spec:
           emptyDir: {}
         - name: config
           configMap:
-            name: {{ include "newrelic.common.naming.fullname" . }}-agent-ksm
+            name: {{ include "nriKubernetes.ksm.fullname.agent" . }}
             items:
               - key: newrelic-infra.yml
                 path: newrelic-infra.yml

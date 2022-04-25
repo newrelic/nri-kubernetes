@@ -8,7 +8,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "newrelic.common.labels" . | nindent 4 }}
-  name: {{ include "newrelic.common.naming.fullname" . }}-agent-ksm
+  name: {{ include "nriKubernetes.ksm.fullname.agent" . }}
 data:
   newrelic-infra.yml: |-
     # This is the configuration file for the infrastructure agent. See:

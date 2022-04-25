@@ -6,7 +6,7 @@ it will be concatenated like "<release_name>-nrk8s". This could change if fullna
 nameOverride are set.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
-{{- define "newrelic.common.naming.fullname" -}}
+{{- define "nriKubernetes.naming.fullname" -}}
 {{- $name := .Values.nameOverride | default "nrk8s" -}}
 
 {{- if .Values.fullnameOverride -}}
@@ -16,7 +16,13 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 
 {{- include "newrelic.common.naming.trucateToDNS" $name -}}
+{{- end -}}
 
+
+
+{{- /* Naming helpers*/ -}}
+{{- define "nriKubernetes.naming.secrets" }}
+{{- include "newrelic.common.naming.truncateToDNSWithSuffix" (dict "name" (include "nriKubernetes.naming.fullname" .) "suffix" "secrets") -}}
 {{- end -}}
 
 

@@ -4,7 +4,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "newrelic.common.labels" . | nindent 4 }}
-  name: {{ include "newrelic.common.naming.fullname" . }}-integrations-cfg
+  name: {{ include "nriKubernetes.kubelet.fullname.integrations" . }}
 data:
   # This ConfigMap holds config files for integrations. They should have the following format:
   #redis-config.yml: |

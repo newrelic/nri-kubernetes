@@ -4,7 +4,7 @@ kind: ClusterRole
 metadata:
   labels:
     {{- include "newrelic.common.labels" . | nindent 4 }}
-  name: {{ include "newrelic.common.naming.fullname" . }}-controlplane
+  name: {{ include "nriKubernetes.controlplane.fullname" . }}
 rules:
   - apiGroups: [""]
     resources:
@@ -37,7 +37,7 @@ kind: ClusterRole
 metadata:
   labels:
     {{- include "newrelic.common.labels" . | nindent 4 }}
-  name: {{ include "newrelic.common.naming.fullname" . }}-secrets
+  name: {{ include "nriKubernetes.naming.secrets" . }}
 rules:
   - apiGroups: [""]
     resources:
