@@ -70,6 +70,29 @@ tests:
             test1: one
             test2: two
 
+  - it: customAttributes are correctly added
+    set:
+      licenseKey: test
+      cluster: test
+      global.customAttributes:
+        global: global
+      customAttributes:
+        local: local
+    asserts:
+      - equal:
+          path: data.newrelic-infra\.yml
+          value: |-
+            # This is the configuration file for the infrastructure agent. See:
+            # https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+            custom_attributes:
+              clusterName: test
+              global: global
+              local: local
+            features:
+              docker_enabled: false
+            http_server_enabled: true
+            http_server_port: 8003
+
   - it: eventQueueDepth is taken into account
     set:
       licenseKey: test

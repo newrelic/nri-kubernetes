@@ -1,9 +1,6 @@
 suite: test controlplane agent configmap
 templates:
-  - templates/controlplane/daemonset.yaml
-  - templates/controlplane/scraper-configmap.yaml
   - templates/controlplane/agent-configmap.yaml
-  - templates/secret.yaml
 tests:
   - it: agent configMap is created and configured from legacy config
     set:
@@ -13,8 +10,7 @@ tests:
         test1: one
         test2: two
     asserts:
-      - template: templates/controlplane/agent-configmap.yaml
-        equal:
+      - equal:
           path: data.newrelic-infra\.yml
           value: |-
             # This is the configuration file for the infrastructure agent. See:
@@ -36,8 +32,7 @@ tests:
         test1: one
         test2: two
     asserts:
-      - template: templates/controlplane/agent-configmap.yaml
-        equal:
+      - equal:
           path: data.newrelic-infra\.yml
           value: |-
             # This is the configuration file for the infrastructure agent. See:
@@ -61,8 +56,7 @@ tests:
       config:
         test3: three
     asserts:
-      - template: templates/controlplane/agent-configmap.yaml
-        equal:
+      - equal:
           path: data.newrelic-infra\.yml
           value: |-
             # This is the configuration file for the infrastructure agent. See:
@@ -76,6 +70,29 @@ tests:
             test1: one
             test2: two
 
+  - it: customAttributes are correctly added
+    set:
+      licenseKey: test
+      cluster: test
+      global.customAttributes:
+        global: global
+      customAttributes:
+        local: local
+    asserts:
+      - equal:
+          path: data.newrelic-infra\.yml
+          value: |-
+            # This is the configuration file for the infrastructure agent. See:
+            # https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+            custom_attributes:
+              clusterName: test
+              global: global
+              local: local
+            http_server_enabled: true
+            http_server_port: 8001
+            is_forward_only: true
+            overide_host_root: ""
+
   - it: eventQueueDepth is taken into account
     set:
       licenseKey: test
@@ -87,8 +104,7 @@ tests:
         test3: three
       eventQueueDepth: 1000
     asserts:
-      - template: templates/controlplane/agent-configmap.yaml
-        equal:
+      - equal:
           path: data.newrelic-infra\.yml
           value: |-
             # This is the configuration file for the infrastructure agent. See:
