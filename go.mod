@@ -20,6 +20,9 @@ require (
 	k8s.io/kubelet v0.23.6
 )
 
+// To avoid CVE-2022-27191 triggering a security scan
+replace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd
+
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect

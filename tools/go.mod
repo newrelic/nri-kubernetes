@@ -4,6 +4,13 @@ go 1.18
 
 require github.com/golangci/golangci-lint v1.45.2
 
+replace (
+	// To avoid CVE-2018-1098 triggering a security scan
+	go.etcd.io/etcd => go.etcd.io/etcd v3.3.27+incompatible
+	// To avoid CVE-2022-27191 triggering a security scan
+	golang.org/x/crypto => golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd
+)
+
 require (
 	4d63.com/gochecknoglobals v0.1.0 // indirect
 	github.com/Antonboom/errname v0.1.5 // indirect
