@@ -20,8 +20,12 @@ require (
 	k8s.io/kubelet v0.23.6
 )
 
-// To avoid CVE-2022-27191 triggering a security scan
-replace golang.org/x/crypto => golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd
+replace (
+	// To avoid CVE-2018-1098 triggering a security scan
+	go.etcd.io/etcd v3.3.27+incompatible => go.etcd.io/etcd/v3 v3.5.4
+	// This is a dependency of golint, trivy is mixing up dependencies
+	golang.org/x/crypto => golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd
+)
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect

@@ -5,8 +5,7 @@ go 1.18
 require github.com/golangci/golangci-lint v1.45.2
 
 replace (
-	// To avoid CVE-2018-1098 triggering a security scan
-	go.etcd.io/etcd => go.etcd.io/etcd v3.3.27+incompatible
+	go.etcd.io/etcd => go.etcd.io/etcd/v3 v3.5.4
 	// To avoid CVE-2022-27191 triggering a security scan
 	golang.org/x/crypto => golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd
 )
@@ -108,9 +107,9 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/polyfloyd/go-errorlint v0.0.0-20211125173453-6d6d39c5bb8b // indirect
-	github.com/prometheus/client_golang v1.7.1 // indirect
+	github.com/prometheus/client_golang v1.11.1 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
-	github.com/prometheus/common v0.10.0 // indirect
+	github.com/prometheus/common v0.26.0 // indirect
 	github.com/prometheus/procfs v0.6.0 // indirect
 	github.com/quasilyte/go-ruleguard v0.3.15 // indirect
 	github.com/quasilyte/gogrep v0.0.0-20220103110004-ffaa07af02e3 // indirect
