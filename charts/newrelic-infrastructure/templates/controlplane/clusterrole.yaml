@@ -29,7 +29,7 @@ rules:
     verbs:
       - use
   {{- end -}}
-{{- $namespaces := include "newrelic.roleBindingNamespaces" . | fromYaml -}}
+{{- $namespaces := include "nriKubernetes.controlPlane.roleBindingNamespaces" . | fromYaml -}}
 {{- if $namespaces.roleBindingNamespaces}}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
