@@ -26,9 +26,9 @@ Warning:
 
 Most Control Plane components listen in the loopback address only, which is not reachable without `hostNetwork: true`.
 Control plane autodiscovery might not work as expected.
-You can enable hostNetwork for control plane scraper pods only by setting `global.hotNetwork`, `hostNetwork` or
-`controlPlane.hostNetwork: true` (in order of granularity for all the helm charts, this chart or only the control plane metrics
-discovery or alternative disable control plane monitoring altogether with `controlPlane.enabled: false`.
+You can enable hostNetwork for all pods by setting `global.hotNetwork`, `hostNetwork` or only for the control
+plane pods by setting `controlPlane.hostNetwork: true`. Alternatively, you can disable control plane monitoring altogether with
+`controlPlane.enabled: false`.
 {{- end }}
 
 {{- if and (include "newrelic.fargate" .) .Values.kubelet.affinity }}

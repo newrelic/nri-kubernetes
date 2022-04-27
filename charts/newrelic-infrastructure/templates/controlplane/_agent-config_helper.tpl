@@ -11,9 +11,10 @@ http_server_port: 8001
 
 
 {{- define "nriKubernetes.controlPlane.agentConfig" -}}
-{{- $agentDefaults := fromYaml ( include "common.agentConfig.defaults" . ) -}}
+{{- $agentDefaults := fromYaml ( include "newrelic.common.agentConfig.defaults" . ) -}}
 {{- $controlPlane := fromYaml ( include "nriKubernetes.controlPlane.agentConfig.defaults" . ) -}}
 {{- $agentConfig := fromYaml ( include "newrelic.compatibility.agentConfig" . ) -}}
+{{- $customAttributes := dict "custom_attributes" (dict "clusterName" (include "newrelic.common.cluster" . )) -}}
 
-{{- mustMergeOverwrite $agentDefaults $controlPlane $agentConfig | toYaml -}}
+{{- mustMergeOverwrite $agentDefaults $controlPlane $agentConfig $customAttributes | toYaml -}}
 {{- end -}}

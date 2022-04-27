@@ -11,9 +11,10 @@ http_server_port: 8002
 
 
 {{- define "nriKubernetes.ksm.agentConfig" -}}
-{{- $agentDefaults := fromYaml ( include "common.agentConfig.defaults" . ) -}}
+{{- $agentDefaults := fromYaml ( include "newrelic.common.agentConfig.defaults" . ) -}}
 {{- $ksm := fromYaml ( include "nriKubernetes.ksm.agentConfig.defaults" . ) -}}
 {{- $agentConfig := fromYaml ( include "newrelic.compatibility.agentConfig" . ) -}}
+{{- $customAttributes := dict "custom_attributes" (dict "clusterName" (include "newrelic.common.cluster" . )) -}}
 
-{{- mustMergeOverwrite $agentDefaults $ksm $agentConfig | toYaml -}}
+{{- mustMergeOverwrite $agentDefaults $ksm $agentConfig $customAttributes | toYaml -}}
 {{- end -}}

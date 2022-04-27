@@ -4,8 +4,8 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   labels:
-    {{- include "common.labels" . | nindent 4 }}
-  name: {{ include "common.naming.fullname" . }}-kubelet
+    {{- include "newrelic.common.labels" . | nindent 4 }}
+  name: {{ include "nriKubernetes.kubelet.fullname" . }}
   namespace: {{ .Release.Namespace }}
 data:
   nri-kubernetes.yml: |

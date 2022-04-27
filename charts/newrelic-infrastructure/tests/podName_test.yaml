@@ -17,19 +17,18 @@ tests:
     set:
       licenseKey: test
       cluster: test
-      # common-library adds `nri-` prefix when release name is not prefixed with it.
     asserts:
       - equal:
           path: metadata.name
-          value: nri-RELEASE-NAME-nrk8s-ksm
+          value: RELEASE-NAME-nrk8s-ksm
         template: templates/ksm/deployment.yaml
       - equal:
           path: metadata.name
-          value: nri-RELEASE-NAME-nrk8s-controlplane
+          value: RELEASE-NAME-nrk8s-controlplane
         template: templates/controlplane/daemonset.yaml
       - equal:
           path: metadata.name
-          value: nri-RELEASE-NAME-nrk8s-kubelet
+          value: RELEASE-NAME-nrk8s-kubelet
         template: templates/kubelet/daemonset.yaml
   - it: name is overridden as expected
     set:

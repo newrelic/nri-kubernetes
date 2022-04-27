@@ -1,3 +1,4 @@
+{{- /*This defines the defaults that the privileged mode has for the agent's securityContext */ -}}
 {{- define "nriKubernetes.kubelet.securityContext.privileged" -}}
 runAsUser: 0
 runAsGroup: 0
@@ -8,14 +9,24 @@ readOnlyRootFilesystem: true
 
 
 
+{{- /* This is the container security context for the agent */ -}}
 {{- define "nriKubernetes.kubelet.securityContext.agentContainer" -}}
-{{- $privileged := dict -}}
-{{- if include "common.privileged" . -}}
-{{- $privileged = fromYaml ( include "nriKubernetes.kubelet.securityContext.privileged" . ) -}}
+{{- $defaults := dict -}}
+{{- if include "newrelic.common.privileged" . -}}
+{{- $defaults = fromYaml ( include "nriKubernetes.kubelet.securityContext.privileged" . ) -}}
+{{- else -}}
+{{- $defaults = fromYaml ( include "nriKubernetes.securityContext.containerDefaults" . ) -}}
 {{- end -}}
-{{- $privileged
-        | mustMergeOverwrite (include "newrelic.compatibility.securityContext" . | fromYaml )
-        | mustMergeOverwrite (include "common.securityContext.container" . | fromYaml )
-        | toYaml
--}}
+
+{{- $compatibilityLayer := include "newrelic.compatibility.securityContext" . | fromYaml -}}
+{{- $commonLibrary := include "newrelic.common.securityContext.container" . | fromYaml -}}
+
+{{- $finalSecurityContext := dict -}}
+{{- if $commonLibrary -}}
+    {{- $finalSecurityContext = mustMergeOverwrite $commonLibrary $compatibilityLayer -}}
+{{- else -}}
+    {{- $finalSecurityContext = mustMergeOverwrite $defaults $compatibilityLayer -}}
+{{- end -}}
+
+{{- toYaml $finalSecurityContext -}}
 {{- end -}}
