@@ -31,6 +31,41 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 
 
 
+{{- /* Return a YAML with the mode to be added to the labels */ -}}
+{{- define "nriKubernetes._mode" -}}
+{{- if include "newrelic.common.privileged" . -}}
+    mode: privileged
+{{- else -}}
+    mode: unprivileged
+{{- end -}}
+{{- end -}}
+
+
+
+{{/*
+Add `mode` label to the labels that come from the common library for all the objects
+*/}}
+{{- define "nriKubernetes.labels" -}}
+{{- $labels := include "newrelic.common.labels" . | fromYaml -}}
+{{- $mode := fromYaml ( include "nriKubernetes._mode" . ) -}}
+
+{{- mustMergeOverwrite $labels $mode | toYaml -}}
+{{- end -}}
+
+
+
+{{/*
+Add `mode` label to the labels that come from the common library for podLabels
+*/}}
+{{- define "nriKubernetes.labels.podLabels" -}}
+{{- $labels := include "newrelic.common.labels.podLabels" . | fromYaml -}}
+{{- $mode := fromYaml ( include "nriKubernetes._mode" . ) -}}
+
+{{- mustMergeOverwrite $labels $mode | toYaml -}}
+{{- end -}}
+
+
+
 {{/*
 Returns fargate
 */}}

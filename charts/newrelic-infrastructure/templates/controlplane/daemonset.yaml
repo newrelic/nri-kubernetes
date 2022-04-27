@@ -4,8 +4,7 @@ kind: {{ .Values.controlPlane.kind }}
 metadata:
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "newrelic.common.labels" . | nindent 4 }}
-    mode: {{ if not ( include "newrelic.common.privileged" . ) }}un{{ end }}privileged
+    {{- include "nriKubernetes.labels" . | nindent 4 }}
   name: {{ include "nriKubernetes.controlplane.fullname" . }}
   {{- $legacyAnnotation:= fromYaml (include "newrelic.compatibility.annotations" .) -}}
   {{- with  include "newrelic.compatibility.valueWithFallback" (dict "legacy" $legacyAnnotation "supported" .Values.controlPlane.annotations )}}
@@ -33,9 +32,8 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
-        {{- include "newrelic.common.labels.podLabels" . | nindent 8 }}
+        {{- include "nriKubernetes.labels.podLabels" . | nindent 8 }}
         app.kubernetes.io/component: controlplane
-        mode: {{ if not ( include "newrelic.common.privileged" . ) }}un{{ end }}privileged
     spec:
       {{- with include "newrelic.common.images.renderPullSecrets" ( dict "pullSecrets" (list .Values.images.pullSecrets) "context" .) }}
       imagePullSecrets:
