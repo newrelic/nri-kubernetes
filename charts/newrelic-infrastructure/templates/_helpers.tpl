@@ -1,6 +1,10 @@
 {{/*
-This is a copy and paste from the common-library's name helper.
 Create a default fully qualified app name.
+
+This is a copy and paste from the common-library's name helper. becuase the overriding system was broken.
+As we have to change the logic to use "nrk8s" instead of `.Chart.Name` we need to mantain here a version
+of the fullname helper
+
 By default the full name will be "<release_name>" just in if it has "nrk8s" included in that, if not
 it will be concatenated like "<release_name>-nrk8s". This could change if fullnameOverride or
 nameOverride are set.
