@@ -4,7 +4,6 @@ package ksm_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -31,12 +30,6 @@ func TestScraper(t *testing.T) {
 			func(group string, spec *definition.Spec, ent *integration.Entity) bool {
 				return group == "service" && spec.Name == "loadBalancerIP" && ent.Metadata.Name != "e2e-lb"
 			},
-			// pod.isReady and pod.startTime will not be present in some pending pods depending on the schedule status.
-			func(group string, spec *definition.Spec, ent *integration.Entity) bool {
-				return group == "pod" &&
-					(spec.Name == "isReady" || spec.Name == "startTime") &&
-					strings.HasSuffix(ent.Metadata.Name, "-pending")
-			},
 			// The following HPA metrics operate in a true-or-NULL basis, and there won't be present if condition is
 			// false.
 			exclude.Exclude(
@@ -45,7 +38,6 @@ func TestScraper(t *testing.T) {
 			),
 		)
 
-	// TODO: use testutil.AllVersions() when all versions are generated with datagen.sh.
 	for _, v := range testutil.AllVersions() {
 		// Make a copy of the version variable to use it concurrently
 		version := v

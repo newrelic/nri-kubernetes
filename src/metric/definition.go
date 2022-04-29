@@ -689,7 +689,6 @@ var KSMSpecs = definition.SpecGroups{
 		TypeGenerator: prometheus.FromLabelValueEntityTypeGenerator("kube_pod_status_phase"),
 		Specs: []definition.Spec{
 			{Name: "createdAt", ValueFunc: prometheus.FromValue("kube_pod_created"), Type: sdkMetric.GAUGE, Optional: true},
-			{Name: "startTime", ValueFunc: prometheus.FromValue("kube_pod_start_time"), Type: sdkMetric.GAUGE},
 			{Name: "createdKind", ValueFunc: prometheus.FromLabelValue("kube_pod_info", "created_by_kind"), Type: sdkMetric.ATTRIBUTE, Optional: true},
 			{Name: "createdBy", ValueFunc: prometheus.FromLabelValue("kube_pod_info", "created_by_name"), Type: sdkMetric.ATTRIBUTE, Optional: true},
 			{Name: "nodeIP", ValueFunc: prometheus.FromLabelValue("kube_pod_info", "host_ip"), Type: sdkMetric.ATTRIBUTE},
@@ -697,7 +696,8 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_pod_info", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "nodeName", ValueFunc: prometheus.FromLabelValue("kube_pod_info", "node"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "podName", ValueFunc: prometheus.FromLabelValue("kube_pod_info", "pod"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "isReady", ValueFunc: definition.Transform(prometheus.FromLabelValue("kube_pod_status_ready", "condition"), toNumericBoolean), Type: sdkMetric.GAUGE},
+			// we are adding as default `false` since all ksm pods used refers to pending pods due to the IDGenerator.
+			{Name: "isReady", ValueFunc: definition.Transform(fetchWithDefault(prometheus.FromLabelValue("kube_pod_status_ready", "condition"), "false"), toNumericBoolean), Type: sdkMetric.GAUGE},
 			{Name: "status", ValueFunc: prometheus.FromLabelValue("kube_pod_status_phase", "phase"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "isScheduled", ValueFunc: definition.Transform(prometheus.FromLabelValue("kube_pod_status_scheduled", "condition"), toNumericBoolean), Type: sdkMetric.GAUGE},
 			{Name: "deploymentName", ValueFunc: ksmMetric.GetDeploymentNameForPod(), Type: sdkMetric.ATTRIBUTE, Optional: true},
@@ -1194,5 +1194,19 @@ func Subtract(left definition.FetchFunc, right definition.FetchFunc) definition.
 
 		result := leftValue.(float64) - rightValue.(float64)
 		return result, nil
+	}
+}
+
+// fetchWithDefault provides a default whenever a metric is missing
+func fetchWithDefault(fetch definition.FetchFunc, defaultValue definition.FetchedValue) definition.FetchFunc {
+	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
+		value, err := fetch(groupLabel, entityID, groups)
+		if err != nil {
+			// The error is currently discarded completely,
+			// we could decide to log this, but it would likely be very noisy and not useful
+			return defaultValue, nil
+		}
+
+		return value, nil
 	}
 }
