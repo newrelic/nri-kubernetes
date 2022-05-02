@@ -3,7 +3,7 @@ module github.com/newrelic/nri-kubernetes/v3
 go 1.18
 
 require (
-	github.com/google/go-cmp v0.5.7
+	github.com/google/go-cmp v0.5.8
 	github.com/newrelic/infra-integrations-sdk v3.7.2+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_model v0.2.0
@@ -59,7 +59,6 @@ require (
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
-	golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
