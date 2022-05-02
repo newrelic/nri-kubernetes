@@ -12,8 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 * `restartCount` metric for pods is now also available as `restartCountDelta` by @sigilioso in https://github.com/newrelic/nri-kubernetes/pull/382
 
 ### Fixed
-* fix(pendingPods): some metrics are missing from KSM by @paologallinaharbur in https://github.com/newrelic/nri-kubernetes/pull/404
-  The metric `isReady` is now reported for pending pod as well
+* `isReady` metric is now correctly reported as `false` (rather than `NULL`) for pending pods by @paologallinaharbur in https://github.com/newrelic/nri-kubernetes/pull/404
 
 ### Dependencies
 * chore(deps): bump github.com/google/go-cmp from 0.5.7 to 0.5.8 by @dependabot in https://github.com/newrelic/nri-kubernetes/pull/406
