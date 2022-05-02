@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.2.0
+
+### Added
+* Initial, internal-only implementation of mTLS-enabled sink by @roobre in https://github.com/newrelic/nri-kubernetes/pull/338
+* `restartCount` metric for pods is now also available as `restartCountDelta` by @sigilioso in https://github.com/newrelic/nri-kubernetes/pull/382
+
+### Fixed
+* `isReady` metric is now correctly reported as `false` (rather than `NULL`) for pending pods by @paologallinaharbur in https://github.com/newrelic/nri-kubernetes/pull/404
+
+### Dependencies
+* chore(deps): bump github.com/google/go-cmp from 0.5.7 to 0.5.8 by @dependabot in https://github.com/newrelic/nri-kubernetes/pull/406
+* chore(deps): bump alpine from 3.15.0 to 3.15.4 by @dependabot in https://github.com/newrelic/nri-kubernetes/pull/391
+* chore(deps): bump github.com/newrelic/infra-integrations-sdk from 3.7.1+incompatible to 3.7.2+incompatible by @dependabot in https://github.com/newrelic/nri-kubernetes/pull/372
+* chore(deps): bump github.com/sethgrid/pester from 1.1.0 to 1.2.0 by @dependabot in https://github.com/newrelic/nri-kubernetes/pull/358
+* Update dependencies to solve security issues pointed by trivy by @kang-makes in https://github.com/newrelic/nri-kubernetes/pull/403
+
+**Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.1.0...v3.1.1
+
+## 3.1.0
+* chore(deps): bump aquasecurity/trivy-action from 0.2.1 to 0.2.2 by @dependabot in https://github.com/newrelic/nri-kubernetes/pull/355
+* controlplane/authenticator: allow to use `kubernetes.io/tls` secrets by @roobre in https://github.com/newrelic/nri-kubernetes/pull/344
+* config: document options by @roobre in https://github.com/newrelic/nri-kubernetes/pull/363
+
+**Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.0.0...v3.1.0
+
 ## 3.0.0
 
 This new version makes significant changes to the number of components that are deployed to the cluster, and introduces many new configuration options to tune the behavior to your environment. We encourage you to take a look at what's changed in full detail [here](/docs/kubernetes-pixie/kubernetes-integration/get-started/changes-since-v3/).
