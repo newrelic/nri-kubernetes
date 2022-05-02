@@ -9,8 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 * Initial, internal-only implementation of mTLS-enabled sink by @roobre in https://github.com/newrelic/nri-kubernetes/pull/338
-* Feature/restart count delta by @sigilioso in https://github.com/newrelic/nri-kubernetes/pull/382
-  a New metric has been added. It reports the number of restart since last sample: `restartCountDelta`
+* `restartCount` metric for pods is now also available as `restartCountDelta` by @sigilioso in https://github.com/newrelic/nri-kubernetes/pull/382
 * Dockerfile: simplify binary path, ensure 755 permissions by @roobre in https://github.com/newrelic/nri-kubernetes/pull/364
 
 ### Fixed
