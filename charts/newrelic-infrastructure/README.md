@@ -93,10 +93,12 @@ If your cluster security policy does not allow to to have `privileged` in your p
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| affinity | object | `{}` | Sets pod/node affinities. Can be configured also with `global.affinity` |
+| cluster | string | `""` | Name of the Kubernetes cluster monitored. Can be configured also with `global.cluster` |
 | common | object | See `values.yaml` | Config that applies to all instances of the solution: kubelet, ksm, control plane and sidecars. |
 | common.agentConfig | object | `{}` | Config for the Infrastructure agent. Will be used by the forwarder sidecars and the agent running integrations. See: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/ |
 | common.config.interval | duration | `15s` (See [Low data mode](README.md#low-data-mode)) | Intervals larger than 40s are not supported and will cause the NR UI to not behave properly. Any non-nil value will override the `lowDataMode` default. |
-| containerSecurityContext | string | `nil` | This is still to be decided in a follow-up PR regarding privileged mode and defaults changing in an evil way |
+| containerSecurityContext | object | `{}` | Sets security context (at container level). Can be configured also with `global.containerSecurityContext` |
 | controlPlane | object | See `values.yaml` | Configuration for the control plane scraper. |
 | controlPlane.affinity | object | Deployed only in master nodes. | Affinity for the control plane DaemonSet. |
 | controlPlane.config.apiServer | object | Common settings for most K8s distributions. | API Server monitoring configuration |
@@ -112,9 +114,13 @@ If your cluster security policy does not allow to to have `privileged` in your p
 | controlPlane.enabled | bool | `true` | Deploy control plane monitoring component. |
 | controlPlane.hostNetwork | bool | `true` | Run Control Plane scraper with `hostNetwork`. `hostNetwork` is required for most control plane configurations, as they only accept connections from localhost. |
 | controlPlane.kind | string | `"DaemonSet"` | How to deploy the control plane scraper. If autodiscovery is in use, it should be `DaemonSet`. Advanced users using static endpoints set this to `Deployment` to avoid reporting metrics twice. |
-| customAttributes | object | `{}` | Custom attributes to be added to the data reported by all integrations reporting in the cluster. |
-| dnsConfig | object | `{}` | Pod dns configuration Ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config |
+| customAttributes | object | `{}` | Adds extra attributes to the cluster and all the metrics emitted to the backend. Can be configured also with `global.customAttributes` |
+| customSecretLicenseKey | string | `""` | In case you don't want to have the license key in you values, this allows you to point to which secret key is the license key located. Can be configured also with `global.customSecretLicenseKey` |
+| customSecretName | string | `""` | In case you don't want to have the license key in you values, this allows you to point to a user created secret to get the key from there. Can be configured also with `global.customSecretName` |
+| dnsConfig | object | `{}` | Sets pod's dnsConfig. Can be configured also with `global.dnsConfig` |
+| fedramp.enabled | bool | `false` | Enables FedRAMP. Can be configured also with `global.fedramp.enabled` |
 | fullnameOverride | string | `""` | Override the full name of the release |
+| hostNetwork | bool | `false` | Sets pod's hostNetwork. Can be configured also with `global.hostNetwork` |
 | images | object | See `values.yaml` | Images used by the chart for the integration and agents. |
 | images.agent | object | See `values.yaml` | Image for the New Relic Infrastructure Agent plus integrations. |
 | images.forwarder | object | See `values.yaml` | Image for the New Relic Infrastructure Agent sidecar. |
@@ -133,20 +139,26 @@ If your cluster security policy does not allow to to have `privileged` in your p
 | kubelet.config.timeout | string | `"10s"` | Timeout for the kubelet APIs contacted by the integration |
 | kubelet.enabled | bool | `true` | Enable kubelet monitoring. Advanced users only. Setting this to `false` is not supported and will break the New Relic experience. |
 | kubelet.tolerations | list | Schedules in all tainted nodes | Affinity for the control plane DaemonSet. |
+| labels | object | `{}` | Additional labels for chart objects. Can be configured also with `global.labels` |
+| licenseKey | string | `""` | This set this license key to use. Can be configured also with `global.licenseKey` |
 | lowDataMode | bool | `false` (See [Low data mode](README.md#low-data-mode)) | Send less data by incrementing the interval from `15s` (the default when `lowDataMode` is `false` or `nil`) to `30s`. Non-nil values of `common.config.interval` will override this value. |
 | nameOverride | string | `""` | Override the name of the chart |
+| nodeSelector | object | `{}` | Sets pod's node selector. Can be configured also with `global.nodeSelector` |
+| nrStaging | bool | `false` | Send the metrics to the staging backend. Requires a valid staging license key. Can be configured also with `global.nrStaging` |
 | podAnnotations | object | `{}` | Annotations to be added to all pods created by the integration. |
-| podLabels | object | `{}` | Labels to be added to all pods created by the integration. |
-| podSecurityContext | string | `nil` | This is still to be decided in a follow-up PR regarding privileged mode and defaults changing in an evil way |
-| priorityClassName | string | `nil` | Pod scheduling priority Ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/ |
+| podLabels | object | `{}` | Additional labels for chart pods. Can be configured also with `global.podLabels` |
+| podSecurityContext | object | `{}` | Sets security context (at pod level). Can be configured also with `global.podSecurityContext` |
+| priorityClassName | string | `""` | Sets pod's priorityClassName. Can be configured also with `global.priorityClassName` |
 | privileged | bool | `true` | Run the integration with full access to the host filesystem and network. Running in this mode allows reporting fine-grained cpu, memory, process and network metrics for your nodes. |
+| proxy | string | `""` | Configures the integration to send all HTTP/HTTPS request through the proxy in that URL. The URL should have a standard format like `https://user:password@hostname:port`. Can be configured also with `global.proxy` |
 | rbac | object | `{"create":true,"pspEnabled":false}` | Settings controlling RBAC objects creation. |
 | rbac.create | bool | `true` | Whether the chart should automatically create the RBAC objects required to run. |
 | rbac.pspEnabled | bool | `false` | Whether the chart should create Pod Security Policy objects. |
 | serviceAccount | object | See `values.yaml` | Settings controlling ServiceAccount creation. |
 | serviceAccount.create | bool | `true` | Whether the chart should automatically create the ServiceAccount objects required to run. |
+| tolerations | list | `[]` | Sets pod's tolerations to node taints. Can be configured also with `global.tolerations` |
 | updateStrategy | object | See `values.yaml` | Update strategy for the DaemonSets deployed. |
-| verboseLog | bool | `false` | Enable verbose logging for all components. |
+| verboseLog | bool | `false` | Sets the debug logs to this integration or all integrations if it is set globally. Can be configured also with `global.verboseLog` |
 
 ## Maintainers
 

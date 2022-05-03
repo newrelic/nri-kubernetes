@@ -395,12 +395,6 @@ updateStrategy:
   rollingUpdate:
     maxUnavailable: 1
 
-# -- Custom attributes to be added to the data reported by all integrations reporting in the cluster.
-customAttributes: {}
-
-# -- Enable verbose logging for all components.
-verboseLog: false
-
 # -- Settings controlling ServiceAccount creation.
 # @default -- See `values.yaml`
 serviceAccount:
@@ -412,21 +406,6 @@ serviceAccount:
 
 # -- Annotations to be added to all pods created by the integration.
 podAnnotations: {}
-# -- Labels to be added to all pods created by the integration.
-podLabels: {}
-
-# -- Pod scheduling priority
-# Ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
-priorityClassName:
-
-# -- This is still to be decided in a follow-up PR regarding privileged mode and defaults changing in an evil way
-podSecurityContext:
-# -- This is still to be decided in a follow-up PR regarding privileged mode and defaults changing in an evil way
-containerSecurityContext:
-
-# -- Pod dns configuration
-# Ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config
-dnsConfig: {}
 
 # -- Run the integration with full access to the host filesystem and network.
 # Running in this mode allows reporting fine-grained cpu, memory, process and network metrics for your nodes.
@@ -482,3 +461,45 @@ integrations: {}
 #  and prefixDisplayNameWithCluster is not set to true.
 # 'false' will use the host name as the name for the "host".
 # useNodeNameAsDisplayName: true
+
+
+# These values are managed by the common-library
+# -- Name of the Kubernetes cluster monitored. Can be configured also with `global.cluster`
+cluster: ""
+# -- This set this license key to use. Can be configured also with `global.licenseKey`
+licenseKey: ""
+# -- In case you don't want to have the license key in you values, this allows you to point to a user created secret to get the key from there. Can be configured also with `global.customSecretName`
+customSecretName: ""
+# -- In case you don't want to have the license key in you values, this allows you to point to which secret key is the license key located. Can be configured also with `global.customSecretLicenseKey`
+customSecretLicenseKey: ""
+# -- Additional labels for chart pods. Can be configured also with `global.podLabels`
+podLabels: {}
+# -- Additional labels for chart objects. Can be configured also with `global.labels`
+labels: {}
+# -- Sets pod's priorityClassName. Can be configured also with `global.priorityClassName`
+priorityClassName: ""
+# -- Sets pod's hostNetwork. Can be configured also with `global.hostNetwork`
+hostNetwork: false
+# -- Sets pod's dnsConfig. Can be configured also with `global.dnsConfig`
+dnsConfig: {}
+# -- Sets security context (at pod level). Can be configured also with `global.podSecurityContext`
+podSecurityContext: {}
+# -- Sets security context (at container level). Can be configured also with `global.containerSecurityContext`
+containerSecurityContext: {}
+# -- Sets pod/node affinities. Can be configured also with `global.affinity`
+affinity: {}
+# -- Sets pod's node selector. Can be configured also with `global.nodeSelector`
+nodeSelector: {}
+# -- Sets pod's tolerations to node taints. Can be configured also with `global.tolerations`
+tolerations: []
+# -- Adds extra attributes to the cluster and all the metrics emitted to the backend. Can be configured also with `global.customAttributes`
+customAttributes: {}
+fedramp:
+  # fedramp.enabled -- Enables FedRAMP. Can be configured also with `global.fedramp.enabled`
+  enabled: false
+# -- Configures the integration to send all HTTP/HTTPS request through the proxy in that URL. The URL should have a standard format like `https://user:password@hostname:port`. Can be configured also with `global.proxy`
+proxy: ""
+# -- Send the metrics to the staging backend. Requires a valid staging license key. Can be configured also with `global.nrStaging`
+nrStaging: false
+# -- Sets the debug logs to this integration or all integrations if it is set globally. Can be configured also with `global.verboseLog`
+verboseLog: false
