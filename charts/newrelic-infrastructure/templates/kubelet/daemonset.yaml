@@ -168,7 +168,7 @@ spec:
               subPath: newrelic-infra.yml
             - name: nri-integrations-cfg-volume
               mountPath: /etc/newrelic-infra/integrations.d/
-            {{- if .Values.privileged }}
+            {{- if include "newrelic.common.privileged" . }}
             - name: dev
               mountPath: /dev
             - name: host-docker-socket
@@ -192,7 +192,7 @@ spec:
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
       volumes:
-        {{- if .Values.privileged }}
+        {{- if include "newrelic.common.privileged" . }}
         - name: dev
           hostPath:
             path: /dev

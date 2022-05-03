@@ -42,6 +42,18 @@ For troubleshooting, see
 [Not seeing data](https://docs.newrelic.com/docs/integrations/host-integrations/troubleshooting/kubernetes-integration-troubleshooting-not-seeing-data)
 or [Error messages](https://docs.newrelic.com/docs/integrations/host-integrations/troubleshooting/kubernetes-integration-troubleshooting-error-messages).
 
+## Helm chart
+
+You can install this chart using [`nri-bundle`](https://github.com/newrelic/helm-charts/tree/master/charts/nri-bundle) located in the
+[helm-charts repository](https://github.com/newrelic/helm-charts) or directly from this repository by adding this Helm repository:
+
+```shell
+helm repo add nri-kubernetes https://newrelic.github.io/nri-kubernetes
+helm upgrade --install nri-kubernetes/newrelic-infrastructure -f your-custom-values.yaml
+```
+
+For further information of the configuration needed for the chart just read the [chart's README](/charts/newrelic-infrastructure/README.md).
+
 ## Usage
 
 Learn how to 
