@@ -41,7 +41,7 @@ For more information go to the [user's guide of the common library](https://gith
 ## Chart particularities
 
 ### Low data mode
-There are two mechanisms to reduce the amount of data that this integration sends to New Relic. See this snippet fomr the `values.yaml` file:
+There are two mechanisms to reduce the amount of data that this integration sends to New Relic. See this snippet from the `values.yaml` file:
 ```yaml
 common:
   config:
