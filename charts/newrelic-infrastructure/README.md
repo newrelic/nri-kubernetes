@@ -1,6 +1,6 @@
 # newrelic-infrastructure
 
-![Version: 3.3.1](https://img.shields.io/badge/Version-3.3.1-informational?style=flat-square) ![AppVersion: 3.1.1](https://img.shields.io/badge/AppVersion-3.1.1-informational?style=flat-square)
+![Version: 3.3.2](https://img.shields.io/badge/Version-3.3.2-informational?style=flat-square) ![AppVersion: 3.1.1](https://img.shields.io/badge/AppVersion-3.1.1-informational?style=flat-square)
 
 A Helm chart to deploy the New Relic Kubernetes monitoring solution
 
@@ -83,7 +83,7 @@ If your cluster security policy does not allow to use `hostNetwork`, you can dis
 The default value for `privileged` [from the common library](https://github.com/newrelic/helm-charts/blob/master/library/common-library/README.md) is
 `false`.
 
-In this chart it is set to true (Look in the [`values.yaml`](values.yaml) for `privileged: true`) because it set `kubelet` pods (the ones that scrape
+In this chart it is set to `true` (Look in the [`values.yaml`](values.yaml) for `privileged: true`) because it set `kubelet` pods (the ones that scrape
 metrics from the hosts itself) into privileged mode so it can fetch more fine-grained cpu, memory, process and network metrics for your nodes.
 
 If your cluster security policy does not allow to to have `privileged` in your pod' security context, you can disable it by setting `privileged` to

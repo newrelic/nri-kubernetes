@@ -76,7 +76,7 @@ If your cluster security policy does not allow to use `hostNetwork`, you can dis
 The default value for `privileged` [from the common library](https://github.com/newrelic/helm-charts/blob/master/library/common-library/README.md) is
 `false`.
 
-In this chart it is set to true (Look in the [`values.yaml`](values.yaml) for `privileged: true`) because it set `kubelet` pods (the ones that scrape
+In this chart it is set to `true` (Look in the [`values.yaml`](values.yaml) for `privileged: true`) because it set `kubelet` pods (the ones that scrape
 metrics from the hosts itself) into privileged mode so it can fetch more fine-grained cpu, memory, process and network metrics for your nodes.
 
 If your cluster security policy does not allow to to have `privileged` in your pod' security context, you can disable it by setting `privileged` to
