@@ -33,20 +33,20 @@ func TestOneAttributePerResource(t *testing.T) {
 	}
 
 	rawResources := v1.ResourceList{
-		v1.ResourceCPU:                    *resource.NewQuantity(2, resource.DecimalSI),
+		v1.ResourceCPU:                    resource.MustParse("1985m"),
 		v1.ResourcePods:                   *resource.NewQuantity(110, resource.DecimalSI),
 		v1.ResourceEphemeralStorage:       *resource.NewQuantity(18211580000, resource.BinarySI),
 		v1.ResourceStorage:                *resource.NewQuantity(18211580000, resource.BinarySI),
 		v1.ResourceMemory:                 *resource.NewQuantity(2033280000, resource.BinarySI),
 		v1.ResourceReplicationControllers: *resource.NewQuantity(1, resource.DecimalSI),
-		resourceTestBeta:                  *resource.NewQuantity(11, resource.DecimalSI),
+		resourceTestBeta:                  resource.MustParse("10985m"),
 		resourceTestAlpha:                 *resource.NewQuantity(111, resource.BinarySI),
 	}
 
 	for _, testCase := range testCases {
 		t.Run(string(testCase.resourceType), func(t *testing.T) {
 			expected := definition.FetchedValues{
-				fmt.Sprintf("%sCpuCores", testCase.resourceType):                 int64(2),
+				fmt.Sprintf("%sCpuCores", testCase.resourceType):                 float64(1.985),
 				fmt.Sprintf("%sPods", testCase.resourceType):                     int64(110),
 				fmt.Sprintf("%sEphemeralStorageBytes", testCase.resourceType):    int64(18211580000),
 				fmt.Sprintf("%sStorageBytes", testCase.resourceType):             int64(18211580000),
