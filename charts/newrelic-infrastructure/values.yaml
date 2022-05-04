@@ -1,32 +1,42 @@
-# nameOverride: ""
-# fullnameOverride: ""
+# -- Override the name of the chart
+nameOverride: ""
+# -- Override the full name of the release
+fullnameOverride: ""
+
+# -- Name of the Kubernetes cluster monitored. Can be configured also with `global.cluster`
+cluster: ""
+# -- This set this license key to use. Can be configured also with `global.licenseKey`
+licenseKey: ""
+# -- In case you don't want to have the license key in you values, this allows you to point to a user created secret to get the key from there. Can be configured also with `global.customSecretName`
+customSecretName: ""
+# -- In case you don't want to have the license key in you values, this allows you to point to which secret key is the license key located. Can be configured also with `global.customSecretLicenseKey`
+customSecretLicenseKey: ""
 
 # -- Images used by the chart for the integration and agents.
 # @default -- See `values.yaml`
 images:
+  # -- The secrets that are needed to pull images from a custom registry.
   pullSecrets: []
-  # Image for the New Relic Infrastructure Agent sidecar.
+  # - name: regsecret
+  # -- Image for the New Relic Infrastructure Agent sidecar.
+  # @default -- See `values.yaml`
   forwarder:
     pullPolicy: IfNotPresent
-    # -- Tag for the agent sidecar.
     tag: 1.24.1
-    # -- Image for the agent sidecar.
     repository: newrelic/k8s-events-forwarder
     registry: ""
-  # Image for the New Relic Infrastructure Agent plus integrations.
+  # -- Image for the New Relic Infrastructure Agent plus integrations.
+  # @default -- See `values.yaml`
   agent:
     pullPolicy: IfNotPresent
-    # -- Tag for the agent and integrations bundle.
     tag: 2.8.8
-    # -- Image for the agent and integrations bundle.
     repository: newrelic/infrastructure-bundle
     registry: ""
-  # Image for the New Relic Kubernetes integration.
+  # -- Image for the New Relic Kubernetes integration.
+  # @default -- See `values.yaml`
   integration:
     pullPolicy: IfNotPresent
-    # -- Tag for the kubernetes integration.
     tag: 3.1.0
-    # -- Image for the kubernetes integration.
     repository: newrelic/nri-kubernetes
     registry: ""
 
@@ -37,7 +47,7 @@ common:
   config:
     # common.config.interval -- (duration) Intervals larger than 40s are not supported and will cause the NR UI to not
     # behave properly. Any non-nil value will override the `lowDataMode` default.
-    # @default -- `15s` if `lowDataMode == false`, `30s` otherwise.
+    # @default -- `15s` (See [Low data mode](README.md#low-data-mode))
     interval:
   # -- Config for the Infrastructure agent.
   # Will be used by the forwarder sidecars and the agent running integrations.
@@ -46,7 +56,7 @@ common:
 
 # lowDataMode -- (bool) Send less data by incrementing the interval from `15s` (the default when `lowDataMode` is `false` or `nil`) to `30s`.
 # Non-nil values of `common.config.interval` will override this value.
-# @default -- `false`
+# @default -- `false` (See [Low data mode](README.md#low-data-mode))
 lowDataMode:
 
 # kubelet -- Configuration for the DaemonSet that collects metrics from the Kubelet.
@@ -56,6 +66,8 @@ kubelet:
   # Advanced users only. Setting this to `false` is not supported and will break the New Relic experience.
   enabled: true
   annotations: {}
+  # -- Affinity for the control plane DaemonSet.
+  # @default -- Schedules in all tainted nodes
   tolerations:
     - operator: "Exists"
       effect: "NoSchedule"
@@ -89,12 +101,16 @@ ksm:
   # Advanced users only. Setting this to `false` is not supported and will break the New Relic experience.
   enabled: true
   annotations: {}
+  # -- Affinity for the control plane DaemonSet.
+  # @default -- Schedules in all tainted nodes
   tolerations:
     - operator: "Exists"
       effect: "NoSchedule"
     - operator: "Exists"
       effect: "NoExecute"
   nodeSelector: {}
+  # -- Affinity for the control plane DaemonSet.
+  # @default -- Deployed in the same node as KSM
   affinity:
     podAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
@@ -388,11 +404,8 @@ updateStrategy:
   rollingUpdate:
     maxUnavailable: 1
 
-# -- Custom attributes to be added to the data reported by all integrations reporting in the cluster.
-customAttributes:
-
-# -- Enable verbose logging for all components.
-verboseLog: false
+# -- Adds extra attributes to the cluster and all the metrics emitted to the backend. Can be configured also with `global.customAttributes`
+customAttributes: {}
 
 # -- Settings controlling ServiceAccount creation.
 # @default -- See `values.yaml`
@@ -403,28 +416,28 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+# -- Additional labels for chart objects. Can be configured also with `global.labels`
+labels: {}
 # -- Annotations to be added to all pods created by the integration.
 podAnnotations: {}
-# -- Labels to be added to all pods created by the integration.
+# -- Additional labels for chart pods. Can be configured also with `global.podLabels`
 podLabels: {}
-
-# -- Pod scheduling priority
-# Ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/
-priorityClassName:
-
-# -- This is still to be decided in a follow-up PR regarding privileged mode and defaults changing in an evil way
-podSecurityContext:
-# -- This is still to be decided in a follow-up PR regarding privileged mode and defaults changing in an evil way
-containerSecurityContext:
-
-# -- Pod dns configuration
-# Ref: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#pod-dns-config
-dnsConfig:
 
 # -- Run the integration with full access to the host filesystem and network.
 # Running in this mode allows reporting fine-grained cpu, memory, process and network metrics for your nodes.
-# Additionally, it allows control plane monitoring, which requires hostNetwork to work.
 privileged: true
+# -- Sets pod's priorityClassName. Can be configured also with `global.priorityClassName`
+priorityClassName: ""
+# -- (bool) Sets pod's hostNetwork. Can be configured also with `global.hostNetwork`
+# @default -- `false`
+hostNetwork:
+# -- Sets security context (at pod level). Can be configured also with `global.podSecurityContext`
+podSecurityContext: {}
+# -- Sets security context (at container level). Can be configured also with `global.containerSecurityContext`
+containerSecurityContext: {}
+
+# -- Sets pod's dnsConfig. Can be configured also with `global.dnsConfig`
+dnsConfig: {}
 
 # -- Settings controlling RBAC objects creation.
 rbac:
@@ -432,6 +445,13 @@ rbac:
   create: true
   # -- Whether the chart should create Pod Security Policy objects.
   pspEnabled: false
+
+# -- Sets pod/node affinities set almost globally. (See [Affinities and tolerations](README.md#affinities-and-tolerations))
+affinity: {}
+# -- Sets pod's node selector almost globally. (See [Affinities and tolerations](README.md#affinities-and-tolerations))
+nodeSelector: {}
+# -- Sets pod's tolerations to node taints almost globally. (See [Affinities and tolerations](README.md#affinities-and-tolerations))
+tolerations: []
 
 # -- Config files for other New Relic integrations that should run in this cluster.
 integrations: {}
@@ -476,3 +496,19 @@ integrations: {}
 #  and prefixDisplayNameWithCluster is not set to true.
 # 'false' will use the host name as the name for the "host".
 # useNodeNameAsDisplayName: true
+
+
+# -- Configures the integration to send all HTTP/HTTPS request through the proxy in that URL. The URL should have a standard format like `https://user:password@hostname:port`. Can be configured also with `global.proxy`
+proxy: ""
+
+# -- (bool) Send the metrics to the staging backend. Requires a valid staging license key. Can be configured also with `global.nrStaging`
+# @default -- `false`
+nrStaging:
+fedramp:
+  # -- (bool) Enables FedRAMP. Can be configured also with `global.fedramp.enabled`
+  # @default -- `false`
+  enabled:
+
+# -- (bool) Sets the debug logs to this integration or all integrations if it is set globally. Can be configured also with `global.verboseLog`
+# @default -- `false`
+verboseLog:
