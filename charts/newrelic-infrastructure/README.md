@@ -53,8 +53,9 @@ inside the range of 10 to 40 seconds.
 
 ### Affinities and tolerations
 
-The New Relic common library allows to set affinities, tolerations, and node selectors globally with the rest of the integrations and products but this
-chart has an extra level of granularity to set them.
+The New Relic common library allows to set affinities, tolerations, and node selectors globally using e.g. `.global.affinity` to ease the configuration
+when you use this chart using `nri-bundle`. This chart has an extra level of granularity to the components that it deploys:
+control plane, ksm, and kubelet.
 
 Take this snippet as an example:
 ```yaml
@@ -70,8 +71,8 @@ controlPlane:
   affinity: {}
 ```
 
-The order to set an affinity is to set first any `kubelet.affinity`, `ksm.affinity`, or `controlPlane.affinity`. If they are empty it fallbacks to
-`affinity` and if it is empty it fallbacks to `global.affinity`.
+The order to set an affinity is to set first any `kubelet.affinity`, `ksm.affinity`, or `controlPlane.affinity`. If these values are empty the chart
+fallbacks to `affinity` (at root level), and if that value is empty, the chart fallbacks to `global.affinity`.
 
 The same procedure applies to `nodeSelector` and `tolerations`.
 
@@ -98,7 +99,7 @@ If your cluster security policy does not allow to use `hostNetwork`, you can dis
 The default value for `privileged` [from the common library](https://github.com/newrelic/helm-charts/blob/master/library/common-library/README.md) is
 `false` but in this particular this chart it is set to `true` (Look in the [`values.yaml`](values.yaml) for `privileged: true`)
 
-This is because when `kubelet` pods need to run in privileged mode to fetch cpu, memory, process, and network metrics for your nodes.
+This is because when `kubelet` pods need to run in privileged mode to fetch cpu, memory, process, and network metrics of your nodes.
 
 If your cluster security policy does not allow to have `privileged` in your pod' security context, you can disable it by setting `privileged` to
 `false` taking into account that you will lose all the metrics from the host and some metadata from the host that are added to the metrics of the
