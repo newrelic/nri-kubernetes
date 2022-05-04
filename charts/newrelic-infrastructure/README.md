@@ -22,21 +22,13 @@ helm upgrade --install nri-kube-events/nri-kube-events -f your-custom-values.yam
 * <https://github.com/newrelic/nri-kubernetes/tree/master/charts/newrelic-infrastructure>
 * <https://github.com/newrelic/infrastructure-agent/>
 
-## Requirements
-
-| Repository | Name | Version |
-|------------|------|---------|
-| https://helm-charts.newrelic.com | common-library | 1.0.2 |
-
 ## Values managed globally
 
 This chart implements the [New Relic's common Helm library](https://github.com/newrelic/helm-charts/tree/master/library/common-library) which
-means that is has a seamless UX between things that are configurable across different Helm charts. So there are behaviours that could be
-changed globally if you install this chart from `nri-bundle` or your own umbrella chart.
+means that it honors a wide range of defaults and globals common to most New Relic Helm charts.
 
-A really broad list of global managed values are `affinity`, `nodeSelector`, `tolerations`, `proxy` and many more.
-
-For more information go to the [user's guide of the common library](https://github.com/newrelic/helm-charts/blob/master/library/common-library/README.md)
+Options that can be defined globally include `affinity`, `nodeSelector`, `tolerations`, `proxy` and others. The full list can be found at
+[user's guide of the common library](https://github.com/newrelic/helm-charts/blob/master/library/common-library/README.md).
 
 ## Chart particularities
 
@@ -93,7 +85,7 @@ If your cluster security policy does not allow to to have `privileged` in your p
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| affinity | object | `{}` | Sets pod/node affinities. Can be configured also with `global.affinity` |
+| affinity | object | `{}` | Sets pod/node affinities set almost globally. (See [Affinities and tolerations](README.md#affinities-and-tolerations)) |
 | cluster | string | `""` | Name of the Kubernetes cluster monitored. Can be configured also with `global.cluster` |
 | common | object | See `values.yaml` | Config that applies to all instances of the solution: kubelet, ksm, control plane and sidecars. |
 | common.agentConfig | object | `{}` | Config for the Infrastructure agent. Will be used by the forwarder sidecars and the agent running integrations. See: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/ |
@@ -143,7 +135,7 @@ If your cluster security policy does not allow to to have `privileged` in your p
 | licenseKey | string | `""` | This set this license key to use. Can be configured also with `global.licenseKey` |
 | lowDataMode | bool | `false` (See [Low data mode](README.md#low-data-mode)) | Send less data by incrementing the interval from `15s` (the default when `lowDataMode` is `false` or `nil`) to `30s`. Non-nil values of `common.config.interval` will override this value. |
 | nameOverride | string | `""` | Override the name of the chart |
-| nodeSelector | object | `{}` | Sets pod's node selector. Can be configured also with `global.nodeSelector` |
+| nodeSelector | object | `{}` | Sets pod's node selector almost globally. (See [Affinities and tolerations](README.md#affinities-and-tolerations)) |
 | nrStaging | bool | `false` | Send the metrics to the staging backend. Requires a valid staging license key. Can be configured also with `global.nrStaging` |
 | podAnnotations | object | `{}` | Annotations to be added to all pods created by the integration. |
 | podLabels | object | `{}` | Additional labels for chart pods. Can be configured also with `global.podLabels` |
@@ -156,7 +148,7 @@ If your cluster security policy does not allow to to have `privileged` in your p
 | rbac.pspEnabled | bool | `false` | Whether the chart should create Pod Security Policy objects. |
 | serviceAccount | object | See `values.yaml` | Settings controlling ServiceAccount creation. |
 | serviceAccount.create | bool | `true` | Whether the chart should automatically create the ServiceAccount objects required to run. |
-| tolerations | list | `[]` | Sets pod's tolerations to node taints. Can be configured also with `global.tolerations` |
+| tolerations | list | `[]` | Sets pod's tolerations to node taints almost globally. (See [Affinities and tolerations](README.md#affinities-and-tolerations)) |
 | updateStrategy | object | See `values.yaml` | Update strategy for the DaemonSets deployed. |
 | verboseLog | bool | `false` | Sets the debug logs to this integration or all integrations if it is set globally. Can be configured also with `global.verboseLog` |
 
