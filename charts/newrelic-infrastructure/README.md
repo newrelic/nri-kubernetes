@@ -42,28 +42,51 @@ common:
 lowDataMode: false
 ```
 
-The `lowDataMode` toggle is the simplest way amd setting it to `true` changes the default scrape interval from 15 seconds (the default) to 30 seconds.
+The `lowDataMode` toggle is the simplest way to reduce data send to Newrelic. Setting it to `true` changes the default scrape interval from 15 seconds
+(the default) to 30 seconds.
 
-If you need for some reason to fine tune the amount of seconds you can use `common.config.interval` directly. If you take a look to the `values.yaml`
-file, the value there is `nil`. If set any value there, the `lowDataMode` toggle is ignored and this value is issued.
+If you need for some reason to fine-tune the number of seconds you can use `common.config.interval` directly. If you take a look at the `values.yaml`
+file, the value there is `nil`. If any value is set there, the `lowDataMode` toggle is ignored as this value takes precedence.
 
 Setting this interval above 40 seconds can make you experience issues with the Kubernetes Cluster Explorer so this chart limits setting the interval
 inside the range of 10 to 40 seconds.
 
 ### Affinities and tolerations
 
-The New Relic common library allows to set affinities, tolerations and nodeSelectors in globally with the resto of the integrations and products. This
-integration in particular has affinities and tolerations set to be able to schedule pods in nodes that are tainted as master nodes and to schedule a
-pod near the KSM to reduce the inter-node traffic.
+The New Relic common library allows to set affinities, tolerations, and node selectors globally with the rest of the integrations and products but this
+chart has an extra level of granularity to set them.
 
-Take a look to the [`values.yaml`](values.yaml) so see how to configure them if you are having problems scheduling pods where you want to.
+Take this snippet as an example:
+```yaml
+global:
+  affinity: {}
+affinity: {}
+
+kubelet:
+  affinity: {}
+ksm:
+  affinity: {}
+controlPlane:
+  affinity: {}
+```
+
+The order to set an affinity is to set first any `kubelet.affinity`, `ksm.affinity`, or `controlPlane.affinity`. If they are empty it fallbacks to
+`affinity` and if it is empty it fallbacks to `global.affinity`.
+
+The same procedure applies to `nodeSelector` and `tolerations`.
+
+On the other hand, some components have affinities and tolerations predefined e.g. to be able to run kubelet pods on nodes that are tainted as master
+nodes or to schedule the KSM scraper on the same node of KSM to reduce the inter-node traffic.
+
+If you are having problems assigning pods to nodes it may be because of this. Take a look at the [`values.yaml`](values.yaml) to see if the pod that is
+not having your expected behavior has any predefined value.
 
 ### `hostNetwork` toggle
 
 In versions below v3, changing the `privileged` mode affected the `hostNetwork`. We changed this behavior and now you can set pods to use `hostNetwork`
 using the corresponding [flags from the common library](https://github.com/newrelic/helm-charts/blob/master/library/common-library/README.md)
-(`.global.hostNetwork` and `.hostNetwork`) but the component that scrapers data from the control plane has always set `hostNetwork` to true (Look in the
-[`values.yaml`](values.yaml) for `controlPlane.hostNetwork: true`)
+(`.global.hostNetwork` and `.hostNetwork`) but the component that scrapes data from the control plane has always set `hostNetwork` enabled by default
+(Look in the [`values.yaml`](values.yaml) for `controlPlane.hostNetwork: true`)
 
 This is because the most common configuration of the control plane components is to be configured to listen only to `localhost`.
 
@@ -73,13 +96,13 @@ If your cluster security policy does not allow to use `hostNetwork`, you can dis
 ### `privileged` toggle
 
 The default value for `privileged` [from the common library](https://github.com/newrelic/helm-charts/blob/master/library/common-library/README.md) is
-`false`.
+`false` but in this particular this chart it is set to `true` (Look in the [`values.yaml`](values.yaml) for `privileged: true`)
 
-In this chart it is set to `true` (Look in the [`values.yaml`](values.yaml) for `privileged: true`) because it set `kubelet` pods (the ones that scrape
-metrics from the hosts itself) into privileged mode so it can fetch more fine-grained cpu, memory, process and network metrics for your nodes.
+This is because when `kubelet` pods need to run in privileged mode to fetch cpu, memory, process, and network metrics for your nodes.
 
-If your cluster security policy does not allow to to have `privileged` in your pod' security context, you can disable it by setting `privileged` to
-`false.`
+If your cluster security policy does not allow to have `privileged` in your pod' security context, you can disable it by setting `privileged` to
+`false` taking into account that you will lose all the metrics from the host and some metadata from the host that are added to the metrics of the
+integrations that you have configured.
 
 ## Values
 
