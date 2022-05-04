@@ -1,6 +1,6 @@
 # newrelic-infrastructure
 
-![Version: 3.3.2](https://img.shields.io/badge/Version-3.3.2-informational?style=flat-square) ![AppVersion: 3.1.1](https://img.shields.io/badge/AppVersion-3.1.1-informational?style=flat-square)
+![Version: 3.3.3](https://img.shields.io/badge/Version-3.3.3-informational?style=flat-square) ![AppVersion: 3.1.1](https://img.shields.io/badge/AppVersion-3.1.1-informational?style=flat-square)
 
 A Helm chart to deploy the New Relic Kubernetes monitoring solution
 
@@ -12,8 +12,8 @@ You can install this chart using [`nri-bundle`](https://github.com/newrelic/helm
 [helm-charts repository](https://github.com/newrelic/helm-charts) or directly from this repository by adding this Helm repository:
 
 ```shell
-helm repo add nri-kube-events https://newrelic.github.io/nri-kube-events
-helm upgrade --install nri-kube-events/nri-kube-events -f your-custom-values.yaml
+helm repo add nri-kubernetes https://newrelic.github.io/nri-kubernetes
+helm upgrade --install nri-kubernetes/newrelic-infrastructure -f your-custom-values.yaml
 ```
 
 ## Source Code
