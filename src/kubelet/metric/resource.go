@@ -36,7 +36,14 @@ func oneAttributePerResource(rawResources definition.FetchedValue, r resourceTyp
 	modified := make(definition.FetchedValues, len(resources))
 	for resourceName, resourceQuantity := range resources {
 		n := camelcase.Camelcase(string(r) + strings.Title(addResourceUnit(resourceName)))
-		modified[n] = resourceQuantity.Value()
+
+		switch resourceName {
+		case v1.ResourceCPU:
+			// AsApproximateFloat64 is used to avoid round up CPU cores metrics which are reported in cores to New Relic.
+			modified[n] = resourceQuantity.AsApproximateFloat64()
+		default:
+			modified[n] = resourceQuantity.Value()
+		}
 	}
 
 	return modified, nil
