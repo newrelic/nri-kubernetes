@@ -19,7 +19,7 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
     {{- $name = printf "%s-%s" .Release.Name $name -}}
 {{- end -}}
 
-{{- include "newrelic.common.naming.trucateToDNS" $name -}}
+{{- include "newrelic.common.naming.truncateToDNS" $name -}}
 {{- end -}}
 
 
