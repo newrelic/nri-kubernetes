@@ -140,16 +140,16 @@ ksm:
     timeout: 10s
     # -- Number of retries after timeout expired
     retries: 3
-  # -- if specified autodiscovery is not performed and the specified URL is used
-  # staticUrl: "http://test.io:8080/metrics"
-  # -- the URL scheme is not discovered and the specified one is used
-  # scheme: "http"
-  # -- the port is not discovered and the specified one is used
-  # port: 8080
-  # -- only the pods matching this selector are taken into account during autodiscovery
-  # selector: "app.kubernetes.io/name=kube-state-metrics"
-  # -- only the pods matching this namespace taken into account during autodiscovery
-  # namespace: "ksm-namespace"
+    # -- if specified autodiscovery is not performed and the specified URL is used
+    # staticUrl: "http://test.io:8080/metrics"
+    # -- pods matching this selector are taken into account during autodiscovery
+    selector: "app.kubernetes.io/name=kube-state-metrics"
+    # -- the URL scheme cannot be discovered and so you have to specify one
+    scheme: "http"
+    # -- the port is not discovered and the specified one is used
+    # port: 8080
+    # -- only the pods matching this namespace taken into account during autodiscovery
+    # namespace: "ksm-namespace"
 
 # controlPlane -- Configuration for the control plane scraper.
 # @default -- See `values.yaml`
