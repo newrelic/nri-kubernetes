@@ -1,11 +1,9 @@
-suite: Control plane strategy
+suite: test control plane strategy
 templates:
   - templates/controlplane/daemonset.yaml
-  - templates/controlplane/configmap.yaml
+  - templates/controlplane/scraper-configmap.yaml
+  - templates/controlplane/agent-configmap.yaml
   - templates/secret.yaml
-  - templates/agent-configmap.yaml
-  - templates/_helpers.tpl
-  - templates/_helpers_compatibility.tpl
 tests:
   - it: DaemonSet defaults to global updateStrategy
     set:
