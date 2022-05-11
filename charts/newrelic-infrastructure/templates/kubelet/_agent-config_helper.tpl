@@ -6,6 +6,10 @@ http_server_enabled: true
 http_server_port: 8003
 features:
   docker_enabled: false
+{{- with .Values.kubelet.passthroughEnvironment }}
+passthrough_environment:
+  {{- toYaml . | nindent 2 }}
+{{- end }}
 {{- if not ( include "newrelic.common.privileged" . ) }}
 is_secure_forward_only: true
 overide_host_root: ""  # Typo from here: https://github.com/newrelic/infrastructure-agent/blob/master/pkg/config/config.go#L267

@@ -75,9 +75,16 @@ kubelet:
       effect: "NoExecute"
   nodeSelector: {}
   affinity: {}
+  # -- The agent will send these environment variables to integrations
+  # Ref: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/configure-infrastructure-agent/#config-file
+  passthroughEnvironment: []
+  # -- Add user environment variables to the agent
   extraEnv: []
+  # -- Add user environment from configMaps or secrets as variables to the agent
   extraEnvFrom: []
+  # -- Volumes to mount in the containers
   extraVolumes: []
+  # -- Defines where to mount volumes specified with `extraVolumes`
   extraVolumeMounts: []
   initContainers: []
   resources:

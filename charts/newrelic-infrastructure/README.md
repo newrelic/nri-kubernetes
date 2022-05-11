@@ -1,6 +1,6 @@
 # newrelic-infrastructure
 
-![Version: 3.3.5](https://img.shields.io/badge/Version-3.3.5-informational?style=flat-square) ![AppVersion: 3.1.1](https://img.shields.io/badge/AppVersion-3.1.1-informational?style=flat-square)
+![Version: 3.3.7](https://img.shields.io/badge/Version-3.3.7-informational?style=flat-square) ![AppVersion: 3.1.1](https://img.shields.io/badge/AppVersion-3.1.1-informational?style=flat-square)
 
 A Helm chart to deploy the New Relic Kubernetes monitoring solution
 
@@ -146,8 +146,8 @@ integrations that you have configured.
 | ksm | object | See `values.yaml` | Configuration for the Deployment that collects state metrics from KSM (kube-state-metrics). |
 | ksm.affinity | object | Deployed in the same node as KSM | Affinity for the control plane DaemonSet. |
 | ksm.config.retries | int | `3` | Number of retries after timeout expired |
-| ksm.config.scheme | string | `"http"` | the URL scheme cannot be discovered and so you have to specify one |
-| ksm.config.selector | string | `"app.kubernetes.io/name=kube-state-metrics"` | pods matching this selector are taken into account during autodiscovery |
+| ksm.config.scheme | string | `"http"` | Scheme to use to connect to kube-state-metrics. Supported values are `http` and `https`. |
+| ksm.config.selector | string | `"app.kubernetes.io/name=kube-state-metrics"` | Label selector that will be used to automatically discover an instance of kube-state-metrics running in the cluster. |
 | ksm.config.timeout | string | `"10s"` | Timeout for the ksm API contacted by the integration |
 | ksm.enabled | bool | `true` | Enable cluster state monitoring. Advanced users only. Setting this to `false` is not supported and will break the New Relic experience. |
 | ksm.resources | object | 100m/150M -/850M | Resources for the KSM scraper pod. Keep in mind that sharding is not supported at the moment, so memory usage for this component ramps up quickly on large clusters. |
@@ -156,6 +156,11 @@ integrations that you have configured.
 | kubelet.config.retries | int | `3` | Number of retries after timeout expired |
 | kubelet.config.timeout | string | `"10s"` | Timeout for the kubelet APIs contacted by the integration |
 | kubelet.enabled | bool | `true` | Enable kubelet monitoring. Advanced users only. Setting this to `false` is not supported and will break the New Relic experience. |
+| kubelet.extraEnv | list | `[]` | Add user environment variables to the agent |
+| kubelet.extraEnvFrom | list | `[]` | Add user environment from configMaps or secrets as variables to the agent |
+| kubelet.extraVolumeMounts | list | `[]` | Defines where to mount volumes specified with `extraVolumes` |
+| kubelet.extraVolumes | list | `[]` | Volumes to mount in the containers |
+| kubelet.passthroughEnvironment | list | `[]` | The agent will send these environment variables to integrations Ref: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/configure-infrastructure-agent/#config-file |
 | kubelet.tolerations | list | Schedules in all tainted nodes | Affinity for the control plane DaemonSet. |
 | labels | object | `{}` | Additional labels for chart objects. Can be configured also with `global.labels` |
 | licenseKey | string | `""` | This set this license key to use. Can be configured also with `global.licenseKey` |
