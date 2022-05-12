@@ -1,0 +1,44 @@
+name: Release newrelic infrastructure chart
+on:
+  push:
+    branches:
+      - v2
+
+jobs:
+#   Sometimes chart-releaser might fetch an outdated index.yaml from gh-pages, causing a WAW hazard on the repo
+#   This job checks the remote file is up to date with the local one on release
+  validate-gh-pages-index:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: gh-pages
+      - name: Download remote index file and check equality
+        run: |
+          curl -vsSL https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/index.yaml > index.yaml.remote
+          LOCAL="$(md5sum < index.yaml)"
+          REMOTE="$(md5sum < index.yaml.remote)"
+          echo "$LOCAL" = "$REMOTE"
+          test "$LOCAL" = "$REMOTE"
+
+  chart-release:
+    runs-on: ubuntu-latest
+    needs: [ validate-gh-pages-index ]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Add newrelic repository
+        run: helm repo add newrelic https://helm-charts.newrelic.com
+
+      - name: Release workload charts
+        uses: helm/chart-releaser-action@v1.3.0
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
