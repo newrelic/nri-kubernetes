@@ -148,7 +148,8 @@ ksm:
     scheme: "http"
     # -- Restrict autodiscovery of the kube-state-metrics endpoint to those using a specific port. If empty or `0`, all endpoints are considered regardless of their port (recommended).
     # port: 8080
-    # -- only the pods matching this namespace taken into account during autodiscovery
+    # -- Restrict autodiscovery of the kube-state-metrics service to a particular namespace.
+    # @default -- All namespaces are searched (recommended).
     # namespace: "ksm-namespace"
 
 # controlPlane -- Configuration for the control plane scraper.
