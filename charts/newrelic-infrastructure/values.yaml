@@ -509,12 +509,11 @@ integrations: {}
 #        labels:
 #          env: test
 
-# Collect detailed metrics from processes running in the host.
-# @default -- [True only for accounts created before July 20, 2020.](https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/new-relic-infrastructure-agent-1120)
-# enableProcessMetrics: false
-
-# Send data to New Relic Staging. Requires an staging-specific License Key.
-# nrStaging: false
+# -- (bool) Collect detailed metrics from processes running in the host.
+# This defaults to true for accounts created before July 20, 2020.
+# ref: https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/new-relic-infrastructure-agent-1120
+# @default -- `true`
+enableProcessMetrics:
 
 # Prefix nodes display name with cluster to reduce chances of collisions
 # prefixDisplayNameWithCluster: false
@@ -524,6 +523,13 @@ integrations: {}
 #  and prefixDisplayNameWithCluster is not set to true.
 # 'false' will use the host name as the name for the "host".
 # useNodeNameAsDisplayName: true
+
+selfMonitoring:
+  pixie:
+    # selfMonitoring.pixie.enabled -- Enables the Pixie Health Check nri-flex config.
+    # This Flex config performs periodic checks of the Pixie /healthz and /statusz endpoints exposed by the Pixie
+    # Cloud Connector. A status for each endpoint is sent to New Relic in a pixieHealthCheck event.
+    enabled: true
 
 
 # -- Configures the integration to send all HTTP/HTTPS request through the proxy in that URL. The URL should have a standard format like `https://user:password@hostname:port`. Can be configured also with `global.proxy`
