@@ -117,6 +117,7 @@ integrations that you have configured.
 | containerSecurityContext | object | `{}` | Sets security context (at container level). Can be configured also with `global.containerSecurityContext` |
 | controlPlane | object | See `values.yaml` | Configuration for the control plane scraper. |
 | controlPlane.affinity | object | Deployed only in master nodes. | Affinity for the control plane DaemonSet. |
+| controlPlane.agentConfig | object | `{}` | Config for the Infrastructure agent. Will be used by the forwarder sidecars and the agent running integrations. See: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/ |
 | controlPlane.config.apiServer | object | Common settings for most K8s distributions. | API Server monitoring configuration |
 | controlPlane.config.apiServer.enabled | bool | `true` | Enable API Server monitoring |
 | controlPlane.config.controllerManager | object | Common settings for most K8s distributions. | Controller manager monitoring configuration |
@@ -145,6 +146,7 @@ integrations that you have configured.
 | integrations | object | `{}` | Config files for other New Relic integrations that should run in this cluster. |
 | ksm | object | See `values.yaml` | Configuration for the Deployment that collects state metrics from KSM (kube-state-metrics). |
 | ksm.affinity | object | Deployed in the same node as KSM | Affinity for the control plane DaemonSet. |
+| ksm.agentConfig | object | `{}` | Config for the Infrastructure agent. Will be used by the forwarder sidecars and the agent running integrations. See: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/ |
 | ksm.config.retries | int | `3` | Number of retries after timeout expired |
 | ksm.config.scheme | string | `"http"` | Scheme to use to connect to kube-state-metrics. Supported values are `http` and `https`. |
 | ksm.config.selector | string | `"app.kubernetes.io/name=kube-state-metrics"` | Label selector that will be used to automatically discover an instance of kube-state-metrics running in the cluster. |
@@ -153,6 +155,8 @@ integrations that you have configured.
 | ksm.resources | object | 100m/150M -/850M | Resources for the KSM scraper pod. Keep in mind that sharding is not supported at the moment, so memory usage for this component ramps up quickly on large clusters. |
 | ksm.tolerations | list | Schedules in all tainted nodes | Affinity for the control plane DaemonSet. |
 | kubelet | object | See `values.yaml` | Configuration for the DaemonSet that collects metrics from the Kubelet. |
+| kubelet.agentConfig | object | `{}` | Config for the Infrastructure agent. Will be used by the forwarder sidecars and the agent running integrations. See: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/ |
+| kubelet.agentConfig.passthrough_environment | list | `[]` | The agent will send these environment variables to integrations Ref: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/configure-infrastructure-agent/#config-file |
 | kubelet.config.retries | int | `3` | Number of retries after timeout expired |
 | kubelet.config.timeout | string | `"10s"` | Timeout for the kubelet APIs contacted by the integration |
 | kubelet.enabled | bool | `true` | Enable kubelet monitoring. Advanced users only. Setting this to `false` is not supported and will break the New Relic experience. |
@@ -160,7 +164,6 @@ integrations that you have configured.
 | kubelet.extraEnvFrom | list | `[]` | Add user environment from configMaps or secrets as variables to the agent |
 | kubelet.extraVolumeMounts | list | `[]` | Defines where to mount volumes specified with `extraVolumes` |
 | kubelet.extraVolumes | list | `[]` | Volumes to mount in the containers |
-| kubelet.passthroughEnvironment | list | `[]` | The agent will send these environment variables to integrations Ref: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/configure-infrastructure-agent/#config-file |
 | kubelet.tolerations | list | Schedules in all tainted nodes | Affinity for the control plane DaemonSet. |
 | labels | object | `{}` | Additional labels for chart objects. Can be configured also with `global.labels` |
 | licenseKey | string | `""` | This set this license key to use. Can be configured also with `global.licenseKey` |

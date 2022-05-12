@@ -64,12 +64,15 @@ Returns legacy annotations if available
 Returns agent configmap merged with legacy config and legacy eventQueueDepth config
 */}}
 {{- define "newrelic.compatibility.agentConfig" -}}
-{{ $config:= (include "newrelic.compatibility.valueWithFallback" (dict "legacy" .Values.config "supported" .Values.common.agentConfig ) | fromYaml )}}
+{{- $oldConfig := .Values.config | default dict -}}
+{{- $newConfig := .Values.common.agentConfig  -}}
+{{- $eventQueueDepth := dict -}}
+
 {{- if .Values.eventQueueDepth -}}
-{{- mustMergeOverwrite $config (dict "event_queue_depth" .Values.eventQueueDepth ) | toYaml }}
-{{- else -}}
-{{- $config | toYaml }}
+{{- $eventQueueDepth = dict "event_queue_depth" .Values.eventQueueDepth -}}
 {{- end -}}
+
+{{- mustMergeOverwrite $oldConfig $newConfig $eventQueueDepth | toYaml -}}
 {{- end -}}
 
 {{- /*

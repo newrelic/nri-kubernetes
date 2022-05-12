@@ -75,9 +75,14 @@ kubelet:
       effect: "NoExecute"
   nodeSelector: {}
   affinity: {}
-  # -- The agent will send these environment variables to integrations
-  # Ref: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/configure-infrastructure-agent/#config-file
-  passthroughEnvironment: []
+  # -- Config for the Infrastructure agent.
+  # Will be used by the forwarder sidecars and the agent running integrations.
+  # See: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+  # @default -- `{}`
+  agentConfig:
+    # -- The agent will send these environment variables to integrations
+    # Ref: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/configure-infrastructure-agent/#config-file
+    passthrough_environment: []
   # -- Add user environment variables to the agent
   extraEnv: []
   # -- Add user environment from configMaps or secrets as variables to the agent
@@ -127,6 +132,10 @@ ksm:
               matchLabels:
                 app.kubernetes.io/name: kube-state-metrics
           weight: 100
+  # -- Config for the Infrastructure agent.
+  # Will be used by the forwarder sidecars and the agent running integrations.
+  # See: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+  agentConfig: {}
   extraEnv: []
   extraEnvFrom: []
   extraVolumes: []
@@ -195,6 +204,10 @@ controlPlane:
   # -- Run Control Plane scraper with `hostNetwork`.
   # `hostNetwork` is required for most control plane configurations, as they only accept connections from localhost.
   hostNetwork: true
+  # -- Config for the Infrastructure agent.
+  # Will be used by the forwarder sidecars and the agent running integrations.
+  # See: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+  agentConfig: {}
   extraEnv: []
   extraEnvFrom: []
   extraVolumes: []
