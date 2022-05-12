@@ -146,7 +146,7 @@ ksm:
     selector: "app.kubernetes.io/name=kube-state-metrics"
     # -- the URL scheme cannot be discovered and so you have to specify one
     scheme: "http"
-    # -- the port is not discovered and the specified one is used
+    # -- Restrict autodiscovery of the kube-state-metrics endpoint to those using a specific port. If empty or `0`, all endpoints are considered regardless of their port (recommended).
     # port: 8080
     # -- only the pods matching this namespace taken into account during autodiscovery
     # namespace: "ksm-namespace"
