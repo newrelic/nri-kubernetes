@@ -78,11 +78,9 @@ kubelet:
   # -- Config for the Infrastructure agent.
   # Will be used by the forwarder sidecars and the agent running integrations.
   # See: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
-  # @default -- `{}`
-  agentConfig:
-    # -- The agent will send these environment variables to integrations
-    # Ref: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/configure-infrastructure-agent/#config-file
-    passthrough_environment: []
+  # You can set here `passthrough_environment` so the agent let use that environment variables to the integrations
+  # Ref: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/configure-infrastructure-agent/#config-file
+  agentConfig: {}
   # -- Add user environment variables to the agent
   extraEnv: []
   # -- Add user environment from configMaps or secrets as variables to the agent

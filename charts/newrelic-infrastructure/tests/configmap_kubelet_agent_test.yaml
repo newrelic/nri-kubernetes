@@ -46,7 +46,7 @@ tests:
             test1: one
             test2: two
 
-  - it: common.agentConfig takes precedence
+  - it: agentConfigs are merged
     set:
       licenseKey: test
       cluster: test
@@ -55,6 +55,8 @@ tests:
         test2: two
       config:
         test3: three
+      kubelet.agentConfig:
+        test4: four
     asserts:
       - equal:
           path: data.newrelic-infra\.yml
@@ -69,6 +71,56 @@ tests:
             http_server_port: 8003
             test1: one
             test2: two
+            test3: three
+            test4: four
+
+  - it: common.agentConfig takes precedence
+    set:
+      licenseKey: test
+      cluster: test
+      common.agentConfig:
+        test1: one
+        test2: override
+      config:
+        test2: two
+    asserts:
+      - equal:
+          path: data.newrelic-infra\.yml
+          value: |-
+            # This is the configuration file for the infrastructure agent. See:
+            # https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+            custom_attributes:
+              clusterName: test
+            features:
+              docker_enabled: false
+            http_server_enabled: true
+            http_server_port: 8003
+            test1: one
+            test2: override
+
+  - it: kubelet.agentConfig takes precedence
+    set:
+      licenseKey: test
+      cluster: test
+      common.agentConfig:
+        test1: one
+        test2: two
+      kubelet.agentConfig:
+        test2: override
+    asserts:
+      - equal:
+          path: data.newrelic-infra\.yml
+          value: |-
+            # This is the configuration file for the infrastructure agent. See:
+            # https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+            custom_attributes:
+              clusterName: test
+            features:
+              docker_enabled: false
+            http_server_enabled: true
+            http_server_port: 8003
+            test1: one
+            test2: override
 
   - it: customAttributes are correctly added
     set:
@@ -118,6 +170,7 @@ tests:
             http_server_port: 8003
             test1: one
             test2: two
+            test3: three
 
   - it: unprivileged sets secure forward mode
     set:
@@ -194,26 +247,3 @@ tests:
               docker_enabled: false
             http_server_enabled: true
             http_server_port: 8003
-
-  - it: add passthrough variables.
-    set:
-      licenseKey: test
-      cluster: test
-      kubelet.passthroughEnvironment:
-        - NRIA_TEST_1
-        - NRIA_TEST_2
-    asserts:
-      - equal:
-          path: data.newrelic-infra\.yml
-          value: |-
-            # This is the configuration file for the infrastructure agent. See:
-            # https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
-            custom_attributes:
-              clusterName: test
-            features:
-              docker_enabled: false
-            http_server_enabled: true
-            http_server_port: 8003
-            passthrough_environment:
-            - NRIA_TEST_1
-            - NRIA_TEST_2
