@@ -16,6 +16,11 @@ spec:
   updateStrategy: {{ toYaml . | nindent 4 }}
   {{- end }}
   {{- end }}
+  {{- if eq .Values.controlPlane.kind "Deployment"}}
+  {{- with .Values.strategy }}
+  strategy: {{ toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "newrelic.common.labels.selectorLabels" . | nindent 6 }}

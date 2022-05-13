@@ -398,12 +398,17 @@ controlPlane:
       #   insecureSkipVerify: true
       #   auth: {}
 
-# -- Update strategy for the DaemonSets deployed.
+# -- Update strategy for the deployed DaemonSets.
 # @default -- See `values.yaml`
 updateStrategy:
   type: RollingUpdate
   rollingUpdate:
     maxUnavailable: 1
+
+# -- Update strategy for the deployed Deployments.
+# @default -- `type: Recreate`
+strategy:
+  type: Recreate
 
 # -- Adds extra attributes to the cluster and all the metrics emitted to the backend. Can be configured also with `global.customAttributes`
 customAttributes: {}
