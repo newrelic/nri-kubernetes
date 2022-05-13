@@ -20,15 +20,15 @@ tests:
     asserts:
       - equal:
           path: metadata.name
-          value: RELEASE-NAME-nrk8s-ksm
+          value: RELEASE-NAME-nrk8s-ksm-scraper
         template: templates/ksm/deployment.yaml
       - equal:
           path: metadata.name
-          value: RELEASE-NAME-nrk8s-controlplane
+          value: RELEASE-NAME-nrk8s-controlplane-scraper
         template: templates/controlplane/daemonset.yaml
       - equal:
           path: metadata.name
-          value: RELEASE-NAME-nrk8s-kubelet
+          value: RELEASE-NAME-nrk8s-kubelet-scraper
         template: templates/kubelet/daemonset.yaml
   - it: name is overridden as expected
     set:
@@ -38,13 +38,13 @@ tests:
     asserts:
       - equal:
           path: metadata.name
-          value: fno-ksm
+          value: fno-ksm-scraper
         template: templates/ksm/deployment.yaml
       - equal:
           path: metadata.name
-          value: fno-controlplane
+          value: fno-controlplane-scraper
         template: templates/controlplane/daemonset.yaml
       - equal:
           path: metadata.name
-          value: fno-kubelet
+          value: fno-kubelet-scraper
         template: templates/kubelet/daemonset.yaml
