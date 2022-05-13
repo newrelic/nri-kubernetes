@@ -12,6 +12,7 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+
   - it: kubeStateMetric config is not created due to ksm.config.enabled and test fails
     set:
       licenseKey: test
@@ -22,6 +23,7 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+
   - it: kubeStateMetricsPort is taken into account since ksm.config.port is not defined
     set:
       licenseKey: test
@@ -36,7 +38,10 @@ tests:
               enabled: true
               port: 22
               retries: 3
+              scheme: http
+              selector: app.kubernetes.io/name=kube-state-metrics
               timeout: 10s
+
   - it: kubeStateMetricsPodLabel is taken into account since ksm.config.label is not defined
     set:
       licenseKey: test
@@ -50,8 +55,10 @@ tests:
             ksm:
               enabled: true
               retries: 3
+              scheme: http
               selector: label-name=kube-state-metrics
               timeout: 10s
+
   - it: kubeStateMetricsPort is ignored since ksm.config.port is defined
     set:
       licenseKey: test
@@ -65,15 +72,18 @@ tests:
             interval: 15s
             ksm:
               enabled: true
-              port: 25
+              port: 22
               retries: 3
+              scheme: http
+              selector: app.kubernetes.io/name=kube-state-metrics
               timeout: 10s
+
   - it: a mix of values is passed and the config is rendered correctly
     set:
       licenseKey: test
       cluster: test
       ksm.config.staticURL: newURL
-      ksm.config.scheme: http
+      ksm.config.scheme: https
       ksm.config.selector: a=b
       ksm.config.namespace: test
       ksm.config.distributed: true
@@ -90,7 +100,7 @@ tests:
               namespace: test
               port: 22
               retries: 3
-              scheme: http
+              scheme: https
               selector: a=b
-              staticURL: newURL
+              staticURL: test2.io
               timeout: 10s
