@@ -66,7 +66,7 @@ kubelet:
   # Advanced users only. Setting this to `false` is not supported and will break the New Relic experience.
   enabled: true
   annotations: {}
-  # -- Affinity for the control plane DaemonSet.
+  # -- Tolerations for the control plane DaemonSet.
   # @default -- Schedules in all tainted nodes
   tolerations:
     - operator: "Exists"
@@ -81,6 +81,10 @@ kubelet:
   # You can set here `passthrough_environment` so the agent let use that environment variables to the integrations
   # Ref: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/configure-infrastructure-agent/#config-file
   agentConfig: {}
+  # passthrough_environment:
+  #   - A_ENVIRONMENT_VARIABLE_SET_IN_extraEnv
+  #   - A_ENVIRONMENT_VARIABLE_SET_IN_A_CONFIG_MAP_SET_IN_entraEnvForm
+
   # -- Add user environment variables to the agent
   extraEnv: []
   # -- Add user environment from configMaps or secrets as variables to the agent
@@ -111,7 +115,7 @@ ksm:
   # Advanced users only. Setting this to `false` is not supported and will break the New Relic experience.
   enabled: true
   annotations: {}
-  # -- Affinity for the control plane DaemonSet.
+  # -- Tolerations for the KSM Deployment.
   # @default -- Schedules in all tainted nodes
   tolerations:
     - operator: "Exists"
@@ -119,7 +123,7 @@ ksm:
     - operator: "Exists"
       effect: "NoExecute"
   nodeSelector: {}
-  # -- Affinity for the control plane DaemonSet.
+  # -- Affinity for the KSM Deployment.
   # @default -- Deployed in the same node as KSM
   affinity:
     podAffinity:
@@ -172,6 +176,7 @@ controlPlane:
   # -- Deploy control plane monitoring component.
   enabled: true
   annotations: {}
+  # -- Tolerations for the control plane DaemonSet.
   tolerations:
     - operator: "Exists"
       effect: "NoSchedule"
@@ -222,7 +227,7 @@ controlPlane:
     timeout: 10s
     # -- Number of retries after timeout expired
     retries: 3
-    # -- ETCD monitoring configuration
+    # -- etcd monitoring configuration
     # @default -- Common settings for most K8s distributions.
     etcd:
       # -- Enable etcd monitoring. Might require manual configuration in some environments.
