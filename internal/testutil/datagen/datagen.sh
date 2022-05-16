@@ -2,6 +2,9 @@
 
 set -e
 
+# e2e-resources chart path
+helm_e2e_path="../../../charts/internal/e2e-resources"
+
 # scrapper_selector is the label with which the scraper deployment is deployed.
 scrapper_selector="app=scraper"
 scrapper_namespace="scraper"
@@ -22,7 +25,7 @@ IS_MINIKUBE=""
 # Extra args that will be appended to the helm install e2e command.
 # Values can be overridden using this and --set commands, or -f and point to a custom values file.
 # Useful to tweak things specific to minikube, or toggle specific features.
-# See  ../../../e2e/charts/e2e-resources/values.yaml for more details.
+# See  $helm_e2e_path/values.yaml for more details.
 HELM_E2E_ARGS=""
 
 # Time to wait for pods to settle.
@@ -131,8 +134,8 @@ function bootstrap() {
         fi
 
         echo "Updating helm dependencies"
-        helm dependency update ../../../e2e/charts/e2e-resources > /dev/null
-        helm upgrade --install e2e ../../../e2e/charts/e2e-resources -n $scrapper_namespace --create-namespace \
+        helm dependency update $helm_e2e_path > /dev/null
+        helm upgrade --install e2e $helm_e2e_path -n $scrapper_namespace --create-namespace \
           --set scraper.enabled=true \
           --set persistentVolume.enabled=true \
           $minikube_args \
