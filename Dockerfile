@@ -5,7 +5,7 @@ ARG TARGETARCH
 
 RUN apk add --no-cache --upgrade && apk add --no-cache tini curl bind-tools
 
-ADD bin/nri-kubernetes-${TARGETOS}-${TARGETARCH} /bin/
+COPY bin/nri-kubernetes-${TARGETOS}-${TARGETARCH} /bin/
 
 RUN mv /bin/nri-kubernetes-${TARGETOS}-${TARGETARCH} /bin/nri-kubernetes && \
     chmod 755 /bin/nri-kubernetes
