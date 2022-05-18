@@ -36,7 +36,7 @@ images:
   # @default -- See `values.yaml`
   integration:
     pullPolicy: IfNotPresent
-    tag: 3.1.0
+    tag: 3.1.1
     repository: newrelic/nri-kubernetes
     registry: ""
 
@@ -75,11 +75,11 @@ kubelet:
       effect: "NoExecute"
   nodeSelector: {}
   affinity: {}
-  # -- Config for the Infrastructure agent.
-  # Will be used by the forwarder sidecars and the agent running integrations.
-  # See: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
-  # You can set here `passthrough_environment` so the agent let use that environment variables to the integrations
-  # Ref: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/configure-infrastructure-agent/#config-file
+  # -- Config for the Infrastructure agent that will forward the metrics to the backend and will run the integrations in this cluster.
+  # It will be merged with the configuration in `.common.agentConfig`. You can see all the agent configurations in
+  # [New Relic docs](https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/)
+  # e.g. you can set `passthrough_environment` int the [config file](https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/configure-infrastructure-agent/#config-file)
+  # so the agent let use that environment variables to the integrations.
   agentConfig: {}
   # passthrough_environment:
   #   - A_ENVIRONMENT_VARIABLE_SET_IN_extraEnv
@@ -134,8 +134,7 @@ ksm:
               matchLabels:
                 app.kubernetes.io/name: kube-state-metrics
           weight: 100
-  # -- Config for the Infrastructure agent.
-  # Will be used by the forwarder sidecars and the agent running integrations.
+  # -- Config for the Infrastructure agent that will forward the metrics to the backend. It will be merged with the configuration in `.common.agentConfig`
   # See: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
   agentConfig: {}
   extraEnv: []
@@ -177,6 +176,7 @@ controlPlane:
   enabled: true
   annotations: {}
   # -- Tolerations for the control plane DaemonSet.
+  # @default -- Schedules in all tainted nodes
   tolerations:
     - operator: "Exists"
       effect: "NoSchedule"
@@ -207,8 +207,7 @@ controlPlane:
   # -- Run Control Plane scraper with `hostNetwork`.
   # `hostNetwork` is required for most control plane configurations, as they only accept connections from localhost.
   hostNetwork: true
-  # -- Config for the Infrastructure agent.
-  # Will be used by the forwarder sidecars and the agent running integrations.
+  # -- Config for the Infrastructure agent that will forward the metrics to the backend. It will be merged with the configuration in `.common.agentConfig`
   # See: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
   agentConfig: {}
   extraEnv: []
@@ -468,11 +467,11 @@ containerSecurityContext: {}
 # -- Sets pod's dnsConfig. Can be configured also with `global.dnsConfig`
 dnsConfig: {}
 
-# -- Settings controlling RBAC objects creation.
+# Settings controlling RBAC objects creation.
 rbac:
-  # -- Whether the chart should automatically create the RBAC objects required to run.
+  # rbac.create -- Whether the chart should automatically create the RBAC objects required to run.
   create: true
-  # -- Whether the chart should create Pod Security Policy objects.
+  # rbac.pspEnabled -- Whether the chart should create Pod Security Policy objects.
   pspEnabled: false
 
 # -- Sets pod/node affinities set almost globally. (See [Affinities and tolerations](README.md#affinities-and-tolerations))
