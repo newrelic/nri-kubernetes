@@ -1,6 +1,6 @@
 # newrelic-infrastructure
 
-![Version: 3.3.5](https://img.shields.io/badge/Version-3.3.5-informational?style=flat-square) ![AppVersion: 3.1.1](https://img.shields.io/badge/AppVersion-3.1.1-informational?style=flat-square)
+![Version: 3.4.0](https://img.shields.io/badge/Version-3.4.0-informational?style=flat-square) ![AppVersion: 3.1.1](https://img.shields.io/badge/AppVersion-3.1.1-informational?style=flat-square)
 
 A Helm chart to deploy the New Relic Kubernetes monitoring solution
 
@@ -117,11 +117,12 @@ integrations that you have configured.
 | containerSecurityContext | object | `{}` | Sets security context (at container level). Can be configured also with `global.containerSecurityContext` |
 | controlPlane | object | See `values.yaml` | Configuration for the control plane scraper. |
 | controlPlane.affinity | object | Deployed only in master nodes. | Affinity for the control plane DaemonSet. |
+| controlPlane.agentConfig | object | `{}` | Config for the Infrastructure agent that will forward the metrics to the backend. It will be merged with the configuration in `.common.agentConfig` See: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/ |
 | controlPlane.config.apiServer | object | Common settings for most K8s distributions. | API Server monitoring configuration |
 | controlPlane.config.apiServer.enabled | bool | `true` | Enable API Server monitoring |
 | controlPlane.config.controllerManager | object | Common settings for most K8s distributions. | Controller manager monitoring configuration |
 | controlPlane.config.controllerManager.enabled | bool | `true` | Enable controller manager monitoring. |
-| controlPlane.config.etcd | object | Common settings for most K8s distributions. | ETCD monitoring configuration |
+| controlPlane.config.etcd | object | Common settings for most K8s distributions. | etcd monitoring configuration |
 | controlPlane.config.etcd.enabled | bool | `true` | Enable etcd monitoring. Might require manual configuration in some environments. |
 | controlPlane.config.retries | int | `3` | Number of retries after timeout expired |
 | controlPlane.config.scheduler | object | Common settings for most K8s distributions. | Scheduler monitoring configuration |
@@ -130,6 +131,7 @@ integrations that you have configured.
 | controlPlane.enabled | bool | `true` | Deploy control plane monitoring component. |
 | controlPlane.hostNetwork | bool | `true` | Run Control Plane scraper with `hostNetwork`. `hostNetwork` is required for most control plane configurations, as they only accept connections from localhost. |
 | controlPlane.kind | string | `"DaemonSet"` | How to deploy the control plane scraper. If autodiscovery is in use, it should be `DaemonSet`. Advanced users using static endpoints set this to `Deployment` to avoid reporting metrics twice. |
+| controlPlane.tolerations | list | Schedules in all tainted nodes | Tolerations for the control plane DaemonSet. |
 | customAttributes | object | `{}` | Adds extra attributes to the cluster and all the metrics emitted to the backend. Can be configured also with `global.customAttributes` |
 | customSecretLicenseKey | string | `""` | In case you don't want to have the license key in you values, this allows you to point to which secret key is the license key located. Can be configured also with `global.customSecretLicenseKey` |
 | customSecretName | string | `""` | In case you don't want to have the license key in you values, this allows you to point to a user created secret to get the key from there. Can be configured also with `global.customSecretName` |
@@ -144,19 +146,25 @@ integrations that you have configured.
 | images.pullSecrets | list | `[]` | The secrets that are needed to pull images from a custom registry. |
 | integrations | object | `{}` | Config files for other New Relic integrations that should run in this cluster. |
 | ksm | object | See `values.yaml` | Configuration for the Deployment that collects state metrics from KSM (kube-state-metrics). |
-| ksm.affinity | object | Deployed in the same node as KSM | Affinity for the control plane DaemonSet. |
+| ksm.affinity | object | Deployed in the same node as KSM | Affinity for the KSM Deployment. |
+| ksm.agentConfig | object | `{}` | Config for the Infrastructure agent that will forward the metrics to the backend. It will be merged with the configuration in `.common.agentConfig` See: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/ |
 | ksm.config.retries | int | `3` | Number of retries after timeout expired |
-| ksm.config.scheme | string | `"http"` | the URL scheme cannot be discovered and so you have to specify one |
-| ksm.config.selector | string | `"app.kubernetes.io/name=kube-state-metrics"` | pods matching this selector are taken into account during autodiscovery |
+| ksm.config.scheme | string | `"http"` | Scheme to use to connect to kube-state-metrics. Supported values are `http` and `https`. |
+| ksm.config.selector | string | `"app.kubernetes.io/name=kube-state-metrics"` | Label selector that will be used to automatically discover an instance of kube-state-metrics running in the cluster. |
 | ksm.config.timeout | string | `"10s"` | Timeout for the ksm API contacted by the integration |
 | ksm.enabled | bool | `true` | Enable cluster state monitoring. Advanced users only. Setting this to `false` is not supported and will break the New Relic experience. |
 | ksm.resources | object | 100m/150M -/850M | Resources for the KSM scraper pod. Keep in mind that sharding is not supported at the moment, so memory usage for this component ramps up quickly on large clusters. |
-| ksm.tolerations | list | Schedules in all tainted nodes | Affinity for the control plane DaemonSet. |
+| ksm.tolerations | list | Schedules in all tainted nodes | Tolerations for the KSM Deployment. |
 | kubelet | object | See `values.yaml` | Configuration for the DaemonSet that collects metrics from the Kubelet. |
+| kubelet.agentConfig | object | `{}` | Config for the Infrastructure agent that will forward the metrics to the backend and will run the integrations in this cluster. It will be merged with the configuration in `.common.agentConfig`. You can see all the agent configurations in [New Relic docs](https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/) e.g. you can set `passthrough_environment` int the [config file](https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/configure-infrastructure-agent/#config-file) so the agent let use that environment variables to the integrations. |
 | kubelet.config.retries | int | `3` | Number of retries after timeout expired |
 | kubelet.config.timeout | string | `"10s"` | Timeout for the kubelet APIs contacted by the integration |
 | kubelet.enabled | bool | `true` | Enable kubelet monitoring. Advanced users only. Setting this to `false` is not supported and will break the New Relic experience. |
-| kubelet.tolerations | list | Schedules in all tainted nodes | Affinity for the control plane DaemonSet. |
+| kubelet.extraEnv | list | `[]` | Add user environment variables to the agent |
+| kubelet.extraEnvFrom | list | `[]` | Add user environment from configMaps or secrets as variables to the agent |
+| kubelet.extraVolumeMounts | list | `[]` | Defines where to mount volumes specified with `extraVolumes` |
+| kubelet.extraVolumes | list | `[]` | Volumes to mount in the containers |
+| kubelet.tolerations | list | Schedules in all tainted nodes | Tolerations for the control plane DaemonSet. |
 | labels | object | `{}` | Additional labels for chart objects. Can be configured also with `global.labels` |
 | licenseKey | string | `""` | This set this license key to use. Can be configured also with `global.licenseKey` |
 | lowDataMode | bool | `false` (See [Low data mode](README.md#low-data-mode)) | Send less data by incrementing the interval from `15s` (the default when `lowDataMode` is `false` or `nil`) to `30s`. Non-nil values of `common.config.interval` will override this value. |
@@ -169,7 +177,6 @@ integrations that you have configured.
 | priorityClassName | string | `""` | Sets pod's priorityClassName. Can be configured also with `global.priorityClassName` |
 | privileged | bool | `true` | Run the integration with full access to the host filesystem and network. Running in this mode allows reporting fine-grained cpu, memory, process and network metrics for your nodes. |
 | proxy | string | `""` | Configures the integration to send all HTTP/HTTPS request through the proxy in that URL. The URL should have a standard format like `https://user:password@hostname:port`. Can be configured also with `global.proxy` |
-| rbac | object | `{"create":true,"pspEnabled":false}` | Settings controlling RBAC objects creation. |
 | rbac.create | bool | `true` | Whether the chart should automatically create the RBAC objects required to run. |
 | rbac.pspEnabled | bool | `false` | Whether the chart should create Pod Security Policy objects. |
 | serviceAccount | object | See `values.yaml` | Settings controlling ServiceAccount creation. |

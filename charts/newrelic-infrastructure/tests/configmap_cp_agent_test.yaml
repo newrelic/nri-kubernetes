@@ -46,7 +46,7 @@ tests:
             test1: one
             test2: two
 
-  - it: common.agentConfig takes precedence
+  - it: agentConfigs are merged
     set:
       licenseKey: test
       cluster: test
@@ -55,6 +55,8 @@ tests:
         test2: two
       config:
         test3: three
+      controlPlane.agentConfig:
+        test4: four
     asserts:
       - equal:
           path: data.newrelic-infra\.yml
@@ -69,6 +71,56 @@ tests:
             overide_host_root: ""
             test1: one
             test2: two
+            test3: three
+            test4: four
+
+  - it: common.agentConfig takes precedence
+    set:
+      licenseKey: test
+      cluster: test
+      common.agentConfig:
+        test1: one
+        test2: override
+      config:
+        test2: two
+    asserts:
+      - equal:
+          path: data.newrelic-infra\.yml
+          value: |-
+            # This is the configuration file for the infrastructure agent. See:
+            # https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+            custom_attributes:
+              clusterName: test
+            http_server_enabled: true
+            http_server_port: 8001
+            is_forward_only: true
+            overide_host_root: ""
+            test1: one
+            test2: override
+
+  - it: controlPlane.agentConfig takes precedence
+    set:
+      licenseKey: test
+      cluster: test
+      common.agentConfig:
+        test1: one
+        test2: two
+      controlPlane.agentConfig:
+        test2: override
+    asserts:
+      - equal:
+          path: data.newrelic-infra\.yml
+          value: |-
+            # This is the configuration file for the infrastructure agent. See:
+            # https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+            custom_attributes:
+              clusterName: test
+            http_server_enabled: true
+            http_server_port: 8001
+            is_forward_only: true
+            overide_host_root: ""
+            test1: one
+            test2: override
 
   - it: customAttributes are correctly added
     set:
@@ -118,6 +170,7 @@ tests:
             overide_host_root: ""
             test1: one
             test2: two
+            test3: three
 
 #I am not able to run this test. TODO
 # fails with this message:

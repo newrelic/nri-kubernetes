@@ -36,7 +36,7 @@ images:
   # @default -- See `values.yaml`
   integration:
     pullPolicy: IfNotPresent
-    tag: 3.1.0
+    tag: 3.1.1
     repository: newrelic/nri-kubernetes
     registry: ""
 
@@ -66,7 +66,7 @@ kubelet:
   # Advanced users only. Setting this to `false` is not supported and will break the New Relic experience.
   enabled: true
   annotations: {}
-  # -- Affinity for the control plane DaemonSet.
+  # -- Tolerations for the control plane DaemonSet.
   # @default -- Schedules in all tainted nodes
   tolerations:
     - operator: "Exists"
@@ -75,9 +75,23 @@ kubelet:
       effect: "NoExecute"
   nodeSelector: {}
   affinity: {}
+  # -- Config for the Infrastructure agent that will forward the metrics to the backend and will run the integrations in this cluster.
+  # It will be merged with the configuration in `.common.agentConfig`. You can see all the agent configurations in
+  # [New Relic docs](https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/)
+  # e.g. you can set `passthrough_environment` int the [config file](https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/configure-infrastructure-agent/#config-file)
+  # so the agent let use that environment variables to the integrations.
+  agentConfig: {}
+  # passthrough_environment:
+  #   - A_ENVIRONMENT_VARIABLE_SET_IN_extraEnv
+  #   - A_ENVIRONMENT_VARIABLE_SET_IN_A_CONFIG_MAP_SET_IN_entraEnvForm
+
+  # -- Add user environment variables to the agent
   extraEnv: []
+  # -- Add user environment from configMaps or secrets as variables to the agent
   extraEnvFrom: []
+  # -- Volumes to mount in the containers
   extraVolumes: []
+  # -- Defines where to mount volumes specified with `extraVolumes`
   extraVolumeMounts: []
   initContainers: []
   resources:
@@ -101,7 +115,7 @@ ksm:
   # Advanced users only. Setting this to `false` is not supported and will break the New Relic experience.
   enabled: true
   annotations: {}
-  # -- Affinity for the control plane DaemonSet.
+  # -- Tolerations for the KSM Deployment.
   # @default -- Schedules in all tainted nodes
   tolerations:
     - operator: "Exists"
@@ -109,7 +123,7 @@ ksm:
     - operator: "Exists"
       effect: "NoExecute"
   nodeSelector: {}
-  # -- Affinity for the control plane DaemonSet.
+  # -- Affinity for the KSM Deployment.
   # @default -- Deployed in the same node as KSM
   affinity:
     podAffinity:
@@ -120,6 +134,9 @@ ksm:
               matchLabels:
                 app.kubernetes.io/name: kube-state-metrics
           weight: 100
+  # -- Config for the Infrastructure agent that will forward the metrics to the backend. It will be merged with the configuration in `.common.agentConfig`
+  # See: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+  agentConfig: {}
   extraEnv: []
   extraEnvFrom: []
   extraVolumes: []
@@ -158,6 +175,8 @@ controlPlane:
   # -- Deploy control plane monitoring component.
   enabled: true
   annotations: {}
+  # -- Tolerations for the control plane DaemonSet.
+  # @default -- Schedules in all tainted nodes
   tolerations:
     - operator: "Exists"
       effect: "NoSchedule"
@@ -188,6 +207,9 @@ controlPlane:
   # -- Run Control Plane scraper with `hostNetwork`.
   # `hostNetwork` is required for most control plane configurations, as they only accept connections from localhost.
   hostNetwork: true
+  # -- Config for the Infrastructure agent that will forward the metrics to the backend. It will be merged with the configuration in `.common.agentConfig`
+  # See: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/
+  agentConfig: {}
   extraEnv: []
   extraEnvFrom: []
   extraVolumes: []
@@ -204,7 +226,7 @@ controlPlane:
     timeout: 10s
     # -- Number of retries after timeout expired
     retries: 3
-    # -- ETCD monitoring configuration
+    # -- etcd monitoring configuration
     # @default -- Common settings for most K8s distributions.
     etcd:
       # -- Enable etcd monitoring. Might require manual configuration in some environments.
@@ -445,11 +467,11 @@ containerSecurityContext: {}
 # -- Sets pod's dnsConfig. Can be configured also with `global.dnsConfig`
 dnsConfig: {}
 
-# -- Settings controlling RBAC objects creation.
+# Settings controlling RBAC objects creation.
 rbac:
-  # -- Whether the chart should automatically create the RBAC objects required to run.
+  # rbac.create -- Whether the chart should automatically create the RBAC objects required to run.
   create: true
-  # -- Whether the chart should create Pod Security Policy objects.
+  # rbac.pspEnabled -- Whether the chart should create Pod Security Policy objects.
   pspEnabled: false
 
 # -- Sets pod/node affinities set almost globally. (See [Affinities and tolerations](README.md#affinities-and-tolerations))
