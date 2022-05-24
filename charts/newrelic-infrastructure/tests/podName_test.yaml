@@ -28,7 +28,7 @@ tests:
         template: templates/controlplane/daemonset.yaml
       - equal:
           path: metadata.name
-          value: RELEASE-NAME-nrk8s-kubelet-scraper
+          value: RELEASE-NAME-nrk8s-kubelet-node-scraper
         template: templates/kubelet/daemonset.yaml
   - it: name is overridden as expected
     set:
@@ -46,5 +46,5 @@ tests:
         template: templates/controlplane/daemonset.yaml
       - equal:
           path: metadata.name
-          value: fno-kubelet-scraper
+          value: fno-kubelet-node-scraper
         template: templates/kubelet/daemonset.yaml
