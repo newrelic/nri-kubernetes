@@ -32,6 +32,15 @@ func TestLoadConfig(t *testing.T) {
 			require.Equal(t, "fake-node", c.NodeName)
 		})
 	})
+	// This test checks that viper custom key delimiter is working as expected by using the old default dot delimiter
+	// as key.
+	t.Run("succeeds_when_dot_character_in_key", func(t *testing.T) {
+		t.Parallel()
+
+		c, err := config.LoadConfig(fakeDataDir, workingData)
+		require.NoError(t, err)
+		require.Equal(t, "1", c.NamespaceSelector.MatchLabels["newrelic.com/scrape"])
+	})
 	t.Run("fail_due_to_unexpected_data", func(t *testing.T) {
 		t.Parallel()
 

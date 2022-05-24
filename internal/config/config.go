@@ -53,6 +53,9 @@ type Config struct {
 	Kubelet `mapstructure:"kubelet"`
 	// KSM defines config options for the kube-state-metrics scraper.
 	KSM `mapstructure:"ksm"`
+
+	// NamespaceSelector defines custom monitoring filtering for namespaces.
+	NamespaceSelector *NamespaceSelector `mapstructure:"namespaceSelector"`
 }
 
 // HTTPSink stores the configuration for the HTTP sink.
@@ -218,38 +221,54 @@ type MTLS struct {
 	TLSSecretNamespace string `mapstructure:"secretNamespace"`
 }
 
+// NamespaceSelector contains config options for filtering namespaces.
+type NamespaceSelector struct {
+	// MatchLabels is a list of labels to filter namespaces with.
+	MatchLabels map[string]string `mapstructure:"matchLabels"`
+	// MatchExpressions is a list of namespaces selector requirements.
+	MatchExpressions []Expression `mapstructure:"matchExpressions"`
+}
+
+type Expression struct {
+	Key      string        `mapstructure:"key" json:"key"`
+	Operator string        `mapstructure:"operator" json:"operator"`
+	Values   []interface{} `mapstructure:"values" json:"values"`
+}
+
 func LoadConfig(filePath string, fileName string) (*Config, error) {
-	v := viper.New()
+	// Update default delimiter as with the new namespaceSelector config, some labels may come in the form of
+	// newrelic.com/scrape, so the key was split in a sub-map on a "." basis.
+	v := viper.NewWithOptions(viper.KeyDelimiter("|"))
 
 	// We need to assure that defaults have been set in order to bind env variables.
 	// https://github.com/spf13/viper/issues/584
 	v.SetDefault("clusterName", "cluster")
 	v.SetDefault("verbose", false)
-	v.SetDefault("kubelet.networkRouteFile", DefaultNetworkRouteFile)
+	v.SetDefault("kubelet|networkRouteFile", DefaultNetworkRouteFile)
 	v.SetDefault("nodeName", "node")
 	v.SetDefault("nodeIP", "node")
 
 	// Sane connection defaults
-	v.SetDefault("sink.type", SinkTypeHTTP)
-	v.SetDefault("sink.http.port", 0)
-	v.SetDefault("sink.http.timeout", DefaultAgentTimeout)
-	v.SetDefault("sink.http.retries", DefaultRetries)
+	v.SetDefault("sink|type", SinkTypeHTTP)
+	v.SetDefault("sink|http|port", 0)
+	v.SetDefault("sink|http|timeout", DefaultAgentTimeout)
+	v.SetDefault("sink|http|retries", DefaultRetries)
 
-	v.SetDefault("kubelet.timeout", DefaultTimeout)
-	v.SetDefault("kubelet.retries", DefaultRetries)
+	v.SetDefault("kubelet|timeout", DefaultTimeout)
+	v.SetDefault("kubelet|retries", DefaultRetries)
 
-	v.SetDefault("controlPlane.timeout", DefaultTimeout)
-	v.SetDefault("controlPlane.retries", DefaultRetries)
+	v.SetDefault("controlPlane|timeout", DefaultTimeout)
+	v.SetDefault("controlPlane|retries", DefaultRetries)
 
-	v.SetDefault("ksm.timeout", DefaultTimeout)
-	v.SetDefault("ksm.retries", DefaultRetries)
+	v.SetDefault("ksm|timeout", DefaultTimeout)
+	v.SetDefault("ksm|retries", DefaultRetries)
 
-	v.SetDefault("ksm.discovery.backoffDelay", 7*time.Second)
-	v.SetDefault("ksm.discovery.timeout", 60*time.Second)
+	v.SetDefault("ksm|discovery|backoffDelay", 7*time.Second)
+	v.SetDefault("ksm|discovery|timeout", 60*time.Second)
 
 	v.SetEnvPrefix("NRI_KUBERNETES")
 	v.AutomaticEnv()
-	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	v.SetEnvKeyReplacer(strings.NewReplacer("|", "_"))
 
 	// Config File
 	v.AddConfigPath(filePath)
