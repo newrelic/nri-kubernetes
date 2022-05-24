@@ -9,22 +9,62 @@ on:
       - main
 
 jobs:
-  e2eTests:
+  generate-kubernetes-versions:
+    # Do not run e2e tests if commit message or PR has skip-e2e.
+    if: ${{ ! contains(github.event.pull_request.labels.*.name, 'ci/skip-e2e') }}
+    runs-on: ubuntu-22.04
+    env:
+      LATEST_SUPPORTED: '1.23'
+    outputs:
+      latest: ${{ steps.matrix.outputs.latest }}
+      previous_1: ${{ steps.matrix.outputs.previous_1 }}
+      previous_2: ${{ steps.matrix.outputs.previous_2 }}
+      previous_3: ${{ steps.matrix.outputs.previous_3 }}
+      previous_4: ${{ steps.matrix.outputs.previous_4 }}
+    steps:
+      - name: Calculate the previous 5 minors
+        id: matrix
+        run: |
+          echo "::group::Generating kubernetes version matrix"
+          # This is a Google Storage bucket, you can check it with
+          # gsutil ls gs://kubernetes-release/release
+          # "dl.k8s.io" is a URL shortener which source you can find here: https://github.com/kubernetes/k8s.io/blob/main/apps/k8s-io/configmap-nginx.yaml#L174-L186
+          VERSION=$(curl -Ls https://dl.k8s.io/release/stable-${LATEST_SUPPORTED}.txt)
+          # shellcheck disable=SC2001
+          MAJOR=$(sed -e 's_v\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)_\1_' <<<"$VERSION")
+          # shellcheck disable=SC2001
+          MINOR=$(sed -e 's_v\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)_\2_' <<<"$VERSION")
+
+          echo "::set-output name=latest::$(curl -L https://dl.k8s.io/release/stable-${MAJOR}.$(( MINOR )).txt)"
+          echo "::set-output name=previous_1::$(curl -L https://dl.k8s.io/release/stable-${MAJOR}.$(( MINOR - 1 )).txt)"
+          echo "::set-output name=previous_2::$(curl -L https://dl.k8s.io/release/stable-${MAJOR}.$(( MINOR - 2 )).txt)"
+          echo "::set-output name=previous_3::$(curl -L https://dl.k8s.io/release/stable-${MAJOR}.$(( MINOR - 3 )).txt)"
+          echo "::set-output name=previous_4::$(curl -L https://dl.k8s.io/release/stable-${MAJOR}.$(( MINOR - 4 )).txt)"
+
+  e2e-tests:
     # Do not run e2e tests if commit message or PR has skip-e2e.
     if: ${{ ! contains(github.event.pull_request.labels.*.name, 'ci/skip-e2e') }}
     runs-on: ubuntu-20.04
+    needs:
+      - generate-kubernetes-versions
     strategy:
-      max-parallel: 5 # len(k8sVersion)/2 is a good number to have here
+      max-parallel: 3 # len(k8sVersion)/2 is a good number to have here
       matrix:
         # Latest patch version can be found in https://github.com/kubernetes/website/blob/main/content/en/releases/patch-releases.md
         # Some versions might not be available yet in https://storage.googleapis.com/kubernetes-release/release/v1.X.Y/bin/linux/amd64/kubelet
-        k8sVersion: [ "v1.22.3", "v1.21.4", "v1.20.10", "v1.19.14", "v1.18.20", "v1.17.17", "v1.16.15" ]
-        cri: [ docker ]
-        include:
-          - k8sVersion: v1.22.3
-            cri: containerd
-          - k8sVersion: v1.21.4
-            cri: containerd
+        k8sVersion:
+          - ${{ needs.generate-kubernetes-versions.outputs.latest }}
+          - ${{ needs.generate-kubernetes-versions.outputs.previous_1 }}
+          - ${{ needs.generate-kubernetes-versions.outputs.previous_2 }}
+          - ${{ needs.generate-kubernetes-versions.outputs.previous_3 }}
+          - ${{ needs.generate-kubernetes-versions.outputs.previous_4 }}
+        cri:
+          - containerd
+      # include:  # CRI-O does not export any metric yet.
+      #   - k8sVersion: v1.22.3
+      #     cri: crio
+      #   - k8sVersion: v1.21.4
+      #     cri: crio
     env:
       DOCKER_BUILDKIT: '1' # Setting DOCKER_BUILDKIT=1 ensures TARGETOS and TARGETARCH are populated
     steps:
@@ -41,12 +81,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - name: Setup Minikube
-        uses: manusa/actions-setup-minikube@v2.4.3
+        uses: manusa/actions-setup-minikube@v2.6.0
         with:
-          minikube version: v1.23.2
+          minikube version: v1.25.2
           kubernetes version: ${{ matrix.k8sVersion }}
           driver: docker
-          start args: "--nodes=2 --container-runtime=${{ matrix.cri }}"
+          container runtime: ${{ matrix.cri }}
+          start args: "--nodes=2"
       - name: Enable addons minikube needed for HPA
         run: |
           minikube addons enable metrics-server
