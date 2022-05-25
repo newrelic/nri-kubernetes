@@ -66,10 +66,22 @@ var APIServerSpecs = definition.SpecGroups{
 				),
 				Type: sdkMetric.RATE,
 			},
+			// etcd_object_counts was deprecated in k8s 1.22 and removed in 1.23 (it is replaced by apiserver_storage_objects)
 			{
 				Name:      "etcdObjectCounts",
 				ValueFunc: prometheus.FromValueWithOverriddenName("etcd_object_counts", "etcdObjectCounts"),
 				Type:      sdkMetric.GAUGE,
+				Optional:  true,
+			},
+			// apiserver_storage_objects was introduced in k8s 1.21 and replaces etcd_object_counts in 1.23
+			{
+				Name: "apiserverStorageObjects",
+				ValueFunc: fetchIfMissing(
+					prometheus.FromValueWithOverriddenName("apiserver_storage_objects", "apiserverStorageObjects"),
+					prometheus.FromValueWithOverriddenName("etcd_object_counts", "etcdObjectCounts"),
+				),
+				Type:     sdkMetric.GAUGE,
+				Optional: true,
 			},
 			{
 				Name:      "processResidentMemoryBytes",
@@ -106,6 +118,9 @@ var APIServerQueries = []prometheus.Query{
 	},
 	{
 		MetricName: "etcd_object_counts",
+	},
+	{
+		MetricName: "apiserver_storage_objects",
 	},
 	{
 		MetricName: "process_resident_memory_bytes",
@@ -1208,5 +1223,18 @@ func fetchWithDefault(fetch definition.FetchFunc, defaultValue definition.Fetche
 		}
 
 		return value, nil
+	}
+}
+
+// fetchIfMissing fetch replacement only if main metric is not present
+// Example: `fetchIfMissing(definition.FromRaw("a"), definition.FromRaw("b"))` will only fetch metric "a" if "b"
+// is missing. When replacement is not fetched, it returns an empty `FetchedValues`.
+func fetchIfMissing(replacement definition.FetchFunc, main definition.FetchFunc) definition.FetchFunc {
+	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
+		_, errWhenMissing := main(groupLabel, entityID, groups)
+		if errWhenMissing == nil {
+			return definition.FetchedValues{}, nil
+		}
+		return replacement(groupLabel, entityID, groups)
 	}
 }
