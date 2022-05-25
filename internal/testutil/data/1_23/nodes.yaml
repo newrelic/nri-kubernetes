@@ -1,0 +1,244 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Node
+  metadata:
+    annotations:
+      kubeadm.alpha.kubernetes.io/cri-socket: /var/run/dockershim.sock
+      node.alpha.kubernetes.io/ttl: "0"
+      volumes.kubernetes.io/controller-managed-attach-detach: "true"
+    creationTimestamp: "2022-04-11T14:58:21Z"
+    labels:
+      beta.kubernetes.io/arch: amd64
+      beta.kubernetes.io/os: linux
+      kubernetes.io/arch: amd64
+      kubernetes.io/hostname: minikube
+      kubernetes.io/os: linux
+      minikube.k8s.io/commit: 362d5fdc0a3dbee389b3d3f1034e8023e72bd3a7
+      minikube.k8s.io/name: minikube
+      minikube.k8s.io/primary: "true"
+      minikube.k8s.io/updated_at: 2022_04_11T16_58_25_0700
+      minikube.k8s.io/version: v1.25.2
+      node-role.kubernetes.io/control-plane: ""
+      node-role.kubernetes.io/master: ""
+      node.kubernetes.io/exclude-from-external-load-balancers: ""
+    name: minikube
+    resourceVersion: "77614"
+    uid: 4a639452-543d-44e4-8cac-d00b73a4864a
+  spec:
+    podCIDR: 10.244.0.0/24
+    podCIDRs:
+    - 10.244.0.0/24
+  status:
+    addresses:
+    - address: 192.168.49.2
+      type: InternalIP
+    - address: minikube
+      type: Hostname
+    allocatable:
+      cpu: "6"
+      ephemeral-storage: 61255492Ki
+      hugepages-1Gi: "0"
+      hugepages-2Mi: "0"
+      memory: 8150888Ki
+      pods: "110"
+    capacity:
+      cpu: "6"
+      ephemeral-storage: 61255492Ki
+      hugepages-1Gi: "0"
+      hugepages-2Mi: "0"
+      memory: 8150888Ki
+      pods: "110"
+    conditions:
+    - lastHeartbeatTime: "2022-05-25T06:51:29Z"
+      lastTransitionTime: "2022-04-11T14:58:17Z"
+      message: kubelet has sufficient memory available
+      reason: KubeletHasSufficientMemory
+      status: "False"
+      type: MemoryPressure
+    - lastHeartbeatTime: "2022-05-25T06:51:29Z"
+      lastTransitionTime: "2022-04-11T14:58:17Z"
+      message: kubelet has no disk pressure
+      reason: KubeletHasNoDiskPressure
+      status: "False"
+      type: DiskPressure
+    - lastHeartbeatTime: "2022-05-25T06:51:29Z"
+      lastTransitionTime: "2022-04-11T14:58:17Z"
+      message: kubelet has sufficient PID available
+      reason: KubeletHasSufficientPID
+      status: "False"
+      type: PIDPressure
+    - lastHeartbeatTime: "2022-05-25T06:51:29Z"
+      lastTransitionTime: "2022-04-11T14:58:35Z"
+      message: kubelet is posting ready status
+      reason: KubeletReady
+      status: "True"
+      type: Ready
+    daemonEndpoints:
+      kubeletEndpoint:
+        Port: 10250
+    images:
+    - names:
+      - k8s.gcr.io/hpa-example@sha256:581697a37f0e136db86d6b30392f0db40ce99c8248a7044c770012f4e8491544
+      - k8s.gcr.io/hpa-example:latest
+      sizeBytes: 480802490
+    - names:
+      - newrelic/infrastructure-bundle@sha256:312a20fcdbfb05d6c2fd60c8e17be08e4405a62caea93e9aefb611fb270bd80b
+      - newrelic/infrastructure-bundle:2.8.8
+      sizeBytes: 394896871
+    - names:
+      - <none>@<none>
+      - <none>:<none>
+      sizeBytes: 294536887
+    - names:
+      - k8s.gcr.io/etcd@sha256:64b9ea357325d5db9f8a723dcf503b5a449177b17ac87d69481e126bb724c263
+      - k8s.gcr.io/etcd:3.5.1-0
+      sizeBytes: 292558922
+    - names:
+      - kubernetesui/dashboard@sha256:ec27f462cf1946220f5a9ace416a84a57c18f98c777876a8054405d1428cc92e
+      - kubernetesui/dashboard:v2.3.1
+      sizeBytes: 220033604
+    - names:
+      - quay.io/prometheus/prometheus@sha256:b37103e03399e90c9b7b1b2940894d3634915cf9df4aa2e5402bd85b4377808c
+      - quay.io/prometheus/prometheus:v2.34.0
+      sizeBytes: 204930030
+    - names:
+      - nginx@sha256:2275af0f20d71b293916f1958f8497f987b8d8fd8113df54635f2a5915002bf1
+      - nginx:latest
+      sizeBytes: 141522028
+    - names:
+      - k8s.gcr.io/kube-apiserver@sha256:b8eba88862bab7d3d7cdddad669ff1ece006baa10d3a3df119683434497a0949
+      - k8s.gcr.io/kube-apiserver:v1.23.3
+      sizeBytes: 135166371
+    - names:
+      - <none>@<none>
+      - <none>:<none>
+      sizeBytes: 128446877
+    - names:
+      - k8s.gcr.io/kube-controller-manager@sha256:b721871d9a9c55836cbcbb2bf375e02696260628f73620b267be9a9a50c97f5a
+      - k8s.gcr.io/kube-controller-manager:v1.23.3
+      sizeBytes: 124979895
+    - names:
+      - <none>@<none>
+      - <none>:<none>
+      sizeBytes: 121979600
+    - names:
+      - newrelic/nri-kubernetes@sha256:072c61fe996c64469fa2741abbeffa8f08a090520d7c4b45d237d2e99b352ade
+      - newrelic/nri-kubernetes:3.2.0
+      sizeBytes: 113983732
+    - names:
+      - k8s.gcr.io/kube-proxy@sha256:def87f007b49d50693aed83d4703d0e56c69ae286154b1c7a20cd1b3a320cf7c
+      - k8s.gcr.io/kube-proxy:v1.23.3
+      sizeBytes: 112332215
+    - names:
+      - k8s.gcr.io/kube-proxy@sha256:29e70ce3c241fe0b410d89cf20b453a750eb8513ea7bd9ef9c2fd35f8e45e68e
+      - k8s.gcr.io/kube-proxy:v1.22.0
+      sizeBytes: 103645143
+    - names:
+      - bitnami/redis@sha256:a97dd274c972cb39c8bfbf6f551fd80a9279b564e4713f4a2f02d213c033ae79
+      - bitnami/redis:6.2.7-debian-10-r0
+      sizeBytes: 96078813
+    - names:
+      - bitnami/redis-exporter@sha256:39440d7d0367b1cf566eb9d5b8a5088c9cbce7e74c6316bbf21396376363c476
+      - bitnami/redis-exporter:1.37.0-debian-10-r39
+      sizeBytes: 94175507
+    - names:
+      - bitnami/nginx-exporter@sha256:1edd5b290be9f966334018671645dcb927e001ee42d441634e710fd7f67a5967
+      - bitnami/nginx-exporter:0.10.0-debian-10-r125
+      sizeBytes: 93785436
+    - names:
+      - bitnami/nginx@sha256:2e406f16df1308490bd75880f897bb60d1b6e58c86b118110e752b080d95c391
+      - bitnami/nginx:1.21.6-debian-10-r93
+      sizeBytes: 89509370
+    - names:
+      - k8s.gcr.io/metrics-server/metrics-server@sha256:dbc33d7d35d2a9cc5ab402005aa7a0d13be6192f3550c7d42cba8d2d5e3a5d62
+      sizeBytes: 60547543
+    - names:
+      - k8s.gcr.io/kube-scheduler@sha256:32308abe86f7415611ca86ee79dd0a73e74ebecb2f9e3eb85fc3a8e62f03d0e7
+      - k8s.gcr.io/kube-scheduler:v1.23.3
+      sizeBytes: 53488311
+    - names:
+      - <none>@<none>
+      - <none>:<none>
+      sizeBytes: 52658863
+    - names:
+      - newrelic/k8s-events-forwarder@sha256:d0f9348698c04b50e7ece4fc2b71c7d9c7c1ba00e1a28f9cb0655a0266614c99
+      - newrelic/k8s-events-forwarder:1.24.1
+      sizeBytes: 51337269
+    - names:
+      - k8s.gcr.io/ingress-nginx/kube-webhook-certgen@sha256:64d8c73dca984af206adf9d6d7e46aa550362b1d7a01f3a0a91b20cc67868660
+      - k8s.gcr.io/ingress-nginx/kube-webhook-certgen:v1.1.1
+      sizeBytes: 47736388
+    - names:
+      - k8s.gcr.io/coredns/coredns@sha256:6e5a02c21641597998b4be7cb5eb1e7b02c0d8d23cce4dd09f4682d463798890
+      - k8s.gcr.io/coredns/coredns:v1.8.4
+      sizeBytes: 47554275
+    - names:
+      - k8s.gcr.io/coredns/coredns@sha256:5b6ec0d6de9baaf3e92d0f66cd96a25b9edbce8716f5f15dcd1a616b3abd590e
+      - k8s.gcr.io/coredns/coredns:v1.8.6
+      sizeBytes: 46829283
+    - names:
+      - newrelic/k8s-metadata-injection@sha256:a7cfd5a96eb7d0d5184ba05aad09f060250f9898f8739ca381ff5fd81b79caf8
+      - newrelic/k8s-metadata-injection:1.7.0
+      sizeBytes: 46381393
+    - names:
+      - newrelic/k8s-metadata-injection:e2e-test
+      sizeBytes: 46318897
+    - names:
+      - <none>@<none>
+      - <none>:<none>
+      sizeBytes: 46318897
+    - names:
+      - newrelic/nri-prometheus@sha256:65d06652572998b5cbf23de4946f54a45e78461c72854433974fb5135fb5e6e3
+      - newrelic/nri-prometheus:2.14.0
+      sizeBytes: 40906461
+    - names:
+      - kubernetesui/metrics-scraper@sha256:36d5b3f60e1a144cc5ada820910535074bdf5cf73fb70d1ff1681537eef4e172
+      - kubernetesui/metrics-scraper:v1.0.7
+      sizeBytes: 34446077
+    - names:
+      - gcr.io/k8s-minikube/storage-provisioner@sha256:18eb69d1418e854ad5a19e399310e52808a8321e4c441c1dddad8977a0d7a944
+      - gcr.io/k8s-minikube/storage-provisioner:v5
+      sizeBytes: 31465472
+    - names:
+      - k8s.gcr.io/kube-state-metrics/kube-state-metrics@sha256:47d3a12d9da6699a9d95df8aaff235305229ef08203fae3fc1f1d47b2a409f89
+      - k8s.gcr.io/kube-state-metrics/kube-state-metrics:v1.9.8
+      sizeBytes: 30754077
+    - names:
+      - <none>@<none>
+      - <none>:<none>
+      sizeBytes: 5574964
+    - names:
+      - alpine@sha256:4edbd2beb5f78b1014028f4fbb99f3237d9561100b6881aabbf5acce2c4f9454
+      - alpine:3.15.4
+      sizeBytes: 5574964
+    - names:
+      - alpine@sha256:686d8c9dfa6f3ccfc8230bc3178d23f84eeaf7e457f36f271ab1acc53015037c
+      - alpine:latest
+      sizeBytes: 5529096
+    - names:
+      - busybox@sha256:d2b53584f580310186df7a2055ce3ff83cc0df6caacf1e3489bff8cf5d0af5d8
+      - busybox:latest
+      sizeBytes: 1239756
+    - names:
+      - <none>@<none>
+      - <none>:<none>
+      sizeBytes: 682696
+    - names:
+      - k8s.gcr.io/pause@sha256:3d380ca8864549e74af4b29c10f9cb0956236dfb01c40ca076fb6c37253234db
+      - k8s.gcr.io/pause:3.6
+      sizeBytes: 682696
+    nodeInfo:
+      architecture: amd64
+      bootID: 5f7d1283-ecd9-4779-ba15-73ecc402e64b
+      containerRuntimeVersion: docker://20.10.12
+      kernelVersion: 5.10.104-linuxkit
+      kubeProxyVersion: v1.23.3
+      kubeletVersion: v1.23.3
+      machineID: b6a262faae404a5db719705fd34b5c8b
+      operatingSystem: linux
+      osImage: Ubuntu 20.04.2 LTS
+      systemUUID: 9ac676cf-ff19-4480-a6f7-faa469126d89
+kind: List
+metadata:
+  resourceVersion: ""
