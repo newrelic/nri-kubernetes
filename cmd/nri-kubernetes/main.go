@@ -18,6 +18,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/internal/config"
 	"github.com/newrelic/nri-kubernetes/v3/src/client"
 	"github.com/newrelic/nri-kubernetes/v3/src/controlplane"
+	"github.com/newrelic/nri-kubernetes/v3/src/health"
 	"github.com/newrelic/nri-kubernetes/v3/src/integration"
 	"github.com/newrelic/nri-kubernetes/v3/src/ksm"
 	ksmClient "github.com/newrelic/nri-kubernetes/v3/src/ksm/client"
@@ -63,6 +64,18 @@ func main() {
 
 	if c.Verbose {
 		logger.SetLevel(log.DebugLevel)
+	}
+
+	healthServer := health.New()
+
+	if c.HealthAddress != "" {
+		go func(address string) {
+			logger.Debugf("Starting health server")
+			err := healthServer.ListenAndServe(address)
+			if err != nil {
+				logger.Errorf("Error starting health server: %v", err)
+			}
+		}(c.HealthAddress)
 	}
 
 	if c.LogLevel != "" {
@@ -170,6 +183,8 @@ func main() {
 		}
 
 		logger.Debugf("waiting %f seconds for next interval", c.Interval.Seconds())
+
+		healthServer.Healthy()
 
 		// Sleep interval minus the time that took to scrape.
 		time.Sleep(c.Interval - time.Since(start))
