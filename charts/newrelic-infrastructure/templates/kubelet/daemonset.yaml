@@ -92,6 +92,14 @@ spec:
           {{- with .Values.kubelet.extraEnvFrom }}
           envFrom: {{ toYaml . | nindent 12 }}
           {{- end }}
+          ports:
+            - containerPort: 8999
+          startupProbe:
+            periodSeconds: 30
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: 8999
           volumeMounts:
             - name: nri-kubernetes-config
               mountPath: /etc/newrelic-infra/nri-kubernetes.yml

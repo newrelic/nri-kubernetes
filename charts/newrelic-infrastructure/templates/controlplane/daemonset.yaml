@@ -80,6 +80,12 @@ spec:
             - name: "NRI_KUBERNETES_VERBOSE"
               value: {{ include "newrelic.common.verboseLog.valueAsBoolean" . | quote }}
 
+            {{- if include "nriKubernetes.controlPlane.hostNetwork" . }}
+            {{/* If we are running in hostNetwork, do not set up the health probe */}}
+            - name: "NRI_KUBERNETES_HEALTH_ADDRESS"
+              value: ""
+            {{- end }}
+
             - name: "NRI_KUBERNETES_NODENAME"
               valueFrom:
                 fieldRef:
@@ -97,6 +103,18 @@ spec:
           {{- with .Values.controlPlane.extraEnvFrom }}
           envFrom: {{ toYaml . | nindent 12 }}
           {{- end }}
+
+          {{- if not (include "nriKubernetes.controlPlane.hostNetwork" .) }}
+          ports:
+            - containerPort: 8999
+          startupProbe:
+            periodSeconds: 30
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: 8999
+          {{- end }}
+
           volumeMounts:
             - name: nri-kubernetes-config
               mountPath: /etc/newrelic-infra/nri-kubernetes.yml
