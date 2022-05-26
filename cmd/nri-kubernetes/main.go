@@ -66,18 +66,6 @@ func main() {
 		logger.SetLevel(log.DebugLevel)
 	}
 
-	healthServer := health.New()
-
-	if c.HealthAddress != "" {
-		go func(address string) {
-			logger.Debugf("Starting health server")
-			err := healthServer.ListenAndServe(address)
-			if err != nil {
-				logger.Errorf("Error starting health server: %v", err)
-			}
-		}(c.HealthAddress)
-	}
-
 	if c.LogLevel != "" {
 		level, err := log.ParseLevel(c.LogLevel)
 		if err != nil {
@@ -85,6 +73,17 @@ func main() {
 		} else {
 			logger.SetLevel(level)
 		}
+	}
+
+	healthServer := health.New(health.WithLogger(logger))
+
+	if c.HealthAddress != "" {
+		go func(address string) {
+			err := healthServer.ListenAndServe(address)
+			if err != nil {
+				logger.Errorf("Error starting health server: %v", err)
+			}
+		}(c.HealthAddress)
 	}
 
 	integrationOptions := []integration.OptionFunc{

@@ -5,6 +5,9 @@ import (
 	"io"
 	"net/http"
 	"sync"
+
+	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -13,24 +16,41 @@ const (
 
 // Server is an HTTP server that can be used as a liveness probe.
 type Server struct {
-	lock sync.RWMutex
-
+	lock    sync.RWMutex
+	logger  *logrus.Logger
 	healthy bool
 	reason  string
 }
 
+type OptionFunc func(server *Server)
+
+func WithLogger(logger *logrus.Logger) OptionFunc {
+	return func(server *Server) {
+		server.logger = logger
+	}
+}
+
 // New creates a new health.Server. A newly created Server is marked as unhealthy with ReasonUninitialized as the reason.
-func New() *Server {
-	return &Server{
+func New(options ...OptionFunc) *Server {
+	s := &Server{
 		healthy: false,
 		reason:  ReasonUninitialized,
+		logger:  logutil.Discard,
 	}
+
+	for _, opt := range options {
+		opt(s)
+	}
+
+	return s
 }
 
 // ListenAndServe sets the health.Server to listen in the supplied address, blocking until an error occurs.
 func (s *Server) ListenAndServe(address string) error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", s.health)
+
+	s.logger.Infof("Starting health server on %s", address)
 
 	return http.ListenAndServe(address, mux)
 }
@@ -41,6 +61,8 @@ func (s *Server) Healthy() {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
+	s.logger.Debugf("Server marked as healthy")
+
 	s.healthy = true
 	s.reason = ""
 }
@@ -50,6 +72,8 @@ func (s *Server) Healthy() {
 func (s *Server) Unhealthy(reason string) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
+
+	s.logger.Debugf("Server marked as unhealthy due to %q", reason)
 
 	s.healthy = false
 	s.reason = reason
@@ -62,10 +86,12 @@ func (s *Server) health(rw http.ResponseWriter, _ *http.Request) {
 	defer s.lock.RUnlock()
 
 	if s.healthy {
+		s.logger.Debugf("Server healthy, returning 200")
 		rw.WriteHeader(http.StatusOK)
 		return
 	}
 
+	s.logger.Infof("Server unhealthy: %s", s.reason)
 	rw.WriteHeader(http.StatusServiceUnavailable)
 	_, _ = io.WriteString(rw, s.reason)
 }
