@@ -12,4 +12,7 @@ data:
     {{- (merge .Values.common.config (include "newrelic.integrationConfigDefaults" . | fromYaml)) | toYaml | nindent 4 }}
     ksm:
       {{- mustMergeOverwrite .Values.ksm.config  (include "newrelic.compatibility.ksm.legacyData" . | fromYaml) | toYaml | nindent 6 -}}
+      {{- if .Values.common.namespaceSelector }}
+      {{- toYaml .Values.common.namespaceSelector | nindent 6 }}
+      {{- end }}
 {{- end -}}

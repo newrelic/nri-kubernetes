@@ -15,4 +15,7 @@ data:
       {{- if .Values.kubelet.config }}
       {{- toYaml .Values.kubelet.config | nindent 6 }}
       {{- end }}
+      {{- if .Values.common.namespaceSelector }}
+      {{- toYaml .Values.common.namespaceSelector | nindent 6 }}
+      {{- end }}
 {{- end }}
