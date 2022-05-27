@@ -114,3 +114,14 @@ tests:
           path: spec.template.spec.hostNetwork
           value: true
         template: templates/kubelet/daemonset.yaml
+
+  - it: controlPlane obeys global hostNetwork
+    set:
+      licenseKey: test
+      cluster: test
+      global.hostNetwork: false
+    asserts:
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: false
+        template: templates/controlplane/daemonset.yaml
