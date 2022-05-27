@@ -40,6 +40,17 @@ const (
 	clusterName    = "testClusterName"
 )
 
+// apiServer123DeprecationExclusion defines an specific exclusion introduced to support k8s 1.23.
+func apiServer123DeprecationExclusion(version testutil.Version) exclude.Func {
+	return func(group string, spec *definition.Spec, ent *integration.Entity) bool {
+		// apiserverStorageObjects replaces etcObjectCounts in k8s versions above 1.23
+		if testutil.IsBelow(version, testutil.Testdata123) {
+			return exclude.Metrics("apiserverStorageObjects")(group, spec, ent)
+		}
+		return exclude.Metrics("etcdObjectCounts")(group, spec, ent)
+	}
+}
+
 func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 	t.Parallel()
 
@@ -101,8 +112,10 @@ func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 				t.Fatalf("running scraper: %v", err)
 			}
 
+			// Include specific specific exclusions for this version.
+			versionAsserter := asserter.Excluding(apiServer123DeprecationExclusion(version))
 			// Call the asserter for the entities of this particular sub-test.
-			asserter.On(i.Entities).Assert(t)
+			versionAsserter.On(i.Entities).Assert(t)
 		})
 	}
 }

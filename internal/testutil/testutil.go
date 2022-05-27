@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"embed"
+	"sort"
 )
 
 //go:embed data
@@ -58,4 +59,13 @@ func AllVersions() []Version {
 func LatestVersion() Version {
 	allVersions := AllVersions()
 	return allVersions[len(allVersions)-1]
+}
+
+// IsBelow returns true when a is below b in the versions we have test data for. It assumes test data for
+// both versions exists and the corresponding `AllVersions()` list is properly sorted.
+func IsBelow(a, b Version) bool {
+	allVersions := AllVersions()
+	aIndex := sort.Search(len(allVersions), func(i int) bool { return allVersions[i] >= a })
+	bIndex := sort.Search(len(allVersions), func(i int) bool { return allVersions[i] >= b })
+	return aIndex < bIndex
 }
