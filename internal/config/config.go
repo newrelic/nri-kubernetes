@@ -1,9 +1,12 @@
 package config
 
 import (
+	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -229,10 +232,39 @@ type NamespaceSelector struct {
 	MatchExpressions []Expression `mapstructure:"matchExpressions"`
 }
 
+// Expression hold the values to generate an expression to filter namespaces by MatchExpressions.
 type Expression struct {
-	Key      string        `mapstructure:"key" json:"key"`
-	Operator string        `mapstructure:"operator" json:"operator"`
-	Values   []interface{} `mapstructure:"values" json:"values"`
+	// Key it the key of the label.
+	Key string `mapstructure:"key" json:"key"`
+	// Operator holds either an inclusion (NotIn) or exclusion (In) value.
+	Operator string `mapstructure:"operator" json:"operator"`
+	// Values is a slice of values related to the key.
+	Values []interface{} `mapstructure:"values" json:"values"`
+}
+
+func (e *Expression) String() string {
+	var values []string
+
+	for _, val := range e.Values {
+		var str string
+		switch v := val.(type) {
+		case string:
+			str = v
+		case bool:
+			str = strconv.FormatBool(v)
+		case int:
+			str = strconv.FormatInt(int64(v), 10)
+		case float32, float64:
+			str = fmt.Sprintf("%f", v)
+		default:
+			log.Errorf("parsing expression value: %v, type %v", val, v)
+			continue
+		}
+
+		values = append(values, str)
+	}
+
+	return fmt.Sprintf("%s %s (%s)", e.Key, strings.ToLower(e.Operator), strings.Join(values, ","))
 }
 
 func LoadConfig(filePath string, fileName string) (*Config, error) {
