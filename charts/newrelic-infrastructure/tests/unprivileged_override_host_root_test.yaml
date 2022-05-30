@@ -1,0 +1,33 @@
+suite: Test NRIA_OVERRIDE_HOST_ROOT
+templates:
+  - templates/kubelet/daemonset.yaml
+  - templates/kubelet/scraper-configmap.yaml
+  - templates/kubelet/agent-configmap.yaml
+  - templates/kubelet/integrations-configmap.yaml
+  - templates/agent-configmap.yaml
+  - templates/secret.yaml
+tests:
+  - it: NRIA_OVERRIDE_HOST_ROOT is not present in privileged mode
+    set:
+      licenseKey: test
+      cluster: test
+      privileged: true
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: "NRIA_OVERRIDE_HOST_ROOT"
+            value: ""
+        template: templates/kubelet/daemonset.yaml
+  - it: NRIA_OVERRIDE_HOST_ROOT is present in unprivileged mode
+    set:
+      licenseKey: test
+      cluster: test
+      privileged: false
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: "NRIA_OVERRIDE_HOST_ROOT"
+            value: ""
+        template: templates/kubelet/daemonset.yaml

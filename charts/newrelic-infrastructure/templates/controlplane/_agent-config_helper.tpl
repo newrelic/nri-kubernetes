@@ -3,7 +3,6 @@ Defaults for controlPlane's agent config
 */ -}}
 {{- define "nriKubernetes.controlPlane.agentConfig.defaults" -}}
 is_forward_only: true
-overide_host_root: ""  # Typo from here: https://github.com/newrelic/infrastructure-agent/blob/master/pkg/config/config.go#L267
 http_server_enabled: true
 http_server_port: 8001
 {{- end -}}
