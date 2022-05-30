@@ -1,0 +1,51 @@
+suite: test startup probe
+templates:
+  - templates/controlplane/daemonset.yaml
+  - templates/controlplane/scraper-configmap.yaml
+  - templates/controlplane/agent-configmap.yaml
+  - templates/kubelet/daemonset.yaml
+  - templates/kubelet/scraper-configmap.yaml
+  - templates/kubelet/agent-configmap.yaml
+  - templates/kubelet/integrations-configmap.yaml
+  - templates/ksm/deployment.yaml
+  - templates/ksm/scraper-configmap.yaml
+  - templates/ksm/agent-configmap.yaml
+  - templates/agent-configmap.yaml
+  - templates/secret.yaml
+tests:
+  - it: Startup probe is set if hostNetwork is false
+    set:
+      global:
+        hostNetwork: false
+      controlPlane:
+        hostNetwork: false
+      licenseKey: test
+      cluster: test
+    asserts:
+      - isNotEmpty:
+          path: spec.template.spec.containers[0].startupProbe
+        template: templates/ksm/deployment.yaml
+      - isNotEmpty:
+          path: spec.template.spec.containers[0].startupProbe
+        template: templates/controlplane/daemonset.yaml
+      - isNotEmpty:
+          path: spec.template.spec.containers[0].startupProbe
+        template: templates/kubelet/daemonset.yaml
+  - it: Startup probe is not if hostNetwork is true
+    set:
+      global:
+        hostNetwork: true
+      controlPlane:
+        hostNetwork: true
+      licenseKey: test
+      cluster: test
+    asserts:
+      - isNull:
+          path: spec.template.spec.containers[0].startupProbe
+        template: templates/ksm/deployment.yaml
+      - isNull:
+          path: spec.template.spec.containers[0].startupProbe
+        template: templates/controlplane/daemonset.yaml
+      - isNull:
+          path: spec.template.spec.containers[0].startupProbe
+        template: templates/kubelet/daemonset.yaml

@@ -17,6 +17,8 @@ const (
 
 	DefaultNetworkRouteFile = "/proc/net/route"
 
+	DefaultHealthAddress = ":8999"
+
 	SinkTypeHTTP   = "http"
 	SinkTypeStdout = "stdout"
 )
@@ -46,6 +48,10 @@ type Config struct {
 		// HTTP stores the configuration for the HTTP sink.
 		HTTP HTTPSink `mapstructure:"http"`
 	} `mapstructure:"sink"`
+
+	// HealthAddress is the address in which the health server will listen for requests.
+	// If empty, the health server will not be started. Defaults to DefaultHealthAddress.
+	HealthAddress string `mapstructure:"healthAddress"`
 
 	// ControlPlane defines config options for the control plane scraper.
 	ControlPlane `mapstructure:"controlPlane"`
@@ -228,6 +234,7 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	v.SetDefault("kubelet.networkRouteFile", DefaultNetworkRouteFile)
 	v.SetDefault("nodeName", "node")
 	v.SetDefault("nodeIP", "node")
+	v.SetDefault("healthAddress", DefaultHealthAddress)
 
 	// Sane connection defaults
 	v.SetDefault("sink.type", SinkTypeHTTP)
