@@ -45,11 +45,10 @@ func (a Asserter) On(entities []*integration.Entity) Asserter {
 // For ignoring whole spec groups, use ExcludingGroups instead.
 // Missing metrics are still logged, unless Silently is used.
 func (a Asserter) Excluding(excludeFuncs ...exclude.Func) Asserter {
-	exclude := make([]exclude.Func, len(a.exclude)+len(excludeFuncs))
+	exclude := make([]exclude.Func, 0, len(a.exclude)+len(excludeFuncs))
 	copy(exclude, a.exclude)
 
-	a.exclude = append(a.exclude, excludeFuncs...)
-
+	a.exclude = append(exclude, excludeFuncs...)
 	return a
 }
 
@@ -57,11 +56,10 @@ func (a Asserter) Excluding(excludeFuncs ...exclude.Func) Asserter {
 // Unlike Excluding, ExcludingGroups will ignore the group _before_ checking if there are any entities at all matching
 // the group, an scenario that would make the asserter fail if the group is not excluded this way.
 func (a Asserter) ExcludingGroups(groupNames ...string) Asserter {
-	excludeGroups := make([]string, len(a.excludedGroups)+len(groupNames))
-	copy(excludeGroups, a.excludedGroups)
+	excludedGroups := make([]string, 0, len(a.excludedGroups)+len(groupNames))
+	copy(excludedGroups, a.excludedGroups)
 
-	a.excludedGroups = append(a.excludedGroups, groupNames...)
-
+	a.excludedGroups = append(excludedGroups, groupNames...)
 	return a
 }
 
