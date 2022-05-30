@@ -8,7 +8,6 @@ features:
   docker_enabled: false
 {{- if not ( include "newrelic.common.privileged" . ) }}
 is_secure_forward_only: true
-overide_host_root: ""  # Typo from here: https://github.com/newrelic/infrastructure-agent/blob/master/pkg/config/config.go#L267
 {{- end }}
 {{- /*
 `enableProcessMetrics` is commented in the values and we want to configure it when it is set to something
