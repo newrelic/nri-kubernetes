@@ -45,7 +45,10 @@ func (a Asserter) On(entities []*integration.Entity) Asserter {
 // For ignoring whole spec groups, use ExcludingGroups instead.
 // Missing metrics are still logged, unless Silently is used.
 func (a Asserter) Excluding(excludeFuncs ...exclude.Func) Asserter {
-	a.exclude = appendToCopy(a.exclude, excludeFuncs...)
+	exclude := make([]exclude.Func, 0, len(a.exclude)+len(excludeFuncs))
+	copy(exclude, a.exclude)
+
+	a.exclude = append(exclude, excludeFuncs...)
 	return a
 }
 
@@ -53,7 +56,10 @@ func (a Asserter) Excluding(excludeFuncs ...exclude.Func) Asserter {
 // Unlike Excluding, ExcludingGroups will ignore the group _before_ checking if there are any entities at all matching
 // the group, an scenario that would make the asserter fail if the group is not excluded this way.
 func (a Asserter) ExcludingGroups(groupNames ...string) Asserter {
-	a.excludedGroups = appendToCopy(a.excludedGroups, groupNames...)
+	excludedGroups := make([]string, 0, len(a.excludedGroups)+len(groupNames))
+	copy(excludedGroups, a.excludedGroups)
+
+	a.excludedGroups = append(excludedGroups, groupNames...)
 	return a
 }
 
@@ -151,13 +157,6 @@ func entityMetric(e *integration.Entity, m string) interface{} {
 	}
 
 	return nil
-}
-
-// appendToCopy is a helper to return a slice copy with specified items appended.
-func appendToCopy[T any](original []T, items ...T) []T {
-	c := make([]T, 0, len(original)+len(items))
-	copy(c, original)
-	return append(c, items...)
 }
 
 // EntityMetricIs returns true if the specified entity has a metric named metricName equal to metricValue.
