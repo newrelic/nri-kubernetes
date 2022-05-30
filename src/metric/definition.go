@@ -80,8 +80,7 @@ var APIServerSpecs = definition.SpecGroups{
 					prometheus.FromValueWithOverriddenName("apiserver_storage_objects", "apiserverStorageObjects"),
 					prometheus.FromValueWithOverriddenName("etcd_object_counts", "etcdObjectCounts"),
 				),
-				Type:     sdkMetric.GAUGE,
-				Optional: true,
+				Type: sdkMetric.GAUGE,
 			},
 			{
 				Name:      "processResidentMemoryBytes",
