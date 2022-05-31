@@ -183,11 +183,10 @@ func TestNamespaceFilter_CacheSync(t *testing.T) {
 	require.NoError(t, err)
 
 	// Give some room to the informer to sync, and check that the new namespace is filtered properly.
-	if err := wait.PollImmediateUntilWithContext(ctx, 1*time.Second, func(context.Context) (bool, error) {
+	err = wait.PollImmediateUntilWithContext(ctx, 1*time.Second, func(context.Context) (bool, error) {
 		return nsFilter.IsAllowed(anotherNamespaceName), nil
-	}); err != nil {
-		t.Fatalf("Timed out waiting for the informer to sync: %v", err)
-	}
+	})
+	require.NoError(t, err, "Timed out waiting for the informer to sync")
 }
 
 func fakeNamespaceWithNameAndLabels(name string, l labels.Set) *corev1.Namespace {

@@ -22,7 +22,8 @@ type NamespaceFilter struct {
 	lister listersv1.NamespaceLister
 }
 
-// NewNamespaceFilter inits the namespace lister and returns a new NamespaceFilter.
+// NewNamespaceFilter inits the namespace lister and returns a new NamespaceFilter and a channel to close the informer
+// gracefully.
 func NewNamespaceFilter(c *config.Config, client kubernetes.Interface, options ...informers.SharedInformerOption) (*NamespaceFilter, chan<- struct{}) {
 	stopCh := make(chan struct{})
 
@@ -51,7 +52,7 @@ func (nf *NamespaceFilter) IsAllowed(namespace string) bool {
 		namespaceList, err := nf.lister.List(labels.SelectorFromSet(nf.c.NamespaceSelector.MatchLabels))
 		if err != nil {
 			log.Errorf("listing namespaces with MatchLabels: %v", err)
-			return false
+			return true
 		}
 
 		return containsNamespace(namespace, namespaceList)
@@ -64,13 +65,13 @@ func (nf *NamespaceFilter) IsAllowed(namespace string) bool {
 			selector, err := labels.Parse(expression.String())
 			if err != nil {
 				log.Errorf("parsing labels: %v", err)
-				return false
+				return true
 			}
 
 			namespaceList, err := nf.lister.List(selector)
 			if err != nil {
 				log.Errorf("listing namespaces with MatchExpressions: %v", err)
-				return false
+				return true
 			}
 
 			if !containsNamespace(namespace, namespaceList) {
