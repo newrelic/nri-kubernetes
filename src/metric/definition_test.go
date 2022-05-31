@@ -197,3 +197,24 @@ func TestUtilizationNotSupported(t *testing.T) {
 		assert.Nil(t, value)
 	}
 }
+
+func TestFetchIfMissing(t *testing.T) {
+	valueA := float64(1)
+	valueB := float64(2)
+	raw := definition.RawGroups{
+		"group": {
+			"entity": {
+				"a": valueA,
+				"b": valueB,
+			},
+		},
+	}
+
+	emptyExpected, err := fetchIfMissing(definition.FromRaw("a"), definition.FromRaw("b"))("group", "entity", raw)
+	assert.NoError(t, err)
+	assert.Empty(t, emptyExpected, "No value should be fetched as main value is present")
+
+	valueExpected, err := fetchIfMissing(definition.FromRaw("a"), definition.FromRaw("c"))("group", "entity", raw)
+	assert.NoError(t, err)
+	assert.Equal(t, valueA, valueExpected)
+}
