@@ -139,7 +139,11 @@ func TestNamespaceFilterer_IsAllowed(t *testing.T) {
 			require.NoError(t, err)
 			c := config.Config{NamespaceSelector: &testData.namespaceSelector}
 
-			nsFilter, _ := discovery.NewNamespaceFilter(&c, client)
+			nsFilter := discovery.NewNamespaceFilter(&c, client)
+
+			t.Cleanup(func() {
+				nsFilter.Close()
+			})
 
 			require.Equal(t, testData.expected, nsFilter.IsAllowed(namespaceName))
 		})
@@ -153,7 +157,6 @@ func TestNamespaceFilter_CacheSync(t *testing.T) {
 	client := testclient.NewSimpleClientset()
 
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(5*time.Second))
-	t.Cleanup(cancel)
 
 	// Create a namespace with a specific label.
 	_, err := client.CoreV1().Namespaces().Create(
@@ -164,7 +167,7 @@ func TestNamespaceFilter_CacheSync(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create the namespace filter.
-	nsFilter, _ := discovery.NewNamespaceFilter(&config.Config{
+	nsFilter := discovery.NewNamespaceFilter(&config.Config{
 		NamespaceSelector: &config.NamespaceSelector{
 			MatchLabels: map[string]string{
 				"test_label": "123",
@@ -173,6 +176,11 @@ func TestNamespaceFilter_CacheSync(t *testing.T) {
 	}, client)
 	// Check that recently created namespace is not allowed.
 	require.Equal(t, false, nsFilter.IsAllowed(namespaceName))
+
+	t.Cleanup(func() {
+		cancel()
+		nsFilter.Close()
+	})
 
 	// Create a new namespace that can be filtered with the previous given config.
 	_, err = client.CoreV1().Namespaces().Create(

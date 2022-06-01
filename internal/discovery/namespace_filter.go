@@ -1,6 +1,8 @@
 package discovery
 
 import (
+	"errors"
+
 	"github.com/newrelic/nri-kubernetes/v3/internal/config"
 
 	log "github.com/sirupsen/logrus"
@@ -20,11 +22,11 @@ type NamespaceFilterer interface {
 type NamespaceFilter struct {
 	c      *config.Config
 	lister listersv1.NamespaceLister
+	stopCh chan<- struct{}
 }
 
-// NewNamespaceFilter inits the namespace lister and returns a new NamespaceFilter and a channel to close the informer
-// gracefully.
-func NewNamespaceFilter(c *config.Config, client kubernetes.Interface, options ...informers.SharedInformerOption) (*NamespaceFilter, chan<- struct{}) {
+// NewNamespaceFilter inits the namespace lister and returns a new NamespaceFilter.
+func NewNamespaceFilter(c *config.Config, client kubernetes.Interface, options ...informers.SharedInformerOption) *NamespaceFilter {
 	stopCh := make(chan struct{})
 
 	factory := informers.NewSharedInformerFactoryWithOptions(client, defaultResyncDuration, options...)
@@ -37,7 +39,8 @@ func NewNamespaceFilter(c *config.Config, client kubernetes.Interface, options .
 	return &NamespaceFilter{
 		c:      c,
 		lister: lister,
-	}, stopCh
+		stopCh: stopCh,
+	}
 }
 
 // IsAllowed checks given any namespace, if it's allowed to be scraped by using the NamespaceLister
@@ -81,6 +84,17 @@ func (nf *NamespaceFilter) IsAllowed(namespace string) bool {
 	}
 
 	return true
+}
+
+// Close closes the stop channel and implements the Closer interface.
+func (nf *NamespaceFilter) Close() error {
+	if nf.stopCh == nil {
+		return errors.New("invalid channel")
+	}
+
+	close(nf.stopCh)
+
+	return nil
 }
 
 // containsNamespace checks if a namespaces is contained in a given list of namespaces.
