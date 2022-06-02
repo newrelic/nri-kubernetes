@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/newrelic/nri-kubernetes/v3/internal/config"
+	"github.com/newrelic/nri-kubernetes/v3/internal/storer"
 
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
@@ -23,10 +24,11 @@ type NamespaceFilter struct {
 	c      *config.Config
 	lister listersv1.NamespaceLister
 	stopCh chan<- struct{}
+	storer storer.Storer
 }
 
 // NewNamespaceFilter inits the namespace lister and returns a new NamespaceFilter.
-func NewNamespaceFilter(c *config.Config, client kubernetes.Interface, options ...informers.SharedInformerOption) *NamespaceFilter {
+func NewNamespaceFilter(c *config.Config, client kubernetes.Interface, storer storer.Storer, options ...informers.SharedInformerOption) *NamespaceFilter {
 	stopCh := make(chan struct{})
 
 	factory := informers.NewSharedInformerFactoryWithOptions(client, defaultResyncDuration, options...)
@@ -40,6 +42,7 @@ func NewNamespaceFilter(c *config.Config, client kubernetes.Interface, options .
 		c:      c,
 		lister: lister,
 		stopCh: stopCh,
+		storer: storer,
 	}
 }
 
@@ -50,6 +53,12 @@ func (nf *NamespaceFilter) IsAllowed(namespace string) bool {
 		return true
 	}
 
+	// Check if the namespace is already in the cache.
+	var allowed bool
+	if _, err := nf.storer.Get(namespace, &allowed); err == nil {
+		return allowed
+	}
+
 	// Scrape namespaces by honoring the matchLabels values.
 	if nf.c.NamespaceSelector.MatchLabels != nil {
 		namespaceList, err := nf.lister.List(labels.SelectorFromSet(nf.c.NamespaceSelector.MatchLabels))
@@ -58,7 +67,12 @@ func (nf *NamespaceFilter) IsAllowed(namespace string) bool {
 			return true
 		}
 
-		return containsNamespace(namespace, namespaceList)
+		allowed = containsNamespace(namespace, namespaceList)
+
+		// Save the namespace in the cache.
+		_ = nf.storer.Set(namespace, allowed)
+
+		return allowed
 	}
 
 	// Scrape namespaces by honoring the matchExpressions values.
@@ -82,6 +96,9 @@ func (nf *NamespaceFilter) IsAllowed(namespace string) bool {
 			}
 		}
 	}
+
+	// Save the namespace in the cache.
+	_ = nf.storer.Set(namespace, true)
 
 	return true
 }
