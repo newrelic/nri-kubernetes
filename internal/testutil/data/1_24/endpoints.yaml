@@ -1,0 +1,147 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Endpoints
+  metadata:
+    creationTimestamp: "2022-05-30T14:44:12Z"
+    labels:
+      endpointslice.kubernetes.io/skip-mirror: "true"
+    name: kubernetes
+    namespace: default
+    resourceVersion: "201"
+    uid: 6b5137d5-4011-49e8-bfb0-ea27ef2d06bd
+  subsets:
+  - addresses:
+    - ip: 172.19.0.2
+    ports:
+    - name: https
+      port: 6443
+      protocol: TCP
+- apiVersion: v1
+  kind: Endpoints
+  metadata:
+    annotations:
+      endpoints.kubernetes.io/last-change-trigger-time: "2022-05-30T14:44:35Z"
+    creationTimestamp: "2022-05-30T14:44:28Z"
+    labels:
+      k8s-app: kube-dns
+      kubernetes.io/cluster-service: "true"
+      kubernetes.io/name: CoreDNS
+    name: kube-dns
+    namespace: kube-system
+    resourceVersion: "443"
+    uid: 42fcea66-4f2f-40e8-8de6-f07f53cd1001
+  subsets:
+  - addresses:
+    - ip: 10.244.0.2
+      nodeName: kind-control-plane
+      targetRef:
+        kind: Pod
+        name: coredns-6d4b75cb6d-t74qr
+        namespace: kube-system
+        uid: 2605c6fd-e156-4c68-a748-bce0f2f0effa
+    - ip: 10.244.0.4
+      nodeName: kind-control-plane
+      targetRef:
+        kind: Pod
+        name: coredns-6d4b75cb6d-rf2sb
+        namespace: kube-system
+        uid: 94506370-15c7-418c-876e-bde75e282e02
+    ports:
+    - name: dns-tcp
+      port: 53
+      protocol: TCP
+    - name: dns
+      port: 53
+      protocol: UDP
+    - name: metrics
+      port: 9153
+      protocol: TCP
+- apiVersion: v1
+  kind: Endpoints
+  metadata:
+    annotations:
+      endpoints.kubernetes.io/last-change-trigger-time: "2022-05-30T14:45:21Z"
+    creationTimestamp: "2022-05-30T14:44:59Z"
+    labels:
+      app.kubernetes.io/managed-by: Helm
+      run: php-apache
+    name: e2e-hpa
+    namespace: scraper
+    resourceVersion: "655"
+    uid: bdb5eaa8-cb96-427b-8095-870ea822e45d
+  subsets:
+  - addresses:
+    - ip: 10.244.0.9
+      nodeName: kind-control-plane
+      targetRef:
+        kind: Pod
+        name: e2e-hpa-7cf9d996f4-hhpdw
+        namespace: scraper
+        uid: 9a7d1a50-23e2-47a0-b9ef-ad713318dad0
+    ports:
+    - port: 80
+      protocol: TCP
+- apiVersion: v1
+  kind: Endpoints
+  metadata:
+    annotations:
+      endpoints.kubernetes.io/last-change-trigger-time: "2022-05-30T14:45:19Z"
+    creationTimestamp: "2022-05-30T14:44:59Z"
+    labels:
+      app.kubernetes.io/instance: e2e
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: kube-state-metrics
+      helm.sh/chart: kube-state-metrics-2.13.2
+    name: e2e-kube-state-metrics
+    namespace: scraper
+    resourceVersion: "646"
+    uid: d9735a73-fe00-49ea-831b-1be670cf40c0
+  subsets:
+  - addresses:
+    - ip: 10.244.0.8
+      nodeName: kind-control-plane
+      targetRef:
+        kind: Pod
+        name: e2e-kube-state-metrics-7c9d7d6f5-v55rs
+        namespace: scraper
+        uid: d298994a-a2d9-45d1-95d8-e4720d188135
+    ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+- apiVersion: v1
+  kind: Endpoints
+  metadata:
+    annotations:
+      endpoints.kubernetes.io/last-change-trigger-time: "2022-05-30T14:45:24Z"
+    creationTimestamp: "2022-05-30T14:44:59Z"
+    labels:
+      app: statefulset
+      app.kubernetes.io/managed-by: Helm
+    name: e2e-statefulset
+    namespace: scraper
+    resourceVersion: "683"
+    uid: ff43a368-a5be-47c6-819e-7e4d99507c1a
+  subsets:
+  - addresses:
+    - ip: 10.244.0.10
+      nodeName: kind-control-plane
+      targetRef:
+        kind: Pod
+        name: e2e-statefulset-0
+        namespace: scraper
+        uid: e4c8800e-fc74-4dcd-9f6c-5103b653d3bc
+    - ip: 10.244.0.11
+      nodeName: kind-control-plane
+      targetRef:
+        kind: Pod
+        name: e2e-statefulset-1
+        namespace: scraper
+        uid: 579a7c0c-3565-433f-9c1b-0b51b9f016fe
+    ports:
+    - port: 8089
+      protocol: TCP
+kind: List
+metadata:
+  resourceVersion: ""
