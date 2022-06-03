@@ -10,7 +10,7 @@ type EntityIDGeneratorFunc func(groupLabel, rawEntityID string, g RawGroups) (st
 // EntityTypeGeneratorFunc generates an entity type.
 type EntityTypeGeneratorFunc func(groupLabel, rawEntityID string, g RawGroups, prefix string) (string, error)
 
-// NamespaceGetterFunc gets the namepsace.
+// NamespaceGetterFunc gets the namespace.
 type NamespaceGetterFunc func(metrics RawMetrics) string
 
 // Spec is a metric specification.
