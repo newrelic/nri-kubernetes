@@ -137,16 +137,14 @@ func FromLabelsValueEntityIDGeneratorForPendingPods() definition.EntityIDGenerat
 	}
 }
 
-func FromLabelGetNamespace() definition.NamespaceGetterFunc {
-	return func(metrics definition.RawMetrics) string {
-		for _, metric := range metrics {
-			m, ok := metric.(Metric)
-			if ok {
-				return m.Labels["namespace"]
-			}
+func FromLabelGetNamespace(metrics definition.RawMetrics) string {
+	for _, metric := range metrics {
+		m, ok := metric.(Metric)
+		if ok {
+			return m.Labels["namespace"]
 		}
-		return ""
 	}
+	return ""
 }
 
 // GroupEntityMetricsBySpec groups metrics coming from Prometheus by the

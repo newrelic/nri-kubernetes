@@ -44,7 +44,7 @@ var rawGroupsSample = definition.RawGroups{
 var specs = definition.SpecGroups{
 	"test": definition.SpecGroup{
 		TypeGenerator:   fromGroupEntityTypeGuessFunc,
-		NamespaceGetter: kubeletMetric.FromLabelGetNamespace(),
+		NamespaceGetter: kubeletMetric.FromLabelGetNamespace,
 		Specs: []definition.Spec{
 
 			{"metric_1", definition.FromRaw("raw_metric_name_1"), metric.GAUGE, false},
@@ -110,7 +110,7 @@ var rawGroupsKSMSample = definition.RawGroups{
 var specsKSM = definition.SpecGroups{
 	"test": definition.SpecGroup{
 		TypeGenerator:   fromGroupEntityTypeGuessFunc,
-		NamespaceGetter: prometheus.FromLabelGetNamespace(),
+		NamespaceGetter: prometheus.FromLabelGetNamespace,
 		Specs: []definition.Spec{
 			{"metric_1", prometheus.FromValue("raw_metric_name_1"), metric.GAUGE, false},
 			{"metric_2", prometheus.FromValue("raw_metric_name_2"), metric.GAUGE, false},
