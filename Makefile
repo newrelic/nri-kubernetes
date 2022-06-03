@@ -79,4 +79,4 @@ buildLicenseNotice:
 
 .PHONY: run-static
 run-static:
-	@go run cmd/kubernetes-static/main.go cmd/kubernetes-static/basic_http_client.go
+	@go run cmd/kubernetes-static/main.go
