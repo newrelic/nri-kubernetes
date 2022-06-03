@@ -1,11 +1,13 @@
 package main
 
 import (
-	"github.com/newrelic/nri-kubernetes/v3/internal/config"
-	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"k8s.io/client-go/kubernetes/fake"
-	"testing"
+
+	"github.com/newrelic/nri-kubernetes/v3/internal/config"
+	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
 )
 
 func TestSetupKubelet(t *testing.T) {
