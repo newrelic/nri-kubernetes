@@ -216,7 +216,7 @@ func setupKSM(c *config.Config, clients *clusterClients) (*ksm.Scraper, error) {
 			c.NamespaceSelector,
 			clients.k8s,
 			storer.NewInMemoryStore(c.Interval, c.Interval+storer.NamespaceStoreExtraInterval, logger),
-			nil,
+			logger,
 		)
 		scraperOpts = append(scraperOpts, ksm.WithFilterer(nsFilter))
 	}
@@ -266,7 +266,7 @@ func setupKubelet(c *config.Config, clients *clusterClients) (*kubelet.Scraper, 
 			c.NamespaceSelector,
 			clients.k8s,
 			storer.NewInMemoryStore(c.Interval, c.Interval+storer.NamespaceStoreExtraInterval, logger),
-			nil,
+			logger,
 		)
 		scraperOpts = append(scraperOpts, kubelet.WithFilterer(nsFilter))
 	}
