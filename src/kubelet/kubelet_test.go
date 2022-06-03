@@ -25,7 +25,17 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/src/kubelet"
 	kubeletClient "github.com/newrelic/nri-kubernetes/v3/src/kubelet/client"
 	"github.com/newrelic/nri-kubernetes/v3/src/metric"
+	"github.com/stretchr/testify/assert"
 )
+
+type NamespaceFilterMock struct{}
+
+func (nf NamespaceFilterMock) IsAllowed(namespace string) bool {
+	if namespace == "scraper" {
+		return false
+	}
+	return true
+}
 
 func TestScraper(t *testing.T) {
 	// Create an asserter with the settings that are shared for all test scenarios.
@@ -82,6 +92,52 @@ func TestScraper(t *testing.T) {
 			asserter.On(i.Entities).Assert(t)
 		})
 	}
+}
+
+func TestScraper_FilterNamespace(t *testing.T) {
+	version := testutil.LatestVersion()
+
+	t.Run(fmt.Sprintf("for_version_%s", version), func(t *testing.T) {
+		testServer, err := version.Server()
+		if err != nil {
+			t.Fatalf("Cannot create fake kubelet server: %v", err)
+		}
+
+		u, _ := url.Parse(testServer.KubeletEndpoint())
+
+		kubeletClient, err := kubeletClient.New(
+			kubeletClient.StaticConnector(&http.Client{}, *u),
+			kubeletClient.WithMaxRetries(3),
+		)
+		require.NoError(t, err)
+
+		k8sData, err := version.K8s()
+		if err != nil {
+			t.Fatalf("error instantiating fake k8s objects: %v", err)
+		}
+
+		fakeK8s := fake.NewSimpleClientset(k8sData.Everything()...)
+
+		scraper, err := kubelet.NewScraper(&config.Config{
+			ClusterName: t.Name(),
+		}, kubelet.Providers{
+			K8s:      fakeK8s,
+			Kubelet:  kubeletClient,
+			CAdvisor: kubeletClient,
+		}, kubelet.WithFilterer(NamespaceFilterMock{}))
+		if err != nil {
+			t.Fatalf("creating scraper: %v", err)
+		}
+
+		i := testutil.NewIntegration(t)
+		err = scraper.Run(i)
+		if err != nil {
+			t.Fatalf("running scraper: %v", err)
+		}
+
+		// Call the asserter for the entities of this particular sub-test.
+		assert.Equal(t, 25, len(i.Entities))
+	})
 }
 
 // kubeletExclusions is a helper that returns all the exclusions needed to assert the kubelet metrics without getting
