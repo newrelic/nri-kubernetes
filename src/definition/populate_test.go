@@ -665,8 +665,5 @@ func TestIntegrationPopulator_PrometheusFormatFilterNamespace(t *testing.T) {
 type NamespaceFilterMock struct{}
 
 func (nf NamespaceFilterMock) IsAllowed(namespace string) bool {
-	if namespace == "nsA" {
-		return false
-	}
-	return true
+	return namespace != "nsA"
 }

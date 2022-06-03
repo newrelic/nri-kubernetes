@@ -31,10 +31,7 @@ import (
 type NamespaceFilterMock struct{}
 
 func (nf NamespaceFilterMock) IsAllowed(namespace string) bool {
-	if namespace == "scraper" {
-		return false
-	}
-	return true
+	return namespace != "scraper"
 }
 
 func TestScraper(t *testing.T) {
