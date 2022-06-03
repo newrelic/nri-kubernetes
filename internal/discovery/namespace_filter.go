@@ -21,14 +21,15 @@ type NamespaceFilterer interface {
 
 // NamespaceFilter is a struct holding pointers to the config and the namespace lister.
 type NamespaceFilter struct {
-	c      *config.Config
+	c      *config.NamespaceSelector
 	lister listersv1.NamespaceLister
 	stopCh chan<- struct{}
 	storer storer.Storer
+	logger *log.Logger
 }
 
 // NewNamespaceFilter inits the namespace lister and returns a new NamespaceFilter.
-func NewNamespaceFilter(c *config.Config, client kubernetes.Interface, storer storer.Storer, options ...informers.SharedInformerOption) *NamespaceFilter {
+func NewNamespaceFilter(c *config.NamespaceSelector, client kubernetes.Interface, storer storer.Storer, logger *log.Logger, options ...informers.SharedInformerOption) *NamespaceFilter {
 	stopCh := make(chan struct{})
 
 	factory := informers.NewSharedInformerFactoryWithOptions(client, defaultResyncDuration, options...)
@@ -43,13 +44,14 @@ func NewNamespaceFilter(c *config.Config, client kubernetes.Interface, storer st
 		lister: lister,
 		stopCh: stopCh,
 		storer: storer,
+		logger: logger,
 	}
 }
 
 // IsAllowed checks given any namespace, if it's allowed to be scraped by using the NamespaceLister
 func (nf *NamespaceFilter) IsAllowed(namespace string) bool {
 	// By default, we scrape every namespace.
-	if nf.c.NamespaceSelector == nil {
+	if nf.c == nil {
 		return true
 	}
 
@@ -60,10 +62,10 @@ func (nf *NamespaceFilter) IsAllowed(namespace string) bool {
 	}
 
 	// Scrape namespaces by honoring the matchLabels values.
-	if nf.c.NamespaceSelector.MatchLabels != nil {
-		namespaceList, err := nf.lister.List(labels.SelectorFromSet(nf.c.NamespaceSelector.MatchLabels))
+	if nf.c.MatchLabels != nil {
+		namespaceList, err := nf.lister.List(labels.SelectorFromSet(nf.c.MatchLabels))
 		if err != nil {
-			log.Errorf("listing namespaces with MatchLabels: %v", err)
+			nf.logger.Errorf("listing namespaces with MatchLabels: %v", err)
 			return true
 		}
 
@@ -77,17 +79,17 @@ func (nf *NamespaceFilter) IsAllowed(namespace string) bool {
 
 	// Scrape namespaces by honoring the matchExpressions values.
 	// Multiple expressions are evaluated with a logical AND between them.
-	if nf.c.NamespaceSelector.MatchExpressions != nil {
-		for _, expression := range nf.c.NamespaceSelector.MatchExpressions {
+	if nf.c.MatchExpressions != nil {
+		for _, expression := range nf.c.MatchExpressions {
 			selector, err := labels.Parse(expression.String())
 			if err != nil {
-				log.Errorf("parsing labels: %v", err)
+				nf.logger.Errorf("parsing labels: %v", err)
 				return true
 			}
 
 			namespaceList, err := nf.lister.List(selector)
 			if err != nil {
-				log.Errorf("listing namespaces with MatchExpressions: %v", err)
+				nf.logger.Errorf("listing namespaces with MatchExpressions: %v", err)
 				return true
 			}
 

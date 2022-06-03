@@ -235,11 +235,11 @@ type NamespaceSelector struct {
 // Expression hold the values to generate an expression to filter namespaces by MatchExpressions.
 type Expression struct {
 	// Key it the key of the label.
-	Key string `mapstructure:"key" json:"key"`
+	Key string `mapstructure:"key"`
 	// Operator holds either an inclusion (NotIn) or exclusion (In) value.
-	Operator string `mapstructure:"operator" json:"operator"`
+	Operator string `mapstructure:"operator"`
 	// Values is a slice of values related to the key.
-	Values []interface{} `mapstructure:"values" json:"values"`
+	Values []interface{} `mapstructure:"values"`
 }
 
 func (e *Expression) String() string {

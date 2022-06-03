@@ -36,15 +36,19 @@ func TestNamespaceFilterer_IsAllowed(t *testing.T) {
 		"namespace_allowed_by_default": {
 			expected: true,
 		},
+		"namespace_allowed_with_labels_and_no_selector": {
+			namespaceLabels: labels.Set{
+				"newrelic.com/scrape": "true",
+			},
+			expected: true,
+		},
 		"match_labels_included_namespace_allowed": {
 			namespaceLabels: labels.Set{
 				"newrelic.com/scrape": "true",
-				"ohhh":                "xxx",
 			},
 			namespaceSelector: config.NamespaceSelector{
 				MatchLabels: map[string]string{
 					"newrelic.com/scrape": "true",
-					"ohhh":                "xxx",
 				},
 			},
 			expected: true,
@@ -143,8 +147,12 @@ func TestNamespaceFilterer_IsAllowed(t *testing.T) {
 			)
 			require.NoError(t, err)
 
-			c := config.Config{NamespaceSelector: &testData.namespaceSelector}
-			nsFilter := discovery.NewNamespaceFilter(&c, client, newStorerMock(false, persist.ErrNotFound))
+			nsFilter := discovery.NewNamespaceFilter(
+				&testData.namespaceSelector,
+				client,
+				newStorerMock(false, persist.ErrNotFound),
+				nil,
+			)
 
 			t.Cleanup(func() {
 				nsFilter.Close()
@@ -205,8 +213,12 @@ func TestNamespaceFilterer_GetFromCache(t *testing.T) {
 			)
 			require.NoError(t, err)
 
-			c := config.Config{NamespaceSelector: &testData.namespaceSelector}
-			nsFilter := discovery.NewNamespaceFilter(&c, client, testData.storer)
+			nsFilter := discovery.NewNamespaceFilter(
+				&testData.namespaceSelector,
+				client,
+				testData.storer,
+				nil,
+			)
 
 			t.Cleanup(func() {
 				nsFilter.Close()
@@ -237,8 +249,7 @@ func TestNamespaceFilterer_SetCache(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	c := config.Config{NamespaceSelector: &namespaceSelector}
-	nsFilter := discovery.NewNamespaceFilter(&c, client, storer)
+	nsFilter := discovery.NewNamespaceFilter(&namespaceSelector, client, storer, nil)
 
 	t.Cleanup(func() {
 		nsFilter.Close()
@@ -274,15 +285,15 @@ func TestNamespaceFilter_InformerCacheSync(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create the namespace filter.
-	nsFilter := discovery.NewNamespaceFilter(&config.Config{
-		NamespaceSelector: &config.NamespaceSelector{
+	nsFilter := discovery.NewNamespaceFilter(
+		&config.NamespaceSelector{
 			MatchLabels: map[string]string{
 				"test_label": "123",
 			},
 		},
-	},
 		client,
 		newStorerMock(false, persist.ErrNotFound),
+		nil,
 	)
 	// Check that recently created namespace is not allowed.
 	require.Equal(t, false, nsFilter.IsAllowed(namespaceName))
