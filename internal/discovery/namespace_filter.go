@@ -2,6 +2,7 @@ package discovery
 
 import (
 	"errors"
+	"time"
 
 	"github.com/newrelic/nri-kubernetes/v3/internal/config"
 	"github.com/newrelic/nri-kubernetes/v3/internal/storer"
@@ -14,6 +15,8 @@ import (
 	listersv1 "k8s.io/client-go/listers/core/v1"
 )
 
+const defaultNamespaceResyncDuration = 10 * time.Minute
+
 // NamespaceFilterer provides an interface to filter namespaces.
 type NamespaceFilterer interface {
 	IsAllowed(namespace string) bool
@@ -24,15 +27,14 @@ type NamespaceFilter struct {
 	c      *config.NamespaceSelector
 	lister listersv1.NamespaceLister
 	stopCh chan<- struct{}
-	storer storer.Storer
 	logger *log.Logger
 }
 
 // NewNamespaceFilter inits the namespace lister and returns a new NamespaceFilter.
-func NewNamespaceFilter(c *config.NamespaceSelector, client kubernetes.Interface, storer storer.Storer, logger *log.Logger, options ...informers.SharedInformerOption) *NamespaceFilter {
+func NewNamespaceFilter(c *config.NamespaceSelector, client kubernetes.Interface, logger *log.Logger, options ...informers.SharedInformerOption) *NamespaceFilter {
 	stopCh := make(chan struct{})
 
-	factory := informers.NewSharedInformerFactoryWithOptions(client, defaultResyncDuration, options...)
+	factory := informers.NewSharedInformerFactoryWithOptions(client, defaultNamespaceResyncDuration, options...)
 
 	lister := factory.Core().V1().Namespaces().Lister()
 
@@ -43,7 +45,6 @@ func NewNamespaceFilter(c *config.NamespaceSelector, client kubernetes.Interface
 		c:      c,
 		lister: lister,
 		stopCh: stopCh,
-		storer: storer,
 		logger: logger,
 	}
 }
@@ -55,12 +56,6 @@ func (nf *NamespaceFilter) IsAllowed(namespace string) bool {
 		return true
 	}
 
-	// Check if the namespace is already in the cache.
-	var allowed bool
-	if _, err := nf.storer.Get(namespace, &allowed); err == nil {
-		return allowed
-	}
-
 	// Scrape namespaces by honoring the matchLabels values.
 	if nf.c.MatchLabels != nil {
 		namespaceList, err := nf.lister.List(labels.SelectorFromSet(nf.c.MatchLabels))
@@ -69,12 +64,7 @@ func (nf *NamespaceFilter) IsAllowed(namespace string) bool {
 			return true
 		}
 
-		allowed = containsNamespace(namespace, namespaceList)
-
-		// Save the namespace in the cache.
-		_ = nf.storer.Set(namespace, allowed)
-
-		return allowed
+		return containsNamespace(namespace, namespaceList)
 	}
 
 	// Scrape namespaces by honoring the matchExpressions values.
@@ -99,9 +89,6 @@ func (nf *NamespaceFilter) IsAllowed(namespace string) bool {
 		}
 	}
 
-	// Save the namespace in the cache.
-	_ = nf.storer.Set(namespace, true)
-
 	return true
 }
 
@@ -114,6 +101,36 @@ func (nf *NamespaceFilter) Close() error {
 	close(nf.stopCh)
 
 	return nil
+}
+
+// CachedNamespaceFilter is a wrapper of the NamespaceFilterer and the cache.
+type CachedNamespaceFilter struct {
+	NsFilter NamespaceFilterer
+	cache    storer.Storer
+}
+
+// NewCachedNamespaceFilter create a new CachedNamespaceFilter, wrapping the cache and the NamespaceFilterer.
+func NewCachedNamespaceFilter(ns NamespaceFilterer, storer storer.Storer) *CachedNamespaceFilter {
+	return &CachedNamespaceFilter{
+		NsFilter: ns,
+		cache:    storer,
+	}
+}
+
+// IsAllowed check the cache and calls the underlying NamespaceFilter if the result is not found.
+func (cnf *CachedNamespaceFilter) IsAllowed(namespace string) bool {
+	// Check if the namespace is already in the cache.
+	var allowed bool
+	if _, err := cnf.cache.Get(namespace, &allowed); err == nil {
+		return allowed
+	}
+
+	allowed = cnf.NsFilter.IsAllowed(namespace)
+
+	// Save the namespace in the cache.
+	_ = cnf.cache.Set(namespace, allowed)
+
+	return allowed
 }
 
 // containsNamespace checks if a namespaces is contained in a given list of namespaces.
