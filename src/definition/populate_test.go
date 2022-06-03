@@ -1,4 +1,4 @@
-package definition
+package definition_test
 
 import (
 	"fmt"
@@ -10,6 +10,9 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/data/inventory"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
+	kubeletMetric "github.com/newrelic/nri-kubernetes/v3/src/kubelet/metric"
+	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/version"
@@ -17,37 +20,40 @@ import (
 
 var defaultNS = "playground"
 
-var rawGroupsSample = RawGroups{
+var rawGroupsSample = definition.RawGroups{
 	"test": {
-		"entity_id_1": RawMetrics{
+		"entity_id_1": definition.RawMetrics{
 			"raw_metric_name_1": 1,
 			"raw_metric_name_2": "metric_value_2",
 			"raw_metric_name_3": map[string]interface{}{
 				"foo": "bar",
 			},
+			"namespace": "nsA",
 		},
-		"entity_id_2": RawMetrics{
+		"entity_id_2": definition.RawMetrics{
 			"raw_metric_name_1": 2,
 			"raw_metric_name_2": "metric_value_4",
 			"raw_metric_name_3": map[string]interface{}{
 				"foo": "bar",
 			},
+			"namespace": "nsB",
 		},
 	},
 }
 
-var specs = SpecGroups{
-	"test": SpecGroup{
-		TypeGenerator: fromGroupEntityTypeGuessFunc,
-		Specs: []Spec{
+var specs = definition.SpecGroups{
+	"test": definition.SpecGroup{
+		TypeGenerator:   fromGroupEntityTypeGuessFunc,
+		NamespaceGetter: kubeletMetric.FromLabelGetNamespace(),
+		Specs: []definition.Spec{
 
-			{"metric_1", FromRaw("raw_metric_name_1"), metric.GAUGE, false},
-			{"metric_2", FromRaw("raw_metric_name_2"), metric.ATTRIBUTE, false},
+			{"metric_1", definition.FromRaw("raw_metric_name_1"), metric.GAUGE, false},
+			{"metric_2", definition.FromRaw("raw_metric_name_2"), metric.ATTRIBUTE, false},
 			{
 				"metric_3",
 				fromMultiple(
-					FetchedValues(
-						map[string]FetchedValue{
+					definition.FetchedValues(
+						map[string]definition.FetchedValue{
 							"multiple_1": "one",
 							"multiple_2": "two",
 						},
@@ -60,23 +66,75 @@ var specs = SpecGroups{
 	},
 }
 
-func fromMultiple(values FetchedValues) FetchFunc {
-	return func(groupLabel, entityID string, groups RawGroups) (FetchedValue, error) {
+var rawGroupsKSMSample = definition.RawGroups{
+	"test": {
+		"entity_id_1": definition.RawMetrics{
+			"raw_metric_name_1": prometheus.Metric{
+				Value: prometheus.CounterValue(1),
+				Labels: map[string]string{
+					"namespace": "nsA",
+				},
+			},
+		},
+		"entity_id_2": definition.RawMetrics{
+			"raw_metric_name_1": prometheus.Metric{
+				Value: prometheus.CounterValue(1),
+				Labels: map[string]string{
+					"namespace": "nsB",
+				},
+			},
+			"raw_metric_name_2": prometheus.Metric{
+				Value: prometheus.CounterValue(1),
+				Labels: map[string]string{
+					"namespace": "nsB",
+				},
+			},
+		},
+		"entity_id_3": definition.RawMetrics{
+			"raw_metric_name_1": prometheus.Metric{
+				Value: prometheus.CounterValue(1),
+				Labels: map[string]string{
+					"namespace": "nsB",
+				},
+			},
+			"raw_metric_name_2": prometheus.Metric{
+				Value: prometheus.CounterValue(1),
+				Labels: map[string]string{
+					"namespace": "nsB",
+				},
+			},
+		},
+	},
+}
+
+var specsKSM = definition.SpecGroups{
+	"test": definition.SpecGroup{
+		TypeGenerator:   fromGroupEntityTypeGuessFunc,
+		NamespaceGetter: prometheus.FromLabelGetNamespace(),
+		Specs: []definition.Spec{
+			{"metric_1", prometheus.FromValue("raw_metric_name_1"), metric.GAUGE, false},
+			{"metric_2", prometheus.FromValue("raw_metric_name_2"), metric.GAUGE, false},
+		},
+	},
+}
+
+func fromMultiple(values definition.FetchedValues) definition.FetchFunc {
+	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 		return values, nil
 	}
 }
 
 // fromGroupMetricSetTypeGuessFunc uses the groupLabel for creating the metric set type sample.
-func fromGroupMetricSetTypeGuessFunc(_, groupLabel, _ string, _ RawGroups) (string, error) {
+func fromGroupMetricSetTypeGuessFunc(_, groupLabel, _ string, _ definition.RawGroups) (string, error) {
 	return fmt.Sprintf("%vSample", strings.Title(groupLabel)), nil
 }
 
-func fromGroupEntityTypeGuessFunc(groupLabel string, _ string, _ RawGroups, prefix string) (string, error) {
+func fromGroupEntityTypeGuessFunc(groupLabel string, _ string, _ definition.RawGroups, prefix string) (string, error) {
 	return fmt.Sprintf("%s:%s", prefix, groupLabel), nil
 }
 
-func testConfig(i *integration.Integration) *IntegrationPopulateConfig {
-	return &IntegrationPopulateConfig{
+func testConfig(i *integration.Integration) *definition.IntegrationPopulateConfig {
+	return &definition.IntegrationPopulateConfig{
 		Integration:   i,
 		ClusterName:   defaultNS,
 		K8sVersion:    &version.Info{GitVersion: "v1.15.42"},
@@ -84,6 +142,20 @@ func testConfig(i *integration.Integration) *IntegrationPopulateConfig {
 		Groups:        rawGroupsSample,
 		Specs:         specs,
 	}
+}
+
+func testConfigMetricFormatWithFilterer(i *integration.Integration) *definition.IntegrationPopulateConfig {
+	populator := testConfig(i)
+	populator.Filterer = NamespaceFilterMock{}
+	return populator
+}
+
+func testConfigPrometheusFormatWithFilterer(i *integration.Integration) *definition.IntegrationPopulateConfig {
+	populator := testConfig(i)
+	populator.Filterer = NamespaceFilterMock{}
+	populator.Groups = rawGroupsKSMSample
+	populator.Specs = specsKSM
+	return populator
 }
 
 func TestIntegrationPopulator_CorrectValue(t *testing.T) {
@@ -122,7 +194,7 @@ func TestIntegrationPopulator_CorrectValue(t *testing.T) {
 	}
 	expectedEntityData2.Metrics = []*metric.Set{expectedMetricSet2}
 
-	populated, errs := IntegrationPopulator(testConfig(intgr))
+	populated, errs := definition.IntegrationPopulator(testConfig(intgr))
 	assert.True(t, populated)
 	assert.Empty(t, errs)
 	assert.Contains(t, intgr.Entities, expectedEntityData1)
@@ -130,12 +202,12 @@ func TestIntegrationPopulator_CorrectValue(t *testing.T) {
 }
 
 func TestIntegrationPopulator_PartialResult(t *testing.T) {
-	metricSpecsWithIncompatibleType := SpecGroups{
-		"test": SpecGroup{
+	metricSpecsWithIncompatibleType := definition.SpecGroups{
+		"test": definition.SpecGroup{
 			TypeGenerator: fromGroupEntityTypeGuessFunc,
-			Specs: []Spec{
-				{"metric_1", FromRaw("raw_metric_name_1"), metric.GAUGE, false},
-				{"metric_2", FromRaw("raw_metric_name_2"), metric.GAUGE, false}, // Source type not correct
+			Specs: []definition.Spec{
+				{"metric_1", definition.FromRaw("raw_metric_name_1"), metric.GAUGE, false},
+				{"metric_2", definition.FromRaw("raw_metric_name_2"), metric.GAUGE, false}, // Source type not correct
 			},
 		},
 	}
@@ -172,7 +244,7 @@ func TestIntegrationPopulator_PartialResult(t *testing.T) {
 	config := testConfig(intgr)
 	config.Specs = metricSpecsWithIncompatibleType
 
-	populated, errs := IntegrationPopulator(config)
+	populated, errs := definition.IntegrationPopulator(config)
 	assert.True(t, populated)
 	assert.Contains(t, intgr.Entities, expectedEntityData1)
 	assert.Contains(t, intgr.Entities, expectedEntityData2)
@@ -181,7 +253,7 @@ func TestIntegrationPopulator_PartialResult(t *testing.T) {
 }
 
 func TestIntegrationPopulator_EntitiesDataNotPopulated_EmptyMetricGroups(t *testing.T) {
-	metricGroupEmpty := RawGroups{}
+	metricGroupEmpty := definition.RawGroups{}
 
 	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
 	require.NoError(t, err)
@@ -191,7 +263,7 @@ func TestIntegrationPopulator_EntitiesDataNotPopulated_EmptyMetricGroups(t *test
 	config := testConfig(intgr)
 	config.Groups = metricGroupEmpty
 
-	populated, errs := IntegrationPopulator(config)
+	populated, errs := definition.IntegrationPopulator(config)
 	assert.False(t, populated)
 	assert.Nil(t, errs)
 	assert.Equal(t, expectedData, intgr.Entities)
@@ -201,9 +273,9 @@ func TestIntegrationPopulator_EntitiesDataNotPopulated_ErrorSettingEntities(t *t
 	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
 	require.NoError(t, err)
 
-	metricGroupEmptyEntityID := RawGroups{
+	metricGroupEmptyEntityID := definition.RawGroups{
 		"test": {
-			"": RawMetrics{
+			"": definition.RawMetrics{
 				"raw_metric_name_1": 1,
 				"raw_metric_name_2": "metric_value_2",
 				"raw_metric_name_3": map[string]interface{}{
@@ -218,18 +290,18 @@ func TestIntegrationPopulator_EntitiesDataNotPopulated_ErrorSettingEntities(t *t
 	config := testConfig(intgr)
 	config.Groups = metricGroupEmptyEntityID
 
-	populated, errs := IntegrationPopulator(config)
+	populated, errs := definition.IntegrationPopulator(config)
 	assert.False(t, populated)
 	assert.EqualError(t, errs[0], "entity name and type are required when defining one")
 	assert.Equal(t, expectedData, intgr.Entities)
 }
 
 func TestIntegrationPopulator_MetricsSetsNotPopulated_OnlyEntity(t *testing.T) {
-	metricSpecsIncorrect := SpecGroups{
-		"test": SpecGroup{
+	metricSpecsIncorrect := definition.SpecGroups{
+		"test": definition.SpecGroup{
 			TypeGenerator: fromGroupEntityTypeGuessFunc,
-			Specs: []Spec{
-				{"useless", FromRaw("nonExistentMetric"), metric.GAUGE, false},
+			Specs: []definition.Spec{
+				{"useless", definition.FromRaw("nonExistentMetric"), metric.GAUGE, false},
 			},
 		},
 	}
@@ -264,7 +336,7 @@ func TestIntegrationPopulator_MetricsSetsNotPopulated_OnlyEntity(t *testing.T) {
 	config := testConfig(intgr)
 	config.Specs = metricSpecsIncorrect
 
-	populated, errs := IntegrationPopulator(config)
+	populated, errs := definition.IntegrationPopulator(config)
 
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
@@ -276,17 +348,17 @@ func TestIntegrationPopulator_MetricsSetsNotPopulated_OnlyEntity(t *testing.T) {
 }
 
 func TestIntegrationPopulator_EntityIDGenerator(t *testing.T) {
-	generator := func(groupLabel, rawEntityID string, g RawGroups) (string, error) {
+	generator := func(groupLabel, rawEntityID string, g definition.RawGroups) (string, error) {
 		return fmt.Sprintf("%v-generated", rawEntityID), nil
 	}
 
-	withGeneratorSpec := SpecGroups{
-		"test": SpecGroup{
+	withGeneratorSpec := definition.SpecGroups{
+		"test": definition.SpecGroup{
 			IDGenerator:   generator,
 			TypeGenerator: fromGroupEntityTypeGuessFunc,
-			Specs: []Spec{
-				{"metric_1", FromRaw("raw_metric_name_1"), metric.GAUGE, false},
-				{"metric_2", FromRaw("raw_metric_name_2"), metric.GAUGE, false},
+			Specs: []definition.Spec{
+				{"metric_1", definition.FromRaw("raw_metric_name_1"), metric.GAUGE, false},
+				{"metric_2", definition.FromRaw("raw_metric_name_2"), metric.GAUGE, false},
 			},
 		},
 	}
@@ -294,7 +366,7 @@ func TestIntegrationPopulator_EntityIDGenerator(t *testing.T) {
 	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
 	require.NoError(t, err)
 
-	raw := RawGroups{
+	raw := definition.RawGroups{
 		"test": {
 			"testEntity1": {
 				"raw_metric_name_1": 1,
@@ -339,7 +411,7 @@ func TestIntegrationPopulator_EntityIDGenerator(t *testing.T) {
 	config.Groups = raw
 	config.Specs = withGeneratorSpec
 
-	populated, errs := IntegrationPopulator(config)
+	populated, errs := definition.IntegrationPopulator(config)
 
 	assert.True(t, populated)
 	assert.Empty(t, errs)
@@ -349,17 +421,17 @@ func TestIntegrationPopulator_EntityIDGenerator(t *testing.T) {
 }
 
 func TestIntegrationPopulator_EntityIDGeneratorFuncWithError(t *testing.T) {
-	generator := func(groupLabel, rawEntityID string, g RawGroups) (string, error) {
+	generator := func(groupLabel, rawEntityID string, g definition.RawGroups) (string, error) {
 		return "", fmt.Errorf("error generating entity ID")
 	}
 
-	specsWithGeneratorFuncError := SpecGroups{
-		"test": SpecGroup{
+	specsWithGeneratorFuncError := definition.SpecGroups{
+		"test": definition.SpecGroup{
 			IDGenerator:   generator,
 			TypeGenerator: fromGroupEntityTypeGuessFunc,
-			Specs: []Spec{
-				{"metric_1", FromRaw("raw_metric_name_1"), metric.GAUGE, false},
-				{"metric_2", FromRaw("raw_metric_name_2"), metric.ATTRIBUTE, false},
+			Specs: []definition.Spec{
+				{"metric_1", definition.FromRaw("raw_metric_name_1"), metric.GAUGE, false},
+				{"metric_2", definition.FromRaw("raw_metric_name_2"), metric.ATTRIBUTE, false},
 			},
 		},
 	}
@@ -369,7 +441,7 @@ func TestIntegrationPopulator_EntityIDGeneratorFuncWithError(t *testing.T) {
 	config := testConfig(intgr)
 	config.Specs = specsWithGeneratorFuncError
 
-	populated, errs := IntegrationPopulator(config)
+	populated, errs := definition.IntegrationPopulator(config)
 
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
@@ -379,22 +451,22 @@ func TestIntegrationPopulator_EntityIDGeneratorFuncWithError(t *testing.T) {
 }
 
 func TestIntegrationPopulator_PopulateOnlySpecifiedGroups(t *testing.T) {
-	generator := func(groupLabel, rawEntityID string, g RawGroups) (string, error) {
+	generator := func(groupLabel, rawEntityID string, g definition.RawGroups) (string, error) {
 		return fmt.Sprintf("%v-generated", rawEntityID), nil
 	}
 
-	withGeneratorSpec := SpecGroups{
-		"test": SpecGroup{
+	withGeneratorSpec := definition.SpecGroups{
+		"test": definition.SpecGroup{
 			TypeGenerator: fromGroupEntityTypeGuessFunc,
 			IDGenerator:   generator,
-			Specs: []Spec{
-				{"metric_1", FromRaw("raw_metric_name_1"), metric.GAUGE, false},
-				{"metric_2", FromRaw("raw_metric_name_2"), metric.GAUGE, false},
+			Specs: []definition.Spec{
+				{"metric_1", definition.FromRaw("raw_metric_name_1"), metric.GAUGE, false},
+				{"metric_2", definition.FromRaw("raw_metric_name_2"), metric.GAUGE, false},
 			},
 		},
 	}
 
-	groups := RawGroups{
+	groups := definition.RawGroups{
 		"test": {
 			"testEntity11": {
 				"raw_metric_name_1": 1,
@@ -476,7 +548,7 @@ func TestIntegrationPopulator_PopulateOnlySpecifiedGroups(t *testing.T) {
 	config.Specs = withGeneratorSpec
 	config.Groups = groups
 
-	populated, errs := IntegrationPopulator(config)
+	populated, errs := definition.IntegrationPopulator(config)
 
 	assert.True(t, populated)
 	assert.Empty(t, errs)
@@ -511,16 +583,16 @@ func TestIntegrationPopulator_PopulateOnlySpecifiedGroups(t *testing.T) {
 }
 
 func TestIntegrationPopulator_EntityTypeGeneratorFuncWithError(t *testing.T) {
-	generatorWithError := func(_ string, _ string, _ RawGroups, _ string) (string, error) {
+	generatorWithError := func(_ string, _ string, _ definition.RawGroups, _ string) (string, error) {
 		return "", fmt.Errorf("error generating entity type")
 	}
 
-	specsWithGeneratorFuncError := SpecGroups{
-		"test": SpecGroup{
+	specsWithGeneratorFuncError := definition.SpecGroups{
+		"test": definition.SpecGroup{
 			TypeGenerator: generatorWithError,
-			Specs: []Spec{
-				{"metric_1", FromRaw("raw_metric_name_1"), metric.GAUGE, false},
-				{"metric_2", FromRaw("raw_metric_name_2"), metric.ATTRIBUTE, false},
+			Specs: []definition.Spec{
+				{"metric_1", definition.FromRaw("raw_metric_name_1"), metric.GAUGE, false},
+				{"metric_2", definition.FromRaw("raw_metric_name_2"), metric.ATTRIBUTE, false},
 			},
 		},
 	}
@@ -531,7 +603,7 @@ func TestIntegrationPopulator_EntityTypeGeneratorFuncWithError(t *testing.T) {
 	config := testConfig(intgr)
 	config.Specs = specsWithGeneratorFuncError
 
-	populated, errs := IntegrationPopulator(config)
+	populated, errs := definition.IntegrationPopulator(config)
 
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
@@ -541,7 +613,7 @@ func TestIntegrationPopulator_EntityTypeGeneratorFuncWithError(t *testing.T) {
 }
 
 func TestIntegrationPopulator_msTypeGuesserFuncWithError(t *testing.T) {
-	msTypeGuesserFuncWithError := func(_, groupLabel, _ string, _ RawGroups) (string, error) {
+	msTypeGuesserFuncWithError := func(_, groupLabel, _ string, _ definition.RawGroups) (string, error) {
 		return "", fmt.Errorf("error setting event type")
 	}
 
@@ -557,11 +629,44 @@ func TestIntegrationPopulator_msTypeGuesserFuncWithError(t *testing.T) {
 	config := testConfig(intgr)
 	config.MsTypeGuesser = msTypeGuesserFuncWithError
 
-	populated, errs := IntegrationPopulator(config)
+	populated, errs := definition.IntegrationPopulator(config)
 
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
 	assert.Contains(t, errs, fmt.Errorf("error setting event type"))
 	assert.Contains(t, intgr.Entities, expectedEntityData1)
 	assert.Contains(t, intgr.Entities, expectedEntityData2)
+}
+
+func TestIntegrationPopulator_MetricFormatFilterNamespace(t *testing.T) {
+	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
+	require.NoError(t, err)
+
+	populated, errs := definition.IntegrationPopulator(testConfigMetricFormatWithFilterer(intgr))
+
+	assert.True(t, populated)
+	// Only cluster entity and nsB
+	assert.Equal(t, 2, len(intgr.Entities))
+	assert.Empty(t, errs)
+}
+
+func TestIntegrationPopulator_PrometheusFormatFilterNamespace(t *testing.T) {
+	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
+	require.NoError(t, err)
+
+	populated, errs := definition.IntegrationPopulator(testConfigPrometheusFormatWithFilterer(intgr))
+
+	assert.True(t, populated)
+	// Only cluster entity and nsB entities
+	assert.Equal(t, 3, len(intgr.Entities))
+	assert.Empty(t, errs)
+}
+
+type NamespaceFilterMock struct{}
+
+func (nf NamespaceFilterMock) IsAllowed(namespace string) bool {
+	if namespace == "nsA" {
+		return false
+	}
+	return true
 }

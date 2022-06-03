@@ -330,6 +330,16 @@ func FromRawGroupsEntityTypeGenerator(groupLabel string, rawEntityID string, gro
 	}
 }
 
+func FromLabelGetNamespace() definition.NamespaceGetterFunc {
+	return func(metrics definition.RawMetrics) string {
+		if ns, ok := metrics["namespace"].(string); ok {
+			return ns
+		}
+
+		return ""
+	}
+}
+
 func getKeys(groupLabel, rawEntityID string, groups definition.RawGroups, keys ...string) ([]string, error) {
 	var s []string
 	gl, ok := groups[groupLabel]

@@ -6,6 +6,7 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
 )
 
 // GuessFunc guesses from data.
@@ -44,6 +45,7 @@ type IntegrationPopulateConfig struct {
 	MsTypeGuesser GuessFunc
 	Groups        RawGroups
 	Specs         SpecGroups
+	Filterer      discovery.NamespaceFilterer
 }
 
 // IntegrationPopulator populates an integration with the given metrics and definition.
@@ -52,11 +54,20 @@ func IntegrationPopulator(config *IntegrationPopulateConfig) (bool, []error) {
 	var errs []error
 	var msEntityType string
 	for groupLabel, entities := range config.Groups {
-		for entityID := range entities {
+		for entityID, metrics := range entities {
 
 			// Only populate specified groups.
 			if _, ok := config.Specs[groupLabel]; !ok {
 				continue
+			}
+
+			if config.Filterer != nil {
+				if nsGetter := config.Specs[groupLabel].NamespaceGetter; nsGetter != nil {
+					ns := nsGetter(metrics)
+					if !config.Filterer.IsAllowed(ns) {
+						continue
+					}
+				}
 			}
 
 			msEntityID := entityID

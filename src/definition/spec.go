@@ -10,6 +10,9 @@ type EntityIDGeneratorFunc func(groupLabel, rawEntityID string, g RawGroups) (st
 // EntityTypeGeneratorFunc generates an entity type.
 type EntityTypeGeneratorFunc func(groupLabel, rawEntityID string, g RawGroups, prefix string) (string, error)
 
+// NamespaceGetterFunc gets the namepsace.
+type NamespaceGetterFunc func(metrics RawMetrics) string
+
 // Spec is a metric specification.
 type Spec struct {
 	Name      string
@@ -20,9 +23,10 @@ type Spec struct {
 
 // SpecGroup represents a bunch of specs that share logic.
 type SpecGroup struct {
-	IDGenerator   EntityIDGeneratorFunc
-	TypeGenerator EntityTypeGeneratorFunc
-	Specs         []Spec
+	IDGenerator     EntityIDGeneratorFunc
+	TypeGenerator   EntityTypeGeneratorFunc
+	NamespaceGetter NamespaceGetterFunc
+	Specs           []Spec
 }
 
 // SpecGroups is a map of groups indexed by group name.
