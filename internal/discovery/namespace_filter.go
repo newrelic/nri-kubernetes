@@ -6,6 +6,7 @@ import (
 
 	"github.com/newrelic/nri-kubernetes/v3/internal/config"
 	"github.com/newrelic/nri-kubernetes/v3/internal/storer"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
@@ -17,9 +18,9 @@ import (
 
 const defaultNamespaceResyncDuration = 10 * time.Minute
 
-// NamespaceFilterer provides an interface to filter namespaces.
-type NamespaceFilterer interface {
-	IsAllowed(namespace string) bool
+// Filterer provider a interface to match from a given RawMetrics.
+type Filterer interface {
+	Match(metrics definition.RawMetrics) bool
 }
 
 // NamespaceFilter is a struct holding pointers to the config and the namespace lister.
@@ -49,43 +50,66 @@ func NewNamespaceFilter(c *config.NamespaceSelector, client kubernetes.Interface
 	}
 }
 
-// IsAllowed checks given any namespace, if it's allowed to be scraped by using the NamespaceLister
-func (nf *NamespaceFilter) IsAllowed(namespace string) bool {
-	// By default, we scrape every namespace.
-	if nf.c == nil {
+// Match checks given any metrics, if a namespace it's allowed to be scraped given a certain match labels or
+// expressions configuration.
+func (nf *NamespaceFilter) Match(metrics definition.RawMetrics) bool {
+	namespaceRaw, ok := metrics["namespace"]
+	if !ok {
 		return true
 	}
 
-	// Scrape namespaces by honoring the matchLabels values.
+	namespace, ok := namespaceRaw.(string)
+	if !ok {
+		log.Tracef("Allowing %q as namespace as invalid type provided %t", namespaceRaw, namespaceRaw)
+		return true
+	}
+
+	if nf.c == nil {
+		log.Tracef("Allowing %q namespace as selector is nil", namespace)
+		return true
+	}
+
 	if nf.c.MatchLabels != nil {
-		namespaceList, err := nf.lister.List(labels.SelectorFromSet(nf.c.MatchLabels))
+		log.Tracef("Filtering %q namespace by MatchLabels", namespace)
+		return nf.matchNamespaceByLabels(namespace)
+	}
+
+	if nf.c.MatchExpressions != nil {
+		log.Tracef("Filtering %q namespace by MatchExpressions", namespace)
+		return nf.matchNamespaceByExpressions(namespace)
+	}
+
+	return true
+}
+
+// matchNamespaceByLabels filters a namespace using the selector from the MatchLabels config.
+func (nf *NamespaceFilter) matchNamespaceByLabels(namespace string) bool {
+	namespaceList, err := nf.lister.List(labels.SelectorFromSet(nf.c.MatchLabels))
+	if err != nil {
+		nf.logger.Errorf("listing namespaces with MatchLabels: %v", err)
+		return true
+	}
+
+	return containsNamespace(namespace, namespaceList)
+}
+
+// matchNamespaceByExpressions filters a namespace using the selector from the MatchExpressions config.
+func (nf *NamespaceFilter) matchNamespaceByExpressions(namespace string) bool {
+	for _, expression := range nf.c.MatchExpressions {
+		selector, err := labels.Parse(expression.String())
 		if err != nil {
-			nf.logger.Errorf("listing namespaces with MatchLabels: %v", err)
+			nf.logger.Errorf("parsing labels: %v", err)
 			return true
 		}
 
-		return containsNamespace(namespace, namespaceList)
-	}
+		namespaceList, err := nf.lister.List(selector)
+		if err != nil {
+			nf.logger.Errorf("listing namespaces with MatchExpressions: %v", err)
+			return true
+		}
 
-	// Scrape namespaces by honoring the matchExpressions values.
-	// Multiple expressions are evaluated with a logical AND between them.
-	if nf.c.MatchExpressions != nil {
-		for _, expression := range nf.c.MatchExpressions {
-			selector, err := labels.Parse(expression.String())
-			if err != nil {
-				nf.logger.Errorf("parsing labels: %v", err)
-				return true
-			}
-
-			namespaceList, err := nf.lister.List(selector)
-			if err != nil {
-				nf.logger.Errorf("listing namespaces with MatchExpressions: %v", err)
-				return true
-			}
-
-			if !containsNamespace(namespace, namespaceList) {
-				return false
-			}
+		if !containsNamespace(namespace, namespaceList) {
+			return false
 		}
 	}
 
@@ -105,27 +129,38 @@ func (nf *NamespaceFilter) Close() error {
 
 // CachedNamespaceFilter is a wrapper of the NamespaceFilterer and the cache.
 type CachedNamespaceFilter struct {
-	NsFilter NamespaceFilterer
+	NsFilter Filterer
 	cache    storer.Storer
 }
 
 // NewCachedNamespaceFilter create a new CachedNamespaceFilter, wrapping the cache and the NamespaceFilterer.
-func NewCachedNamespaceFilter(ns NamespaceFilterer, storer storer.Storer) *CachedNamespaceFilter {
+func NewCachedNamespaceFilter(ns Filterer, storer storer.Storer) *CachedNamespaceFilter {
 	return &CachedNamespaceFilter{
 		NsFilter: ns,
 		cache:    storer,
 	}
 }
 
-// IsAllowed check the cache and calls the underlying NamespaceFilter if the result is not found.
-func (cnf *CachedNamespaceFilter) IsAllowed(namespace string) bool {
+// Match check the cache and calls the underlying NamespaceFilter if the result is not found.
+func (cnf *CachedNamespaceFilter) Match(metrics definition.RawMetrics) bool {
+	namespaceRaw, ok := metrics["namespace"]
+	if !ok {
+		return true
+	}
+
+	namespace, ok := namespaceRaw.(string)
+	if !ok {
+		log.Tracef("Allowing %q from cache as namespace invalid type provided %t", namespaceRaw, namespaceRaw)
+		return true
+	}
+
 	// Check if the namespace is already in the cache.
 	var allowed bool
 	if _, err := cnf.cache.Get(namespace, &allowed); err == nil {
 		return allowed
 	}
 
-	allowed = cnf.NsFilter.IsAllowed(namespace)
+	allowed = cnf.NsFilter.Match(metrics)
 
 	// Save the namespace in the cache.
 	_ = cnf.cache.Set(namespace, allowed)

@@ -8,6 +8,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/internal/config"
 	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v3/internal/storer"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
@@ -22,6 +23,8 @@ const namespaceName = "test_namespace"
 
 func TestNamespaceFilterer_IsAllowed(t *testing.T) {
 	t.Parallel()
+
+	metrics := definition.RawMetrics{"namespace": namespaceName}
 
 	type testData struct {
 		namespaceLabels   labels.Set
@@ -154,13 +157,15 @@ func TestNamespaceFilterer_IsAllowed(t *testing.T) {
 				ns.Close()
 			})
 
-			require.Equal(t, testData.expected, ns.IsAllowed(namespaceName))
+			require.Equal(t, testData.expected, ns.Match(metrics))
 		})
 	}
 }
 
 func TestNamespaceFilterer_Cache(t *testing.T) {
 	t.Parallel()
+
+	metrics := definition.RawMetrics{"namespace": namespaceName}
 
 	type testData struct {
 		warmCache func(cache *storer.InMemoryStore)
@@ -173,10 +178,10 @@ func TestNamespaceFilterer_Cache(t *testing.T) {
 		"namespace_cache_miss_fallback_to_call_informer": {
 			warmCache: func(cache *storer.InMemoryStore) {},
 			prepare: func(nsFilterMock *NamespaceFilterMock) {
-				nsFilterMock.On("IsAllowed", namespaceName).Return(true).Once()
+				nsFilterMock.On("Match", metrics).Return(true).Once()
 			},
 			assert: func(expected bool, cnsf *discovery.CachedNamespaceFilter) {
-				require.Equal(t, expected, cnsf.IsAllowed(namespaceName))
+				require.Equal(t, expected, cnsf.Match(metrics))
 			},
 			expected: true,
 		},
@@ -185,10 +190,10 @@ func TestNamespaceFilterer_Cache(t *testing.T) {
 				cache.Set(namespaceName, true)
 			},
 			prepare: func(nsFilterMock *NamespaceFilterMock) {
-				nsFilterMock.AssertNotCalled(t, "IsAllowed")
+				nsFilterMock.AssertNotCalled(t, "Match")
 			},
 			assert: func(expected bool, cnsf *discovery.CachedNamespaceFilter) {
-				require.Equal(t, expected, cnsf.IsAllowed(namespaceName))
+				require.Equal(t, expected, cnsf.Match(metrics))
 			},
 			expected: true,
 		},
@@ -197,21 +202,21 @@ func TestNamespaceFilterer_Cache(t *testing.T) {
 				cache.Set(namespaceName, false)
 			},
 			prepare: func(nsFilterMock *NamespaceFilterMock) {
-				nsFilterMock.AssertNotCalled(t, "IsAllowed")
+				nsFilterMock.AssertNotCalled(t, "Match")
 			},
 			assert: func(expected bool, cnsf *discovery.CachedNamespaceFilter) {
-				require.Equal(t, expected, cnsf.IsAllowed(namespaceName))
+				require.Equal(t, expected, cnsf.Match(metrics))
 			},
 			expected: false,
 		},
 		"namespace_cache_miss_subsequent_call_uses_cache": {
 			warmCache: func(cache *storer.InMemoryStore) {},
 			prepare: func(nsFilterMock *NamespaceFilterMock) {
-				nsFilterMock.On("IsAllowed", namespaceName).Return(true).Once()
+				nsFilterMock.On("Match", metrics).Return(true).Once()
 			},
 			assert: func(expected bool, cnsf *discovery.CachedNamespaceFilter) {
-				require.Equal(t, expected, cnsf.IsAllowed(namespaceName))
-				require.Equal(t, expected, cnsf.IsAllowed(namespaceName))
+				require.Equal(t, expected, cnsf.Match(metrics))
+				require.Equal(t, expected, cnsf.Match(metrics))
 			},
 			expected: true,
 		},
@@ -267,7 +272,7 @@ func TestNamespaceFilter_InformerCacheSync(t *testing.T) {
 		nil,
 	)
 	// Check that recently created namespace is not allowed.
-	require.Equal(t, false, ns.IsAllowed(namespaceName))
+	require.Equal(t, false, ns.Match(definition.RawMetrics{"namespace": namespaceName}))
 
 	t.Cleanup(func() {
 		cancel()
@@ -284,7 +289,7 @@ func TestNamespaceFilter_InformerCacheSync(t *testing.T) {
 
 	// Give some room to the informer to sync, and check that the new namespace is filtered properly.
 	err = wait.PollImmediateUntilWithContext(ctx, 1*time.Second, func(context.Context) (bool, error) {
-		return ns.IsAllowed(anotherNamespaceName), nil
+		return ns.Match(definition.RawMetrics{"namespace": anotherNamespaceName}), nil
 	})
 	require.NoError(t, err, "Timed out waiting for the informer to sync")
 }
@@ -297,8 +302,8 @@ func newNamespaceFilterMock() *NamespaceFilterMock {
 	return &NamespaceFilterMock{}
 }
 
-func (ns *NamespaceFilterMock) IsAllowed(namespace string) bool {
-	args := ns.Called(namespace)
+func (ns *NamespaceFilterMock) Match(metrics definition.RawMetrics) bool {
+	args := ns.Called(metrics)
 	return args.Bool(0)
 }
 
