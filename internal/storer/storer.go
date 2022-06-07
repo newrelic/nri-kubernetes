@@ -19,11 +19,6 @@ const (
 	DefaultInterval = 15 * time.Minute
 )
 
-type Storer interface {
-	Set(key string, value interface{}) int64
-	Get(key string, valuePtr interface{}) (int64, error)
-}
-
 // InMemoryStore is similar to the sdk one, the main difference is cleanCache method executed each interval.
 type InMemoryStore struct {
 	cachedData  map[string]jsonEntry

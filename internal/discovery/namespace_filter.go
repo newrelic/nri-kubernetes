@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/newrelic/nri-kubernetes/v3/internal/config"
-	"github.com/newrelic/nri-kubernetes/v3/internal/storer"
 
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
@@ -114,34 +113,29 @@ func (nf *NamespaceFilter) Close() error {
 	return nil
 }
 
-// CachedNamespaceFilter is a wrapper of the NamespaceFilterer and the cache.
+// CachedNamespaceFilter holds a NamespaceCache around the NamespaceFilterer.
 type CachedNamespaceFilter struct {
-	NsFilter NamespaceFilterer
-	cache    storer.Storer
+	cache  NamespaceCache
+	filter NamespaceFilterer
 }
 
 // NewCachedNamespaceFilter create a new CachedNamespaceFilter, wrapping the cache and the NamespaceFilterer.
-func NewCachedNamespaceFilter(ns NamespaceFilterer, storer storer.Storer) *CachedNamespaceFilter {
+func NewCachedNamespaceFilter(filter NamespaceFilterer, cache NamespaceCache) *CachedNamespaceFilter {
 	return &CachedNamespaceFilter{
-		NsFilter: ns,
-		cache:    storer,
+		filter: filter,
+		cache:  cache,
 	}
 }
 
-// IsAllowed check the cache and calls the underlying NamespaceFilter if the result is not found.
-func (cnf *CachedNamespaceFilter) IsAllowed(namespace string) bool {
-	// Check if the namespace is already in the cache.
-	var allowed bool
-	if _, err := cnf.cache.Get(namespace, &allowed); err == nil {
-		return allowed
+func (cm *CachedNamespaceFilter) IsAllowed(namespace string) bool {
+	if match, found := cm.cache.Match(namespace); found {
+		return match
 	}
 
-	allowed = cnf.NsFilter.IsAllowed(namespace)
+	match := cm.filter.IsAllowed(namespace)
+	cm.cache.Put(namespace, match)
 
-	// Save the namespace in the cache.
-	_ = cnf.cache.Set(namespace, allowed)
-
-	return allowed
+	return match
 }
 
 // containsNamespace checks if a namespaces is contained in a given list of namespaces.

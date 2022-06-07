@@ -7,7 +7,7 @@ import (
 
 	"github.com/newrelic/nri-kubernetes/v3/internal/config"
 	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
-	"github.com/newrelic/nri-kubernetes/v3/internal/storer"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
@@ -163,7 +163,7 @@ func TestNamespaceFilterer_Cache(t *testing.T) {
 	t.Parallel()
 
 	type testData struct {
-		warmCache func(cache *storer.InMemoryStore)
+		warmCache func(c *discovery.NamespaceInMemoryStore)
 		prepare   func(nsFilterMock *NamespaceFilterMock)
 		assert    func(expected bool, cnsf *discovery.CachedNamespaceFilter)
 		expected  bool
@@ -171,7 +171,7 @@ func TestNamespaceFilterer_Cache(t *testing.T) {
 
 	testCases := map[string]testData{
 		"namespace_cache_miss_fallback_to_call_informer": {
-			warmCache: func(cache *storer.InMemoryStore) {},
+			warmCache: func(c *discovery.NamespaceInMemoryStore) {},
 			prepare: func(nsFilterMock *NamespaceFilterMock) {
 				nsFilterMock.On("IsAllowed", namespaceName).Return(true).Once()
 			},
@@ -181,8 +181,8 @@ func TestNamespaceFilterer_Cache(t *testing.T) {
 			expected: true,
 		},
 		"namespace_already_in_cache_allowed": {
-			warmCache: func(cache *storer.InMemoryStore) {
-				cache.Set(namespaceName, true)
+			warmCache: func(c *discovery.NamespaceInMemoryStore) {
+				c.Put(namespaceName, true)
 			},
 			prepare: func(nsFilterMock *NamespaceFilterMock) {
 				nsFilterMock.AssertNotCalled(t, "IsAllowed")
@@ -193,8 +193,8 @@ func TestNamespaceFilterer_Cache(t *testing.T) {
 			expected: true,
 		},
 		"namespace_already_in_cache_not_allowed": {
-			warmCache: func(cache *storer.InMemoryStore) {
-				cache.Set(namespaceName, false)
+			warmCache: func(c *discovery.NamespaceInMemoryStore) {
+				c.Put(namespaceName, false)
 			},
 			prepare: func(nsFilterMock *NamespaceFilterMock) {
 				nsFilterMock.AssertNotCalled(t, "IsAllowed")
@@ -205,7 +205,7 @@ func TestNamespaceFilterer_Cache(t *testing.T) {
 			expected: false,
 		},
 		"namespace_cache_miss_subsequent_call_uses_cache": {
-			warmCache: func(cache *storer.InMemoryStore) {},
+			warmCache: func(c *discovery.NamespaceInMemoryStore) {},
 			prepare: func(nsFilterMock *NamespaceFilterMock) {
 				nsFilterMock.On("IsAllowed", namespaceName).Return(true).Once()
 			},
@@ -224,13 +224,13 @@ func TestNamespaceFilterer_Cache(t *testing.T) {
 
 			nsFilterMock := newNamespaceFilterMock()
 
-			cache := storer.NewInMemoryStore(storer.DefaultTTL, storer.DefaultInterval, nil)
-			testData.warmCache(cache)
+			c := discovery.NewNamespaceInMemoryStore(discovery.DefaultInterval, logrus.New())
+			testData.warmCache(c)
 			testData.prepare(nsFilterMock)
 
 			cnsf := discovery.NewCachedNamespaceFilter(
 				nsFilterMock,
-				cache,
+				c,
 			)
 
 			testData.assert(testData.expected, cnsf)
