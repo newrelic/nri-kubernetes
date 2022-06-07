@@ -72,7 +72,7 @@ compile-dev:
 .PHONY: test
 test:
 	@echo "[test] Running unit tests"
-	@go test ./...
+	@go test ./... -count=1
 
 buildLicenseNotice:
 	@go list -mod=mod -m -json all | go-licence-detector -noticeOut=NOTICE.txt -rules ./assets/licence/rules.json  -noticeTemplate ./assets/licence/THIRD_PARTY_NOTICES.md.tmpl -noticeOut THIRD_PARTY_NOTICES.md -overrides ./assets/licence/overrides -includeIndirect

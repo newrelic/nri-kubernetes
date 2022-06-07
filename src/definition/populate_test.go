@@ -70,6 +70,10 @@ var rawGroupsKSMSample = definition.RawGroups{
 	"test": {
 		"entity_id_1": definition.RawMetrics{
 			"raw_metric_name_1": prometheus.Metric{
+				Value:  prometheus.CounterValue(1),
+				Labels: map[string]string{},
+			},
+			"raw_metric_name_2": prometheus.Metric{
 				Value: prometheus.CounterValue(1),
 				Labels: map[string]string{
 					"namespace": "nsA",
@@ -77,6 +81,20 @@ var rawGroupsKSMSample = definition.RawGroups{
 			},
 		},
 		"entity_id_2": definition.RawMetrics{
+			"raw_metric_name_1": prometheus.Metric{
+				Value: prometheus.CounterValue(1),
+				Labels: map[string]string{
+					"namespace": "nsA",
+				},
+			},
+			"raw_metric_name_2": prometheus.Metric{
+				Value: prometheus.CounterValue(1),
+				Labels: map[string]string{
+					"namespace": "nsA",
+				},
+			},
+		},
+		"entity_id_3": definition.RawMetrics{
 			"raw_metric_name_1": prometheus.Metric{
 				Value: prometheus.CounterValue(1),
 				Labels: map[string]string{
@@ -90,7 +108,7 @@ var rawGroupsKSMSample = definition.RawGroups{
 				},
 			},
 		},
-		"entity_id_3": definition.RawMetrics{
+		"entity_id_4": definition.RawMetrics{
 			"raw_metric_name_1": prometheus.Metric{
 				Value: prometheus.CounterValue(1),
 				Labels: map[string]string{

@@ -140,7 +140,7 @@ func FromLabelsValueEntityIDGeneratorForPendingPods() definition.EntityIDGenerat
 func FromLabelGetNamespace(metrics definition.RawMetrics) string {
 	for _, metric := range metrics {
 		m, ok := metric.(Metric)
-		if ok {
+		if ok && m.Labels["namespace"] != "" {
 			return m.Labels["namespace"]
 		}
 	}
