@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -242,7 +241,7 @@ type Expression struct {
 	Values []interface{} `mapstructure:"values"`
 }
 
-func (e *Expression) String() string {
+func (e *Expression) String() (string, error) {
 	var values []string
 
 	for _, val := range e.Values {
@@ -257,14 +256,13 @@ func (e *Expression) String() string {
 		case float32, float64:
 			str = fmt.Sprintf("%f", v)
 		default:
-			log.Errorf("parsing expression value: %v, type %v", val, v)
-			continue
+			return "", fmt.Errorf("parsing expression invalid value: %v, type: %T", val, v)
 		}
 
 		values = append(values, str)
 	}
 
-	return fmt.Sprintf("%s %s (%s)", e.Key, strings.ToLower(e.Operator), strings.Join(values, ","))
+	return fmt.Sprintf("%s %s (%s)", e.Key, strings.ToLower(e.Operator), strings.Join(values, ",")), nil
 }
 
 func LoadConfig(filePath string, fileName string) (*Config, error) {

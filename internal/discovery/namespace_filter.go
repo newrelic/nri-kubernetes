@@ -82,7 +82,13 @@ func (nf *NamespaceFilter) matchNamespaceByLabels(namespace string) bool {
 // matchNamespaceByExpressions filters a namespace using the selector from the MatchExpressions config.
 func (nf *NamespaceFilter) matchNamespaceByExpressions(namespace string) bool {
 	for _, expression := range nf.c.MatchExpressions {
-		selector, err := labels.Parse(expression.String())
+		val, err := expression.String()
+		if err != nil {
+			nf.logger.Error(err)
+			return true
+		}
+
+		selector, err := labels.Parse(val)
 		if err != nil {
 			nf.logger.Errorf("parsing labels: %v", err)
 			return true
@@ -127,6 +133,7 @@ func NewCachedNamespaceFilter(filter NamespaceFilterer, cache NamespaceCache) *C
 	}
 }
 
+// IsAllowed looks for a match in the cache first, otherwise calls the filter.
 func (cm *CachedNamespaceFilter) IsAllowed(namespace string) bool {
 	if match, found := cm.cache.Match(namespace); found {
 		return match
