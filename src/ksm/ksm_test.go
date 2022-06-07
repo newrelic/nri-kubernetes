@@ -96,8 +96,6 @@ func TestScraper_FilterNamespace(t *testing.T) {
 	// We test with a specific version to not modify number of entities
 	version := testutil.Version(testutil.Testdata122)
 	t.Run(fmt.Sprintf("for_version_%s", version), func(t *testing.T) {
-		t.Parallel()
-
 		testServer, err := version.Server()
 		if err != nil {
 			t.Fatalf("Cannot create fake KSM server: %v", err)
@@ -136,6 +134,6 @@ func TestScraper_FilterNamespace(t *testing.T) {
 			t.Fatalf("running scraper: %v", err)
 		}
 
-		assert.Equal(t, 18, len(i.Entities))
+		assert.Equal(t, 17, len(i.Entities))
 	})
 }
