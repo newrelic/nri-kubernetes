@@ -92,7 +92,8 @@ func TestScraper(t *testing.T) {
 }
 
 func TestScraper_FilterNamespace(t *testing.T) {
-	version := testutil.LatestVersion()
+	// We test with a specific version to not modify number of entities
+	version := testutil.Version(testutil.Testdata122)
 
 	t.Run(fmt.Sprintf("for_version_%s", version), func(t *testing.T) {
 		testServer, err := version.Server()
