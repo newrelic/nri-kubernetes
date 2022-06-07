@@ -14,7 +14,11 @@ import (
 	listersv1 "k8s.io/client-go/listers/core/v1"
 )
 
-const defaultNamespaceResyncDuration = 10 * time.Minute
+const (
+	defaultNamespaceResyncDuration = 10 * time.Minute
+	// NamespaceStoreExtraInterval is the extra time added to the integration interval to execute the "gc"
+	NamespaceStoreExtraInterval = 5 * time.Second
+)
 
 // NamespaceFilterer provides an interface to filter from a given namespace.
 type NamespaceFilterer interface {

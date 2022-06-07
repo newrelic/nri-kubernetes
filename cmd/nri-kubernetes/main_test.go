@@ -27,6 +27,7 @@ func TestSetupKubelet(t *testing.T) {
 	scraper, err := setupKSM(&c, &providers)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, scraper)
+	assert.NotEmpty(t, scraper.Filterer)
 }
 
 func TestSetupKSM(t *testing.T) {
@@ -46,4 +47,5 @@ func TestSetupKSM(t *testing.T) {
 	scraper, err := setupKSM(&c, &providers)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, scraper)
+	assert.NotEmpty(t, scraper.Filterer)
 }

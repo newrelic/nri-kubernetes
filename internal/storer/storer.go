@@ -17,8 +17,6 @@ const (
 	DefaultTTL = 10 * time.Minute
 	// DefaultInterval is default interval to execute the "garbage collection" of the cache.
 	DefaultInterval = 15 * time.Minute
-	// NamespaceStoreExtraInterval is the extra time added to the integration interval to execute the "gc"
-	NamespaceStoreExtraInterval = 5 * time.Second
 )
 
 type Storer interface {

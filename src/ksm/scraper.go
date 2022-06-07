@@ -39,7 +39,7 @@ type Scraper struct {
 	endpointsDiscoverer discovery.EndpointsDiscoverer
 	servicesLister      listersv1.ServiceLister
 	informerClosers     []chan<- struct{}
-	filterer            discovery.NamespaceFilterer
+	Filterer            discovery.NamespaceFilterer
 }
 
 // ScraperOpt are options that can be used to configure the Scraper
@@ -56,7 +56,7 @@ func WithLogger(logger *log.Logger) ScraperOpt {
 // WithFilterer returns an OptionFunc to add a Filterer.
 func WithFilterer(filterer discovery.NamespaceFilterer) ScraperOpt {
 	return func(s *Scraper) error {
-		s.filterer = filterer
+		s.Filterer = filterer
 		return nil
 	}
 }
@@ -129,7 +129,7 @@ func (s *Scraper) Run(i *integration.Integration) error {
 		}
 
 		// TODO: Check if the concept of job still makes sense with the new architecture.
-		job := scrape.NewScrapeJob("kube-state-metrics", grouper, metric.KSMSpecs, scrape.JobWithFilterer(s.filterer))
+		job := scrape.NewScrapeJob("kube-state-metrics", grouper, metric.KSMSpecs, scrape.JobWithFilterer(s.Filterer))
 
 		s.logger.Debugf("Running KSM job")
 		r := job.Populate(i, s.config.ClusterName, s.logger, s.k8sVersion)

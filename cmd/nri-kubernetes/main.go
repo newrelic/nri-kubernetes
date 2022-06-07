@@ -212,13 +212,7 @@ func setupKSM(c *config.Config, clients *clusterClients) (*ksm.Scraper, error) {
 	scraperOpts := []ksm.ScraperOpt{ksm.WithLogger(logger)}
 
 	if c.NamespaceSelector != nil {
-		nsFilter := discovery.NewNamespaceFilter(
-			c.NamespaceSelector,
-			clients.k8s,
-			storer.NewInMemoryStore(c.Interval, c.Interval+storer.NamespaceStoreExtraInterval, logger),
-			logger,
-		)
-		scraperOpts = append(scraperOpts, ksm.WithFilterer(nsFilter))
+		scraperOpts = append(scraperOpts, ksm.WithFilterer(buildNamespaceFilter(c, clients)))
 	}
 
 	ksmScraper, err := ksm.NewScraper(c, providers, scraperOpts...)
@@ -262,13 +256,7 @@ func setupKubelet(c *config.Config, clients *clusterClients) (*kubelet.Scraper, 
 	scraperOpts := []kubelet.ScraperOpt{kubelet.WithLogger(logger)}
 
 	if c.NamespaceSelector != nil {
-		nsFilter := discovery.NewNamespaceFilter(
-			c.NamespaceSelector,
-			clients.k8s,
-			storer.NewInMemoryStore(c.Interval, c.Interval+storer.NamespaceStoreExtraInterval, logger),
-			logger,
-		)
-		scraperOpts = append(scraperOpts, kubelet.WithFilterer(nsFilter))
+		scraperOpts = append(scraperOpts, kubelet.WithFilterer(buildNamespaceFilter(c, clients)))
 	}
 
 	ksmScraper, err := kubelet.NewScraper(c, providers, scraperOpts...)
@@ -277,6 +265,19 @@ func setupKubelet(c *config.Config, clients *clusterClients) (*kubelet.Scraper, 
 	}
 
 	return ksmScraper, nil
+}
+
+func buildNamespaceFilter(c *config.Config, clients *clusterClients) *discovery.CachedNamespaceFilter {
+	nsFilter := discovery.NewNamespaceFilter(
+		c.NamespaceSelector,
+		clients.k8s,
+		logger,
+	)
+	cachedNsFilter := discovery.NewCachedNamespaceFilter(
+		nsFilter,
+		storer.NewInMemoryStore(c.Interval, c.Interval+discovery.NamespaceStoreExtraInterval, logger),
+	)
+	return cachedNsFilter
 }
 
 func buildClients(c *config.Config) (*clusterClients, error) {
