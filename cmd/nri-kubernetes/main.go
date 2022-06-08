@@ -17,7 +17,6 @@ import (
 
 	"github.com/newrelic/nri-kubernetes/v3/internal/config"
 	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
-	"github.com/newrelic/nri-kubernetes/v3/internal/storer"
 	"github.com/newrelic/nri-kubernetes/v3/src/client"
 	"github.com/newrelic/nri-kubernetes/v3/src/controlplane"
 	"github.com/newrelic/nri-kubernetes/v3/src/integration"
@@ -273,11 +272,11 @@ func buildNamespaceFilter(c *config.Config, clients *clusterClients) *discovery.
 		clients.k8s,
 		logger,
 	)
-	cachedNsFilter := discovery.NewCachedNamespaceFilter(
+
+	return discovery.NewCachedNamespaceFilter(
 		nsFilter,
-		storer.NewInMemoryStore(c.Interval, c.Interval+discovery.NamespaceStoreExtraInterval, logger),
+		discovery.NewNamespaceInMemoryStore(c.Interval, logger),
 	)
-	return cachedNsFilter
 }
 
 func buildClients(c *config.Config) (*clusterClients, error) {

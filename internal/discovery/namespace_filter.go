@@ -16,8 +16,6 @@ import (
 
 const (
 	defaultNamespaceResyncDuration = 10 * time.Minute
-	// NamespaceStoreExtraInterval is the extra time added to the integration interval to execute the "gc"
-	NamespaceStoreExtraInterval = 5 * time.Second
 )
 
 // NamespaceFilterer provides an interface to filter from a given namespace.

@@ -6,6 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"k8s.io/client-go/kubernetes/fake"
 
+	"time"
+
 	"github.com/newrelic/nri-kubernetes/v3/internal/config"
 	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
 )
@@ -19,6 +21,7 @@ func TestSetupKubelet(t *testing.T) {
 				"newrelic.com/scrape": "true",
 			},
 		},
+		Interval: 10 * time.Second,
 	}
 	logger = logutil.Discard
 	providers := clusterClients{
@@ -39,6 +42,7 @@ func TestSetupKSM(t *testing.T) {
 				"newrelic.com/scrape": "true",
 			},
 		},
+		Interval: 10 * time.Second,
 	}
 	logger = logutil.Discard
 	providers := clusterClients{
