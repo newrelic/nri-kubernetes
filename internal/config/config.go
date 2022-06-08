@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -53,6 +55,9 @@ type Config struct {
 	Kubelet `mapstructure:"kubelet"`
 	// KSM defines config options for the kube-state-metrics scraper.
 	KSM `mapstructure:"ksm"`
+
+	// NamespaceSelector defines custom monitoring filtering for namespaces.
+	NamespaceSelector *NamespaceSelector `mapstructure:"namespaceSelector"`
 }
 
 // HTTPSink stores the configuration for the HTTP sink.
@@ -218,38 +223,82 @@ type MTLS struct {
 	TLSSecretNamespace string `mapstructure:"secretNamespace"`
 }
 
+// NamespaceSelector contains config options for filtering namespaces.
+type NamespaceSelector struct {
+	// MatchLabels is a list of labels to filter namespaces with.
+	MatchLabels map[string]string `mapstructure:"matchLabels"`
+	// MatchExpressions is a list of namespaces selector requirements.
+	MatchExpressions []Expression `mapstructure:"matchExpressions"`
+}
+
+// Expression hold the values to generate an expression to filter namespaces by MatchExpressions.
+type Expression struct {
+	// Key it the key of the label.
+	Key string `mapstructure:"key"`
+	// Operator holds either an inclusion (NotIn) or exclusion (In) value.
+	Operator string `mapstructure:"operator"`
+	// Values is a slice of values related to the key.
+	Values []interface{} `mapstructure:"values"`
+}
+
+func (e *Expression) String() (string, error) {
+	var values []string
+
+	for _, val := range e.Values {
+		var str string
+		switch v := val.(type) {
+		case string:
+			str = v
+		case bool:
+			str = strconv.FormatBool(v)
+		case int:
+			str = strconv.FormatInt(int64(v), 10)
+		case float32, float64:
+			str = fmt.Sprintf("%f", v)
+		default:
+			return "", fmt.Errorf("parsing expression invalid value: %v, type: %T", val, v)
+		}
+
+		values = append(values, str)
+	}
+
+	return fmt.Sprintf("%s %s (%s)", e.Key, strings.ToLower(e.Operator), strings.Join(values, ",")), nil
+}
+
 func LoadConfig(filePath string, fileName string) (*Config, error) {
-	v := viper.New()
+	// Update default delimiter as with the new namespaceSelector config, some labels may come in the form of
+	// newrelic.com/scrape, so the key was split in a sub-map on a "." basis.
+	v := viper.NewWithOptions(viper.KeyDelimiter("|"))
 
 	// We need to assure that defaults have been set in order to bind env variables.
 	// https://github.com/spf13/viper/issues/584
 	v.SetDefault("clusterName", "cluster")
 	v.SetDefault("verbose", false)
-	v.SetDefault("kubelet.networkRouteFile", DefaultNetworkRouteFile)
+	v.SetDefault("kubelet|networkRouteFile", DefaultNetworkRouteFile)
 	v.SetDefault("nodeName", "node")
 	v.SetDefault("nodeIP", "node")
 
 	// Sane connection defaults
-	v.SetDefault("sink.type", SinkTypeHTTP)
-	v.SetDefault("sink.http.port", 0)
-	v.SetDefault("sink.http.timeout", DefaultAgentTimeout)
-	v.SetDefault("sink.http.retries", DefaultRetries)
+	v.SetDefault("sink|type", SinkTypeHTTP)
+	v.SetDefault("sink|http|port", 0)
+	v.SetDefault("sink|http|timeout", DefaultAgentTimeout)
+	v.SetDefault("sink|http|retries", DefaultRetries)
 
-	v.SetDefault("kubelet.timeout", DefaultTimeout)
-	v.SetDefault("kubelet.retries", DefaultRetries)
+	v.SetDefault("kubelet|timeout", DefaultTimeout)
+	v.SetDefault("kubelet|retries", DefaultRetries)
 
-	v.SetDefault("controlPlane.timeout", DefaultTimeout)
-	v.SetDefault("controlPlane.retries", DefaultRetries)
+	v.SetDefault("controlPlane|timeout", DefaultTimeout)
+	v.SetDefault("controlPlane|retries", DefaultRetries)
 
-	v.SetDefault("ksm.timeout", DefaultTimeout)
-	v.SetDefault("ksm.retries", DefaultRetries)
+	v.SetDefault("ksm|timeout", DefaultTimeout)
+	v.SetDefault("ksm|retries", DefaultRetries)
 
-	v.SetDefault("ksm.discovery.backoffDelay", 7*time.Second)
-	v.SetDefault("ksm.discovery.timeout", 60*time.Second)
+	v.SetDefault("ksm|discovery|backoffDelay", 7*time.Second)
+	v.SetDefault("ksm|discovery|timeout", 60*time.Second)
 
 	v.SetEnvPrefix("NRI_KUBERNETES")
 	v.AutomaticEnv()
-	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	v.SetEnvKeyReplacer(strings.NewReplacer("|", "_"))
 
 	// Config File
 	v.AddConfigPath(filePath)
