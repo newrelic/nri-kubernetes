@@ -51,6 +51,13 @@ common:
     interval:
     # -- Config for filtering ksm and kubelet metrics by namespace.
     namespaceSelector: {}
+    # If you want to include only namespaces with a given label you could do so by adding:
+    # matchLabels:
+    #   newrelic.com/scrape: true
+    # Otherwhise you can build more complex filters and include or exclude certain namespaces by adding one or multiple
+    # expressions that are anded, for instance:
+    # matchExpressions:
+    #   - {key: newrelic.com/scrape, operator: NotIn, values: [false]}
 
   # -- Config for the Infrastructure agent.
   # Will be used by the forwarder sidecars and the agent running integrations.
