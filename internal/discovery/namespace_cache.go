@@ -8,8 +8,6 @@ import (
 )
 
 const (
-	// DefaultTTL is default ttl of the cache entries.
-	DefaultTTL = 10 * time.Minute
 	// DefaultInterval is default interval to execute the "garbage collection" of the cache.
 	DefaultInterval = 15 * time.Minute
 )
@@ -26,7 +24,6 @@ type NamespaceInMemoryStore struct {
 	cache       cachedData
 	locker      *sync.RWMutex
 	logger      *logrus.Logger
-	ttl         time.Duration
 	lastVacuum  time.Time
 	ticker      *time.Ticker
 	stopChannel chan struct{}
