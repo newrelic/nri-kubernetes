@@ -97,19 +97,13 @@ func TestScraper_FilterNamespace(t *testing.T) {
 	version := testutil.Version(testutil.Testdata122)
 	t.Run(fmt.Sprintf("for_version_%s", version), func(t *testing.T) {
 		testServer, err := version.Server()
-		if err != nil {
-			t.Fatalf("Cannot create fake KSM server: %v", err)
-		}
+		require.NoError(t, err)
 
 		ksmCli, err := ksmClient.New()
-		if err != nil {
-			t.Fatalf("error creating ksm client: %v", err)
-		}
+		require.NoError(t, err)
 
 		k8sData, err := version.K8s()
-		if err != nil {
-			t.Fatalf("error instantiating fake k8s objects: %v", err)
-		}
+		require.NoError(t, err)
 
 		fakeK8s := fake.NewSimpleClientset(k8sData.Everything()...)
 		scraper, err := ksm.NewScraper(
@@ -130,9 +124,7 @@ func TestScraper_FilterNamespace(t *testing.T) {
 		i := testutil.NewIntegration(t)
 
 		err = scraper.Run(i)
-		if err != nil {
-			t.Fatalf("running scraper: %v", err)
-		}
+		require.NoError(t, err)
 
 		assert.Equal(t, 17, len(i.Entities))
 	})

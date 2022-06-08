@@ -97,9 +97,7 @@ func TestScraper_FilterNamespace(t *testing.T) {
 
 	t.Run(fmt.Sprintf("for_version_%s", version), func(t *testing.T) {
 		testServer, err := version.Server()
-		if err != nil {
-			t.Fatalf("Cannot create fake kubelet server: %v", err)
-		}
+		require.NoError(t, err)
 
 		u, _ := url.Parse(testServer.KubeletEndpoint())
 
@@ -110,9 +108,7 @@ func TestScraper_FilterNamespace(t *testing.T) {
 		require.NoError(t, err)
 
 		k8sData, err := version.K8s()
-		if err != nil {
-			t.Fatalf("error instantiating fake k8s objects: %v", err)
-		}
+		require.NoError(t, err)
 
 		fakeK8s := fake.NewSimpleClientset(k8sData.Everything()...)
 
@@ -123,15 +119,11 @@ func TestScraper_FilterNamespace(t *testing.T) {
 			Kubelet:  kubeletClient,
 			CAdvisor: kubeletClient,
 		}, kubelet.WithFilterer(NamespaceFilterMock{}))
-		if err != nil {
-			t.Fatalf("creating scraper: %v", err)
-		}
+		require.NoError(t, err)
 
 		i := testutil.NewIntegration(t)
 		err = scraper.Run(i)
-		if err != nil {
-			t.Fatalf("running scraper: %v", err)
-		}
+		require.NoError(t, err)
 
 		// Call the asserter for the entities of this particular sub-test.
 		assert.Equal(t, 25, len(i.Entities))
