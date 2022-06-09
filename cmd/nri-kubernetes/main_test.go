@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/newrelic/nri-kubernetes/v3/internal/config"
+	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
 )
 
@@ -24,10 +25,11 @@ func TestSetupKubelet(t *testing.T) {
 		Interval: 10 * time.Second,
 	}
 	logger = logutil.Discard
+	namespaceCache := discovery.NewNamespaceInMemoryStore(logger)
 	providers := clusterClients{
 		k8s: fake.NewSimpleClientset(),
 	}
-	scraper, err := setupKSM(&c, &providers)
+	scraper, err := setupKSM(&c, &providers, namespaceCache)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, scraper)
 	assert.NotEmpty(t, scraper.Filterer)
@@ -45,10 +47,11 @@ func TestSetupKSM(t *testing.T) {
 		Interval: 10 * time.Second,
 	}
 	logger = logutil.Discard
+	namespaceCache := discovery.NewNamespaceInMemoryStore(logger)
 	providers := clusterClients{
 		k8s: fake.NewSimpleClientset(),
 	}
-	scraper, err := setupKSM(&c, &providers)
+	scraper, err := setupKSM(&c, &providers, namespaceCache)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, scraper)
 	assert.NotEmpty(t, scraper.Filterer)
