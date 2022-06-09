@@ -30,10 +30,10 @@ func TestSetupKubelet(t *testing.T) {
 	providers := clusterClients{
 		k8s: k8sClient,
 	}
-	scraper, err := setupKSM(&c, &providers, nsFilter)
+	scraper, err := setupKubelet(&c, &providers, discovery.NewCachedNamespaceFilter(nsFilter, nil))
 	assert.NoError(t, err)
 	assert.NotEmpty(t, scraper)
-	assert.NotEmpty(t, scraper.Filterer)
+	assert.NotNil(t, scraper.Filterer)
 }
 
 func TestSetupKSM(t *testing.T) {
@@ -53,8 +53,8 @@ func TestSetupKSM(t *testing.T) {
 	providers := clusterClients{
 		k8s: k8sClient,
 	}
-	scraper, err := setupKSM(&c, &providers, nsFilter)
+	scraper, err := setupKSM(&c, &providers, discovery.NewCachedNamespaceFilter(nsFilter, nil))
 	assert.NoError(t, err)
 	assert.NotEmpty(t, scraper)
-	assert.NotEmpty(t, scraper.Filterer)
+	assert.NotNil(t, scraper.Filterer)
 }
