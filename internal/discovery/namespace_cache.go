@@ -2,14 +2,8 @@ package discovery
 
 import (
 	"sync"
-	"time"
 
 	"github.com/sirupsen/logrus"
-)
-
-const (
-	// DefaultInterval is default interval to execute the "garbage collection" of the cache.
-	DefaultInterval = 15 * time.Minute
 )
 
 type cachedData map[string]bool
@@ -18,37 +12,21 @@ type cachedData map[string]bool
 type NamespaceCache interface {
 	Put(namespace string, match bool)
 	Match(namespace string) (bool, bool)
+	Vacuum()
 }
 
 type NamespaceInMemoryStore struct {
-	cache       cachedData
-	locker      *sync.RWMutex
-	logger      *logrus.Logger
-	lastVacuum  time.Time
-	ticker      *time.Ticker
-	stopChannel chan struct{}
+	cache  cachedData
+	locker *sync.RWMutex
+	logger *logrus.Logger
 }
 
-func NewNamespaceInMemoryStore(interval time.Duration, logger *logrus.Logger) *NamespaceInMemoryStore {
+func NewNamespaceInMemoryStore(logger *logrus.Logger) *NamespaceInMemoryStore {
 	cm := &NamespaceInMemoryStore{
 		cache:  make(cachedData),
 		locker: &sync.RWMutex{},
 		logger: logger,
-		// ticker interval should be slightly smaller than the integration interval.
-		ticker:      time.NewTicker(interval),
-		stopChannel: make(chan struct{}),
 	}
-
-	go func() {
-		for {
-			select {
-			case <-cm.ticker.C:
-				cm.vacuum()
-			case <-cm.stopChannel:
-				return
-			}
-		}
-	}()
 
 	return cm
 }
@@ -69,15 +47,8 @@ func (m *NamespaceInMemoryStore) Match(namespace string) (bool, bool) {
 	return match, found
 }
 
-// StopVacuum Stops the goroutine in charge of the vacuum of the cache.
-func (m *NamespaceInMemoryStore) StopVacuum() {
-	m.logger.Debugf("stopping namespace cache vacuum goroutine")
-	m.ticker.Stop()
-	close(m.stopChannel)
-}
-
-// vacuum removes the cached data entries on each interval.
-func (m *NamespaceInMemoryStore) vacuum() {
+// Vacuum removes the cached data entries on each interval.
+func (m *NamespaceInMemoryStore) Vacuum() {
 	m.locker.Lock()
 	defer m.locker.Unlock()
 
