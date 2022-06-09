@@ -123,9 +123,17 @@ func main() {
 
 	namespaceCache := discovery.NewNamespaceInMemoryStore(logger)
 
+	var nsFilter *discovery.CachedNamespaceFilter
+	if c.NamespaceSelector != nil {
+		nsFilter = discovery.NewCachedNamespaceFilter(
+			discovery.NewNamespaceFilter(c.NamespaceSelector, clients.k8s, logger),
+			namespaceCache,
+		)
+	}
+
 	var kubeletScraper *kubelet.Scraper
 	if c.Kubelet.Enabled {
-		kubeletScraper, err = setupKubelet(c, clients, namespaceCache)
+		kubeletScraper, err = setupKubelet(c, clients, nsFilter)
 		if err != nil {
 			logger.Errorf("setting up ksm scraper: %v", err)
 			os.Exit(exitSetup)
@@ -134,7 +142,7 @@ func main() {
 
 	var ksmScraper *ksm.Scraper
 	if c.KSM.Enabled {
-		ksmScraper, err = setupKSM(c, clients, namespaceCache)
+		ksmScraper, err = setupKSM(c, clients, nsFilter)
 		if err != nil {
 			logger.Errorf("setting up ksm scraper: %v", err)
 			os.Exit(exitSetup)
@@ -206,20 +214,15 @@ func runScrapers(c *config.Config, ksmScraper *ksm.Scraper, kubeletScraper *kube
 	return nil
 }
 
-func setupKSM(c *config.Config, clients *clusterClients, namespaceCache *discovery.NamespaceInMemoryStore) (*ksm.Scraper, error) {
+func setupKSM(c *config.Config, clients *clusterClients, nsFilter discovery.NamespaceFilterer) (*ksm.Scraper, error) {
 	providers := ksm.Providers{
 		K8s: clients.k8s,
 		KSM: clients.ksm,
 	}
 
 	scraperOpts := []ksm.ScraperOpt{ksm.WithLogger(logger)}
-
-	if c.NamespaceSelector != nil {
-		nsFilter := discovery.NewNamespaceFilter(c.NamespaceSelector, clients.k8s, logger)
-		scraperOpts = append(
-			scraperOpts,
-			ksm.WithFilterer(discovery.NewCachedNamespaceFilter(nsFilter, namespaceCache)),
-		)
+	if nsFilter != nil {
+		scraperOpts = append(scraperOpts, ksm.WithFilterer(nsFilter))
 	}
 
 	ksmScraper, err := ksm.NewScraper(c, providers, scraperOpts...)
@@ -253,7 +256,7 @@ func setupControlPlane(c *config.Config, clients *clusterClients) (*controlplane
 	return controlplaneScraper, nil
 }
 
-func setupKubelet(c *config.Config, clients *clusterClients, namespaceCache *discovery.NamespaceInMemoryStore) (*kubelet.Scraper, error) {
+func setupKubelet(c *config.Config, clients *clusterClients, nsFilter discovery.NamespaceFilterer) (*kubelet.Scraper, error) {
 	providers := kubelet.Providers{
 		K8s:      clients.k8s,
 		Kubelet:  clients.kubelet,
@@ -261,13 +264,8 @@ func setupKubelet(c *config.Config, clients *clusterClients, namespaceCache *dis
 	}
 
 	scraperOpts := []kubelet.ScraperOpt{kubelet.WithLogger(logger)}
-
-	if c.NamespaceSelector != nil {
-		nsFilter := discovery.NewNamespaceFilter(c.NamespaceSelector, clients.k8s, logger)
-		scraperOpts = append(
-			scraperOpts,
-			kubelet.WithFilterer(discovery.NewCachedNamespaceFilter(nsFilter, namespaceCache)),
-		)
+	if nsFilter != nil {
+		scraperOpts = append(scraperOpts, kubelet.WithFilterer(nsFilter))
 	}
 
 	ksmScraper, err := kubelet.NewScraper(c, providers, scraperOpts...)
