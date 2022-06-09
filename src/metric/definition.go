@@ -49,6 +49,15 @@ var APIServerSpecs = definition.SpecGroups{
 				Type: sdkMetric.RATE,
 			},
 			{
+				Name: "apiserverCurrentInflightRequests",
+				ValueFunc: prometheus.FromValueWithOverriddenName(
+					"apiserver_current_inflight_requests",
+					"apiserverCurrentInflightRequests",
+					prometheus.IncludeOnlyLabelsFilter("request_kind"),
+				),
+				Type: sdkMetric.GAUGE,
+			},
+			{
 				Name: "restClientRequestsDelta",
 				ValueFunc: prometheus.FromValueWithOverriddenName(
 					"rest_client_requests_total",
@@ -120,6 +129,9 @@ var APIServerQueries = []prometheus.Query{
 	},
 	{
 		MetricName: "apiserver_storage_objects",
+	},
+	{
+		MetricName: "apiserver_current_inflight_requests",
 	},
 	{
 		MetricName: "process_resident_memory_bytes",
