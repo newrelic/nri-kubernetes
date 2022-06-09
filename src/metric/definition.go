@@ -493,8 +493,9 @@ var EtcdQueries = []prometheus.Query{
 // KSMSpecs are the metric specifications we want to collect from KSM.
 var KSMSpecs = definition.SpecGroups{
 	"replicaset": {
-		IDGenerator:   prometheus.FromLabelValueEntityIDGenerator("kube_replicaset_created", "replicaset"),
-		TypeGenerator: prometheus.FromLabelValueEntityTypeGenerator("kube_replicaset_created"),
+		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_replicaset_created", "replicaset"),
+		TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_replicaset_created"),
+		NamespaceGetter: prometheus.FromLabelGetNamespace,
 		Specs: []definition.Spec{
 			{Name: "createdAt", ValueFunc: prometheus.FromValue("kube_replicaset_created"), Type: sdkMetric.GAUGE},
 			{Name: "podsDesired", ValueFunc: prometheus.FromValue("kube_replicaset_spec_replicas"), Type: sdkMetric.GAUGE},
@@ -517,8 +518,9 @@ var KSMSpecs = definition.SpecGroups{
 		},
 	},
 	"statefulset": {
-		IDGenerator:   prometheus.FromLabelValueEntityIDGenerator("kube_statefulset_created", "statefulset"),
-		TypeGenerator: prometheus.FromLabelValueEntityTypeGenerator("kube_statefulset_created"),
+		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_statefulset_created", "statefulset"),
+		TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_statefulset_created"),
+		NamespaceGetter: prometheus.FromLabelGetNamespace,
 		Specs: []definition.Spec{
 			{Name: "createdAt", ValueFunc: prometheus.FromValue("kube_statefulset_created"), Type: sdkMetric.GAUGE},
 			{Name: "podsDesired", ValueFunc: prometheus.FromValue("kube_statefulset_replicas"), Type: sdkMetric.GAUGE},
@@ -543,8 +545,9 @@ var KSMSpecs = definition.SpecGroups{
 		},
 	},
 	"daemonset": {
-		IDGenerator:   prometheus.FromLabelValueEntityIDGenerator("kube_daemonset_created", "daemonset"),
-		TypeGenerator: prometheus.FromLabelValueEntityTypeGenerator("kube_daemonset_created"),
+		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_daemonset_created", "daemonset"),
+		TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_daemonset_created"),
+		NamespaceGetter: prometheus.FromLabelGetNamespace,
 		Specs: []definition.Spec{
 			{Name: "createdAt", ValueFunc: prometheus.FromValue("kube_daemonset_created"), Type: sdkMetric.GAUGE},
 			{Name: "podsDesired", ValueFunc: prometheus.FromValue("kube_daemonset_status_desired_number_scheduled"), Type: sdkMetric.GAUGE},
@@ -568,7 +571,8 @@ var KSMSpecs = definition.SpecGroups{
 		},
 	},
 	"namespace": {
-		TypeGenerator: prometheus.FromLabelValueEntityTypeGenerator("kube_namespace_created"),
+		TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_namespace_created"),
+		NamespaceGetter: prometheus.FromLabelGetNamespace,
 		Specs: []definition.Spec{
 			{Name: "createdAt", ValueFunc: prometheus.FromValue("kube_namespace_created"), Type: sdkMetric.GAUGE},
 			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_namespace_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
@@ -578,8 +582,9 @@ var KSMSpecs = definition.SpecGroups{
 		},
 	},
 	"deployment": {
-		IDGenerator:   prometheus.FromLabelValueEntityIDGenerator("kube_deployment_created", "deployment"),
-		TypeGenerator: prometheus.FromLabelValueEntityTypeGenerator("kube_deployment_created"),
+		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_deployment_created", "deployment"),
+		TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_deployment_created"),
+		NamespaceGetter: prometheus.FromLabelGetNamespace,
 		Specs: []definition.Spec{
 			{Name: "createdAt", ValueFunc: prometheus.FromValue("kube_deployment_created"), Type: sdkMetric.GAUGE},
 			{Name: "podsDesired", ValueFunc: prometheus.FromValue("kube_deployment_spec_replicas"), Type: sdkMetric.GAUGE},
@@ -604,8 +609,9 @@ var KSMSpecs = definition.SpecGroups{
 		},
 	},
 	"service": {
-		IDGenerator:   prometheus.FromLabelValueEntityIDGenerator("kube_service_created", "service"),
-		TypeGenerator: prometheus.FromLabelValueEntityTypeGenerator("kube_service_created"),
+		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_service_created", "service"),
+		TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_service_created"),
+		NamespaceGetter: prometheus.FromLabelGetNamespace,
 		Specs: []definition.Spec{
 			{
 				Name:      "createdAt",
@@ -659,8 +665,9 @@ var KSMSpecs = definition.SpecGroups{
 		},
 	},
 	"endpoint": {
-		IDGenerator:   prometheus.FromLabelValueEntityIDGenerator("kube_endpoint_created", "endpoint"),
-		TypeGenerator: prometheus.FromLabelValueEntityTypeGenerator("kube_endpoint_created"),
+		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_endpoint_created", "endpoint"),
+		TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_endpoint_created"),
+		NamespaceGetter: prometheus.FromLabelGetNamespace,
 		Specs: []definition.Spec{
 			{
 				Name:      "createdAt",
@@ -699,8 +706,9 @@ var KSMSpecs = definition.SpecGroups{
 	// they aren't running in any node and the information about them is only
 	// present in the API.
 	"pod": {
-		IDGenerator:   prometheus.FromLabelsValueEntityIDGeneratorForPendingPods(),
-		TypeGenerator: prometheus.FromLabelValueEntityTypeGenerator("kube_pod_status_phase"),
+		IDGenerator:     prometheus.FromLabelsValueEntityIDGeneratorForPendingPods(),
+		TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_pod_status_phase"),
+		NamespaceGetter: prometheus.FromLabelGetNamespace,
 		Specs: []definition.Spec{
 			{Name: "createdAt", ValueFunc: prometheus.FromValue("kube_pod_created"), Type: sdkMetric.GAUGE, Optional: true},
 			{Name: "createdKind", ValueFunc: prometheus.FromLabelValue("kube_pod_info", "created_by_kind"), Type: sdkMetric.ATTRIBUTE, Optional: true},
@@ -719,8 +727,9 @@ var KSMSpecs = definition.SpecGroups{
 		},
 	},
 	"hpa": {
-		IDGenerator:   prometheus.FromLabelValueEntityIDGenerator("kube_hpa_labels", "hpa"),
-		TypeGenerator: prometheus.FromLabelValueEntityTypeGenerator("kube_hpa_labels"),
+		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_hpa_labels", "hpa"),
+		TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_hpa_labels"),
+		NamespaceGetter: prometheus.FromLabelGetNamespace,
 		Specs: []definition.Spec{
 			// Kubernetes labels converted to Prometheus labels. not sure if interesting to get
 			{Name: "labels", ValueFunc: prometheus.FromValue("kube_hpa_labels"), Type: sdkMetric.GAUGE},
@@ -885,8 +894,9 @@ var CadvisorQueries = []prometheus.Query{
 // KubeletSpecs are the metric specifications we want to collect from Kubelet.
 var KubeletSpecs = definition.SpecGroups{
 	"pod": {
-		IDGenerator:   kubeletMetric.FromRawEntityIDGroupEntityIDGenerator("namespace"),
-		TypeGenerator: kubeletMetric.FromRawGroupsEntityTypeGenerator,
+		IDGenerator:     kubeletMetric.FromRawEntityIDGroupEntityIDGenerator("namespace"),
+		TypeGenerator:   kubeletMetric.FromRawGroupsEntityTypeGenerator,
+		NamespaceGetter: kubeletMetric.FromLabelGetNamespace,
 		Specs: []definition.Spec{
 			// /stats/summary endpoint
 			{Name: "net.rxBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("rxBytes"), Type: sdkMetric.RATE},
@@ -914,8 +924,9 @@ var KubeletSpecs = definition.SpecGroups{
 		},
 	},
 	"container": {
-		IDGenerator:   kubeletMetric.FromRawGroupsEntityIDGenerator("containerName"),
-		TypeGenerator: kubeletMetric.FromRawGroupsEntityTypeGenerator,
+		IDGenerator:     kubeletMetric.FromRawGroupsEntityIDGenerator("containerName"),
+		TypeGenerator:   kubeletMetric.FromRawGroupsEntityTypeGenerator,
+		NamespaceGetter: kubeletMetric.FromLabelGetNamespace,
 		Specs: []definition.Spec{
 			// /stats/summary endpoint
 			{Name: "memoryUsedBytes", ValueFunc: definition.FromRaw("usageBytes"), Type: sdkMetric.GAUGE},
@@ -1011,7 +1022,8 @@ var KubeletSpecs = definition.SpecGroups{
 		},
 	},
 	"volume": {
-		TypeGenerator: kubeletMetric.FromRawGroupsEntityTypeGenerator,
+		TypeGenerator:   kubeletMetric.FromRawGroupsEntityTypeGenerator,
+		NamespaceGetter: kubeletMetric.FromLabelGetNamespace,
 		Specs: []definition.Spec{
 			{Name: "volumeName", ValueFunc: definition.FromRaw("volumeName"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "podName", ValueFunc: definition.FromRaw("podName"), Type: sdkMetric.ATTRIBUTE},

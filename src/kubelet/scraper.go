@@ -39,6 +39,7 @@ type Scraper struct {
 	defaultNetworkInterface string
 	nodeGetter              listersv1.NodeLister
 	informerClosers         []chan<- struct{}
+	Filterer                discovery.NamespaceFilterer
 }
 
 // ScraperOpt are options that can be used to configure the Scraper
@@ -101,7 +102,7 @@ func (s *Scraper) Run(i *integration.Integration) error {
 		return fmt.Errorf("creating Kubelet grouper: %w", err)
 	}
 
-	job := scrape.NewScrapeJob("kubelet", kubeletGrouper, metric.KubeletSpecs)
+	job := scrape.NewScrapeJob("kubelet", kubeletGrouper, metric.KubeletSpecs, scrape.JobWithFilterer(s.Filterer))
 
 	r := job.Populate(i, s.config.ClusterName, s.logger, s.k8sVersion)
 	if r.Errors != nil {
@@ -119,6 +120,14 @@ func (s *Scraper) Run(i *integration.Integration) error {
 func WithLogger(logger *log.Logger) ScraperOpt {
 	return func(s *Scraper) error {
 		s.logger = logger
+		return nil
+	}
+}
+
+// WithFilterer returns an OptionFunc to add a Filterer.
+func WithFilterer(filterer discovery.NamespaceFilterer) ScraperOpt {
+	return func(s *Scraper) error {
+		s.Filterer = filterer
 		return nil
 	}
 }

@@ -224,7 +224,7 @@ func TestNamespaceFilterer_Cache(t *testing.T) {
 
 			nsFilterMock := newNamespaceFilterMock()
 
-			c := discovery.NewNamespaceInMemoryStore(discovery.DefaultInterval, logrus.New())
+			c := discovery.NewNamespaceInMemoryStore(logrus.New())
 			testData.warmCache(c)
 			testData.prepare(nsFilterMock)
 

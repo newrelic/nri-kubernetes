@@ -19,7 +19,14 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/src/ksm"
 	ksmClient "github.com/newrelic/nri-kubernetes/v3/src/ksm/client"
 	"github.com/newrelic/nri-kubernetes/v3/src/metric"
+	"github.com/stretchr/testify/assert"
 )
+
+type NamespaceFilterMock struct{}
+
+func (nf NamespaceFilterMock) IsAllowed(namespace string) bool {
+	return namespace != "scraper"
+}
 
 func TestScraper(t *testing.T) {
 	// Create an asserter with the settings that are shared for all test scenarios.
@@ -83,4 +90,42 @@ func TestScraper(t *testing.T) {
 			asserter.On(i.Entities).Assert(t)
 		})
 	}
+}
+
+func TestScraper_FilterNamespace(t *testing.T) {
+	// We test with a specific version to not modify number of entities
+	version := testutil.Version(testutil.Testdata122)
+	t.Run(fmt.Sprintf("for_version_%s", version), func(t *testing.T) {
+		testServer, err := version.Server()
+		require.NoError(t, err)
+
+		ksmCli, err := ksmClient.New()
+		require.NoError(t, err)
+
+		k8sData, err := version.K8s()
+		require.NoError(t, err)
+
+		fakeK8s := fake.NewSimpleClientset(k8sData.Everything()...)
+		scraper, err := ksm.NewScraper(
+			&config.Config{
+				KSM: config.KSM{
+					StaticURL: testServer.KSMEndpoint(),
+				},
+				ClusterName: t.Name(),
+			}, ksm.Providers{
+				K8s: fakeK8s,
+				KSM: ksmCli,
+			},
+			ksm.WithFilterer(NamespaceFilterMock{}),
+		)
+
+		require.NoError(t, err)
+
+		i := testutil.NewIntegration(t)
+
+		err = scraper.Run(i)
+		require.NoError(t, err)
+
+		assert.Equal(t, 17, len(i.Entities))
+	})
 }
