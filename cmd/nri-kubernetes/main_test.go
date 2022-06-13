@@ -25,15 +25,14 @@ func TestSetupKubelet(t *testing.T) {
 		Interval: 10 * time.Second,
 	}
 	logger = logutil.Discard
-	k8sClient := fake.NewSimpleClientset()
-	nsFilter := discovery.NewNamespaceFilter(c.NamespaceSelector, k8sClient, logger)
+	namespaceCache := discovery.NewNamespaceInMemoryStore(logger)
 	providers := clusterClients{
-		k8s: k8sClient,
+		k8s: fake.NewSimpleClientset(),
 	}
-	scraper, err := setupKubelet(&c, &providers, discovery.NewCachedNamespaceFilter(nsFilter, nil))
+	scraper, err := setupKSM(&c, &providers, namespaceCache)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, scraper)
-	assert.NotNil(t, scraper.Filterer)
+	assert.NotEmpty(t, scraper.Filterer)
 }
 
 func TestSetupKSM(t *testing.T) {
@@ -48,13 +47,12 @@ func TestSetupKSM(t *testing.T) {
 		Interval: 10 * time.Second,
 	}
 	logger = logutil.Discard
-	k8sClient := fake.NewSimpleClientset()
-	nsFilter := discovery.NewNamespaceFilter(c.NamespaceSelector, k8sClient, logger)
+	namespaceCache := discovery.NewNamespaceInMemoryStore(logger)
 	providers := clusterClients{
-		k8s: k8sClient,
+		k8s: fake.NewSimpleClientset(),
 	}
-	scraper, err := setupKSM(&c, &providers, discovery.NewCachedNamespaceFilter(nsFilter, nil))
+	scraper, err := setupKSM(&c, &providers, namespaceCache)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, scraper)
-	assert.NotNil(t, scraper.Filterer)
+	assert.NotEmpty(t, scraper.Filterer)
 }
