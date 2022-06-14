@@ -900,6 +900,7 @@ var CadvisorQueries = []prometheus.Query{
 	{MetricName: "container_cpu_cfs_throttled_periods_total"},
 	{MetricName: "container_cpu_cfs_throttled_seconds_total"},
 	{MetricName: "container_memory_mapped_file"},
+	{MetricName: "container_oom_events_total"},
 }
 
 // KubeletSpecs are the metric specifications we want to collect from Kubelet.
@@ -959,6 +960,7 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "containerCpuCfsThrottledPeriodsTotal", ValueFunc: definition.FromRaw("container_cpu_cfs_throttled_periods_total"), Type: sdkMetric.GAUGE, Optional: true},
 			{Name: "containerCpuCfsThrottledSecondsTotal", ValueFunc: definition.FromRaw("container_cpu_cfs_throttled_seconds_total"), Type: sdkMetric.GAUGE, Optional: true},
 			{Name: "containerMemoryMappedFileBytes", ValueFunc: definition.FromRaw("container_memory_mapped_file"), Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "containerOOMEventsTotal", ValueFunc: definition.FromRaw("container_oom_events_total"), Type: sdkMetric.DELTA},
 
 			// /pods endpoint
 			{Name: "containerName", ValueFunc: definition.FromRaw("containerName"), Type: sdkMetric.ATTRIBUTE},
