@@ -201,6 +201,11 @@ var ControllerManagerSpecs = definition.SpecGroups{
 				ValueFunc: prometheus.FromValueWithOverriddenName("go_goroutines", "goGoroutines"),
 				Type:      sdkMetric.GAUGE,
 			},
+			{
+				Name:      "nodeCollectorEvictionsDelta",
+				ValueFunc: prometheus.FromValueWithOverriddenName("node_collector_evictions_total", "nodeCollectorEvictionsDelta"),
+				Type:      sdkMetric.DELTA,
+			},
 		},
 	},
 }
@@ -231,6 +236,9 @@ var ControllerManagerQueries = []prometheus.Query{
 	},
 	{
 		MetricName: "go_goroutines",
+	},
+	{
+		MetricName: "node_collector_evictions_total",
 	},
 }
 
