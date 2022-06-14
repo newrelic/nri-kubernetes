@@ -282,6 +282,11 @@ var SchedulerSpecs = definition.SpecGroups{
 				Type:      sdkMetric.DELTA,
 			},
 			{
+				Name:      "schedulerPendingPods",
+				ValueFunc: prometheus.FromValueWithOverriddenName("scheduler_pending_pods", "schedulerPendingPods"),
+				Type:      sdkMetric.GAUGE,
+			},
+			{
 				Name:      "schedulerPodPreemptionVictims",
 				ValueFunc: prometheus.FromValueWithOverriddenName("scheduler_pod_preemption_victims", "schedulerPodPreemptionVictims"),
 				Type:      sdkMetric.GAUGE,
@@ -327,6 +332,9 @@ var SchedulerQueries = []prometheus.Query{
 	},
 	{
 		MetricName: "scheduler_total_preemption_attempts",
+	},
+	{
+		MetricName: "scheduler_pending_pods",
 	},
 	{
 		MetricName: "scheduler_pod_preemption_victims",
