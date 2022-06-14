@@ -125,6 +125,12 @@ spec:
                   apiVersion: "v1"
                   fieldPath: "spec.nodeName"
 
+            - name: "NRIA_OVERRIDE_HOSTNAME"
+              valueFrom:
+                fieldRef:
+                  apiVersion: "v1"
+                  fieldPath: "spec.nodeName"
+
             {{- if not (include "newrelic.common.privileged" .) }}
             # Override NRIA_OVERRIDE_HOST_ROOT to empty if unprivileged. This must be done as an env var as the
             # `k8s-events-forwarder` and `infrastructure-bundle` images ship this very same env var set to /host.
