@@ -226,7 +226,7 @@ type MTLS struct {
 // NamespaceSelector contains config options for filtering namespaces.
 type NamespaceSelector struct {
 	// MatchLabels is a list of labels to filter namespaces with.
-	MatchLabels map[string]string `mapstructure:"matchLabels"`
+	MatchLabels map[string]interface{} `mapstructure:"matchLabels"`
 	// MatchExpressions is a list of namespaces selector requirements.
 	MatchExpressions []Expression `mapstructure:"matchExpressions"`
 }
@@ -315,5 +315,36 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 		return nil, err
 	}
 
+	if cfg.NamespaceSelector != nil && cfg.NamespaceSelector.MatchLabels != nil {
+		matchLabels := make(map[string]interface{})
+		for k, v := range cfg.NamespaceSelector.MatchLabels {
+			str, err := ParseValueToString(v)
+			if err != nil {
+				return &cfg, err
+			}
+			matchLabels[k] = str
+		}
+
+		cfg.NamespaceSelector.MatchLabels = matchLabels
+	}
+
 	return &cfg, nil
+}
+
+func ParseValueToString(val interface{}) (string, error) {
+	var str string
+	switch v := val.(type) {
+	case string:
+		str = v
+	case bool:
+		str = strconv.FormatBool(v)
+	case int:
+		str = strconv.FormatInt(int64(v), 10)
+	case float32, float64:
+		str = fmt.Sprintf("%f", v)
+	default:
+		return "", fmt.Errorf("parsing matchLabels, invalid value type %T for val: %v", v, val)
+	}
+
+	return str, nil
 }

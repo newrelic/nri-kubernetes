@@ -72,7 +72,7 @@ func (nf *NamespaceFilter) IsAllowed(namespace string) bool {
 
 // matchNamespaceByLabels filters a namespace using the selector from the MatchLabels config.
 func (nf *NamespaceFilter) matchNamespaceByLabels(namespace string) bool {
-	namespaceList, err := nf.lister.List(labels.SelectorFromSet(nf.c.MatchLabels))
+	namespaceList, err := nf.lister.List(labels.SelectorFromSet(parseToStringMap(nf.c.MatchLabels)))
 	if err != nil {
 		nf.logger.Errorf("listing namespaces with MatchLabels: %v", err)
 		return true
@@ -156,4 +156,18 @@ func containsNamespace(namespace string, namespaceList []*v1.Namespace) bool {
 	}
 
 	return false
+}
+
+func parseToStringMap(matchLabels map[string]interface{}) map[string]string {
+	strMap := make(map[string]string)
+
+	for k, v := range matchLabels {
+		str, err := config.ParseValueToString(v)
+		if err != nil {
+			continue
+		}
+		strMap[k] = str
+	}
+
+	return strMap
 }
