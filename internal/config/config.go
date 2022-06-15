@@ -316,16 +316,18 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	}
 
 	// Parse bool matchLabels values into strings.
-	matchLabels := make(map[string]interface{})
-	for k, v := range cfg.NamespaceSelector.MatchLabels {
-		str, err := ParseValueToString(v)
-		if err != nil {
-			return &cfg, err
+	if cfg.NamespaceSelector != nil && cfg.NamespaceSelector.MatchLabels != nil {
+		matchLabels := make(map[string]interface{})
+		for k, v := range cfg.NamespaceSelector.MatchLabels {
+			str, err := ParseValueToString(v)
+			if err != nil {
+				return &cfg, err
+			}
+			matchLabels[k] = str
 		}
-		matchLabels[k] = str
-	}
 
-	cfg.NamespaceSelector.MatchLabels = matchLabels
+		cfg.NamespaceSelector.MatchLabels = matchLabels
+	}
 
 	return &cfg, nil
 }
