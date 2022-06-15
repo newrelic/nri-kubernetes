@@ -82,7 +82,7 @@ func TestScraper(t *testing.T) {
 			versionAsserter := asserter
 			if testutil.IsBelow(version, testutil.Testdata124) {
 				versionAsserter = versionAsserter.Excluding(
-					exclude.Metrics("nodeCollectorEvictionsDelta"))
+					exclude.Metrics("nodeCollectorEvictionsDelta", "containerOOMEventsDelta"))
 			}
 
 			// Call the asserter for the entities of this particular sub-test.
