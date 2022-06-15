@@ -158,7 +158,7 @@ func (s *Scraper) Run(i *integration.Integration) error {
 
 	if !populated {
 		if s.Filterer != nil {
-			return fmt.Errorf("%v, check if namespace filters are set properly", errNoData)
+			return fmt.Errorf("%w, check if namespace filters are set properly", errNoData)
 		}
 		return errNoData
 	}
