@@ -105,7 +105,11 @@ func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 			versionAsserter := asserter
 			// apiserverStorageObjects replaces etcObjectCounts in k8s versions above 1.23
 			if testutil.IsBelow(version, testutil.Testdata123) {
-				versionAsserter = versionAsserter.Excluding(exclude.Metrics("apiserverStorageObjects"))
+				versionAsserter = versionAsserter.Excluding(
+					exclude.Metrics("apiserverStorageObjects", "nodeCollectorEvictionsDelta"))
+			} else if testutil.IsBelow(version, testutil.Testdata124) {
+				versionAsserter = versionAsserter.Excluding(
+					exclude.Metrics("nodeCollectorEvictionsDelta", "etcdObjectCounts"))
 			} else {
 				versionAsserter = versionAsserter.Excluding(exclude.Metrics("etcdObjectCounts"))
 			}
