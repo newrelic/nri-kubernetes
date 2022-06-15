@@ -39,7 +39,15 @@ func TestLoadConfig(t *testing.T) {
 
 		c, err := config.LoadConfig(fakeDataDir, workingData)
 		require.NoError(t, err)
-		require.Equal(t, "1", c.NamespaceSelector.MatchLabels["newrelic.com/scrape"])
+		require.Equal(t, "true", c.NamespaceSelector.MatchLabels["newrelic.com/scrape"])
+	})
+	t.Run("parses_bool_as_string", func(t *testing.T) {
+		t.Parallel()
+
+		c, err := config.LoadConfig(fakeDataDir, workingData)
+		require.NoError(t, err)
+		require.Equal(t, "true", c.NamespaceSelector.MatchLabels["another_label"])
+		require.Equal(t, "true", c.NamespaceSelector.MatchLabels["newrelic.com/scrape"])
 	})
 	t.Run("fail_due_to_unexpected_data", func(t *testing.T) {
 		t.Parallel()

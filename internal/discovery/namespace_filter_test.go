@@ -44,7 +44,7 @@ func TestNamespaceFilterer_IsAllowed(t *testing.T) {
 				"newrelic.com/scrape": "true",
 			},
 			namespaceSelector: config.NamespaceSelector{
-				MatchLabels: map[string]string{
+				MatchLabels: map[string]interface{}{
 					"newrelic.com/scrape": "true",
 				},
 			},
@@ -53,7 +53,7 @@ func TestNamespaceFilterer_IsAllowed(t *testing.T) {
 		"match_labels_excluded_namespaces_not_allowed": {
 			namespaceLabels: labels.Set{"newrelic.com/scrape": "false"},
 			namespaceSelector: config.NamespaceSelector{
-				MatchLabels: map[string]string{
+				MatchLabels: map[string]interface{}{
 					"newrelic.com/scrape": "true",
 				},
 			},
@@ -259,7 +259,7 @@ func TestNamespaceFilter_InformerCacheSync(t *testing.T) {
 	// Create the namespace filter.
 	ns := discovery.NewNamespaceFilter(
 		&config.NamespaceSelector{
-			MatchLabels: map[string]string{
+			MatchLabels: map[string]interface{}{
 				"test_label": "123",
 			},
 		},

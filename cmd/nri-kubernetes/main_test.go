@@ -18,7 +18,7 @@ func TestSetupKubelet(t *testing.T) {
 		Verbose: false,
 		Kubelet: config.Kubelet{},
 		NamespaceSelector: &config.NamespaceSelector{
-			MatchLabels: map[string]string{
+			MatchLabels: map[string]interface{}{
 				"newrelic.com/scrape": "true",
 			},
 		},
@@ -40,7 +40,7 @@ func TestSetupKSM(t *testing.T) {
 		Verbose: false,
 		KSM:     config.KSM{},
 		NamespaceSelector: &config.NamespaceSelector{
-			MatchLabels: map[string]string{
+			MatchLabels: map[string]interface{}{
 				"newrelic.com/scrape": "true",
 			},
 		},
