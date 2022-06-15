@@ -1,6 +1,7 @@
 package ksm
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 
@@ -22,6 +23,8 @@ import (
 const defaultLabelSelector = "app.kubernetes.io/name=kube-state-metrics"
 const defaultScheme = "http"
 const ksmMetricsPath = "metrics"
+
+var errNoData = errors.New("KSM data was not populated after trying all endpoints")
 
 // Providers is a struct holding pointers to all the clients Scraper needs to get data from.
 // TODO: Extract this out of the KSM package.
@@ -154,7 +157,10 @@ func (s *Scraper) Run(i *integration.Integration) error {
 	}
 
 	if !populated {
-		return fmt.Errorf("KSM data was not populated after trying all endpoints")
+		if s.Filterer != nil {
+			return fmt.Errorf("%w, check if namespace filters are set properly", errNoData)
+		}
+		return errNoData
 	}
 
 	return nil
