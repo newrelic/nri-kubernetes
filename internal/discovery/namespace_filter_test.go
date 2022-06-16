@@ -66,7 +66,7 @@ func TestNamespaceFilterer_IsAllowed(t *testing.T) {
 					{
 						Key:      "newrelic.com/scrape",
 						Operator: "NotIn",
-						Values:   []interface{}{false},
+						Values:   []interface{}{"false"},
 					},
 				},
 			},
@@ -79,7 +79,7 @@ func TestNamespaceFilterer_IsAllowed(t *testing.T) {
 					{
 						Key:      "newrelic.com/scrape",
 						Operator: "NotIn",
-						Values:   []interface{}{true},
+						Values:   []interface{}{"true"},
 					},
 				},
 			},
@@ -92,7 +92,7 @@ func TestNamespaceFilterer_IsAllowed(t *testing.T) {
 					{
 						Key:      "newrelic.com/scrape",
 						Operator: "In",
-						Values:   []interface{}{true},
+						Values:   []interface{}{"true"},
 					},
 				},
 			},
@@ -147,7 +147,7 @@ func TestNamespaceFilterer_IsAllowed(t *testing.T) {
 			ns := discovery.NewNamespaceFilter(
 				&testData.namespaceSelector,
 				client,
-				nil,
+				logrus.New(),
 			)
 
 			t.Cleanup(func() {
@@ -264,7 +264,7 @@ func TestNamespaceFilter_InformerCacheSync(t *testing.T) {
 			},
 		},
 		client,
-		nil,
+		logrus.New(),
 	)
 	// Check that recently created namespace is not allowed.
 	require.Equal(t, false, ns.IsAllowed(namespaceName))

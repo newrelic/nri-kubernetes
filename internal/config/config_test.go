@@ -14,6 +14,8 @@ const workingData = "config"
 
 // Added namespaceSelector config in a separate yaml, this way we can be sure there is no error in its absence.
 const workingDataWithNamespaceFilters = "config_with_namespace_filter"
+const wrongDataWithNamespaceFilterMatchLabels = "config_with_namespace_filter_wrong_match_labels"
+const wrongDataWithNamespaceFiltersMatchExpressions = "config_with_namespace_filter_wrong_match_expressions"
 const unexpectedFields = "config_with_unexpected_fields"
 
 func TestLoadConfig(t *testing.T) {
@@ -42,15 +44,20 @@ func TestLoadConfig(t *testing.T) {
 
 		c, err := config.LoadConfig(fakeDataDir, workingDataWithNamespaceFilters)
 		require.NoError(t, err)
-		require.Equal(t, "true", c.NamespaceSelector.MatchLabels["newrelic.com/scrape"])
+		require.Contains(t, c.NamespaceSelector.MatchLabels, "newrelic.com/scrape")
+		require.Equal(t, "newrelic.com/scrape", c.NamespaceSelector.MatchExpressions[0].Key)
 	})
-	t.Run("parses_bool_as_string", func(t *testing.T) {
+	t.Run("fail_when_bad_namespace_filter_match_labels_values", func(t *testing.T) {
 		t.Parallel()
 
-		c, err := config.LoadConfig(fakeDataDir, workingDataWithNamespaceFilters)
-		require.NoError(t, err)
-		require.Equal(t, "true", c.NamespaceSelector.MatchLabels["another_label"])
-		require.Equal(t, "true", c.NamespaceSelector.MatchLabels["newrelic.com/scrape"])
+		_, err := config.LoadConfig(fakeDataDir, wrongDataWithNamespaceFilterMatchLabels)
+		require.ErrorIs(t, err, config.ErrInvalidMatchLabelsValue)
+	})
+	t.Run("fail_when_bad_namespace_filter_match_expressions_values", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := config.LoadConfig(fakeDataDir, wrongDataWithNamespaceFiltersMatchExpressions)
+		require.ErrorIs(t, err, config.ErrInvalidMatchExpressionsValue)
 	})
 	t.Run("fail_due_to_unexpected_data", func(t *testing.T) {
 		t.Parallel()

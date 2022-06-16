@@ -1,8 +1,8 @@
 package config
 
 import (
+	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -245,18 +245,10 @@ func (e *Expression) String() (string, error) {
 	var values []string
 
 	for _, val := range e.Values {
-		var str string
-		switch v := val.(type) {
-		case string:
-			str = v
-		case bool:
-			str = strconv.FormatBool(v)
-		case int:
-			str = strconv.FormatInt(int64(v), 10)
-		case float32, float64:
-			str = fmt.Sprintf("%f", v)
-		default:
-			return "", fmt.Errorf("parsing expression invalid value: %v, type: %T", val, v)
+		str, ok := val.(string)
+		// This should never happen as each expression value type is checked when loading the config.
+		if !ok {
+			return "", fmt.Errorf("parsing expression invalid value: %v, type: %T", val, val)
 		}
 
 		values = append(values, str)
@@ -315,36 +307,40 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 		return nil, err
 	}
 
-	if cfg.NamespaceSelector != nil && cfg.NamespaceSelector.MatchLabels != nil {
-		matchLabels := make(map[string]interface{})
-		for k, v := range cfg.NamespaceSelector.MatchLabels {
-			str, err := ParseValueToString(v)
-			if err != nil {
-				return &cfg, err
-			}
-			matchLabels[k] = str
-		}
-
-		cfg.NamespaceSelector.MatchLabels = matchLabels
+	if err := checkNamespaceSelectorConfig(cfg); err != nil {
+		return &cfg, err
 	}
 
 	return &cfg, nil
 }
 
-func ParseValueToString(val interface{}) (string, error) {
-	var str string
-	switch v := val.(type) {
-	case string:
-		str = v
-	case bool:
-		str = strconv.FormatBool(v)
-	case int:
-		str = strconv.FormatInt(int64(v), 10)
-	case float32, float64:
-		str = fmt.Sprintf("%f", v)
-	default:
-		return "", fmt.Errorf("parsing matchLabels, invalid value type %T for val: %v", v, val)
+var (
+	ErrInvalidMatchExpressionsValue = errors.New("invalid matchExpressions value")
+	ErrInvalidMatchLabelsValue      = errors.New("invalid matchLabels value")
+)
+
+func checkNamespaceSelectorConfig(c Config) error {
+	if c.NamespaceSelector == nil {
+		return nil
 	}
 
-	return str, nil
+	if c.NamespaceSelector.MatchLabels != nil {
+		for _, v := range c.NamespaceSelector.MatchLabels {
+			if _, ok := v.(string); !ok {
+				return fmt.Errorf("%w: %v, type %T", ErrInvalidMatchLabelsValue, v, v)
+			}
+		}
+	}
+
+	if c.NamespaceSelector.MatchExpressions != nil {
+		for _, expression := range c.NamespaceSelector.MatchExpressions {
+			for _, v := range expression.Values {
+				if _, ok := v.(string); !ok {
+					return fmt.Errorf("%w: %v, type %T", ErrInvalidMatchExpressionsValue, v, v)
+				}
+			}
+		}
+	}
+
+	return nil
 }

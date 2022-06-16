@@ -5,4 +5,5 @@ verbose: true
 namespaceSelector:
   matchLabels:
     newrelic.com/scrape: "true"
-    another_label: true
+  matchExpressions:
+    - { key: newrelic.com/scrape, operator: NotIn, values: ["false"]}
