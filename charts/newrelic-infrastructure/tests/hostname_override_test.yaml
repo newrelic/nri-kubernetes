@@ -1,0 +1,33 @@
+suite: Test override of hostname
+templates:
+  - templates/kubelet/daemonset.yaml
+  - templates/kubelet/scraper-configmap.yaml
+  - templates/kubelet/agent-configmap.yaml
+  - templates/kubelet/integrations-configmap.yaml
+  - templates/agent-configmap.yaml
+  - templates/secret.yaml
+tests:
+  - it: NRIA_OVERRIDE_HOSTNAME_SHORT and NRIA_OVERRIDE_HOSTNAME are set for the kubelet daemonset
+    set:
+      licenseKey: test
+      cluster: test
+      privileged: false
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: "NRIA_OVERRIDE_HOSTNAME_SHORT"
+            valueFrom:
+              fieldRef:
+                apiVersion: "v1"
+                fieldPath: "spec.nodeName"
+        template: templates/kubelet/daemonset.yaml
+      - contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: "NRIA_OVERRIDE_HOSTNAME"
+            valueFrom:
+              fieldRef:
+                apiVersion: "v1"
+                fieldPath: "spec.nodeName"
+        template: templates/kubelet/daemonset.yaml
