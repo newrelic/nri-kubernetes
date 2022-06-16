@@ -206,9 +206,8 @@ var ControllerManagerSpecs = definition.SpecGroups{
 				ValueFunc: prometheus.FromValueWithOverriddenName(
 					"node_collector_evictions_total",
 					"nodeCollectorEvictionsDelta",
-					prometheus.IgnoreLabelsFilter("zone"),
 				),
-				Type: sdkMetric.DELTA,
+				Type: sdkMetric.PDELTA,
 			},
 		},
 	},
@@ -972,7 +971,7 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "containerCpuCfsThrottledPeriodsTotal", ValueFunc: definition.FromRaw("container_cpu_cfs_throttled_periods_total"), Type: sdkMetric.GAUGE, Optional: true},
 			{Name: "containerCpuCfsThrottledSecondsTotal", ValueFunc: definition.FromRaw("container_cpu_cfs_throttled_seconds_total"), Type: sdkMetric.GAUGE, Optional: true},
 			{Name: "containerMemoryMappedFileBytes", ValueFunc: definition.FromRaw("container_memory_mapped_file"), Type: sdkMetric.GAUGE, Optional: true},
-			{Name: "containerOOMEventsDelta", ValueFunc: definition.FromRaw("container_oom_events_total"), Type: sdkMetric.DELTA, Optional: true},
+			{Name: "containerOOMEventsDelta", ValueFunc: definition.FromRaw("container_oom_events_total"), Type: sdkMetric.PDELTA, Optional: true},
 
 			// /pods endpoint
 			{Name: "containerName", ValueFunc: definition.FromRaw("containerName"), Type: sdkMetric.ATTRIBUTE},
