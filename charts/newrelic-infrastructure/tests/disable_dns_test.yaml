@@ -1,0 +1,29 @@
+suite: Test dns resolution is disabled for ksm and controlplane
+templates:
+  - templates/ksm/deployment.yaml
+  - templates/ksm/scraper-configmap.yaml
+  - templates/ksm/agent-configmap.yaml
+  - templates/controlplane/daemonset.yaml
+  - templates/controlplane/scraper-configmap.yaml
+  - templates/controlplane/agent-configmap.yaml
+  - templates/agent-configmap.yaml
+  - templates/secret.yaml
+tests:
+  - it: NRIA_DNS_HOSTNAME_RESOLUTION is set for the ksm and controlplane workloads
+    set:
+      licenseKey: test
+      cluster: test
+      privileged: false
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: "NRIA_DNS_HOSTNAME_RESOLUTION"
+            value: "false"
+        template: templates/controlplane/daemonset.yaml
+      - contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: "NRIA_DNS_HOSTNAME_RESOLUTION"
+            value: "false"
+        template: templates/ksm/deployment.yaml
