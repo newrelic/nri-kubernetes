@@ -126,6 +126,6 @@ func TestScraper_FilterNamespace(t *testing.T) {
 		err = scraper.Run(i)
 		require.NoError(t, err)
 
-		assert.Equal(t, 17, len(i.Entities))
+		assert.Equal(t, 19, len(i.Entities))
 	})
 }

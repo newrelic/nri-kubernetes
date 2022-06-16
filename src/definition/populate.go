@@ -9,6 +9,8 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
 )
 
+const NamespaceGroup = "namespace"
+
 // GuessFunc guesses from data.
 type GuessFunc func(clusterName, groupLabel, entityID string, groups RawGroups) (string, error)
 
@@ -55,7 +57,7 @@ func IntegrationPopulator(config *IntegrationPopulateConfig) (bool, []error) {
 	var msEntityType string
 	for groupLabel, entities := range config.Groups {
 		for entityID, metrics := range entities {
-
+			var extraAttributes []attribute.Attribute
 			// Only populate specified groups.
 			if _, ok := config.Specs[groupLabel]; !ok {
 				continue
@@ -65,7 +67,10 @@ func IntegrationPopulator(config *IntegrationPopulateConfig) (bool, []error) {
 				if nsGetter := config.Specs[groupLabel].NamespaceGetter; nsGetter != nil {
 					ns := nsGetter(metrics)
 					if !config.Filterer.IsAllowed(ns) {
-						continue
+						if groupLabel != NamespaceGroup {
+							continue
+						}
+						extraAttributes = []attribute.Attribute{attribute.Attr("filtered", "true")}
 					}
 				}
 			}
@@ -95,11 +100,16 @@ func IntegrationPopulator(config *IntegrationPopulateConfig) (bool, []error) {
 				continue
 			}
 
+			extraAttributes = append(
+				extraAttributes,
+				attribute.Attr("clusterName", config.ClusterName),
+				attribute.Attr("displayName", e.Metadata.Name),
+			)
+
 			// Add entity attributes, which will propagate to all metric.Sets.
 			// This was previously (on sdk v2) done by msManipulators.
 			e.AddAttributes(
-				attribute.Attr("clusterName", config.ClusterName),
-				attribute.Attr("displayName", e.Metadata.Name),
+				extraAttributes...,
 			)
 
 			msType, err := config.MsTypeGuesser(config.ClusterName, groupLabel, entityID, config.Groups)

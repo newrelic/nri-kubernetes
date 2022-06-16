@@ -571,7 +571,8 @@ var KSMSpecs = definition.SpecGroups{
 		},
 	},
 	"namespace": {
-		TypeGenerator: prometheus.FromLabelValueEntityTypeGenerator("kube_namespace_created"),
+		TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_namespace_created"),
+		NamespaceGetter: prometheus.FromLabelGetNamespace,
 		Specs: []definition.Spec{
 			{Name: "createdAt", ValueFunc: prometheus.FromValue("kube_namespace_created"), Type: sdkMetric.GAUGE},
 			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_namespace_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
