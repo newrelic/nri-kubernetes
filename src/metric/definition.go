@@ -727,8 +727,9 @@ var KSMSpecs = definition.SpecGroups{
 		},
 	},
 	"hpa": {
-		IDGenerator:   prometheus.FromLabelValueEntityIDGenerator("kube_hpa_labels", "hpa"),
-		TypeGenerator: prometheus.FromLabelValueEntityTypeGenerator("kube_hpa_labels"),
+		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_hpa_labels", "hpa"),
+		TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_hpa_labels"),
+		NamespaceGetter: prometheus.FromLabelGetNamespace,
 		Specs: []definition.Spec{
 			// Kubernetes labels converted to Prometheus labels. not sure if interesting to get
 			{Name: "labels", ValueFunc: prometheus.FromValue("kube_hpa_labels"), Type: sdkMetric.GAUGE},
