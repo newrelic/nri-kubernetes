@@ -101,15 +101,15 @@ func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 				t.Fatalf("running scraper: %v", err)
 			}
 
-			// Include specific specific exclusions that depend on version.
+			// Include specific exclusions that depend on version.
 			versionAsserter := asserter
+			if testutil.IsBelow(version, testutil.Testdata124) {
+				versionAsserter = versionAsserter.Excluding(exclude.Metrics("nodeCollectorEvictionsDelta"))
+			}
+
 			// apiserverStorageObjects replaces etcObjectCounts in k8s versions above 1.23
 			if testutil.IsBelow(version, testutil.Testdata123) {
-				versionAsserter = versionAsserter.Excluding(
-					exclude.Metrics("apiserverStorageObjects", "nodeCollectorEvictionsDelta"))
-			} else if testutil.IsBelow(version, testutil.Testdata124) {
-				versionAsserter = versionAsserter.Excluding(
-					exclude.Metrics("nodeCollectorEvictionsDelta", "etcdObjectCounts"))
+				versionAsserter = versionAsserter.Excluding(exclude.Metrics("apiserverStorageObjects"))
 			} else {
 				versionAsserter = versionAsserter.Excluding(exclude.Metrics("etcdObjectCounts"))
 			}
