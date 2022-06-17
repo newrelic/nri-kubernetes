@@ -124,7 +124,7 @@ var rawGroupsKSMSample = definition.RawGroups{
 		},
 	},
 	definition.NamespaceGroup: {
-		"entity_id_1": definition.RawMetrics{
+		"entity_id_filtered": definition.RawMetrics{
 			"raw_metric_name_1": prometheus.Metric{
 				Value: prometheus.CounterValue(1),
 				Labels: map[string]string{
@@ -135,6 +135,20 @@ var rawGroupsKSMSample = definition.RawGroups{
 				Value: prometheus.CounterValue(1),
 				Labels: map[string]string{
 					"namespace": "nsA",
+				},
+			},
+		},
+		"entity_id_not_filtered": definition.RawMetrics{
+			"raw_metric_name_1": prometheus.Metric{
+				Value: prometheus.CounterValue(1),
+				Labels: map[string]string{
+					"namespace": "nsB",
+				},
+			},
+			"raw_metric_name_2": prometheus.Metric{
+				Value: prometheus.CounterValue(1),
+				Labels: map[string]string{
+					"namespace": "nsB",
 				},
 			},
 		},
@@ -699,15 +713,19 @@ func TestIntegrationPopulator_PrometheusFormatFilterNamespace(t *testing.T) {
 	populated, errs := definition.IntegrationPopulator(testConfigPrometheusFormatWithFilterer(intgr))
 
 	assert.True(t, populated)
-	// Only cluster entity, nsB test entities and namespace group entity
-	assert.Equal(t, 4, len(intgr.Entities))
+	// Only cluster entity, nsB test entities and namespace group entities
+	assert.Equal(t, 5, len(intgr.Entities))
 	assert.Empty(t, errs)
 
 	// Check for extraAttributes
 	for _, entity := range intgr.Entities {
 		// Namespace Entity should include filtered label
 		if entity.Metrics[0].Metrics["event_type"] == "NamespaceSample" {
-			assert.Equal(t, "true", entity.Metrics[0].Metrics["filtered"])
+			if entity.Metrics[0].Metrics["displayName"] == "entity_id_filtered" {
+				assert.Equal(t, "true", entity.Metrics[0].Metrics[definition.NamespaceFilteredLabel])
+			} else {
+				assert.Equal(t, "false", entity.Metrics[0].Metrics[definition.NamespaceFilteredLabel])
+			}
 		}
 		if entity.Metrics[0].Metrics["event_type"] != "K8sClusterSample" {
 			assert.NotEmpty(t, entity.Metrics[0].Metrics["displayName"])

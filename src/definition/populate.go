@@ -2,6 +2,7 @@ package definition
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/newrelic/infra-integrations-sdk/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
@@ -10,6 +11,7 @@ import (
 )
 
 const NamespaceGroup = "namespace"
+const NamespaceFilteredLabel = "nrFiltered"
 
 // GuessFunc guesses from data.
 type GuessFunc func(clusterName, groupLabel, entityID string, groups RawGroups) (string, error)
@@ -66,11 +68,13 @@ func IntegrationPopulator(config *IntegrationPopulateConfig) (bool, []error) {
 			if config.Filterer != nil {
 				if nsGetter := config.Specs[groupLabel].NamespaceGetter; nsGetter != nil {
 					ns := nsGetter(metrics)
-					if !config.Filterer.IsAllowed(ns) {
-						if groupLabel != NamespaceGroup {
+					if groupLabel != NamespaceGroup {
+						if !config.Filterer.IsAllowed(ns) {
 							continue
 						}
-						extraAttributes = []attribute.Attribute{attribute.Attr("filtered", "true")}
+					} else {
+						isFiltered := strconv.FormatBool(!config.Filterer.IsAllowed(ns))
+						extraAttributes = []attribute.Attribute{attribute.Attr(NamespaceFilteredLabel, isFiltered)}
 					}
 				}
 			}
