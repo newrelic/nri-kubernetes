@@ -44,7 +44,7 @@ func TestNamespaceFilterer_IsAllowed(t *testing.T) {
 				"newrelic.com/scrape": "true",
 			},
 			namespaceSelector: config.NamespaceSelector{
-				MatchLabels: map[string]string{
+				MatchLabels: map[string]interface{}{
 					"newrelic.com/scrape": "true",
 				},
 			},
@@ -53,7 +53,7 @@ func TestNamespaceFilterer_IsAllowed(t *testing.T) {
 		"match_labels_excluded_namespaces_not_allowed": {
 			namespaceLabels: labels.Set{"newrelic.com/scrape": "false"},
 			namespaceSelector: config.NamespaceSelector{
-				MatchLabels: map[string]string{
+				MatchLabels: map[string]interface{}{
 					"newrelic.com/scrape": "true",
 				},
 			},
@@ -66,7 +66,7 @@ func TestNamespaceFilterer_IsAllowed(t *testing.T) {
 					{
 						Key:      "newrelic.com/scrape",
 						Operator: "NotIn",
-						Values:   []interface{}{false},
+						Values:   []interface{}{"false"},
 					},
 				},
 			},
@@ -79,7 +79,7 @@ func TestNamespaceFilterer_IsAllowed(t *testing.T) {
 					{
 						Key:      "newrelic.com/scrape",
 						Operator: "NotIn",
-						Values:   []interface{}{true},
+						Values:   []interface{}{"true"},
 					},
 				},
 			},
@@ -92,7 +92,7 @@ func TestNamespaceFilterer_IsAllowed(t *testing.T) {
 					{
 						Key:      "newrelic.com/scrape",
 						Operator: "In",
-						Values:   []interface{}{true},
+						Values:   []interface{}{"true"},
 					},
 				},
 			},
@@ -147,7 +147,7 @@ func TestNamespaceFilterer_IsAllowed(t *testing.T) {
 			ns := discovery.NewNamespaceFilter(
 				&testData.namespaceSelector,
 				client,
-				nil,
+				logrus.New(),
 			)
 
 			t.Cleanup(func() {
@@ -259,12 +259,12 @@ func TestNamespaceFilter_InformerCacheSync(t *testing.T) {
 	// Create the namespace filter.
 	ns := discovery.NewNamespaceFilter(
 		&config.NamespaceSelector{
-			MatchLabels: map[string]string{
+			MatchLabels: map[string]interface{}{
 				"test_label": "123",
 			},
 		},
 		client,
-		nil,
+		logrus.New(),
 	)
 	// Check that recently created namespace is not allowed.
 	require.Equal(t, false, ns.IsAllowed(namespaceName))

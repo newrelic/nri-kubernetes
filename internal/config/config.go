@@ -1,8 +1,8 @@
 package config
 
 import (
+	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -226,7 +226,7 @@ type MTLS struct {
 // NamespaceSelector contains config options for filtering namespaces.
 type NamespaceSelector struct {
 	// MatchLabels is a list of labels to filter namespaces with.
-	MatchLabels map[string]string `mapstructure:"matchLabels"`
+	MatchLabels map[string]interface{} `mapstructure:"matchLabels"`
 	// MatchExpressions is a list of namespaces selector requirements.
 	MatchExpressions []Expression `mapstructure:"matchExpressions"`
 }
@@ -245,18 +245,10 @@ func (e *Expression) String() (string, error) {
 	var values []string
 
 	for _, val := range e.Values {
-		var str string
-		switch v := val.(type) {
-		case string:
-			str = v
-		case bool:
-			str = strconv.FormatBool(v)
-		case int:
-			str = strconv.FormatInt(int64(v), 10)
-		case float32, float64:
-			str = fmt.Sprintf("%f", v)
-		default:
-			return "", fmt.Errorf("parsing expression invalid value: %v, type: %T", val, v)
+		str, ok := val.(string)
+		// This should never happen as each expression value type is checked when loading the config.
+		if !ok {
+			return "", fmt.Errorf("parsing expression invalid value: %v, type: %T", val, val)
 		}
 
 		values = append(values, str)
@@ -315,5 +307,40 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 		return nil, err
 	}
 
+	if err := checkNamespaceSelectorConfig(cfg); err != nil {
+		return &cfg, err
+	}
+
 	return &cfg, nil
+}
+
+var (
+	ErrInvalidMatchExpressionsValue = errors.New("invalid matchExpressions value")
+	ErrInvalidMatchLabelsValue      = errors.New("invalid matchLabels value")
+)
+
+func checkNamespaceSelectorConfig(c Config) error {
+	if c.NamespaceSelector == nil {
+		return nil
+	}
+
+	if c.NamespaceSelector.MatchLabels != nil {
+		for _, v := range c.NamespaceSelector.MatchLabels {
+			if _, ok := v.(string); !ok {
+				return fmt.Errorf("%w: %v, type %T", ErrInvalidMatchLabelsValue, v, v)
+			}
+		}
+	}
+
+	if c.NamespaceSelector.MatchExpressions != nil {
+		for _, expression := range c.NamespaceSelector.MatchExpressions {
+			for _, v := range expression.Values {
+				if _, ok := v.(string); !ok {
+					return fmt.Errorf("%w: %v, type %T", ErrInvalidMatchExpressionsValue, v, v)
+				}
+			}
+		}
+	}
+
+	return nil
 }

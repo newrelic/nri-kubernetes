@@ -72,7 +72,7 @@ func (nf *NamespaceFilter) IsAllowed(namespace string) bool {
 
 // matchNamespaceByLabels filters a namespace using the selector from the MatchLabels config.
 func (nf *NamespaceFilter) matchNamespaceByLabels(namespace string) bool {
-	namespaceList, err := nf.lister.List(labels.SelectorFromSet(nf.c.MatchLabels))
+	namespaceList, err := nf.lister.List(labels.SelectorFromSet(nf.parseToStringMap(nf.c.MatchLabels)))
 	if err != nil {
 		nf.logger.Errorf("listing namespaces with MatchLabels: %v", err)
 		return true
@@ -108,6 +108,21 @@ func (nf *NamespaceFilter) matchNamespaceByExpressions(namespace string) bool {
 	}
 
 	return true
+}
+
+func (nf *NamespaceFilter) parseToStringMap(matchLabels map[string]interface{}) map[string]string {
+	strMap := make(map[string]string)
+
+	for k, v := range matchLabels {
+		val, ok := v.(string)
+		if !ok {
+			nf.logger.Errorf("parseToStringMap value into string: %v, type: %t", v, v)
+			continue
+		}
+		strMap[k] = val
+	}
+
+	return strMap
 }
 
 // Close closes the stop channel and implements the Closer interface.

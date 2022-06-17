@@ -11,6 +11,11 @@ import (
 
 const fakeDataDir = "testdata"
 const workingData = "config"
+
+// Added namespaceSelector config in a separate yaml, this way we can be sure there is no error in its absence.
+const workingDataWithNamespaceFilters = "config_with_namespace_filter"
+const wrongDataWithNamespaceFilterMatchLabels = "config_with_namespace_filter_wrong_match_labels"
+const wrongDataWithNamespaceFiltersMatchExpressions = "config_with_namespace_filter_wrong_match_expressions"
 const unexpectedFields = "config_with_unexpected_fields"
 
 func TestLoadConfig(t *testing.T) {
@@ -37,9 +42,22 @@ func TestLoadConfig(t *testing.T) {
 	t.Run("succeeds_when_dot_character_in_key", func(t *testing.T) {
 		t.Parallel()
 
-		c, err := config.LoadConfig(fakeDataDir, workingData)
+		c, err := config.LoadConfig(fakeDataDir, workingDataWithNamespaceFilters)
 		require.NoError(t, err)
-		require.Equal(t, "1", c.NamespaceSelector.MatchLabels["newrelic.com/scrape"])
+		require.Contains(t, c.NamespaceSelector.MatchLabels, "newrelic.com/scrape")
+		require.Equal(t, "newrelic.com/scrape", c.NamespaceSelector.MatchExpressions[0].Key)
+	})
+	t.Run("fail_when_bad_namespace_filter_match_labels_values", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := config.LoadConfig(fakeDataDir, wrongDataWithNamespaceFilterMatchLabels)
+		require.ErrorIs(t, err, config.ErrInvalidMatchLabelsValue)
+	})
+	t.Run("fail_when_bad_namespace_filter_match_expressions_values", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := config.LoadConfig(fakeDataDir, wrongDataWithNamespaceFiltersMatchExpressions)
+		require.ErrorIs(t, err, config.ErrInvalidMatchExpressionsValue)
 	})
 	t.Run("fail_due_to_unexpected_data", func(t *testing.T) {
 		t.Parallel()
