@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.3.1
+
+### Added
+* Add nrFiltered attribute to K8sNamespaceSamples when using namespace filtering https://github.com/newrelic/nri-kubernetes/pull/496
+
+**Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.3.0...v3.3.1
 
 ## 3.3.0
 
