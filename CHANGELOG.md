@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.3.1
+
+### Added
+* Add nrFiltered attribute to K8sNamespaceSamples when using namespace filtering https://github.com/newrelic/nri-kubernetes/pull/496
+
+**Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.3.0...v3.3.1
+
+## 3.3.0
+
+### Added
+* Allow filter to only scrape selected namespaces in ksm and kubelet by @alvarocabanas and @marcsanmi in  https://github.com/newrelic/nri-kubernetes/pull/457, https://github.com/newrelic/nri-kubernetes/pull/476 and https://github.com/newrelic/nri-kubernetes/pull/487
+
+### Changed
+* Use Go version 1.18 in the pipelines @roobre https://github.com/newrelic/nri-kubernetes/pull/472
+
+**Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.2.1...v3.3.0
+
+## 3.2.1
+
+### Changed
+
+* fix: round up CPU allocatable and capacity metrics by @gsanchezgavier in https://github.com/newrelic/nri-kubernetes/pull/412
+* Dockerfile: use COPY instead of ADD by @roobre in https://github.com/newrelic/nri-kubernetes/pull/433
+* chore(deps): bump alpine from 3.15.4 to 3.16.0 by @dependabot in https://github.com/newrelic/nri-kubernetes/pull/458
+
+**Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.2.0...v3.2.1
+
 ## 3.2.0
 
 ### Added

@@ -9,24 +9,42 @@ import (
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/version"
 
+	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v3/src/data"
 	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 )
 
+// JobOpt are options that can be used to configure the ScrapeJob
+type JobOpt func(s *Job)
+
 // NewScrapeJob creates a new Scrape Job with the given attributes
-func NewScrapeJob(name string, grouper data.Grouper, specs definition.SpecGroups) *Job {
-	return &Job{
+func NewScrapeJob(name string, grouper data.Grouper, specs definition.SpecGroups, options ...JobOpt) *Job {
+	job := &Job{
 		Name:    name,
 		Grouper: grouper,
 		Specs:   specs,
 	}
+
+	for _, opt := range options {
+		opt(job)
+	}
+
+	return job
 }
 
 // Job hold all information specific to a certain Scrape Job, e.g.: where do I get the data from, and what data
 type Job struct {
-	Name    string
-	Grouper data.Grouper
-	Specs   definition.SpecGroups
+	Name     string
+	Grouper  data.Grouper
+	Specs    definition.SpecGroups
+	Filterer discovery.NamespaceFilterer
+}
+
+// JobWithFilterer returns an OptionFunc to add a Filterer.
+func JobWithFilterer(filterer discovery.NamespaceFilterer) JobOpt {
+	return func(j *Job) {
+		j.Filterer = filterer
+	}
 }
 
 // Populate will get the data using the given Group, transform it, and push it to the given Integration
@@ -54,6 +72,7 @@ func (s *Job) Populate(
 		Specs:         s.Specs,
 		MsTypeGuesser: k8sMetricSetTypeGuesser,
 		Groups:        groups,
+		Filterer:      s.Filterer,
 	}
 	ok, populateErrs := definition.IntegrationPopulator(config)
 

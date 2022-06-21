@@ -2,7 +2,6 @@ package discovery_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
 	"github.com/sirupsen/logrus"
@@ -20,7 +19,7 @@ func Test_NamespaceCache(t *testing.T) {
 
 	t.Run("is_set", func(t *testing.T) {
 		t.Parallel()
-		cache := discovery.NewNamespaceInMemoryStore(time.Second, logrus.New())
+		cache := discovery.NewNamespaceInMemoryStore(logrus.New())
 
 		cache.Put(testKey, testValue)
 		match, found := cache.Match(testKey)
@@ -36,9 +35,9 @@ func Test_NamespaceCache(t *testing.T) {
 			require.Equal(t, true, found)
 		})
 
-		t.Run("and_after_interval_is_garbage_collected", func(t *testing.T) {
+		t.Run("and_after_vacuum_is_garbage_collected", func(t *testing.T) {
 			cache.Put(testKey, testValue)
-			time.Sleep(time.Second * 3)
+			cache.Vacuum()
 			_, found = cache.Match(testKey)
 
 			require.Equal(t, false, found)
@@ -48,23 +47,9 @@ func Test_NamespaceCache(t *testing.T) {
 	t.Run("miss_returns_namespace_not_found", func(t *testing.T) {
 		t.Parallel()
 
-		cache := discovery.NewNamespaceInMemoryStore(time.Second, logrus.New())
+		cache := discovery.NewNamespaceInMemoryStore(logrus.New())
 		match, found := cache.Match(testKey)
 		require.Equal(t, false, match)
 		require.Equal(t, false, found)
-	})
-
-	t.Run("does_not_delete_old_entries_if_stopped", func(t *testing.T) {
-		t.Parallel()
-		cache := discovery.NewNamespaceInMemoryStore(time.Second, logrus.New())
-		cache.StopVacuum()
-
-		for i := 0; i < 2; i++ {
-			cache.Put(testKey, testValue)
-			time.Sleep(time.Millisecond * 200)
-			match, _ := cache.Match(testKey)
-
-			require.Equal(t, match, testValue)
-		}
 	})
 }

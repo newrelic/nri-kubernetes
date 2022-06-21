@@ -2,11 +2,16 @@ package definition
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/newrelic/infra-integrations-sdk/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
 )
+
+const NamespaceGroup = "namespace"
+const NamespaceFilteredLabel = "nrFiltered"
 
 // GuessFunc guesses from data.
 type GuessFunc func(clusterName, groupLabel, entityID string, groups RawGroups) (string, error)
@@ -44,6 +49,7 @@ type IntegrationPopulateConfig struct {
 	MsTypeGuesser GuessFunc
 	Groups        RawGroups
 	Specs         SpecGroups
+	Filterer      discovery.NamespaceFilterer
 }
 
 // IntegrationPopulator populates an integration with the given metrics and definition.
@@ -52,11 +58,25 @@ func IntegrationPopulator(config *IntegrationPopulateConfig) (bool, []error) {
 	var errs []error
 	var msEntityType string
 	for groupLabel, entities := range config.Groups {
-		for entityID := range entities {
-
+		for entityID, metrics := range entities {
+			var extraAttributes []attribute.Attribute
 			// Only populate specified groups.
 			if _, ok := config.Specs[groupLabel]; !ok {
 				continue
+			}
+
+			if config.Filterer != nil {
+				if nsGetter := config.Specs[groupLabel].NamespaceGetter; nsGetter != nil {
+					ns := nsGetter(metrics)
+					if groupLabel != NamespaceGroup {
+						if !config.Filterer.IsAllowed(ns) {
+							continue
+						}
+					} else {
+						isFiltered := strconv.FormatBool(!config.Filterer.IsAllowed(ns))
+						extraAttributes = []attribute.Attribute{attribute.Attr(NamespaceFilteredLabel, isFiltered)}
+					}
+				}
 			}
 
 			msEntityID := entityID
@@ -84,11 +104,16 @@ func IntegrationPopulator(config *IntegrationPopulateConfig) (bool, []error) {
 				continue
 			}
 
+			extraAttributes = append(
+				extraAttributes,
+				attribute.Attr("clusterName", config.ClusterName),
+				attribute.Attr("displayName", e.Metadata.Name),
+			)
+
 			// Add entity attributes, which will propagate to all metric.Sets.
 			// This was previously (on sdk v2) done by msManipulators.
 			e.AddAttributes(
-				attribute.Attr("clusterName", config.ClusterName),
-				attribute.Attr("displayName", e.Metadata.Name),
+				extraAttributes...,
 			)
 
 			msType, err := config.MsTypeGuesser(config.ClusterName, groupLabel, entityID, config.Groups)

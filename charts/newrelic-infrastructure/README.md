@@ -1,6 +1,6 @@
 # newrelic-infrastructure
 
-![Version: 3.5.1](https://img.shields.io/badge/Version-3.5.1-informational?style=flat-square) ![AppVersion: 3.2.0](https://img.shields.io/badge/AppVersion-3.2.0-informational?style=flat-square)
+![Version: 3.6.2](https://img.shields.io/badge/Version-3.6.2-informational?style=flat-square) ![AppVersion: 3.3.1](https://img.shields.io/badge/AppVersion-3.3.1-informational?style=flat-square)
 
 A Helm chart to deploy the New Relic Kubernetes monitoring solution
 
@@ -114,6 +114,7 @@ integrations that you have configured.
 | common | object | See `values.yaml` | Config that applies to all instances of the solution: kubelet, ksm, control plane and sidecars. |
 | common.agentConfig | object | `{}` | Config for the Infrastructure agent. Will be used by the forwarder sidecars and the agent running integrations. See: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/ |
 | common.config.interval | duration | `15s` (See [Low data mode](README.md#low-data-mode)) | Intervals larger than 40s are not supported and will cause the NR UI to not behave properly. Any non-nil value will override the `lowDataMode` default. |
+| common.config.namespaceSelector | object | `{}` | Config for filtering ksm and kubelet metrics by namespace. |
 | containerSecurityContext | object | `{}` | Sets security context (at container level). Can be configured also with `global.containerSecurityContext` |
 | controlPlane | object | See `values.yaml` | Configuration for the control plane scraper. |
 | controlPlane.affinity | object | Deployed only in master nodes. | Affinity for the control plane DaemonSet. |
