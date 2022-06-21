@@ -49,6 +49,15 @@ var APIServerSpecs = definition.SpecGroups{
 				Type: sdkMetric.RATE,
 			},
 			{
+				Name: "apiserverCurrentInflightRequests",
+				ValueFunc: prometheus.FromValueWithOverriddenName(
+					"apiserver_current_inflight_requests",
+					"apiserverCurrentInflightRequests",
+					prometheus.IncludeOnlyLabelsFilter("request_kind"),
+				),
+				Type: sdkMetric.GAUGE,
+			},
+			{
 				Name: "restClientRequestsDelta",
 				ValueFunc: prometheus.FromValueWithOverriddenName(
 					"rest_client_requests_total",
@@ -122,6 +131,9 @@ var APIServerQueries = []prometheus.Query{
 		MetricName: "apiserver_storage_objects",
 	},
 	{
+		MetricName: "apiserver_current_inflight_requests",
+	},
+	{
 		MetricName: "process_resident_memory_bytes",
 	},
 	{
@@ -189,6 +201,14 @@ var ControllerManagerSpecs = definition.SpecGroups{
 				ValueFunc: prometheus.FromValueWithOverriddenName("go_goroutines", "goGoroutines"),
 				Type:      sdkMetric.GAUGE,
 			},
+			{
+				Name: "nodeCollectorEvictionsDelta",
+				ValueFunc: prometheus.FromValueWithOverriddenName(
+					"node_collector_evictions_total",
+					"nodeCollectorEvictionsDelta",
+				),
+				Type: sdkMetric.PDELTA,
+			},
 		},
 	},
 }
@@ -219,6 +239,9 @@ var ControllerManagerQueries = []prometheus.Query{
 	},
 	{
 		MetricName: "go_goroutines",
+	},
+	{
+		MetricName: "node_collector_evictions_total",
 	},
 }
 
@@ -270,6 +293,11 @@ var SchedulerSpecs = definition.SpecGroups{
 				Type:      sdkMetric.DELTA,
 			},
 			{
+				Name:      "schedulerPendingPods",
+				ValueFunc: prometheus.FromValueWithOverriddenName("scheduler_pending_pods", "schedulerPendingPods"),
+				Type:      sdkMetric.GAUGE,
+			},
+			{
 				Name:      "schedulerPodPreemptionVictims",
 				ValueFunc: prometheus.FromValueWithOverriddenName("scheduler_pod_preemption_victims", "schedulerPodPreemptionVictims"),
 				Type:      sdkMetric.GAUGE,
@@ -315,6 +343,9 @@ var SchedulerQueries = []prometheus.Query{
 	},
 	{
 		MetricName: "scheduler_total_preemption_attempts",
+	},
+	{
+		MetricName: "scheduler_pending_pods",
 	},
 	{
 		MetricName: "scheduler_pod_preemption_victims",
@@ -889,6 +920,7 @@ var CadvisorQueries = []prometheus.Query{
 	{MetricName: "container_cpu_cfs_throttled_periods_total"},
 	{MetricName: "container_cpu_cfs_throttled_seconds_total"},
 	{MetricName: "container_memory_mapped_file"},
+	{MetricName: "container_oom_events_total"},
 }
 
 // KubeletSpecs are the metric specifications we want to collect from Kubelet.
@@ -950,6 +982,7 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "containerCpuCfsThrottledPeriodsTotal", ValueFunc: definition.FromRaw("container_cpu_cfs_throttled_periods_total"), Type: sdkMetric.GAUGE, Optional: true},
 			{Name: "containerCpuCfsThrottledSecondsTotal", ValueFunc: definition.FromRaw("container_cpu_cfs_throttled_seconds_total"), Type: sdkMetric.GAUGE, Optional: true},
 			{Name: "containerMemoryMappedFileBytes", ValueFunc: definition.FromRaw("container_memory_mapped_file"), Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "containerOOMEventsDelta", ValueFunc: definition.FromRaw("container_oom_events_total"), Type: sdkMetric.PDELTA, Optional: true},
 
 			// /pods endpoint
 			{Name: "containerName", ValueFunc: definition.FromRaw("containerName"), Type: sdkMetric.ATTRIBUTE},

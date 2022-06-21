@@ -85,8 +85,15 @@ func TestScraper(t *testing.T) {
 				t.Fatalf("running scraper: %v", err)
 			}
 
+			// Include specific specific exclusions that depend on version.
+			versionAsserter := asserter
+			if testutil.IsBelow(version, testutil.Testdata124) {
+				versionAsserter = versionAsserter.Excluding(
+					exclude.Metrics("nodeCollectorEvictionsDelta", "containerOOMEventsDelta"))
+			}
+
 			// Call the asserter for the entities of this particular sub-test.
-			asserter.On(i.Entities).Assert(t)
+			versionAsserter.On(i.Entities).Assert(t)
 		})
 	}
 }
@@ -143,7 +150,7 @@ func kubeletExclusions() []exclude.Func {
 	notRunningMetrics := []string{"memoryUsedBytes", "memoryWorkingSetBytes", "cpuUsedCores", "requestedMemoryUtilization",
 		"fsAvailableBytes", "fsCapacityBytes", "fsUsedBytes", "fsUsedPercent", "fsInodesFree", "fsInodes", "memoryUtilization",
 		"fsInodesUsed", "containerMemoryMappedFileBytes", "containerID", "containerImageID", "isReady", "podIP",
-		"cpuCoresUtilization", "requestedCpuCoresUtilization"}
+		"cpuCoresUtilization", "requestedCpuCoresUtilization", "containerOOMEventsDelta"}
 
 	// Utilization metrics will not be present if the corresponding limit/request is not present.
 	utilizationDependencies := map[string][]string{
