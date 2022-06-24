@@ -31,7 +31,7 @@ data:
   {{- if .Values.integrations -}}
   {{- range $k, $v := .Values.integrations -}}
   {{- $k | trimSuffix ".yaml" | trimSuffix ".yml" | nindent 2 -}}.yaml: |-
-  {{- tpl ($v | toYaml) $ | nindent 4 -}}
+  {{- $v | toYaml | nindent 4 -}}
   {{- end }}
   {{- end }}
 
