@@ -1,0 +1,12 @@
+# This metrics are not present on 1.23
+except_metrics:
+# removed from 1.23
+- k8s.apiserver.etcd.objectCount_*
+# Added from 1.24
+- k8s.controllermanager.nodeCollectorEvictionsDelta
+- k8s.container.oomEventsDelta
+
+# This metrics are pending to be transformed as DM, once they are we can remove this exceptions
+- k8s.apiserver.currentInflightRequests
+- k8s.scheduler.schedulerPendingPods
+- k8s.apiserver.storageObjects_*

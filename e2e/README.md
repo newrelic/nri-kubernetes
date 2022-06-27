@@ -37,7 +37,7 @@ go build -o  $GOPATH/bin/newrelic-integration-e2e ./cmd/...
 
 You can now run the e2e tests locally
 ```shell
-LICENSE_KEY=${LICENSE_KEY} newrelic-integration-e2e --commit_sha=test-string --retry_attempts=5 --retry_seconds=60 \
+LICENSE_KEY=${LICENSE_KEY} EXCEPTIONS_SOURCE_FILE=${EXCEPTION_FILE} newrelic-integration-e2e --commit_sha=test-string --retry_attempts=5 --retry_seconds=60 \
 	 --account_id=${ACCOUNT_ID} --api_key=${API_KEY} --license_key=${LICENSE_KEY} \
 	 --spec_path=./e2e/test-specs.yml --verbose_mode=true --agent_enabled="false"
 ```

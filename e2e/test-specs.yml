@@ -21,6 +21,8 @@ scenarios:
       entities: []
       metrics:
         - source: "k8s.yml"
+          # EXCEPTIONS_SOURCE_FILE contains the path to the exceptions according to the k8s version.
+          exceptions_source: ${EXCEPTIONS_SOURCE_FILE}
           except_entities: []
           except_metrics:
             - k8s.node.allocatableHugepages*
@@ -40,6 +42,9 @@ scenarios:
             - k8s.pod.netRxBytesPerSecond
             - k8s.pod.netTxBytesPerSecond
 
+            # this metric does not appear when the scaler is not limited.
+            - k8s.hpa.isLimited
+
   - description: |
       This scenario will verify that metrics from a k8s Cluster are correctly collected without privileges.
     before:
@@ -57,6 +62,7 @@ scenarios:
       entities: []
       metrics:
         - source: "k8s.yml"
+          exceptions_source: ${EXCEPTIONS_SOURCE_FILE}
           except_entities:
             - K8sCluster # all metrics are related to controlPlane
           except_metrics:
@@ -69,3 +75,5 @@ scenarios:
             - k8s.pod.netErrorsPerSecond
             - k8s.pod.netRxBytesPerSecond
             - k8s.pod.netTxBytesPerSecond
+
+            - k8s.hpa.isLimited
