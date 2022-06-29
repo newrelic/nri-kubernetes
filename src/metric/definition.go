@@ -50,19 +50,23 @@ var APIServerSpecs = definition.SpecGroups{
 			},
 			{
 				Name: "apiserverCurrentInflightRequestsMutating",
-				ValueFunc: prometheus.FromValueWithOverriddenName(
+				ValueFunc: prometheus.FromValueWithLabelsFilter(
 					"apiserver_current_inflight_requests",
 					"apiserverCurrentInflightRequestsMutating",
-					prometheus.IncludeOnlyWhenLabelMatchFilter(map[string]string{"request_kind": "mutating"}),
+					prometheus.IncludeOnlyWhenLabelMatchFilter(map[string]string{
+						"request_kind": "mutating",
+					}),
 				),
 				Type: sdkMetric.GAUGE,
 			},
 			{
 				Name: "apiserverCurrentInflightRequestsReadOnly",
-				ValueFunc: prometheus.FromValueWithOverriddenName(
+				ValueFunc: prometheus.FromValueWithLabelsFilter(
 					"apiserver_current_inflight_requests",
 					"apiserverCurrentInflightRequestsReadOnly",
-					prometheus.IncludeOnlyWhenLabelMatchFilter(map[string]string{"request_kind": "readOnly"}),
+					prometheus.IncludeOnlyWhenLabelMatchFilter(map[string]string{
+						"request_kind": "readOnly",
+					}),
 				),
 				Type: sdkMetric.GAUGE,
 			},
@@ -304,28 +308,34 @@ var SchedulerSpecs = definition.SpecGroups{
 			},
 			{
 				Name: "schedulerPendingPodsActive",
-				ValueFunc: prometheus.FromValueWithOverriddenName(
+				ValueFunc: prometheus.FromValueWithLabelsFilter(
 					"scheduler_pending_pods",
 					"schedulerPendingPodsActive",
-					prometheus.IncludeOnlyWhenLabelMatchFilter(map[string]string{"queue": "active"}),
+					prometheus.IncludeOnlyWhenLabelMatchFilter(map[string]string{
+						"queue": "active",
+					}),
 				),
 				Type: sdkMetric.GAUGE,
 			},
 			{
 				Name: "schedulerPendingPodsBackoff",
-				ValueFunc: prometheus.FromValueWithOverriddenName(
+				ValueFunc: prometheus.FromValueWithLabelsFilter(
 					"scheduler_pending_pods",
 					"schedulerPendingPodsBackoff",
-					prometheus.IncludeOnlyWhenLabelMatchFilter(map[string]string{"queue": "backoff"}),
+					prometheus.IncludeOnlyWhenLabelMatchFilter(map[string]string{
+						"queue": "backoff",
+					}),
 				),
 				Type: sdkMetric.GAUGE,
 			},
 			{
 				Name: "schedulerPendingPodsUnschedulable",
-				ValueFunc: prometheus.FromValueWithOverriddenName(
+				ValueFunc: prometheus.FromValueWithLabelsFilter(
 					"scheduler_pending_pods",
 					"schedulerPendingPodsUnschedulable",
-					prometheus.IncludeOnlyWhenLabelMatchFilter(map[string]string{"queue": "unschedulable"}),
+					prometheus.IncludeOnlyWhenLabelMatchFilter(map[string]string{
+						"queue": "unschedulable",
+					}),
 				),
 				Type: sdkMetric.GAUGE,
 			},

@@ -320,18 +320,14 @@ func IncludeOnlyWhenLabelMatchFilter(labelsToInclude Labels) func(Labels) Labels
 	return func(labels Labels) Labels {
 		filteredLabels := make(Labels)
 		for label, value := range labels {
-			include := false
 			for labelToInclude, valueToInclude := range labelsToInclude {
 				if label == labelToInclude && value == valueToInclude {
-					include = true
+					filteredLabels[label] = value
 					break
 				}
 			}
-
-			if include {
-				filteredLabels[label] = value
-			}
 		}
+
 		return filteredLabels
 	}
 }
@@ -560,6 +556,82 @@ func FromSummary(key string) definition.FetchFunc {
 		}
 		return val, nil
 	}
+}
+
+// FromValueWithLabelsFilter creates a FetchFunc that fetches values from prometheus metrics values given specific
+// labels filter.
+func FromValueWithLabelsFilter(metricName string, nameOverride string, labelsFilter ...LabelsFilter) definition.FetchFunc {
+	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
+		value, err := definition.FromRaw(metricName)(groupLabel, entityID, groups)
+		if err != nil {
+			return nil, err
+		}
+
+		switch m := value.(type) {
+		case Metric:
+			return m.Value, nil
+		case []Metric:
+			return fetchedValuesFromRawMetricsWithoutSuffix(metricName, nameOverride, m, labelsFilter...)
+		}
+		return nil, fmt.Errorf(
+			"incompatible metric type for %s. Expected: Metric or []Metric. Got: %T",
+			metricName,
+			value,
+		)
+	}
+}
+
+func fetchedValuesFromRawMetricsWithoutSuffix(
+	metricName string,
+	nameOverride string,
+	metrics []Metric,
+	labelsFilter ...LabelsFilter,
+) (definition.FetchedValues, error) {
+	val := make(definition.FetchedValues)
+	for _, metric := range metrics {
+		labels := make(Labels)
+		for _, filter := range labelsFilter {
+			labels = filter(metric.Labels)
+		}
+
+		if len(labels) == 0 {
+			continue
+		}
+
+		if nameOverride != "" {
+			metricName = nameOverride
+		}
+
+		aggregatedValue, ok := val[metricName]
+		if !ok {
+			val[metricName] = metric.Value
+			continue
+		}
+
+		switch metric.Value.(type) {
+		case CounterValue:
+			aggregatedCounter, ok := aggregatedValue.(CounterValue)
+			if !ok {
+				return nil, fmt.Errorf(
+					"incompatible metric type for %s aggregation. Expected: CounterValue. Got: %T",
+					metricName,
+					metric.Value,
+				)
+			}
+			val[metricName] = aggregatedCounter + metric.Value.(CounterValue)
+		case GaugeValue:
+			aggregatedCounter, ok := aggregatedValue.(GaugeValue)
+			if !ok {
+				return nil, fmt.Errorf(
+					"incompatible metric type for %s aggregation. Expected: GaugeValue. Got: %T",
+					metricName,
+					metric.Value,
+				)
+			}
+			val[metricName] = aggregatedCounter + metric.Value.(GaugeValue)
+		}
+	}
+	return val, nil
 }
 
 // validNRValue returns if v is a New Relic metric supported float64.

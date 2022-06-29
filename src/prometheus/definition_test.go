@@ -875,7 +875,7 @@ func TestFetchFuncs_CorrectValue(t *testing.T) {
 			},
 		},
 		{
-			name: "FromValueWithOverriddenName correct aggregates and filters values",
+			name: "FromValueWithLabelsFilter correct aggregates value with single filter",
 			rawGroups: definition.RawGroups{
 				"scheduler": {
 					"kube-scheduler-minikube": {
@@ -889,10 +889,6 @@ func TestFetchFuncs_CorrectValue(t *testing.T) {
 								Value:  CounterValue(2),
 							},
 							{
-								Labels: Labels{"queue": "unschedulable"},
-								Value:  CounterValue(3),
-							},
-							{
 								Labels: Labels{"queue": "active"},
 								Value:  CounterValue(4),
 							},
@@ -900,14 +896,47 @@ func TestFetchFuncs_CorrectValue(t *testing.T) {
 					},
 				},
 			},
-			fetchFunc: FromValueWithOverriddenName(
+			fetchFunc: FromValueWithLabelsFilter(
 				"scheduler_pending_pods",
 				"",
 				IncludeOnlyWhenLabelMatchFilter(map[string]string{"queue": "active"}),
 			),
 			expectedFetchedValue: definition.FetchedValues{
-				"scheduler_pending_pods":              CounterValue(5),
-				"scheduler_pending_pods_queue_active": CounterValue(5),
+				"scheduler_pending_pods": CounterValue(5),
+			},
+		},
+		{
+			name: "FromValueWithLabelsFilter correct aggregates values with multiple filters",
+			rawGroups: definition.RawGroups{
+				"scheduler": {
+					"kube-scheduler-minikube": {
+						"scheduler_pending_pods": []Metric{
+							{
+								Labels: Labels{"queue": "active"},
+								Value:  CounterValue(1),
+							},
+							{
+								Labels: Labels{"queue": "active", "l": "v2"},
+								Value:  CounterValue(2),
+							},
+							{
+								Labels: Labels{"queue": "backoff"},
+								Value:  CounterValue(1),
+							},
+						},
+					},
+				},
+			},
+			fetchFunc: FromValueWithLabelsFilter(
+				"scheduler_pending_pods",
+				"",
+				IncludeOnlyWhenLabelMatchFilter(map[string]string{
+					"queue": "active",
+					"l":     "v2",
+				}),
+			),
+			expectedFetchedValue: definition.FetchedValues{
+				"scheduler_pending_pods": CounterValue(3),
 			},
 		},
 		{
