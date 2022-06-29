@@ -314,6 +314,28 @@ func IncludeOnlyLabelsFilter(labelsToInclude ...string) func(Labels) Labels {
 	}
 }
 
+// IncludeOnlyWhenLabelMatchFilter returns a function that filters-out all but the
+// given label-value key pairs.
+func IncludeOnlyWhenLabelMatchFilter(labelsToInclude Labels) func(Labels) Labels {
+	return func(labels Labels) Labels {
+		filteredLabels := make(Labels)
+		for label, value := range labels {
+			include := false
+			for labelToInclude, valueToInclude := range labelsToInclude {
+				if label == labelToInclude && value == valueToInclude {
+					include = true
+					break
+				}
+			}
+
+			if include {
+				filteredLabels[label] = value
+			}
+		}
+		return filteredLabels
+	}
+}
+
 // attributeName generates the attribute name by suffixing the time-series
 // labels to the given metricName in order.
 func attributeName(metricName, nameOverride string, labels Labels, labelsFilter ...LabelsFilter) string {
