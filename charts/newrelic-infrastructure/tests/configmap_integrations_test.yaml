@@ -200,3 +200,35 @@ tests:
     asserts:
       - hasDocuments:
           count: 1
+  - it: integrations options works with environment passthrough
+    set:
+      licenseKey: test
+      cluster: test
+      integrations:
+        nri-redis-sampleapp:
+          discovery:
+            command:
+              exec: /var/db/newrelic-infra/nri-discovery-kubernetes
+              match:
+                label.app: sampleapp
+          integrations:
+            - name: nri-redis
+              env:
+                PORT: "{{ SUPER_SECRET_VARIABLE }}"
+              labels:
+                env: test1
+    asserts:
+      - equal:
+          path: data.nri-redis-sampleapp\.yaml
+          value: |-
+            discovery:
+              command:
+                exec: /var/db/newrelic-infra/nri-discovery-kubernetes
+                match:
+                  label.app: sampleapp
+            integrations:
+            - env:
+                PORT: '{{ SUPER_SECRET_VARIABLE }}'
+              labels:
+                env: test1
+              name: nri-redis
