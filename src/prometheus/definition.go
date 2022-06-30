@@ -400,28 +400,12 @@ func fetchedValuesFromRawMetrics(
 			continue
 		}
 
-		switch metric.Value.(type) {
-		case CounterValue:
-			aggregatedCounter, ok := aggregatedValue.(CounterValue)
-			if !ok {
-				return nil, fmt.Errorf(
-					"incompatible metric type for %s aggregation. Expected: CounterValue. Got: %T",
-					metricName,
-					metric.Value,
-				)
-			}
-			val[attrName] = aggregatedCounter + metric.Value.(CounterValue)
-		case GaugeValue:
-			aggregatedCounter, ok := aggregatedValue.(GaugeValue)
-			if !ok {
-				return nil, fmt.Errorf(
-					"incompatible metric type for %s aggregation. Expected: GaugeValue. Got: %T",
-					metricName,
-					metric.Value,
-				)
-			}
-			val[attrName] = aggregatedCounter + metric.Value.(GaugeValue)
+		value, err := getMetricValue(metricName, aggregatedValue, metric)
+		if err != nil {
+			return nil, err
 		}
+
+		val[attrName] = value
 	}
 	return val, nil
 }
@@ -571,7 +555,7 @@ func FromValueWithLabelsFilter(metricName string, nameOverride string, labelsFil
 		case Metric:
 			return m.Value, nil
 		case []Metric:
-			return fetchedValuesFromRawMetricsWithoutSuffix(metricName, nameOverride, m, labelsFilter...)
+			return fetchedValuesFromRawMetricsWithLabels(metricName, nameOverride, m, labelsFilter...)
 		}
 		return nil, fmt.Errorf(
 			"incompatible metric type for %s. Expected: Metric or []Metric. Got: %T",
@@ -581,7 +565,9 @@ func FromValueWithLabelsFilter(metricName string, nameOverride string, labelsFil
 	}
 }
 
-func fetchedValuesFromRawMetricsWithoutSuffix(
+// fetchedValuesFromRawMetricsWithLabels generates a mapping of metrics to `FetchedValue` by metricName or nameOverride
+// if provided and skips the metrics aggregation if there are no matching labels for that metric.
+func fetchedValuesFromRawMetricsWithLabels(
 	metricName string,
 	nameOverride string,
 	metrics []Metric,
@@ -589,11 +575,12 @@ func fetchedValuesFromRawMetricsWithoutSuffix(
 ) (definition.FetchedValues, error) {
 	val := make(definition.FetchedValues)
 	for _, metric := range metrics {
-		labels := make(Labels)
+		labels := copyMapLabels(metric.Labels)
 		for _, filter := range labelsFilter {
-			labels = filter(metric.Labels)
+			labels = filter(labels)
 		}
 
+		// We skip the aggregation if there aren't matching labels.
 		if len(labels) == 0 {
 			continue
 		}
@@ -608,30 +595,44 @@ func fetchedValuesFromRawMetricsWithoutSuffix(
 			continue
 		}
 
-		switch metric.Value.(type) {
-		case CounterValue:
-			aggregatedCounter, ok := aggregatedValue.(CounterValue)
-			if !ok {
-				return nil, fmt.Errorf(
-					"incompatible metric type for %s aggregation. Expected: CounterValue. Got: %T",
-					metricName,
-					metric.Value,
-				)
-			}
-			val[metricName] = aggregatedCounter + metric.Value.(CounterValue)
-		case GaugeValue:
-			aggregatedCounter, ok := aggregatedValue.(GaugeValue)
-			if !ok {
-				return nil, fmt.Errorf(
-					"incompatible metric type for %s aggregation. Expected: GaugeValue. Got: %T",
-					metricName,
-					metric.Value,
-				)
-			}
-			val[metricName] = aggregatedCounter + metric.Value.(GaugeValue)
+		value, err := getMetricValue(metricName, aggregatedValue, metric)
+		if err != nil {
+			return nil, err
 		}
+
+		val[metricName] = value
 	}
+
 	return val, nil
+}
+
+func getMetricValue(metricName string, aggregatedValue definition.FetchedValue, metric Metric) (definition.FetchedValue, error) {
+	var value definition.FetchedValue
+
+	switch metric.Value.(type) {
+	case CounterValue:
+		aggregatedCounter, ok := aggregatedValue.(CounterValue)
+		if !ok {
+			return nil, fmt.Errorf(
+				"incompatible metric type for %s aggregation. Expected: CounterValue. Got: %T",
+				metricName,
+				metric.Value,
+			)
+		}
+		value = aggregatedCounter + metric.Value.(CounterValue)
+	case GaugeValue:
+		aggregatedCounter, ok := aggregatedValue.(GaugeValue)
+		if !ok {
+			return nil, fmt.Errorf(
+				"incompatible metric type for %s aggregation. Expected: GaugeValue. Got: %T",
+				metricName,
+				metric.Value,
+			)
+		}
+		value = aggregatedCounter + metric.Value.(GaugeValue)
+	}
+
+	return value, nil
 }
 
 // validNRValue returns if v is a New Relic metric supported float64.
@@ -829,4 +830,12 @@ func getRawEntityID(parentGroupLabel, groupLabel, entityID string, groups defini
 		rawEntityID = fmt.Sprintf("%v_%v", namespaceID, relatedMetricID)
 	}
 	return rawEntityID, nil
+}
+
+func copyMapLabels(labels Labels) Labels {
+	targetMap := make(Labels)
+	for key, value := range labels {
+		targetMap[key] = value
+	}
+	return targetMap
 }

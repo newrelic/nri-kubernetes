@@ -875,6 +875,27 @@ func TestFetchFuncs_CorrectValue(t *testing.T) {
 			},
 		},
 		{
+			name: "FromValueWithLabelsFilter skip aggregates value when no filter",
+			rawGroups: definition.RawGroups{
+				"scheduler": {
+					"kube-scheduler-minikube": {
+						"scheduler_pending_pods": []Metric{
+							{
+								Labels: Labels{"queue": "active"},
+								Value:  CounterValue(1),
+							},
+						},
+					},
+				},
+			},
+			fetchFunc: FromValueWithLabelsFilter(
+				"scheduler_pending_pods",
+				"",
+				IncludeOnlyWhenLabelMatchFilter(nil),
+			),
+			expectedFetchedValue: definition.FetchedValues{},
+		},
+		{
 			name: "FromValueWithLabelsFilter correct aggregates value with single filter",
 			rawGroups: definition.RawGroups{
 				"scheduler": {
