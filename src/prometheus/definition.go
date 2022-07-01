@@ -622,12 +622,7 @@ func hasMatchingLabels(metric Metric, labelsFilter ...LabelsFilter) bool {
 		labels = filter(labels)
 	}
 
-	// We skip the aggregation if there aren't matching labels.
-	if len(labels) == 0 {
-		return false
-	}
-
-	return true
+	return len(labels) != 0
 }
 
 // getMetricValue return the value of a given metric taking into account the aggregated and the metric value itself.
