@@ -6,12 +6,12 @@ import (
 	"math"
 	"testing"
 
-	"github.com/newrelic/infra-integrations-sdk/data/metric"
 	model "github.com/prometheus/client_model/go"
+
+	"github.com/newrelic/infra-integrations-sdk/data/metric"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 )
 
 var mFamily = []MetricFamily{
@@ -872,6 +872,92 @@ func TestFetchFuncs_CorrectValue(t *testing.T) {
 			expectedFetchedValue: definition.FetchedValues{
 				"leader_election_master_status_name_kube-scheduler":    CounterValue(3),
 				"leader_election_master_status_name_kube-scheduler-02": CounterValue(7),
+			},
+		},
+		{
+			name: "FromValueWithLabelsFilter skip aggregates value when no filter",
+			rawGroups: definition.RawGroups{
+				"scheduler": {
+					"kube-scheduler-minikube": {
+						"scheduler_pending_pods": []Metric{
+							{
+								Labels: Labels{"queue": "active"},
+								Value:  CounterValue(1),
+							},
+						},
+					},
+				},
+			},
+			fetchFunc: FromValueWithLabelsFilter(
+				"scheduler_pending_pods",
+				"",
+				IncludeOnlyWhenLabelMatchFilter(nil),
+			),
+			expectedFetchedValue: definition.FetchedValues{},
+		},
+		{
+			name: "FromValueWithLabelsFilter correct aggregates value with single filter",
+			rawGroups: definition.RawGroups{
+				"scheduler": {
+					"kube-scheduler-minikube": {
+						"scheduler_pending_pods": []Metric{
+							{
+								Labels: Labels{"queue": "active"},
+								Value:  CounterValue(1),
+							},
+							{
+								Labels: Labels{"queue": "backoff"},
+								Value:  CounterValue(2),
+							},
+							{
+								Labels: Labels{"queue": "active"},
+								Value:  CounterValue(4),
+							},
+						},
+					},
+				},
+			},
+			fetchFunc: FromValueWithLabelsFilter(
+				"scheduler_pending_pods",
+				"",
+				IncludeOnlyWhenLabelMatchFilter(map[string]string{"queue": "active"}),
+			),
+			expectedFetchedValue: definition.FetchedValues{
+				"scheduler_pending_pods": CounterValue(5),
+			},
+		},
+		{
+			name: "FromValueWithLabelsFilter correct aggregates values with multiple filters",
+			rawGroups: definition.RawGroups{
+				"scheduler": {
+					"kube-scheduler-minikube": {
+						"scheduler_pending_pods": []Metric{
+							{
+								Labels: Labels{"queue": "active"},
+								Value:  CounterValue(1),
+							},
+							{
+								Labels: Labels{"queue": "active", "l": "v2"},
+								Value:  CounterValue(2),
+							},
+							{
+								Labels: Labels{"queue": "backoff"},
+								Value:  CounterValue(1),
+							},
+						},
+					},
+				},
+			},
+			fetchFunc: FromValueWithLabelsFilter(
+				"scheduler_pending_pods",
+				"",
+				IncludeOnlyWhenLabelMatchFilter(map[string]string{
+					"queue": "active",
+					"l":     "v2",
+				}),
+			),
+			expectedFetchedValue: definition.FetchedValues{
+				"scheduler_pending_pods": CounterValue(3),
 			},
 		},
 		{

@@ -314,6 +314,24 @@ func IncludeOnlyLabelsFilter(labelsToInclude ...string) func(Labels) Labels {
 	}
 }
 
+// IncludeOnlyWhenLabelMatchFilter returns a function that filters-out all but the
+// given label-value key pairs.
+func IncludeOnlyWhenLabelMatchFilter(labelsToInclude Labels) func(Labels) Labels {
+	return func(labels Labels) Labels {
+		filteredLabels := make(Labels)
+		for label, value := range labels {
+			for labelToInclude, valueToInclude := range labelsToInclude {
+				if label == labelToInclude && value == valueToInclude {
+					filteredLabels[label] = value
+					break
+				}
+			}
+		}
+
+		return filteredLabels
+	}
+}
+
 // attributeName generates the attribute name by suffixing the time-series
 // labels to the given metricName in order.
 func attributeName(metricName, nameOverride string, labels Labels, labelsFilter ...LabelsFilter) string {
@@ -382,28 +400,12 @@ func fetchedValuesFromRawMetrics(
 			continue
 		}
 
-		switch metric.Value.(type) {
-		case CounterValue:
-			aggregatedCounter, ok := aggregatedValue.(CounterValue)
-			if !ok {
-				return nil, fmt.Errorf(
-					"incompatible metric type for %s aggregation. Expected: CounterValue. Got: %T",
-					metricName,
-					metric.Value,
-				)
-			}
-			val[attrName] = aggregatedCounter + metric.Value.(CounterValue)
-		case GaugeValue:
-			aggregatedCounter, ok := aggregatedValue.(GaugeValue)
-			if !ok {
-				return nil, fmt.Errorf(
-					"incompatible metric type for %s aggregation. Expected: GaugeValue. Got: %T",
-					metricName,
-					metric.Value,
-				)
-			}
-			val[attrName] = aggregatedCounter + metric.Value.(GaugeValue)
+		value, err := getMetricValue(metricName, aggregatedValue, metric)
+		if err != nil {
+			return nil, err
 		}
+
+		val[attrName] = value
 	}
 	return val, nil
 }
@@ -538,6 +540,119 @@ func FromSummary(key string) definition.FetchFunc {
 		}
 		return val, nil
 	}
+}
+
+// FromValueWithLabelsFilter creates a FetchFunc that fetches values from prometheus metrics values given specific
+// labels filter.
+func FromValueWithLabelsFilter(metricName string, nameOverride string, labelsFilter ...LabelsFilter) definition.FetchFunc {
+	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
+		value, err := definition.FromRaw(metricName)(groupLabel, entityID, groups)
+		if err != nil {
+			return nil, err
+		}
+
+		switch m := value.(type) {
+		case Metric:
+			return m.Value, nil
+		case []Metric:
+			return fetchedValuesFromRawMetricsWithLabels(metricName, nameOverride, m, labelsFilter...)
+		}
+		return nil, fmt.Errorf(
+			"incompatible metric type for %s. Expected: Metric or []Metric. Got: %T",
+			metricName,
+			value,
+		)
+	}
+}
+
+// fetchedValuesFromRawMetricsWithLabels generates a mapping of metrics to `FetchedValue` by metricName or nameOverride
+// if provided and skips the metrics aggregation if there are no matching labels for that metric.
+// In case there aren't any matching filters, the function won't return any value.
+//
+// Given a `metricName=my_metric`, a label filter function returning `l3:d` and the following `metrics`:
+//
+// [
+//   {Value: 4, Labels: [{Name: "l1", Value: "a"}, {Name: "l2", Value: "b"}]},
+//   {Value: 6, Labels: [{Name: "l1", Value: "c"}, {Name: "l3", Value: "d"}]}
+// ]
+//
+// The following `FetchedValues` will be returned:
+//
+// {
+//    "my_metric": 6,
+// }
+//
+func fetchedValuesFromRawMetricsWithLabels(
+	metricName string,
+	nameOverride string,
+	metrics []Metric,
+	labelsFilter ...LabelsFilter,
+) (definition.FetchedValues, error) {
+	val := make(definition.FetchedValues)
+	for _, metric := range metrics {
+		if !hasMatchingLabels(metric, labelsFilter...) {
+			continue
+		}
+
+		if nameOverride != "" {
+			metricName = nameOverride
+		}
+
+		aggregatedValue, ok := val[metricName]
+		if !ok {
+			val[metricName] = metric.Value
+			continue
+		}
+
+		value, err := getMetricValue(metricName, aggregatedValue, metric)
+		if err != nil {
+			return nil, err
+		}
+
+		val[metricName] = value
+	}
+
+	return val, nil
+}
+
+// hasMatchingLabels checks if a metric has any matching label given a list of labels filter funcs.
+func hasMatchingLabels(metric Metric, labelsFilter ...LabelsFilter) bool {
+	labels := copyMapLabels(metric.Labels)
+	for _, filter := range labelsFilter {
+		labels = filter(labels)
+	}
+
+	return len(labels) != 0
+}
+
+// getMetricValue return the value of a given metric taking into account the aggregated and the metric value itself.
+func getMetricValue(metricName string, aggregatedValue definition.FetchedValue, metric Metric) (definition.FetchedValue, error) {
+	var value definition.FetchedValue
+
+	switch metric.Value.(type) {
+	case CounterValue:
+		aggregatedCounter, ok := aggregatedValue.(CounterValue)
+		if !ok {
+			return nil, fmt.Errorf(
+				"incompatible metric type for %s aggregation. Expected: CounterValue. Got: %T",
+				metricName,
+				metric.Value,
+			)
+		}
+		value = aggregatedCounter + metric.Value.(CounterValue)
+	case GaugeValue:
+		aggregatedCounter, ok := aggregatedValue.(GaugeValue)
+		if !ok {
+			return nil, fmt.Errorf(
+				"incompatible metric type for %s aggregation. Expected: GaugeValue. Got: %T",
+				metricName,
+				metric.Value,
+			)
+		}
+		value = aggregatedCounter + metric.Value.(GaugeValue)
+	}
+
+	return value, nil
 }
 
 // validNRValue returns if v is a New Relic metric supported float64.
@@ -735,4 +850,12 @@ func getRawEntityID(parentGroupLabel, groupLabel, entityID string, groups defini
 		rawEntityID = fmt.Sprintf("%v_%v", namespaceID, relatedMetricID)
 	}
 	return rawEntityID, nil
+}
+
+func copyMapLabels(labels Labels) Labels {
+	targetMap := make(Labels)
+	for key, value := range labels {
+		targetMap[key] = value
+	}
+	return targetMap
 }

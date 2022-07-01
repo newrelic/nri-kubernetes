@@ -85,7 +85,7 @@ func TestScraper(t *testing.T) {
 				t.Fatalf("running scraper: %v", err)
 			}
 
-			// Include specific specific exclusions that depend on version.
+			// Include specific exclusions that depend on version.
 			versionAsserter := asserter
 			if testutil.IsBelow(version, testutil.Testdata124) {
 				versionAsserter = versionAsserter.Excluding(
