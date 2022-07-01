@@ -567,6 +567,21 @@ func FromValueWithLabelsFilter(metricName string, nameOverride string, labelsFil
 
 // fetchedValuesFromRawMetricsWithLabels generates a mapping of metrics to `FetchedValue` by metricName or nameOverride
 // if provided and skips the metrics aggregation if there are no matching labels for that metric.
+// In case there aren't any matching filters, the function won't return any value.
+//
+// Given a `metricName=my_metric`, a label filter function returning `l3:d` and the following `metrics`:
+//
+// [
+//   {Value: 4, Labels: [{Name: "l1", Value: "a"}, {Name: "l2", Value: "b"}]},
+//   {Value: 6, Labels: [{Name: "l1", Value: "c"}, {Name: "l3", Value: "d"}]}
+// ]
+//
+// The following `FetchedValues` will be returned:
+//
+// {
+//    "my_metric": 6,
+// }
+//
 func fetchedValuesFromRawMetricsWithLabels(
 	metricName string,
 	nameOverride string,
@@ -575,13 +590,7 @@ func fetchedValuesFromRawMetricsWithLabels(
 ) (definition.FetchedValues, error) {
 	val := make(definition.FetchedValues)
 	for _, metric := range metrics {
-		labels := copyMapLabels(metric.Labels)
-		for _, filter := range labelsFilter {
-			labels = filter(labels)
-		}
-
-		// We skip the aggregation if there aren't matching labels.
-		if len(labels) == 0 {
+		if !hasMatchingLabels(metric, labelsFilter...) {
 			continue
 		}
 
@@ -606,6 +615,22 @@ func fetchedValuesFromRawMetricsWithLabels(
 	return val, nil
 }
 
+// hasMatchingLabels checks if a metric has any matching label given a list of labels filter funcs.
+func hasMatchingLabels(metric Metric, labelsFilter ...LabelsFilter) bool {
+	labels := copyMapLabels(metric.Labels)
+	for _, filter := range labelsFilter {
+		labels = filter(labels)
+	}
+
+	// We skip the aggregation if there aren't matching labels.
+	if len(labels) == 0 {
+		return false
+	}
+
+	return true
+}
+
+// getMetricValue return the value of a given metric taking into account the aggregated and the metric value itself.
 func getMetricValue(metricName string, aggregatedValue definition.FetchedValue, metric Metric) (definition.FetchedValue, error) {
 	var value definition.FetchedValue
 
