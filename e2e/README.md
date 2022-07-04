@@ -42,4 +42,6 @@ LICENSE_KEY=${LICENSE_KEY} EXCEPTIONS_SOURCE_FILE=${EXCEPTION_FILE} newrelic-int
 	 --spec_path=./e2e/test-specs.yml --verbose_mode=true --agent_enabled="false"
 ```
 
+Since some metrics are removed and added depending on the k8s version, the `EXCEPTION_FILE` should point, depending on the k8s version you are testing on, to one of the `/e2e/*-exception.yml` files.
+
 You may check [e2e workflow](../.github/workflows/e2e.yaml) to have more details about how this is used in development workflow.
