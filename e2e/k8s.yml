@@ -1,5 +1,4 @@
 specVersion: '1'
-owningTeam: fsi
 integrationName: kubernetes
 humanReadableIntegrationName: Kubernetes
 entities:
@@ -277,14 +276,30 @@ entities:
           legacyEventType: K8sSchedulerSample
           legacyNames:
             - schedulerPodPreemptionVictims
-      - name: k8s.scheduler.schedulerPendingPods
+      - name: k8s.scheduler.schedulerPendingPodsActive
         type: gauge
         defaultResolution: 15
         unit: count
         migrationInformation:
           legacyEventType: K8sSchedulerSample
           legacyNames:
-            - schedulerPendingPods
+            - schedulerPendingPodsActive
+      - name: k8s.scheduler.schedulerPendingPodsBackoff
+        type: gauge
+        defaultResolution: 15
+        unit: count
+        migrationInformation:
+          legacyEventType: K8sSchedulerSample
+          legacyNames:
+            - schedulerPendingPodsBackoff
+      - name: k8s.scheduler.schedulerPendingPodsUnschedulable
+        type: gauge
+        defaultResolution: 15
+        unit: count
+        migrationInformation:
+          legacyEventType: K8sSchedulerSample
+          legacyNames:
+            - schedulerPendingPodsUnschedulable
       - name: k8s.scheduler.preemptionAttemptsDelta
         type: gauge
         defaultResolution: 15
@@ -349,14 +364,22 @@ entities:
           legacyEventType: K8sApiServerSample
           legacyNames:
             - goThreads
-      - name: k8s.apiserver.currentInflightRequests
+      - name: k8s.apiserver.currentInflightRequestsMutating
         type: gauge
         defaultResolution: 15
         unit: count
         migrationInformation:
           legacyEventType: K8sApiServerSample
           legacyNames:
-            - apiserverCurrentInflightRequests
+            - apiserverCurrentInflightRequestsMutating
+      - name: k8s.apiserver.currentInflightRequestsReadOnly
+        type: gauge
+        defaultResolution: 15
+        unit: count
+        migrationInformation:
+          legacyEventType: K8sApiServerSample
+          legacyNames:
+            - apiserverCurrentInflightRequestsReadOnly
       - name: k8s.apiserver.process.cpuSecondsDelta
         type: gauge
         defaultResolution: 15
