@@ -79,32 +79,23 @@ For running unit tests, run
 make test
 ```
 
-### Run locally
+### Run local development environment
 
-Compile, build docker image and setup helm repositories as described in [e2e/README](./e2e/README.md).
+We use Minikube and Tilt to spawn a local environment that it will reload after any changes inside the charts or the integration code.
 
-Setup custom values to run locally. Example (custom-values.yaml).
+Make sure you have these tools or install them:
+- [Install minikube](https://minikube.sigs.k8s.io/docs/start/)
+- [Install Tilt](https://docs.tilt.dev/install.html)
+- [Install Helm](https://helm.sh/docs/intro/install/)
 
-```yml
-licenseKey: fake
-cluster: minikube
+Create a `values-local.yaml` file from the `values-local.yaml.sample` using a valid license key and your cluster name.
 
-images:
-  integration:
-    tag: e2e
-    repository: e2e/nri-kubernetes
-
-common:
-  config:
-    sink:
-      type: stdout # report to standard output instead to agent endpoint.
-```
-
-Run the integration.
-
+Start the local environment:
 ```shell
-helm upgrade --install nri newrelic/newrelic-infrastructure-v3 -f custom-values.yaml --namespace newrelic
+make local-env-start
 ```
+
+Notice that local images are build and pushed to docker running inside the minikube cluster since we are running `eval $(minikube docker-env)` before launching Tilt.
 
 ## Running OpenShift locally using CodeReady Containers
 
