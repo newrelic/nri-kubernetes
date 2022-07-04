@@ -37,9 +37,11 @@ go build -o  $GOPATH/bin/newrelic-integration-e2e ./cmd/...
 
 You can now run the e2e tests locally
 ```shell
-LICENSE_KEY=${LICENSE_KEY} newrelic-integration-e2e --commit_sha=test-string --retry_attempts=5 --retry_seconds=60 \
+LICENSE_KEY=${LICENSE_KEY} EXCEPTIONS_SOURCE_FILE=${EXCEPTION_FILE} newrelic-integration-e2e --commit_sha=test-string --retry_attempts=5 --retry_seconds=60 \
 	 --account_id=${ACCOUNT_ID} --api_key=${API_KEY} --license_key=${LICENSE_KEY} \
 	 --spec_path=./e2e/test-specs.yml --verbose_mode=true --agent_enabled="false"
 ```
+
+Since some metrics are removed and added depending on the k8s version, the `EXCEPTION_FILE` should point, depending on the k8s version you are testing on, to one of the `/e2e/*-exception.yml` files.
 
 You may check [e2e workflow](../.github/workflows/e2e.yaml) to have more details about how this is used in development workflow.

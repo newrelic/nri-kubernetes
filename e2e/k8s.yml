@@ -1,6 +1,4 @@
-# https://source.datanerd.us/infrastructure/infra-integration-specs/blob/master/specs/kubernetes.yml
 specVersion: '1'
-owningTeam: fsi
 integrationName: kubernetes
 humanReadableIntegrationName: Kubernetes
 entities:
@@ -30,6 +28,14 @@ entities:
           legacyEventType: K8sControllerManagerSample
           legacyNames:
             - leaderElectionMasterStatus
+      - name: k8s.controllermanager.nodeCollectorEvictionsDelta
+        type: gauge
+        defaultResolution: 15
+        unit: count
+        migrationInformation:
+          legacyEventType: K8sControllerManagerSample
+          legacyNames:
+            - nodeCollectorEvictionsDelta
       - name: k8s.controllermanager.process.cpuSecondsDelta
         type: gauge
         defaultResolution: 15
@@ -270,6 +276,30 @@ entities:
           legacyEventType: K8sSchedulerSample
           legacyNames:
             - schedulerPodPreemptionVictims
+      - name: k8s.scheduler.schedulerPendingPodsActive
+        type: gauge
+        defaultResolution: 15
+        unit: count
+        migrationInformation:
+          legacyEventType: K8sSchedulerSample
+          legacyNames:
+            - schedulerPendingPodsActive
+      - name: k8s.scheduler.schedulerPendingPodsBackoff
+        type: gauge
+        defaultResolution: 15
+        unit: count
+        migrationInformation:
+          legacyEventType: K8sSchedulerSample
+          legacyNames:
+            - schedulerPendingPodsBackoff
+      - name: k8s.scheduler.schedulerPendingPodsUnschedulable
+        type: gauge
+        defaultResolution: 15
+        unit: count
+        migrationInformation:
+          legacyEventType: K8sSchedulerSample
+          legacyNames:
+            - schedulerPendingPodsUnschedulable
       - name: k8s.scheduler.preemptionAttemptsDelta
         type: gauge
         defaultResolution: 15
@@ -334,6 +364,22 @@ entities:
           legacyEventType: K8sApiServerSample
           legacyNames:
             - goThreads
+      - name: k8s.apiserver.currentInflightRequestsMutating
+        type: gauge
+        defaultResolution: 15
+        unit: count
+        migrationInformation:
+          legacyEventType: K8sApiServerSample
+          legacyNames:
+            - apiserverCurrentInflightRequestsMutating
+      - name: k8s.apiserver.currentInflightRequestsReadOnly
+        type: gauge
+        defaultResolution: 15
+        unit: count
+        migrationInformation:
+          legacyEventType: K8sApiServerSample
+          legacyNames:
+            - apiserverCurrentInflightRequestsReadOnly
       - name: k8s.apiserver.process.cpuSecondsDelta
         type: gauge
         defaultResolution: 15
@@ -390,6 +436,14 @@ entities:
           legacyEventType: K8sApiServerSample
           legacyNames:
             - etcdObjectCounts_*
+      - name: k8s.apiserver.storageObjects_*
+        type: gauge
+        defaultResolution: 15
+        unit: count
+        migrationInformation:
+          legacyEventType: K8sApiServerSample
+          legacyNames:
+            - apiserverStorageObjects_*
     tags:
       - name: k8s.clusterName
         type: string
@@ -1552,6 +1606,14 @@ entities:
           legacyEventType: K8sContainerSample
           legacyNames:
             - restartCount
+      - name: k8s.container.restartCountDelta
+        type: gauge
+        defaultResolution: 15
+        unit: count
+        migrationInformation:
+          legacyEventType: K8sContainerSample
+          legacyNames:
+            - restartCountDelta
       - name: k8s.container.cpuCoresUtilization
         type: gauge
         defaultResolution: 15
@@ -1608,6 +1670,14 @@ entities:
           legacyEventType: K8sContainerSample
           legacyNames:
             - containerMemoryMappedFileBytes
+      - name: k8s.container.oomEventsDelta
+        type: gauge
+        defaultResolution: 15
+        unit: count
+        migrationInformation:
+          legacyEventType: K8sContainerSample
+          legacyNames:
+            - containerOOMEventsDelta
       - name: k8s.container.cpuCfsPeriodsDelta
         type: gauge
         defaultResolution: 15
@@ -4940,6 +5010,13 @@ entities:
             - status
           legacyEventTypes:
             - K8sNamespaceSample
+      - name: k8s.nrFiltered
+        type: string
+        migrationInformation:
+          legacyNames:
+            - nrFiltered
+          legacyEventTypes:
+            - K8sNamespaceSample
       - name: entity.guid
         type: string
         description: >-
@@ -5785,6 +5862,14 @@ entities:
           legacyEventType: K8sNodeSample
           legacyNames:
             - condition*
+      - name: k8s.node.cpuRequestedCores
+        type: gauge
+        defaultResolution: 15
+        unit: count
+        migrationInformation:
+          legacyEventType: K8sNodeSample
+          legacyNames:
+            - cpuRequestedCores
       - name: k8s.node.cpuUsedCoreMilliseconds
         type: gauge
         defaultResolution: 15
@@ -5881,6 +5966,14 @@ entities:
           legacyEventType: K8sNodeSample
           legacyNames:
             - memoryRssBytes
+      - name: k8s.node.memoryRequestedBytes
+        type: gauge
+        defaultResolution: 15
+        unit: bytes
+        migrationInformation:
+          legacyEventType: K8sNodeSample
+          legacyNames:
+            - memoryRequestedBytes
       - name: k8s.node.memoryUsedBytes
         type: gauge
         defaultResolution: 15
@@ -6014,6 +6107,13 @@ entities:
         migrationInformation:
           legacyNames:
             - nodeName
+          legacyEventTypes:
+            - K8sNodeSample
+      - name: k8s.kubeletVersion
+        type: string
+        migrationInformation:
+          legacyNames:
+            - kubeletVersion
           legacyEventTypes:
             - K8sNodeSample
       - name: entity.guid
