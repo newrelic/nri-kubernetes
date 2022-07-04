@@ -88,6 +88,8 @@ Make sure you have these tools or install them:
 - [Install Tilt](https://docs.tilt.dev/install.html)
 - [Install Helm](https://helm.sh/docs/intro/install/)
 
+Create a `values-local.yaml` file from the `values-local.yaml.sample` using a valid license key and your cluster name.
+
 Start the local environment:
 ```shell
 make local-env-start
