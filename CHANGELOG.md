@@ -9,10 +9,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 * Add k8s v1.23 & v1.24 new metrics [[#485](https://github.com/newrelic/nri-kubernetes/pull/485), [#507](https://github.com/newrelic/nri-kubernetes/pull/507)]:
-  * `apiserverCurrentInflightRequests`
+  * `apiserverCurrentInflightRequestsMutating`
+  * `apiserverCurrentInflightRequestsReadOnly`
   * `containerOOMEventsDelta`
   * `nodeCollectorEvictionsDelta`
-  * `schedulerPendingPods`
+  * `schedulerPendingPodsActive`
+  * `schedulerPendingPodsBackoff`
+  * `schedulerPendingPodsBackoff`
 
 **Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.3.1...v3.4.0
 
