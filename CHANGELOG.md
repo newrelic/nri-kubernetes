@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   * `nodeCollectorEvictionsDelta`
   * `schedulerPendingPodsActive`
   * `schedulerPendingPodsBackoff`
-  * `schedulerPendingPodsBackoff`
+  * `schedulerPendingPodsUnschedulable`
 
 **Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.3.1...v3.4.0
 
