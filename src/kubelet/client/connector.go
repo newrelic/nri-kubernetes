@@ -64,7 +64,12 @@ func (dp *defaultConnector) Connect() (*connParams, error) {
 	hostURL := net.JoinHostPort(dp.config.NodeIP, fmt.Sprint(kubeletPort))
 
 	dp.logger.Infof("Trying to connect to kubelet locally with scheme=%q hostURL=%q", kubeletScheme, hostURL)
-	conn, err := dp.checkLocalConnection(tripperWithBearerToken(dp.inClusterConfig.BearerToken), kubeletScheme, hostURL)
+	trip, err := tripperWithBearerTokenAndRefresh(dp.inClusterConfig.BearerToken, dp.inClusterConfig.BearerTokenFile)
+	if err != nil {
+		return nil, fmt.Errorf("creating tripper connecting to kubelet through nodeIP: %w", err)
+	}
+
+	conn, err := dp.checkLocalConnection(trip, kubeletScheme, hostURL)
 	if err == nil {
 		dp.logger.Infof("Connected to Kubelet through nodeIP with scheme=%q hostURL=%q", kubeletScheme, hostURL)
 		return conn, nil
@@ -227,7 +232,7 @@ func checkConnection(conn connParams) error {
 	return nil
 }
 
-func tripperWithBearerToken(token string) http.RoundTripper {
+func tripperWithBearerTokenAndRefresh(token string, tokenFile string) (http.RoundTripper, error) {
 	// Here we're using the default http.Transport configuration, but with a modified TLS config.
 	// The DefaultTransport is casted to an http.RoundTripper interface, so we need to convert it back.
 	t := http.DefaultTransport.(*http.Transport).Clone()
@@ -235,8 +240,12 @@ func tripperWithBearerToken(token string) http.RoundTripper {
 	t.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	// Use the default kubernetes Bearer token authentication RoundTripper
-	tripperWithBearer := transport.NewBearerAuthRoundTripper(token, t)
-	return tripperWithBearer
+	tripperWithBearer, err := transport.NewBearerAuthWithRefreshRoundTripper(token, tokenFile, t)
+	if err != nil {
+		return nil, fmt.Errorf("creating bearerAuthWithRefreshRoundTripper: %w", err)
+	}
+
+	return tripperWithBearer, nil
 }
 
 func (dp *defaultConnector) defaultConnParamsHTTP(hostURL string) connParams {
