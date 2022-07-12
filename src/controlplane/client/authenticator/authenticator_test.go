@@ -1,6 +1,7 @@
 package authenticator_test
 
 import (
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -15,8 +16,8 @@ import (
 )
 
 const (
-	testValidURL = "https://test:443"
-	bearerToken  = "12345"
+	testValidURL    = "https://test:443"
+	bearerTokenFile = "./test_data/token"
 )
 
 func Test_Authenticate_for_http_endpoint(t *testing.T) {
@@ -71,7 +72,7 @@ func Test_Authenticate_for_https_endpoint_with_bearer_token_auth(t *testing.T) {
 
 	authenticator, err := authenticator.New(
 		authenticator.Config{
-			InClusterConfig: &rest.Config{BearerToken: bearerToken},
+			InClusterConfig: &rest.Config{BearerTokenFile: bearerTokenFile},
 		})
 	assert.NoError(t, err)
 
@@ -84,12 +85,12 @@ func Test_Authenticate_for_https_endpoint_with_bearer_token_auth(t *testing.T) {
 	}
 
 	rt, err := authenticator.AuthenticatedTransport(endpoint)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	c := &http.Client{Transport: rt}
 
 	resp, err := c.Get(server.URL)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
@@ -175,8 +176,11 @@ func Test_Authenticator_fails_when(t *testing.T) {
 func testHTTPSServerBearer(t *testing.T) *httptest.Server {
 	t.Helper()
 
+	token, err := ioutil.ReadFile(bearerTokenFile)
+	require.NoError(t, err)
+
 	testServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !strings.Contains(r.Header.Get("Authorization"), bearerToken) {
+		if !strings.Contains(r.Header.Get("Authorization"), string(token)) {
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}

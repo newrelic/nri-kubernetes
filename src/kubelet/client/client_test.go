@@ -320,8 +320,7 @@ func getTestData(s *httptest.Server) (*fake.Clientset, *config.Config, *rest.Con
 	}
 
 	inClusterConfig := &rest.Config{
-		Host:        fmt.Sprintf("%s://%s", u.Scheme, u.Host),
-		BearerToken: "12345",
+		Host: fmt.Sprintf("%s://%s", u.Scheme, u.Host),
 		TLSClientConfig: rest.TLSClientConfig{
 			Insecure: true,
 		},
