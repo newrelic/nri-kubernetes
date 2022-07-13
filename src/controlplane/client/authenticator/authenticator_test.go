@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/client-go/rest"
 
@@ -29,15 +28,15 @@ func Test_Authenticate_for_http_endpoint(t *testing.T) {
 	defer server.Close()
 
 	authenticator, err := authenticator.New(authenticator.Config{})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	rt, err := authenticator.AuthenticatedTransport(config.Endpoint{URL: server.URL})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	c := &http.Client{Transport: rt}
 
 	_, err = c.Get(server.URL)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func Test_Authenticate_for_https_endpoint(t *testing.T) {
@@ -49,7 +48,7 @@ func Test_Authenticate_for_https_endpoint(t *testing.T) {
 	defer server.Close()
 
 	authenticator, err := authenticator.New(authenticator.Config{})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	endpoint := config.Endpoint{
 		URL:                server.URL,
@@ -57,12 +56,12 @@ func Test_Authenticate_for_https_endpoint(t *testing.T) {
 	}
 
 	rt, err := authenticator.AuthenticatedTransport(endpoint)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	c := &http.Client{Transport: rt}
 
 	_, err = c.Get(server.URL)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func Test_Authenticate_for_https_endpoint_with_bearer_token_auth(t *testing.T) {
@@ -74,7 +73,7 @@ func Test_Authenticate_for_https_endpoint_with_bearer_token_auth(t *testing.T) {
 		authenticator.Config{
 			InClusterConfig: &rest.Config{BearerTokenFile: bearerTokenFile},
 		})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	endpoint := config.Endpoint{
 		URL:                server.URL,
@@ -91,7 +90,7 @@ func Test_Authenticate_for_https_endpoint_with_bearer_token_auth(t *testing.T) {
 
 	resp, err := c.Get(server.URL)
 	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
 func Test_Authenticator_fails_when(t *testing.T) {
@@ -165,7 +164,7 @@ func Test_Authenticator_fails_when(t *testing.T) {
 			t.Parallel()
 
 			authenticator, err := authenticator.New(authenticator.Config{})
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			_, err = authenticator.AuthenticatedTransport(test.endpoint)
 			test.assert(t, err)
