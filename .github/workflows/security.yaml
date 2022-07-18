@@ -25,7 +25,7 @@ jobs:
           scan-type: fs
           ignore-unfixed: true
           exit-code: 1
-          severity: 'HIGH,CRITICAL'
+          severity: 'CRITICAL'
 
       - name: Run Trivy vulnerability scanner sarif output
         uses: aquasecurity/trivy-action@0.3.0
@@ -33,7 +33,7 @@ jobs:
         with:
           scan-type: fs
           ignore-unfixed: true
-          severity: 'HIGH,CRITICAL'
+          severity: 'CRITICAL'
           format: 'template'
           template: '@/contrib/sarif.tpl'
           output: 'trivy-results.sarif'

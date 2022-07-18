@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.4.1
+
+### Fix
+In version above 1.21 having the apiServer flag `service-account-extend-token-expiration` set to false was causing the kubelet scraper pod to be restarted each time the token expired.
+In AWS having environments due to its implementation caused a pod restart each 90days
+
+### Changed
+Updated several dependencies
+
+**Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.4.0...v3.4.1
+
 ## 3.4.0
 
 ### Added
