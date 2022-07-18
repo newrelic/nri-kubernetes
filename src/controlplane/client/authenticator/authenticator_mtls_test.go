@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,7 +45,7 @@ func Test_Authenticator_with_mTLS(t *testing.T) {
 				require.NoError(t, getErr)
 				bodyBytes, err := io.ReadAll(resp.Body)
 				require.NoError(t, err, "error reading response body")
-				assert.Equal(t, string(bodyBytes), testString, "expected body contents not found")
+				require.Equal(t, string(bodyBytes), testString, "expected body contents not found")
 			},
 		},
 		{
@@ -61,7 +60,7 @@ func Test_Authenticator_with_mTLS(t *testing.T) {
 				require.NoError(t, getErr)
 				bodyBytes, err := io.ReadAll(resp.Body)
 				require.NoError(t, err, "error reading response body")
-				assert.Equal(t, string(bodyBytes), testString, "expected body contents not found")
+				require.Equal(t, string(bodyBytes), testString, "expected body contents not found")
 			},
 		},
 		{
