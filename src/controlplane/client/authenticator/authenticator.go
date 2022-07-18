@@ -80,7 +80,7 @@ func (a K8sClientAuthenticator) AuthenticatedTransport(endpoint config.Endpoint)
 	case strings.EqualFold(endpoint.Auth.Type, bearerAuth):
 		a.logger.Debugf("Using kubernetes token to authenticate request to %q", endpoint.URL)
 
-		transportConfig.BearerToken = a.InClusterConfig.BearerToken
+		transportConfig.BearerTokenFile = a.InClusterConfig.BearerTokenFile
 
 	case strings.EqualFold(endpoint.Auth.Type, mTLSAuth) && endpoint.Auth.MTLS != nil:
 		a.logger.Debugf("Using mTLS to authenticate request to %q", endpoint.URL)

@@ -2,6 +2,7 @@ package client_test
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -31,6 +32,7 @@ const (
 	kubeletMetric          = "/kubelet-metric"
 	kubeletMetricWithDelay = "/kubelet-metric-delay"
 	nodeName               = "test-node"
+	fakeTokenFile          = "./test_data/token"
 	retries                = 3
 )
 
@@ -250,8 +252,13 @@ func TestClientFailingProbingHTTPS(t *testing.T) {
 	t.Run("does_not_attach_bearer_token", func(t *testing.T) {
 		t.Parallel()
 
+		require.NotNil(t, requests)
+		data, err := ioutil.ReadFile(fakeTokenFile)
+
+		require.NoError(t, err)
+
 		for _, v := range requests {
-			assert.Equal(t, "Bearer 12345", v.Header["Authorization"][0])
+			assert.Equal(t, "Bearer "+string(data), v.Header["Authorization"][0])
 		}
 	})
 }
@@ -320,8 +327,8 @@ func getTestData(s *httptest.Server) (*fake.Clientset, *config.Config, *rest.Con
 	}
 
 	inClusterConfig := &rest.Config{
-		Host:        fmt.Sprintf("%s://%s", u.Scheme, u.Host),
-		BearerToken: "12345",
+		Host:            fmt.Sprintf("%s://%s", u.Scheme, u.Host),
+		BearerTokenFile: fakeTokenFile,
 		TLSClientConfig: rest.TLSClientConfig{
 			Insecure: true,
 		},
