@@ -15,7 +15,7 @@ roleRef:
   name: {{ include "nriKubernetes.naming.secrets" $ }}
 subjects:
 - kind: ServiceAccount
-  name: {{ include "newrelic.common.serviceAccount.name" $ }}-controlplane
+  name: {{ include "nriKubernetes.controlplane.fullname.serviceAccount" $ }}
   namespace: {{ $.Release.Namespace }}
 {{- end -}}
 {{- end }}

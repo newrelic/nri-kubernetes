@@ -1,0 +1,41 @@
+suite: test RBAC creation
+templates:
+  - templates/controlplane/rolebinding.yaml
+  - templates/controlplane/clusterrolebinding.yaml
+release:
+  name: my-release
+  namespace: my-namespace
+tests:
+  - it: RBAC points to the service account that is created by default
+    set:
+      rbac.create: true
+      serviceAccount.create: true
+      # The line below is to create one rolebinding to test it.
+      controlPlane.config.apiServer.staticEndpoint.auth.mtls.secretNamespace: test
+    asserts:
+      - equal:
+          path: subjects[0].name
+          value: my-release-nrk8s-controlplane
+
+  - it: RBAC points to the service account the user supplies when serviceAccount is disabled
+    set:
+      rbac.create: true
+      serviceAccount.create: false
+      serviceAccount.name: sa-test
+      # The line below is to create one rolebinding to test it.
+      controlPlane.config.apiServer.staticEndpoint.auth.mtls.secretNamespace: test
+    asserts:
+      - equal:
+          path: subjects[0].name
+          value: sa-test
+
+  - it: RBAC points to the service account the user supplies when serviceAccount is disabled
+    set:
+      rbac.create: true
+      serviceAccount.create: false
+      # The line below is to create one rolebinding to test it.
+      controlPlane.config.apiServer.staticEndpoint.auth.mtls.secretNamespace: test
+    asserts:
+      - equal:
+          path: subjects[0].name
+          value: default
