@@ -233,7 +233,7 @@ func (s *Scraper) autodiscover(c component) (*scrape.Job, error) {
 	for _, autodiscover := range c.AutodiscoverConfigs {
 		pod, err := s.podDiscoverer.Discover(autodiscover)
 		if errors.Is(err, discoverer.ErrPodNotFound) {
-			s.logger.Debugf("No pod found for %q with labels %q", c.Name, autodiscover.Selector)
+			s.logger.Debugf("No pod found for %q with labels %q in namespace %q", c.Name, autodiscover.Selector, autodiscover.Namespace)
 			continue
 		}
 
