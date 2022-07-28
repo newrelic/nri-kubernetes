@@ -64,8 +64,8 @@ Returns legacy annotations if available
 Returns agent configmap merged with legacy config and legacy eventQueueDepth config
 */}}
 {{- define "newrelic.compatibility.agentConfig" -}}
-{{- $oldConfig := .Values.config | default dict -}}
-{{- $newConfig := .Values.common.agentConfig  -}}
+{{- $oldConfig := deepCopy (.Values.config | default dict) -}}
+{{- $newConfig := deepCopy .Values.common.agentConfig -}}
 {{- $eventQueueDepth := dict -}}
 
 {{- if .Values.eventQueueDepth -}}
