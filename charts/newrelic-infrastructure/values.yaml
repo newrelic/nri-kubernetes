@@ -22,21 +22,21 @@ images:
   # @default -- See `values.yaml`
   forwarder:
     pullPolicy: IfNotPresent
-    tag: 1.27.4
+    tag: 1.28.0
     repository: newrelic/k8s-events-forwarder
     registry: ""
   # -- Image for the New Relic Infrastructure Agent plus integrations.
   # @default -- See `values.yaml`
   agent:
     pullPolicy: IfNotPresent
-    tag: 2.8.20
+    tag: 2.8.22
     repository: newrelic/infrastructure-bundle
     registry: ""
   # -- Image for the New Relic Kubernetes integration.
   # @default -- See `values.yaml`
   integration:
     pullPolicy: IfNotPresent
-    tag: 3.4.0
+    tag: 3.4.1
     repository: newrelic/nri-kubernetes
     registry: ""
 
@@ -274,8 +274,8 @@ controlPlane:
                 type: bearer
       # Openshift users might want to remove previous autodiscover entries and add this one instead.
       # Manual steps are required to create a secret containing the required TLS certificates to connect to etcd.
-      # - selector: "k8s-app=etcd"
-      #   namespace: kube-system
+      # - selector: "app=etcd,etcd=true,k8s-app=etcd"
+      #   namespace: openshift-etcd
       #   matchNode: true
       #   endpoints:
       #     - url: https://localhost:9979
@@ -311,6 +311,14 @@ controlPlane:
                 type: bearer
         - selector: "k8s-app=kube-scheduler"
           namespace: kube-system
+          matchNode: true
+          endpoints:
+            - url: https://localhost:10259
+              insecureSkipVerify: true
+              auth:
+                type: bearer
+        - selector: "app=openshift-kube-scheduler,scheduler=true"
+          namespace: openshift-kube-scheduler
           matchNode: true
           endpoints:
             - url: https://localhost:10259
@@ -357,6 +365,22 @@ controlPlane:
               auth:
                 type: bearer
         - selector: "app=kube-controller-manager,kube-controller-manager=true"
+          namespace: openshift-kube-controller-manager
+          matchNode: true
+          endpoints:
+            - url: https://localhost:10257
+              insecureSkipVerify: true
+              auth:
+                type: bearer
+        - selector: "app=kube-controller-manager,kube-controller-manager=true"
+          namespace: kube-system
+          matchNode: true
+          endpoints:
+            - url: https://localhost:10257
+              insecureSkipVerify: true
+              auth:
+                type: bearer
+        - selector: "app=controller-manager,controller-manager=true"
           namespace: kube-system
           matchNode: true
           endpoints:
@@ -367,14 +391,6 @@ controlPlane:
              #  mtls:
              #    secretName: secret-name
              #    secretNamespace: secret-namespace
-        - selector: "app=controller-manager,controller-manager=true"
-          namespace: kube-system
-          matchNode: true
-          endpoints:
-            - url: https://localhost:10257
-              insecureSkipVerify: true
-              auth:
-                type: bearer
       # -- staticEndpoint configuration.
       # It is possible to specify static endpoint to scrape. If specified 'autodiscover' section is ignored.
       # If set the static endpoint should be reachable, otherwise an error will be returned and the integration stops.
@@ -413,6 +429,18 @@ controlPlane:
               auth:
                 type: bearer
             - url: http://localhost:8080
+        - selector: "app=openshift-kube-apiserver,apiserver=true"
+          namespace: openshift-kube-apiserver
+          matchNode: true
+          endpoints:
+            - url: https://localhost:8443
+              insecureSkipVerify: true
+              auth:
+                type: bearer
+            - url: https://localhost:6443
+              insecureSkipVerify: true
+              auth:
+                type: bearer
         - selector: "app=openshift-kube-apiserver,apiserver=true"
           namespace: kube-system
           matchNode: true

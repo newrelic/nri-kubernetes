@@ -108,6 +108,14 @@ tests:
                     insecureSkipVerify: true
                     url: https://localhost:10259
                   matchNode: true
+                  namespace: openshift-kube-scheduler
+                  selector: app=openshift-kube-scheduler,scheduler=true
+                - endpoints:
+                  - auth:
+                      type: bearer
+                    insecureSkipVerify: true
+                    url: https://localhost:10259
+                  matchNode: true
                   namespace: kube-system
                   selector: app=openshift-kube-scheduler,scheduler=true
                 enabled: true
