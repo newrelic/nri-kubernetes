@@ -73,13 +73,13 @@ jobs:
             -t $DOCKER_IMAGE_NAME:ci-scan \
             .
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.2.2
+        uses: aquasecurity/trivy-action@0.6.2
         with:
           image-ref: '${{ env.DOCKER_IMAGE_NAME }}:ci-scan'
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
-          severity: 'CRITICAL'
+          severity: 'HIGH,CRITICAL'
 
       - name: Push pre-release images
         if: ${{ github.event.release.prerelease }}
