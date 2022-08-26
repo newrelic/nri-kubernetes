@@ -1,3 +1,4 @@
+{{- if .Values.kubelet.enabled }}
 {{- if not .Values.forceUnsupportedInterval }}
 {{- $max := 40 }}
 {{- $min := 10 }}
@@ -9,6 +10,7 @@
 {{- end }}
 {{- if lt ( .Values.common.config.interval | trimSuffix "s" | int64 ) $min }}
 {{ fail (printf "Intervals smaller than %ds are not supported" $min) }}
+{{- end }}
 {{- end }}
 {{- end }}
 
