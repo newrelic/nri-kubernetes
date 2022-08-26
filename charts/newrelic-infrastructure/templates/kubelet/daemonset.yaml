@@ -11,15 +11,8 @@ metadata:
   annotations: {{ . | nindent 4 }}
   {{- end }}
 spec:
-  {{- if eq .Values.kubelet.kind "DaemonSet"}}
   {{- with .Values.updateStrategy }}
   updateStrategy: {{ toYaml . | nindent 4 }}
-  {{- end }}
-  {{- end }}
-  {{- if eq .Values.kubelet.kind "Deployment"}}
-  {{- with .Values.strategy }}
-  strategy: {{ toYaml . | nindent 4 }}
-  {{- end }}
   {{- end }}
   selector:
     matchLabels:
