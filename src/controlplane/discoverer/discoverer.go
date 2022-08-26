@@ -17,7 +17,7 @@ var ErrPodNotFound = errors.New("pod not found")
 
 // PodDiscoverer is used to discover control plane components.
 type PodDiscoverer interface {
-	// Discover returns a pod mathching the selector, namespaces and
+	// Discover returns a pod matching the selector, namespaces and
 	// is in the same node if matchNode is true.
 	Discover(config.AutodiscoverControlPlane) (*corev1.Pod, error)
 }
