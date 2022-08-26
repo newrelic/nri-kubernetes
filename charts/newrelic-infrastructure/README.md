@@ -17,7 +17,7 @@ helm upgrade --install nri-kubernetes/newrelic-infrastructure -f your-custom-val
 ## Source Code
 
 * <https://github.com/newrelic/nri-kubernetes/>
-* <https://github.com/newrelic/nri-kubernetes/tree/master/charts/newrelic-infrastructure>
+* <https://github.com/newrelic/nri-kubernetes/tree/main/charts/newrelic-infrastructure>
 * <https://github.com/newrelic/infrastructure-agent/>
 
 ## Values managed globally
