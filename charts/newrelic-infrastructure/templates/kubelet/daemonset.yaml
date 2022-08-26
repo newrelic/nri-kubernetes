@@ -1,6 +1,6 @@
 {{- if (.Values.kubelet.enabled) }}
 apiVersion: apps/v1
-kind: {{ .Values.kubelet.kind }}
+kind: DaemonSet
 metadata:
   namespace: {{ .Release.Namespace }}
   labels:
