@@ -5,7 +5,6 @@ TOOLS_DIR := $(BIN_DIR)/dev-tools
 BINARY_NAME = nri-kubernetes
 E2E_BINARY_NAME := $(BINARY_NAME)-e2e
 GOFLAGS = -mod=readonly
-GOLANGCI_LINT = github.com/golangci/golangci-lint/cmd/golangci-lint
 
 # GOOS and GOARCH will likely come from env
 GOOS ?=
@@ -29,20 +28,13 @@ endif
 all: build
 
 .PHONY: build
-build: clean validate test compile
+build: clean test compile
 
 .PHONY: clean
 clean:
 	@echo "[clean] Removing integration binaries"
 	@rm -rf $(BIN_DIR)/$(BINARY_NAME) $(BIN_DIR)/$(E2E_BINARY_NAME)
 
-.PHONY: validate
-
-validate:
-	@echo "[validate] Validating source code running golangci-lint & semgrep... "
-	go run -modfile tools/go.mod $(GOFLAGS) $(GOLANGCI_LINT) run --verbose
-	@[ -f .semgrep.yml ] && semgrep_config=".semgrep.yml" || semgrep_config="p/golang" ; \
-	docker run --rm -v "${PWD}:/src:ro" --workdir /src returntocorp/semgrep -c "$$semgrep_config"
 
 .PHONY: compile
 
