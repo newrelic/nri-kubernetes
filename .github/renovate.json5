@@ -6,21 +6,19 @@
     ":disableDependencyDashboard"
   ],
   "enabledManagers": [
-    // Enable only the regex manager (for Dockerfile base image bumping). Go dependencies are managed by Dependabot.
+    // Enable only the regex manager. Go dependencies are managed by Dependabot.
     "regex",
     // Managers for helm and helm-values. Go dependencies are managed by Dependabot.
-    "helm-values",
     "helmv3"
   ],
   "regexManagers": [
     {
-      // Parse bundle image version from `BASE_IMAGE` ARG in Dockerfile.
       "fileMatch": [
-        "^Dockerfile$"
+        '(^|/)values\.yaml$' // Is the same regex as "helmv3" but we have to change the regex.
       ],
       "datasourceTemplate": "docker",
       "matchStrings": [
-        "BASE_IMAGE=(?<depName>.+):(?<currentValue>.+)"
+        " *repository: (?<depName>.+)\n *tag: (?<currentValue>.+)"
       ]
     }
   ]
