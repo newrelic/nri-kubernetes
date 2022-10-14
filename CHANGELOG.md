@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ---
 
+## 2.13.4
+
+### Added
+- Upgrade infrastructure-bundle to 2.8.32
+    - See https://github.com/newrelic/infrastructure-bundle/releases/tag/2.8.32 for more details about the upgraded integrations in this release of the infrastructure-bundle
+- Updated dependencies
+
 ## 2.13.3
 
 ### Added
