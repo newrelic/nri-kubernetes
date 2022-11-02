@@ -30,7 +30,7 @@ func Test_Authenticator_with_mTLS(t *testing.T) {
 	testCases := []struct {
 		name               string
 		insecureSkipVerify bool
-		cacert, key, cert  []byte
+		cacert, key, cert  string
 		secretName         string
 		assert             func(*testing.T, error, *http.Response, error)
 	}{
@@ -109,7 +109,7 @@ func Test_Authenticator_with_mTLS(t *testing.T) {
 				secretName,
 				secretNamespace,
 				corev1.SecretTypeOpaque,
-				fakeSecrets(test.cacert, test.key, test.cert),
+				fakeSecrets([]byte(test.cacert), []byte(test.key), []byte(test.cert)),
 			)
 
 			authenticator, err := authenticator.New(
@@ -149,9 +149,9 @@ func Test_Authenticator_fetches_certs(t *testing.T) {
 		{
 			name: "from_tls_secret_with_k8s_keys",
 			listerer: secretListerer(t, secretName, secretNamespace, corev1.SecretTypeTLS, map[string][]byte{
-				corev1.TLSCertKey:       clientCert,
-				corev1.TLSPrivateKeyKey: clientKey,
-				"ca.crt":                clientCACert,
+				corev1.TLSCertKey:       []byte(clientCert),
+				corev1.TLSPrivateKeyKey: []byte(clientKey),
+				"ca.crt":                []byte(clientCACert),
 			}),
 		},
 		{
@@ -159,17 +159,17 @@ func Test_Authenticator_fetches_certs(t *testing.T) {
 			// This test case should fail if Kubernetes constants change unexpectedly.
 			name: "from_tls_secret_with_standard_names",
 			listerer: secretListerer(t, secretName, secretNamespace, corev1.SecretTypeTLS, map[string][]byte{
-				"tls.crt": clientCert,
-				"tls.key": clientKey,
-				"ca.crt":  clientCACert,
+				"tls.crt": []byte(clientCert),
+				"tls.key": []byte(clientKey),
+				"ca.crt":  []byte(clientCACert),
 			}),
 		},
 		{
 			name: "from_opaque_secret_with_nr_names",
 			listerer: secretListerer(t, secretName, secretNamespace, corev1.SecretTypeOpaque, map[string][]byte{
-				"cert":   clientCert,
-				"key":    clientKey,
-				"cacert": clientCACert,
+				"cert":   []byte(clientCert),
+				"key":    []byte(clientKey),
+				"cacert": []byte(clientCACert),
 			}),
 		},
 	}
@@ -247,7 +247,7 @@ func startMTLSServer() string {
 		panic(err)
 	}
 
-	cert, err := tls.X509KeyPair(serverCert, serverKey)
+	cert, err := tls.X509KeyPair([]byte(serverCert), []byte(serverKey))
 	if err != nil {
 		panic(err)
 	}
@@ -256,7 +256,7 @@ func startMTLSServer() string {
 
 	clientCAs := x509.NewCertPool()
 
-	clientCAs.AppendCertsFromPEM(clientCACert)
+	clientCAs.AppendCertsFromPEM([]byte(clientCACert))
 
 	m := http.NewServeMux()
 
@@ -283,8 +283,8 @@ func startMTLSServer() string {
 }
 
 // Testing certificates generated using `cfssl`, check ./README.md for details.
-var (
-	clientCACert = []byte(`-----BEGIN CERTIFICATE-----
+const (
+	clientCACert = `-----BEGIN CERTIFICATE-----
 MIIDVjCCAj6gAwIBAgIUFC4471Vr90q3/UIKSA0/TGWdXUowDQYJKoZIhvcNAQEL
 BQAwQzELMAkGA1UEBhMCRVMxDDAKBgNVBAgTA0JDTjESMBAGA1UEBxMJQmFyY2Vs
 b25hMRIwEAYDVQQDEwlteS5vd24uY2EwHhcNMjIxMTAyMTI1OTAwWhcNMjcxMTAx
@@ -303,8 +303,8 @@ QUiGKnlpIW7X8o/IKrQmyMyUIa3LyQLVQWQp6sluYN5DPeQ9pVnjgc5feQHUDY0k
 u0Ycn+k79Gibu1m3EdtnymIWv1nIPrAsMwomHZEQuiL2lahPM7wpE/yX6voMSDY6
 zi8BOyoQSU/5M+6It/Ch0MgdOM94SGmXGTjjq/q9gCHgkCco1Qk00+54Trc1UZsR
 tYY1BVEEikAx4nKW/G8YLMSuzPZuTknCvafC+N552AWqevnShNJkI1d5
------END CERTIFICATE-----`)
-	clientCert = []byte(`-----BEGIN CERTIFICATE-----
+-----END CERTIFICATE-----`
+	clientCert = `-----BEGIN CERTIFICATE-----
 MIIDWTCCAkGgAwIBAgIUaynAmwh15Ikcn+uOaVnyL8LPOF0wDQYJKoZIhvcNAQEL
 BQAwQzELMAkGA1UEBhMCRVMxDDAKBgNVBAgTA0JDTjESMBAGA1UEBxMJQmFyY2Vs
 b25hMRIwEAYDVQQDEwlteS5vd24uY2EwIBcNMjIxMTAyMTMxMTAwWhgPMjEyMjEw
@@ -323,8 +323,8 @@ jdnCC8n2B1THLHiNMEchK7MwCJzgL9bIzCeIAOeBpL0NxN7zie+FV9gRGKnzS0sP
 IIb2//kgqm5B8ATobLmrpCrPFvvONiqoPuIR8MhSmRXYEib/NgKTkc3nO5UsJRms
 ucSP1oxG3VYOJ9IkizFN1sRCVLIRNddOBBPGkDw2NxKEIXX9cOPjoD1sCshsigc1
 ifv4GchsjkL1qf3Q+eAo51qj2eXMl5H+U5M+1JzujI3w66/d6x+o81gUbk1Z
------END CERTIFICATE-----`)
-	clientKey = []byte(`-----BEGIN RSA PRIVATE KEY-----
+-----END CERTIFICATE-----`
+	clientKey = `-----BEGIN RSA PRIVATE KEY-----
 MIIEpAIBAAKCAQEA5QJGhv0wI5Td7w6i4sDD1gaTCZPBCGhoZD3XN57sXCXsJYKO
 IPtnwMqwtF65rx4UiVqMHOGsoq/ydQiuflQ8sW5xDx0UUrJBswoCWO6+fbP4mYsY
 QFBH7oCurC4s1whyOiuPgKptksxhT4lWqecQAmS1pVVGJ39+e8C4WTJ2ixqPkpGk
@@ -350,8 +350,8 @@ pNPpPJY8jShdRTVYudfkDKME7tv+OveqrCcRW/Vk2xTLFu/sxk3qrj/0Sdyt84CM
 kZQWAQKBgQCAM7q4IGKqbvz4JlkQFHL6qworTewP78phjEY4taggfNV+LMEM86HV
 zoHOOMkKLHdjOA1Pz+tHhUoW7P/npiHqd5Gc+Vj8oykasF7qx1NHfYYUSaeByiUQ
 UjjTodSBXpwrvBU298T9VRKsn9ydowSedZYa5Gl7GgnMfW1k1yuuqg==
------END RSA PRIVATE KEY-----`)
-	serverCert = []byte(`-----BEGIN CERTIFICATE-----
+-----END RSA PRIVATE KEY-----`
+	serverCert = `-----BEGIN CERTIFICATE-----
 MIIDcTCCAlmgAwIBAgIUR7SABjgd0mehGzh5+8ImcZXqYEYwDQYJKoZIhvcNAQEL
 BQAwQzELMAkGA1UEBhMCRVMxDDAKBgNVBAgTA0JDTjESMBAGA1UEBxMJQmFyY2Vs
 b25hMRIwEAYDVQQDEwlteS5vd24uY2EwIBcNMjIxMTAyMTMwOTAwWhgPMjEyMjEw
@@ -371,8 +371,8 @@ BaGZOgOFNJqO53kNxzb9dpwPowaQmICR8k88TAj5BtIaOkUkGVUxa1Bna/x0c+Ku
 hhJ8rnO7bjIAPBCVKi40iTYgGkvqDcDaLmkVF42ssasTcWOhOylAl8v+wtg1N7sy
 oNlwDXrGyfY7e3d24DuoUUgmK80EEqAPsz5fh5Wh1LOcHELP1x/EeBVi2jdjJ1/D
 /b8iB3J6Aqyl+fZGlTLUEatQVPkv
------END CERTIFICATE-----`)
-	serverKey = []byte(`-----BEGIN RSA PRIVATE KEY-----
+-----END CERTIFICATE-----`
+	serverKey = `-----BEGIN RSA PRIVATE KEY-----
 MIIEpgIBAAKCAQEAyH5MDsV0qaO4a0iD9TKFWttofhAiOghtrSXULRaOw0nJT4Kc
 IFMtaNyyA8+gOkdxHFms564LslQMKMrC+DDGcXKyUYwVQC2J6Q75ze7qA/XgevNP
 j8s+XNwzVx5fIu+y0Ubekx0htO3orWPNwORHzjbLK/4rySSwKk97EHW8xbKMDwwC
@@ -398,8 +398,8 @@ ehwHNyJwML/w7Ncjzpa5rv920dLjMT7nYRQF9pYtexK9K4S8BJ8Vnug14xS278jP
 aNtfkOhTAoGBAIm977NFmqvOm4tMPEFfmhByBY/X6BNsiI3npfPkoZoa3OFgfAFN
 M8vxw5NybuI4Lpr+TcZrZHpxZ1s+dKjWWKz7OqhaaReC6428yUil7y6EY9rug2Al
 kh49/RIKPyyRA6vfmozzS8h03LA070w7oZtolpZVt4ImjtebS8d6At3H
------END RSA PRIVATE KEY-----`)
-	serverCACert = []byte(`-----BEGIN CERTIFICATE-----
+-----END RSA PRIVATE KEY-----`
+	serverCACert = `-----BEGIN CERTIFICATE-----
 MIIDVjCCAj6gAwIBAgIUFC4471Vr90q3/UIKSA0/TGWdXUowDQYJKoZIhvcNAQEL
 BQAwQzELMAkGA1UEBhMCRVMxDDAKBgNVBAgTA0JDTjESMBAGA1UEBxMJQmFyY2Vs
 b25hMRIwEAYDVQQDEwlteS5vd24uY2EwHhcNMjIxMTAyMTI1OTAwWhcNMjcxMTAx
@@ -418,5 +418,5 @@ QUiGKnlpIW7X8o/IKrQmyMyUIa3LyQLVQWQp6sluYN5DPeQ9pVnjgc5feQHUDY0k
 u0Ycn+k79Gibu1m3EdtnymIWv1nIPrAsMwomHZEQuiL2lahPM7wpE/yX6voMSDY6
 zi8BOyoQSU/5M+6It/Ch0MgdOM94SGmXGTjjq/q9gCHgkCco1Qk00+54Trc1UZsR
 tYY1BVEEikAx4nKW/G8YLMSuzPZuTknCvafC+N552AWqevnShNJkI1d5
------END CERTIFICATE-----`)
+-----END CERTIFICATE-----`
 )
