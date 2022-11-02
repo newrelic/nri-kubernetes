@@ -282,7 +282,7 @@ func startMTLSServer() string {
 	return endpoint
 }
 
-// These certificates are taking from the etcd TLS example.
+// Testing certificates generated using `cfssl`, check ./README.md for details.
 var (
 	clientCACert = []byte(`-----BEGIN CERTIFICATE-----
 MIIDVjCCAj6gAwIBAgIUFC4471Vr90q3/UIKSA0/TGWdXUowDQYJKoZIhvcNAQEL
