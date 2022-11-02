@@ -4,7 +4,7 @@ Testing certificates where generated using [cfssl](https://github.com/cloudflare
 
 ## Steps to generate new certificates
 
-Install `cfssl` and generate configuration files a follows:
+Install `cfssl` and generate configuration files as follows:
 
 **ca-config.json**:
 
