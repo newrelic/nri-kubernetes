@@ -5,13 +5,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 3.5.1
-
-### Changed
-Update control-plane authenticator testing tools.
-
-**Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.5.0...v3.5.1
-
 ## 3.5.0
 
 ### Changed
