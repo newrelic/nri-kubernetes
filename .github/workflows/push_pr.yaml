@@ -17,9 +17,9 @@ jobs:
         goarch: [ amd64, arm64, arm ]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v3
         with:
-          go-version: '1.18'
+          go-version-file: 'go.mod'
       - uses: actions/cache@v3
         with:
           path: |
@@ -80,10 +80,10 @@ jobs:
           minikube version: v1.20.0
           kubernetes version: ${{ matrix.kubernetes-version }}
           github token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v3
         if: steps.list-changed.outputs.changed == 'true'
         with:
-          go-version: '1.18'
+          go-version-file: 'go.mod'
       - name: Create image for chart testing
         if: steps.list-changed.outputs.changed == 'true'
         run: |
@@ -104,9 +104,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v3
         with:
-          go-version: '1.18'
+          go-version-file: 'go.mod'
       - uses: actions/cache@v3
         with:
           path: |
@@ -123,9 +123,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v3
         with:
-          go-version: '1.18'
+          go-version-file: 'go.mod'
       - uses: newrelic/newrelic-infra-checkers@v1
         with:
           golangci-lint-config: golangci-lint
