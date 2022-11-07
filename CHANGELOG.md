@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Upgrade infrastructure-bundle to 2.8.34
     - See https://github.com/newrelic/infrastructure-bundle/releases/tag/2.8.34 for more details about the upgraded integrations in this release of the infrastructure-bundle
 - Updated dependencies
+- Use Go version 1.19
 
 ## 2.13.4
 
