@@ -11,6 +11,8 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 )
 
+const entityNamespaceSeparator = ":"
+
 // Asserter is a helper for checking whether an integration contains all the metrics defined in a specGroup.
 // It provides a chainable API, with each call returning a copy of the asserter. This way, successive calls to the
 // chainable methods do not modify the previous Asserter, allowing to reuse the chain as a test fans out.
@@ -71,9 +73,9 @@ func (a Asserter) Silently() Asserter {
 
 // Assert checks whether all metrics defined in the supplied groups are present, and fails the test if any is not.
 // Assert will fail the test if:
-// - No entity at all exists with a type matching a specGroup, unless this specGroup is ignored using ExcludingGroups.
-// - Any entity whose type matches a specGroup lacks any metric defined in the specGroup, unless any Func returns
-//   true for that particular groupName, metric, and entity.
+//   - No entity at all exists with a type matching a specGroup, unless this specGroup is ignored using ExcludingGroups.
+//   - Any entity whose type matches a specGroup lacks any metric defined in the specGroup, unless any Func returns
+//     true for that particular groupName, metric, and entity.
 func (a Asserter) Assert(t *testing.T) {
 	t.Helper()
 
@@ -140,12 +142,23 @@ func (a *Asserter) shouldExcludeGroup(group string) bool {
 func entitiesFor(entities []*integration.Entity, pseudotype string) []*integration.Entity {
 	var appropriateEntities []*integration.Entity
 	for _, e := range entities {
-		if strings.Contains(strings.ToLower(e.Metadata.Namespace), strings.ToLower(pseudotype)) {
+		if specGroupNameMatch(e, pseudotype) {
 			appropriateEntities = append(appropriateEntities, e)
 		}
 	}
 
 	return appropriateEntities
+}
+
+// pseudotypeMatch returns true if the specGroupName match with the provided entity.
+func specGroupNameMatch(entity *integration.Entity, specGroupName string) bool {
+	chunks := strings.Split(entity.Metadata.Namespace, entityNamespaceSeparator)
+	for _, chunk := range chunks {
+		if chunk == specGroupName {
+			return true
+		}
+	}
+	return false
 }
 
 // entityMetric is a helper function that returns the first metric from an entity that matches the given name.
