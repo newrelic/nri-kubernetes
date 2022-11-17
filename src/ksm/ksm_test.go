@@ -40,7 +40,7 @@ func TestScraper(t *testing.T) {
 			// The following HPA metrics operate in a true-or-NULL basis, and there won't be present if condition is
 			// false.
 			exclude.Exclude(
-				exclude.Groups("hpa"),
+				exclude.Groups("horizontalpodautoscaler"),
 				exclude.Metrics("isActive", "isAble", "isLimited"),
 			),
 		)
@@ -126,6 +126,6 @@ func TestScraper_FilterNamespace(t *testing.T) {
 		err = scraper.Run(i)
 		require.NoError(t, err)
 
-		assert.Equal(t, 18, len(i.Entities))
+		assert.Equal(t, 19, len(i.Entities))
 	})
 }
