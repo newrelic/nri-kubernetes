@@ -23,6 +23,7 @@ type Asserter struct {
 	excludedGroups []string
 	exclude        []exclude.Func
 	silent         bool
+	groupAliases   map[string]string
 }
 
 // New returns an empty asserter.
@@ -71,6 +72,13 @@ func (a Asserter) Silently() Asserter {
 	return a
 }
 
+// AliasingGroups returns an asserter configured with a alias for groups so it is possible
+// to look for antities with a different group name.
+func (a Asserter) AliasingGroups(aliases map[string]string) Asserter {
+	a.groupAliases = aliases
+	return a
+}
+
 // Assert checks whether all metrics defined in the supplied groups are present, and fails the test if any is not.
 // Assert will fail the test if:
 //   - No entity at all exists with a type matching a specGroup, unless this specGroup is ignored using ExcludingGroups.
@@ -91,9 +99,13 @@ func (a Asserter) Assert(t *testing.T) {
 		}
 
 		// Integration will contain many entities, but we are only interested in the one corresponding to this group.
-		entities := entitiesFor(a.entities, groupName)
+		pseudotype := groupName
+		if alias := a.groupAliases[groupName]; alias != "" {
+			pseudotype = alias
+		}
+		entities := entitiesFor(a.entities, pseudotype)
 		if entities == nil {
-			t.Fatalf("could not find any entity for specGroup %q", groupName)
+			t.Fatalf("could not find any entity for specGroup %q (%q)", groupName, pseudotype)
 		}
 
 		for _, spec := range group.Specs {

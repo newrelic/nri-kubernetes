@@ -43,7 +43,8 @@ func TestScraper(t *testing.T) {
 				exclude.Groups("horizontalpodautoscaler"),
 				exclude.Metrics("isActive", "isAble", "isLimited"),
 			),
-		)
+		).
+		AliasingGroups(map[string]string{"horizontalpodautoscaler": "hpa"})
 
 	for _, v := range testutil.AllVersions() {
 		// Make a copy of the version variable to use it concurrently
@@ -85,7 +86,6 @@ func TestScraper(t *testing.T) {
 			if err != nil {
 				t.Fatalf("running scraper: %v", err)
 			}
-
 			// Call the asserter for the entities of this particular sub-test.
 			asserter.On(i.Entities).Assert(t)
 		})

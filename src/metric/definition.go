@@ -800,9 +800,11 @@ var KSMSpecs = definition.SpecGroups{
 		},
 	},
 	"horizontalpodautoscaler": {
-		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_horizontalpodautoscaler_labels", "horizontalpodautoscaler"),
-		TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_horizontalpodautoscaler_labels"),
+		IDGenerator: prometheus.FromLabelValueEntityIDGenerator("kube_horizontalpodautoscaler_labels", "horizontalpodautoscaler"),
+		// group customized for backwards compatibility reasons (Metrics where renamed in KSM v2)
+		TypeGenerator:   prometheus.FromLabelValueEntityTypeGeneratorWithCustomGroup("kube_horizontalpodautoscaler_labels", "hpa"),
 		NamespaceGetter: prometheus.FromLabelGetNamespace,
+		MsTypeGuesser:   metricSetTypeGuesserWithCustomGroup("hpa"), // group customized for backwards compatibility reasons
 		Specs: []definition.Spec{
 			// Kubernetes labels converted to Prometheus labels. not sure if interesting to get
 			{Name: "labels", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_labels"), Type: sdkMetric.GAUGE},
@@ -1323,5 +1325,13 @@ func fetchIfMissing(replacement definition.FetchFunc, main definition.FetchFunc)
 			return definition.FetchedValues{}, nil
 		}
 		return replacement(groupLabel, entityID, groups)
+	}
+}
+
+// metricSetTypeGuesserWithCustomGroup customizes K8sMetricSetTypeGuesser by setting up a custom value instead of the
+// groupLabel.
+func metricSetTypeGuesserWithCustomGroup(group string) definition.GuessFunc {
+	return func(clusterName, groupLabel, entityID string, groups definition.RawGroups) (string, error) {
+		return definition.K8sMetricSetTypeGuesser(clusterName, group, entityID, groups) //nolint: wrapcheck
 	}
 }

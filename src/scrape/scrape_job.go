@@ -2,8 +2,6 @@ package scrape
 
 import (
 	"errors"
-	"fmt"
-	"strings"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	log "github.com/sirupsen/logrus"
@@ -70,7 +68,7 @@ func (s *Job) Populate(
 		ClusterName:   clusterName,
 		K8sVersion:    k8sVersion,
 		Specs:         s.Specs,
-		MsTypeGuesser: k8sMetricSetTypeGuesser,
+		MsTypeGuesser: definition.K8sMetricSetTypeGuesser,
 		Groups:        groups,
 		Filterer:      s.Filterer,
 	}
@@ -88,13 +86,4 @@ func (s *Job) Populate(
 	}
 
 	return data.PopulateResult{Populated: true}
-}
-
-// k8sMetricSetTypeGuesser is the metric set type guesser for k8s integrations.
-func k8sMetricSetTypeGuesser(_, groupLabel, _ string, _ definition.RawGroups) (string, error) {
-	var sampleName string
-	for _, s := range strings.Split(groupLabel, "-") {
-		sampleName += strings.Title(s)
-	}
-	return fmt.Sprintf("K8s%vSample", sampleName), nil
 }

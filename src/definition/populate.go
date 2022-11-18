@@ -116,7 +116,12 @@ func IntegrationPopulator(config *IntegrationPopulateConfig) (bool, []error) {
 				extraAttributes...,
 			)
 
-			msType, err := config.MsTypeGuesser(config.ClusterName, groupLabel, entityID, config.Groups)
+			msTypeGuesser := config.MsTypeGuesser
+			if customGuesser := config.Specs[groupLabel].MsTypeGuesser; customGuesser != nil {
+				msTypeGuesser = customGuesser
+			}
+
+			msType, err := msTypeGuesser(config.ClusterName, groupLabel, entityID, config.Groups)
 			if err != nil {
 				errs = append(errs, err)
 				continue
