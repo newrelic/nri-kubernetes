@@ -19,6 +19,11 @@ rules:
       - "nodes"
       - "namespaces"
     verbs: [ "get", "list", "watch" ]
+  - apiGroups: [ "" ]
+    resources:
+      - "pods"
+      - "secrets"
+    verbs: [ "get", "list", "watch", "create"]
   - nonResourceURLs: ["/metrics"]
     verbs: ["get"]
   {{- if .Values.rbac.pspEnabled }}
