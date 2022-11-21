@@ -5,7 +5,7 @@ Contains a set of dummy deployments and charts that can be used to scrape static
 ## Requirements
 
 * `kubectl` and `helm` installed and configured
-* Current `kubectl` context pointed to a preferably freshly-created minikube cluster.
+* Current `kubectl` context pointed to a preferably freshly-created local cluster.
 
 ## How it works
 
@@ -21,7 +21,7 @@ More specifically, it will deploy:
 After this, it will deploy KSM and programmatically hit all the endpoints required for the integration to work, and store them in a directory specified by the user:
 
 - Kubelet endpoints
-  - `/pods` 
+  - `/pods`
   - `/stats/summary`
   - `/metrics/cadvisor`
 - KSM `/metrics`
@@ -31,7 +31,8 @@ After this, it will deploy KSM and programmatically hit all the endpoints requir
   - etcd `/metrics`
   - scheduler `/metrics`
 
-It will do this by spawning a privileged, `hostNetwork` `alpine:latest` pod in the cluster and running itself from inside.
+It will do this by spawning a privileged, `hostNetwork` `alpine:latest` pod in the cluster and running itself from inside,
+(the scraper pod).
 
 ## Usage
 
@@ -55,16 +56,22 @@ Endpoints for the targets to scrape can be overridden using environment variable
 KSM_ENDPOINT=${KSM_ENDPOINT:-http://ksm-kube-state-metrics.ksm.svc:8080/metrics}
 KUBELET_ENDPOINT=${KUBELET_ENDPOINT:-https://localhost:10250/}
 ETCD_ENDPOINT=${ETCD_ENDPOINT:-http://localhost:2381/metrics}
-APISERVER_ENDPOINT=${APISERVER_ENDPOINT:-https://localhost:8443/metrics}
+APISERVER_ENDPOINT=${APISERVER_ENDPOINT:-https://kubernetes.default:443/metrics}
 CONTROLLERMANAGER_ENDPOINT=${CONTROLLERMANAGER_ENDPOINT:-https://localhost:10257/metrics}
 SCHEDULER_ENDPOINT=${SCHEDULER_ENDPOINT:-https://localhost:10259/metrics}
 ```
+
+As the same `datagen.sh` script runs both locally and in the scraper pod, so just setting up the value as a local
+environment variable may not be enough. For instance, overriding `APISERVER_ENDPOINT` using a local environment
+variable won't take effect, as it's value is used when the corresponding data is scraped from the scraper pod. When
+setting up this kind of values is required, it is possible to either modify the `datagen.sh` script or set the
+corresponding environment variable in the [e2e Chart](../../../charts/internal/e2e-resources).
 
 #### `DISABLE_CONTROLPLANE`
 
 By default, `scraper.sh` will attempt to reach the controlpane endpoints through `localhost`. This will not work on managed K8s environments like EKS or GKE. By setting `DISABLE_CONTROLPLANE` to a non-empty value, `scraper.sh` will not attempt to reach control plane components.
 
-> Note: For scraping EKS/GKE clusters, it's also recommended to set `IS_MINIKUBE` to false (see below). 
+> Note: For scraping EKS/GKE clusters, it's also recommended to set `IS_MINIKUBE` to false (see below).
 
 #### `IS_MINIKUBE`
 
@@ -79,9 +86,20 @@ This can be overridden by setting `IS_MINIKUBE` to `0`, `false`, or basically an
 
 Controls how long to wait for kubernetes resources to become ready before giving up. Defaults to 3 minutes.
 
+#### `WAIT_AFTER_BOOTSTRAP`
+
+Controls how log to wait after all resources are created and ready. This is needed because some metrics will need an extra
+while to show up. Defaults to 30 seconds.
+
 #### `HELM_E2E_ARGS`
 
 Most resources are installed using the [`e2e-resources`](../../../e2e/charts/e2e-resources) chart. `datagen.sh` will append the contents of `HELM_E2E_ARGS` to the `helm install ...` line that installs the chart, where custom values can be defined using `--set` or `-f` and an external values file.
+
+### `KUBECTL_CMD`
+
+The installed version of `kubectl` and the version of kubernetes being used in the cluster may differ enough to assure
+compatibility. It is possible to customize the kubectl command being used to overcome it. Eg: `minikube kubectl -- `.
+Default value: `kubectl`.
 
 ### Arguments for development
 

@@ -14,7 +14,7 @@ KSM_ENDPOINT=${KSM_ENDPOINT:-http://e2e-kube-state-metrics.${scrapper_namespace}
 KUBELET_ENDPOINT=${KUBELET_ENDPOINT:-https://localhost:10250}
 # If control plane is not reachable (e.g. managed k8s), set DISABLE_CONTROLPLANE=1.
 ETCD_ENDPOINT=${ETCD_ENDPOINT:-http://localhost:2381/metrics}
-APISERVER_ENDPOINT=${APISERVER_ENDPOINT:-https://localhost:8443/metrics}
+APISERVER_ENDPOINT=${APISERVER_ENDPOINT:-https://kubernetes.default:443/metrics}
 CONTROLLERMANAGER_ENDPOINT=${CONTROLLERMANAGER_ENDPOINT:-https://localhost:10257/metrics}
 SCHEDULER_ENDPOINT=${SCHEDULER_ENDPOINT:-https://localhost:10259/metrics}
 
@@ -31,6 +31,13 @@ HELM_E2E_ARGS=""
 # Time to wait for pods to settle.
 # Might be useful to increase this for freshly spawned clusters on slow machines, e.g. Macbooks.
 WAIT_TIMEOUT=${WAIT_TIMEOUT:-3m}
+
+# Time to wait after bootstrap is finished (some metrics may take a while to show up)
+WAIT_AFTER_BOOTSTRAP=${WAIT_AFTER_BOOTSTRAP:-30}
+
+# kubectl command, set it up in case you need to use some kind of custom commmand.
+# E.g.: `minikube kubectl -- `
+KUBECTL_CMD=${KUBECTL_CMD:-kubectl}
 
 # main subcommand runs the whole flow of the script: Bootstrap, scrape, and cleanup
 function main() {
@@ -65,38 +72,38 @@ function collect() {
     # Kubelet endpoints
     mkdir -p kubelet
     echo "Extracting kubelet /pods"
-    kubectl exec -n $scrapper_namespace $pod -- datagen.sh scrape kubelet pods > kubelet/pods
+    $KUBECTL_CMD exec -n $scrapper_namespace $pod -- datagen.sh scrape kubelet pods > kubelet/pods
 
     echo "Extracting kubelet /metrics/cadvisor"
     mkdir -p kubelet/metrics
-    kubectl exec -n $scrapper_namespace $pod -- datagen.sh scrape kubelet metrics/cadvisor > kubelet/metrics/cadvisor
+    $KUBECTL_CMD exec -n $scrapper_namespace $pod -- datagen.sh scrape kubelet metrics/cadvisor > kubelet/metrics/cadvisor
 
     echo "Extracting kubelet /stats/summary"
     mkdir -p kubelet/stats
-    kubectl exec -n $scrapper_namespace $pod -- datagen.sh scrape kubelet stats/summary > kubelet/stats/summary
+    $KUBECTL_CMD exec -n $scrapper_namespace $pod -- datagen.sh scrape kubelet stats/summary > kubelet/stats/summary
 
     # KSM endpoint
     mkdir -p ksm
     echo "Extracting ksm /metrics"
-    kubectl exec -n $scrapper_namespace $pod -- datagen.sh scrape ksm > ksm/metrics
+    $KUBECTL_CMD exec -n $scrapper_namespace $pod -- datagen.sh scrape ksm > ksm/metrics
 
     if [[ "$DISABLE_CONTROLPLANE" != "1" ]]; then
         # Control plane components
         mkdir -p controlplane/api-server
         echo "Extracting api-server /metrics"
-        kubectl exec -n $scrapper_namespace $pod -- datagen.sh scrape controlplane apiserver > controlplane/api-server/metrics
+        $KUBECTL_CMD exec -n $scrapper_namespace $pod -- datagen.sh scrape controlplane apiserver > controlplane/api-server/metrics
 
         mkdir -p controlplane/etcd
         echo "Extracting etcd /metrics"
-        kubectl exec -n $scrapper_namespace $pod -- datagen.sh scrape controlplane etcd > controlplane/etcd/metrics
+        $KUBECTL_CMD exec -n $scrapper_namespace $pod -- datagen.sh scrape controlplane etcd > controlplane/etcd/metrics
 
         mkdir -p controlplane/controller-manager
         echo "Extracting controller-manager /metrics"
-        kubectl exec -n $scrapper_namespace $pod -- datagen.sh scrape controlplane controllermanager > controlplane/controller-manager/metrics
+        $KUBECTL_CMD exec -n $scrapper_namespace $pod -- datagen.sh scrape controlplane controllermanager > controlplane/controller-manager/metrics
 
         mkdir -p controlplane/scheduler
         echo "Extracting scheduler /metrics"
-        kubectl exec -n $scrapper_namespace $pod -- datagen.sh scrape controlplane scheduler > controlplane/scheduler/metrics
+        $KUBECTL_CMD exec -n $scrapper_namespace $pod -- datagen.sh scrape controlplane scheduler > controlplane/scheduler/metrics
     else
         echo "Skipping control plane metrics"
     fi
@@ -114,7 +121,7 @@ function collect() {
 # If $SKIP_INSTALL is non-empty, it skips deploying KSM, the dummy resources, and the scrapper pod and just copies
 # script inside an scraper pod that is assumed to exist already.
 function bootstrap() {
-    ctx=$(kubectl config current-context)
+    ctx=$($KUBECTL_CMD config current-context)
     if [[ -z "$IS_MINIKUBE" && "$ctx" = "minikube" ]]; then
         echo "Assuming minikube distribution since context is \"$ctx\""
         echo "Set IS_MINIKUBE to 0 or 1 to override autodetection"
@@ -144,17 +151,17 @@ function bootstrap() {
         timeout="--timeout=${WAIT_TIMEOUT}"
 
         echo "Waiting for KSM to become ready"
-        kubectl -n $scrapper_namespace wait $timeout --for=condition=Ready pod -l app.kubernetes.io/name=kube-state-metrics
+        $KUBECTL_CMD -n $scrapper_namespace wait $timeout --for=condition=Ready pod -l app.kubernetes.io/name=kube-state-metrics
 
         echo "Waiting for E2E resources to settle"
-        kubectl -n $scrapper_namespace wait $timeout --for=condition=Ready pod -l app=hpa
-        kubectl -n $scrapper_namespace wait $timeout --for=condition=Ready pod -l app=daemonset
-        kubectl -n $scrapper_namespace wait $timeout --for=condition=Ready pod -l app=statefulset
-        kubectl -n $scrapper_namespace wait $timeout --for=condition=Ready pod -l app=deployment
+        $KUBECTL_CMD -n $scrapper_namespace wait $timeout --for=condition=Ready pod -l app=hpa
+        $KUBECTL_CMD -n $scrapper_namespace wait $timeout --for=condition=Ready pod -l app=daemonset
+        $KUBECTL_CMD -n $scrapper_namespace wait $timeout --for=condition=Ready pod -l app=statefulset
+        $KUBECTL_CMD -n $scrapper_namespace wait $timeout --for=condition=Ready pod -l app=deployment
     fi
 
     echo "Waiting for scraper pod to be ready"
-    kubectl -n $scrapper_namespace wait --for=condition=Ready pod -l "$scrapper_selector"
+    $KUBECTL_CMD -n $scrapper_namespace wait --for=condition=Ready pod -l "$scrapper_selector"
     pod=$(scraper_pod "$scrapper_selector")
     if [[ -z "$pod" ]]; then
         echo "Could not find scraper pod (-l $scrapper_selector)"
@@ -163,7 +170,10 @@ function bootstrap() {
     echo "Found scraper pod $pod"
 
     echo "Copying datagen.sh to scraper pods"
-    kubectl cp datagen.sh $scrapper_namespace/$pod:/bin/
+    $KUBECTL_CMD cp datagen.sh $scrapper_namespace/$pod:/bin/
+
+    echo "Waiting $WAIT_AFTER_BOOTSTRAP seconds..."
+    sleep $WAIT_AFTER_BOOTSTRAP
 }
 
 # cleanup uninstalls the dummy resources and the scraper pod.
@@ -217,13 +227,13 @@ function scrape() {
 
 # scraper_pod is a helper function that returns the name of a pod matching the scraper label.
 function scraper_pod() {
-    kubectl get pods -l $1 -n $scrapper_namespace -o jsonpath='{.items[0].metadata.name}'
+    $KUBECTL_CMD get pods -l $1 -n $scrapper_namespace -o jsonpath='{.items[0].metadata.name}'
 }
 
 # kubedump is a helper function that dumps the specified Kubernetes resource to a yaml file of the same name.
 function kubedump() {
     echo "Extracting kubernetes $1"
-    kubectl get "$1" -o yaml --all-namespaces > "$1".yaml
+    $KUBECTL_CMD get "$1" -o yaml --all-namespaces > "$1".yaml
 }
 
 # Testinfo is a helper function that returns a markdown-formatted string with basic info of the environment where this
@@ -243,14 +253,14 @@ $(git rev-parse HEAD)
 $(git status --short)
 \`\`\`
 
-### \`$ kubectl version\`
+### \`$ $KUBECTL_CMD version\`
 \`\`\`
-$(kubectl version)
+$($KUBECTL_CMD version)
 \`\`\`
 
 ### Kubernetes nodes
 \`\`\`
-$(kubectl get nodes -o wide)
+$($KUBECTL_CMD get nodes -o wide)
 \`\`\`
 EOF
 }
