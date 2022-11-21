@@ -73,7 +73,7 @@ func (a Asserter) Silently() Asserter {
 }
 
 // AliasingGroups returns an asserter configured with an alias for groups so it is possible
-// to look for antities with a different group name.
+// to look for entities with a different group name.
 func (a Asserter) AliasingGroups(aliases map[string]string) Asserter {
 	a.groupAliases = aliases
 	return a
