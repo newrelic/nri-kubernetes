@@ -162,7 +162,7 @@ func entitiesFor(entities []*integration.Entity, pseudotype string) []*integrati
 	return appropriateEntities
 }
 
-// pseudotypeMatch returns true if the specGroupName match with the provided entity.
+// specGroupNameMatch returns true if the specGroupName match with the provided entity.
 func specGroupNameMatch(entity *integration.Entity, specGroupName string) bool {
 	chunks := strings.Split(entity.Metadata.Namespace, entityNamespaceSeparator)
 	for _, chunk := range chunks {
