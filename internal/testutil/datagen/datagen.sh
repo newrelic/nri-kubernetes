@@ -35,7 +35,7 @@ WAIT_TIMEOUT=${WAIT_TIMEOUT:-3m}
 # Time to wait after bootstrap is finished (some metrics may take a while to show up)
 WAIT_AFTER_BOOTSTRAP=${WAIT_AFTER_BOOTSTRAP:-30}
 
-# kubectl command, set it up in case you need to use some kind of custom commmand.
+# kubectl command, set it up in case you need to use some kind of custom command.
 # E.g.: `minikube kubectl -- `
 KUBECTL_CMD=${KUBECTL_CMD:-kubectl}
 
