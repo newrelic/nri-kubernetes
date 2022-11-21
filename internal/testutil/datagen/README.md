@@ -31,8 +31,7 @@ After this, it will deploy KSM and programmatically hit all the endpoints requir
   - etcd `/metrics`
   - scheduler `/metrics`
 
-It will do this by spawning a privileged, `hostNetwork` `alpine:latest` pod in the cluster and running itself from inside,
-(the scraper pod).
+It will do this by spawning a privileged, `hostNetwork` `alpine:latest` pod (the _scraper pod_) in the cluster and running itself from inside.
 
 ## Usage
 
