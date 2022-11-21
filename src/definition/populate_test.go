@@ -734,6 +734,38 @@ func TestIntegrationPopulator_PrometheusFormatFilterNamespace(t *testing.T) {
 	}
 }
 
+func TestIntegrationPopulator_CustomMsTypeGuesser(t *testing.T) { //nolint: paralleltest
+	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
+	require.NoError(t, err)
+
+	customMsTypeGuesser := func(_, _, _ string, _ definition.RawGroups) (string, error) {
+		return "Custom", nil
+	}
+
+	config := testConfig(intgr)
+	config.Specs = definition.SpecGroups{
+		"test": definition.SpecGroup{
+			TypeGenerator:   fromGroupEntityTypeGuessFunc,
+			NamespaceGetter: kubeletMetric.FromLabelGetNamespace,
+			MsTypeGuesser:   customMsTypeGuesser,
+			Specs: []definition.Spec{
+				{"metric_1", definition.FromRaw("raw_metric_name_1"), metric.GAUGE, false},
+			},
+		},
+	}
+
+	populated, errs := definition.IntegrationPopulator(config)
+	assert.True(t, populated)
+	assert.Empty(t, errs)
+	for _, e := range intgr.Entities {
+		if e.Metadata.Namespace != "k8s:cluster" { // the custom MsTypeGuesser does not apply to the cluster entity.
+			for _, ms := range e.Metrics {
+				assert.Equal(t, "Custom", ms.Metrics["event_type"])
+			}
+		}
+	}
+}
+
 type NamespaceFilterMock struct{}
 
 func (nf NamespaceFilterMock) IsAllowed(namespace string) bool {
