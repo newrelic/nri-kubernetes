@@ -14,7 +14,7 @@ const NamespaceGroup = "namespace"
 const NamespaceFilteredLabel = "nrFiltered"
 
 // GuessFunc guesses from data.
-type GuessFunc func(clusterName, groupLabel, entityID string, groups RawGroups) (string, error)
+type GuessFunc func(groupLabel string) (string, error)
 
 func populateCluster(i *integration.Integration, clusterName string, k8sVersion fmt.Stringer) error {
 	e, err := i.Entity(clusterName, "k8s:cluster")
@@ -121,7 +121,7 @@ func IntegrationPopulator(config *IntegrationPopulateConfig) (bool, []error) {
 				msTypeGuesser = customGuesser
 			}
 
-			msType, err := msTypeGuesser(config.ClusterName, groupLabel, entityID, config.Groups)
+			msType, err := msTypeGuesser(groupLabel)
 			if err != nil {
 				errs = append(errs, err)
 				continue

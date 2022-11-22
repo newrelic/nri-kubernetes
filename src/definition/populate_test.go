@@ -181,7 +181,7 @@ func fromMultiple(values definition.FetchedValues) definition.FetchFunc {
 }
 
 // fromGroupMetricSetTypeGuessFunc uses the groupLabel for creating the metric set type sample.
-func fromGroupMetricSetTypeGuessFunc(_, groupLabel, _ string, _ definition.RawGroups) (string, error) {
+func fromGroupMetricSetTypeGuessFunc(groupLabel string) (string, error) {
 	return fmt.Sprintf("%vSample", strings.Title(groupLabel)), nil
 }
 
@@ -669,7 +669,7 @@ func TestIntegrationPopulator_EntityTypeGeneratorFuncWithError(t *testing.T) {
 }
 
 func TestIntegrationPopulator_msTypeGuesserFuncWithError(t *testing.T) {
-	msTypeGuesserFuncWithError := func(_, groupLabel, _ string, _ definition.RawGroups) (string, error) {
+	msTypeGuesserFuncWithError := func(groupLabel string) (string, error) {
 		return "", fmt.Errorf("error setting event type")
 	}
 
@@ -738,7 +738,7 @@ func TestIntegrationPopulator_CustomMsTypeGuesser(t *testing.T) { //nolint: para
 	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
 	require.NoError(t, err)
 
-	customMsTypeGuesser := func(_, _, _ string, _ definition.RawGroups) (string, error) {
+	customMsTypeGuesser := func(_ string) (string, error) {
 		return "Custom", nil
 	}
 
