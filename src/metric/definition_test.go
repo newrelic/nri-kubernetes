@@ -236,7 +236,7 @@ func TestMetricSetTypeGuesserWithCustomGroup(t *testing.T) {
 		t.Run(testCase.groupLabel, func(t *testing.T) {
 			t.Parallel()
 
-			guess, err := metricSetTypeGuesserWithCustomGroup("custom")("", testCase.groupLabel, "", nil)
+			guess, err := metricSetTypeGuesserWithCustomGroup("custom")(testCase.groupLabel)
 			assert.NoError(t, err)
 			assert.Equal(t, expected, guess)
 		})

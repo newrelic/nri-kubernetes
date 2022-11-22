@@ -23,7 +23,7 @@ func TestK8sMetricSetTypeGuesser(t *testing.T) {
 		t.Run(testCase.groupLabel, func(t *testing.T) {
 			t.Parallel()
 
-			guess, err := K8sMetricSetTypeGuesser("", testCase.groupLabel, "", nil)
+			guess, err := K8sMetricSetTypeGuesser(testCase.groupLabel)
 			assert.NoError(t, err)
 			assert.Equal(t, testCase.expected, guess)
 		})

@@ -1331,7 +1331,7 @@ func fetchIfMissing(replacement definition.FetchFunc, main definition.FetchFunc)
 // metricSetTypeGuesserWithCustomGroup customizes K8sMetricSetTypeGuesser by setting up a custom value instead of the
 // groupLabel.
 func metricSetTypeGuesserWithCustomGroup(group string) definition.GuessFunc {
-	return func(clusterName, groupLabel, entityID string, groups definition.RawGroups) (string, error) {
-		return definition.K8sMetricSetTypeGuesser(clusterName, group, entityID, groups) //nolint: wrapcheck
+	return func(_ string) (string, error) {
+		return definition.K8sMetricSetTypeGuesser(group) //nolint: wrapcheck
 	}
 }
