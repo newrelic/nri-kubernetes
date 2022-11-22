@@ -15,7 +15,7 @@ Then you need to build the binary and the image. Notice that  since the Dockerfi
 support, you may need to set `DOCKER_BUILDKIT=1` when running `docker build` for the `TARGETARCH`
 and `TARGETOS` args to be populated.
 ```shell
-GOOS=linux GOARCH=amd64 make compile # Set GOOS and GOARCH explicitly since Dockerfile expects them in the binary name
+GOOS=linux GOARCH=arm64 make compile # Set GOOS and GOARCH explicitly since Dockerfile expects them in the binary name
 export  DOCKER_BUILDKIT=1
 docker build -t e2e/nri-kubernetes:e2e  .
 minikube image load e2e/nri-kubernetes:e2e
@@ -35,9 +35,15 @@ cd newrelic-integration-e2e-action/newrelic-integration-e2e
 go build -o  $GOPATH/bin/newrelic-integration-e2e ./cmd/...
 ```
 
-You can now run the e2e tests locally
+You can now run the e2e tests locally once you export the needed variables
 ```shell
-LICENSE_KEY=${LICENSE_KEY} EXCEPTIONS_SOURCE_FILE=${EXCEPTION_FILE} newrelic-integration-e2e --commit_sha=test-string --retry_attempts=5 --retry_seconds=60 \
+export EXCEPTION_FILE="./1_22-exceptions.yml"
+export LICENSE_KEY=xxx
+export API_KEY=xxx
+export ACCOUNT_ID=xxx
+
+LICENSE_KEY=${LICENSE_KEY} EXCEPTIONS_SOURCE_FILE=${EXCEPTION_FILE}  go run github.com/newrelic/newrelic-integration-e2e-action@latest \
+     --commit_sha=test-string --retry_attempts=5 --retry_seconds=60 \
 	 --account_id=${ACCOUNT_ID} --api_key=${API_KEY} --license_key=${LICENSE_KEY} \
 	 --spec_path=./e2e/test-specs.yml --verbose_mode=true --agent_enabled="false"
 ```
