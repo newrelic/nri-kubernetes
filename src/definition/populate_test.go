@@ -758,10 +758,11 @@ func TestIntegrationPopulator_CustomMsTypeGuesser(t *testing.T) { //nolint: para
 	assert.True(t, populated)
 	assert.Empty(t, errs)
 	for _, e := range intgr.Entities {
-		if e.Metadata.Namespace != "k8s:cluster" { // the custom MsTypeGuesser does not apply to the cluster entity.
-			for _, ms := range e.Metrics {
-				assert.Equal(t, "Custom", ms.Metrics["event_type"])
-			}
+		if e.Metadata.Namespace == "k8s:cluster" { // the custom MsTypeGuesser does not apply to the cluster entity.
+			continue
+		}
+		for _, ms := range e.Metrics {
+			assert.Equal(t, "Custom", ms.Metrics["event_type"])
 		}
 	}
 }
