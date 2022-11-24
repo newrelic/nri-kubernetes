@@ -126,7 +126,7 @@ We define “Personal Data” as any information relating to an identified or id
 For more information, review [New Relic’s General Data Privacy Notice](https://newrelic.com/termsandconditions/privacy).
 
 ## Contribute
-
+ 
 We encourage your contributions to improve this project! Keep in mind that when you submit your pull request, you'll need to sign the CLA via the click-through using CLA-Assistant. You only have to sign the CLA one time per project.
 
 If you have any questions, or to execute our corporate CLA (which is required if your contribution is on behalf of a company), drop us an email at opensource@newrelic.com.
