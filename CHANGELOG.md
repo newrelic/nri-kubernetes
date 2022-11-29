@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.6.0
+
+### Added
+* Add support for kube-state-metrics v2
+
+### Changed
+* Update static test data to use KSM v2
+* Update kube-state-metrics version in e2e testing chart
+
+**Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.5.0...v3.6.0
+
+
 ## 3.5.0
 
 ### Changed
