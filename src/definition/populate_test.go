@@ -181,7 +181,7 @@ func fromMultiple(values definition.FetchedValues) definition.FetchFunc {
 }
 
 // fromGroupMetricSetTypeGuessFunc uses the groupLabel for creating the metric set type sample.
-func fromGroupMetricSetTypeGuessFunc(_, groupLabel, _ string, _ definition.RawGroups) (string, error) {
+func fromGroupMetricSetTypeGuessFunc(groupLabel string) (string, error) {
 	return fmt.Sprintf("%vSample", strings.Title(groupLabel)), nil
 }
 
@@ -669,7 +669,7 @@ func TestIntegrationPopulator_EntityTypeGeneratorFuncWithError(t *testing.T) {
 }
 
 func TestIntegrationPopulator_msTypeGuesserFuncWithError(t *testing.T) {
-	msTypeGuesserFuncWithError := func(_, groupLabel, _ string, _ definition.RawGroups) (string, error) {
+	msTypeGuesserFuncWithError := func(groupLabel string) (string, error) {
 		return "", fmt.Errorf("error setting event type")
 	}
 
@@ -731,6 +731,39 @@ func TestIntegrationPopulator_PrometheusFormatFilterNamespace(t *testing.T) {
 			assert.NotEmpty(t, entity.Metrics[0].Metrics["displayName"])
 		}
 		assert.NotEmpty(t, entity.Metrics[0].Metrics["clusterName"])
+	}
+}
+
+func TestIntegrationPopulator_CustomMsTypeGuesser(t *testing.T) { //nolint: paralleltest
+	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
+	require.NoError(t, err)
+
+	customMsTypeGuesser := func(_ string) (string, error) {
+		return "Custom", nil
+	}
+
+	config := testConfig(intgr)
+	config.Specs = definition.SpecGroups{
+		"test": definition.SpecGroup{
+			TypeGenerator:   fromGroupEntityTypeGuessFunc,
+			NamespaceGetter: kubeletMetric.FromLabelGetNamespace,
+			MsTypeGuesser:   customMsTypeGuesser,
+			Specs: []definition.Spec{
+				{"metric_1", definition.FromRaw("raw_metric_name_1"), metric.GAUGE, false},
+			},
+		},
+	}
+
+	populated, errs := definition.IntegrationPopulator(config)
+	assert.True(t, populated)
+	assert.Empty(t, errs)
+	for _, e := range intgr.Entities {
+		if e.Metadata.Namespace == "k8s:cluster" { // the custom MsTypeGuesser does not apply to the cluster entity.
+			continue
+		}
+		for _, ms := range e.Metrics {
+			assert.Equal(t, "Custom", ms.Metrics["event_type"])
+		}
 	}
 }
 

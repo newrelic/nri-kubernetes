@@ -1308,7 +1308,7 @@ func TestFromLabelValueEntityTypeGenerator_EmptyPodNameForContainer(t *testing.T
 	}
 
 	generatedValue, err := FromLabelValueEntityTypeGenerator("kube_pod_container_info")("container", "kube-system_fluentd-elasticsearch-jnqb7_kube-state-metrics", raw, "clusterName")
-	assert.EqualError(t, err, "empty values for generated entity type for \"container\"")
+	assert.ErrorIs(t, err, ErrUnexpectedEmptyLabels)
 	assert.Equal(t, "", generatedValue)
 }
 
@@ -1327,7 +1327,7 @@ func TestFromLabelValueEntityTypeGenerator_EmptyNamespace(t *testing.T) {
 		},
 	}
 	generatedValue, err := FromLabelValueEntityTypeGenerator("kube_pod_start_time")("pod", "kube-system_fluentd-elasticsearch-jnqb7", raw, "clusterName")
-	assert.EqualError(t, err, "empty namespace for generated entity type for \"pod\"")
+	assert.ErrorIs(t, err, ErrUnexpectedEmptyLabels)
 	assert.Equal(t, "", generatedValue)
 }
 

@@ -26,6 +26,7 @@ type SpecGroup struct {
 	IDGenerator     EntityIDGeneratorFunc
 	TypeGenerator   EntityTypeGeneratorFunc
 	NamespaceGetter NamespaceGetterFunc
+	MsTypeGuesser   GuessFunc
 	Specs           []Spec
 }
 

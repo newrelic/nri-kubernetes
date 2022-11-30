@@ -218,3 +218,27 @@ func TestFetchIfMissing(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, valueA, valueExpected)
 }
+
+func TestMetricSetTypeGuesserWithCustomGroup(t *testing.T) {
+	t.Parallel()
+
+	expected := "K8sCustomSample"
+	testCases := []struct {
+		groupLabel string
+	}{
+		{groupLabel: "replicaset"},
+		{groupLabel: "api-server"},
+		{groupLabel: "controller-manager"},
+		{groupLabel: "-controller-manager-"},
+	}
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.groupLabel, func(t *testing.T) {
+			t.Parallel()
+
+			guess, err := metricSetTypeGuesserWithCustomGroup("custom")(testCase.groupLabel)
+			assert.NoError(t, err)
+			assert.Equal(t, expected, guess)
+		})
+	}
+}

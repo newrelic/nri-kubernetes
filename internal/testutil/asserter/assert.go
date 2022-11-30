@@ -11,6 +11,8 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 )
 
+const entityNamespaceSeparator = ":"
+
 // Asserter is a helper for checking whether an integration contains all the metrics defined in a specGroup.
 // It provides a chainable API, with each call returning a copy of the asserter. This way, successive calls to the
 // chainable methods do not modify the previous Asserter, allowing to reuse the chain as a test fans out.
@@ -21,6 +23,7 @@ type Asserter struct {
 	excludedGroups []string
 	exclude        []exclude.Func
 	silent         bool
+	groupAliases   map[string]string
 }
 
 // New returns an empty asserter.
@@ -69,11 +72,18 @@ func (a Asserter) Silently() Asserter {
 	return a
 }
 
+// AliasingGroups returns an asserter configured with an alias for groups so it is possible
+// to look for entities with a different group name.
+func (a Asserter) AliasingGroups(aliases map[string]string) Asserter {
+	a.groupAliases = aliases
+	return a
+}
+
 // Assert checks whether all metrics defined in the supplied groups are present, and fails the test if any is not.
 // Assert will fail the test if:
-// - No entity at all exists with a type matching a specGroup, unless this specGroup is ignored using ExcludingGroups.
-// - Any entity whose type matches a specGroup lacks any metric defined in the specGroup, unless any Func returns
-//   true for that particular groupName, metric, and entity.
+//   - No entity at all exists with a type matching a specGroup, unless this specGroup is ignored using ExcludingGroups.
+//   - Any entity whose type matches a specGroup lacks any metric defined in the specGroup, unless any Func returns
+//     true for that particular groupName, metric, and entity.
 func (a Asserter) Assert(t *testing.T) {
 	t.Helper()
 
@@ -89,9 +99,13 @@ func (a Asserter) Assert(t *testing.T) {
 		}
 
 		// Integration will contain many entities, but we are only interested in the one corresponding to this group.
-		entities := entitiesFor(a.entities, groupName)
+		pseudotype := groupName
+		if alias := a.groupAliases[groupName]; alias != "" {
+			pseudotype = alias
+		}
+		entities := entitiesFor(a.entities, pseudotype)
 		if entities == nil {
-			t.Fatalf("could not find any entity for specGroup %q", groupName)
+			t.Fatalf("could not find any entity for specGroup %q (%q)", groupName, pseudotype)
 		}
 
 		for _, spec := range group.Specs {
@@ -140,12 +154,23 @@ func (a *Asserter) shouldExcludeGroup(group string) bool {
 func entitiesFor(entities []*integration.Entity, pseudotype string) []*integration.Entity {
 	var appropriateEntities []*integration.Entity
 	for _, e := range entities {
-		if strings.Contains(strings.ToLower(e.Metadata.Namespace), strings.ToLower(pseudotype)) {
+		if specGroupNameMatch(e, pseudotype) {
 			appropriateEntities = append(appropriateEntities, e)
 		}
 	}
 
 	return appropriateEntities
+}
+
+// specGroupNameMatch returns true if the specGroupName match with the provided entity.
+func specGroupNameMatch(entity *integration.Entity, specGroupName string) bool {
+	chunks := strings.Split(entity.Metadata.Namespace, entityNamespaceSeparator)
+	for _, chunk := range chunks {
+		if chunk == specGroupName {
+			return true
+		}
+	}
+	return false
 }
 
 // entityMetric is a helper function that returns the first metric from an entity that matches the given name.

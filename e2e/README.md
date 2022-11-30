@@ -24,7 +24,7 @@ minikube image load e2e/nri-kubernetes:e2e
 Then, include helm needed repositories.
 ```shell
 helm repo add newrelic https://helm-charts.newrelic.com
-helm repo add kube-state-metrics https://kubernetes.github.io/kube-state-metrics
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
 ```
 

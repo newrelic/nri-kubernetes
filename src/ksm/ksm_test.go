@@ -40,10 +40,11 @@ func TestScraper(t *testing.T) {
 			// The following HPA metrics operate in a true-or-NULL basis, and there won't be present if condition is
 			// false.
 			exclude.Exclude(
-				exclude.Groups("hpa"),
+				exclude.Groups("horizontalpodautoscaler"),
 				exclude.Metrics("isActive", "isAble", "isLimited"),
 			),
-		)
+		).
+		AliasingGroups(map[string]string{"horizontalpodautoscaler": "hpa"})
 
 	for _, v := range testutil.AllVersions() {
 		// Make a copy of the version variable to use it concurrently
@@ -85,7 +86,6 @@ func TestScraper(t *testing.T) {
 			if err != nil {
 				t.Fatalf("running scraper: %v", err)
 			}
-
 			// Call the asserter for the entities of this particular sub-test.
 			asserter.On(i.Entities).Assert(t)
 		})
@@ -126,6 +126,6 @@ func TestScraper_FilterNamespace(t *testing.T) {
 		err = scraper.Run(i)
 		require.NoError(t, err)
 
-		assert.Equal(t, 18, len(i.Entities))
+		assert.Equal(t, 19, len(i.Entities))
 	})
 }

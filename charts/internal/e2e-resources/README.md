@@ -1,6 +1,6 @@
 # e2e-resources
 
-![Version: 1.2.0-devel](https://img.shields.io/badge/Version-1.2.0--devel-informational?style=flat-square)
+![Version: 1.3.0-devel](https://img.shields.io/badge/Version-1.3.0--devel-informational?style=flat-square)
 
 This chart creates e2e resources for nri-kubernetes.
 
@@ -10,8 +10,10 @@ This chart creates e2e resources for nri-kubernetes.
 | ---- | ------ | --- |
 | alvarocabanas |  | <https://github.com/alvarocabanas> |
 | carlossscastro |  | <https://github.com/carlossscastro> |
+| sigilioso |  | <https://github.com/sigilioso> |
 | gsanchezgavier |  | <https://github.com/gsanchezgavier> |
 | kang-makes |  | <https://github.com/kang-makes> |
+| marcsanmi |  | <https://github.com/marcsanmi> |
 | paologallinaharbur |  | <https://github.com/paologallinaharbur> |
 | roobre |  | <https://github.com/roobre> |
 
@@ -19,7 +21,7 @@ This chart creates e2e resources for nri-kubernetes.
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://kubernetes.github.io/kube-state-metrics | kube-state-metrics | 2.13.2 |
+| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 4.23.0 |
 
 ## Values
 

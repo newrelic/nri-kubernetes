@@ -6,7 +6,7 @@ New Relic's Kubernetes integration gives you full observability into the health 
 no matter whether you run Kubernetes on-premises or in the cloud.
 It gives you visibility about Kubernetes namespaces, deployments, replica sets, nodes, pods, and containers.
 Metrics are collected from different sources:
-* [kube-state-metrics service](https://github.com/kubernetes/kube-state-metrics) provides information about state of
+* [kube-state-metrics service](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics) provides information about state of
 Kubernetes objects like namespace, replicaset, deployments and pods (when they are not in running state)
 * `/stats/summary` kubelet endpoint gives information about network, errors, memory and CPU usage
 * `/pods` kubelet endpoint provides information about state of running pods and containers

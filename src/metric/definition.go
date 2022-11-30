@@ -629,7 +629,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "podsReady", ValueFunc: prometheus.FromValue("kube_daemonset_status_number_ready"), Type: sdkMetric.GAUGE},
 			{Name: "podsUnavailable", ValueFunc: prometheus.FromValue("kube_daemonset_status_number_unavailable"), Type: sdkMetric.GAUGE},
 			{Name: "podsMisscheduled", ValueFunc: prometheus.FromValue("kube_daemonset_status_number_misscheduled"), Type: sdkMetric.GAUGE},
-			{Name: "podsUpdatedScheduled", ValueFunc: prometheus.FromValue("kube_daemonset_updated_number_scheduled"), Type: sdkMetric.GAUGE},
+			{Name: "podsUpdatedScheduled", ValueFunc: prometheus.FromValue("kube_daemonset_status_updated_number_scheduled"), Type: sdkMetric.GAUGE},
 			{Name: "metadataGeneration", ValueFunc: prometheus.FromValue("kube_daemonset_metadata_generation"), Type: sdkMetric.GAUGE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_daemonset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "daemonsetName", ValueFunc: prometheus.FromLabelValue("kube_daemonset_created", "daemonset"), Type: sdkMetric.ATTRIBUTE},
@@ -799,27 +799,29 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("pod", "kube_pod_labels"), Type: sdkMetric.ATTRIBUTE},
 		},
 	},
-	"hpa": {
-		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_hpa_labels", "hpa"),
-		TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_hpa_labels"),
+	"horizontalpodautoscaler": {
+		IDGenerator: prometheus.FromLabelValueEntityIDGenerator("kube_horizontalpodautoscaler_labels", "horizontalpodautoscaler"),
+		// group customized for backwards compatibility reasons (Metrics where renamed in KSM v2)
+		TypeGenerator:   prometheus.FromLabelValueEntityTypeGeneratorWithCustomGroup("kube_horizontalpodautoscaler_labels", "hpa"),
 		NamespaceGetter: prometheus.FromLabelGetNamespace,
+		MsTypeGuesser:   metricSetTypeGuesserWithCustomGroup("hpa"), // group customized for backwards compatibility reasons
 		Specs: []definition.Spec{
 			// Kubernetes labels converted to Prometheus labels. not sure if interesting to get
-			{Name: "labels", ValueFunc: prometheus.FromValue("kube_hpa_labels"), Type: sdkMetric.GAUGE},
+			{Name: "labels", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_labels"), Type: sdkMetric.GAUGE},
 			// The generation observed by the HorizontalPodAutoscaler controller. not sure if interesting to get
-			{Name: "metadataGeneration", ValueFunc: prometheus.FromValue("kube_hpa_metadata_generation"), Type: sdkMetric.GAUGE},
-			{Name: "maxReplicas", ValueFunc: prometheus.FromValue("kube_hpa_spec_max_replicas"), Type: sdkMetric.GAUGE},
-			{Name: "minReplicas", ValueFunc: prometheus.FromValue("kube_hpa_spec_min_replicas"), Type: sdkMetric.GAUGE},
+			{Name: "metadataGeneration", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_metadata_generation"), Type: sdkMetric.GAUGE},
+			{Name: "maxReplicas", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_spec_max_replicas"), Type: sdkMetric.GAUGE},
+			{Name: "minReplicas", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_spec_min_replicas"), Type: sdkMetric.GAUGE},
 			// TODO this metric has a couple of dimensions (metric_name, target_type) that might be useful to add
-			{Name: "targetMetric", ValueFunc: prometheus.FromValue("kube_hpa_spec_target_metric"), Type: sdkMetric.GAUGE},
-			{Name: "currentReplicas", ValueFunc: prometheus.FromValue("kube_hpa_status_current_replicas"), Type: sdkMetric.GAUGE},
-			{Name: "desiredReplicas", ValueFunc: prometheus.FromValue("kube_hpa_status_desired_replicas"), Type: sdkMetric.GAUGE},
-			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_hpa_metadata_generation", "namespace"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("hpa", "kube_hpa_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "targetMetric", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_spec_target_metric"), Type: sdkMetric.GAUGE},
+			{Name: "currentReplicas", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_status_current_replicas"), Type: sdkMetric.GAUGE},
+			{Name: "desiredReplicas", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_status_desired_replicas"), Type: sdkMetric.GAUGE},
+			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_horizontalpodautoscaler_metadata_generation", "namespace"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("horizontalpodautoscaler", "kube_horizontalpodautoscaler_labels"), Type: sdkMetric.ATTRIBUTE},
 			// TODO: is* metrics will be either true or `NULL`, but never false if the condition is not reported. This is not ideal.
-			{Name: "isActive", ValueFunc: prometheus.FromValue("kube_hpa_status_condition_active")},
-			{Name: "isAble", ValueFunc: prometheus.FromValue("kube_hpa_status_condition_able")},
-			{Name: "isLimited", ValueFunc: prometheus.FromValue("kube_hpa_status_condition_limited")},
+			{Name: "isActive", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_status_condition_active")},
+			{Name: "isAble", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_status_condition_able")},
+			{Name: "isLimited", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_status_condition_limited")},
 		},
 	},
 }
@@ -846,7 +848,7 @@ var KSMQueries = []prometheus.Query{
 	{MetricName: "kube_daemonset_status_number_available"},
 	{MetricName: "kube_daemonset_status_number_unavailable"},
 	{MetricName: "kube_daemonset_status_number_misscheduled"},
-	{MetricName: "kube_daemonset_updated_number_scheduled"},
+	{MetricName: "kube_daemonset_status_updated_number_scheduled"},
 	{MetricName: "kube_daemonset_metadata_generation"},
 	{MetricName: "kube_daemonset_labels", Value: prometheus.QueryValue{
 		Value: prometheus.GaugeValue(1),
@@ -901,34 +903,34 @@ var KSMQueries = []prometheus.Query{
 	{MetricName: "kube_endpoint_address_not_ready"},
 	{MetricName: "kube_endpoint_address_available"},
 	// hpa
-	{MetricName: "kube_hpa_labels"},
-	{MetricName: "kube_hpa_metadata_generation"},
-	{MetricName: "kube_hpa_spec_max_replicas"},
-	{MetricName: "kube_hpa_spec_min_replicas"},
-	{MetricName: "kube_hpa_spec_target_metric"},
+	{MetricName: "kube_horizontalpodautoscaler_labels"},
+	{MetricName: "kube_horizontalpodautoscaler_metadata_generation"},
+	{MetricName: "kube_horizontalpodautoscaler_spec_max_replicas"},
+	{MetricName: "kube_horizontalpodautoscaler_spec_min_replicas"},
+	{MetricName: "kube_horizontalpodautoscaler_spec_target_metric"},
 	{
-		MetricName: "kube_hpa_status_condition", CustomName: "kube_hpa_status_condition_active",
+		MetricName: "kube_horizontalpodautoscaler_status_condition", CustomName: "kube_horizontalpodautoscaler_status_condition_active",
 		Labels: prometheus.QueryLabels{
 			Labels:   prometheus.Labels{"condition": "ScalingActive", "status": "true"},
 			Operator: prometheus.QueryOpAnd,
 		},
 	},
 	{
-		MetricName: "kube_hpa_status_condition", CustomName: "kube_hpa_status_condition_able",
+		MetricName: "kube_horizontalpodautoscaler_status_condition", CustomName: "kube_horizontalpodautoscaler_status_condition_able",
 		Labels: prometheus.QueryLabels{
 			Labels:   prometheus.Labels{"condition": "AbleToScale", "status": "true"},
 			Operator: prometheus.QueryOpAnd,
 		},
 	},
 	{
-		MetricName: "kube_hpa_status_condition", CustomName: "kube_hpa_status_condition_limited",
+		MetricName: "kube_horizontalpodautoscaler_status_condition", CustomName: "kube_horizontalpodautoscaler_status_condition_limited",
 		Labels: prometheus.QueryLabels{
 			Labels:   prometheus.Labels{"condition": "ScalingLimited", "status": "true"},
 			Operator: prometheus.QueryOpAnd,
 		},
 	},
-	{MetricName: "kube_hpa_status_current_replicas"},
-	{MetricName: "kube_hpa_status_desired_replicas"},
+	{MetricName: "kube_horizontalpodautoscaler_status_current_replicas"},
+	{MetricName: "kube_horizontalpodautoscaler_status_desired_replicas"},
 	// Node info and labels, so sample containing conditions also has this information.
 	{MetricName: "kube_node_info"},
 	{MetricName: "kube_node_labels"},
@@ -1323,5 +1325,13 @@ func fetchIfMissing(replacement definition.FetchFunc, main definition.FetchFunc)
 			return definition.FetchedValues{}, nil
 		}
 		return replacement(groupLabel, entityID, groups)
+	}
+}
+
+// metricSetTypeGuesserWithCustomGroup customizes K8sMetricSetTypeGuesser by setting up a custom value instead of the
+// groupLabel.
+func metricSetTypeGuesserWithCustomGroup(group string) definition.GuessFunc {
+	return func(_ string) (string, error) {
+		return definition.K8sMetricSetTypeGuesser(group) //nolint: wrapcheck
 	}
 }

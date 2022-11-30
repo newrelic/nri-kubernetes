@@ -29,9 +29,6 @@ func (v Version) K8s() (K8s, error) {
 // - REMEMBER TO ADD IT TO AllVersions() BELOW.
 
 const (
-	Testdata116 = "1_16"
-	Testdata117 = "1_17"
-	Testdata118 = "1_18"
 	Testdata119 = "1_19"
 	Testdata120 = "1_20"
 	Testdata121 = "1_21"
@@ -45,9 +42,6 @@ const (
 // PLEASE KEEP THIS LIST SORTED, WITH NEWER RELEASES LAST IN THE LIST.
 func AllVersions() []Version {
 	return []Version{
-		Testdata116,
-		Testdata117,
-		Testdata118,
 		Testdata119,
 		Testdata120,
 		Testdata121,
