@@ -57,7 +57,7 @@ LICENSE_KEY=${LICENSE_KEY} EXCEPTIONS_SOURCE_FILE=${EXCEPTION_FILE}  go run gith
 
 NOTES: 
 For local testing purposes, we usually test against a staging environment. In order to enable testing against staging environment, the following modifications need to be made:
-- Open the the `/e2e/test-specs.yml` and add `--set global.nrStaging=true` to the end of any occurences of this line `- helm upgrade --install ${SCENARIO_TAG} -n nr-${SCENARIO_TAG} --create-namespace ../charts/newrelic-infrastructure ...` .
+- Open the the `/e2e/test-specs.yml` and add `--set global.nrStaging=true` to the end of any occurrences of this line `- helm upgrade --install ${SCENARIO_TAG} -n nr-${SCENARIO_TAG} --create-namespace ../charts/newrelic-infrastructure ...` .
 - Add and set `--region="Staging"` the command that executes the tests. For example:
 ```shell
 LICENSE_KEY=${LICENSE_KEY} EXCEPTIONS_SOURCE_FILE=${EXCEPTION_FILE}  go run github.com/newrelic/newrelic-integration-e2e-action@latest \
