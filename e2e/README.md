@@ -30,9 +30,8 @@ helm repo update
 
 You need to install the binary `https://github.com/newrelic/newrelic-integration-e2e-action/tree/main/newrelic-integration-e2e` used in the e2e test
 ```shell
-git clone https://github.com/newrelic/newrelic-integration-e2e-action
-cd newrelic-integration-e2e-action/newrelic-integration-e2e
-go build -o  $GOPATH/bin/newrelic-integration-e2e ./cmd/...
+go install github.com/newrelic/newrelic-integration-e2e-action@latest
+
 ```
 
 You need New Relic license key (Ingest - License), Api key (User key) and Account before running the tests. More information on how to find these keys, please see [this](https://docs.newrelic.com/docs/apis/intro-apis/new-relic-api-keys/). 
@@ -58,7 +57,7 @@ LICENSE_KEY=${LICENSE_KEY} EXCEPTIONS_SOURCE_FILE=${EXCEPTION_FILE}  go run gith
 
 NOTES: 
 For local testing purposes, we usually test against a staging environment. In order to enable testing against staging environment, the following modifications need to be made:
-- Open the the `/e2e/test-specs.yml` and add `--set global.nrStaging=true` to the end of this line `- helm upgrade --install ${SCENARIO_TAG} -n nr-${SCENARIO_TAG} --create-namespace ../charts/newrelic-infrastructure ...`
+- Open the the `/e2e/test-specs.yml` and add `--set global.nrStaging=true` to the end of this line `- helm upgrade --install ${SCENARIO_TAG} -n nr-${SCENARIO_TAG} --create-namespace ../charts/newrelic-infrastructure ...` .
 - Add and set `--region="Staging"` the command that executes the tests. For example:
 ```shell
 LICENSE_KEY=${LICENSE_KEY} EXCEPTIONS_SOURCE_FILE=${EXCEPTION_FILE}  go run github.com/newrelic/newrelic-integration-e2e-action@latest \
