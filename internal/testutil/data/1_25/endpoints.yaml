@@ -1,0 +1,150 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Endpoints
+  metadata:
+    creationTimestamp: "2022-11-30T15:29:45Z"
+    labels:
+      endpointslice.kubernetes.io/skip-mirror: "true"
+    name: kubernetes
+    namespace: default
+    resourceVersion: "195"
+    uid: a16f13c5-6ed3-48e1-9880-0245415e06ce
+  subsets:
+  - addresses:
+    - ip: 172.18.0.2
+    ports:
+    - name: https
+      port: 6443
+      protocol: TCP
+- apiVersion: v1
+  kind: Endpoints
+  metadata:
+    annotations:
+      endpoints.kubernetes.io/last-change-trigger-time: "2022-11-30T15:30:09Z"
+    creationTimestamp: "2022-11-30T15:30:01Z"
+    labels:
+      k8s-app: kube-dns
+      kubernetes.io/cluster-service: "true"
+      kubernetes.io/name: CoreDNS
+    name: kube-dns
+    namespace: kube-system
+    resourceVersion: "441"
+    uid: a027f6d0-e330-426f-b756-369e239e9711
+  subsets:
+  - addresses:
+    - ip: 10.244.0.2
+      nodeName: kind-control-plane
+      targetRef:
+        kind: Pod
+        name: coredns-565d847f94-fnx8z
+        namespace: kube-system
+        uid: 4a84f058-3db9-42ae-970d-b736570313a9
+    - ip: 10.244.0.4
+      nodeName: kind-control-plane
+      targetRef:
+        kind: Pod
+        name: coredns-565d847f94-2zbv9
+        namespace: kube-system
+        uid: aa743260-af62-4b8b-b2b6-695c8159d0e8
+    ports:
+    - name: dns-tcp
+      port: 53
+      protocol: TCP
+    - name: dns
+      port: 53
+      protocol: UDP
+    - name: metrics
+      port: 9153
+      protocol: TCP
+- apiVersion: v1
+  kind: Endpoints
+  metadata:
+    annotations:
+      endpoints.kubernetes.io/last-change-trigger-time: "2022-11-30T15:37:17Z"
+    creationTimestamp: "2022-11-30T15:37:05Z"
+    labels:
+      app.kubernetes.io/managed-by: Helm
+      run: php-apache
+    name: e2e-hpa
+    namespace: scraper
+    resourceVersion: "1080"
+    uid: 822471d6-0cdf-43a5-9fa2-833254c7c585
+  subsets:
+  - addresses:
+    - ip: 10.244.0.5
+      nodeName: kind-control-plane
+      targetRef:
+        kind: Pod
+        name: e2e-hpa-68cc49444c-f5wlm
+        namespace: scraper
+        uid: 4f040ef9-8aaa-4eae-b37e-d8965d714507
+    ports:
+    - port: 80
+      protocol: TCP
+- apiVersion: v1
+  kind: Endpoints
+  metadata:
+    annotations:
+      endpoints.kubernetes.io/last-change-trigger-time: "2022-11-30T15:37:37Z"
+    creationTimestamp: "2022-11-30T15:37:05Z"
+    labels:
+      app.kubernetes.io/component: metrics
+      app.kubernetes.io/instance: e2e
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: kube-state-metrics
+      app.kubernetes.io/part-of: kube-state-metrics
+      app.kubernetes.io/version: 2.6.0
+      helm.sh/chart: kube-state-metrics-4.23.0
+    name: e2e-kube-state-metrics
+    namespace: scraper
+    resourceVersion: "1167"
+    uid: 85304eba-0bda-4ca1-bd26-f970fe5912a6
+  subsets:
+  - addresses:
+    - ip: 10.244.0.9
+      nodeName: kind-control-plane
+      targetRef:
+        kind: Pod
+        name: e2e-kube-state-metrics-5d5dc657bb-ftvlm
+        namespace: scraper
+        uid: 17a6936d-f840-441d-b8aa-52761925702d
+    ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+- apiVersion: v1
+  kind: Endpoints
+  metadata:
+    annotations:
+      endpoints.kubernetes.io/last-change-trigger-time: "2022-11-30T15:37:28Z"
+    creationTimestamp: "2022-11-30T15:37:05Z"
+    labels:
+      app: statefulset
+      app.kubernetes.io/managed-by: Helm
+    name: e2e-statefulset
+    namespace: scraper
+    resourceVersion: "1143"
+    uid: 7cd641b9-0420-4205-b8b8-13af8e10e8a0
+  subsets:
+  - addresses:
+    - ip: 10.244.0.10
+      nodeName: kind-control-plane
+      targetRef:
+        kind: Pod
+        name: e2e-statefulset-0
+        namespace: scraper
+        uid: 1c7556bc-6f34-47a1-a111-e6f2531bcc78
+    - ip: 10.244.0.11
+      nodeName: kind-control-plane
+      targetRef:
+        kind: Pod
+        name: e2e-statefulset-1
+        namespace: scraper
+        uid: dc4ba996-8863-4ada-bff1-eeb03aaf4a9f
+    ports:
+    - port: 8089
+      protocol: TCP
+kind: List
+metadata:
+  resourceVersion: ""
