@@ -48,9 +48,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - name: Setup Minikube
-        uses: manusa/actions-setup-minikube@v2.7.0
+        uses: manusa/actions-setup-minikube@v2.7.1
         with:
-          minikube version: v1.26.0
+          minikube version: v1.28.0
           kubernetes version: ${{ matrix.k8sVersion }}
           driver: docker
           start args: "--nodes=2 --container-runtime=${{ matrix.cri }}"
@@ -77,7 +77,7 @@ jobs:
             echo "::set-output name=exceptions::1_22"
           elif [ "$MINOR" -eq 23 ]; then
             echo "::set-output name=exceptions::1_23"
-          elif [ "$MINOR" -ge 24 ]; then
+          elif [ "$MINOR" -eq 24 ]; then
             echo "::set-output name=exceptions::1_24"
           elif [ "$MINOR" -ge 25 ]; then
             echo "::set-output name=exceptions::1_25"
