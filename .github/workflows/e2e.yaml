@@ -18,15 +18,19 @@ jobs:
       matrix:
         # Latest patch version can be found in https://github.com/kubernetes/website/blob/main/content/en/releases/patch-releases.md
         # Some versions might not be available yet in https://storage.googleapis.com/kubernetes-release/release/v1.X.Y/bin/linux/amd64/kubelet
-        k8sVersion: [ "v1.24.1","v1.23.8","v1.22.11", "v1.21.14", "v1.16.15" ]
+        k8sVersion: [ "v1.25.3", "v1.24.1", "v1.23.8", "v1.22.11", "v1.21.14", "v1.16.15" ]
         cri: [ docker ]
         exclude:
           - k8sVersion: v1.24.1
+            cri: docker
+          - k8sVersion: v1.25.3
             cri: docker
         include:
           - k8sVersion: v1.24.1
             cri: containerd
           - k8sVersion: v1.23.8
+            cri: containerd
+          - k8sVersion: v1.25.3
             cri: containerd
     env:
       DOCKER_BUILDKIT: '1' # Setting DOCKER_BUILDKIT=1 ensures TARGETOS and TARGETARCH are populated
@@ -44,9 +48,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - name: Setup Minikube
-        uses: manusa/actions-setup-minikube@v2.6.0
+        uses: manusa/actions-setup-minikube@v2.7.1
         with:
-          minikube version: v1.26.0
+          minikube version: v1.28.0
           kubernetes version: ${{ matrix.k8sVersion }}
           driver: docker
           start args: "--nodes=2 --container-runtime=${{ matrix.cri }}"
@@ -73,8 +77,10 @@ jobs:
             echo "::set-output name=exceptions::1_22"
           elif [ "$MINOR" -eq 23 ]; then
             echo "::set-output name=exceptions::1_23"
-          elif [ "$MINOR" -ge 24 ]; then 
+          elif [ "$MINOR" -eq 24 ]; then
             echo "::set-output name=exceptions::1_24"
+          elif [ "$MINOR" -ge 25 ]; then
+            echo "::set-output name=exceptions::1_25"
           fi
       - name: Run e2e-test
         uses: newrelic/newrelic-integration-e2e-action@v1
