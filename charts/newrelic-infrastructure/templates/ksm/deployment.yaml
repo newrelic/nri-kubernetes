@@ -50,7 +50,7 @@ spec:
       {{- end }}
       serviceAccountName: {{ include "newrelic.common.serviceAccount.name" . }}
       hostNetwork: {{ include "nriKubernetes.ksm.hostNetwork.value" . }}
-      {{- if include "nriKubernetes.controlPlane.hostNetwork" . }}
+      {{- if include "nriKubernetes.ksm.hostNetwork" . }}
       dnsPolicy: ClusterFirstWithHostNet
       {{- end }}
       
