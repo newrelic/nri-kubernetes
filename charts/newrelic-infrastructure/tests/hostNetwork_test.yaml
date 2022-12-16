@@ -157,27 +157,6 @@ tests:
           value: true
         template: templates/kubelet/daemonset.yaml
 
-  - it: hostNetwork is set by the common library
-    set:
-      licenseKey: test
-      cluster: test
-      global.hostNetwork: null
-      hostNetwork: true
-      ksm.hostNetwork: null
-    asserts:
-      - equal:
-          path: spec.template.spec.hostNetwork
-          value: true
-        template: templates/ksm/deployment.yaml
-      - equal:
-          path: spec.template.spec.hostNetwork
-          value: true
-        template: templates/controlplane/daemonset.yaml
-      - equal:
-          path: spec.template.spec.hostNetwork
-          value: true
-        template: templates/kubelet/daemonset.yaml
-
   - it: kubelet hostNetwork is overridable to true
     set:
       licenseKey: test
@@ -219,25 +198,3 @@ tests:
           path: spec.template.spec.hostNetwork
           value: true
         template: templates/kubelet/daemonset.yaml
-
-  - it: hostNetwork is set by the common library
-    set:
-      licenseKey: test
-      cluster: test
-      global.hostNetwork: null
-      hostNetwork: true
-      kubelet.hostNetwork: null
-    asserts:
-      - equal:
-          path: spec.template.spec.hostNetwork
-          value: true
-        template: templates/ksm/deployment.yaml
-      - equal:
-          path: spec.template.spec.hostNetwork
-          value: true
-        template: templates/controlplane/daemonset.yaml
-      - equal:
-          path: spec.template.spec.hostNetwork
-          value: true
-        template: templates/kubelet/daemonset.yaml
-
