@@ -188,7 +188,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.hostNetwork
-          value: false
+          value: true
         template: templates/ksm/deployment.yaml
       - equal:
           path: spec.template.spec.hostNetwork
@@ -196,5 +196,5 @@ tests:
         template: templates/controlplane/daemonset.yaml
       - equal:
           path: spec.template.spec.hostNetwork
-          value: true
+          value: false
         template: templates/kubelet/daemonset.yaml
