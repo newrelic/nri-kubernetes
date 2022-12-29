@@ -79,15 +79,13 @@ jobs:
         # - The kube-state-metrics chart v4.25.0 directly maps to kube-state-metrics application v2.7.0.
         # - The kube-state-metrics chart v4.23.0 directly maps to kube-state-metrics application v2.6.0.
         run: |
-          KSM_CHART_VERSION="v4.25.0"
-
           MINOR=$(echo "${{ matrix.k8sVersion }}"|sed -e 's_v\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)_\2_')
 
           if [ "$MINOR" -le 25 ]; then
-            KSM_CHART_VERSION="v4.23.0"
+            KSM_CHART_VERSION="--version v4.23.0"
           fi
 
-          helm install prometheus-community/kube-state-metrics --version $KSM_CHART_VERSION --generate-name
+          helm install prometheus-community/kube-state-metrics $KSM_CHART_VERSION --generate-name
 
       - name: Select metrics exception file
         id: exceptions-version
