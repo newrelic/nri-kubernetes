@@ -2,7 +2,7 @@
 You can run e2e tests on any cluster, please notice that scraping control plane could be not possible or needing 
 specific values depending on the flavour. The following instructions assume that e2e tests are ran inside a `Minikube` cluster with `containerd` runtime. 
 
-In order to run e2e tests locally you can do the followings.
+In order to run e2e tests locally you can do the following.
 
 Initialize a test cluster.
 ```shell
