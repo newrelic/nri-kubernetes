@@ -2,12 +2,22 @@
 You can run e2e tests on any cluster, please notice that scraping control plane could be not possible or needing 
 specific values depending on the flavour. The following instructions assume that e2e tests are ran inside a `Minikube` cluster with `containerd` runtime. 
 
+In order to run e2e tests locally you can do the followings.
 
-In order to run e2e tests locally you can do the following
+Initialize a test cluster.
 ```shell
 minikube start --kubernetes-version=vX.X.X --container-runtime=containerd
 minikube addons enable metrics-server
 ```
+
+Manually install Kube State Metrics (KSM) service onto the test cluster.
+
+```shell
+helm install prometheus-community/kube-state-metrics --version v4.23.0 --generate-name
+
+NOTE: Starting from k8s v1.26, @autoscaling/v2beta2 API is no longer available as @autoscaling/v2 replaced it. It is important that kube-state-metrics v2.7.0 is installed on the k8s v1.26.0+ test cluster because only kube-state-metrics v2.7.0 or higher can supports the @autoscaling/v2 API. Because of this, if you are running the e2e tests on a k8s v1.26.0 or later cluster, you want to install the prometheus-community/kube-state-metrics chart v4.25.0 instead. Incorrect setup will result in missing metrics, for examples: HorizontalPodAutoscaler related metrics .etc
+```
+
 
 Note that the control plane flags in `e2e-values.yml` have been set meeting the minikube specifications. 
 
@@ -63,7 +73,7 @@ For local testing purposes, we usually test against a staging environment. In or
 LICENSE_KEY=${LICENSE_KEY} EXCEPTIONS_SOURCE_FILE=${EXCEPTION_FILE}  go run github.com/newrelic/newrelic-integration-e2e-action@latest \
      --commit_sha=test-string --retry_attempts=5 --retry_seconds=60 \
 	 --account_id=${ACCOUNT_ID} --api_key=${API_KEY} --license_key=${LICENSE_KEY} \
-	 --spec_path=./e2e/test-specs.yml --verbose_mode=true --agent_enabled="false" `--region="Staging"`
+	 --spec_path=./e2e/test-specs.yml --verbose_mode=true --agent_enabled="false" --region="Staging"
 ```   
 
 You may check [e2e workflow](../.github/workflows/e2e.yaml) to have more details about how this is used in development workflow.
