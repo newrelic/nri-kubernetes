@@ -114,3 +114,87 @@ tests:
           path: spec.template.spec.hostNetwork
           value: true
         template: templates/kubelet/daemonset.yaml
+
+  - it: ksm hostNetwork is overridable to true
+    set:
+      licenseKey: test
+      cluster: test
+      global.hostNetwork: null
+      hostNetwork: false
+      ksm.hostNetwork: true
+    asserts:
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: true
+        template: templates/ksm/deployment.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: true
+        template: templates/controlplane/daemonset.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: false
+        template: templates/kubelet/daemonset.yaml
+
+  - it: ksm hostNetwork is overridable to false
+    set:
+      licenseKey: test
+      cluster: test
+      global.hostNetwork: null
+      hostNetwork: true
+      ksm.hostNetwork: false
+    asserts:
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: false
+        template: templates/ksm/deployment.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: true
+        template: templates/controlplane/daemonset.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: true
+        template: templates/kubelet/daemonset.yaml
+
+  - it: kubelet hostNetwork is overridable to true
+    set:
+      licenseKey: test
+      cluster: test
+      global.hostNetwork: null
+      hostNetwork: false
+      kubelet.hostNetwork: true
+    asserts:
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: false
+        template: templates/ksm/deployment.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: true
+        template: templates/controlplane/daemonset.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: true
+        template: templates/kubelet/daemonset.yaml
+
+  - it: kubelet hostNetwork is overridable to false
+    set:
+      licenseKey: test
+      cluster: test
+      global.hostNetwork: null
+      hostNetwork: true
+      kubelet.hostNetwork: false
+    asserts:
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: true
+        template: templates/ksm/deployment.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: true
+        template: templates/controlplane/daemonset.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: false
+        template: templates/kubelet/daemonset.yaml
