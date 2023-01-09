@@ -13,7 +13,31 @@ templates:
   - templates/agent-configmap.yaml
   - templates/secret.yaml
 tests:
-  - it: nodeSelector is populated from common-library
+  - it: nodeSelector is populated from global by common-library
+    set:
+      licenseKey: test
+      cluster: test
+      global:
+        nodeSelector:
+          disktype: ssd
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            disktype: ssd
+        template: templates/ksm/deployment.yaml
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            disktype: ssd
+        template: templates/kubelet/daemonset.yaml
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            disktype: ssd
+        template: templates/controlplane/daemonset.yaml
+
+  - it: nodeSelector is populated from chart's root by common-library
     set:
       licenseKey: test
       cluster: test
@@ -25,6 +49,42 @@ tests:
           value:
             disktype: ssd
         template: templates/ksm/deployment.yaml
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            disktype: ssd
+        template: templates/kubelet/daemonset.yaml
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            disktype: ssd
+        template: templates/controlplane/daemonset.yaml
+
+  - it: nodeSelector is overridable
+    set:
+      licenseKey: test
+      cluster: test
+      global:
+        nodeSelector:
+          disktype: ssd
+      nodeSelector:
+        disktype: real
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            disktype: real
+        template: templates/ksm/deployment.yaml
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            disktype: real
+        template: templates/kubelet/daemonset.yaml
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            disktype: real
+        template: templates/controlplane/daemonset.yaml
 
   - it: nodeSelector is populated from ksm tree value
     set:
@@ -41,19 +101,16 @@ tests:
           value:
             disktype: real
         template: templates/ksm/deployment.yaml
-
-  - it: nodeSelector is populated from common-library
-    set:
-      licenseKey: test
-      cluster: test
-      nodeSelector:
-        disktype: ssd
-    asserts:
       - equal:
           path: spec.template.spec.nodeSelector
           value:
             disktype: ssd
         template: templates/kubelet/daemonset.yaml
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            disktype: ssd
+        template: templates/controlplane/daemonset.yaml
 
   - it: nodeSelector is populated from kubelet tree value
     set:
@@ -68,16 +125,13 @@ tests:
       - equal:
           path: spec.template.spec.nodeSelector
           value:
+            disktype: ssd
+        template: templates/ksm/deployment.yaml
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
             disktype: real
         template: templates/kubelet/daemonset.yaml
-
-  - it: nodeSelector is populated from common-library
-    set:
-      licenseKey: test
-      cluster: test
-      nodeSelector:
-        disktype: ssd
-    asserts:
       - equal:
           path: spec.template.spec.nodeSelector
           value:
@@ -94,6 +148,16 @@ tests:
       nodeSelector:
         disktype: ssd
     asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            disktype: ssd
+        template: templates/ksm/deployment.yaml
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            disktype: ssd
+        template: templates/kubelet/daemonset.yaml
       - equal:
           path: spec.template.spec.nodeSelector
           value:
