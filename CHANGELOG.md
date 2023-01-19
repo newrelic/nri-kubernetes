@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.7.0
+
+### Added
+* Add K8s v1.26 e2e and integration tests by @vuqtran88 in https://github.com/newrelic/nri-kubernetes/pull/595
+* Add more tests to the chart by @kang-makes in https://github.com/newrelic/nri-kubernetes/pull/599
+
+### Changed
+* chore: bump several dependencies by @marcsanmi in https://github.com/newrelic/nri-kubernetes/pull/602
+* chore: bump chart version and dependencies by @sigilioso in https://github.com/newrelic/nri-kubernetes/pull/586
+* Extend integration tests to support k8s 1.25 by @htroisi in https://github.com/newrelic/nri-kubernetes/pull/585
+* Improve e2e readme by @vuqtran88 in https://github.com/newrelic/nri-kubernetes/pull/589
+* Update e2e testing to support k8s v1.25 by @htroisi in https://github.com/newrelic/nri-kubernetes/pull/588
+* NR-73265: update contributing and readme by @carlossscastro in https://github.com/newrelic/nri-kubernetes/pull/591
+
+### Fix
+* Fix host network (NEWRELIC-5927) by @kang-makes in https://github.com/newrelic/nri-kubernetes/pull/596
+
+### New Contributors
+* @htroisi made their first contribution in https://github.com/newrelic/nri-kubernetes/pull/585
+* @vuqtran88 made their first contribution in https://github.com/newrelic/nri-kubernetes/pull/589
+
+**Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.6.0...v3.7.0
+
 ## 3.6.0
 
 ### Added
