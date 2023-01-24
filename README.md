@@ -90,6 +90,11 @@ Make sure you have these tools or install them:
 
 Create a `values-local.yaml` file from the `values-local.yaml.sample` using a valid license key and your cluster name.
 
+Start tilt:
+```shell
+tilt up
+```
+
 Start the local environment:
 ```shell
 make local-env-start
