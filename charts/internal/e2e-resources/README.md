@@ -1,6 +1,6 @@
 # e2e-resources
 
-![Version: 1.4.0-devel](https://img.shields.io/badge/Version-1.4.0--devel-informational?style=flat-square)
+![Version: 1.3.0-devel](https://img.shields.io/badge/Version-1.3.0--devel-informational?style=flat-square)
 
 This chart creates e2e resources for nri-kubernetes.
 
@@ -27,7 +27,6 @@ This chart creates e2e resources for nri-kubernetes.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| cronjob.enabled | bool | `true` |  |
 | daemonSet.enabled | bool | `true` |  |
 | deployment.enabled | bool | `true` |  |
 | hpa.enabled | bool | `true` |  |
