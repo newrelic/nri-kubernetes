@@ -586,7 +586,7 @@ var KSMSpecs = definition.SpecGroups{
 		},
 	},
 	"persistentvolumeclaim": {
-		IDGenerator: prometheus.FromLabelValueEntityIDGenerator("kube_persistentvolumeclaim_created", "persistentvolume"),
+		IDGenerator: prometheus.FromLabelValueEntityIDGenerator("kube_persistentvolumeclaim_created", "persistentvolumeclaim"),
 		// TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_persistentvolumeclaim_created"),
 		NamespaceGetter: prometheus.FromLabelGetNamespace,
 		Specs: []definition.Spec{
