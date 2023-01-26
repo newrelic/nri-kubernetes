@@ -565,6 +565,47 @@ var EtcdQueries = []prometheus.Query{
 
 // KSMSpecs are the metric specifications we want to collect from KSM.
 var KSMSpecs = definition.SpecGroups{
+	"persistentvolume": {
+		IDGenerator: prometheus.FromLabelValueEntityIDGenerator("kube_persistentvolume_created", "persistentvolume"),
+		// TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_persistentvolume_created"),
+		NamespaceGetter: prometheus.FromLabelGetNamespace,
+		Specs: []definition.Spec{
+			{Name: "createdAt", ValueFunc: prometheus.FromValue("kube_persistentvolume_created"), Type: sdkMetric.GAUGE},
+			{Name: "annotations", ValueFunc: prometheus.FromValue("kube_persistentvolume_annotations"), Type: sdkMetric.GAUGE},
+			{Name: "capacityBytes", ValueFunc: prometheus.FromValue("kube_persistentvolume_capacity_bytes"), Type: sdkMetric.GAUGE},
+			{Name: "statusPhase", ValueFunc: prometheus.FromValue("kube_persistentvolume_status_phase"), Type: sdkMetric.GAUGE},
+			{Name: "claimRef", ValueFunc: prometheus.FromValue("kube_persistentvolume_claim_ref"), Type: sdkMetric.GAUGE},
+			{Name: "labels", ValueFunc: prometheus.FromValue("kube_persistentvolume_labels"), Type: sdkMetric.GAUGE},
+			{Name: "info", ValueFunc: prometheus.FromValue("kube_persistentvolume_info"), Type: sdkMetric.GAUGE},
+
+			// namespace is here for backwards compatibility, we should use the namespaceName
+			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "deploymentName", ValueFunc: ksmMetric.GetDeploymentNameForReplicaSet(), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("persistentvolume", "kube_persistentvolume_labels"), Type: sdkMetric.ATTRIBUTE},
+		},
+	},
+	"persistentvolumeclaim": {
+		IDGenerator: prometheus.FromLabelValueEntityIDGenerator("kube_persistentvolumeclaim_created", "persistentvolume"),
+		// TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_persistentvolumeclaim_created"),
+		NamespaceGetter: prometheus.FromLabelGetNamespace,
+		Specs: []definition.Spec{
+			{Name: "createdAt", ValueFunc: prometheus.FromValue("kube_persistentvolumeclaim_created"), Type: sdkMetric.GAUGE},
+			{Name: "annotations", ValueFunc: prometheus.FromValue("kube_persistentvolumeclaim_annotations"), Type: sdkMetric.GAUGE},
+			{Name: "accessMode", ValueFunc: prometheus.FromValue("kube_persistentvolumeclaim_access_mode"), Type: sdkMetric.GAUGE},
+			{Name: "statusPhase", ValueFunc: prometheus.FromValue("kube_persistentvolume_status_phase"), Type: sdkMetric.GAUGE},
+			{Name: "statusCondition", ValueFunc: prometheus.FromValue("kube_persistentvolumeclaim_status_condition"), Type: sdkMetric.GAUGE},
+			{Name: "resourceRequestsStorageBytes", ValueFunc: prometheus.FromValue("kube_persistentvolumeclaim_resource_requests_storage_bytes"), Type: sdkMetric.GAUGE},
+			{Name: "labels", ValueFunc: prometheus.FromValue("kube_persistentvolumeclaim_labels"), Type: sdkMetric.GAUGE},
+			{Name: "info", ValueFunc: prometheus.FromValue("kube_persistentvolumeclaim_info"), Type: sdkMetric.GAUGE},
+
+			// namespace is here for backwards compatibility, we should use the namespaceName
+			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_created	", "namespace"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "deploymentName", ValueFunc: ksmMetric.GetDeploymentNameForReplicaSet(), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("persistentvolumeclaim", "kube_persistentvolumeclaim_labels"), Type: sdkMetric.ATTRIBUTE},
+		},
+	},
 	"replicaset": {
 		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_replicaset_created", "replicaset"),
 		TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_replicaset_created"),
@@ -828,6 +869,25 @@ var KSMSpecs = definition.SpecGroups{
 
 // KSMQueries are the queries we will do to KSM in order to fetch all the raw metrics.
 var KSMQueries = []prometheus.Query{
+	{MetricName: "kube_persistentvolume_annotations"},
+	{MetricName: "kube_persistentvolume_capacity_bytes"},
+	{MetricName: "kube_persistentvolume_status_phase"},
+	{MetricName: "kube_persistentvolume_claim_ref"},
+	{MetricName: "kube_persistentvolume_info"},
+	{MetricName: "kube_persistentvolume_created"},
+	{MetricName: "kube_persistentvolume_labels", Value: prometheus.QueryValue{
+		Value: prometheus.GaugeValue(1),
+	}},
+	{MetricName: "kube_persistentvolumeclaim_annotations"},
+	{MetricName: "kube_persistentvolumeclaim_access_mode"},
+	{MetricName: "kube_persistentvolumeclaim_info"},
+	{MetricName: "kube_persistentvolumeclaim_resource_requests_storage_bytes"},
+	{MetricName: "kube_persistentvolumeclaim_status_condition"},
+	{MetricName: "kube_persistentvolumeclaim_status_phase"},
+	{MetricName: "kube_persistentvolumeclaim_created"},
+	{MetricName: "kube_persistentvolumeclaim_labels", Value: prometheus.QueryValue{
+		Value: prometheus.GaugeValue(1),
+	}},
 	{MetricName: "kube_statefulset_replicas"},
 	{MetricName: "kube_statefulset_status_replicas_ready"},
 	{MetricName: "kube_statefulset_status_replicas"},
