@@ -6,6 +6,7 @@ New Relic's Kubernetes integration gives you full observability into the health 
 no matter whether you run Kubernetes on-premises or in the cloud.
 It gives you visibility about Kubernetes namespaces, deployments, replica sets, nodes, pods, and containers.
 Metrics are collected from different sources:
+
 * [kube-state-metrics service](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics) provides information about state of
 Kubernetes objects like namespace, replicaset, deployments and pods (when they are not in running state)
 * `/stats/summary` kubelet endpoint gives information about network, errors, memory and CPU usage
@@ -19,22 +20,22 @@ and how to query them.
 
 ## Table of contents
 
-- [Table of contents](#table-of-contents)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Running the integration against a static data set](#running-the-integration-against-a-static-data-set)
-- [Development](#development)
-  - [E2E tests](#Run-e2e-Tests)
-  - [Tests](#tests)
-- [Running OpenShift locally using CodeReady Containers](#running-openshift-locally-using-codeready-containers)
-- [Support](#support)
-- [Contributing](#contributing)
-- [License](#license)
+* [Table of contents](#table-of-contents)
+* [Installation](#installation)
+* [Usage](#usage)
+* [Running the integration against a static data set](#running-the-integration-against-a-static-data-set)
+* [Development](#development)
+  * [E2E tests](#run-e2e-tests)
+  * [Tests](#tests)
+* [Running OpenShift locally using CodeReady Containers](#running-openshift-locally-using-codeready-containers)
+* [Support](#support)
+* [Contributing](#contributing)
+* [License](#license)
 
 ## Installation
 
 Start by checking the
-[compatibility and requirements](https://docs.newrelic.com/docs/integrations/kubernetes-integration/get-started/kubernetes-integration-compatibility-requirements) 
+[compatibility and requirements](https://docs.newrelic.com/docs/integrations/kubernetes-integration/get-started/kubernetes-integration-compatibility-requirements)
 and then follow the
 [installation steps](https://docs.newrelic.com/docs/kubernetes-monitoring-integration).
 
@@ -56,20 +57,21 @@ For further information of the configuration needed for the chart just read the 
 
 ## Usage
 
-Learn how to 
+Learn how to
 [find and use data](https://docs.newrelic.com/docs/integrations/kubernetes-integration/understand-use-data/understand-use-data)
-and review the description of all 
+and review the description of all
 [captured data](https://docs.newrelic.com/docs/integrations/kubernetes-integration/understand-use-data/understand-use-data#event-types).
 
 ## Running the integration against a static data set
 
- - See [cmd/kubernetes-static/readme.md](./cmd/kubernetes-static/readme.md) for more details regarding running the integration.
- - See [internal/testutil/datagen/README.md](./internal/testutil/datagen/README.md) for more details regarding generate new data.
+* See [cmd/kubernetes-static/readme.md](./cmd/kubernetes-static/readme.md) for more details regarding running the integration.
+* See [internal/testutil/datagen/README.md](./internal/testutil/datagen/README.md) for more details regarding generate new data.
 
 ## Development
 
 ### Run e2e Tests
-- See [e2e/README.md](./e2e/README.md) for more details regarding running e2e tests.
+
+* See [e2e/README.md](./e2e/README.md) for more details regarding running e2e tests.
 
 ### Tests
 
@@ -84,22 +86,26 @@ make test
 We use Minikube and Tilt to spawn a local environment that it will reload after any changes inside the charts or the integration code.
 
 Make sure you have these tools or install them:
-- [Install minikube](https://minikube.sigs.k8s.io/docs/start/)
-- [Install Tilt](https://docs.tilt.dev/install.html)
-- [Install Helm](https://helm.sh/docs/intro/install/)
+
+* [Install minikube](https://minikube.sigs.k8s.io/docs/start/)
+* [Install Tilt](https://docs.tilt.dev/install.html)
+* [Install Helm](https://helm.sh/docs/intro/install/)
 
 Create a `values-local.yaml` file from the `values-local.yaml.sample` using a valid license key and your cluster name.
 
 Start the local environment:
+
 ```shell
 make local-env-start
 ```
 
 Notice that local images are build and pushed to docker running inside the minikube cluster since we are running `eval $(minikube docker-env)` before launching Tilt.
 
+Note: for clusters with Kubernetes versions < `1.21`, manually set `apiVersion: batch/v1beta1` for the [e2e-resources/templates/cronjob.yml](https://github.com/newrelic/nri-kubernetes/blob/main/charts/internal/e2e-resources/templates/cronjob.yml).
+
 ## Running OpenShift locally using CodeReady Containers
 
-- See [OpenShift.md](./OpenShift.md) for more details regarding running locally OpenShift environments.
+* See [OpenShift.md](./OpenShift.md) for more details regarding running locally OpenShift environments.
 
 ## Support
 
