@@ -566,6 +566,8 @@ var EtcdQueries = []prometheus.Query{
 // KSMSpecs are the metric specifications we want to collect from KSM.
 var KSMSpecs = definition.SpecGroups{
 	"persistentvolume": {
+		IDGenerator: prometheus.FromLabelValueEntityIDGenerator("kube_persistentvolume_labels", "persistentvolume"),
+		// TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_persistentvolume_labels"),
 		NamespaceGetter: prometheus.FromLabelGetNamespace,
 		Specs: []definition.Spec{
 			{Name: "capacityBytes", ValueFunc: prometheus.FromValue("kube_persistentvolume_capacity_bytes"), Type: sdkMetric.GAUGE},
@@ -578,11 +580,12 @@ var KSMSpecs = definition.SpecGroups{
 		},
 	},
 	"persistentvolumeclaim": {
+		IDGenerator: prometheus.FromLabelValueEntityIDGenerator("kube_persistentvolumeclaim_labels", "persistentvolumeclaim"),
+		// TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_persistentvolumeclaim_labels	"),
 		NamespaceGetter: prometheus.FromLabelGetNamespace,
 		Specs: []definition.Spec{
-			{Name: "createdAt", ValueFunc: prometheus.FromValue("kube_persistentvolumeclaim_created"), Type: sdkMetric.GAUGE},
 			{Name: "accessMode", ValueFunc: prometheus.FromValue("kube_persistentvolumeclaim_access_mode"), Type: sdkMetric.GAUGE},
-			{Name: "statusPhase", ValueFunc: prometheus.FromValue("kube_persistentvolume_status_phase"), Type: sdkMetric.GAUGE},
+			{Name: "statusPhase", ValueFunc: prometheus.FromValue("kube_persistentvolumeclaim_status_phase"), Type: sdkMetric.GAUGE},
 			{Name: "resourceRequestsStorageBytes", ValueFunc: prometheus.FromValue("kube_persistentvolumeclaim_resource_requests_storage_bytes"), Type: sdkMetric.GAUGE},
 			{Name: "labels", ValueFunc: prometheus.FromValue("kube_persistentvolumeclaim_labels"), Type: sdkMetric.GAUGE},
 			{Name: "info", ValueFunc: prometheus.FromValue("kube_persistentvolumeclaim_info"), Type: sdkMetric.GAUGE},
