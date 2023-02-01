@@ -101,7 +101,7 @@ make local-env-start
 
 Notice that local images are build and pushed to docker running inside the minikube cluster since we are running `eval $(minikube docker-env)` before launching Tilt.
 
-Note: when running the local-dev-environment with a Kubernetes cluster `< v1.21`, you will need to remove the `apiVersion` templating for the [CronJob resource](https://github.com/newrelic/nri-kubernetes/blob/main/charts/internal/e2e-resources/templates/cronjob.yml#L2) and manually set `apiVersion: batch/v1beta1`.
+Note: when running the local-dev-environment with a Kubernetes cluster `< v1.21`, you will need to remove the `apiVersion` templating for the [CronJob resource](https://github.com/newrelic/nri-kubernetes/blob/main/charts/internal/e2e-resources/templates/cronjob.yml#L2) and manually set `apiVersion: batch/v1beta1`. This is because Tilt uses `helm template` and helm template doesn't render capabilities: https://github.com/helm/helm/issues/3377.
 
 ## Running OpenShift locally using CodeReady Containers
 
