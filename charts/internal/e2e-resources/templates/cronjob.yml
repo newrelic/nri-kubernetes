@@ -1,8 +1,8 @@
 {{- if .Values.cronjob.enabled }}
-{{- if .Capabilities.APIVersions.Has "batch/v1/CronJob" }}
-apiVersion: batch/v1
-{{- else if .Capabilities.APIVersions.Has "batch/v1beta1/CronJob" }}
+{{- if .Capabilities.APIVersions.Has "batch/v1beta1/CronJob" }}
 apiVersion: batch/v1beta1
+{{- else }}
+apiVersion: batch/v1
 {{- end }}
 kind: CronJob
 metadata:
