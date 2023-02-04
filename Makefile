@@ -86,7 +86,6 @@ local-env-start:
 	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 	helm dependency update ./charts/newrelic-infrastructure
 	helm dependency update ./charts/internal/e2e-resources
-	helm install prometheus-community/kube-state-metrics --generate-name
 	$(MAKE) tilt-up
 
 .PHONY: tilt-up
