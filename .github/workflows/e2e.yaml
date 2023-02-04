@@ -72,25 +72,6 @@ jobs:
           helm repo add newrelic https://helm-charts.newrelic.com
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
           helm repo update
-      - name: Install kube-state-metrics service onto test the Minikube cluster
-
-        # Starting from k8s v1.26, @autoscaling/v2beta2 API is no longer available as @autoscaling/v2 replaced it. It is important that
-        # kube-state-metrics v2.7.0 is installed on the k8s v1.26.0+ test cluster because only kube-state-metrics v2.7.0 or higher can
-        # supports the @autoscaling/v2 API. The following scripts make sure the correct version of kube-state-metrics is installed in respect
-        # to the k8s version. Incorrect setup will result in missing metrics, for examples: HorizontalPodAutoscaler related metrics .etc .
-
-        # Notes: 
-        # - The kube-state-metrics chart v4.25.0 directly maps to kube-state-metrics application v2.7.0.
-        # - The kube-state-metrics chart v4.23.0 directly maps to kube-state-metrics application v2.6.0.
-        run: |
-          MINOR=$(echo "${{ matrix.k8sVersion }}"|sed -e 's_v\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)_\2_')
-
-          if [ "$MINOR" -le 25 ]; then
-            KSM_CHART_VERSION="--version v4.23.0"
-          fi
-
-          helm install prometheus-community/kube-state-metrics $KSM_CHART_VERSION --generate-name
-
       - name: Select metrics exception file
         id: exceptions-version
         run: |
