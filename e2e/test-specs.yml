@@ -9,7 +9,7 @@ scenarios:
     before:
       - helm dependency update ../charts/internal/e2e-resources
       - helm dependency update ../charts/newrelic-infrastructure
-      - helm upgrade --install ${SCENARIO_TAG}-resources -n nr-${SCENARIO_TAG} --create-namespace ../charts/internal/e2e-resources --set persistentVolume.enabled=true
+      - function ver { printf $((10#$(printf "%03d%03d" $(echo "$1" | tr '.' ' ')))); } && K8S_VERSION=$(kubectl version --short 2>&1 | grep 'Server Version' | awk -F' v' '{ print $2; }' | awk -F. '{ print $1"."$2; }') && if [[ $(ver $K8S_VERSION) -lt $(ver "1.25") ]]; then KSM_IMAGE_VERSION="v2.6.0"; else KSM_IMAGE_VERSION="v2.7.0"; fi && echo "Will use KSM image version ${KSM_IMAGE_VERSION}" && helm upgrade --install ${SCENARIO_TAG}-resources -n nr-${SCENARIO_TAG} --create-namespace ../charts/internal/e2e-resources --set persistentVolume.enabled=true --set kube-state-metrics.image.tag=${KSM_IMAGE_VERSION}
       - helm upgrade --install ${SCENARIO_TAG} -n nr-${SCENARIO_TAG} --create-namespace ../charts/newrelic-infrastructure --values e2e-values.yml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG}
     after:
       - kubectl logs -l app.kubernetes.io/name=newrelic-infrastructure -n nr-${SCENARIO_TAG} --all-containers --prefix=true
@@ -51,7 +51,7 @@ scenarios:
     before:
       - helm dependency update ../charts/internal/e2e-resources
       - helm dependency update ../charts/newrelic-infrastructure
-      - helm upgrade --install ${SCENARIO_TAG}-resources -n nr-${SCENARIO_TAG} --create-namespace ../charts/internal/e2e-resources --set persistentVolume.enabled=true
+      - function ver { printf $((10#$(printf "%03d%03d" $(echo "$1" | tr '.' ' ')))); } && K8S_VERSION=$(kubectl version --short 2>&1 | grep 'Server Version' | awk -F' v' '{ print $2; }' | awk -F. '{ print $1"."$2; }') && if [[ $(ver $K8S_VERSION) -lt $(ver "1.25") ]]; then KSM_IMAGE_VERSION="v2.6.0"; else KSM_IMAGE_VERSION="v2.7.0"; fi && echo "Will use KSM image version ${KSM_IMAGE_VERSION}" && helm upgrade --install ${SCENARIO_TAG}-resources -n nr-${SCENARIO_TAG} --create-namespace ../charts/internal/e2e-resources --set persistentVolume.enabled=true --set kube-state-metrics.image.tag=${KSM_IMAGE_VERSION} 
       - helm upgrade --install ${SCENARIO_TAG} -n nr-${SCENARIO_TAG} --create-namespace ../charts/newrelic-infrastructure --values e2e-values.yml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG} --set privileged=false
     after:
       - kubectl logs -l app.kubernetes.io/name=newrelic-infrastructure -n nr-${SCENARIO_TAG} --all-containers --prefix=true
