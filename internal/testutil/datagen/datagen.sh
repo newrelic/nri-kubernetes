@@ -142,8 +142,8 @@ function bootstrap() {
 
         echo "Updating helm dependencies"
 
-        function ver { printf "%03d%03d" $(echo "$1" | tr '.' ' '); } && \
-        K8S_VERSION=$(kubectl version --short 2>&1 | grep 'Server Version' | awk -F' v' '{ print $2; }' | awk -F. '{ print $1"."$2; }') && \
+        function ver { printf $((10#$(printf "%03d%03d" $(echo "$1" | tr '.' ' ')))); }
+        K8S_VERSION=$(kubectl version --short 2>&1 | grep 'Server Version' | awk -F' v' '{ print $2; }' | awk -F. '{ print $1"."$2; }')
         if [[ $(ver $K8S_VERSION) -lt $(ver "1.25") ]]; then KSM_IMAGE_VERSION="v2.6.0"; else KSM_IMAGE_VERSION="v2.7.0"; fi
         
         helm dependency update $helm_e2e_path > /dev/null
