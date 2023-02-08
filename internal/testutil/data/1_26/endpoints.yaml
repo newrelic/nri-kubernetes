@@ -3,13 +3,13 @@ items:
 - apiVersion: v1
   kind: Endpoints
   metadata:
-    creationTimestamp: "2022-12-27T23:29:44Z"
+    creationTimestamp: "2023-02-07T23:00:45Z"
     labels:
       endpointslice.kubernetes.io/skip-mirror: "true"
     name: kubernetes
     namespace: default
-    resourceVersion: "196"
-    uid: 44fc0088-659f-4203-8c9e-64dcefbb17da
+    resourceVersion: "198"
+    uid: 76f331fc-84f1-4908-83b9-4458d0852b95
   subsets:
   - addresses:
     - ip: 192.168.49.2
@@ -21,35 +21,35 @@ items:
   kind: Endpoints
   metadata:
     annotations:
-      control-plane.alpha.kubernetes.io/leader: '{"holderIdentity":"minikube_e7fecc30-e14a-470d-aa0f-f7cfa878a57b","leaseDurationSeconds":15,"acquireTime":"2022-12-27T23:30:06Z","renewTime":"2022-12-27T23:32:21Z","leaderTransitions":0}'
-    creationTimestamp: "2022-12-27T23:30:06Z"
+      control-plane.alpha.kubernetes.io/leader: '{"holderIdentity":"minikube_0ad36a14-244b-49ed-8cf4-541ccb2ab2a8","leaseDurationSeconds":15,"acquireTime":"2023-02-07T23:01:07Z","renewTime":"2023-02-07T23:05:39Z","leaderTransitions":0}'
+    creationTimestamp: "2023-02-07T23:01:07Z"
     name: k8s.io-minikube-hostpath
     namespace: kube-system
-    resourceVersion: "757"
-    uid: 42a139be-83b4-4dc1-891a-43eadbc6a0b0
+    resourceVersion: "940"
+    uid: b296a842-2df6-4cf5-a903-853689bf1447
 - apiVersion: v1
   kind: Endpoints
   metadata:
     annotations:
-      endpoints.kubernetes.io/last-change-trigger-time: "2022-12-27T23:30:07Z"
-    creationTimestamp: "2022-12-27T23:29:58Z"
+      endpoints.kubernetes.io/last-change-trigger-time: "2023-02-07T23:01:15Z"
+    creationTimestamp: "2023-02-07T23:00:59Z"
     labels:
       k8s-app: kube-dns
       kubernetes.io/cluster-service: "true"
       kubernetes.io/name: CoreDNS
     name: kube-dns
     namespace: kube-system
-    resourceVersion: "395"
-    uid: 96afdd55-f030-4bb2-af3b-29b80a058a2d
+    resourceVersion: "414"
+    uid: 699c4f5a-0b5c-4cb8-8404-b3abfdefab13
   subsets:
   - addresses:
     - ip: 10.244.0.2
       nodeName: minikube
       targetRef:
         kind: Pod
-        name: coredns-787d4945fb-m5cbw
+        name: coredns-787d4945fb-8btm9
         namespace: kube-system
-        uid: 7208b756-89b7-4521-9d59-c228134c9943
+        uid: 3493d59d-4a93-49ca-b7ba-1a71278be6a4
     ports:
     - name: dns-tcp
       port: 53
@@ -63,7 +63,9 @@ items:
 - apiVersion: v1
   kind: Endpoints
   metadata:
-    creationTimestamp: "2022-12-27T23:31:12Z"
+    annotations:
+      endpoints.kubernetes.io/last-change-trigger-time: "2023-02-07T23:05:16Z"
+    creationTimestamp: "2023-02-07T23:03:56Z"
     labels:
       addonmanager.kubernetes.io/mode: Reconcile
       k8s-app: metrics-server
@@ -72,17 +74,17 @@ items:
       kubernetes.io/name: Metrics-server
     name: metrics-server
     namespace: kube-system
-    resourceVersion: "613"
-    uid: 82a57079-05a5-4777-ada6-c4c90154e85e
+    resourceVersion: "905"
+    uid: 1f12bbe1-4710-40f3-956e-3852c04dbb09
   subsets:
-  - notReadyAddresses:
+  - addresses:
     - ip: 10.244.0.3
       nodeName: minikube
       targetRef:
         kind: Pod
-        name: metrics-server-66f7fd5986-k8qjr
+        name: metrics-server-5f8fcc9bb7-bfcdk
         namespace: kube-system
-        uid: ac0da9d9-387b-45d3-bf69-3f96d27a6040
+        uid: 94bc9af8-d30e-4b18-b441-fbb08df0bcce
     ports:
     - name: https
       port: 4443
@@ -91,24 +93,24 @@ items:
   kind: Endpoints
   metadata:
     annotations:
-      endpoints.kubernetes.io/last-change-trigger-time: "2022-12-27T23:31:48Z"
-    creationTimestamp: "2022-12-27T23:31:15Z"
+      endpoints.kubernetes.io/last-change-trigger-time: "2023-02-07T23:05:06Z"
+    creationTimestamp: "2023-02-07T23:03:59Z"
     labels:
       app.kubernetes.io/managed-by: Helm
       run: php-apache
     name: e2e-hpa
     namespace: scraper
-    resourceVersion: "681"
-    uid: e5187b26-0bf0-4720-92a7-28636891158d
+    resourceVersion: "848"
+    uid: b7bc2966-0524-42cb-9627-ab7d94841c83
   subsets:
   - addresses:
-    - ip: 10.244.0.8
+    - ip: 10.244.0.7
       nodeName: minikube
       targetRef:
         kind: Pod
-        name: e2e-hpa-6f58f7b87f-tx4qd
+        name: e2e-hpa-6f58f7b87f-4vfpb
         namespace: scraper
-        uid: ae79cda3-952f-4054-b94b-37b050ee8895
+        uid: b78bcd5e-0394-43ed-8c31-07dd4f3ba4af
     ports:
     - port: 80
       protocol: TCP
@@ -116,29 +118,29 @@ items:
   kind: Endpoints
   metadata:
     annotations:
-      endpoints.kubernetes.io/last-change-trigger-time: "2022-12-27T23:31:26Z"
-    creationTimestamp: "2022-12-27T23:31:15Z"
+      endpoints.kubernetes.io/last-change-trigger-time: "2023-02-07T23:04:31Z"
+    creationTimestamp: "2023-02-07T23:03:59Z"
     labels:
       app.kubernetes.io/component: metrics
       app.kubernetes.io/instance: e2e
       app.kubernetes.io/managed-by: Helm
       app.kubernetes.io/name: kube-state-metrics
       app.kubernetes.io/part-of: kube-state-metrics
-      app.kubernetes.io/version: 2.7.0
-      helm.sh/chart: kube-state-metrics-4.25.0
+      app.kubernetes.io/version: 2.6.0
+      helm.sh/chart: kube-state-metrics-4.23.0
     name: e2e-kube-state-metrics
     namespace: scraper
-    resourceVersion: "637"
-    uid: c0206110-c2dd-4f0b-bfc5-94234e7c474b
+    resourceVersion: "780"
+    uid: a1731823-224d-4f23-bb11-5db48daf6b7b
   subsets:
   - addresses:
-    - ip: 10.244.0.4
+    - ip: 10.244.0.8
       nodeName: minikube
       targetRef:
         kind: Pod
-        name: e2e-kube-state-metrics-7486999578-6sfz4
+        name: e2e-kube-state-metrics-7b6cd5d749-66h8h
         namespace: scraper
-        uid: 85b8c052-3e4c-4020-9fb7-a627eaf87929
+        uid: cef0b1c5-cf73-4baf-ac5d-ea2129750b32
     ports:
     - name: http
       port: 8080
@@ -147,31 +149,31 @@ items:
   kind: Endpoints
   metadata:
     annotations:
-      endpoints.kubernetes.io/last-change-trigger-time: "2022-12-27T23:31:52Z"
-    creationTimestamp: "2022-12-27T23:31:15Z"
+      endpoints.kubernetes.io/last-change-trigger-time: "2023-02-07T23:05:09Z"
+    creationTimestamp: "2023-02-07T23:03:59Z"
     labels:
       app: statefulset
       app.kubernetes.io/managed-by: Helm
     name: e2e-statefulset
     namespace: scraper
-    resourceVersion: "708"
-    uid: 38a8de4f-6294-4098-95f1-b38b5e24e724
+    resourceVersion: "878"
+    uid: f5fc0e56-4a74-4aa7-905f-d38ca6dd9b22
   subsets:
   - addresses:
-    - ip: 10.244.0.10
+    - ip: 10.244.0.12
       nodeName: minikube
       targetRef:
         kind: Pod
         name: e2e-statefulset-1
         namespace: scraper
-        uid: d5899c5d-cc0c-4781-8467-705fcce918b7
+        uid: 31e0a64d-4a5a-4a4e-9aa4-0e5b679bb3b5
     - ip: 10.244.0.9
       nodeName: minikube
       targetRef:
         kind: Pod
         name: e2e-statefulset-0
         namespace: scraper
-        uid: 40ed8a21-fbff-4589-88ec-4ea277039f27
+        uid: a7ce2f6a-fcd1-4c6e-8b8b-d8ab09353f33
     ports:
     - port: 8089
       protocol: TCP
