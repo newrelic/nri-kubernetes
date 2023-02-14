@@ -616,7 +616,7 @@ var KSMSpecs = definition.SpecGroups{
 		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_persistentvolumeclaim_created", "persistentvolumeclaim"),
 		TypeGenerator:   prometheus.FromLabelValueEntityTypeGeneratorWithCustomGroup("kube_persistentvolumeclaim_created", "PersistentVolumeClaim"),
 		NamespaceGetter: prometheus.FromLabelGetNamespace,
-		MsTypeGuesser:   metricSetTypeGuesserWithCustomGroup("PersistentVolumeClaim"), // group customized for backwards compatibility reasons
+		MsTypeGuesser:   metricSetTypeGuesserWithCustomGroup("PersistentVolumeClaim"),
 		Specs: []definition.Spec{
 			{Name: "createdAt", ValueFunc: prometheus.FromValue("kube_persistentvolumeclaim_created"), Type: sdkMetric.GAUGE},
 			{Name: "resourceRequestsStorageBytes", ValueFunc: prometheus.FromValue("kube_persistentvolumeclaim_resource_requests_storage_bytes"), Type: sdkMetric.GAUGE},
