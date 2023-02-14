@@ -50,7 +50,7 @@ func TestScraper(t *testing.T) {
 				exclude.Optional(),
 			),
 		).
-		AliasingGroups(map[string]string{"horizontalpodautoscaler": "hpa", "job_name": "job"})
+		AliasingGroups(map[string]string{"horizontalpodautoscaler": "hpa", "job_name": "job", "persistentvolumeclaim": "PersistentVolumeClaim"})
 
 	for _, v := range testutil.AllVersions() {
 		// Make a copy of the version variable to use it concurrently
