@@ -613,8 +613,10 @@ var KSMSpecs = definition.SpecGroups{
 		},
 	},
 	"persistentvolumeclaim": {
-		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_persistentvolumeclaim_created", "persistentvolumeclaim"),
-		TypeGenerator:   prometheus.FromLabelValueEntityTypeGeneratorWithCustomGroup("kube_persistentvolumeclaim_created", "PersistentVolumeClaim"),
+		// kube_persistentvolumeclaim_created is marked as an experimental metric, so we instead use the namespace and name
+		// labels from kube_persistentvolumeclaim_info to create the Entity ID and Entity Type.
+		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_persistentvolumeclaim_info", "persistentvolumeclaim"),
+		TypeGenerator:   prometheus.FromLabelValueEntityTypeGeneratorWithCustomGroup("kube_persistentvolumeclaim_info", "PersistentVolumeClaim"),
 		NamespaceGetter: prometheus.FromLabelGetNamespace,
 		MsTypeGuesser:   metricSetTypeGuesserWithCustomGroup("PersistentVolumeClaim"),
 		Specs: []definition.Spec{
