@@ -43,10 +43,6 @@ func TestScraper(t *testing.T) {
 				exclude.Groups("horizontalpodautoscaler"),
 				exclude.Metrics("isActive", "isAble", "isLimited"),
 			),
-			exclude.Exclude(
-				exclude.Groups("persistentvolume"),
-				exclude.Optional(),
-			),
 		).
 		AliasingGroups(map[string]string{"horizontalpodautoscaler": "hpa", "persistentvolume": "PersistentVolume"})
 
