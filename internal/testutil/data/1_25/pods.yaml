@@ -3,12 +3,12 @@ items:
 - apiVersion: v1
   kind: Pod
   metadata:
-    creationTimestamp: "2022-11-30T15:30:01Z"
+    creationTimestamp: "2023-02-07T23:12:38Z"
     generateName: coredns-565d847f94-
     labels:
       k8s-app: kube-dns
       pod-template-hash: 565d847f94
-    name: coredns-565d847f94-2zbv9
+    name: coredns-565d847f94-rl69k
     namespace: kube-system
     ownerReferences:
     - apiVersion: apps/v1
@@ -16,9 +16,9 @@ items:
       controller: true
       kind: ReplicaSet
       name: coredns-565d847f94
-      uid: cc903e59-c999-4b89-af33-cdbd823111bb
-    resourceVersion: "428"
-    uid: aa743260-af62-4b8b-b2b6-695c8159d0e8
+      uid: 1277b748-89c4-4781-8ba9-474b88099994
+    resourceVersion: "398"
+    uid: 5fa50e82-f464-43b3-a0ce-634163532df8
   spec:
     affinity:
       podAntiAffinity:
@@ -89,11 +89,11 @@ items:
         name: config-volume
         readOnly: true
       - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-        name: kube-api-access-qbxd6
+        name: kube-api-access-p4kk8
         readOnly: true
     dnsPolicy: Default
     enableServiceLinks: true
-    nodeName: kind-control-plane
+    nodeName: minikube
     nodeSelector:
       kubernetes.io/os: linux
     preemptionPolicy: PreemptLowerPriority
@@ -128,7 +128,7 @@ items:
           path: Corefile
         name: coredns
       name: config-volume
-    - name: kube-api-access-qbxd6
+    - name: kube-api-access-p4kk8
       projected:
         defaultMode: 420
         sources:
@@ -149,25 +149,25 @@ items:
   status:
     conditions:
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:30:07Z"
+      lastTransitionTime: "2023-02-07T23:12:38Z"
       status: "True"
       type: Initialized
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:30:09Z"
+      lastTransitionTime: "2023-02-07T23:12:56Z"
       status: "True"
       type: Ready
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:30:09Z"
+      lastTransitionTime: "2023-02-07T23:12:56Z"
       status: "True"
       type: ContainersReady
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:30:07Z"
+      lastTransitionTime: "2023-02-07T23:12:38Z"
       status: "True"
       type: PodScheduled
     containerStatuses:
-    - containerID: containerd://f5201a51a8e42f9f25a8124a5a33c54558ca70c1d1c25c3238c5b2b782f04c83
+    - containerID: containerd://784d37470d910490c1277484f71b6300077c03c45a926104611cb3b6b6946adf
       image: registry.k8s.io/coredns/coredns:v1.9.3
-      imageID: sha256:5185b96f0becf59032b8e3646e99f84d9655dff3ac9e2605e0dc77f9c441ae4a
+      imageID: registry.k8s.io/coredns/coredns@sha256:8e352a029d304ca7431c6507b56800636c321cb52289686a581ab70aaa8a2e2a
       lastState: {}
       name: coredns
       ready: true
@@ -175,244 +175,62 @@ items:
       started: true
       state:
         running:
-          startedAt: "2022-11-30T15:30:08Z"
-    hostIP: 172.18.0.2
-    phase: Running
-    podIP: 10.244.0.4
-    podIPs:
-    - ip: 10.244.0.4
-    qosClass: Burstable
-    startTime: "2022-11-30T15:30:07Z"
-- apiVersion: v1
-  kind: Pod
-  metadata:
-    creationTimestamp: "2022-11-30T15:30:01Z"
-    generateName: coredns-565d847f94-
-    labels:
-      k8s-app: kube-dns
-      pod-template-hash: 565d847f94
-    name: coredns-565d847f94-fnx8z
-    namespace: kube-system
-    ownerReferences:
-    - apiVersion: apps/v1
-      blockOwnerDeletion: true
-      controller: true
-      kind: ReplicaSet
-      name: coredns-565d847f94
-      uid: cc903e59-c999-4b89-af33-cdbd823111bb
-    resourceVersion: "440"
-    uid: 4a84f058-3db9-42ae-970d-b736570313a9
-  spec:
-    affinity:
-      podAntiAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
-        - podAffinityTerm:
-            labelSelector:
-              matchExpressions:
-              - key: k8s-app
-                operator: In
-                values:
-                - kube-dns
-            topologyKey: kubernetes.io/hostname
-          weight: 100
-    containers:
-    - args:
-      - -conf
-      - /etc/coredns/Corefile
-      image: registry.k8s.io/coredns/coredns:v1.9.3
-      imagePullPolicy: IfNotPresent
-      livenessProbe:
-        failureThreshold: 5
-        httpGet:
-          path: /health
-          port: 8080
-          scheme: HTTP
-        initialDelaySeconds: 60
-        periodSeconds: 10
-        successThreshold: 1
-        timeoutSeconds: 5
-      name: coredns
-      ports:
-      - containerPort: 53
-        name: dns
-        protocol: UDP
-      - containerPort: 53
-        name: dns-tcp
-        protocol: TCP
-      - containerPort: 9153
-        name: metrics
-        protocol: TCP
-      readinessProbe:
-        failureThreshold: 3
-        httpGet:
-          path: /ready
-          port: 8181
-          scheme: HTTP
-        periodSeconds: 10
-        successThreshold: 1
-        timeoutSeconds: 1
-      resources:
-        limits:
-          memory: 170Mi
-        requests:
-          cpu: 100m
-          memory: 70Mi
-      securityContext:
-        allowPrivilegeEscalation: false
-        capabilities:
-          add:
-          - NET_BIND_SERVICE
-          drop:
-          - all
-        readOnlyRootFilesystem: true
-      terminationMessagePath: /dev/termination-log
-      terminationMessagePolicy: File
-      volumeMounts:
-      - mountPath: /etc/coredns
-        name: config-volume
-        readOnly: true
-      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-        name: kube-api-access-6kjwr
-        readOnly: true
-    dnsPolicy: Default
-    enableServiceLinks: true
-    nodeName: kind-control-plane
-    nodeSelector:
-      kubernetes.io/os: linux
-    preemptionPolicy: PreemptLowerPriority
-    priority: 2000000000
-    priorityClassName: system-cluster-critical
-    restartPolicy: Always
-    schedulerName: default-scheduler
-    securityContext: {}
-    serviceAccount: coredns
-    serviceAccountName: coredns
-    terminationGracePeriodSeconds: 30
-    tolerations:
-    - key: CriticalAddonsOnly
-      operator: Exists
-    - effect: NoSchedule
-      key: node-role.kubernetes.io/master
-    - effect: NoSchedule
-      key: node-role.kubernetes.io/control-plane
-    - effect: NoExecute
-      key: node.kubernetes.io/not-ready
-      operator: Exists
-      tolerationSeconds: 300
-    - effect: NoExecute
-      key: node.kubernetes.io/unreachable
-      operator: Exists
-      tolerationSeconds: 300
-    volumes:
-    - configMap:
-        defaultMode: 420
-        items:
-        - key: Corefile
-          path: Corefile
-        name: coredns
-      name: config-volume
-    - name: kube-api-access-6kjwr
-      projected:
-        defaultMode: 420
-        sources:
-        - serviceAccountToken:
-            expirationSeconds: 3607
-            path: token
-        - configMap:
-            items:
-            - key: ca.crt
-              path: ca.crt
-            name: kube-root-ca.crt
-        - downwardAPI:
-            items:
-            - fieldRef:
-                apiVersion: v1
-                fieldPath: metadata.namespace
-              path: namespace
-  status:
-    conditions:
-    - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:30:07Z"
-      status: "True"
-      type: Initialized
-    - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:30:09Z"
-      status: "True"
-      type: Ready
-    - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:30:09Z"
-      status: "True"
-      type: ContainersReady
-    - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:30:07Z"
-      status: "True"
-      type: PodScheduled
-    containerStatuses:
-    - containerID: containerd://ffb3fa886b108bdd8a498a2e5f9ca9917477f8406738740213643c3bdd774119
-      image: registry.k8s.io/coredns/coredns:v1.9.3
-      imageID: sha256:5185b96f0becf59032b8e3646e99f84d9655dff3ac9e2605e0dc77f9c441ae4a
-      lastState: {}
-      name: coredns
-      ready: true
-      restartCount: 0
-      started: true
-      state:
-        running:
-          startedAt: "2022-11-30T15:30:08Z"
-    hostIP: 172.18.0.2
+          startedAt: "2023-02-07T23:12:55Z"
+    hostIP: 192.168.49.2
     phase: Running
     podIP: 10.244.0.2
     podIPs:
     - ip: 10.244.0.2
     qosClass: Burstable
-    startTime: "2022-11-30T15:30:07Z"
+    startTime: "2023-02-07T23:12:38Z"
 - apiVersion: v1
   kind: Pod
   metadata:
     annotations:
-      kubeadm.kubernetes.io/etcd.advertise-client-urls: https://172.18.0.2:2379
-      kubernetes.io/config.hash: 0656ab70da313d6449b17f099a2a3110
-      kubernetes.io/config.mirror: 0656ab70da313d6449b17f099a2a3110
-      kubernetes.io/config.seen: "2022-11-30T15:29:47.105995619Z"
+      kubeadm.kubernetes.io/etcd.advertise-client-urls: https://192.168.49.2:2379
+      kubernetes.io/config.hash: bb7db2a0cb5999da8d9d83b7abaf438a
+      kubernetes.io/config.mirror: bb7db2a0cb5999da8d9d83b7abaf438a
+      kubernetes.io/config.seen: "2023-02-07T23:12:26.068797260Z"
       kubernetes.io/config.source: file
-    creationTimestamp: "2022-11-30T15:29:47Z"
+    creationTimestamp: "2023-02-07T23:12:26Z"
     labels:
       component: etcd
       tier: control-plane
-    name: etcd-kind-control-plane
+    name: etcd-minikube
     namespace: kube-system
     ownerReferences:
     - apiVersion: v1
       controller: true
       kind: Node
-      name: kind-control-plane
-      uid: e5a63bff-bbee-42c8-ad61-a82853217689
-    resourceVersion: "295"
-    uid: de1cba98-8a36-416e-9ac5-09799aa6224d
+      name: minikube
+      uid: 161a810c-f05c-4e1e-a3e2-d5f186cede25
+    resourceVersion: "302"
+    uid: 0903b6ac-8bcb-4e1b-b0db-d997ec1be22b
   spec:
     containers:
     - command:
       - etcd
-      - --advertise-client-urls=https://172.18.0.2:2379
-      - --cert-file=/etc/kubernetes/pki/etcd/server.crt
+      - --advertise-client-urls=https://192.168.49.2:2379
+      - --cert-file=/var/lib/minikube/certs/etcd/server.crt
       - --client-cert-auth=true
-      - --data-dir=/var/lib/etcd
+      - --data-dir=/var/lib/minikube/etcd
       - --experimental-initial-corrupt-check=true
       - --experimental-watch-progress-notify-interval=5s
-      - --initial-advertise-peer-urls=https://172.18.0.2:2380
-      - --initial-cluster=kind-control-plane=https://172.18.0.2:2380
-      - --key-file=/etc/kubernetes/pki/etcd/server.key
-      - --listen-client-urls=https://127.0.0.1:2379,https://172.18.0.2:2379
+      - --initial-advertise-peer-urls=https://192.168.49.2:2380
+      - --initial-cluster=minikube=https://192.168.49.2:2380
+      - --key-file=/var/lib/minikube/certs/etcd/server.key
+      - --listen-client-urls=https://127.0.0.1:2379,https://192.168.49.2:2379
       - --listen-metrics-urls=http://127.0.0.1:2381
-      - --listen-peer-urls=https://172.18.0.2:2380
-      - --name=kind-control-plane
-      - --peer-cert-file=/etc/kubernetes/pki/etcd/peer.crt
+      - --listen-peer-urls=https://192.168.49.2:2380
+      - --name=minikube
+      - --peer-cert-file=/var/lib/minikube/certs/etcd/peer.crt
       - --peer-client-cert-auth=true
-      - --peer-key-file=/etc/kubernetes/pki/etcd/peer.key
-      - --peer-trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+      - --peer-key-file=/var/lib/minikube/certs/etcd/peer.key
+      - --peer-trusted-ca-file=/var/lib/minikube/certs/etcd/ca.crt
+      - --proxy-refresh-interval=70000
       - --snapshot-count=10000
-      - --trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
-      image: registry.k8s.io/etcd:3.5.4-0
+      - --trusted-ca-file=/var/lib/minikube/certs/etcd/ca.crt
+      image: registry.k8s.io/etcd:3.5.6-0
       imagePullPolicy: IfNotPresent
       livenessProbe:
         failureThreshold: 8
@@ -444,14 +262,14 @@ items:
       terminationMessagePath: /dev/termination-log
       terminationMessagePolicy: File
       volumeMounts:
-      - mountPath: /var/lib/etcd
+      - mountPath: /var/lib/minikube/etcd
         name: etcd-data
-      - mountPath: /etc/kubernetes/pki/etcd
+      - mountPath: /var/lib/minikube/certs/etcd
         name: etcd-certs
     dnsPolicy: ClusterFirst
     enableServiceLinks: true
     hostNetwork: true
-    nodeName: kind-control-plane
+    nodeName: minikube
     preemptionPolicy: PreemptLowerPriority
     priority: 2000001000
     priorityClassName: system-node-critical
@@ -466,35 +284,35 @@ items:
       operator: Exists
     volumes:
     - hostPath:
-        path: /etc/kubernetes/pki/etcd
+        path: /var/lib/minikube/certs/etcd
         type: DirectoryOrCreate
       name: etcd-certs
     - hostPath:
-        path: /var/lib/etcd
+        path: /var/lib/minikube/etcd
         type: DirectoryOrCreate
       name: etcd-data
   status:
     conditions:
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:29:47Z"
+      lastTransitionTime: "2023-02-07T23:12:27Z"
       status: "True"
       type: Initialized
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:29:53Z"
+      lastTransitionTime: "2023-02-07T23:12:37Z"
       status: "True"
       type: Ready
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:29:53Z"
+      lastTransitionTime: "2023-02-07T23:12:37Z"
       status: "True"
       type: ContainersReady
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:29:47Z"
+      lastTransitionTime: "2023-02-07T23:12:27Z"
       status: "True"
       type: PodScheduled
     containerStatuses:
-    - containerID: containerd://90a10131fa62fc6b2b1a42ddfa69abdc392eca60bc09e6b315fecf3e7e52da72
-      image: registry.k8s.io/etcd:3.5.4-0
-      imageID: sha256:a8a176a5d5d698f9409dc246f81fa69d37d4a2f4132ba5e62e72a78476b27f66
+    - containerID: containerd://35011e6151bf8679f9f66b78f388f8d447fb0f6180771f9e04bb522afd61799a
+      image: registry.k8s.io/etcd:3.5.6-0
+      imageID: registry.k8s.io/etcd@sha256:dd75ec974b0a2a6f6bb47001ba09207976e625db898d1b16735528c009cb171c
       lastState: {}
       name: etcd
       ready: true
@@ -502,26 +320,26 @@ items:
       started: true
       state:
         running:
-          startedAt: "2022-11-30T15:29:41Z"
-    hostIP: 172.18.0.2
+          startedAt: "2023-02-07T23:12:21Z"
+    hostIP: 192.168.49.2
     phase: Running
-    podIP: 172.18.0.2
+    podIP: 192.168.49.2
     podIPs:
-    - ip: 172.18.0.2
+    - ip: 192.168.49.2
     qosClass: Burstable
-    startTime: "2022-11-30T15:29:47Z"
+    startTime: "2023-02-07T23:12:27Z"
 - apiVersion: v1
   kind: Pod
   metadata:
-    creationTimestamp: "2022-11-30T15:30:00Z"
+    creationTimestamp: "2023-02-07T23:12:38Z"
     generateName: kindnet-
     labels:
       app: kindnet
-      controller-revision-hash: 6f5f87b9f5
+      controller-revision-hash: 8476c799c9
       k8s-app: kindnet
       pod-template-generation: "1"
       tier: node
-    name: kindnet-ctmvn
+    name: kindnet-28g6q
     namespace: kube-system
     ownerReferences:
     - apiVersion: apps/v1
@@ -529,9 +347,9 @@ items:
       controller: true
       kind: DaemonSet
       name: kindnet
-      uid: 4ccfcee8-07cb-41e8-97ec-7b744666c789
-    resourceVersion: "394"
-    uid: dab40afa-0b39-470c-9565-f3a85c16c649
+      uid: 426d4334-d71b-4186-a0b4-2fc0c1e1293a
+    resourceVersion: "375"
+    uid: 8edc7c0e-79a7-4f04-be70-e307a57adbac
   spec:
     affinity:
       nodeAffinity:
@@ -541,7 +359,7 @@ items:
             - key: metadata.name
               operator: In
               values:
-              - kind-control-plane
+              - minikube
     containers:
     - env:
       - name: HOST_IP
@@ -556,9 +374,7 @@ items:
             fieldPath: status.podIP
       - name: POD_SUBNET
         value: 10.244.0.0/16
-      - name: CONTROL_PLANE_ENDPOINT
-        value: kind-control-plane:6443
-      image: docker.io/kindest/kindnetd:v20221004-44d545d1
+      image: kindest/kindnetd:v20221004-44d545d1
       imagePullPolicy: IfNotPresent
       name: kindnet-cni
       resources:
@@ -585,12 +401,12 @@ items:
         name: lib-modules
         readOnly: true
       - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-        name: kube-api-access-2x5ts
+        name: kube-api-access-rz9qn
         readOnly: true
     dnsPolicy: ClusterFirst
     enableServiceLinks: true
     hostNetwork: true
-    nodeName: kind-control-plane
+    nodeName: minikube
     preemptionPolicy: PreemptLowerPriority
     priority: 0
     restartPolicy: Always
@@ -600,7 +416,8 @@ items:
     serviceAccountName: kindnet
     terminationGracePeriodSeconds: 30
     tolerations:
-    - operator: Exists
+    - effect: NoSchedule
+      operator: Exists
     - effect: NoExecute
       key: node.kubernetes.io/not-ready
       operator: Exists
@@ -625,7 +442,7 @@ items:
     volumes:
     - hostPath:
         path: /etc/cni/net.d
-        type: ""
+        type: DirectoryOrCreate
       name: cni-cfg
     - hostPath:
         path: /run/xtables.lock
@@ -635,7 +452,7 @@ items:
         path: /lib/modules
         type: ""
       name: lib-modules
-    - name: kube-api-access-2x5ts
+    - name: kube-api-access-rz9qn
       projected:
         defaultMode: 420
         sources:
@@ -656,25 +473,25 @@ items:
   status:
     conditions:
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:30:00Z"
+      lastTransitionTime: "2023-02-07T23:12:38Z"
       status: "True"
       type: Initialized
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:30:03Z"
+      lastTransitionTime: "2023-02-07T23:12:40Z"
       status: "True"
       type: Ready
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:30:03Z"
+      lastTransitionTime: "2023-02-07T23:12:40Z"
       status: "True"
       type: ContainersReady
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:30:00Z"
+      lastTransitionTime: "2023-02-07T23:12:38Z"
       status: "True"
       type: PodScheduled
     containerStatuses:
-    - containerID: containerd://058de881d349becae21f196c5a8f45dcfdee431c1179de0cf0a68e81b7e28342
+    - containerID: containerd://35d2470551fc59e36fceb62c9e0a655876bf7364c4669e0ca8d9afee40475b03
       image: docker.io/kindest/kindnetd:v20221004-44d545d1
-      imageID: sha256:d6e3e26021b60c625f0ef5b2dd3f9e22d2d398e05bccc4fdd7d59fbbb6a04d3f
+      imageID: docker.io/kindest/kindnetd@sha256:273469d84ede51824194a31f6a405e3d3686b8b87cd161ea40f6bc3ff8e04ffe
       lastState: {}
       name: kindnet-cni
       ready: true
@@ -682,77 +499,76 @@ items:
       started: true
       state:
         running:
-          startedAt: "2022-11-30T15:30:02Z"
-    hostIP: 172.18.0.2
+          startedAt: "2023-02-07T23:12:39Z"
+    hostIP: 192.168.49.2
     phase: Running
-    podIP: 172.18.0.2
+    podIP: 192.168.49.2
     podIPs:
-    - ip: 172.18.0.2
+    - ip: 192.168.49.2
     qosClass: Guaranteed
-    startTime: "2022-11-30T15:30:00Z"
+    startTime: "2023-02-07T23:12:38Z"
 - apiVersion: v1
   kind: Pod
   metadata:
     annotations:
-      kubeadm.kubernetes.io/kube-apiserver.advertise-address.endpoint: 172.18.0.2:6443
-      kubernetes.io/config.hash: 9d154d94c881e34144512156e922afea
-      kubernetes.io/config.mirror: 9d154d94c881e34144512156e922afea
-      kubernetes.io/config.seen: "2022-11-30T15:29:47.105998251Z"
+      kubeadm.kubernetes.io/kube-apiserver.advertise-address.endpoint: 192.168.49.2:8443
+      kubernetes.io/config.hash: d9f550fb4d8c7fcc2c120c0c9ccc7f33
+      kubernetes.io/config.mirror: d9f550fb4d8c7fcc2c120c0c9ccc7f33
+      kubernetes.io/config.seen: "2023-02-07T23:12:20.588832715Z"
       kubernetes.io/config.source: file
-    creationTimestamp: "2022-11-30T15:29:47Z"
+    creationTimestamp: "2023-02-07T23:12:24Z"
     labels:
       component: kube-apiserver
       tier: control-plane
-    name: kube-apiserver-kind-control-plane
+    name: kube-apiserver-minikube
     namespace: kube-system
     ownerReferences:
     - apiVersion: v1
       controller: true
       kind: Node
-      name: kind-control-plane
-      uid: e5a63bff-bbee-42c8-ad61-a82853217689
-    resourceVersion: "292"
-    uid: d6b2adfd-e201-4ff3-b513-b16a18b10dca
+      name: minikube
+      uid: 161a810c-f05c-4e1e-a3e2-d5f186cede25
+    resourceVersion: "282"
+    uid: d2e28ae3-ee74-461c-988d-9c2e68a2b8da
   spec:
     containers:
     - command:
       - kube-apiserver
-      - --advertise-address=172.18.0.2
+      - --advertise-address=192.168.49.2
       - --allow-privileged=true
       - --authorization-mode=Node,RBAC
-      - --client-ca-file=/etc/kubernetes/pki/ca.crt
-      - --enable-admission-plugins=NodeRestriction
+      - --client-ca-file=/var/lib/minikube/certs/ca.crt
+      - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,NodeRestriction,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota
       - --enable-bootstrap-token-auth=true
-      - --etcd-cafile=/etc/kubernetes/pki/etcd/ca.crt
-      - --etcd-certfile=/etc/kubernetes/pki/apiserver-etcd-client.crt
-      - --etcd-keyfile=/etc/kubernetes/pki/apiserver-etcd-client.key
+      - --etcd-cafile=/var/lib/minikube/certs/etcd/ca.crt
+      - --etcd-certfile=/var/lib/minikube/certs/apiserver-etcd-client.crt
+      - --etcd-keyfile=/var/lib/minikube/certs/apiserver-etcd-client.key
       - --etcd-servers=https://127.0.0.1:2379
-      - --kubelet-client-certificate=/etc/kubernetes/pki/apiserver-kubelet-client.crt
-      - --kubelet-client-key=/etc/kubernetes/pki/apiserver-kubelet-client.key
+      - --kubelet-client-certificate=/var/lib/minikube/certs/apiserver-kubelet-client.crt
+      - --kubelet-client-key=/var/lib/minikube/certs/apiserver-kubelet-client.key
       - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
-      - --proxy-client-cert-file=/etc/kubernetes/pki/front-proxy-client.crt
-      - --proxy-client-key-file=/etc/kubernetes/pki/front-proxy-client.key
+      - --proxy-client-cert-file=/var/lib/minikube/certs/front-proxy-client.crt
+      - --proxy-client-key-file=/var/lib/minikube/certs/front-proxy-client.key
       - --requestheader-allowed-names=front-proxy-client
-      - --requestheader-client-ca-file=/etc/kubernetes/pki/front-proxy-ca.crt
+      - --requestheader-client-ca-file=/var/lib/minikube/certs/front-proxy-ca.crt
       - --requestheader-extra-headers-prefix=X-Remote-Extra-
       - --requestheader-group-headers=X-Remote-Group
       - --requestheader-username-headers=X-Remote-User
-      - --runtime-config=
-      - --secure-port=6443
+      - --secure-port=8443
       - --service-account-issuer=https://kubernetes.default.svc.cluster.local
-      - --service-account-key-file=/etc/kubernetes/pki/sa.pub
-      - --service-account-signing-key-file=/etc/kubernetes/pki/sa.key
-      - --service-cluster-ip-range=10.96.0.0/16
-      - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
-      - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
-      image: registry.k8s.io/kube-apiserver:v1.25.3
+      - --service-account-key-file=/var/lib/minikube/certs/sa.pub
+      - --service-account-signing-key-file=/var/lib/minikube/certs/sa.key
+      - --service-cluster-ip-range=10.96.0.0/12
+      - --tls-cert-file=/var/lib/minikube/certs/apiserver.crt
+      - --tls-private-key-file=/var/lib/minikube/certs/apiserver.key
+      image: registry.k8s.io/kube-apiserver:v1.25.6
       imagePullPolicy: IfNotPresent
       livenessProbe:
         failureThreshold: 8
         httpGet:
-          host: 172.18.0.2
+          host: 192.168.49.2
           path: /livez
-          port: 6443
+          port: 8443
           scheme: HTTPS
         initialDelaySeconds: 10
         periodSeconds: 10
@@ -762,9 +578,9 @@ items:
       readinessProbe:
         failureThreshold: 3
         httpGet:
-          host: 172.18.0.2
+          host: 192.168.49.2
           path: /readyz
-          port: 6443
+          port: 8443
           scheme: HTTPS
         periodSeconds: 1
         successThreshold: 1
@@ -775,9 +591,9 @@ items:
       startupProbe:
         failureThreshold: 24
         httpGet:
-          host: 172.18.0.2
+          host: 192.168.49.2
           path: /livez
-          port: 6443
+          port: 8443
           scheme: HTTPS
         initialDelaySeconds: 10
         periodSeconds: 10
@@ -792,7 +608,7 @@ items:
       - mountPath: /etc/ca-certificates
         name: etc-ca-certificates
         readOnly: true
-      - mountPath: /etc/kubernetes/pki
+      - mountPath: /var/lib/minikube/certs
         name: k8s-certs
         readOnly: true
       - mountPath: /usr/local/share/ca-certificates
@@ -804,7 +620,7 @@ items:
     dnsPolicy: ClusterFirst
     enableServiceLinks: true
     hostNetwork: true
-    nodeName: kind-control-plane
+    nodeName: minikube
     preemptionPolicy: PreemptLowerPriority
     priority: 2000001000
     priorityClassName: system-node-critical
@@ -827,7 +643,7 @@ items:
         type: DirectoryOrCreate
       name: etc-ca-certificates
     - hostPath:
-        path: /etc/kubernetes/pki
+        path: /var/lib/minikube/certs
         type: DirectoryOrCreate
       name: k8s-certs
     - hostPath:
@@ -841,25 +657,25 @@ items:
   status:
     conditions:
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:29:48Z"
+      lastTransitionTime: "2023-02-07T23:12:26Z"
       status: "True"
       type: Initialized
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:29:50Z"
+      lastTransitionTime: "2023-02-07T23:12:33Z"
       status: "True"
       type: Ready
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:29:50Z"
+      lastTransitionTime: "2023-02-07T23:12:33Z"
       status: "True"
       type: ContainersReady
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:29:48Z"
+      lastTransitionTime: "2023-02-07T23:12:26Z"
       status: "True"
       type: PodScheduled
     containerStatuses:
-    - containerID: containerd://e0cbc0533ff3ee04845b3595705b6818af34676a689808a51400926ace64e367
-      image: registry.k8s.io/kube-apiserver:v1.25.3
-      imageID: docker.io/library/import-2022-11-02@sha256:975ab6838f71ba7f8ed71ea319124bc7adbdc41a639e329e76d0beda84d5c193
+    - containerID: containerd://fd3993da7f9e08529303a04d5bbc0fb8071a15dd9d10af4a507023a8f58224e3
+      image: registry.k8s.io/kube-apiserver:v1.25.6
+      imageID: registry.k8s.io/kube-apiserver@sha256:efa9ae4b9922b3a2c0d296d59651c7cfd528816a641e8c3e7417de72d5f383b4
       lastState: {}
       name: kube-apiserver
       ready: true
@@ -867,36 +683,36 @@ items:
       started: true
       state:
         running:
-          startedAt: "2022-11-30T15:29:39Z"
-    hostIP: 172.18.0.2
+          startedAt: "2023-02-07T23:12:21Z"
+    hostIP: 192.168.49.2
     phase: Running
-    podIP: 172.18.0.2
+    podIP: 192.168.49.2
     podIPs:
-    - ip: 172.18.0.2
+    - ip: 192.168.49.2
     qosClass: Burstable
-    startTime: "2022-11-30T15:29:48Z"
+    startTime: "2023-02-07T23:12:26Z"
 - apiVersion: v1
   kind: Pod
   metadata:
     annotations:
-      kubernetes.io/config.hash: aaff90ec64f346d418f0a93d766752c5
-      kubernetes.io/config.mirror: aaff90ec64f346d418f0a93d766752c5
-      kubernetes.io/config.seen: "2022-11-30T15:29:47.105999011Z"
+      kubernetes.io/config.hash: 010ef11fc795c71ef2dec0ff0506790f
+      kubernetes.io/config.mirror: 010ef11fc795c71ef2dec0ff0506790f
+      kubernetes.io/config.seen: "2023-02-07T23:12:26.068821760Z"
       kubernetes.io/config.source: file
-    creationTimestamp: "2022-11-30T15:29:47Z"
+    creationTimestamp: "2023-02-07T23:12:26Z"
     labels:
       component: kube-controller-manager
       tier: control-plane
-    name: kube-controller-manager-kind-control-plane
+    name: kube-controller-manager-minikube
     namespace: kube-system
     ownerReferences:
     - apiVersion: v1
       controller: true
       kind: Node
-      name: kind-control-plane
-      uid: e5a63bff-bbee-42c8-ad61-a82853217689
-    resourceVersion: "300"
-    uid: df3a2349-4c82-47f2-9201-7431a31223ca
+      name: minikube
+      uid: 161a810c-f05c-4e1e-a3e2-d5f186cede25
+    resourceVersion: "301"
+    uid: 55cdcf3b-5746-4de1-8838-65cebd4626a3
   spec:
     containers:
     - command:
@@ -905,21 +721,20 @@ items:
       - --authentication-kubeconfig=/etc/kubernetes/controller-manager.conf
       - --authorization-kubeconfig=/etc/kubernetes/controller-manager.conf
       - --bind-address=127.0.0.1
-      - --client-ca-file=/etc/kubernetes/pki/ca.crt
+      - --client-ca-file=/var/lib/minikube/certs/ca.crt
       - --cluster-cidr=10.244.0.0/16
-      - --cluster-name=kind
-      - --cluster-signing-cert-file=/etc/kubernetes/pki/ca.crt
-      - --cluster-signing-key-file=/etc/kubernetes/pki/ca.key
+      - --cluster-name=mk
+      - --cluster-signing-cert-file=/var/lib/minikube/certs/ca.crt
+      - --cluster-signing-key-file=/var/lib/minikube/certs/ca.key
       - --controllers=*,bootstrapsigner,tokencleaner
-      - --enable-hostpath-provisioner=true
       - --kubeconfig=/etc/kubernetes/controller-manager.conf
-      - --leader-elect=true
-      - --requestheader-client-ca-file=/etc/kubernetes/pki/front-proxy-ca.crt
-      - --root-ca-file=/etc/kubernetes/pki/ca.crt
-      - --service-account-private-key-file=/etc/kubernetes/pki/sa.key
-      - --service-cluster-ip-range=10.96.0.0/16
+      - --leader-elect=false
+      - --requestheader-client-ca-file=/var/lib/minikube/certs/front-proxy-ca.crt
+      - --root-ca-file=/var/lib/minikube/certs/ca.crt
+      - --service-account-private-key-file=/var/lib/minikube/certs/sa.key
+      - --service-cluster-ip-range=10.96.0.0/12
       - --use-service-account-credentials=true
-      image: registry.k8s.io/kube-controller-manager:v1.25.3
+      image: registry.k8s.io/kube-controller-manager:v1.25.6
       imagePullPolicy: IfNotPresent
       livenessProbe:
         failureThreshold: 8
@@ -958,7 +773,7 @@ items:
         readOnly: true
       - mountPath: /usr/libexec/kubernetes/kubelet-plugins/volume/exec
         name: flexvolume-dir
-      - mountPath: /etc/kubernetes/pki
+      - mountPath: /var/lib/minikube/certs
         name: k8s-certs
         readOnly: true
       - mountPath: /etc/kubernetes/controller-manager.conf
@@ -973,7 +788,7 @@ items:
     dnsPolicy: ClusterFirst
     enableServiceLinks: true
     hostNetwork: true
-    nodeName: kind-control-plane
+    nodeName: minikube
     preemptionPolicy: PreemptLowerPriority
     priority: 2000001000
     priorityClassName: system-node-critical
@@ -1000,7 +815,7 @@ items:
         type: DirectoryOrCreate
       name: flexvolume-dir
     - hostPath:
-        path: /etc/kubernetes/pki
+        path: /var/lib/minikube/certs
         type: DirectoryOrCreate
       name: k8s-certs
     - hostPath:
@@ -1018,25 +833,25 @@ items:
   status:
     conditions:
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:29:47Z"
+      lastTransitionTime: "2023-02-07T23:12:27Z"
       status: "True"
       type: Initialized
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:29:54Z"
+      lastTransitionTime: "2023-02-07T23:12:37Z"
       status: "True"
       type: Ready
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:29:54Z"
+      lastTransitionTime: "2023-02-07T23:12:37Z"
       status: "True"
       type: ContainersReady
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:29:47Z"
+      lastTransitionTime: "2023-02-07T23:12:27Z"
       status: "True"
       type: PodScheduled
     containerStatuses:
-    - containerID: containerd://0c9b4776d9989759eb49ce597c671de7ab47c55e3833bcc41e1940d3d57be123
-      image: registry.k8s.io/kube-controller-manager:v1.25.3
-      imageID: docker.io/library/import-2022-11-02@sha256:ea11577bfe5c64a2c95b291596042b878dcc627903e3d9e3734c51b0fc019af1
+    - containerID: containerd://47ee373afe2884784e361c29056b8883c4be32b828edd2a9794fb8ce984d0f11
+      image: registry.k8s.io/kube-controller-manager:v1.25.6
+      imageID: registry.k8s.io/kube-controller-manager@sha256:080f668ca39f876cefbb4d62d94ad6ea1475a33ba7784bfcfd65da58e33c9ffc
       lastState: {}
       name: kube-controller-manager
       ready: true
@@ -1044,24 +859,24 @@ items:
       started: true
       state:
         running:
-          startedAt: "2022-11-30T15:29:39Z"
-    hostIP: 172.18.0.2
+          startedAt: "2023-02-07T23:12:21Z"
+    hostIP: 192.168.49.2
     phase: Running
-    podIP: 172.18.0.2
+    podIP: 192.168.49.2
     podIPs:
-    - ip: 172.18.0.2
+    - ip: 192.168.49.2
     qosClass: Burstable
-    startTime: "2022-11-30T15:29:47Z"
+    startTime: "2023-02-07T23:12:27Z"
 - apiVersion: v1
   kind: Pod
   metadata:
-    creationTimestamp: "2022-11-30T15:30:00Z"
+    creationTimestamp: "2023-02-07T23:12:38Z"
     generateName: kube-proxy-
     labels:
-      controller-revision-hash: b9c5d5dc4
+      controller-revision-hash: 5f6bcf49c
       k8s-app: kube-proxy
       pod-template-generation: "1"
-    name: kube-proxy-tmctc
+    name: kube-proxy-sgmtm
     namespace: kube-system
     ownerReferences:
     - apiVersion: apps/v1
@@ -1069,9 +884,9 @@ items:
       controller: true
       kind: DaemonSet
       name: kube-proxy
-      uid: 51fb65c9-c826-4ec7-978b-79fce695fe1a
-    resourceVersion: "389"
-    uid: a0124572-21d3-4a65-ac30-4c0af31d7507
+      uid: 58cde7df-8a1f-45ec-a461-e06848396d2b
+    resourceVersion: "373"
+    uid: b1297fcd-986f-4927-8a30-c43401fbffc6
   spec:
     affinity:
       nodeAffinity:
@@ -1081,7 +896,7 @@ items:
             - key: metadata.name
               operator: In
               values:
-              - kind-control-plane
+              - minikube
     containers:
     - command:
       - /usr/local/bin/kube-proxy
@@ -1093,7 +908,7 @@ items:
           fieldRef:
             apiVersion: v1
             fieldPath: spec.nodeName
-      image: registry.k8s.io/kube-proxy:v1.25.3
+      image: registry.k8s.io/kube-proxy:v1.25.6
       imagePullPolicy: IfNotPresent
       name: kube-proxy
       resources: {}
@@ -1110,12 +925,12 @@ items:
         name: lib-modules
         readOnly: true
       - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-        name: kube-api-access-x7bvh
+        name: kube-api-access-t4phd
         readOnly: true
     dnsPolicy: ClusterFirst
     enableServiceLinks: true
     hostNetwork: true
-    nodeName: kind-control-plane
+    nodeName: minikube
     nodeSelector:
       kubernetes.io/os: linux
     preemptionPolicy: PreemptLowerPriority
@@ -1163,7 +978,7 @@ items:
         path: /lib/modules
         type: ""
       name: lib-modules
-    - name: kube-api-access-x7bvh
+    - name: kube-api-access-t4phd
       projected:
         defaultMode: 420
         sources:
@@ -1184,25 +999,25 @@ items:
   status:
     conditions:
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:30:00Z"
+      lastTransitionTime: "2023-02-07T23:12:38Z"
       status: "True"
       type: Initialized
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:30:02Z"
+      lastTransitionTime: "2023-02-07T23:12:39Z"
       status: "True"
       type: Ready
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:30:02Z"
+      lastTransitionTime: "2023-02-07T23:12:39Z"
       status: "True"
       type: ContainersReady
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:30:00Z"
+      lastTransitionTime: "2023-02-07T23:12:38Z"
       status: "True"
       type: PodScheduled
     containerStatuses:
-    - containerID: containerd://384cdd7340912058d4c7edc52001274fd16769ab2de33b358639a615b3de790f
-      image: registry.k8s.io/kube-proxy:v1.25.3
-      imageID: docker.io/library/import-2022-11-02@sha256:a8333982f3c16667801faa12373e05cc7024e0182e4d034679b83e4911d1fdd1
+    - containerID: containerd://e094a9f82175d1a81233ca1823be4c45c509170a557e1942d5a6d008ba421149
+      image: registry.k8s.io/kube-proxy:v1.25.6
+      imageID: registry.k8s.io/kube-proxy@sha256:7461d0b2b2c9fe5b50c15acf9739cd6624e1ec1b07ae3877780035e0f436ad63
       lastState: {}
       name: kube-proxy
       ready: true
@@ -1210,36 +1025,36 @@ items:
       started: true
       state:
         running:
-          startedAt: "2022-11-30T15:30:01Z"
-    hostIP: 172.18.0.2
+          startedAt: "2023-02-07T23:12:39Z"
+    hostIP: 192.168.49.2
     phase: Running
-    podIP: 172.18.0.2
+    podIP: 192.168.49.2
     podIPs:
-    - ip: 172.18.0.2
+    - ip: 192.168.49.2
     qosClass: BestEffort
-    startTime: "2022-11-30T15:30:00Z"
+    startTime: "2023-02-07T23:12:38Z"
 - apiVersion: v1
   kind: Pod
   metadata:
     annotations:
-      kubernetes.io/config.hash: 6d3dda2cad9846e0d48dbd5d5b9f59fc
-      kubernetes.io/config.mirror: 6d3dda2cad9846e0d48dbd5d5b9f59fc
-      kubernetes.io/config.seen: "2022-11-30T15:29:47.105999569Z"
+      kubernetes.io/config.hash: b025727130c49df17a31e512324e6733
+      kubernetes.io/config.mirror: b025727130c49df17a31e512324e6733
+      kubernetes.io/config.seen: "2023-02-07T23:12:26.068822218Z"
       kubernetes.io/config.source: file
-    creationTimestamp: "2022-11-30T15:29:47Z"
+    creationTimestamp: "2023-02-07T23:12:26Z"
     labels:
       component: kube-scheduler
       tier: control-plane
-    name: kube-scheduler-kind-control-plane
+    name: kube-scheduler-minikube
     namespace: kube-system
     ownerReferences:
     - apiVersion: v1
       controller: true
       kind: Node
-      name: kind-control-plane
-      uid: e5a63bff-bbee-42c8-ad61-a82853217689
-    resourceVersion: "299"
-    uid: 24955292-c512-444f-8203-84cc27d8bb65
+      name: minikube
+      uid: 161a810c-f05c-4e1e-a3e2-d5f186cede25
+    resourceVersion: "285"
+    uid: d6f7e2f3-c7c8-4e46-89d9-4018b3ea30cc
   spec:
     containers:
     - command:
@@ -1248,8 +1063,8 @@ items:
       - --authorization-kubeconfig=/etc/kubernetes/scheduler.conf
       - --bind-address=127.0.0.1
       - --kubeconfig=/etc/kubernetes/scheduler.conf
-      - --leader-elect=true
-      image: registry.k8s.io/kube-scheduler:v1.25.3
+      - --leader-elect=false
+      image: registry.k8s.io/kube-scheduler:v1.25.6
       imagePullPolicy: IfNotPresent
       livenessProbe:
         failureThreshold: 8
@@ -1286,7 +1101,7 @@ items:
     dnsPolicy: ClusterFirst
     enableServiceLinks: true
     hostNetwork: true
-    nodeName: kind-control-plane
+    nodeName: minikube
     preemptionPolicy: PreemptLowerPriority
     priority: 2000001000
     priorityClassName: system-node-critical
@@ -1307,25 +1122,25 @@ items:
   status:
     conditions:
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:29:48Z"
+      lastTransitionTime: "2023-02-07T23:12:26Z"
       status: "True"
       type: Initialized
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:29:54Z"
+      lastTransitionTime: "2023-02-07T23:12:35Z"
       status: "True"
       type: Ready
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:29:54Z"
+      lastTransitionTime: "2023-02-07T23:12:35Z"
       status: "True"
       type: ContainersReady
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:29:48Z"
+      lastTransitionTime: "2023-02-07T23:12:26Z"
       status: "True"
       type: PodScheduled
     containerStatuses:
-    - containerID: containerd://e3106a2c713326e74d56a02830eb3ae77374aa1dc7578883d46f1bbd77b9c416
-      image: registry.k8s.io/kube-scheduler:v1.25.3
-      imageID: docker.io/library/import-2022-11-02@sha256:2a436be2b9f9f6973775123308760aeb44edaeda099374efd3ddab5a91812121
+    - containerID: containerd://8fefe9a81e4e02c535626edbfa1b5fa3515d28dc028f8aec80b3a63866549135
+      image: registry.k8s.io/kube-scheduler:v1.25.6
+      imageID: registry.k8s.io/kube-scheduler@sha256:f41301881252779d21dde86aac5a45e9acfe560643b5a28cef1286eabb187e26
       lastState: {}
       name: kube-scheduler
       ready: true
@@ -1333,81 +1148,96 @@ items:
       started: true
       state:
         running:
-          startedAt: "2022-11-30T15:29:39Z"
-    hostIP: 172.18.0.2
+          startedAt: "2023-02-07T23:12:21Z"
+    hostIP: 192.168.49.2
     phase: Running
-    podIP: 172.18.0.2
+    podIP: 192.168.49.2
     podIPs:
-    - ip: 172.18.0.2
+    - ip: 192.168.49.2
     qosClass: Burstable
-    startTime: "2022-11-30T15:29:48Z"
+    startTime: "2023-02-07T23:12:26Z"
 - apiVersion: v1
   kind: Pod
   metadata:
-    creationTimestamp: "2022-11-30T15:30:01Z"
-    generateName: local-path-provisioner-684f458cdd-
+    creationTimestamp: "2023-02-07T23:13:25Z"
+    generateName: metrics-server-56c6cfbdd9-
     labels:
-      app: local-path-provisioner
-      pod-template-hash: 684f458cdd
-    name: local-path-provisioner-684f458cdd-lx5ch
-    namespace: local-path-storage
+      k8s-app: metrics-server
+      pod-template-hash: 56c6cfbdd9
+    name: metrics-server-56c6cfbdd9-k64sc
+    namespace: kube-system
     ownerReferences:
     - apiVersion: apps/v1
       blockOwnerDeletion: true
       controller: true
       kind: ReplicaSet
-      name: local-path-provisioner-684f458cdd
-      uid: 7f58752c-8e0b-4e09-80d4-060d311e9cee
-    resourceVersion: "432"
-    uid: 8a0cf77c-835a-4d45-8006-a4ade76557b9
+      name: metrics-server-56c6cfbdd9
+      uid: db88a64a-45d0-4f57-90ac-9948ca748a98
+    resourceVersion: "591"
+    uid: a2756e3e-5a3f-4fa4-8043-8bee673c187e
   spec:
     containers:
-    - command:
-      - local-path-provisioner
-      - --debug
-      - start
-      - --helper-image
-      - docker.io/kindest/local-path-helper:v20220607-9a4d8d2a
-      - --config
-      - /etc/config/config.json
-      env:
-      - name: POD_NAMESPACE
-        valueFrom:
-          fieldRef:
-            apiVersion: v1
-            fieldPath: metadata.namespace
-      image: docker.io/kindest/local-path-provisioner:v0.0.22-kind.0
+    - args:
+      - --cert-dir=/tmp
+      - --secure-port=4443
+      - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+      - --kubelet-use-node-status-port
+      - --metric-resolution=60s
+      - --kubelet-insecure-tls
+      image: registry.k8s.io/metrics-server/metrics-server:v0.6.2@sha256:f977ad859fb500c1302d9c3428c6271db031bb7431e7076213b676b345a88dc2
       imagePullPolicy: IfNotPresent
-      name: local-path-provisioner
-      resources: {}
+      livenessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /livez
+          port: https
+          scheme: HTTPS
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      name: metrics-server
+      ports:
+      - containerPort: 4443
+        name: https
+        protocol: TCP
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /readyz
+          port: https
+          scheme: HTTPS
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources:
+        requests:
+          cpu: 100m
+          memory: 200Mi
+      securityContext:
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 1000
       terminationMessagePath: /dev/termination-log
       terminationMessagePolicy: File
       volumeMounts:
-      - mountPath: /etc/config/
-        name: config-volume
+      - mountPath: /tmp
+        name: tmp-dir
       - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-        name: kube-api-access-bh4bk
+        name: kube-api-access-h5d4z
         readOnly: true
     dnsPolicy: ClusterFirst
     enableServiceLinks: true
-    nodeName: kind-control-plane
-    nodeSelector:
-      kubernetes.io/os: linux
+    nodeName: minikube
     preemptionPolicy: PreemptLowerPriority
-    priority: 0
+    priority: 2000000000
+    priorityClassName: system-cluster-critical
     restartPolicy: Always
     schedulerName: default-scheduler
     securityContext: {}
-    serviceAccount: local-path-provisioner-service-account
-    serviceAccountName: local-path-provisioner-service-account
+    serviceAccount: metrics-server
+    serviceAccountName: metrics-server
     terminationGracePeriodSeconds: 30
     tolerations:
-    - effect: NoSchedule
-      key: node-role.kubernetes.io/control-plane
-      operator: Equal
-    - effect: NoSchedule
-      key: node-role.kubernetes.io/master
-      operator: Equal
     - effect: NoExecute
       key: node.kubernetes.io/not-ready
       operator: Exists
@@ -1417,11 +1247,9 @@ items:
       operator: Exists
       tolerationSeconds: 300
     volumes:
-    - configMap:
-        defaultMode: 420
-        name: local-path-config
-      name: config-volume
-    - name: kube-api-access-bh4bk
+    - emptyDir: {}
+      name: tmp-dir
+    - name: kube-api-access-h5d4z
       projected:
         defaultMode: 420
         sources:
@@ -1442,53 +1270,170 @@ items:
   status:
     conditions:
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:30:07Z"
+      lastTransitionTime: "2023-02-07T23:13:25Z"
       status: "True"
       type: Initialized
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:30:09Z"
+      lastTransitionTime: "2023-02-07T23:13:37Z"
       status: "True"
       type: Ready
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:30:09Z"
+      lastTransitionTime: "2023-02-07T23:13:37Z"
       status: "True"
       type: ContainersReady
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:30:07Z"
+      lastTransitionTime: "2023-02-07T23:13:25Z"
       status: "True"
       type: PodScheduled
     containerStatuses:
-    - containerID: containerd://ce3226237ec4b7ee140fbe5c5b4e3ec06974c68adb0bfa3037b05602a975b000
-      image: docker.io/kindest/local-path-provisioner:v0.0.22-kind.0
-      imageID: sha256:4c1e997385b8fb4ad4d1d3c7e5af7ff3f882e94d07cf5b78de9e889bc60830e6
+    - containerID: containerd://5e19ecacb7e6b18e7e3a6cf73ddb7fea9a77b2cb6c633215e57a152003fa6e57
+      image: sha256:ea7b05ebc8e8dd72b4ef806d9b76b93a456ba21d1768e15aecffa1c38616e78b
+      imageID: registry.k8s.io/metrics-server/metrics-server@sha256:f977ad859fb500c1302d9c3428c6271db031bb7431e7076213b676b345a88dc2
       lastState: {}
-      name: local-path-provisioner
+      name: metrics-server
       ready: true
       restartCount: 0
       started: true
       state:
         running:
-          startedAt: "2022-11-30T15:30:08Z"
-    hostIP: 172.18.0.2
+          startedAt: "2023-02-07T23:13:36Z"
+    hostIP: 192.168.49.2
     phase: Running
     podIP: 10.244.0.3
     podIPs:
     - ip: 10.244.0.3
+    qosClass: Burstable
+    startTime: "2023-02-07T23:13:25Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Pod","metadata":{"annotations":{},"labels":{"addonmanager.kubernetes.io/mode":"Reconcile","integration-test":"storage-provisioner"},"name":"storage-provisioner","namespace":"kube-system"},"spec":{"containers":[{"command":["/storage-provisioner"],"image":"gcr.io/k8s-minikube/storage-provisioner:v5","imagePullPolicy":"IfNotPresent","name":"storage-provisioner","volumeMounts":[{"mountPath":"/tmp","name":"tmp"}]}],"hostNetwork":true,"serviceAccountName":"storage-provisioner","volumes":[{"hostPath":{"path":"/tmp","type":"Directory"},"name":"tmp"}]}}
+    creationTimestamp: "2023-02-07T23:12:27Z"
+    labels:
+      addonmanager.kubernetes.io/mode: Reconcile
+      integration-test: storage-provisioner
+    name: storage-provisioner
+    namespace: kube-system
+    resourceVersion: "384"
+    uid: 7ee42734-d0bf-4983-847d-caed442ac514
+  spec:
+    containers:
+    - command:
+      - /storage-provisioner
+      image: gcr.io/k8s-minikube/storage-provisioner:v5
+      imagePullPolicy: IfNotPresent
+      name: storage-provisioner
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /tmp
+        name: tmp
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-q4nhl
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    hostNetwork: true
+    nodeName: minikube
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: storage-provisioner
+    serviceAccountName: storage-provisioner
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - hostPath:
+        path: /tmp
+        type: Directory
+      name: tmp
+    - name: kube-api-access-q4nhl
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2023-02-07T23:12:37Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2023-02-07T23:12:45Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2023-02-07T23:12:45Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2023-02-07T23:12:37Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://6aef10a8de6cda90df754aead8cfeb9710319bb7fbc639bbcea2a06335136528
+      image: gcr.io/k8s-minikube/storage-provisioner:v5
+      imageID: gcr.io/k8s-minikube/storage-provisioner@sha256:18eb69d1418e854ad5a19e399310e52808a8321e4c441c1dddad8977a0d7a944
+      lastState:
+        terminated:
+          containerID: containerd://0fd7cd4f0e4f1a4ff60cd97fef035ab1185f96fe819755c9cdb876094350a743
+          exitCode: 1
+          finishedAt: "2023-02-07T23:12:44Z"
+          reason: Error
+          startedAt: "2023-02-07T23:12:38Z"
+      name: storage-provisioner
+      ready: true
+      restartCount: 1
+      started: true
+      state:
+        running:
+          startedAt: "2023-02-07T23:12:44Z"
+    hostIP: 192.168.49.2
+    phase: Running
+    podIP: 192.168.49.2
+    podIPs:
+    - ip: 192.168.49.2
     qosClass: BestEffort
-    startTime: "2022-11-30T15:30:07Z"
+    startTime: "2023-02-07T23:12:37Z"
 - apiVersion: v1
   kind: Pod
   metadata:
     annotations:
       meta.helm.sh/release-name: e2e
       meta.helm.sh/release-namespace: scraper
-    creationTimestamp: "2022-11-30T15:37:05Z"
+    creationTimestamp: "2023-02-07T23:13:29Z"
     labels:
       app.kubernetes.io/managed-by: Helm
     name: e2e-container-creating
     namespace: scraper
-    resourceVersion: "1209"
-    uid: c82f639c-df2f-4141-b36b-ecf32a8bffd2
+    resourceVersion: "799"
+    uid: 66989d3b-7ccf-4f28-b8b4-48d981e97d17
   spec:
     containers:
     - image: alpine:latest
@@ -1505,11 +1450,11 @@ items:
       terminationMessagePolicy: File
       volumeMounts:
       - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-        name: kube-api-access-qxtmd
+        name: kube-api-access-t8pwr
         readOnly: true
     dnsPolicy: ClusterFirst
     enableServiceLinks: true
-    nodeName: kind-control-plane
+    nodeName: minikube
     preemptionPolicy: PreemptLowerPriority
     priority: 0
     restartPolicy: Always
@@ -1528,7 +1473,7 @@ items:
       operator: Exists
       tolerationSeconds: 300
     volumes:
-    - name: kube-api-access-qxtmd
+    - name: kube-api-access-t8pwr
       projected:
         defaultMode: 420
         sources:
@@ -1549,73 +1494,309 @@ items:
   status:
     conditions:
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:05Z"
+      lastTransitionTime: "2023-02-07T23:13:29Z"
       status: "True"
       type: Initialized
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:05Z"
+      lastTransitionTime: "2023-02-07T23:14:47Z"
       message: 'containers with unready status: [alpine]'
       reason: ContainersNotReady
       status: "False"
       type: Ready
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:05Z"
+      lastTransitionTime: "2023-02-07T23:14:47Z"
       message: 'containers with unready status: [alpine]'
       reason: ContainersNotReady
       status: "False"
       type: ContainersReady
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:05Z"
+      lastTransitionTime: "2023-02-07T23:13:29Z"
       status: "True"
       type: PodScheduled
     containerStatuses:
-    - containerID: containerd://3a59ca9c7cf129bc1dd677ae77af7598eaae94106a0327595d28d9732c95c767
+    - containerID: containerd://e329c98bb09bee889bcb6246559c03ab087276b349e44365fc4b17dde1084ee4
       image: docker.io/library/alpine:latest
-      imageID: docker.io/library/alpine@sha256:8914eb54f968791faf6a8638949e480fef81e697984fba772b3976835194c6d4
+      imageID: docker.io/library/alpine@sha256:f271e74b17ced29b915d351685fd4644785c6d1559dd1f2d4189a5e851ef753a
       lastState:
         terminated:
-          containerID: containerd://8e04cedf5b290dbc0992a6c52e2b9f0535481a3a65ad9863f0250eb12d0a986b
+          containerID: containerd://99148166b3f8364c37f961d7b92e0542d49ed84f9f4a1dd82eefb27da1ab4297
           exitCode: 0
-          finishedAt: "2022-11-30T15:37:39Z"
+          finishedAt: "2023-02-07T23:14:46Z"
           reason: Completed
-          startedAt: "2022-11-30T15:37:39Z"
+          startedAt: "2023-02-07T23:14:46Z"
       name: alpine
       ready: false
       restartCount: 2
       started: false
       state:
         terminated:
-          containerID: containerd://3a59ca9c7cf129bc1dd677ae77af7598eaae94106a0327595d28d9732c95c767
+          containerID: containerd://e329c98bb09bee889bcb6246559c03ab087276b349e44365fc4b17dde1084ee4
           exitCode: 0
-          finishedAt: "2022-11-30T15:38:00Z"
+          finishedAt: "2023-02-07T23:15:09Z"
           reason: Completed
-          startedAt: "2022-11-30T15:38:00Z"
-    hostIP: 172.18.0.2
+          startedAt: "2023-02-07T23:15:09Z"
+    hostIP: 192.168.49.2
     phase: Running
-    podIP: 10.244.0.6
+    podIP: 10.244.0.4
     podIPs:
-    - ip: 10.244.0.6
+    - ip: 10.244.0.4
     qosClass: Guaranteed
-    startTime: "2022-11-30T15:37:05Z"
+    startTime: "2023-02-07T23:13:29Z"
 - apiVersion: v1
   kind: Pod
   metadata:
-    creationTimestamp: "2022-11-30T15:37:05Z"
-    generateName: e2e-depl-5546654696-
+    creationTimestamp: "2023-02-07T23:14:00Z"
+    generateName: e2e-cronjob-27930194-
+    labels:
+      controller-uid: c5231f75-ec1f-46fc-a9bc-b07f9a335a78
+      job-name: e2e-cronjob-27930194
+    name: e2e-cronjob-27930194-cgxmq
+    namespace: scraper
+    ownerReferences:
+    - apiVersion: batch/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Job
+      name: e2e-cronjob-27930194
+      uid: c5231f75-ec1f-46fc-a9bc-b07f9a335a78
+    resourceVersion: "652"
+    uid: 82d9f329-1cbb-470f-9bb6-323597dd3eb2
+  spec:
+    containers:
+    - command:
+      - /bin/sh
+      - -c
+      - date; echo Hello from the Kubernetes cluster
+      image: busybox
+      imagePullPolicy: IfNotPresent
+      name: busybox
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-skjf5
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    nodeName: minikube
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: OnFailure
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: default
+    serviceAccountName: default
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: kube-api-access-skjf5
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2023-02-07T23:14:00Z"
+      reason: PodCompleted
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2023-02-07T23:14:00Z"
+      reason: PodCompleted
+      status: "False"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2023-02-07T23:14:00Z"
+      reason: PodCompleted
+      status: "False"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2023-02-07T23:14:00Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://93b2e5d41a1a8a1f40c4491337673dcdadb1b6a1633da004658f08e7a3a11df7
+      image: docker.io/library/busybox:latest
+      imageID: docker.io/library/busybox@sha256:7b3ccabffc97de872a30dfd234fd972a66d247c8cfc69b0550f276481852627c
+      lastState: {}
+      name: busybox
+      ready: false
+      restartCount: 0
+      started: false
+      state:
+        terminated:
+          containerID: containerd://93b2e5d41a1a8a1f40c4491337673dcdadb1b6a1633da004658f08e7a3a11df7
+          exitCode: 0
+          finishedAt: "2023-02-07T23:14:00Z"
+          reason: Completed
+          startedAt: "2023-02-07T23:14:00Z"
+    hostIP: 192.168.49.2
+    phase: Succeeded
+    podIP: 10.244.0.10
+    podIPs:
+    - ip: 10.244.0.10
+    qosClass: BestEffort
+    startTime: "2023-02-07T23:14:00Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    creationTimestamp: "2023-02-07T23:15:00Z"
+    generateName: e2e-cronjob-27930195-
+    labels:
+      controller-uid: ea340816-a024-48d6-8600-2394a6aa3fc5
+      job-name: e2e-cronjob-27930195
+    name: e2e-cronjob-27930195-bt6cg
+    namespace: scraper
+    ownerReferences:
+    - apiVersion: batch/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Job
+      name: e2e-cronjob-27930195
+      uid: ea340816-a024-48d6-8600-2394a6aa3fc5
+    resourceVersion: "786"
+    uid: a5046e70-7858-4afb-badf-1ee1ea357fc3
+  spec:
+    containers:
+    - command:
+      - /bin/sh
+      - -c
+      - date; echo Hello from the Kubernetes cluster
+      image: busybox
+      imagePullPolicy: IfNotPresent
+      name: busybox
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-f64pg
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    nodeName: minikube
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: OnFailure
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: default
+    serviceAccountName: default
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: kube-api-access-f64pg
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2023-02-07T23:15:00Z"
+      reason: PodCompleted
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2023-02-07T23:15:00Z"
+      reason: PodCompleted
+      status: "False"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2023-02-07T23:15:00Z"
+      reason: PodCompleted
+      status: "False"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2023-02-07T23:15:00Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://8f9d99eba173bd032f7a47219b1ef568eb225558ed2fe7a685d19e1efe2422a4
+      image: docker.io/library/busybox:latest
+      imageID: docker.io/library/busybox@sha256:7b3ccabffc97de872a30dfd234fd972a66d247c8cfc69b0550f276481852627c
+      lastState: {}
+      name: busybox
+      ready: false
+      restartCount: 0
+      started: false
+      state:
+        terminated:
+          containerID: containerd://8f9d99eba173bd032f7a47219b1ef568eb225558ed2fe7a685d19e1efe2422a4
+          exitCode: 0
+          finishedAt: "2023-02-07T23:15:00Z"
+          reason: Completed
+          startedAt: "2023-02-07T23:15:00Z"
+    hostIP: 192.168.49.2
+    phase: Succeeded
+    podIP: 10.244.0.12
+    podIPs:
+    - ip: 10.244.0.12
+    qosClass: BestEffort
+    startTime: "2023-02-07T23:15:00Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    creationTimestamp: "2023-02-07T23:13:29Z"
+    generateName: e2e-depl-59b6859788-
     labels:
       app: deployment
-      pod-template-hash: "5546654696"
-    name: e2e-depl-5546654696-rm4gd
+      pod-template-hash: 59b6859788
+    name: e2e-depl-59b6859788-wl7fh
     namespace: scraper
     ownerReferences:
     - apiVersion: apps/v1
       blockOwnerDeletion: true
       controller: true
       kind: ReplicaSet
-      name: e2e-depl-5546654696
-      uid: 740c167e-07aa-4260-9ef7-594de4e36f7f
-    resourceVersion: "1105"
-    uid: 37ebc4b0-2382-4398-bbd5-968b71f282f6
+      name: e2e-depl-59b6859788
+      uid: a31d0622-a253-4c85-95f6-eced06687128
+    resourceVersion: "714"
+    uid: 6fc17db6-874b-41b3-96a8-a8d18a6daeca
   spec:
     containers:
     - args:
@@ -1628,14 +1809,16 @@ items:
       terminationMessagePath: /dev/termination-log
       terminationMessagePolicy: File
       volumeMounts:
+      - mountPath: /pv
+        name: pv
       - mountPath: /emptydir
         name: an-empty-dir
       - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-        name: kube-api-access-5c7ph
+        name: kube-api-access-m9znv
         readOnly: true
     dnsPolicy: ClusterFirst
     enableServiceLinks: true
-    nodeName: kind-control-plane
+    nodeName: minikube
     preemptionPolicy: PreemptLowerPriority
     priority: 0
     restartPolicy: Always
@@ -1654,10 +1837,13 @@ items:
       operator: Exists
       tolerationSeconds: 300
     volumes:
+    - name: pv
+      persistentVolumeClaim:
+        claimName: e2e
     - emptyDir:
         sizeLimit: 128Mi
       name: an-empty-dir
-    - name: kube-api-access-5c7ph
+    - name: kube-api-access-m9znv
       projected:
         defaultMode: 420
         sources:
@@ -1678,25 +1864,25 @@ items:
   status:
     conditions:
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:05Z"
+      lastTransitionTime: "2023-02-07T23:13:29Z"
       status: "True"
       type: Initialized
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:23Z"
+      lastTransitionTime: "2023-02-07T23:14:31Z"
       status: "True"
       type: Ready
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:23Z"
+      lastTransitionTime: "2023-02-07T23:14:31Z"
       status: "True"
       type: ContainersReady
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:05Z"
+      lastTransitionTime: "2023-02-07T23:13:29Z"
       status: "True"
       type: PodScheduled
     containerStatuses:
-    - containerID: containerd://697bf645fd187709f5c117e4b0e5466100c5113430b2a6629d37da86d5c1f708
+    - containerID: containerd://dec2620d481d1e192dfa324e980256e78b2eae6f49fb966b5377e2a716ccb1fa
       image: docker.io/library/busybox:latest
-      imageID: docker.io/library/busybox@sha256:fcd85228d7a25feb59f101ac3a955d27c80df4ad824d65f5757a954831450185
+      imageID: docker.io/library/busybox@sha256:7b3ccabffc97de872a30dfd234fd972a66d247c8cfc69b0550f276481852627c
       lastState: {}
       name: busybox
       ready: true
@@ -1704,24 +1890,24 @@ items:
       started: true
       state:
         running:
-          startedAt: "2022-11-30T15:37:22Z"
-    hostIP: 172.18.0.2
+          startedAt: "2023-02-07T23:14:30Z"
+    hostIP: 192.168.49.2
     phase: Running
-    podIP: 10.244.0.8
+    podIP: 10.244.0.9
     podIPs:
-    - ip: 10.244.0.8
+    - ip: 10.244.0.9
     qosClass: BestEffort
-    startTime: "2022-11-30T15:37:05Z"
+    startTime: "2023-02-07T23:13:29Z"
 - apiVersion: v1
   kind: Pod
   metadata:
-    creationTimestamp: "2022-11-30T15:37:05Z"
+    creationTimestamp: "2023-02-07T23:13:29Z"
     generateName: e2e-ds-
     labels:
       app: daemonset
       controller-revision-hash: 854df558c9
       pod-template-generation: "1"
-    name: e2e-ds-4ld4x
+    name: e2e-ds-64fsg
     namespace: scraper
     ownerReferences:
     - apiVersion: apps/v1
@@ -1729,9 +1915,9 @@ items:
       controller: true
       kind: DaemonSet
       name: e2e-ds
-      uid: 9ed83488-d237-48a3-90e3-7a6704d74558
-    resourceVersion: "1099"
-    uid: 690c41db-79e8-4b72-840d-21515d040deb
+      uid: e96e6216-8771-4795-a7d7-13f47f528630
+    resourceVersion: "611"
+    uid: 4bab0536-28a8-45da-9d87-a1456eb6a8a7
   spec:
     affinity:
       nodeAffinity:
@@ -1741,7 +1927,7 @@ items:
             - key: metadata.name
               operator: In
               values:
-              - kind-control-plane
+              - minikube
     containers:
     - args:
       - sleep
@@ -1756,11 +1942,11 @@ items:
       - mountPath: /emptydir
         name: an-empty-dir
       - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-        name: kube-api-access-bblzs
+        name: kube-api-access-rxk4t
         readOnly: true
     dnsPolicy: ClusterFirst
     enableServiceLinks: true
-    nodeName: kind-control-plane
+    nodeName: minikube
     preemptionPolicy: PreemptLowerPriority
     priority: 0
     restartPolicy: Always
@@ -1792,7 +1978,7 @@ items:
     - emptyDir:
         sizeLimit: 128Mi
       name: an-empty-dir
-    - name: kube-api-access-bblzs
+    - name: kube-api-access-rxk4t
       projected:
         defaultMode: 420
         sources:
@@ -1813,25 +1999,25 @@ items:
   status:
     conditions:
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:05Z"
+      lastTransitionTime: "2023-02-07T23:13:29Z"
       status: "True"
       type: Initialized
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:22Z"
+      lastTransitionTime: "2023-02-07T23:13:43Z"
       status: "True"
       type: Ready
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:22Z"
+      lastTransitionTime: "2023-02-07T23:13:43Z"
       status: "True"
       type: ContainersReady
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:05Z"
+      lastTransitionTime: "2023-02-07T23:13:29Z"
       status: "True"
       type: PodScheduled
     containerStatuses:
-    - containerID: containerd://c059f5e02c98762ec13db6e110615b2c39805751a5f137f87f42234f77af09d4
+    - containerID: containerd://a2ea6eb9663192760b8577e01a960e4d91d51d5f3f5fcdec286eec70ab88e8b5
       image: docker.io/library/busybox:latest
-      imageID: docker.io/library/busybox@sha256:fcd85228d7a25feb59f101ac3a955d27c80df4ad824d65f5757a954831450185
+      imageID: docker.io/library/busybox@sha256:7b3ccabffc97de872a30dfd234fd972a66d247c8cfc69b0550f276481852627c
       lastState: {}
       name: busybox
       ready: true
@@ -1839,24 +2025,24 @@ items:
       started: true
       state:
         running:
-          startedAt: "2022-11-30T15:37:22Z"
-    hostIP: 172.18.0.2
+          startedAt: "2023-02-07T23:13:43Z"
+    hostIP: 192.168.49.2
     phase: Running
-    podIP: 10.244.0.7
+    podIP: 10.244.0.5
     podIPs:
-    - ip: 10.244.0.7
+    - ip: 10.244.0.5
     qosClass: BestEffort
-    startTime: "2022-11-30T15:37:05Z"
+    startTime: "2023-02-07T23:13:29Z"
 - apiVersion: v1
   kind: Pod
   metadata:
-    creationTimestamp: "2022-11-30T15:37:05Z"
+    creationTimestamp: "2023-02-07T23:13:29Z"
     generateName: e2e-hpa-68cc49444c-
     labels:
       app: hpa
       pod-template-hash: 68cc49444c
       run: php-apache
-    name: e2e-hpa-68cc49444c-f5wlm
+    name: e2e-hpa-68cc49444c-g4tzm
     namespace: scraper
     ownerReferences:
     - apiVersion: apps/v1
@@ -1864,9 +2050,9 @@ items:
       controller: true
       kind: ReplicaSet
       name: e2e-hpa-68cc49444c
-      uid: 837be766-3900-4a36-986a-942e94305c48
-    resourceVersion: "1077"
-    uid: 4f040ef9-8aaa-4eae-b37e-d8965d714507
+      uid: 1831d6fe-a190-4f1e-af1b-4e6b02c1dbdd
+    resourceVersion: "678"
+    uid: 1ddd3f94-f81a-4309-9413-56d2bdbb35fa
   spec:
     containers:
     - image: k8s.gcr.io/hpa-example
@@ -1884,11 +2070,11 @@ items:
       terminationMessagePolicy: File
       volumeMounts:
       - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-        name: kube-api-access-b2mll
+        name: kube-api-access-sfxs9
         readOnly: true
     dnsPolicy: ClusterFirst
     enableServiceLinks: true
-    nodeName: kind-control-plane
+    nodeName: minikube
     preemptionPolicy: PreemptLowerPriority
     priority: 0
     restartPolicy: Always
@@ -1907,7 +2093,7 @@ items:
       operator: Exists
       tolerationSeconds: 300
     volumes:
-    - name: kube-api-access-b2mll
+    - name: kube-api-access-sfxs9
       projected:
         defaultMode: 420
         sources:
@@ -1928,23 +2114,23 @@ items:
   status:
     conditions:
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:05Z"
+      lastTransitionTime: "2023-02-07T23:13:29Z"
       status: "True"
       type: Initialized
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:17Z"
+      lastTransitionTime: "2023-02-07T23:14:25Z"
       status: "True"
       type: Ready
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:17Z"
+      lastTransitionTime: "2023-02-07T23:14:25Z"
       status: "True"
       type: ContainersReady
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:05Z"
+      lastTransitionTime: "2023-02-07T23:13:29Z"
       status: "True"
       type: PodScheduled
     containerStatuses:
-    - containerID: containerd://9a616fe6be6625f88e5cd801fc58ba67b38ac79a0b8756e8c619def83f8a9455
+    - containerID: containerd://e7dc5c82cd12ddbeec03fbff4fac135fd39fd7075b3dc53ee9e74dd03f10e32d
       image: k8s.gcr.io/hpa-example:latest
       imageID: k8s.gcr.io/hpa-example@sha256:581697a37f0e136db86d6b30392f0db40ce99c8248a7044c770012f4e8491544
       lastState: {}
@@ -1954,19 +2140,19 @@ items:
       started: true
       state:
         running:
-          startedAt: "2022-11-30T15:37:17Z"
-    hostIP: 172.18.0.2
+          startedAt: "2023-02-07T23:14:24Z"
+    hostIP: 192.168.49.2
     phase: Running
-    podIP: 10.244.0.5
+    podIP: 10.244.0.6
     podIPs:
-    - ip: 10.244.0.5
+    - ip: 10.244.0.6
     qosClass: Burstable
-    startTime: "2022-11-30T15:37:05Z"
+    startTime: "2023-02-07T23:13:29Z"
 - apiVersion: v1
   kind: Pod
   metadata:
-    creationTimestamp: "2022-11-30T15:37:05Z"
-    generateName: e2e-kube-state-metrics-5d5dc657bb-
+    creationTimestamp: "2023-02-07T23:13:29Z"
+    generateName: e2e-kube-state-metrics-9b6db9d89-
     labels:
       app.kubernetes.io/component: metrics
       app.kubernetes.io/instance: e2e
@@ -1975,24 +2161,24 @@ items:
       app.kubernetes.io/part-of: kube-state-metrics
       app.kubernetes.io/version: 2.6.0
       helm.sh/chart: kube-state-metrics-4.23.0
-      pod-template-hash: 5d5dc657bb
-    name: e2e-kube-state-metrics-5d5dc657bb-ftvlm
+      pod-template-hash: 9b6db9d89
+    name: e2e-kube-state-metrics-9b6db9d89-d2jn2
     namespace: scraper
     ownerReferences:
     - apiVersion: apps/v1
       blockOwnerDeletion: true
       controller: true
       kind: ReplicaSet
-      name: e2e-kube-state-metrics-5d5dc657bb
-      uid: 214b6ad1-051e-4ee2-b045-351e9ab14bc5
-    resourceVersion: "1164"
-    uid: 17a6936d-f840-441d-b8aa-52761925702d
+      name: e2e-kube-state-metrics-9b6db9d89
+      uid: cea0b34b-ff1c-47a5-9dec-6a01e074ea9d
+    resourceVersion: "736"
+    uid: 3c118500-54cd-41b2-ac1e-f3c945aab9bf
   spec:
     containers:
     - args:
       - --port=8080
       - --resources=certificatesigningrequests,configmaps,cronjobs,daemonsets,deployments,endpoints,horizontalpodautoscalers,ingresses,jobs,leases,limitranges,mutatingwebhookconfigurations,namespaces,networkpolicies,nodes,persistentvolumeclaims,persistentvolumes,poddisruptionbudgets,pods,replicasets,replicationcontrollers,resourcequotas,secrets,services,statefulsets,storageclasses,validatingwebhookconfigurations,volumeattachments
-      image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.6.0
+      image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.7.0
       imagePullPolicy: IfNotPresent
       livenessProbe:
         failureThreshold: 3
@@ -2024,11 +2210,11 @@ items:
       terminationMessagePolicy: File
       volumeMounts:
       - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-        name: kube-api-access-wpbqp
+        name: kube-api-access-mwb57
         readOnly: true
     dnsPolicy: ClusterFirst
     enableServiceLinks: true
-    nodeName: kind-control-plane
+    nodeName: minikube
     preemptionPolicy: PreemptLowerPriority
     priority: 0
     restartPolicy: Always
@@ -2050,7 +2236,7 @@ items:
       operator: Exists
       tolerationSeconds: 300
     volumes:
-    - name: kube-api-access-wpbqp
+    - name: kube-api-access-mwb57
       projected:
         defaultMode: 420
         sources:
@@ -2071,25 +2257,25 @@ items:
   status:
     conditions:
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:05Z"
+      lastTransitionTime: "2023-02-07T23:13:29Z"
       status: "True"
       type: Initialized
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:37Z"
+      lastTransitionTime: "2023-02-07T23:14:41Z"
       status: "True"
       type: Ready
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:37Z"
+      lastTransitionTime: "2023-02-07T23:14:41Z"
       status: "True"
       type: ContainersReady
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:05Z"
+      lastTransitionTime: "2023-02-07T23:13:29Z"
       status: "True"
       type: PodScheduled
     containerStatuses:
-    - containerID: containerd://4171649c61a21d210872b6678f07fa68eec23b2f5b471d65966be2f5fd2cd103
-      image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.6.0
-      imageID: registry.k8s.io/kube-state-metrics/kube-state-metrics@sha256:bdab4e49d71d272cf944c8612dff5ab1250f0fafdae45c22980286ac0c016032
+    - containerID: containerd://93d0f239343d51026a2879d38cd33a5bd3d58c55f48c27869400fcd57bdf67cb
+      image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.7.0
+      imageID: registry.k8s.io/kube-state-metrics/kube-state-metrics@sha256:a15ca437f2309b769caa36a88240ce0266d67028f02da90f1c817c849b144273
       lastState: {}
       name: kube-state-metrics
       ready: true
@@ -2097,27 +2283,27 @@ items:
       started: true
       state:
         running:
-          startedAt: "2022-11-30T15:37:25Z"
-    hostIP: 172.18.0.2
+          startedAt: "2023-02-07T23:14:29Z"
+    hostIP: 192.168.49.2
     phase: Running
-    podIP: 10.244.0.9
+    podIP: 10.244.0.7
     podIPs:
-    - ip: 10.244.0.9
+    - ip: 10.244.0.7
     qosClass: BestEffort
-    startTime: "2022-11-30T15:37:05Z"
+    startTime: "2023-02-07T23:13:29Z"
 - apiVersion: v1
   kind: Pod
   metadata:
     annotations:
       meta.helm.sh/release-name: e2e
       meta.helm.sh/release-namespace: scraper
-    creationTimestamp: "2022-11-30T15:37:05Z"
+    creationTimestamp: "2023-02-07T23:13:29Z"
     labels:
       app.kubernetes.io/managed-by: Helm
     name: e2e-pending
     namespace: scraper
-    resourceVersion: "981"
-    uid: decbf5f5-4a9e-40c2-b3bd-d5d56bddc8b1
+    resourceVersion: "501"
+    uid: eba1ffc3-ab59-4447-abe5-f9c8ffadce04
   spec:
     containers:
     - image: alpine:latest
@@ -2128,7 +2314,7 @@ items:
       terminationMessagePolicy: File
       volumeMounts:
       - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-        name: kube-api-access-lmvrg
+        name: kube-api-access-mspbx
         readOnly: true
     dnsPolicy: ClusterFirst
     enableServiceLinks: true
@@ -2152,7 +2338,7 @@ items:
       operator: Exists
       tolerationSeconds: 300
     volumes:
-    - name: kube-api-access-lmvrg
+    - name: kube-api-access-mspbx
       projected:
         defaultMode: 420
         sources:
@@ -2173,7 +2359,7 @@ items:
   status:
     conditions:
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:05Z"
+      lastTransitionTime: "2023-02-07T23:13:29Z"
       message: '0/1 nodes are available: 1 node(s) didn''t match Pod''s node affinity/selector.
         preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.'
       reason: Unschedulable
@@ -2184,12 +2370,12 @@ items:
 - apiVersion: v1
   kind: Pod
   metadata:
-    creationTimestamp: "2022-11-30T15:37:05Z"
+    creationTimestamp: "2023-02-07T23:13:29Z"
     generateName: e2e-scraper-7fcb557b5f-
     labels:
       app: scraper
       pod-template-hash: 7fcb557b5f
-    name: e2e-scraper-7fcb557b5f-hqx9x
+    name: e2e-scraper-7fcb557b5f-67kr2
     namespace: scraper
     ownerReferences:
     - apiVersion: apps/v1
@@ -2197,9 +2383,9 @@ items:
       controller: true
       kind: ReplicaSet
       name: e2e-scraper-7fcb557b5f
-      uid: b85d3bef-4a38-4925-bc37-0d96635d8861
-    resourceVersion: "1124"
-    uid: a8af92f6-6c7c-4066-8995-6e413c779ef0
+      uid: 57c5f545-654f-47e8-bd19-bae09659c2db
+    resourceVersion: "621"
+    uid: 87d833d8-e32a-4902-b28d-e84a43b39b85
   spec:
     containers:
     - args:
@@ -2226,12 +2412,12 @@ items:
       terminationMessagePolicy: File
       volumeMounts:
       - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-        name: kube-api-access-qglxz
+        name: kube-api-access-27flm
         readOnly: true
     dnsPolicy: ClusterFirstWithHostNet
     enableServiceLinks: true
     hostNetwork: true
-    nodeName: kind-control-plane
+    nodeName: minikube
     preemptionPolicy: PreemptLowerPriority
     priority: 0
     restartPolicy: Always
@@ -2250,7 +2436,7 @@ items:
       operator: Exists
       tolerationSeconds: 300
     volumes:
-    - name: kube-api-access-qglxz
+    - name: kube-api-access-27flm
       projected:
         defaultMode: 420
         sources:
@@ -2271,25 +2457,25 @@ items:
   status:
     conditions:
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:05Z"
+      lastTransitionTime: "2023-02-07T23:13:29Z"
       status: "True"
       type: Initialized
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:26Z"
+      lastTransitionTime: "2023-02-07T23:13:50Z"
       status: "True"
       type: Ready
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:26Z"
+      lastTransitionTime: "2023-02-07T23:13:50Z"
       status: "True"
       type: ContainersReady
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:05Z"
+      lastTransitionTime: "2023-02-07T23:13:29Z"
       status: "True"
       type: PodScheduled
     containerStatuses:
-    - containerID: containerd://74f0c03e8410d4dd23431961a0a84dceb8e5cb09da15e2d71686e2b9abe8891e
+    - containerID: containerd://b6ad7c92dc7930d80b5a0ec6922a853f4395f8a04fdb7a5c05d769b66a2a0a38
       image: docker.io/library/alpine:latest
-      imageID: docker.io/library/alpine@sha256:8914eb54f968791faf6a8638949e480fef81e697984fba772b3976835194c6d4
+      imageID: docker.io/library/alpine@sha256:f271e74b17ced29b915d351685fd4644785c6d1559dd1f2d4189a5e851ef753a
       lastState: {}
       name: e2e-scraper
       ready: true
@@ -2297,18 +2483,18 @@ items:
       started: true
       state:
         running:
-          startedAt: "2022-11-30T15:37:19Z"
-    hostIP: 172.18.0.2
+          startedAt: "2023-02-07T23:13:39Z"
+    hostIP: 192.168.49.2
     phase: Running
-    podIP: 172.18.0.2
+    podIP: 192.168.49.2
     podIPs:
-    - ip: 172.18.0.2
+    - ip: 192.168.49.2
     qosClass: BestEffort
-    startTime: "2022-11-30T15:37:05Z"
+    startTime: "2023-02-07T23:13:29Z"
 - apiVersion: v1
   kind: Pod
   metadata:
-    creationTimestamp: "2022-11-30T15:37:05Z"
+    creationTimestamp: "2023-02-07T23:13:29Z"
     generateName: e2e-statefulset-
     labels:
       app: statefulset
@@ -2322,9 +2508,9 @@ items:
       controller: true
       kind: StatefulSet
       name: e2e-statefulset
-      uid: 06c87637-b097-4fef-b562-4aacad18dca7
-    resourceVersion: "1127"
-    uid: 1c7556bc-6f34-47a1-a111-e6f2531bcc78
+      uid: 288c53bf-f72f-4419-a2ae-959e3cc42c6f
+    resourceVersion: "698"
+    uid: 33918cd7-4d08-42cd-a380-6cb15e40bdc1
   spec:
     containers:
     - args:
@@ -2340,12 +2526,12 @@ items:
       - mountPath: /emptydir
         name: an-empty-dir
       - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-        name: kube-api-access-h8wp6
+        name: kube-api-access-l6fd2
         readOnly: true
     dnsPolicy: ClusterFirst
     enableServiceLinks: true
     hostname: e2e-statefulset-0
-    nodeName: kind-control-plane
+    nodeName: minikube
     preemptionPolicy: PreemptLowerPriority
     priority: 0
     restartPolicy: Always
@@ -2368,7 +2554,7 @@ items:
     - emptyDir:
         sizeLimit: 128Mi
       name: an-empty-dir
-    - name: kube-api-access-h8wp6
+    - name: kube-api-access-l6fd2
       projected:
         defaultMode: 420
         sources:
@@ -2389,25 +2575,25 @@ items:
   status:
     conditions:
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:05Z"
+      lastTransitionTime: "2023-02-07T23:13:29Z"
       status: "True"
       type: Initialized
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:26Z"
+      lastTransitionTime: "2023-02-07T23:14:30Z"
       status: "True"
       type: Ready
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:26Z"
+      lastTransitionTime: "2023-02-07T23:14:30Z"
       status: "True"
       type: ContainersReady
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:05Z"
+      lastTransitionTime: "2023-02-07T23:13:29Z"
       status: "True"
       type: PodScheduled
     containerStatuses:
-    - containerID: containerd://a0034bb4ae7af724c814ca84500183a4094c431200065e42eb9e50d26d8b4bfb
+    - containerID: containerd://3642dbb5415ec53779e7b69afcc1078b6599a0ee7d94b960f699eddab5a76e12
       image: docker.io/library/busybox:latest
-      imageID: docker.io/library/busybox@sha256:fcd85228d7a25feb59f101ac3a955d27c80df4ad824d65f5757a954831450185
+      imageID: docker.io/library/busybox@sha256:7b3ccabffc97de872a30dfd234fd972a66d247c8cfc69b0550f276481852627c
       lastState: {}
       name: busybox
       ready: true
@@ -2415,18 +2601,18 @@ items:
       started: true
       state:
         running:
-          startedAt: "2022-11-30T15:37:25Z"
-    hostIP: 172.18.0.2
+          startedAt: "2023-02-07T23:14:30Z"
+    hostIP: 192.168.49.2
     phase: Running
-    podIP: 10.244.0.10
+    podIP: 10.244.0.8
     podIPs:
-    - ip: 10.244.0.10
+    - ip: 10.244.0.8
     qosClass: BestEffort
-    startTime: "2022-11-30T15:37:05Z"
+    startTime: "2023-02-07T23:13:29Z"
 - apiVersion: v1
   kind: Pod
   metadata:
-    creationTimestamp: "2022-11-30T15:37:26Z"
+    creationTimestamp: "2023-02-07T23:14:30Z"
     generateName: e2e-statefulset-
     labels:
       app: statefulset
@@ -2440,9 +2626,9 @@ items:
       controller: true
       kind: StatefulSet
       name: e2e-statefulset
-      uid: 06c87637-b097-4fef-b562-4aacad18dca7
-    resourceVersion: "1142"
-    uid: dc4ba996-8863-4ada-bff1-eeb03aaf4a9f
+      uid: 288c53bf-f72f-4419-a2ae-959e3cc42c6f
+    resourceVersion: "720"
+    uid: 1f1cf032-ff00-4d03-b599-51bb98dc3ecb
   spec:
     containers:
     - args:
@@ -2458,12 +2644,12 @@ items:
       - mountPath: /emptydir
         name: an-empty-dir
       - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
-        name: kube-api-access-v2fl7
+        name: kube-api-access-fz9c8
         readOnly: true
     dnsPolicy: ClusterFirst
     enableServiceLinks: true
     hostname: e2e-statefulset-1
-    nodeName: kind-control-plane
+    nodeName: minikube
     preemptionPolicy: PreemptLowerPriority
     priority: 0
     restartPolicy: Always
@@ -2486,7 +2672,7 @@ items:
     - emptyDir:
         sizeLimit: 128Mi
       name: an-empty-dir
-    - name: kube-api-access-v2fl7
+    - name: kube-api-access-fz9c8
       projected:
         defaultMode: 420
         sources:
@@ -2507,25 +2693,25 @@ items:
   status:
     conditions:
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:26Z"
+      lastTransitionTime: "2023-02-07T23:14:30Z"
       status: "True"
       type: Initialized
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:28Z"
+      lastTransitionTime: "2023-02-07T23:14:32Z"
       status: "True"
       type: Ready
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:28Z"
+      lastTransitionTime: "2023-02-07T23:14:32Z"
       status: "True"
       type: ContainersReady
     - lastProbeTime: null
-      lastTransitionTime: "2022-11-30T15:37:26Z"
+      lastTransitionTime: "2023-02-07T23:14:30Z"
       status: "True"
       type: PodScheduled
     containerStatuses:
-    - containerID: containerd://c027f4a21bf89a455cde47cd37e310902a6d7101f80c71b053ae510a28f3f282
+    - containerID: containerd://483f78e36d45dc65d1307dd27efd4bac6cff138ff5725d3313acbe69523526a8
       image: docker.io/library/busybox:latest
-      imageID: docker.io/library/busybox@sha256:fcd85228d7a25feb59f101ac3a955d27c80df4ad824d65f5757a954831450185
+      imageID: docker.io/library/busybox@sha256:7b3ccabffc97de872a30dfd234fd972a66d247c8cfc69b0550f276481852627c
       lastState: {}
       name: busybox
       ready: true
@@ -2533,14 +2719,14 @@ items:
       started: true
       state:
         running:
-          startedAt: "2022-11-30T15:37:28Z"
-    hostIP: 172.18.0.2
+          startedAt: "2023-02-07T23:14:32Z"
+    hostIP: 192.168.49.2
     phase: Running
     podIP: 10.244.0.11
     podIPs:
     - ip: 10.244.0.11
     qosClass: BestEffort
-    startTime: "2022-11-30T15:37:26Z"
+    startTime: "2023-02-07T23:14:30Z"
 kind: List
 metadata:
   resourceVersion: ""
