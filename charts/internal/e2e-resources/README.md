@@ -35,8 +35,8 @@ This chart creates e2e resources for nri-kubernetes.
 | loadBalancerService.enabled | bool | `true` |  |
 | loadBalancerService.fakeIP | string | `""` |  |
 | pending.enabled | bool | `true` |  |
-| persistentVolume.enabled | bool | `false` |  |
-| persistentVolumeClaim.enabled | bool | `false` |  |
+| persistentVolume.enabled | bool | `true` |  |
+| persistentVolumeClaim.enabled | bool | `true` |  |
 | persistentVolumeClaim.storageClassName | string | `"standard"` |  |
 | scraper.enabled | bool | `false` |  |
 | statefulSet.enabled | bool | `true` |  |
