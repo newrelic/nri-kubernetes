@@ -78,15 +78,15 @@ jobs:
           MINOR=$(echo "${{ matrix.k8sVersion }}"|sed -e 's_v\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)_\2_')
 
           if [ "$MINOR" -le 22 ]; then
-            echo "{exceptions}={1_22}" >> $GITHUB_OUTPUT
+            echo "exceptions=1_22" >> $GITHUB_OUTPUT
           elif [ "$MINOR" -eq 23 ]; then
-            echo "{exceptions}={1_23}" >> $GITHUB_OUTPUT
+            echo "exceptions=1_23" >> $GITHUB_OUTPUT
           elif [ "$MINOR" -eq 24 ]; then
-            echo "{exceptions}={1_24}" >> $GITHUB_OUTPUT
+            echo "exceptions=1_24" >> $GITHUB_OUTPUT
           elif [ "$MINOR" -eq 25 ]; then
-            echo "{exceptions}={1_25}" >> $GITHUB_OUTPUT
+            echo "exceptions=1_25" >> $GITHUB_OUTPUT
           elif [ "$MINOR" -ge 26 ]; then
-            echo "{exceptions}={1_26}" >> $GITHUB_OUTPUT
+            echo "exceptions=1_26" >> $GITHUB_OUTPUT
           fi
       - name: Run e2e-test
         uses: newrelic/newrelic-integration-e2e-action@v1
