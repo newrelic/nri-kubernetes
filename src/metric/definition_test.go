@@ -242,9 +242,3 @@ func TestMetricSetTypeGuesserWithCustomGroup(t *testing.T) {
 		})
 	}
 }
-
-func TestFromLabelValueEntityIDGenerator(t *testing.T) {
-
-	var IDGenerator = prometheus.FromLabelValueEntityIDGenerator("kube_persistentvolume_labels", "persistentvolume")
-	println(IDGenerator)
-}
