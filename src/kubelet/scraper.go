@@ -138,3 +138,8 @@ func (s *Scraper) Close() {
 		close(ch)
 	}
 }
+
+// Run scraper collect the data populating the integration entities
+func (s *Scraper) IsMaxRerunReached(curReruns int) bool {
+	return curReruns > s.config.ScraperMaxReruns
+}
