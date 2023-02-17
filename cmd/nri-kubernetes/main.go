@@ -195,10 +195,9 @@ func runScrapers(c *config.Config, ksmScraper *ksm.Scraper, kubeletScraper *kube
 		if err != nil {
 			if kubeletScraper.IsMaxRerunReached(kubeletReruns) {
 				return fmt.Errorf("retrieving kubelet data: %w", err)
-			} else {
-				kubeletReruns++
-				logger.Debug("the kubelet scraper fails due to %v, will rerun it for %dth time", err, kubeletReruns)
 			}
+			kubeletReruns++
+			logger.Debug("the kubelet scraper fails due to %v, will rerun it for %dth time", err, kubeletReruns)
 		}
 	}
 

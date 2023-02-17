@@ -139,7 +139,7 @@ func (s *Scraper) Close() {
 	}
 }
 
-// Run scraper collect the data populating the integration entities
+// Check whether the max number of scraper reruns has been reached or not.
 func (s *Scraper) IsMaxRerunReached(curReruns int) bool {
 	return curReruns > s.config.ScraperMaxReruns
 }
