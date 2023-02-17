@@ -628,6 +628,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "pvcName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_info", "persistentvolumeclaim"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "volumeName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_info", "volumename"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_info", "namespace"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_info", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("persistentvolumeclaim", "kube_persistentvolumeclaim_labels"), Type: sdkMetric.ATTRIBUTE},
 		},
 	},
