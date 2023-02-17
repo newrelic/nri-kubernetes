@@ -42,7 +42,6 @@ var (
 	integrationVersion = "0.0.0"
 	gitCommit          = ""
 	buildDate          = ""
-	kubeletReruns      = 0
 )
 
 var logger *log.Logger
@@ -193,11 +192,10 @@ func runScrapers(c *config.Config, ksmScraper *ksm.Scraper, kubeletScraper *kube
 	if c.Kubelet.Enabled {
 		err := kubeletScraper.Run(i)
 		if err != nil {
-			if kubeletScraper.IsMaxRerunReached(kubeletReruns) {
+			if kubeletScraper.IsMaxRerunReached() {
 				return fmt.Errorf("retrieving kubelet data: %w", err)
 			}
-			kubeletReruns++
-			logger.Debugf("the kubelet scraper fails due to %v, will rerun it for %dth time", err, kubeletReruns)
+			logger.Debugf("the kubelet scraper fails due to %v, will rerun it", err)
 		}
 	}
 
