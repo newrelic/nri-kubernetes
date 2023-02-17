@@ -621,7 +621,7 @@ var KSMSpecs = definition.SpecGroups{
 		MsTypeGuesser:   metricSetTypeGuesserWithCustomGroup("PersistentVolumeClaim"),
 		Specs: []definition.Spec{
 			{Name: "createdAt", ValueFunc: prometheus.FromValue("kube_persistentvolumeclaim_created"), Type: sdkMetric.GAUGE},
-			{Name: "resourceRequestsStorageBytes", ValueFunc: prometheus.FromValue("kube_persistentvolumeclaim_resource_requests_storage_bytes"), Type: sdkMetric.GAUGE},
+			{Name: "requestedStorageBytes", ValueFunc: prometheus.FromValue("kube_persistentvolumeclaim_resource_requests_storage_bytes"), Type: sdkMetric.GAUGE},
 			{Name: "accessMode", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_access_mode", "access_mode"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "statusPhase", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_status_phase", "phase"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "storageClass", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_info", "storageclass"), Type: sdkMetric.ATTRIBUTE},
