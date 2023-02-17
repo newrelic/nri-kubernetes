@@ -196,6 +196,7 @@ func runScrapers(c *config.Config, ksmScraper *ksm.Scraper, kubeletScraper *kube
 				return fmt.Errorf("retrieving kubelet data: %w", err)
 			}
 			logger.Debugf("the kubelet scraper fails due to %v, will rerun it", err)
+			kubeletScraper.IncCurrentReruns()
 		}
 	}
 
