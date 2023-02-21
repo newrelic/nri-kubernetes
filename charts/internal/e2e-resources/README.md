@@ -1,6 +1,6 @@
 # e2e-resources
 
-![Version: 1.5.0-devel](https://img.shields.io/badge/Version-1.5.0--devel-informational?style=flat-square)
+![Version: 1.6.0-devel](https://img.shields.io/badge/Version-1.6.0--devel-informational?style=flat-square)
 
 This chart creates e2e resources for nri-kubernetes.
 
@@ -36,8 +36,8 @@ This chart creates e2e resources for nri-kubernetes.
 | loadBalancerService.enabled | bool | `true` |  |
 | loadBalancerService.fakeIP | string | `""` |  |
 | pending.enabled | bool | `true` |  |
-| persistentVolume.enabled | bool | `false` |  |
-| persistentVolumeClaim.enabled | bool | `false` |  |
+| persistentVolume.enabled | bool | `true` |  |
+| persistentVolumeClaim.enabled | bool | `true` |  |
 | persistentVolumeClaim.storageClassName | string | `"standard"` |  |
 | scraper.enabled | bool | `false` |  |
 | statefulSet.enabled | bool | `true` |  |
