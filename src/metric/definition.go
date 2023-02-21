@@ -607,6 +607,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "ownerKind", ValueFunc: prometheus.FromLabelValue("kube_job_owner", "owner_kind"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "ownerIsController", ValueFunc: prometheus.FromLabelValue("kube_job_owner", "owner_is_controller"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "jobName", ValueFunc: prometheus.FromLabelValue("kube_job_created", "job_name"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_job_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_job_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("job_name", "kube_job_labels"), Type: sdkMetric.ATTRIBUTE},
 		},
