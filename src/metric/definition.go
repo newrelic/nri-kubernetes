@@ -578,6 +578,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "specStartingDeadlineSeconds", ValueFunc: prometheus.FromValue("kube_cronjob_spec_starting_deadline_seconds"), Type: sdkMetric.GAUGE},
 			{Name: "metadataResourceVersion", ValueFunc: prometheus.FromValue("kube_cronjob_metadata_resource_version"), Type: sdkMetric.GAUGE},
 			{Name: "cronjobName", ValueFunc: prometheus.FromLabelValue("kube_cronjob_created", "cronjob"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_cronjob_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_cronjob_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("cronjob", "kube_cronjob_labels"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "schedule", ValueFunc: prometheus.FromLabelValue("kube_cronjob_info", "schedule"), Type: sdkMetric.ATTRIBUTE},
