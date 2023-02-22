@@ -1,0 +1,21 @@
+{{- if .Values.failingJob.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-failjob
+spec:
+  activeDeadlineSeconds: 200
+  completions: 4
+  parallelism: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: main
+        image: docker.io/library/bash:5
+        command: ["bash"]
+        args:
+        - -c
+        - echo "Hello world! I'm going to exit with 42 to simulate a software bug." && sleep 5 && exit 42
+  backoffLimit: 6
+{{- end }}
