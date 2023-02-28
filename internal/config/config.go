@@ -137,6 +137,9 @@ type Kubelet struct {
 	Timeout time.Duration `mapstructure:"timeout"`
 	// Retries controls how many times the integration will attempt to connect to the kubelet before giving up.
 	Retries int `mapstructure:"retries"`
+	// ScraperMaxReruns controls how many times the integration will attempt to
+	// run kubelet scraper when runtime error happens before giving up.
+	ScraperMaxReruns int `mapstructure:"scraperMaxReruns"`
 }
 
 // ControlPlane contains config options for the control plane scraper.
