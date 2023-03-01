@@ -39,6 +39,7 @@ type Scraper struct {
 	defaultNetworkInterface string
 	nodeGetter              listersv1.NodeLister
 	informerClosers         []chan<- struct{}
+	currentReruns           int
 	Filterer                discovery.NamespaceFilterer
 }
 
@@ -50,9 +51,10 @@ type ScraperOpt func(s *Scraper) error
 func NewScraper(config *config.Config, providers Providers, options ...ScraperOpt) (*Scraper, error) {
 	var err error
 	s := &Scraper{
-		config:    config,
-		Providers: providers,
-		logger:    logutil.Discard,
+		config:        config,
+		Providers:     providers,
+		logger:        logutil.Discard,
+		currentReruns: 0,
 	}
 
 	// TODO: Sanity check config
@@ -137,4 +139,14 @@ func (s *Scraper) Close() {
 	for _, ch := range s.informerClosers {
 		close(ch)
 	}
+}
+
+// Increase the kubelet currentReruns counter.
+func (s *Scraper) IncCurrentReruns() {
+	s.currentReruns++
+}
+
+// Check whether the max number of kubulet scraper reruns has been reached or not.
+func (s *Scraper) IsMaxRerunReached() bool {
+	return s.currentReruns > s.config.ScraperMaxReruns
 }
