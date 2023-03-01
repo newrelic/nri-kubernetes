@@ -13,9 +13,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+* Fix an issue where when the Kubelet becomes temporarily unavailable the agent fails: https://github.com/newrelic/nri-kubernetes/pull/633
 * Update e2e testing chart templates
+* Updated dependencies
 
-**Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.5.0...v3.6.0
+**Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.6.0...v3.7.0
 
 ## 3.6.0
 
