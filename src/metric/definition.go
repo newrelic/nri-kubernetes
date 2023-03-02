@@ -853,31 +853,6 @@ var KSMSpecs = definition.SpecGroups{
 				ValueFunc: prometheus.FromValue("kube_endpoint_address_available"),
 				Type:      sdkMetric.GAUGE,
 			},
-			{
-				Name:      "ipAddress",
-				ValueFunc: prometheus.FromLabelValue("kube_endpoint_address", "ip"),
-				Type:      sdkMetric.ATTRIBUTE,
-			},
-			{
-				Name:      "ipAddressReady",
-				ValueFunc: prometheus.FromLabelValue("kube_endpoint_address", "ready"),
-				Type:      sdkMetric.ATTRIBUTE,
-			},
-			{
-				Name:      "portName",
-				ValueFunc: prometheus.FromLabelValue("kube_endpoint_ports", "port_name"),
-				Type:      sdkMetric.ATTRIBUTE,
-			},
-			{
-				Name:      "portProtocol",
-				ValueFunc: prometheus.FromLabelValue("kube_endpoint_ports", "port_protocol"),
-				Type:      sdkMetric.ATTRIBUTE,
-			},
-			{
-				Name:      "portNumber",
-				ValueFunc: prometheus.FromLabelValue("kube_endpoint_ports", "port_number"),
-				Type:      sdkMetric.ATTRIBUTE,
-			},
 		},
 	},
 	// We get Pod metrics from kube-state-metrics for those pods that are in
@@ -1112,8 +1087,6 @@ var KSMQueries = []prometheus.Query{
 	{MetricName: "kube_endpoint_labels"},
 	{MetricName: "kube_endpoint_address_not_ready"},
 	{MetricName: "kube_endpoint_address_available"},
-	{MetricName: "kube_endpoint_ports"},
-	{MetricName: "kube_endpoint_address"},
 	// hpa
 	{MetricName: "kube_horizontalpodautoscaler_labels"},
 	{MetricName: "kube_horizontalpodautoscaler_metadata_generation"},
