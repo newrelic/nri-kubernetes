@@ -43,8 +43,14 @@ func TestScraper(t *testing.T) {
 				exclude.Groups("horizontalpodautoscaler"),
 				exclude.Metrics("isActive", "isAble", "isLimited"),
 			),
+			// Kubernetes jobs either succeed or fail (but not both). Thus, the KSM metrics related to success (isComplete, completedAt)
+			// and failure (failed, failedPods, failedPodsReason) are marked as optional in src/metric/definition.go
+			exclude.Exclude(
+				exclude.Groups("job_name"),
+				exclude.Optional(),
+			),
 		).
-		AliasingGroups(map[string]string{"horizontalpodautoscaler": "hpa"})
+		AliasingGroups(map[string]string{"horizontalpodautoscaler": "hpa", "job_name": "job"})
 
 	for _, v := range testutil.AllVersions() {
 		// Make a copy of the version variable to use it concurrently
