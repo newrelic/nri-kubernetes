@@ -875,7 +875,6 @@ var KSMSpecs = definition.SpecGroups{
 
 // KSMQueries are the queries we will do to KSM in order to fetch all the raw metrics.
 var KSMQueries = []prometheus.Query{
-<<<<<<< HEAD
 	{MetricName: "kube_cronjob_info"},
 	{MetricName: "kube_cronjob_labels", Value: prometheus.QueryValue{
 		Value: prometheus.GaugeValue(1),
@@ -887,7 +886,6 @@ var KSMQueries = []prometheus.Query{
 	{MetricName: "kube_cronjob_spec_suspend"},
 	{MetricName: "kube_cronjob_spec_starting_deadline_seconds"},
 	{MetricName: "kube_cronjob_metadata_resource_version"},
-=======
 	{MetricName: "kube_job_info"},
 	{MetricName: "kube_job_labels", Value: prometheus.QueryValue{
 		Value: prometheus.GaugeValue(1),
@@ -935,7 +933,6 @@ var KSMQueries = []prometheus.Query{
 		Value: prometheus.GaugeValue(1),
 	}},
 	{MetricName: "kube_job_created"},
->>>>>>> 78c98d9 (Add Job KSM metrics.)
 	{MetricName: "kube_statefulset_replicas"},
 	{MetricName: "kube_statefulset_status_replicas_ready"},
 	{MetricName: "kube_statefulset_status_replicas"},
