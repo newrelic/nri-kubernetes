@@ -923,6 +923,7 @@ var KSMQueries = []prometheus.Query{
 		// kube_job_status_failed{namespace="default",job_name="e2e-resources-failjob",reason="DeadLineExceeded"} 0
 		// kube_job_status_failed{namespace="default",job_name="e2e-resources-failjob",reason="Evicted"} 0
 		// kube_job_status_failed{namespace="default",job_name="e2e-resources-cronjob-27931661"} 0
+	}},
 	{MetricName: "kube_job_status_start_time"},
 	{MetricName: "kube_job_status_completion_time"},
 	{MetricName: "kube_job_complete", Value: prometheus.QueryValue{
