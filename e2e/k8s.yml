@@ -3323,6 +3323,14 @@ entities:
           legacyEventType: K8sDaemonsetSample
           legacyNames:
             - createdAt
+      - name: k8s.daemonset.observedGeneration
+        type: gauge
+        defaultResolution: 15
+        unit: count
+        migrationInformation:
+          legacyEventType: K8sDaemonsetSample
+          legacyNames:
+            - observedGeneration
       - name: k8s.daemonset.metadataGeneration
         type: gauge
         defaultResolution: 15
@@ -4193,6 +4201,14 @@ entities:
           legacyEventType: K8sDeploymentSample
           legacyNames:
             - podsTotal
+      - name: k8s.deployment.podsReady
+        type: gauge
+        defaultResolution: 15
+        unit: count
+        migrationInformation:
+          legacyEventType: K8sDeploymentSample
+          legacyNames:
+            - podsReady
       - name: k8s.deployment.podsUnavailable
         type: gauge
         defaultResolution: 15
@@ -4209,6 +4225,38 @@ entities:
           legacyEventType: K8sDeploymentSample
           legacyNames:
             - podsUpdated
+      - name: k8s.deployment.observedGeneration
+        type: gauge
+        defaultResolution: 15
+        unit: count
+        migrationInformation:
+          legacyEventType: K8sDeploymentSample
+          legacyNames:
+            - observedGeneration
+      - name: k8s.deployment.isPaused
+        type: gauge
+        defaultResolution: 15
+        unit: count
+        migrationInformation:
+          legacyEventType: K8sDeploymentSample
+          legacyNames:
+            - isPaused
+      - name: k8s.deployment.rollingUpdateMaxPodsSurge
+        type: gauge
+        defaultResolution: 15
+        unit: count
+        migrationInformation:
+          legacyEventType: K8sDeploymentSample
+          legacyNames:
+            - rollingUpdateMaxPodsSurge
+      - name: k8s.deployment.metadataGeneration
+        type: gauge
+        defaultResolution: 15
+        unit: count
+        migrationInformation:
+          legacyEventType: K8sDeploymentSample
+          legacyNames:
+            - metadataGeneration
       - name: k8s.deployment.podsMissing
         type: gauge
         defaultResolution: 15
@@ -4238,6 +4286,20 @@ entities:
           legacyNames:
             - namespaceName
             - namespace
+          legacyEventTypes:
+            - K8sDeploymentSample
+      - name: k8s.deployment.isAvailable
+        type: string
+        migrationInformation:
+          legacyNames:
+            - isAvailable
+          legacyEventTypes:
+            - K8sDeploymentSample
+      - name: k8s.deployment.isProgressing
+        type: string
+        migrationInformation:
+          legacyNames:
+            - isProgressing
           legacyEventTypes:
             - K8sDeploymentSample
       - name: entity.guid
@@ -10044,6 +10106,14 @@ entities:
           legacyEventType: K8sReplicasetSample
           legacyNames:
             - observedGeneration
+      - name: k8s.replicaset.metadataGeneration
+        type: gauge
+        defaultResolution: 15
+        unit: count
+        migrationInformation:
+          legacyEventType: K8sReplicasetSample
+          legacyNames:
+            - metadataGeneration
       - name: k8s.replicaset.podsDesired
         type: gauge
         defaultResolution: 15
@@ -10097,6 +10167,27 @@ entities:
         migrationInformation:
           legacyNames:
             - deploymentName
+          legacyEventTypes:
+            - K8sReplicasetSample
+      - name: k8s.replicaset.ownerName
+        type: string
+        migrationInformation:
+          legacyNames:
+            - ownerName
+          legacyEventTypes:
+            - K8sReplicasetSample
+      - name: k8s.replicaset.ownerKind
+        type: string
+        migrationInformation:
+          legacyNames:
+            - ownerKind
+          legacyEventTypes:
+            - K8sReplicasetSample
+      - name: k8s.replicaset.ownerIsController
+        type: string
+        migrationInformation:
+          legacyNames:
+            - ownerIsController
           legacyEventTypes:
             - K8sReplicasetSample
       - name: k8s.namespaceName
