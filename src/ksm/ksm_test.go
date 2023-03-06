@@ -49,6 +49,11 @@ func TestScraper(t *testing.T) {
 				exclude.Groups("job_name"),
 				exclude.Optional(),
 			),
+			// kube_persistentvolumeclaim_created is marked as an optional metric since it not available for older versions of KSM.
+			exclude.Exclude(
+				exclude.Groups("persistentvolumeclaim"),
+				exclude.Optional(),
+			),
 		).
 		AliasingGroups(map[string]string{"horizontalpodautoscaler": "hpa", "job_name": "job", "persistentvolumeclaim": "PersistentVolumeClaim"})
 
