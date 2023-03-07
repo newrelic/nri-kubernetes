@@ -52,10 +52,14 @@ func TestScraper(t *testing.T) {
 			// Kubernetes deployment's `condition` attribute operate in a true-or-NULL basis, so it won't be present if false
 			exclude.Exclude(
 				exclude.Groups("deployment"),
+			),
+			// kube_persistentvolumeclaim_created is marked as an optional metric since it not available for older versions of KSM.
+			exclude.Exclude(
+				exclude.Groups("persistentvolumeclaim"),
 				exclude.Optional(),
 			),
 		).
-		AliasingGroups(map[string]string{"horizontalpodautoscaler": "hpa", "job_name": "job"})
+		AliasingGroups(map[string]string{"horizontalpodautoscaler": "hpa", "job_name": "job", "persistentvolumeclaim": "PersistentVolumeClaim"})
 
 	for _, v := range testutil.AllVersions() {
 		// Make a copy of the version variable to use it concurrently
