@@ -599,7 +599,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "azureDiskName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "azure_disk_name"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "ebsVolumeId", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "ebs_volume_id"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "gcePersistentDiskName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "gce_persistent_disk_name"), Type: sdkMetric.ATTRIBUTE},
-    },
+		},
 	},
 	"cronjob": {
 		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_cronjob_created", "cronjob"),
@@ -941,10 +941,12 @@ var KSMQueries = []prometheus.Query{
 		// kube_persistentvolume_status_phase{persistentvolume="e2e-resources",phase="Pending"} 0
 		// kube_persistentvolume_status_phase{persistentvolume="e2e-resources",phase="Available"} 1
 		// kube_persistentvolume_status_phase{persistentvolume="e2e-resources",phase="Bound"} 0
-  }},
-  {MetricName: "kube_persistentvolume_claim_ref"},
+	}},
+	{MetricName: "kube_persistentvolume_claim_ref"},
 	{MetricName: "kube_persistentvolume_info"},
 	{MetricName: "kube_persistentvolume_labels", Value: prometheus.QueryValue{
+		Value: prometheus.GaugeValue(1),
+	}},
 	{MetricName: "kube_cronjob_info"},
 	{MetricName: "kube_cronjob_labels", Value: prometheus.QueryValue{
 		Value: prometheus.GaugeValue(1),
