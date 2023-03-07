@@ -69,7 +69,12 @@ func WithHTTPSink(sinkConfig config.HTTPSink) OptionFunc {
 			}
 		}
 
-		prober, err := prober.New(iw.probeTimeout, iw.probeBackoff, prober.WithLogger(iw.logger), prober.WithClient(client))
+		probeTimeout := sinkConfig.ProbeTimeout
+		// if the ProbeTimeout is not set in HTTPSink, just use the default probe timeout from the wrapper
+		if probeTimeout == 0 {
+			probeTimeout = iw.probeTimeout
+		}
+		prober, err := prober.New(probeTimeout, iw.probeBackoff, prober.WithLogger(iw.logger), prober.WithClient(client))
 		if err != nil {
 			return fmt.Errorf("building prober: %w", err)
 		}

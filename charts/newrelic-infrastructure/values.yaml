@@ -69,6 +69,12 @@ common:
 # @default -- `false` (See [Low data mode](README.md#low-data-mode))
 lowDataMode:
 
+# sink - Configuration for the scraper sink.
+sink:
+  http:
+    # probeTimeout is the amount of time the scraper container to probe infra agent sidecar container before giving up and restarting during pod starts.
+    probeTimeout: 90s
+
 # kubelet -- Configuration for the DaemonSet that collects metrics from the Kubelet.
 # @default -- See `values.yaml`
 kubelet:
