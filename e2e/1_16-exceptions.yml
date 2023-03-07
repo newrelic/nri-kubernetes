@@ -1,4 +1,4 @@
-# This metrics are not present from 1.22
+# This metrics are not present from 1.16
 except_metrics:
 # Added from 1.23
 - k8s.apiserver.currentInflightRequestsReadOnly
@@ -10,4 +10,12 @@ except_metrics:
 # Added from 1.24
 - k8s.controllermanager.nodeCollectorEvictionsDelta
 - k8s.container.oomEventsDelta
+# For Kubernetes 1.16, kube-state-metric helm charts v4.7.0+ no longer report metrics for CronJob
+- k8s.cronjob.createdAt
+- k8s.cronjob.isActive
+- k8s.cronjob.nextScheduledTime
+- k8s.cronjob.lastScheduledTime
+- k8s.cronjob.isSuspended
+- k8s.cronjob.specStartingDeadlineSeconds
+- k8s.cronjob.metadataResourceVersion
 - k8s.job.failedPods
