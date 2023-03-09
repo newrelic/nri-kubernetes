@@ -15,6 +15,14 @@ spec:
       containers:
         - name: busybox
           image: busybox
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
           args:
             - sleep
             - infinity

@@ -4,15 +4,26 @@ kind: Pod
 metadata:
   name: {{ .Release.Name }}-container-creating
 spec:
+  securityContext:
+   # Do not use SeccompProfile if your project must work on 
+   # old k8s versions < 1.19 and Openshift < 4.11
+    seccompProfile:
+      type: RuntimeDefault
+    runAsNonRoot: true
   containers:
     - name: alpine
       image: alpine:latest
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
       resources:
         limits:
-          memory: 5M
+          memory: 15M
           cpu: 5m
         requests:
-          memory: 5M
+          memory: 15M
           cpu: 5m
 ---
 apiVersion: v1
@@ -20,9 +31,20 @@ kind: Pod
 metadata:
   name: {{ .Release.Name }}-pending
 spec:
+  securityContext:
+   # Do not use SeccompProfile if your project must work on 
+   # old k8s versions < 1.19 and Openshift < 4.11
+    seccompProfile:
+      type: RuntimeDefault
+    runAsNonRoot: true
   containers:
     - name: alpine
       image: alpine:latest
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
   nodeSelector:
     not-existing: not-existing
 {{- end }}

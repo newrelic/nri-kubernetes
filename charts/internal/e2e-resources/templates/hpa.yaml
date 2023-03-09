@@ -17,6 +17,14 @@ spec:
       containers:
         - name: php-apache
           image: k8s.gcr.io/hpa-example
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
           ports:
             - containerPort: 80
           resources:

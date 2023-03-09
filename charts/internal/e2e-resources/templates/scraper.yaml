@@ -70,4 +70,12 @@ spec:
               command:
                 - which
                 - bash
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
 {{- end }}
