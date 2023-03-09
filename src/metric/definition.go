@@ -941,6 +941,7 @@ var KSMQueries = []prometheus.Query{
 		// kube_persistentvolume_status_phase{persistentvolume="e2e-resources",phase="Pending"} 0
 		// kube_persistentvolume_status_phase{persistentvolume="e2e-resources",phase="Available"} 1
 		// kube_persistentvolume_status_phase{persistentvolume="e2e-resources",phase="Bound"} 0
+		Value: prometheus.GaugeValue(1),
 	}},
 	{MetricName: "kube_persistentvolume_claim_ref"},
 	{MetricName: "kube_persistentvolume_info"},
