@@ -13,6 +13,7 @@ scrapper_namespace="scraper"
 KSM_ENDPOINT=${KSM_ENDPOINT:-http://e2e-kube-state-metrics.${scrapper_namespace}.svc:8080/metrics}
 KUBELET_ENDPOINT=${KUBELET_ENDPOINT:-https://localhost:10250}
 # If control plane is not reachable (e.g. managed k8s), set DISABLE_CONTROLPLANE=1.
+K8S_CONTROL_PLANE_NAMESPACE=${K8S_CONTROL_PLANE:-kube-system}
 ETCD_ENDPOINT=${ETCD_ENDPOINT:-http://localhost:2381/metrics}
 APISERVER_ENDPOINT=${APISERVER_ENDPOINT:-https://kubernetes.default:443/metrics}
 CONTROLLERMANAGER_ENDPOINT=${CONTROLLERMANAGER_ENDPOINT:-https://localhost:10257/metrics}
@@ -30,7 +31,7 @@ HELM_E2E_ARGS=""
 
 # Time to wait for pods to settle.
 # Might be useful to increase this for freshly spawned clusters on slow machines, e.g. Macbooks.
-WAIT_TIMEOUT=${WAIT_TIMEOUT:-3m}
+WAIT_TIMEOUT=${WAIT_TIMEOUT:-180s}
 
 # Time to wait after bootstrap is finished (some metrics may take a while to show up)
 WAIT_AFTER_BOOTSTRAP=${WAIT_AFTER_BOOTSTRAP:-30}
@@ -41,13 +42,11 @@ KUBECTL_CMD=${KUBECTL_CMD:-kubectl}
 
 # main subcommand runs the whole flow of the script: Bootstrap, scrape, and cleanup
 function main() {
-    if [[ -z "$1" ]]; then
-        echo "Usage: $0 <output_folder>"
-        exit 1
-    fi
+    K8S_VERSION=$($KUBECTL_CMD version --short 2>&1 | grep 'Server Version' | awk -F' v' '{ print $2; }' | awk -F. '{ print $1"."$2; }')
+    OUTPUT_FOLDER=$(echo $K8S_VERSION | sed 's/\./_/')
 
     # Install scraper pod and e2e resources.
-    bootstrap
+    bootstrap "$K8S_VERSION"
 
     # Scraper pod is a deployment, so we need to locate it.
     pod=$(scraper_pod "$scrapper_selector")
@@ -57,7 +56,7 @@ function main() {
     fi
 
     # Collect cds to the specified dir so we invoke it on a subshell
-    ( collect "$1" )
+    ( collect "$OUTPUT_FOLDER" )
 
     if [[ "$DISABLE_CLEANUP" != "1" ]]; then
       cleanup
@@ -121,6 +120,11 @@ function collect() {
 # If $SKIP_INSTALL is non-empty, it skips deploying KSM, the dummy resources, and the scrapper pod and just copies
 # script inside an scraper pod that is assumed to exist already.
 function bootstrap() {
+    echo "Waiting for Kubernetes control plane resources to settle"
+    $KUBECTL_CMD --namespace $K8S_CONTROL_PLANE_NAMESPACE wait --timeout=$WAIT_TIMEOUT --for=condition=Ready pods --all > /dev/null
+    echo "Waiting for DNS service to settle"  # It takes longer than the rest of the control plane to be spun
+    wait_for_pod $K8S_CONTROL_PLANE_NAMESPACE "-l k8s-app=kube-dns" Ready
+
     ctx=$($KUBECTL_CMD config current-context)
     if [[ -z "$IS_MINIKUBE" && "$ctx" = "minikube" ]]; then
         echo "Assuming minikube distribution since context is \"$ctx\""
@@ -138,13 +142,28 @@ function bootstrap() {
             # Enable PVC if we are in minikube
             minikube_args="--set persistentVolumeClaim.enabled=true --set loadBalancerService.fakeIP=127.1.2.3"
             minikube addons enable metrics-server
+            echo "Waiting for metrics-server to settle"
+            wait_for_pod $K8S_CONTROL_PLANE_NAMESPACE "-l k8s-app=metrics-server" Ready
         fi
 
         echo "Updating helm dependencies"
 
-        function ver { printf $((10#$(printf "%03d%03d" $(echo "$1" | tr '.' ' ')))); }
-        K8S_VERSION=$(kubectl version --short 2>&1 | grep 'Server Version' | awk -F' v' '{ print $2; }' | awk -F. '{ print $1"."$2; }')
-        if [[ $(ver $K8S_VERSION) -lt $(ver "1.25") ]]; then KSM_IMAGE_VERSION="v2.6.0"; else KSM_IMAGE_VERSION="v2.7.0"; fi
+        case "$1" in
+          "1.26" | "1.25")
+            KSM_IMAGE_VERSION="v2.7.0"
+            ;;
+          "1.24" | "1.23" | "1.22" | "1.21")
+            KSM_IMAGE_VERSION="v2.6.0"
+            ;;
+          "1.20" | "1.19" | "1.16")
+            KSM_IMAGE_VERSION="v2.3.0"
+            ;;
+          *)
+            echo "ERROR (${0##*/}:$LINENO): KSM image version needs to be defined for Kubernetes version $1"
+            exit 1
+            ;;
+        esac
+        echo "Using KSM image $KSM_IMAGE_VERSION"
         
         helm dependency update $helm_e2e_path > /dev/null
         helm upgrade --install e2e $helm_e2e_path -n $scrapper_namespace --create-namespace \
@@ -154,20 +173,20 @@ function bootstrap() {
           $minikube_args \
           $HELM_E2E_ARGS
 
-        timeout="--timeout=${WAIT_TIMEOUT}"
-
         echo "Waiting for KSM to become ready"
-        $KUBECTL_CMD -n $scrapper_namespace wait $timeout --for=condition=Ready pod -l app.kubernetes.io/name=kube-state-metrics
+        wait_for_pod $scrapper_namespace "-l app.kubernetes.io/name=kube-state-metrics" Ready
 
         echo "Waiting for E2E resources to settle"
-        $KUBECTL_CMD -n $scrapper_namespace wait $timeout --for=condition=Ready pod -l app=hpa
-        $KUBECTL_CMD -n $scrapper_namespace wait $timeout --for=condition=Ready pod -l app=daemonset
-        $KUBECTL_CMD -n $scrapper_namespace wait $timeout --for=condition=Ready pod -l app=statefulset
-        $KUBECTL_CMD -n $scrapper_namespace wait $timeout --for=condition=Ready pod -l app=deployment
+        wait_for_pod $scrapper_namespace "-l app=hpa" Ready
+        wait_for_pod $scrapper_namespace "-l app=daemonset" Ready
+        wait_for_pod $scrapper_namespace "-l app=statefulset" Ready
+        wait_for_pod $scrapper_namespace "-l app=deployment" Ready
+        wait_for_pod $scrapper_namespace "-l app=cronjob" PodScheduled
+        wait_for_pod $scrapper_namespace "-l app=failjob" PodScheduled
     fi
 
     echo "Waiting for scraper pod to be ready"
-    $KUBECTL_CMD -n $scrapper_namespace wait --for=condition=Ready pod -l "$scrapper_selector"
+    wait_for_pod $scrapper_namespace "-l $scrapper_selector" Ready
     pod=$(scraper_pod "$scrapper_selector")
     if [[ -z "$pod" ]]; then
         echo "Could not find scraper pod (-l $scrapper_selector)"
@@ -180,6 +199,21 @@ function bootstrap() {
 
     echo "Waiting $WAIT_AFTER_BOOTSTRAP seconds..."
     sleep $WAIT_AFTER_BOOTSTRAP
+}
+
+# wait_for_pod checks for a pod in a given namespace and label selector to show a specific condition
+function wait_for_pod() {
+  NAMESPACE=$1
+  SELECTOR=$2
+  CONDITION=$3
+
+  while [[ -z $($KUBECTL_CMD --namespace $NAMESPACE  get pod $SELECTOR --output NAME) ]]; do
+    # echo "Waiting for $SELECTOR to show up"
+    sleep 5
+  done
+  # echo "$SELECTOR showed up!"
+
+  $KUBECTL_CMD --namespace $NAMESPACE wait --timeout=$WAIT_TIMEOUT --for=condition=$CONDITION pod $SELECTOR > /dev/null
 }
 
 # cleanup uninstalls the dummy resources and the scraper pod.
