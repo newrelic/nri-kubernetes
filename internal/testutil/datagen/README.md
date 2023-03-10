@@ -17,8 +17,9 @@ More specifically, it will deploy:
   - Dummy Pods, Services, StatefulSets, DaemonSets and Deployments in several states
   - HPA targets
   - If enabled, PersistentVolumes and PersistentVolumeClaims
+  - Cronjob and Job
 
-After this, it will deploy KSM and programmatically hit all the endpoints required for the integration to work, and store them in a directory specified by the user:
+After this, it will deploy KSM and programmatically hit all the endpoints required for the integration to work, and store them in a directory named after the Kubernetes version used in the cluster.
 
 - Kubelet endpoints
   - `/pods`
@@ -36,14 +37,11 @@ It will do this by spawning a privileged, `hostNetwork` `alpine:latest` pod (the
 ## Usage
 
 ```
-./datagen.sh <output_folder>
+./datagen.sh
 ```
 
-Output folder would typically be a version number, e.g.
-
-```shell
-./datagen.sh 1_22
-```
+### `kube-state-metrics` version
+The script chooses the image version to use for KSM according to the Kubernetes version used by the cluster. If new Kubernetes versions need to be supported, the script will print out an error message alerting about the missing mapping.
 
 ### Arguments and config
 
