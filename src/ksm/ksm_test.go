@@ -49,6 +49,12 @@ func TestScraper(t *testing.T) {
 				exclude.Groups("job_name"),
 				exclude.Optional(),
 			),
+			// kube_persistentvolume_claim_ref is marked as an optional metric since not all
+			// persistent volumes have claims on them and we want to test that on our E2Es
+			exclude.Exclude(
+				exclude.Groups("persistentvolume"),
+				exclude.Optional(),
+			),
 			// kube_persistentvolumeclaim_created is marked as an optional metric since it not available for older versions of KSM.
 			exclude.Exclude(
 				exclude.Groups("persistentvolumeclaim"),
