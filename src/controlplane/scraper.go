@@ -225,10 +225,11 @@ func (s *Scraper) externalEndpoint(c component) (*scrape.Job, error) {
 }
 
 // autodiscover will iterate over the Autodiscovery configs from a component and for each:
-//  - Discover if any pod matches the selector.
-//  - Build the client, which probes all the endpoints in the list.
+//   - Discover if any pod matches the selector.
+//   - Build the client, which probes all the endpoints in the list.
+//
 // It uses the first autodiscovery config that can satisfy conditions above.
-// It doesn't fail if no autodiscovery satisfy the contitions.
+// It doesn't fail if no autodiscovery satisfy the conditions.
 func (s *Scraper) autodiscover(c component) (*scrape.Job, error) {
 	for _, autodiscover := range c.AutodiscoverConfigs {
 		pod, err := s.podDiscoverer.Discover(autodiscover)
