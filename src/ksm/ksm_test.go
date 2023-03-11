@@ -56,6 +56,7 @@ func TestScraper(t *testing.T) {
 				exclude.Optional(),
 			),
 			// kube_persistentvolumeclaim_created is marked as an optional metric since it not available for older versions of KSM.
+			// Similarly, a subset of labels for kube_persistentvolume_info are marked as optional since they not available for older versions of KSM.
 			exclude.Exclude(
 				exclude.Groups("persistentvolumeclaim"),
 				exclude.Optional(),
