@@ -219,7 +219,7 @@ function wait_for_pod() {
 # cleanup uninstalls the dummy resources and the scraper pod.
 function cleanup() {
     echo "Removing e2e-resources chart"
-    helm uninstall e2e -n $scrapper_namespace --wait || true
+    helm uninstall e2e -n $scrapper_namespace --wait 2> /dev/null || true
 }
 
 # scrape will curl the specified component and output the response body to standard output.
@@ -295,7 +295,7 @@ $(git status --short)
 
 ### \`$ $KUBECTL_CMD version\`
 \`\`\`
-$($KUBECTL_CMD version)
+$($KUBECTL_CMD version 2> /dev/null)
 \`\`\`
 
 ### Kubernetes nodes
