@@ -18,7 +18,7 @@ if live_reload:
 
   # Building daemon binary locally.
   local_resource(
-    '%s-binary' % project_name, 
+    '%s-binary' % project_name,
     'GOOS=linux make compile',
     deps=[
             "./src",
@@ -34,7 +34,7 @@ if live_reload:
   ''' % (binary_name, project_name)
 
   docker_build_with_restart(
-    ref=project_name, 
+    ref=project_name,
     context='./bin',
     dockerfile_contents=dockerfile,
     entrypoint=[
@@ -49,6 +49,6 @@ if live_reload:
 else:
   docker_build(project_name, '.')
 
-k8s_yaml(helm('./charts/newrelic-infrastructure', name='nr', values=['values-dev.yaml', 'values-local.yaml']))
+k8s_yaml(helm('./charts/newrelic-infrastructure', name='nr', namespace='nri-k8s-dev', values=['values-dev.yaml', 'values-local.yaml']))
 
-k8s_yaml(helm('./charts/internal/e2e-resources', name='e2e-resources'))
+k8s_yaml(helm('./charts/internal/e2e-resources', name='e2e-resources', namespace='nri-k8s-dev'))
