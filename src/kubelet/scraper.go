@@ -148,5 +148,5 @@ func (s *Scraper) IncCurrentReruns() {
 
 // Check whether the max number of kubulet scraper reruns has been reached or not.
 func (s *Scraper) IsMaxRerunReached() bool {
-	return s.currentReruns > s.config.ScraperMaxReruns
+	return s.currentReruns > s.config.Kubelet.ScraperMaxReruns
 }

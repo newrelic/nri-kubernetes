@@ -13,9 +13,10 @@ const (
 	DefaultConfigFileName   = "nri-kubernetes"
 	DefaultConfigFolderName = "/etc/newrelic-infra"
 
-	DefaultTimeout      = 10 * time.Second
-	DefaultRetries      = 3
-	DefaultAgentTimeout = 3 * time.Second
+	DefaultTimeout          = 10 * time.Second
+	DefaultRetries          = 3
+	DefaultScraperMaxReruns = 4
+	DefaultAgentTimeout     = 3 * time.Second
 
 	DefaultNetworkRouteFile = "/proc/net/route"
 
@@ -281,6 +282,7 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 
 	v.SetDefault("kubelet|timeout", DefaultTimeout)
 	v.SetDefault("kubelet|retries", DefaultRetries)
+	v.SetDefault("kubelet|scraperMaxReruns", DefaultScraperMaxReruns)
 
 	v.SetDefault("controlPlane|timeout", DefaultTimeout)
 	v.SetDefault("controlPlane|retries", DefaultRetries)
