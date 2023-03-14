@@ -166,6 +166,7 @@ integrations that you have configured.
 | kubelet.extraVolumeMounts | list | `[]` | Defines where to mount volumes specified with `extraVolumes` |
 | kubelet.extraVolumes | list | `[]` | Volumes to mount in the containers |
 | kubelet.hostNetwork | bool | Not set | Sets pod's hostNetwork. When set bypasses global/common variable  |
+| kubelet.scraperMaxReruns | int | 4 | Max number of kubelet scraper reruns when scraper runtime error happens. |
 | kubelet.tolerations | list | Schedules in all tainted nodes | Tolerations for the control plane DaemonSet. |
 | labels | object | `{}` | Additional labels for chart objects. Can be configured also with `global.labels` |
 | licenseKey | string | `""` | This set this license key to use. Can be configured also with `global.licenseKey` |
