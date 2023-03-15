@@ -159,6 +159,7 @@ integrations that you have configured.
 | kubelet | object | See `values.yaml` | Configuration for the DaemonSet that collects metrics from the Kubelet. |
 | kubelet.agentConfig | object | `{}` | Config for the Infrastructure agent that will forward the metrics to the backend and will run the integrations in this cluster. It will be merged with the configuration in `.common.agentConfig`. You can see all the agent configurations in [New Relic docs](https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/) e.g. you can set `passthrough_environment` int the [config file](https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/configure-infrastructure-agent/#config-file) so the agent let use that environment variables to the integrations. |
 | kubelet.config.retries | int | `3` | Number of retries after timeout expired |
+| kubelet.config.scraperMaxReruns | int | 4 | Max number of kubelet scraper reruns when scraper runtime error happens. |
 | kubelet.config.timeout | string | `"10s"` | Timeout for the kubelet APIs contacted by the integration |
 | kubelet.enabled | bool | `true` | Enable kubelet monitoring. Advanced users only. Setting this to `false` is not supported and will break the New Relic experience. |
 | kubelet.extraEnv | list | `[]` | Add user environment variables to the agent |
