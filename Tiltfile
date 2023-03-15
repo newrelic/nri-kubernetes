@@ -57,9 +57,7 @@ kind: Namespace
 metadata:
   name: nri-k8s-dev
 """
-k8s_yaml([
-    blob(ns_yaml_str)
-])
+k8s_yaml([blob(ns_yaml_str)])
 
 k8s_yaml(helm('./charts/newrelic-infrastructure', name='nr', namespace='nri-k8s-dev', values=['values-dev.yaml', 'values-local.yaml']))
 
