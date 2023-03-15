@@ -49,6 +49,18 @@ if live_reload:
 else:
   docker_build(project_name, '.')
 
+# ns_yaml_str is wrapped as Blob so that Tiltfile will treat it as DATA and not as a filepath
+ns_yaml_str = """
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nri-k8s-dev
+"""
+k8s_yaml([
+    blob(ns_yaml_str)
+])
+
 k8s_yaml(helm('./charts/newrelic-infrastructure', name='nr', namespace='nri-k8s-dev', values=['values-dev.yaml', 'values-local.yaml']))
 
 k8s_yaml(helm('./charts/internal/e2e-resources', name='e2e-resources', namespace='nri-k8s-dev'))
