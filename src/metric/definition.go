@@ -644,11 +644,16 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "podsTotal", ValueFunc: prometheus.FromValue("kube_replicaset_status_replicas"), Type: sdkMetric.GAUGE},
 			{Name: "podsFullyLabeled", ValueFunc: prometheus.FromValue("kube_replicaset_status_fully_labeled_replicas"), Type: sdkMetric.GAUGE},
 			{Name: "observedGeneration", ValueFunc: prometheus.FromValue("kube_replicaset_status_observed_generation"), Type: sdkMetric.GAUGE},
+			{Name: "metadataGeneration", ValueFunc: prometheus.FromValue("kube_replicaset_metadata_generation"), Type: sdkMetric.GAUGE},
 			{Name: "replicasetName", ValueFunc: prometheus.FromLabelValue("kube_replicaset_created", "replicaset"), Type: sdkMetric.ATTRIBUTE},
 			// namespace is here for backwards compatibility, we should use the namespaceName
 			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_replicaset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_replicaset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "deploymentName", ValueFunc: ksmMetric.GetDeploymentNameForReplicaSet(), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("replicaset", "kube_replicaset_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "ownerName", ValueFunc: prometheus.FromLabelValue("kube_replicaset_owner", "owner_name"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "ownerKind", ValueFunc: prometheus.FromLabelValue("kube_replicaset_owner", "owner_kind"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "ownerIsController", ValueFunc: prometheus.FromLabelValue("kube_replicaset_owner", "owner_is_controller"), Type: sdkMetric.ATTRIBUTE},
 			// computed
 			{
 				Name: "podsMissing", ValueFunc: Subtract(
@@ -698,6 +703,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "podsUnavailable", ValueFunc: prometheus.FromValue("kube_daemonset_status_number_unavailable"), Type: sdkMetric.GAUGE},
 			{Name: "podsMisscheduled", ValueFunc: prometheus.FromValue("kube_daemonset_status_number_misscheduled"), Type: sdkMetric.GAUGE},
 			{Name: "podsUpdatedScheduled", ValueFunc: prometheus.FromValue("kube_daemonset_status_updated_number_scheduled"), Type: sdkMetric.GAUGE},
+			{Name: "observedGeneration", ValueFunc: prometheus.FromValue("kube_daemonset_status_observed_generation"), Type: sdkMetric.GAUGE},
 			{Name: "metadataGeneration", ValueFunc: prometheus.FromValue("kube_daemonset_metadata_generation"), Type: sdkMetric.GAUGE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_daemonset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "daemonsetName", ValueFunc: prometheus.FromLabelValue("kube_daemonset_created", "daemonset"), Type: sdkMetric.ATTRIBUTE},
@@ -730,9 +736,16 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "createdAt", ValueFunc: prometheus.FromValue("kube_deployment_created"), Type: sdkMetric.GAUGE},
 			{Name: "podsDesired", ValueFunc: prometheus.FromValue("kube_deployment_spec_replicas"), Type: sdkMetric.GAUGE},
 			{Name: "podsTotal", ValueFunc: prometheus.FromValue("kube_deployment_status_replicas"), Type: sdkMetric.GAUGE},
+			{Name: "podsReady", ValueFunc: prometheus.FromValue("kube_deployment_status_replicas_ready"), Type: sdkMetric.GAUGE},
 			{Name: "podsAvailable", ValueFunc: prometheus.FromValue("kube_deployment_status_replicas_available"), Type: sdkMetric.GAUGE},
 			{Name: "podsUnavailable", ValueFunc: prometheus.FromValue("kube_deployment_status_replicas_unavailable"), Type: sdkMetric.GAUGE},
 			{Name: "podsUpdated", ValueFunc: prometheus.FromValue("kube_deployment_status_replicas_updated"), Type: sdkMetric.GAUGE},
+			{Name: "observedGeneration", ValueFunc: prometheus.FromValue("kube_deployment_status_observed_generation"), Type: sdkMetric.GAUGE},
+			{Name: "isPaused", ValueFunc: prometheus.FromValue("kube_deployment_spec_paused"), Type: sdkMetric.GAUGE},
+			{Name: "rollingUpdateMaxPodsSurge", ValueFunc: prometheus.FromValue("kube_deployment_spec_strategy_rollingupdate_max_surge"), Type: sdkMetric.GAUGE},
+			{Name: "metadataGeneration", ValueFunc: prometheus.FromValue("kube_deployment_metadata_generation"), Type: sdkMetric.GAUGE},
+			{Name: "isAvailable", ValueFunc: prometheus.FromLabelValue("kube_deployment_status_condition_available", "status"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "isProgressing", ValueFunc: prometheus.FromLabelValue("kube_deployment_status_condition_progressing", "status"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "podsMaxUnavailable", ValueFunc: prometheus.FromValue("kube_deployment_spec_strategy_rollingupdate_max_unavailable"), Type: sdkMetric.GAUGE, Optional: true},
 			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_deployment_labels", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_deployment_labels", "namespace"), Type: sdkMetric.ATTRIBUTE},
@@ -990,6 +1003,7 @@ var KSMQueries = []prometheus.Query{
 	{MetricName: "kube_daemonset_status_number_unavailable"},
 	{MetricName: "kube_daemonset_status_number_misscheduled"},
 	{MetricName: "kube_daemonset_status_updated_number_scheduled"},
+	{MetricName: "kube_daemonset_status_observed_generation"},
 	{MetricName: "kube_daemonset_metadata_generation"},
 	{MetricName: "kube_daemonset_labels", Value: prometheus.QueryValue{
 		Value: prometheus.GaugeValue(1),
@@ -999,7 +1013,12 @@ var KSMQueries = []prometheus.Query{
 	{MetricName: "kube_replicaset_status_replicas"},
 	{MetricName: "kube_replicaset_status_fully_labeled_replicas"},
 	{MetricName: "kube_replicaset_status_observed_generation"},
+	{MetricName: "kube_replicaset_metadata_generation"},
 	{MetricName: "kube_replicaset_created"},
+	{MetricName: "kube_replicaset_labels", Value: prometheus.QueryValue{
+		Value: prometheus.GaugeValue(1),
+	}},
+	{MetricName: "kube_replicaset_owner"},
 	{MetricName: "kube_namespace_labels", Value: prometheus.QueryValue{
 		Value: prometheus.GaugeValue(1),
 	}},
@@ -1013,9 +1032,34 @@ var KSMQueries = []prometheus.Query{
 	{MetricName: "kube_deployment_created"},
 	{MetricName: "kube_deployment_spec_replicas"},
 	{MetricName: "kube_deployment_status_replicas"},
+	{MetricName: "kube_deployment_status_replicas_ready"},
 	{MetricName: "kube_deployment_status_replicas_available"},
 	{MetricName: "kube_deployment_status_replicas_unavailable"},
 	{MetricName: "kube_deployment_status_replicas_updated"},
+	{MetricName: "kube_deployment_status_observed_generation"},
+	{MetricName: "kube_deployment_spec_paused"},
+	{MetricName: "kube_deployment_spec_strategy_rollingupdate_max_surge"},
+	{MetricName: "kube_deployment_metadata_generation"},
+	{
+		MetricName: "kube_deployment_status_condition",
+		CustomName: "kube_deployment_status_condition_available",
+		Labels: prometheus.QueryLabels{
+			Labels: prometheus.Labels{"condition": "Available"},
+		},
+		Value: prometheus.QueryValue{
+			Value: prometheus.GaugeValue(1),
+		},
+	},
+	{
+		MetricName: "kube_deployment_status_condition",
+		CustomName: "kube_deployment_status_condition_progressing",
+		Labels: prometheus.QueryLabels{
+			Labels: prometheus.Labels{"condition": "Progressing"},
+		},
+		Value: prometheus.QueryValue{
+			Value: prometheus.GaugeValue(1),
+		},
+	},
 	{MetricName: "kube_deployment_spec_strategy_rollingupdate_max_unavailable"},
 	{MetricName: "kube_pod_status_phase", Labels: prometheus.QueryLabels{
 		Labels: prometheus.Labels{"phase": "Pending"},
