@@ -17,7 +17,7 @@ jobs:
         goarch: [ amd64, arm64, arm ]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
       - uses: actions/cache@v3
@@ -80,7 +80,7 @@ jobs:
           minikube version: v1.20.0
           kubernetes version: ${{ matrix.kubernetes-version }}
           github token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         if: steps.list-changed.outputs.changed == 'true'
         with:
           go-version-file: 'go.mod'
@@ -104,7 +104,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
       - uses: actions/cache@v3
@@ -123,7 +123,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
       - uses: newrelic/newrelic-infra-checkers@v1
