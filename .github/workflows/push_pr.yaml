@@ -16,7 +16,7 @@ jobs:
         goos: [ linux ]
         goarch: [ amd64, arm64, arm ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
@@ -43,7 +43,7 @@ jobs:
       matrix:
         kubernetes-version: [ "v1.16.15", "v1.22.0" ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - uses: helm/chart-testing-action@v2.3.1
@@ -103,7 +103,7 @@ jobs:
     needs: [ build ]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
@@ -122,7 +122,7 @@ jobs:
     name: Static analysis and linting
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
@@ -144,6 +144,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Codespell test
         uses: codespell-project/actions-codespell@master
