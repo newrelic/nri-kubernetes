@@ -56,7 +56,7 @@ func defaultEntityTypeFromLabelValue( //nolint: cyclop
 	key string, group, groupLabel string, rawEntityID string, g definition.RawGroups, clusterName string,
 ) (string, error) {
 	switch groupLabel {
-	case "namespace", "node", "persistentvolume": //nolint: goconst
+	case "namespace", "node": //nolint: goconst
 		return fmt.Sprintf("k8s:%s:%s", clusterName, group), nil
 
 	case "container":
