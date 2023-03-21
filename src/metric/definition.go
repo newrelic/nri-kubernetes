@@ -565,26 +565,6 @@ var EtcdQueries = []prometheus.Query{
 
 // KSMSpecs are the metric specifications we want to collect from KSM.
 var KSMSpecs = definition.SpecGroups{
-	"cronjob": {
-		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_cronjob_created", "cronjob"),
-		TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_cronjob_created"),
-		NamespaceGetter: prometheus.FromLabelGetNamespace,
-		Specs: []definition.Spec{
-			{Name: "createdAt", ValueFunc: prometheus.FromValue("kube_cronjob_created"), Type: sdkMetric.GAUGE},
-			{Name: "isActive", ValueFunc: prometheus.FromValue("kube_cronjob_status_active"), Type: sdkMetric.GAUGE},
-			{Name: "nextScheduledTime", ValueFunc: prometheus.FromValue("kube_cronjob_next_schedule_time"), Type: sdkMetric.GAUGE},
-			{Name: "lastScheduledTime", ValueFunc: prometheus.FromValue("kube_cronjob_status_last_schedule_time"), Type: sdkMetric.GAUGE},
-			{Name: "isSuspended", ValueFunc: prometheus.FromValue("kube_cronjob_spec_suspend"), Type: sdkMetric.GAUGE},
-			{Name: "specStartingDeadlineSeconds", ValueFunc: prometheus.FromValue("kube_cronjob_spec_starting_deadline_seconds"), Type: sdkMetric.GAUGE},
-			{Name: "metadataResourceVersion", ValueFunc: prometheus.FromValue("kube_cronjob_metadata_resource_version"), Type: sdkMetric.GAUGE},
-			{Name: "cronjobName", ValueFunc: prometheus.FromLabelValue("kube_cronjob_created", "cronjob"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_cronjob_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_cronjob_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("cronjob", "kube_cronjob_labels"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "schedule", ValueFunc: prometheus.FromLabelValue("kube_cronjob_info", "schedule"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "concurrencyPolicy", ValueFunc: prometheus.FromLabelValue("kube_cronjob_info", "concurrency_policy"), Type: sdkMetric.ATTRIBUTE},
-		},
-	},
 	"replicaset": {
 		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_replicaset_created", "replicaset"),
 		TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_replicaset_created"),
@@ -848,17 +828,6 @@ var KSMSpecs = definition.SpecGroups{
 
 // KSMQueries are the queries we will do to KSM in order to fetch all the raw metrics.
 var KSMQueries = []prometheus.Query{
-	{MetricName: "kube_cronjob_info"},
-	{MetricName: "kube_cronjob_labels", Value: prometheus.QueryValue{
-		Value: prometheus.GaugeValue(1),
-	}},
-	{MetricName: "kube_cronjob_created"},
-	{MetricName: "kube_cronjob_next_schedule_time"},
-	{MetricName: "kube_cronjob_status_active"},
-	{MetricName: "kube_cronjob_status_last_schedule_time"},
-	{MetricName: "kube_cronjob_spec_suspend"},
-	{MetricName: "kube_cronjob_spec_starting_deadline_seconds"},
-	{MetricName: "kube_cronjob_metadata_resource_version"},
 	{MetricName: "kube_statefulset_replicas"},
 	{MetricName: "kube_statefulset_status_replicas_ready"},
 	{MetricName: "kube_statefulset_status_replicas"},
