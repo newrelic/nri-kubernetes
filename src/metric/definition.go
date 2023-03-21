@@ -585,33 +585,6 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "concurrencyPolicy", ValueFunc: prometheus.FromLabelValue("kube_cronjob_info", "concurrency_policy"), Type: sdkMetric.ATTRIBUTE},
 		},
 	},
-	"job_name": {
-		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_job_created", "job_name"),
-		TypeGenerator:   prometheus.FromLabelValueEntityTypeGeneratorWithCustomGroup("kube_job_created", "job"),
-		NamespaceGetter: prometheus.FromLabelGetNamespace,
-		MsTypeGuesser:   metricSetTypeGuesserWithCustomGroup("job"),
-		Specs: []definition.Spec{
-			{Name: "createdAt", ValueFunc: prometheus.FromValue("kube_job_created"), Type: sdkMetric.GAUGE},
-			{Name: "startedAt", ValueFunc: prometheus.FromValue("kube_job_status_start_time"), Type: sdkMetric.GAUGE},
-			{Name: "completedAt", ValueFunc: prometheus.FromValue("kube_job_status_completion_time"), Type: sdkMetric.GAUGE, Optional: true},
-			{Name: "specParallelism", ValueFunc: prometheus.FromValue("kube_job_spec_parallelism"), Type: sdkMetric.GAUGE},
-			{Name: "specCompletions", ValueFunc: prometheus.FromValue("kube_job_spec_completions"), Type: sdkMetric.GAUGE},
-			{Name: "specActiveDeadlineSeconds", ValueFunc: prometheus.FromValue("kube_job_spec_active_deadline_seconds"), Type: sdkMetric.GAUGE, Optional: true},
-			{Name: "activePods", ValueFunc: prometheus.FromValue("kube_job_status_active"), Type: sdkMetric.GAUGE},
-			{Name: "succeededPods", ValueFunc: prometheus.FromValue("kube_job_status_succeeded"), Type: sdkMetric.GAUGE},
-			{Name: "failedPods", ValueFunc: prometheus.FromValue("kube_job_status_failed"), Type: sdkMetric.GAUGE, Optional: true},
-			{Name: "isComplete", ValueFunc: prometheus.FromLabelValue("kube_job_complete", "condition"), Type: sdkMetric.ATTRIBUTE, Optional: true},
-			{Name: "failed", ValueFunc: prometheus.FromLabelValue("kube_job_failed", "condition"), Type: sdkMetric.ATTRIBUTE, Optional: true},
-			{Name: "failedPodsReason", ValueFunc: prometheus.FromLabelValue("kube_job_status_failed", "reason"), Type: sdkMetric.ATTRIBUTE, Optional: true},
-			{Name: "ownerName", ValueFunc: prometheus.FromLabelValue("kube_job_owner", "owner_name"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "ownerKind", ValueFunc: prometheus.FromLabelValue("kube_job_owner", "owner_kind"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "ownerIsController", ValueFunc: prometheus.FromLabelValue("kube_job_owner", "owner_is_controller"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "jobName", ValueFunc: prometheus.FromLabelValue("kube_job_created", "job_name"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_job_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_job_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("job_name", "kube_job_labels"), Type: sdkMetric.ATTRIBUTE},
-		},
-	},
 	"replicaset": {
 		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_replicaset_created", "replicaset"),
 		TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_replicaset_created"),
@@ -886,53 +859,6 @@ var KSMQueries = []prometheus.Query{
 	{MetricName: "kube_cronjob_spec_suspend"},
 	{MetricName: "kube_cronjob_spec_starting_deadline_seconds"},
 	{MetricName: "kube_cronjob_metadata_resource_version"},
-	{MetricName: "kube_job_info"},
-	{MetricName: "kube_job_labels", Value: prometheus.QueryValue{
-		Value: prometheus.GaugeValue(1),
-	}},
-	{MetricName: "kube_job_owner"},
-	{MetricName: "kube_job_spec_parallelism"},
-	{MetricName: "kube_job_spec_completions"},
-	{MetricName: "kube_job_spec_active_deadline_seconds"},
-	{MetricName: "kube_job_status_active"},
-	{MetricName: "kube_job_status_succeeded"},
-	{MetricName: "kube_job_status_failed", Value: prometheus.QueryValue{
-		// Since we aggregate metrics which look like the following:
-		//
-		// kube_job_status_failed{namespace="default",job_name="e2e-resources-failjob",reason="BackoffLimitExceeded"} 1
-		// kube_job_status_failed{namespace="default",job_name="e2e-resources-failjob",reason="DeadLineExceeded"} 0
-		// kube_job_status_failed{namespace="default",job_name="e2e-resources-failjob",reason="Evicted"} 0
-		// kube_job_status_failed{namespace="default",job_name="e2e-resources-cronjob-27931661"} 0
-		//
-		// KSM should never produce a positive value for more than one status, so we can simply fetch
-		// only values which has value 1 for processing.
-		Value: prometheus.GaugeValue(1),
-	}},
-	{MetricName: "kube_job_status_start_time"},
-	{MetricName: "kube_job_status_completion_time"},
-	{MetricName: "kube_job_complete", Value: prometheus.QueryValue{
-		// Since we aggregate metrics which look like the following:
-		//
-		// kube_job_complete{namespace="default",job_name="e2e-resources-cronjob",condition="true"} 1
-		// kube_job_complete{namespace="default",job_name="e2e-resources-cronjob",condition="false"} 0
-		// kube_job_complete{namespace="default",job_name="e2e-resources-cronjob",condition="unknown"} 0
-		//
-		// KSM should never produce a positive value for more than one status, so we can simply fetch
-		// only values which has value 1 for processing.
-		Value: prometheus.GaugeValue(1),
-	}},
-	{MetricName: "kube_job_failed", Value: prometheus.QueryValue{
-		// Since we aggregate metrics which look like the following:
-		//
-		// kube_job_failed{namespace="default",job_name="e2e-resources-failjob",condition="true"} 1
-		// kube_job_failed{namespace="default",job_name="e2e-resources-failjob",condition="false"} 0
-		// kube_job_failed{namespace="default",job_name="e2e-resources-failjob",condition="unknown"} 0
-		//
-		// KSM should never produce a positive value for more than one status, so we can simply fetch
-		// only values which has value 1 for processing.
-		Value: prometheus.GaugeValue(1),
-	}},
-	{MetricName: "kube_job_created"},
 	{MetricName: "kube_statefulset_replicas"},
 	{MetricName: "kube_statefulset_status_replicas_ready"},
 	{MetricName: "kube_statefulset_status_replicas"},
