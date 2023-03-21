@@ -612,27 +612,6 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("job_name", "kube_job_labels"), Type: sdkMetric.ATTRIBUTE},
 		},
 	},
-	"persistentvolumeclaim": {
-		// kube_persistentvolumeclaim_created is marked as an experimental metric, so we instead use the namespace and name
-		// labels from kube_persistentvolumeclaim_info to create the Entity ID and Entity Type.
-		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_persistentvolumeclaim_info", "persistentvolumeclaim"),
-		TypeGenerator:   prometheus.FromLabelValueEntityTypeGeneratorWithCustomGroup("kube_persistentvolumeclaim_info", "PersistentVolumeClaim"),
-		NamespaceGetter: prometheus.FromLabelGetNamespace,
-		MsTypeGuesser:   metricSetTypeGuesserWithCustomGroup("PersistentVolumeClaim"),
-		Specs: []definition.Spec{
-			// createdAt is marked as optional because it is an experimental metric and not available in older KSM versions
-			{Name: "createdAt", ValueFunc: prometheus.FromValue("kube_persistentvolumeclaim_created"), Type: sdkMetric.GAUGE, Optional: true},
-			{Name: "requestedStorageBytes", ValueFunc: prometheus.FromValue("kube_persistentvolumeclaim_resource_requests_storage_bytes"), Type: sdkMetric.GAUGE},
-			{Name: "accessMode", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_access_mode", "access_mode"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "statusPhase", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_status_phase", "phase"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "storageClass", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_info", "storageclass"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "pvcName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_info", "persistentvolumeclaim"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "volumeName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_info", "volumename"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_info", "namespace"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_info", "namespace"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("persistentvolumeclaim", "kube_persistentvolumeclaim_labels"), Type: sdkMetric.ATTRIBUTE},
-		},
-	},
 	"replicaset": {
 		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_replicaset_created", "replicaset"),
 		TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_replicaset_created"),
@@ -924,6 +903,10 @@ var KSMQueries = []prometheus.Query{
 		// kube_job_status_failed{namespace="default",job_name="e2e-resources-failjob",reason="DeadLineExceeded"} 0
 		// kube_job_status_failed{namespace="default",job_name="e2e-resources-failjob",reason="Evicted"} 0
 		// kube_job_status_failed{namespace="default",job_name="e2e-resources-cronjob-27931661"} 0
+		//
+		// KSM should never produce a positive value for more than one status, so we can simply fetch
+		// only values which has value 1 for processing.
+		Value: prometheus.GaugeValue(1),
 	}},
 	{MetricName: "kube_job_status_start_time"},
 	{MetricName: "kube_job_status_completion_time"},
@@ -950,25 +933,6 @@ var KSMQueries = []prometheus.Query{
 		Value: prometheus.GaugeValue(1),
 	}},
 	{MetricName: "kube_job_created"},
-	// kube_persistentvolumeclaim_created is an EXPERIMENTAL KSM metric
-	{MetricName: "kube_persistentvolumeclaim_created"},
-	{MetricName: "kube_persistentvolumeclaim_access_mode"},
-	{MetricName: "kube_persistentvolumeclaim_info"},
-	{MetricName: "kube_persistentvolumeclaim_resource_requests_storage_bytes"},
-	{MetricName: "kube_persistentvolumeclaim_status_phase", Value: prometheus.QueryValue{
-		// Since we aggregate metrics which look like the following:
-		//
-		// kube_persistentvolumeclaim_status_phase{namespace="default",persistentvolumeclaim="e2e-resources",phase="Lost"} 0
-		// kube_persistentvolumeclaim_status_phase{namespace="default",persistentvolumeclaim="e2e-resources",phase="Bound"} 1
-		// kube_persistentvolumeclaim_status_phase{namespace="default",persistentvolumeclaim="e2e-resources",phase="Pending"} 0
-		//
-		// KSM should never produce a positive value for more than one status, so we can simply fetch
-		// only values which has value 1 for processing.
-		Value: prometheus.GaugeValue(1),
-	}},
-	{MetricName: "kube_persistentvolumeclaim_labels", Value: prometheus.QueryValue{
-		Value: prometheus.GaugeValue(1),
-	}},
 	{MetricName: "kube_statefulset_replicas"},
 	{MetricName: "kube_statefulset_status_replicas_ready"},
 	{MetricName: "kube_statefulset_status_replicas"},
