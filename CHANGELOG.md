@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.9.0
+
+### Changed
+
+* Updated dependencies
+* Update Kubernetes image registry
+
+**Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.7.0...v3.9.0
+
 ## 3.7.0
 
 ### Changed
