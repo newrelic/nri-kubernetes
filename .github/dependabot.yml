@@ -23,3 +23,30 @@ updates:
     labels:
       - ci/skip-e2e
       - dependencies
+  # Copy of the above configs for the v2 branch.
+  - package-ecosystem: gomod
+    target-branch: v2
+    directory: "/"
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: "k8s.io/*"
+    labels:
+      - dependencies
+      - ci/skip-e2e
+  - package-ecosystem: docker
+    target-branch: v2
+    directory: "/"
+    schedule:
+      interval: daily
+    labels:
+      - ci/skip-e2e
+      - dependencies
+  - package-ecosystem: github-actions
+    target-branch: v2
+    directory: "/"
+    schedule:
+      interval: daily
+    labels:
+      - ci/skip-e2e
+      - dependencies
