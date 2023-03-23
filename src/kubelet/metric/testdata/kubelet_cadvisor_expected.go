@@ -10,15 +10,15 @@ var ExpectedCadvisorRawData = definition.RawGroups{
 	"container": {
 		"kube-system_heapster-5mz5f_heapster": {
 			"containerID":      "015ff1fea2583aba674c824c754de8c3a0ef52ee4bb82b9bbc523be8f346393c",
-			"containerImageID": "k8s.gcr.io/heapster-amd64@sha256:da3288b0fe2312c621c2a6d08f24ccc56183156ec70767987501287db4927b9d",
+			"containerImageID": "registry.k8s.io/heapster-amd64@sha256:da3288b0fe2312c621c2a6d08f24ccc56183156ec70767987501287db4927b9d",
 		},
 		"kube-system_influxdb-grafana-rsmwp_grafana": {
 			"containerID":      "7f092105225a729f4917aa6950b5b90236c720fc411eee80ba9f7ca0f639525f",
-			"containerImageID": "k8s.gcr.io/heapster-grafana-amd64@sha256:4a472eb4df03f4f557d80e7c6b903d9c8fe31493108b99fbd6da6540b5448d70",
+			"containerImageID": "registry.k8s.io/heapster-grafana-amd64@sha256:4a472eb4df03f4f557d80e7c6b903d9c8fe31493108b99fbd6da6540b5448d70",
 		},
 		"kube-system_influxdb-grafana-rsmwp_influxdb": {
 			"containerID":      "fd0ca055e308e5d11b0c8fbf273b733d1166aa2823bf7fd724a6b70c72959774",
-			"containerImageID": "k8s.gcr.io/heapster-influxdb-amd64@sha256:f433e331c1865ad87bc5387589965528b78cd6b1b2f61697e589584d690c1edd",
+			"containerImageID": "registry.k8s.io/heapster-influxdb-amd64@sha256:f433e331c1865ad87bc5387589965528b78cd6b1b2f61697e589584d690c1edd",
 		},
 		"kube-system_kube-addon-manager-minikube_kube-addon-manager": {
 			"containerID":      "48b12201acc975f6ac563b3c4938e835a6bd161bfdfc0bb8594c144c8a422c99",

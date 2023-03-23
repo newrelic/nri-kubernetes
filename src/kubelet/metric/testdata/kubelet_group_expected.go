@@ -227,7 +227,7 @@ var ExpectedGroupData = definition.RawGroups{
 		},
 		"kube-system_kube-controller-manager-minikube_kube-controller-manager": {
 			"containerName":     "kube-controller-manager",
-			"containerImage":    "k8s.gcr.io/kube-controller-manager:v1.16.0",
+			"containerImage":    "registry.k8s.io/kube-controller-manager:v1.16.0",
 			"nodeIP":            "192.168.99.100",
 			"cpuRequestedCores": int64(200),
 			"status":            "Running",

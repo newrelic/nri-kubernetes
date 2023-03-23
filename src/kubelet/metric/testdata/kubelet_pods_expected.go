@@ -164,7 +164,7 @@ var ExpectedRawData = definition.RawGroups{
 				"component": "kube-controller-manager",
 			},
 			"podName":           "kube-controller-manager-minikube",
-			"containerImage":    "k8s.gcr.io/kube-controller-manager:v1.16.0",
+			"containerImage":    "registry.k8s.io/kube-controller-manager:v1.16.0",
 			"namespace":         "kube-system",
 			"nodeIP":            "192.168.99.100",
 			"cpuRequestedCores": int64(200),

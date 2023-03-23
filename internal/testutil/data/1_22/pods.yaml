@@ -24,7 +24,7 @@ items:
     - args:
       - -conf
       - /etc/coredns/Corefile
-      image: k8s.gcr.io/coredns/coredns:v1.8.4
+      image: registry.k8s.io/coredns/coredns:v1.8.4
       imagePullPolicy: IfNotPresent
       livenessProbe:
         failureThreshold: 5
@@ -154,8 +154,8 @@ items:
       type: PodScheduled
     containerStatuses:
     - containerID: containerd://5e63129196cebc2141e575e35c74eb3ddd08f62627b58ff5caa0e4e081cdf3fc
-      image: k8s.gcr.io/coredns/coredns:v1.8.4
-      imageID: k8s.gcr.io/coredns/coredns@sha256:6e5a02c21641597998b4be7cb5eb1e7b02c0d8d23cce4dd09f4682d463798890
+      image: registry.k8s.io/coredns/coredns:v1.8.4
+      imageID: registry.k8s.io/coredns/coredns@sha256:6e5a02c21641597998b4be7cb5eb1e7b02c0d8d23cce4dd09f4682d463798890
       lastState: {}
       name: coredns
       ready: true
@@ -218,7 +218,7 @@ items:
       - --proxy-refresh-interval=70000
       - --snapshot-count=10000
       - --trusted-ca-file=/var/lib/minikube/certs/etcd/ca.crt
-      image: k8s.gcr.io/etcd:3.5.0-0
+      image: registry.k8s.io/etcd:3.5.0-0
       imagePullPolicy: IfNotPresent
       livenessProbe:
         failureThreshold: 8
@@ -299,8 +299,8 @@ items:
       type: PodScheduled
     containerStatuses:
     - containerID: containerd://0d25c280d34eecd3148f623215273c04a6924a24d68a4def7ef2c962a2a1fe83
-      image: k8s.gcr.io/etcd:3.5.0-0
-      imageID: k8s.gcr.io/etcd@sha256:9ce33ba33d8e738a5b85ed50b5080ac746deceed4a7496c550927a7a19ca3b6d
+      image: registry.k8s.io/etcd:3.5.0-0
+      imageID: registry.k8s.io/etcd@sha256:9ce33ba33d8e738a5b85ed50b5080ac746deceed4a7496c550927a7a19ca3b6d
       lastState: {}
       name: etcd
       ready: true
@@ -550,7 +550,7 @@ items:
       - --service-cluster-ip-range=10.96.0.0/12
       - --tls-cert-file=/var/lib/minikube/certs/apiserver.crt
       - --tls-private-key-file=/var/lib/minikube/certs/apiserver.key
-      image: k8s.gcr.io/kube-apiserver:v1.22.15
+      image: registry.k8s.io/kube-apiserver:v1.22.15
       imagePullPolicy: IfNotPresent
       livenessProbe:
         failureThreshold: 8
@@ -663,8 +663,8 @@ items:
       type: PodScheduled
     containerStatuses:
     - containerID: containerd://fe23f550ca0d05cb328bd9b44836fc7f2e9e1d3151d8a34da18393674275c992
-      image: k8s.gcr.io/kube-apiserver:v1.22.15
-      imageID: k8s.gcr.io/kube-apiserver@sha256:0ce5d87bc57a9030f472edf3c0844618e7ce567bfbe2af0fd44cf051d3feab4e
+      image: registry.k8s.io/kube-apiserver:v1.22.15
+      imageID: registry.k8s.io/kube-apiserver@sha256:0ce5d87bc57a9030f472edf3c0844618e7ce567bfbe2af0fd44cf051d3feab4e
       lastState: {}
       name: kube-apiserver
       ready: true
@@ -725,7 +725,7 @@ items:
       - --service-account-private-key-file=/var/lib/minikube/certs/sa.key
       - --service-cluster-ip-range=10.96.0.0/12
       - --use-service-account-credentials=true
-      image: k8s.gcr.io/kube-controller-manager:v1.22.15
+      image: registry.k8s.io/kube-controller-manager:v1.22.15
       imagePullPolicy: IfNotPresent
       livenessProbe:
         failureThreshold: 8
@@ -841,8 +841,8 @@ items:
       type: PodScheduled
     containerStatuses:
     - containerID: containerd://02c9f9e1ecdfc0712b2d47ddddaf111669aa05be5eb3a64ca551957ed900caa4
-      image: k8s.gcr.io/kube-controller-manager:v1.22.15
-      imageID: k8s.gcr.io/kube-controller-manager@sha256:317e0aabe5b41c47043568cae36445b14b1985bc9d35e81ed99639c217f3f372
+      image: registry.k8s.io/kube-controller-manager:v1.22.15
+      imageID: registry.k8s.io/kube-controller-manager@sha256:317e0aabe5b41c47043568cae36445b14b1985bc9d35e81ed99639c217f3f372
       lastState: {}
       name: kube-controller-manager
       ready: true
@@ -899,7 +899,7 @@ items:
           fieldRef:
             apiVersion: v1
             fieldPath: spec.nodeName
-      image: k8s.gcr.io/kube-proxy:v1.22.15
+      image: registry.k8s.io/kube-proxy:v1.22.15
       imagePullPolicy: IfNotPresent
       name: kube-proxy
       resources: {}
@@ -1007,8 +1007,8 @@ items:
       type: PodScheduled
     containerStatuses:
     - containerID: containerd://93674329ac42ac23938d4cc5edb1a40d84e15a866f50b8062e9eb62c7b634e1c
-      image: k8s.gcr.io/kube-proxy:v1.22.15
-      imageID: k8s.gcr.io/kube-proxy@sha256:d0c27dc89863edcf2ebede5d7ddca3d8521a48792c1c754fedc58a0511fd2ff8
+      image: registry.k8s.io/kube-proxy:v1.22.15
+      imageID: registry.k8s.io/kube-proxy@sha256:d0c27dc89863edcf2ebede5d7ddca3d8521a48792c1c754fedc58a0511fd2ff8
       lastState: {}
       name: kube-proxy
       ready: true
@@ -1057,7 +1057,7 @@ items:
       - --kubeconfig=/etc/kubernetes/scheduler.conf
       - --leader-elect=false
       - --port=0
-      image: k8s.gcr.io/kube-scheduler:v1.22.15
+      image: registry.k8s.io/kube-scheduler:v1.22.15
       imagePullPolicy: IfNotPresent
       livenessProbe:
         failureThreshold: 8
@@ -1132,8 +1132,8 @@ items:
       type: PodScheduled
     containerStatuses:
     - containerID: containerd://088145bc8c0462cd76a52e3b6979f096d394170591f40b05f0bc7df177343e2e
-      image: k8s.gcr.io/kube-scheduler:v1.22.15
-      imageID: k8s.gcr.io/kube-scheduler@sha256:073834aade22f64133ffb38293bd35f3d5fa7e5bbfceb518cfd029687d4bae9f
+      image: registry.k8s.io/kube-scheduler:v1.22.15
+      imageID: registry.k8s.io/kube-scheduler@sha256:073834aade22f64133ffb38293bd35f3d5fa7e5bbfceb518cfd029687d4bae9f
       lastState: {}
       name: kube-scheduler
       ready: true
@@ -2042,7 +2042,7 @@ items:
     uid: 94d665a8-a915-4b50-a116-0cff8c926fc9
   spec:
     containers:
-    - image: k8s.gcr.io/hpa-example
+    - image: registry.k8s.io/hpa-example
       imagePullPolicy: Always
       name: php-apache
       ports:
@@ -2118,8 +2118,8 @@ items:
       type: PodScheduled
     containerStatuses:
     - containerID: containerd://3c4e26fd8352c4e9718807a42fae29b669b81e250032cd6ee4f7c342afd7dbd4
-      image: k8s.gcr.io/hpa-example:latest
-      imageID: k8s.gcr.io/hpa-example@sha256:581697a37f0e136db86d6b30392f0db40ce99c8248a7044c770012f4e8491544
+      image: registry.k8s.io/hpa-example:latest
+      imageID: registry.k8s.io/hpa-example@sha256:581697a37f0e136db86d6b30392f0db40ce99c8248a7044c770012f4e8491544
       lastState: {}
       name: php-apache
       ready: true
