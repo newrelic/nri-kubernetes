@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"time"
 
 	sdk "github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/sethgrid/pester"
@@ -20,9 +19,6 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/src/integration/sink"
 )
 
-const defaultProbeTimeout = 90 * time.Second
-const defaultProbeBackoff = 5 * time.Second
-
 const agentReadyPath = "/v1/data/ready"
 
 // Wrapper is a wrapper on top of the SDK integration.
@@ -30,8 +26,6 @@ type Wrapper struct {
 	sdkIntegration *sdk.Integration
 	logger         *log.Logger
 	metadata       Metadata
-	probeTimeout   time.Duration
-	probeBackoff   time.Duration
 	sink           io.Writer
 }
 
@@ -69,7 +63,7 @@ func WithHTTPSink(sinkConfig config.HTTPSink) OptionFunc {
 			}
 		}
 
-		prober, err := prober.New(iw.probeTimeout, iw.probeBackoff, prober.WithLogger(iw.logger), prober.WithClient(client))
+		prober, err := prober.New(sinkConfig.ProbeTimeout, sinkConfig.ProbeBackoff, prober.WithLogger(iw.logger), prober.WithClient(client))
 		if err != nil {
 			return fmt.Errorf("building prober: %w", err)
 		}
@@ -112,10 +106,8 @@ type Metadata struct {
 // NewWrapper creates a new SDK integration wrapper using the specified options.
 func NewWrapper(opts ...OptionFunc) (*Wrapper, error) {
 	intgr := &Wrapper{
-		logger:       logutil.Discard,
-		sink:         os.Stdout,
-		probeTimeout: defaultProbeTimeout,
-		probeBackoff: defaultProbeBackoff,
+		logger: logutil.Discard,
+		sink:   os.Stdout,
 	}
 
 	for _, opt := range opts {
