@@ -16,8 +16,8 @@ jobs:
         goos: [ linux ]
         goarch: [ amd64, arm64, arm ]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
       - uses: actions/cache@v3
@@ -43,7 +43,7 @@ jobs:
       matrix:
         kubernetes-version: [ "v1.16.15", "v1.22.0" ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - uses: helm/chart-testing-action@v2.3.1
@@ -74,13 +74,13 @@ jobs:
             fi
           done
       - name: Setup Minikube
-        uses: manusa/actions-setup-minikube@v2.4.3
+        uses: manusa/actions-setup-minikube@v2.7.2
         if: steps.list-changed.outputs.changed == 'true'
         with:
           minikube version: v1.20.0
           kubernetes version: ${{ matrix.kubernetes-version }}
           github token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         if: steps.list-changed.outputs.changed == 'true'
         with:
           go-version-file: 'go.mod'
@@ -103,8 +103,8 @@ jobs:
     needs: [ build ]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
       - uses: actions/cache@v3
@@ -122,8 +122,8 @@ jobs:
     name: Static analysis and linting
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
       - uses: newrelic/newrelic-infra-checkers@v1
@@ -144,6 +144,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Codespell test
         uses: codespell-project/actions-codespell@master

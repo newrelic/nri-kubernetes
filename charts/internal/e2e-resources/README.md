@@ -17,6 +17,7 @@ This chart creates e2e resources for nri-kubernetes.
 | csongnr |  | <https://github.com/csongnr> |
 | vuqtran88 |  | <https://github.com/vuqtran88> |
 | xqi-nr |  | <https://github.com/xqi-nr> |
+
 ## Requirements
 
 | Repository | Name | Version |
