@@ -97,7 +97,7 @@ func (p *Prober) attempt(url string) error {
 
 	resp, err := p.client.Do(request)
 	if err != nil {
-		return fmt.Errorf("probe attempt to %s failed: %w", url, err)
+		return fmt.Errorf("probe attempt to infra agent (%s) failed: %w", url, err)
 	}
 
 	_ = resp.Body.Close()
