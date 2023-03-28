@@ -185,6 +185,7 @@ integrations that you have configured.
 | selfMonitoring.pixie.enabled | bool | `false` | Enables the Pixie Health Check nri-flex config. This Flex config performs periodic checks of the Pixie /healthz and /statusz endpoints exposed by the Pixie Cloud Connector. A status for each endpoint is sent to New Relic in a pixieHealthCheck event. |
 | serviceAccount | object | See `values.yaml` | Settings controlling ServiceAccount creation. |
 | serviceAccount.create | bool | `true` | Whether the chart should automatically create the ServiceAccount objects required to run. |
+| sink.http.probeBackoff | time.duration | `"5s"` | The amount of time the scraper container to backoff when it fails to probe infra agent sidecar container. |
 | sink.http.probeTimeout | time.duration | `"90s"` | The amount of time the scraper container to probe infra agent sidecar container before giving up and restarting during scraper agent starting. |
 | strategy | object | `type: Recreate` | Update strategy for the deployed Deployments. |
 | tolerations | list | `[]` | Sets pod's tolerations to node taints almost globally. (See [Affinities and tolerations](README.md#affinities-and-tolerations)) |

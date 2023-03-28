@@ -18,6 +18,7 @@ const (
 	DefaultScraperMaxReruns = 4
 	DefaultAgentTimeout     = 3 * time.Second
 	DefaultProbeTimeout     = 90 * time.Second
+	DefaultProbeBackoff     = 5 * time.Second
 
 	DefaultNetworkRouteFile = "/proc/net/route"
 
@@ -75,6 +76,8 @@ type HTTPSink struct {
 	TLS TLSConfig `mapstructure:"tls"`
 	// ProbeTimeout is the amount of time the main func to probe infra agent sidecar before giving up and restarting during scraper agent starting.
 	ProbeTimeout time.Duration `mapstructure:"probeTimeout"`
+	// ProbeBackoff is the amount of time the main func to backoff when it fails to probe infra agent sidecar.
+	ProbeBackoff time.Duration `mapstructure:"probeBackoff"`
 }
 
 type TLSConfig struct {
@@ -283,6 +286,7 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	v.SetDefault("sink|http|timeout", DefaultAgentTimeout)
 	v.SetDefault("sink|http|retries", DefaultRetries)
 	v.SetDefault("sink|http|probeTimeout", DefaultProbeTimeout)
+	v.SetDefault("sink|http|probeBackoff", DefaultProbeBackoff)
 
 	v.SetDefault("kubelet|timeout", DefaultTimeout)
 	v.SetDefault("kubelet|retries", DefaultRetries)
