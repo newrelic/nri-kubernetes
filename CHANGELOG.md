@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.10.0
+
+### Changed
+
+* Add CronJob and Job kube-state-metrics collection
+* Make ProbeTimeout and ProbeBackoff Configurable
+* Updated dependencies
+
+**Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.9.0...v3.10.0
+
 ## 3.9.0
 
 ### Changed
