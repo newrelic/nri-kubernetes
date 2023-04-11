@@ -8,23 +8,28 @@ kind: CronJob
 metadata:
   name: {{ .Release.Name }}-cronjob
 spec:
+  concurrencyPolicy: Allow
   schedule: "* * * * *"
+  suspend: false
   startingDeadlineSeconds: 200
   jobTemplate:
     spec:
-      activeDeadlineSeconds: 200
+      parallelism: 1
+      completions: 1
+      activeDeadlineSeconds: 540
       template:
         metadata:
           labels:
             app: cronjob
         spec:
           containers:
-          - name: busybox
-            image: busybox
+          - name: compute-pi-digits
+            image: perl:5.34.0
             imagePullPolicy: IfNotPresent
             command:
-            - /bin/sh
-            - -c
-            - date; echo Hello from the Kubernetes cluster
+            - perl
+            - -Mbignum=bpi
+            - -wle
+            - print bpi(1500)
           restartPolicy: OnFailure
 {{- end }}
