@@ -26,6 +26,13 @@ spec:
           - name: compute-pi-digits
             image: perl:5.34.0
             imagePullPolicy: IfNotPresent
+            resources:
+              requests:
+                cpu: 400m
+                memory: 50Mi
+              limits:
+                cpu: 800m
+                memory: 100Mi
             command:
             - perl
             - -Mbignum=bpi
