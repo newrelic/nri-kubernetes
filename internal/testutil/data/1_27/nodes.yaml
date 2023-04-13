@@ -1,0 +1,190 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Node
+  metadata:
+    annotations:
+      kubeadm.alpha.kubernetes.io/cri-socket: unix:///run/containerd/containerd.sock
+      node.alpha.kubernetes.io/ttl: "0"
+      volumes.kubernetes.io/controller-managed-attach-detach: "true"
+    creationTimestamp: "2023-04-13T00:12:52Z"
+    labels:
+      beta.kubernetes.io/arch: arm64
+      beta.kubernetes.io/os: linux
+      kubernetes.io/arch: arm64
+      kubernetes.io/hostname: kind-control-plane
+      kubernetes.io/os: linux
+      node-role.kubernetes.io/control-plane: ""
+      node.kubernetes.io/exclude-from-external-load-balancers: ""
+    name: kind-control-plane
+    resourceVersion: "2826"
+    uid: 28476c7c-2722-4a4f-ac03-96b44ec32088
+  spec:
+    podCIDR: 10.244.0.0/24
+    podCIDRs:
+    - 10.244.0.0/24
+    providerID: kind://docker/kind/kind-control-plane
+  status:
+    addresses:
+    - address: 172.18.0.2
+      type: InternalIP
+    - address: kind-control-plane
+      type: Hostname
+    allocatable:
+      cpu: "5"
+      ephemeral-storage: 61202244Ki
+      hugepages-1Gi: "0"
+      hugepages-2Mi: "0"
+      hugepages-32Mi: "0"
+      hugepages-64Ki: "0"
+      memory: 8039792Ki
+      pods: "110"
+    capacity:
+      cpu: "5"
+      ephemeral-storage: 61202244Ki
+      hugepages-1Gi: "0"
+      hugepages-2Mi: "0"
+      hugepages-32Mi: "0"
+      hugepages-64Ki: "0"
+      memory: 8039792Ki
+      pods: "110"
+    conditions:
+    - lastHeartbeatTime: "2023-04-13T00:36:01Z"
+      lastTransitionTime: "2023-04-13T00:12:50Z"
+      message: kubelet has sufficient memory available
+      reason: KubeletHasSufficientMemory
+      status: "False"
+      type: MemoryPressure
+    - lastHeartbeatTime: "2023-04-13T00:36:01Z"
+      lastTransitionTime: "2023-04-13T00:12:50Z"
+      message: kubelet has no disk pressure
+      reason: KubeletHasNoDiskPressure
+      status: "False"
+      type: DiskPressure
+    - lastHeartbeatTime: "2023-04-13T00:36:01Z"
+      lastTransitionTime: "2023-04-13T00:12:50Z"
+      message: kubelet has sufficient PID available
+      reason: KubeletHasSufficientPID
+      status: "False"
+      type: PIDPressure
+    - lastHeartbeatTime: "2023-04-13T00:36:01Z"
+      lastTransitionTime: "2023-04-13T00:13:13Z"
+      message: kubelet is posting ready status
+      reason: KubeletReady
+      status: "True"
+      type: Ready
+    daemonEndpoints:
+      kubeletEndpoint:
+        Port: 10250
+    images:
+    - names:
+      - docker.io/newrelic/infrastructure-bundle@sha256:8e7942a398445161cc4149545701cf0a03d645fc186e81fea1124e8d5e0fcd76
+      - docker.io/newrelic/infrastructure-bundle:3.1.5
+      sizeBytes: 176653271
+    - names:
+      - registry.k8s.io/hpa-example@sha256:581697a37f0e136db86d6b30392f0db40ce99c8248a7044c770012f4e8491544
+      - registry.k8s.io/hpa-example:latest
+      sizeBytes: 164030864
+    - names:
+      - quay.io/prometheus/prometheus@sha256:8fa63fdd8d48e12bc8cd5e84b3e39e8ebf3cbd3580fb2c6449167917aaf0f04e
+      - quay.io/prometheus/prometheus:v2.37.5
+      sizeBytes: 81666448
+    - names:
+      - registry.k8s.io/etcd:3.5.7-0
+      sizeBytes: 80665728
+    - names:
+      - docker.io/library/import-2023-04-11@sha256:b016cb826a343269457d2bb88677fedb416cddd398ac7287c858ae84532c6d96
+      - registry.k8s.io/kube-apiserver:v1.27.0
+      sizeBytes: 79827455
+    - names:
+      - docker.io/library/import-2023-04-11@sha256:a6e2b464aa58652e8ab8f5856850932f07e979b1551ea5d9a19bf0d95b52e428
+      - registry.k8s.io/kube-controller-manager:v1.27.0
+      sizeBytes: 71504013
+    - names:
+      - docker.io/library/import-2023-04-11@sha256:ebbfd12829e3929af25285e51559666a5e0c99898f29aefb1653c45a00457f02
+      - registry.k8s.io/kube-proxy:v1.27.0
+      sizeBytes: 68097533
+    - names:
+      - docker.io/library/import-2023-04-11@sha256:f6f58bc79f5462c31344c32dcd6d68d94a530c13e140188bb12bdcfe96dbf105
+      - registry.k8s.io/kube-scheduler:v1.27.0
+      sizeBytes: 57544845
+    - names:
+      - docker.io/newrelic/nri-kubernetes@sha256:f7e9d0c509d3ceb988846092abdc19c35e4abb16b5195e2167bded604ba5c033
+      - docker.io/newrelic/nri-kubernetes:3.10.0
+      sizeBytes: 51539035
+    - names:
+      - docker.io/newrelic/nri-kube-events@sha256:14f2a64158a277d49a8e54ad0851db1623ad3368a12d04a67be6d2e7e7d32752
+      - docker.io/newrelic/nri-kube-events:1.9.2
+      sizeBytes: 46334463
+    - names:
+      - docker.io/kindest/kindnetd:v20230330-48f316cd@sha256:c19d6362a6a928139820761475a38c24c0cf84d507b9ddf414a078cf627497af
+      - docker.io/kindest/kindnetd@sha256:c19d6362a6a928139820761475a38c24c0cf84d507b9ddf414a078cf627497af
+      sizeBytes: 25295658
+    - names:
+      - docker.io/newrelic/k8s-metadata-injection@sha256:698d9a8e3b3a10e02f4c118f8532ab0f9decf6443e5004c989c9bb96c3614371
+      - docker.io/newrelic/k8s-metadata-injection:1.9.0
+      sizeBytes: 22098127
+    - names:
+      - docker.io/newrelic/k8s-events-forwarder@sha256:470b61dfdd4910d0e3c2b6ccaae4bbb50659e056dee80e4bd80e231169ee9bb8
+      - docker.io/newrelic/k8s-events-forwarder:1.40.0
+      sizeBytes: 19450966
+    - names:
+      - docker.io/newrelic/k8s-events-forwarder@sha256:e028285586f45e9812710c19988a3c285af78e7904ea0dcdcdc3432140507d22
+      - docker.io/newrelic/k8s-events-forwarder:1.39.1
+      sizeBytes: 19439918
+    - names:
+      - registry.k8s.io/ingress-nginx/kube-webhook-certgen@sha256:549e71a6ca248c5abd51cdb73dbc3083df62cf92ed5e6147c780e30f7e007a47
+      - registry.k8s.io/ingress-nginx/kube-webhook-certgen:v1.3.0
+      sizeBytes: 18157967
+    - names:
+      - docker.io/kindest/local-path-provisioner:v0.0.23-kind.0@sha256:f2d0a02831ff3a03cf51343226670d5060623b43a4cfc4808bd0875b2c4b9501
+      - docker.io/kindest/local-path-provisioner@sha256:f2d0a02831ff3a03cf51343226670d5060623b43a4cfc4808bd0875b2c4b9501
+      sizeBytes: 16648592
+    - names:
+      - registry.k8s.io/coredns/coredns:v1.10.1
+      sizeBytes: 14557471
+    - names:
+      - registry.k8s.io/kube-state-metrics/kube-state-metrics@sha256:a15ca437f2309b769caa36a88240ce0266d67028f02da90f1c817c849b144273
+      - registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.7.0
+      sizeBytes: 11371848
+    - names:
+      - docker.io/newrelic/newrelic-prometheus-configurator@sha256:81bcb1efec7fe43a2c3381c7496ad9eef3c1b5397b551d2b5158e35ca35c808e
+      - docker.io/newrelic/newrelic-prometheus-configurator:1.3.0
+      sizeBytes: 11310234
+    - names:
+      - registry.k8s.io/kube-state-metrics/kube-state-metrics@sha256:bdab4e49d71d272cf944c8612dff5ab1250f0fafdae45c22980286ac0c016032
+      - registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.6.0
+      sizeBytes: 10842943
+    - names:
+      - docker.io/library/bash@sha256:e0acf0b8fb59c01b6a2b66de360c86bcad5c3cd114db325155970e6bab9663a0
+      - docker.io/library/bash:5
+      sizeBytes: 6084441
+    - names:
+      - docker.io/library/alpine@sha256:124c7d2707904eea7431fffe91522a01e5a861a624ee31d03372cc1d138a3126
+      - docker.io/library/alpine:latest
+      sizeBytes: 3265507
+    - names:
+      - docker.io/kindest/local-path-helper:v20230330-48f316cd@sha256:135203f2441f916fb13dad1561d27f60a6f11f50ec288b01a7d2ee9947c36270
+      - docker.io/kindest/local-path-helper@sha256:135203f2441f916fb13dad1561d27f60a6f11f50ec288b01a7d2ee9947c36270
+      sizeBytes: 2921999
+    - names:
+      - docker.io/library/busybox@sha256:b5d6fe0712636ceb7430189de28819e195e8966372edfc2d9409d79402a0dc16
+      - docker.io/library/busybox:latest
+      sizeBytes: 2005439
+    - names:
+      - registry.k8s.io/pause:3.7
+      sizeBytes: 268400
+    nodeInfo:
+      architecture: arm64
+      bootID: a6010037-5e3e-4a39-9392-6fcc8f28e2f9
+      containerRuntimeVersion: containerd://1.6.19-46-g941215f49
+      kernelVersion: 5.10.124-linuxkit
+      kubeProxyVersion: v1.27.0
+      kubeletVersion: v1.27.0
+      machineID: acd1aa4f8b5743cd966d2212b265f2ef
+      operatingSystem: linux
+      osImage: Ubuntu 22.04.2 LTS
+      systemUUID: acd1aa4f8b5743cd966d2212b265f2ef
+kind: List
+metadata:
+  resourceVersion: ""
