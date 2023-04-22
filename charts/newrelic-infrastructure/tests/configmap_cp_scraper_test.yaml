@@ -12,7 +12,7 @@ tests:
       controlPlane.config.scheduler.enabled: false
     asserts:
       - equal:
-          path: data.nri-kubernetes\.yml
+          path: data["nri-kubernetes.yml"]
           value: |-
             interval: 15s
             namespaceSelector: {}
@@ -36,7 +36,7 @@ tests:
         insecureSkipVerify: false
     asserts:
       - equal:
-          path: data.nri-kubernetes\.yml
+          path: data["nri-kubernetes.yml"]
           value: |-
             interval: 15s
             namespaceSelector: {}
@@ -70,7 +70,7 @@ tests:
       apiServerEndpointUrl: http://apiServer/test
     asserts:
       - equal:
-          path: data.nri-kubernetes\.yml
+          path: data["nri-kubernetes.yml"]
           value: |-
             interval: 15s
             namespaceSelector: {}
@@ -150,7 +150,7 @@ tests:
       etcdEndpointUrl: http://test.io:9090/test
     asserts:
       - equal:
-          path: data.nri-kubernetes\.yml
+          path: data["nri-kubernetes.yml"]
           value: |-
             interval: 15s
             namespaceSelector: {}

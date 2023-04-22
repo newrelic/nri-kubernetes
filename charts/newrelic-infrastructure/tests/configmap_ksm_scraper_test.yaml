@@ -31,7 +31,7 @@ tests:
       kubeStateMetricsPort: 22
     asserts:
       - equal:
-          path: data.nri-kubernetes\.yml
+          path: data["nri-kubernetes.yml"]
           value: |-
             interval: 15s
             namespaceSelector: {}
@@ -50,7 +50,7 @@ tests:
       kubeStateMetricsPodLabel: label-name
     asserts:
       - equal:
-          path: data.nri-kubernetes\.yml
+          path: data["nri-kubernetes.yml"]
           value: |-
             interval: 15s
             namespaceSelector: {}
@@ -69,7 +69,7 @@ tests:
       ksm.config.port: 25
     asserts:
       - equal:
-          path: data.nri-kubernetes\.yml
+          path: data["nri-kubernetes.yml"]
           value: |-
             interval: 15s
             namespaceSelector: {}
@@ -94,7 +94,7 @@ tests:
       kubeStateMetricsUrl: test2.io
     asserts:
       - equal:
-          path: data.nri-kubernetes\.yml
+          path: data["nri-kubernetes.yml"]
           value: |-
             interval: 15s
             namespaceSelector: {}
