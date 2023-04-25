@@ -723,8 +723,9 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "isPaused", ValueFunc: prometheus.FromValue("kube_deployment_spec_paused"), Type: sdkMetric.GAUGE},
 			{Name: "rollingUpdateMaxPodsSurge", ValueFunc: prometheus.FromValue("kube_deployment_spec_strategy_rollingupdate_max_surge"), Type: sdkMetric.GAUGE},
 			{Name: "metadataGeneration", ValueFunc: prometheus.FromValue("kube_deployment_metadata_generation"), Type: sdkMetric.GAUGE},
-			{Name: "isAvailable", ValueFunc: prometheus.FromLabelValue("kube_deployment_status_condition_available", "status"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "isProgressing", ValueFunc: prometheus.FromLabelValue("kube_deployment_status_condition_progressing", "status"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "conditionAvailable", ValueFunc: prometheus.FromLabelValue("kube_deployment_status_condition_available", "status"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "conditionProgressing", ValueFunc: prometheus.FromLabelValue("kube_deployment_status_condition_progressing", "status"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "conditionReplicaFailure", ValueFunc: prometheus.FromLabelValue("kube_deployment_status_condition_replica_failure", "status"), Type: sdkMetric.ATTRIBUTE, Optional: true},
 			{Name: "podsMaxUnavailable", ValueFunc: prometheus.FromValue("kube_deployment_spec_strategy_rollingupdate_max_unavailable"), Type: sdkMetric.GAUGE, Optional: true},
 			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_deployment_labels", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_deployment_labels", "namespace"), Type: sdkMetric.ATTRIBUTE},
@@ -1019,6 +1020,16 @@ var KSMQueries = []prometheus.Query{
 		CustomName: "kube_deployment_status_condition_progressing",
 		Labels: prometheus.QueryLabels{
 			Labels: prometheus.Labels{"condition": "Progressing"},
+		},
+		Value: prometheus.QueryValue{
+			Value: prometheus.GaugeValue(1),
+		},
+	},
+	{
+		MetricName: "kube_deployment_status_condition",
+		CustomName: "kube_deployment_status_condition_replica_failure",
+		Labels: prometheus.QueryLabels{
+			Labels: prometheus.Labels{"condition": "ReplicaFailure"},
 		},
 		Value: prometheus.QueryValue{
 			Value: prometheus.GaugeValue(1),

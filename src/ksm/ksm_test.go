@@ -49,6 +49,11 @@ func TestScraper(t *testing.T) {
 				exclude.Groups("job_name"),
 				exclude.Optional(),
 			),
+			// Kubernetes deployment's `condition` attribute operate in a true-or-NULL basis, so it won't be present if false
+			exclude.Exclude(
+				exclude.Groups("deployment"),
+				exclude.Optional(),
+			),
 		).
 		AliasingGroups(map[string]string{"horizontalpodautoscaler": "hpa", "job_name": "job"})
 
