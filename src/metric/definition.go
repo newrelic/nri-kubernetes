@@ -725,7 +725,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "metadataGeneration", ValueFunc: prometheus.FromValue("kube_deployment_metadata_generation"), Type: sdkMetric.GAUGE},
 			{Name: "conditionAvailable", ValueFunc: prometheus.FromLabelValue("kube_deployment_status_condition_available", "status"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "conditionProgressing", ValueFunc: prometheus.FromLabelValue("kube_deployment_status_condition_progressing", "status"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "conditionReplicaFailure", ValueFunc: prometheus.FromLabelValue("kube_deployment_status_condition_replica_failure", "status"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "conditionReplicaFailure", ValueFunc: prometheus.FromLabelValue("kube_deployment_status_condition_replica_failure", "status"), Type: sdkMetric.ATTRIBUTE, Optional: true},
 			{Name: "podsMaxUnavailable", ValueFunc: prometheus.FromValue("kube_deployment_spec_strategy_rollingupdate_max_unavailable"), Type: sdkMetric.GAUGE, Optional: true},
 			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_deployment_labels", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_deployment_labels", "namespace"), Type: sdkMetric.ATTRIBUTE},
