@@ -66,8 +66,6 @@ tests:
         url: http://controller/test
       controlPlane.config.apiServer.staticEndpoint:
         url: http://apiServer/test
-
-      apiServerEndpointUrl: http://apiServer/test
     asserts:
       - equal:
           path: data["nri-kubernetes.yml"]
@@ -147,7 +145,6 @@ tests:
           matchNode: true
           endpoints:
             - url: http://localhost:2381
-      etcdEndpointUrl: http://test.io:9090/test
     asserts:
       - equal:
           path: data["nri-kubernetes.yml"]
