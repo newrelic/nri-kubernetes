@@ -56,7 +56,7 @@ jobs:
       - name: Run helm unit tests
         if: steps.list-changed.outputs.changed == 'true'
         run: |
-          helm plugin install https://github.com/quintush/helm-unittest
+          helm plugin install https://github.com/helm-unittest/helm-unittest --version=0.3.1
 
           for chart in $(ct --config .github/ct.yaml list-changed); do
             if [ -d "$chart/tests/" ]; then
