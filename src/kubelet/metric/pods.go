@@ -158,8 +158,21 @@ func (f *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]definition.Raw
 		}
 
 		if ref := pod.GetOwnerReferences(); len(ref) > 0 {
-			if d := deploymentNameBasedOnCreator(ref[0].Kind, ref[0].Name); d != "" {
-				metrics[id]["deploymentName"] = d
+			creatorKind := ref[0].Kind
+			creatorName := ref[0].Name
+
+			switch creatorKind {
+			case "DaemonSet":
+				metrics[id]["daemonsetName"] = creatorName
+			case "Deployment":
+				metrics[id]["deploymentName"] = creatorName
+			case "Job":
+				metrics[id]["jobName"] = creatorName
+			case "ReplicaSet":
+				metrics[id]["replicasetName"] = creatorName
+				if d := deploymentNameBasedOnCreator(creatorKind, creatorName); d != "" {
+					metrics[id]["deploymentName"] = d
+				}
 			}
 		}
 

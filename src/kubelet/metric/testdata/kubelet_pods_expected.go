@@ -82,6 +82,7 @@ var ExpectedRawData = definition.RawGroups{
 			"containerImage": "newrelic/ohaik:1.0.0-beta3",
 			"namespace":      "kube-system",
 			"podName":        "newrelic-infra-rz225",
+			"daemonsetName":  "newrelic-infra",
 			"nodeName":       "minikube",
 			"nodeIP":         "192.168.99.100",
 			"restartCount":   int32(6),
@@ -103,6 +104,7 @@ var ExpectedRawData = definition.RawGroups{
 			"containerImage": "quay.io/coreos/kube-state-metrics:v1.1.0",
 			"namespace":      "kube-system",
 			"podName":        "kube-state-metrics-57f4659995-6n2qq",
+			"replicasetName": "kube-state-metrics-57f4659995",
 			"nodeName":       "minikube",
 			"nodeIP":         "192.168.99.100",
 			// "restartCount":   int32(7),  // No restartCount since there is no restartCount in status field in the pod.
@@ -124,6 +126,7 @@ var ExpectedRawData = definition.RawGroups{
 			"containerImage": "gcr.io/google_containers/addon-resizer:1.0",
 			"namespace":      "kube-system",
 			"podName":        "kube-state-metrics-57f4659995-6n2qq",
+			"replicasetName": "kube-state-metrics-57f4659995",
 			"nodeName":       "minikube",
 			"nodeIP":         "192.168.99.100",
 			// "restartCount":   int32(7),  // No restartCount since there is no restartCount in status field in the pod.
@@ -146,6 +149,7 @@ var ExpectedRawData = definition.RawGroups{
 			"containerImage": "python",
 			"namespace":      "default",
 			"podName":        "sh-7c95664875-4btqh",
+			"replicasetName": "sh-7c95664875",
 			"nodeName":       "minikube",
 			"nodeIP":         "192.168.99.100",
 			"deploymentName": "sh",

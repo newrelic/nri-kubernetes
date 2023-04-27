@@ -124,6 +124,7 @@ var ExpectedGroupData = definition.RawGroups{
 			"containerImageID":     "sha256:1a95d0df2997f93741fbe2a15d2c31a394e752fd942ec29bf16a44163342f6a1",
 			"namespace":            "kube-system",
 			"podName":              "newrelic-infra-rz225",
+			"daemonsetName":        "newrelic-infra",
 			"nodeName":             "minikube",
 			"nodeIP":               "192.168.99.100",
 			"restartCount":         int32(6),
@@ -162,6 +163,7 @@ var ExpectedGroupData = definition.RawGroups{
 			// "status":         "Running", // No Status since there is no ContainerStatuses field in the pod fetched from kubelet /pods.
 			// "startedAt":            parseTime("2018-02-27T15:21:37Z"), // No startedAt since there is no startedAt in status field in the pod fetched from kubelet /pods.
 			"deploymentName":       "kube-state-metrics",
+			"replicasetName":       "kube-state-metrics-57f4659995",
 			"cpuRequestedCores":    int64(101),
 			"cpuLimitCores":        int64(101),
 			"memoryRequestedBytes": int64(106954752),
@@ -194,6 +196,7 @@ var ExpectedGroupData = definition.RawGroups{
 			// "status":         "Running", // No Status since there is no ContainerStatuses field in the pod fetched from kubelet /pods.
 			// "startedAt":            parseTime("2018-02-27T15:21:37Z"), // No startedAt since there is no startedAt in status field in the pod fetched from kubelet /pods.
 			"deploymentName":       "kube-state-metrics",
+			"replicasetName":       "kube-state-metrics-57f4659995",
 			"cpuRequestedCores":    int64(100),
 			"cpuLimitCores":        int64(100),
 			"memoryRequestedBytes": int64(31457280),
@@ -217,6 +220,7 @@ var ExpectedGroupData = definition.RawGroups{
 			"containerImage": "python",
 			"namespace":      "default",
 			"podName":        "sh-7c95664875-4btqh",
+			"replicasetName": "sh-7c95664875",
 			"nodeName":       "minikube",
 			"nodeIP":         "192.168.99.100",
 			"deploymentName": "sh",
