@@ -1141,6 +1141,7 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "daemonsetName", ValueFunc: definition.FromRaw("daemonsetName"), Type: sdkMetric.ATTRIBUTE, Optional: true},
 			{Name: "jobName", ValueFunc: definition.FromRaw("jobName"), Type: sdkMetric.ATTRIBUTE, Optional: true},
 			{Name: "replicasetName", ValueFunc: definition.FromRaw("replicasetName"), Type: sdkMetric.ATTRIBUTE, Optional: true},
+			{Name: "statefulsetName", ValueFunc: definition.FromRaw("statefulsetName"), Type: sdkMetric.ATTRIBUTE, Optional: true},
 			{Name: "namespace", ValueFunc: definition.FromRaw("namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: definition.FromRaw("namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "podName", ValueFunc: definition.FromRaw("podName"), Type: sdkMetric.ATTRIBUTE},

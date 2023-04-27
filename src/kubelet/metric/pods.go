@@ -173,6 +173,8 @@ func (f *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]definition.Raw
 				if d := deploymentNameBasedOnCreator(creatorKind, creatorName); d != "" {
 					metrics[id]["deploymentName"] = d
 				}
+			case "StatefulSet":
+				metrics[id]["statefulsetName"] = creatorName
 			}
 		}
 

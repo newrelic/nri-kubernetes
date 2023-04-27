@@ -194,7 +194,7 @@ func kubeletExclusions() []exclude.Func {
 				return asserter.EntityMetricIs(ent, "namespace", "kube-system")
 			},
 			exclude.Metrics("createdAt", "createdBy", "createdKind", "deploymentName", "daemonsetName", "jobName",
-				"replicasetName"),
+				"replicasetName", "statefulsetName"),
 		),
 
 		// Exclude deploymentName metric for pods not created by a deployment
