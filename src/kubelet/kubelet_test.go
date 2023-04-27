@@ -180,7 +180,7 @@ func kubeletExclusions() []exclude.Func {
 
 		// Exclude metrics that are marked as optional.
 		exclude.Exclude(
-			exclude.Groups("container"),
+			exclude.Groups("container", "pod"),
 			exclude.Optional(),
 		),
 

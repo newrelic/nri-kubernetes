@@ -73,6 +73,7 @@ var expectedEntities = []*integration.Entity{
 					"namespaceName":                  "kube-system",
 					"nodeName":                       "minikube",
 					"podName":                        "newrelic-infra-rz225",
+					"daemonsetName":                  "newrelic-infra",
 					"isReady":                        float64(1),
 					"status":                         "Running",
 					"isScheduled":                    float64(1),

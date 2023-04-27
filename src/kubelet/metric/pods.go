@@ -259,10 +259,25 @@ func (f *PodsFetcher) fetchPodData(pod *v1.Pod) definition.RawMetrics {
 	}
 
 	if ref := pod.GetOwnerReferences(); len(ref) > 0 {
-		metrics["createdKind"] = ref[0].Kind
-		metrics["createdBy"] = ref[0].Name
-		if d := deploymentNameBasedOnCreator(ref[0].Kind, ref[0].Name); d != "" {
-			metrics["deploymentName"] = d
+		creatorKind := ref[0].Kind
+		creatorName := ref[0].Name
+		metrics["createdKind"] = creatorKind
+		metrics["createdBy"] = creatorName
+
+		switch creatorKind {
+		case "DaemonSet":
+			metrics["daemonsetName"] = creatorName
+		case "Deployment":
+			metrics["deploymentName"] = creatorName
+		case "Job":
+			metrics["jobName"] = creatorName
+		case "ReplicaSet":
+			metrics["replicasetName"] = creatorName
+			if d := deploymentNameBasedOnCreator(creatorKind, creatorName); d != "" {
+				metrics["deploymentName"] = d
+			}
+		case "StatefulSet":
+			metrics["statefulsetName"] = creatorName
 		}
 	}
 
