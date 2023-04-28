@@ -168,7 +168,7 @@ func (f *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]definition.Raw
 				metrics[id]["deploymentName"] = creatorName
 			case "Job":
 				metrics[id]["jobName"] = creatorName
-			case "ReplicaSet":
+			case "ReplicaSet": //nolint: goconst
 				metrics[id]["replicasetName"] = creatorName
 				if d := deploymentNameBasedOnCreator(creatorKind, creatorName); d != "" {
 					metrics[id]["deploymentName"] = d
