@@ -184,8 +184,8 @@ spec:
             {{- if include "newrelic.common.privileged" . }}
             - name: dev
               mountPath: /dev
-            - name: host-docker-socket
-              mountPath: /var/run/docker.sock
+            - name: host-containerd-socket
+              mountPath: /run/containerd/containerd.sock
             - name: log
               mountPath: /var/log
             - name: host-volume
@@ -209,9 +209,9 @@ spec:
         - name: dev
           hostPath:
             path: /dev
-        - name: host-docker-socket
+        - name: host-containerd-socket
           hostPath:
-            path: /var/run/docker.sock
+            path: /run/containerd/containerd.sock
         - name: log
           hostPath:
             path: /var/log
