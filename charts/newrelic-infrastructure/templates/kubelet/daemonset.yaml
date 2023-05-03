@@ -186,6 +186,8 @@ spec:
               mountPath: /dev
             - name: host-containerd-socket
               mountPath: /run/containerd/containerd.sock
+            - name: host-docker-socket
+              mountPath: /var/run/docker.sock
             - name: log
               mountPath: /var/log
             - name: host-volume
@@ -212,6 +214,9 @@ spec:
         - name: host-containerd-socket
           hostPath:
             path: /run/containerd/containerd.sock
+        - name: host-docker-socket
+          hostPath:
+            path: /var/run/docker.sock
         - name: log
           hostPath:
             path: /var/log
