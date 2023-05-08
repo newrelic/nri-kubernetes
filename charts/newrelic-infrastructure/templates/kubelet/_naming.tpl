@@ -3,6 +3,10 @@
 {{- include "newrelic.common.naming.truncateToDNSWithSuffix" (dict "name" (include "nriKubernetes.naming.fullname" .) "suffix" "kubelet") -}}
 {{- end -}}
 
+{{- define "nriKubernetes.kubelet.windows.fullname" -}}
+{{- include "newrelic.common.naming.truncateToDNSWithSuffix" (dict "name" (include "nriKubernetes.naming.fullname" .) "suffix" "windows") -}}
+{{- end -}}
+
 {{- define "nriKubernetes.kubelet.fullname.agent" -}}
 {{- include "newrelic.common.naming.truncateToDNSWithSuffix" (dict "name" (include "nriKubernetes.naming.fullname" .) "suffix" "agent-kubelet") -}}
 {{- end -}}
