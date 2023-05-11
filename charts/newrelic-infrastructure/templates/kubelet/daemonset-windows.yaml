@@ -1,5 +1,5 @@
 {{- if and .Values.kubelet.enabled .Values.kubelet.enableWindows }}
-{{- range $key, $windowsList := .Values.kubelet.windowsOsList }}
+{{- range .Values.kubelet.windowsOsList }}
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -10,6 +10,9 @@ metadata:
   annotations: {{ . | nindent 4 }}
   {{- end }}
 spec:
+  {{- with $.Values.updateStrategy }}
+  updateStrategy: {{ toYaml . | nindent 4 }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "newrelic.common.labels.selectorLabels" $ | nindent 6 }}
