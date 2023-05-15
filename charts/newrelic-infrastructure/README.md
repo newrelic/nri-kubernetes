@@ -168,6 +168,8 @@ integrations that you have configured.
 | kubelet.extraVolumes | list | `[]` | Volumes to mount in the containers |
 | kubelet.hostNetwork | bool | Not set | Sets pod's hostNetwork. When set bypasses global/common variable |
 | kubelet.tolerations | list | Schedules in all tainted nodes | Tolerations for the control plane DaemonSet. |
+| kubelet.enableWindows | bool | `false` | Set to enable Windows node monitoring. |
+| kubelet.windowsOsList | list | `[]` |List of windowsOs to be monitored, for each object specified it will create a different daemonset for the specified Windows version.
 | labels | object | `{}` | Additional labels for chart objects. Can be configured also with `global.labels` |
 | licenseKey | string | `""` | This set this license key to use. Can be configured also with `global.licenseKey` |
 | lowDataMode | bool | `false` (See [Low data mode](README.md#low-data-mode)) | Send less data by incrementing the interval from `15s` (the default when `lowDataMode` is `false` or `nil`) to `30s`. Non-nil values of `common.config.interval` will override this value. |
