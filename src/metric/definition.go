@@ -565,6 +565,42 @@ var EtcdQueries = []prometheus.Query{
 
 // KSMSpecs are the metric specifications we want to collect from KSM.
 var KSMSpecs = definition.SpecGroups{
+	"persistentvolume": {
+		// kube_persistentvolume_created is marked as an experimental metric, so we instead use the namespace and name
+		// labels from kube_persistentvolume_info to create the Entity ID and Entity Type.
+		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_persistentvolume_info", "persistentvolume"),
+		TypeGenerator:   prometheus.FromLabelValueEntityTypeGeneratorWithCustomGroup("kube_persistentvolume_info", "PersistentVolume"),
+		NamespaceGetter: prometheus.FromLabelGetNamespace,
+		MsTypeGuesser:   metricSetTypeGuesserWithCustomGroup("PersistentVolume"),
+		Specs: []definition.Spec{
+			{Name: "createdAt", ValueFunc: prometheus.FromValue("kube_persistentvolume_created"), Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "capacityBytes", ValueFunc: prometheus.FromValue("kube_persistentvolume_capacity_bytes"), Type: sdkMetric.GAUGE},
+			{Name: "statusPhase", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_status_phase", "phase"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "volumeName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "persistentvolume"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "pvcName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_claim_ref", "name"), Type: sdkMetric.ATTRIBUTE, Optional: true},
+			{Name: "pvcNamespace", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_claim_ref", "claim_namespace"), Type: sdkMetric.ATTRIBUTE, Optional: true},
+			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("persistentvolume", "kube_persistentvolume_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "storageClass", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "storageclass"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "hostPath", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "host_path"), Type: sdkMetric.ATTRIBUTE, Optional: true},
+			{Name: "hostPathType", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "host_path_type"), Type: sdkMetric.ATTRIBUTE, Optional: true},
+			{Name: "localFs", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "local_fs"), Type: sdkMetric.ATTRIBUTE, Optional: true},
+			{Name: "localPath", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "local_path"), Type: sdkMetric.ATTRIBUTE, Optional: true},
+			{Name: "csiVolumeHandle", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "csi_volume_handle"), Type: sdkMetric.ATTRIBUTE, Optional: true},
+			{Name: "csiDriver", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "csi_driver"), Type: sdkMetric.ATTRIBUTE, Optional: true},
+			{Name: "nfsPath", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "nfs_path"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "nfsServer", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "nfs_server"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "iscsiInitiatorName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "iscsi_initiator_name"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "iscsiLun", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "iscsi_lun"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "iscsiIqn", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "iscsi_iqn"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "iscsiTargetPortal", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "iscsi_target_portal"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "fcTargetWwns", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "fc_target_wwns"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "fcLun", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "fc_lun"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "fcWwids", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "fc_wwids"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "azureDiskName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "azure_disk_name"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "ebsVolumeId", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "ebs_volume_id"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "gcePersistentDiskName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "gce_persistent_disk_name"), Type: sdkMetric.ATTRIBUTE},
+		},
+	},
 	"cronjob": {
 		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_cronjob_created", "cronjob"),
 		TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_cronjob_created"),
@@ -610,6 +646,27 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_job_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_job_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("job_name", "kube_job_labels"), Type: sdkMetric.ATTRIBUTE},
+		},
+	},
+	"persistentvolumeclaim": {
+		// kube_persistentvolumeclaim_created is marked as an experimental metric, so we instead use the namespace and name
+		// labels from kube_persistentvolumeclaim_info to create the Entity ID and Entity Type.
+		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_persistentvolumeclaim_info", "persistentvolumeclaim"),
+		TypeGenerator:   prometheus.FromLabelValueEntityTypeGeneratorWithCustomGroup("kube_persistentvolumeclaim_info", "PersistentVolumeClaim"),
+		NamespaceGetter: prometheus.FromLabelGetNamespace,
+		MsTypeGuesser:   metricSetTypeGuesserWithCustomGroup("PersistentVolumeClaim"),
+		Specs: []definition.Spec{
+			// createdAt is marked as optional because it is an experimental metric and not available in older KSM versions
+			{Name: "createdAt", ValueFunc: prometheus.FromValue("kube_persistentvolumeclaim_created"), Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "requestedStorageBytes", ValueFunc: prometheus.FromValue("kube_persistentvolumeclaim_resource_requests_storage_bytes"), Type: sdkMetric.GAUGE},
+			{Name: "accessMode", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_access_mode", "access_mode"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "statusPhase", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_status_phase", "phase"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "storageClass", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_info", "storageclass"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "pvcName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_info", "persistentvolumeclaim"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "volumeName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_info", "volumename"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_info", "namespace"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_info", "namespace"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("persistentvolumeclaim", "kube_persistentvolumeclaim_labels"), Type: sdkMetric.ATTRIBUTE},
 		},
 	},
 	"replicaset": {
@@ -889,6 +946,22 @@ var KSMSpecs = definition.SpecGroups{
 
 // KSMQueries are the queries we will do to KSM in order to fetch all the raw metrics.
 var KSMQueries = []prometheus.Query{
+	// kube_persistentvolume_created is an EXPERIMENTAL KSM metric
+	{MetricName: "kube_persistentvolume_created"},
+	{MetricName: "kube_persistentvolume_capacity_bytes"},
+	{MetricName: "kube_persistentvolume_status_phase", Value: prometheus.QueryValue{
+		// Since we aggregate metrics which look like the following:
+		//
+		// kube_persistentvolume_status_phase{persistentvolume="e2e-resources",phase="Pending"} 0
+		// kube_persistentvolume_status_phase{persistentvolume="e2e-resources",phase="Available"} 1
+		// kube_persistentvolume_status_phase{persistentvolume="e2e-resources",phase="Bound"} 0
+		Value: prometheus.GaugeValue(1),
+	}},
+	{MetricName: "kube_persistentvolume_claim_ref"},
+	{MetricName: "kube_persistentvolume_info"},
+	{MetricName: "kube_persistentvolume_labels", Value: prometheus.QueryValue{
+		Value: prometheus.GaugeValue(1),
+	}},
 	{MetricName: "kube_cronjob_info"},
 	{MetricName: "kube_cronjob_labels", Value: prometheus.QueryValue{
 		Value: prometheus.GaugeValue(1),
@@ -947,6 +1020,25 @@ var KSMQueries = []prometheus.Query{
 		Value: prometheus.GaugeValue(1),
 	}},
 	{MetricName: "kube_job_created"},
+	// kube_persistentvolumeclaim_created is an EXPERIMENTAL KSM metric
+	{MetricName: "kube_persistentvolumeclaim_created"},
+	{MetricName: "kube_persistentvolumeclaim_access_mode"},
+	{MetricName: "kube_persistentvolumeclaim_info"},
+	{MetricName: "kube_persistentvolumeclaim_resource_requests_storage_bytes"},
+	{MetricName: "kube_persistentvolumeclaim_status_phase", Value: prometheus.QueryValue{
+		// Since we aggregate metrics which look like the following:
+		//
+		// kube_persistentvolumeclaim_status_phase{namespace="default",persistentvolumeclaim="e2e-resources",phase="Lost"} 0
+		// kube_persistentvolumeclaim_status_phase{namespace="default",persistentvolumeclaim="e2e-resources",phase="Bound"} 1
+		// kube_persistentvolumeclaim_status_phase{namespace="default",persistentvolumeclaim="e2e-resources",phase="Pending"} 0
+		//
+		// KSM should never produce a positive value for more than one status, so we can simply fetch
+		// only values which has value 1 for processing.
+		Value: prometheus.GaugeValue(1),
+	}},
+	{MetricName: "kube_persistentvolumeclaim_labels", Value: prometheus.QueryValue{
+		Value: prometheus.GaugeValue(1),
+	}},
 	{MetricName: "kube_statefulset_replicas"},
 	{MetricName: "kube_statefulset_status_replicas_ready"},
 	{MetricName: "kube_statefulset_status_replicas"},

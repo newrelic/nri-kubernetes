@@ -5,9 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.12.0
+
+## What's Changed
+
+* Bump app and chart version by @juanjjaramillo in https://github.com/newrelic/nri-kubernetes/pull/736
+* Update renovatebot by @htroisi in https://github.com/newrelic/nri-kubernetes/pull/732
+* Add more workload name fields to K8sContainerSample, K8sPodSample by @htroisi in https://github.com/newrelic/nri-kubernetes/pull/733
+* chore(deps): update newrelic/k8s-events-forwarder docker tag to v1.41.0 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/748
+* chore(deps): update alpine docker tag to v3.18.0 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/746
+* Add PersistentVolume and PersistentVolumeClaim KSM metrics by @htroisi in https://github.com/newrelic/nri-kubernetes/pull/729
+
+**Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.11.0...v3.12.0
+
 ## 3.11.0
 
 ### Changed
+
 * chore(deps): update newrelic/k8s-events-forwarder docker tag to v1.40.0 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/712
 * Bump app and chart version by @htroisi in https://github.com/newrelic/nri-kubernetes/pull/710
 * chore(deps): update newrelic/infrastructure-bundle docker tag to v3.1.6 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/716
