@@ -161,6 +161,7 @@ integrations that you have configured.
 | kubelet.config.retries | int | `3` | Number of retries after timeout expired |
 | kubelet.config.scraperMaxReruns | int | `4` | Max number of scraper rerun when scraper runtime error happens |
 | kubelet.config.timeout | string | `"10s"` | Timeout for the kubelet APIs contacted by the integration |
+| kubelet.enableWindows | bool | `false` | Enable Windows monitoring and update `windowsOsList` with the list of Windows versions present in the cluster. |
 | kubelet.enabled | bool | `true` | Enable kubelet monitoring. Advanced users only. Setting this to `false` is not supported and will break the New Relic experience. |
 | kubelet.extraEnv | list | `[]` | Add user environment variables to the agent |
 | kubelet.extraEnvFrom | list | `[]` | Add user environment from configMaps or secrets as variables to the agent |
@@ -169,7 +170,7 @@ integrations that you have configured.
 | kubelet.hostNetwork | bool | Not set | Sets pod's hostNetwork. When set bypasses global/common variable |
 | kubelet.tolerations | list | Schedules in all tainted nodes | Tolerations for the control plane DaemonSet. |
 | kubelet.enableWindows | bool | `false` | Set to enable Windows node monitoring. |
-| kubelet.windowsOsList | list | `[]` |List of windowsOs to be monitored, for each object specified it will create a different daemonset for the specified Windows version.
+| kubelet.windowsOsList | list | `[]` | List of Windows versions present in the cluster. Our Kubernetes integration supported Windows versions LTSC 2019 (1809), 20H2, and LTSC 2022 |
 | labels | object | `{}` | Additional labels for chart objects. Can be configured also with `global.labels` |
 | licenseKey | string | `""` | This set this license key to use. Can be configured also with `global.licenseKey` |
 | lowDataMode | bool | `false` (See [Low data mode](README.md#low-data-mode)) | Send less data by incrementing the interval from `15s` (the default when `lowDataMode` is `false` or `nil`) to `30s`. Non-nil values of `common.config.interval` will override this value. |
