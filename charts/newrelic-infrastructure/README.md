@@ -169,7 +169,6 @@ integrations that you have configured.
 | kubelet.extraVolumes | list | `[]` | Volumes to mount in the containers |
 | kubelet.hostNetwork | bool | Not set | Sets pod's hostNetwork. When set bypasses global/common variable |
 | kubelet.tolerations | list | Schedules in all tainted nodes | Tolerations for the control plane DaemonSet. |
-| kubelet.enableWindows | bool | `false` | Set to enable Windows node monitoring. |
 | kubelet.windowsOsList | list | `[]` | List of Windows versions present in the cluster. Our Kubernetes integration supported Windows versions LTSC 2019 (1809), 20H2, and LTSC 2022 |
 | labels | object | `{}` | Additional labels for chart objects. Can be configured also with `global.labels` |
 | licenseKey | string | `""` | This set this license key to use. Can be configured also with `global.licenseKey` |
