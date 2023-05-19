@@ -178,12 +178,6 @@ func kubeletExclusions() []exclude.Func {
 			},
 		),
 
-		// Exclude metrics that are marked as optional.
-		exclude.Exclude(
-			exclude.Groups("container", "pod"),
-			exclude.Optional(),
-		),
-
 		// Exclude metrics that depend on limits when those limits are not set.
 		exclude.Exclude(exclude.Groups("pod", "container"), exclude.Dependent(utilizationDependencies)),
 
@@ -193,8 +187,7 @@ func kubeletExclusions() []exclude.Func {
 			func(_ string, _ *definition.Spec, ent *integration.Entity) bool {
 				return asserter.EntityMetricIs(ent, "namespace", "kube-system")
 			},
-			exclude.Metrics("createdAt", "createdBy", "createdKind", "deploymentName", "daemonsetName", "jobName",
-				"replicasetName", "statefulsetName"),
+			exclude.Metrics("createdAt", "createdBy", "createdKind", "deploymentName"),
 		),
 
 		// Exclude deploymentName metric for pods not created by a deployment

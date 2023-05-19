@@ -158,9 +158,9 @@ func (f *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]definition.Raw
 		}
 
 		if ref := pod.GetOwnerReferences(); len(ref) > 0 {
-			creatorKind := ref[0].Kind
-			creatorName := ref[0].Name
-			addWorkloadNameBasedOnCreator(creatorKind, creatorName, metrics[id])
+			if d := deploymentNameBasedOnCreator(ref[0].Kind, ref[0].Name); d != "" {
+				metrics[id]["deploymentName"] = d
+			}
 		}
 
 		// merging status data
@@ -244,11 +244,11 @@ func (f *PodsFetcher) fetchPodData(pod *v1.Pod) definition.RawMetrics {
 	}
 
 	if ref := pod.GetOwnerReferences(); len(ref) > 0 {
-		creatorKind := ref[0].Kind
-		creatorName := ref[0].Name
-		metrics["createdKind"] = creatorKind
-		metrics["createdBy"] = creatorName
-		addWorkloadNameBasedOnCreator(creatorKind, creatorName, metrics)
+		metrics["createdKind"] = ref[0].Kind
+		metrics["createdBy"] = ref[0].Name
+		if d := deploymentNameBasedOnCreator(ref[0].Kind, ref[0].Name); d != "" {
+			metrics["deploymentName"] = d
+		}
 	}
 
 	if pod.Status.Reason != "" {
@@ -298,24 +298,6 @@ func podLabels(p *v1.Pod) map[string]string {
 	}
 
 	return labels
-}
-
-func addWorkloadNameBasedOnCreator(creatorKind string, creatorName string, metrics definition.RawMetrics) {
-	switch creatorKind {
-	case "DaemonSet":
-		metrics["daemonsetName"] = creatorName
-	case "Deployment":
-		metrics["deploymentName"] = creatorName
-	case "Job":
-		metrics["jobName"] = creatorName
-	case "ReplicaSet":
-		metrics["replicasetName"] = creatorName
-		if d := deploymentNameBasedOnCreator(creatorKind, creatorName); d != "" {
-			metrics["deploymentName"] = d
-		}
-	case "StatefulSet":
-		metrics["statefulsetName"] = creatorName
-	}
 }
 
 func deploymentNameBasedOnCreator(creatorKind, creatorName string) string {

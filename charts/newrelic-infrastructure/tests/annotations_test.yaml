@@ -18,14 +18,17 @@ tests:
       licenseKey: test
       cluster: test
     asserts:
-      - isNull:
+      - equal:
           path: metadata.annotations
+          value: null
         template: templates/ksm/deployment.yaml
-      - isNull:
+      - equal:
           path: metadata.annotations
+          value: null
         template: templates/controlplane/daemonset.yaml
-      - isNull:
+      - equal:
           path: metadata.annotations
+          value: null
         template: templates/kubelet/daemonset.yaml
   - it: annotations are populated from supported value
     set:

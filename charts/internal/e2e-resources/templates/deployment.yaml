@@ -1,17 +1,9 @@
-{{- if .Values.deployment.enabled }}
+{{- if .Values.daemonSet.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Release.Name }}-depl
 spec:
-  paused: false
-  minReadySeconds: 6
-  replicas: 2
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 1
   selector:
     matchLabels:
       app: deployment

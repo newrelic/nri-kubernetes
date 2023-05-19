@@ -18,14 +18,17 @@ tests:
       licenseKey: test
       cluster: test
     asserts:
-      - isNull:
+      - equal:
           path: spec.template.spec.initContainers
+          value: null
         template: templates/ksm/deployment.yaml
-      - isNull:
+      - equal:
           path: spec.template.spec.initContainers
+          value: null
         template: templates/controlplane/daemonset.yaml
-      - isNull:
+      - equal:
           path: spec.template.spec.initContainers
+          value: null
         template: templates/kubelet/daemonset.yaml
   - it: init containers are populated
     set:

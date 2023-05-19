@@ -20,6 +20,14 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
       - name: Build integration
         env:
           GOOS: ${{ matrix.goos }}
@@ -74,7 +82,7 @@ jobs:
             -t $DOCKER_IMAGE_NAME:ci-scan \
             .
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.10.0
+        uses: aquasecurity/trivy-action@0.9.2
         with:
           image-ref: '${{ env.DOCKER_IMAGE_NAME }}:ci-scan'
           format: 'table'
