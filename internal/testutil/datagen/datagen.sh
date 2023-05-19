@@ -149,7 +149,7 @@ function bootstrap() {
         echo "Updating helm dependencies"
 
         case "$1" in
-          "1.26" | "1.25")
+          "1.27" | "1.26" | "1.25")
             KSM_IMAGE_VERSION="v2.7.0"
             ;;
           "1.24" | "1.23" | "1.22" | "1.21")
