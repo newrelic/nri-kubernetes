@@ -21,11 +21,11 @@ items:
   kind: Endpoints
   metadata:
     annotations:
-      control-plane.alpha.kubernetes.io/leader: '{"holderIdentity":"minikube_70c815de-028a-4c97-a38a-50bfd395762f","leaseDurationSeconds":15,"acquireTime":"2023-05-19T01:10:02Z","renewTime":"2023-05-19T01:14:03Z","leaderTransitions":0}'
+      control-plane.alpha.kubernetes.io/leader: '{"holderIdentity":"minikube_70c815de-028a-4c97-a38a-50bfd395762f","leaseDurationSeconds":15,"acquireTime":"2023-05-19T01:10:02Z","renewTime":"2023-05-19T08:21:33Z","leaderTransitions":0}'
     creationTimestamp: "2023-05-19T01:10:02Z"
     name: k8s.io-minikube-hostpath
     namespace: kube-system
-    resourceVersion: "981"
+    resourceVersion: "14814"
     uid: f09a817a-db39-4fee-aecd-4c3beb858aa5
 - apiVersion: v1
   kind: Endpoints
@@ -93,24 +93,24 @@ items:
   kind: Endpoints
   metadata:
     annotations:
-      endpoints.kubernetes.io/last-change-trigger-time: "2023-05-19T01:13:01Z"
-    creationTimestamp: "2023-05-19T01:12:21Z"
+      endpoints.kubernetes.io/last-change-trigger-time: "2023-05-19T08:20:13Z"
+    creationTimestamp: "2023-05-19T08:20:11Z"
     labels:
       app.kubernetes.io/managed-by: Helm
       run: php-apache
     name: e2e-hpa
     namespace: scraper
-    resourceVersion: "793"
-    uid: 67467f2d-55e1-4490-8803-c8abda367cdb
+    resourceVersion: "14602"
+    uid: 85545b25-8806-4e4d-9a07-2477563e3389
   subsets:
   - addresses:
-    - ip: 10.244.0.8
+    - ip: 10.244.0.43
       nodeName: minikube
       targetRef:
         kind: Pod
-        name: e2e-hpa-78585f866d-p9qds
+        name: e2e-hpa-78585f866d-v52xw
         namespace: scraper
-        uid: ef686c6a-c2fd-454a-bd1c-62620a5ec87e
+        uid: 25ab7d49-36e3-4396-90ad-c54d3562ed29
     ports:
     - port: 80
       protocol: TCP
@@ -118,8 +118,8 @@ items:
   kind: Endpoints
   metadata:
     annotations:
-      endpoints.kubernetes.io/last-change-trigger-time: "2023-05-19T01:12:42Z"
-    creationTimestamp: "2023-05-19T01:12:21Z"
+      endpoints.kubernetes.io/last-change-trigger-time: "2023-05-19T08:20:21Z"
+    creationTimestamp: "2023-05-19T08:20:11Z"
     labels:
       app.kubernetes.io/component: metrics
       app.kubernetes.io/instance: e2e
@@ -130,17 +130,17 @@ items:
       helm.sh/chart: kube-state-metrics-4.23.0
     name: e2e-kube-state-metrics
     namespace: scraper
-    resourceVersion: "748"
-    uid: 11e36f25-d70b-480a-ba32-87fc792af775
+    resourceVersion: "14666"
+    uid: 65a6a97e-837c-4ddf-8982-380d9ecde734
   subsets:
   - addresses:
-    - ip: 10.244.0.6
+    - ip: 10.244.0.41
       nodeName: minikube
       targetRef:
         kind: Pod
-        name: e2e-kube-state-metrics-b6bd4767c-nzbjk
+        name: e2e-kube-state-metrics-b6bd4767c-8nxbr
         namespace: scraper
-        uid: 3a244bf7-106f-4e5a-b06b-41a75c662b32
+        uid: afcdbfb1-2460-4963-987d-7c2bbed32463
     ports:
     - name: http
       port: 8080
@@ -149,31 +149,31 @@ items:
   kind: Endpoints
   metadata:
     annotations:
-      endpoints.kubernetes.io/last-change-trigger-time: "2023-05-19T01:13:31Z"
-    creationTimestamp: "2023-05-19T01:12:21Z"
+      endpoints.kubernetes.io/last-change-trigger-time: "2023-05-19T08:20:16Z"
+    creationTimestamp: "2023-05-19T08:20:11Z"
     labels:
       app: statefulset
       app.kubernetes.io/managed-by: Helm
     name: e2e-statefulset
     namespace: scraper
-    resourceVersion: "895"
-    uid: f43f1560-e69d-44ec-a5a7-dcc1da552117
+    resourceVersion: "14638"
+    uid: 93ce7ae0-0e41-4a2f-aba9-14751a417c95
   subsets:
   - addresses:
-    - ip: 10.244.0.11
+    - ip: 10.244.0.47
       nodeName: minikube
       targetRef:
         kind: Pod
         name: e2e-statefulset-0
         namespace: scraper
-        uid: 1746bdd3-262e-485c-91b8-512f02f2c9d6
-    - ip: 10.244.0.14
+        uid: 521b7e95-b477-4270-8c75-33fb3663266c
+    - ip: 10.244.0.48
       nodeName: minikube
       targetRef:
         kind: Pod
         name: e2e-statefulset-1
         namespace: scraper
-        uid: 0cc158b9-6bee-4cd4-b82b-5acf20818df5
+        uid: f613e363-1dee-49fc-a796-e77d66dcf22d
     ports:
     - port: 8089
       protocol: TCP
