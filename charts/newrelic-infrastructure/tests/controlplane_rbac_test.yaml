@@ -8,6 +8,8 @@ release:
 tests:
   - it: RBAC points to the service account that is created by default
     set:
+      licenseKey: test
+      cluster: test
       rbac.create: true
       serviceAccount.create: true
       # The line below is to create one rolebinding to test it.
@@ -19,6 +21,8 @@ tests:
 
   - it: RBAC points to the service account the user supplies when serviceAccount is disabled
     set:
+      licenseKey: test
+      cluster: test
       rbac.create: true
       serviceAccount.create: false
       serviceAccount.name: sa-test
@@ -31,6 +35,8 @@ tests:
 
   - it: RBAC points to the service account the user supplies when serviceAccount is disabled
     set:
+      licenseKey: test
+      cluster: test
       rbac.create: true
       serviceAccount.create: false
       # The line below is to create one rolebinding to test it.

@@ -20,14 +20,6 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
       - name: Build integration
         env:
           GOOS: ${{ matrix.goos }}
@@ -64,11 +56,11 @@ jobs:
       - name: Run helm unit tests
         if: steps.list-changed.outputs.changed == 'true'
         run: |
-          helm plugin install https://github.com/quintush/helm-unittest
+          helm plugin install https://github.com/helm-unittest/helm-unittest --version=0.3.1
 
           for chart in $(ct --config .github/ct.yaml list-changed); do
             if [ -d "$chart/tests/" ]; then
-              helm unittest -3 $chart
+              helm unittest $chart
             else
               echo "No unit tests found for $chart"
             fi
@@ -107,14 +99,6 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
       - name: Run tests
         run: make test
 

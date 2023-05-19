@@ -49,8 +49,24 @@ func TestScraper(t *testing.T) {
 				exclude.Groups("job_name"),
 				exclude.Optional(),
 			),
+			// Kubernetes deployment's `condition` attribute operate in a true-or-NULL basis, so it won't be present if false
+			exclude.Exclude(
+				exclude.Groups("deployment"),
+			),
+			// kube_persistentvolume_claim_ref is marked as an optional metric since not all
+			// persistent volumes have claims on them and we want to test that on our E2Es
+			exclude.Exclude(
+				exclude.Groups("persistentvolume"),
+				exclude.Optional(),
+			),
+			// kube_persistentvolumeclaim_created is marked as an optional metric since it not available for older versions of KSM.
+			// Similarly, a subset of labels for kube_persistentvolume_info are marked as optional since they not available for older versions of KSM.
+			exclude.Exclude(
+				exclude.Groups("persistentvolumeclaim"),
+				exclude.Optional(),
+			),
 		).
-		AliasingGroups(map[string]string{"horizontalpodautoscaler": "hpa", "job_name": "job"})
+		AliasingGroups(map[string]string{"horizontalpodautoscaler": "hpa", "job_name": "job", "persistentvolumeclaim": "PersistentVolumeClaim", "persistentvolume": "PersistentVolume"})
 
 	for _, v := range testutil.AllVersions() {
 		// Make a copy of the version variable to use it concurrently
@@ -132,6 +148,6 @@ func TestScraper_FilterNamespace(t *testing.T) {
 		err = scraper.Run(i)
 		require.NoError(t, err)
 
-		assert.Equal(t, 19, len(i.Entities))
+		assert.Equal(t, 21, len(i.Entities))
 	})
 }

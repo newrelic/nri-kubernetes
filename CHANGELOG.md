@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.12.0
+
+## What's Changed
+
+* Bump app and chart version by @juanjjaramillo in https://github.com/newrelic/nri-kubernetes/pull/736
+* Update renovatebot by @htroisi in https://github.com/newrelic/nri-kubernetes/pull/732
+* Add more workload name fields to K8sContainerSample, K8sPodSample by @htroisi in https://github.com/newrelic/nri-kubernetes/pull/733
+* chore(deps): update newrelic/k8s-events-forwarder docker tag to v1.41.0 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/748
+* chore(deps): update alpine docker tag to v3.18.0 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/746
+* Add PersistentVolume and PersistentVolumeClaim KSM metrics by @htroisi in https://github.com/newrelic/nri-kubernetes/pull/729
+
+**Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.11.0...v3.12.0
+
+## 3.11.0
+
+### Changed
+
+* chore(deps): update newrelic/k8s-events-forwarder docker tag to v1.40.0 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/712
+* Bump app and chart version by @htroisi in https://github.com/newrelic/nri-kubernetes/pull/710
+* chore(deps): update newrelic/infrastructure-bundle docker tag to v3.1.6 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/716
+* Improve Cronjob chart for testing by @juanjjaramillo in https://github.com/newrelic/nri-kubernetes/pull/715
+* CronJob chart improvement by @juanjjaramillo in https://github.com/newrelic/nri-kubernetes/pull/718
+* chore(deps): update newrelic/infrastructure-bundle docker tag to v3.1.7 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/717
+* Remove manual go cache since setup-go/v4 automatically caches by @htroisi in https://github.com/newrelic/nri-kubernetes/pull/713
+* chore(deps): bump actions/github-script from 6.4.0 to 6.4.1 by @dependabot in https://github.com/newrelic/nri-kubernetes/pull/714
+* Add spec for backoffLimit to help with testing cronjobs by @juanjjaramillo in https://github.com/newrelic/nri-kubernetes/pull/720
+* Add KSM metrics promoted to stable category by @juanjjaramillo in https://github.com/newrelic/nri-kubernetes/pull/724
+* Fix push_pr workflow by @htroisi in https://github.com/newrelic/nri-kubernetes/pull/726
+* Improve testing for deployment object by @juanjjaramillo in https://github.com/newrelic/nri-kubernetes/pull/730
+* Adding new attribute `ReplicaFailure` to deployment workload by @juanjjaramillo in https://github.com/newrelic/nri-kubernetes/pull/725
+* chore(deps): bump aquasecurity/trivy-action from 0.9.2 to 0.10.0 by @htroisi in https://github.com/newrelic/nri-kubernetes/pull/727
+* Fix Helm unittests by @htroisi in https://github.com/newrelic/nri-kubernetes/pull/728
+* Update infrastructure-bundle to v3.1.8 and k8s-events-forwarder to v1.40.1 by @htroisi in https://github.com/newrelic/nri-kubernetes/pull/731
+
+**Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.10.0...v3.11.0
+
 ## 3.10.0
 
 ### Changed
