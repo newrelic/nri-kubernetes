@@ -72,7 +72,10 @@ jobs:
         id: exceptions-version
         run: |
           MINOR=$(echo "${{ matrix.k8sVersion }}"|sed -e 's_v\([0-9]\+\)\.\([0-9]\+\)\.\([0-9]\+\)_\2_')
-
+          
+          echo Hello 
+          echo $MINOR
+          echo hello
           if [ "$MINOR" -eq 16 ]; then
             echo "exceptions=1_16" >> $GITHUB_OUTPUT
           elif [ "$MINOR" -le 22 ]; then
