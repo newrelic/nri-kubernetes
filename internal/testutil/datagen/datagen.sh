@@ -40,8 +40,20 @@ WAIT_AFTER_BOOTSTRAP=${WAIT_AFTER_BOOTSTRAP:-30}
 # E.g.: `minikube kubectl -- `
 KUBECTL_CMD=${KUBECTL_CMD:-kubectl}
 
+# Profile name for Minikube cluster
+MINIKUBE_PROFILE="${0##*/}"
+MINIKUBE_PROFILE=${MINIKUBE_PROFILE%.*}
+MINIKUBE_PROFILE="${MINIKUBE_PROFILE}-${1/./-}"
+
 # main subcommand runs the whole flow of the script: Bootstrap, scrape, and cleanup
 function main() {
+    if [[ $# -eq 0 ]]; then
+      echo "Please provide Kubernetes version as MAJOR.MINOR (e.g., ${0##*/} 1.27)"
+      exit 1
+    fi
+
+    setup $1
+
     K8S_VERSION=$($KUBECTL_CMD version --short 2>&1 | grep 'Server Version' | awk -F' v' '{ print $2; }' | awk -F. '{ print $1"."$2; }')
     OUTPUT_FOLDER=$(echo $K8S_VERSION | sed 's/\./_/')
 
@@ -52,15 +64,56 @@ function main() {
     pod=$(scraper_pod "$scrapper_selector")
     if [[ -z "$pod" ]]; then
         echo "Could not find scraper pod (-l $scrapper_selector)"
+        cleanup
         exit 1
     fi
 
     # Collect cds to the specified dir so we invoke it on a subshell
     ( collect "$OUTPUT_FOLDER" )
 
-    if [[ "$DISABLE_CLEANUP" != "1" ]]; then
-      cleanup
-    fi
+    cleanup
+}
+
+function setup() {
+    case "$1" in
+      "1.27")
+        K8S_VERSION="v1.27.0-rc.0"
+        ;;
+      "1.26")
+        K8S_VERSION="v1.26.3"
+        ;;
+      "1.25")
+        K8S_VERSION="v1.25.8"
+        ;;
+      "1.24")
+        K8S_VERSION="v1.24.12"
+        ;;
+      "1.23")
+        K8S_VERSION="v1.23.17"
+        ;;
+      "1.22")
+        K8S_VERSION="v1.22.17"
+        ;;
+      "1.21")
+        K8S_VERSION="v1.21.14"
+        ;;
+      "1.20")
+        K8S_VERSION="v1.20.15"
+        ;;
+      "1.19")
+        K8S_VERSION="v1.19.16"
+        ;;
+      *)
+        echo "ERROR (${0##*/}:$LINENO): specific Kubernetes version needs to be defined for '$1'"
+        exit 1
+        ;;
+    esac
+    echo "minikube start --profile=$MINIKUBE_PROFILE --container-runtime=containerd --driver=docker --kubernetes-version=$K8S_VERSION"
+    minikube start \
+      --profile=$MINIKUBE_PROFILE \
+      --container-runtime=containerd \
+      --driver=docker \
+      --kubernetes-version=$K8S_VERSION
 }
 
 function collect() {
@@ -126,7 +179,7 @@ function bootstrap() {
     wait_for_pod $K8S_CONTROL_PLANE_NAMESPACE "-l k8s-app=kube-dns" Ready
 
     ctx=$($KUBECTL_CMD config current-context)
-    if [[ -z "$IS_MINIKUBE" && "$ctx" = "minikube" ]]; then
+    if [[ -z "$IS_MINIKUBE" && "$ctx" = "$MINIKUBE_PROFILE" ]]; then
         echo "Assuming minikube distribution since context is \"$ctx\""
         echo "Set IS_MINIKUBE to 0 or 1 to override autodetection"
         IS_MINIKUBE=1
@@ -141,7 +194,7 @@ function bootstrap() {
         if [[ "$IS_MINIKUBE" = "1" ]]; then
             # Enable PVC if we are in minikube
             minikube_args="--set persistentVolumeClaim.enabled=true --set loadBalancerService.fakeIP=127.1.2.3"
-            minikube addons enable metrics-server
+            minikube addons enable metrics-server --profile=$MINIKUBE_PROFILE 
             echo "Waiting for metrics-server to settle"
             wait_for_pod $K8S_CONTROL_PLANE_NAMESPACE "-l k8s-app=metrics-server" Ready
         fi
@@ -149,6 +202,9 @@ function bootstrap() {
         echo "Updating helm dependencies"
 
         case "$1" in
+          "1.27")
+            KSM_IMAGE_VERSION="v2.8.2"
+            ;;
           "1.26" | "1.25")
             KSM_IMAGE_VERSION="v2.7.0"
             ;;
@@ -160,13 +216,18 @@ function bootstrap() {
             ;;
           *)
             echo "ERROR (${0##*/}:$LINENO): KSM image version needs to be defined for Kubernetes version $1"
+            cleanup
             exit 1
             ;;
         esac
         echo "Using KSM image $KSM_IMAGE_VERSION"
         
-        helm dependency update $helm_e2e_path > /dev/null
-        helm upgrade --install e2e $helm_e2e_path -n $scrapper_namespace --create-namespace \
+        helm dependency update $helm_e2e_path \
+          --kube-context $MINIKUBE_PROFILE \
+          > /dev/null
+        helm upgrade --install e2e $helm_e2e_path \
+          --kube-context $MINIKUBE_PROFILE \
+          --namespace $scrapper_namespace --create-namespace \
           --set scraper.enabled=true \
           --set persistentVolume.enabled=true \
           --set kube-state-metrics.image.tag=${KSM_IMAGE_VERSION} \
@@ -190,6 +251,7 @@ function bootstrap() {
     pod=$(scraper_pod "$scrapper_selector")
     if [[ -z "$pod" ]]; then
         echo "Could not find scraper pod (-l $scrapper_selector)"
+        cleanup
         exit 1
     fi
     echo "Found scraper pod $pod"
@@ -218,8 +280,17 @@ function wait_for_pod() {
 
 # cleanup uninstalls the dummy resources and the scraper pod.
 function cleanup() {
-    echo "Removing e2e-resources chart"
-    helm uninstall e2e -n $scrapper_namespace --wait 2> /dev/null || true
+    if [[ "$DISABLE_CLEANUP" != "1" ]]; then
+      echo "Removing e2e-resources chart"
+      helm uninstall e2e \
+      --kube-context $MINIKUBE_PROFILE \
+      --namespace $scrapper_namespace \
+      --wait \
+      2> /dev/null || true
+
+      echo "minikube delete --profile $MINIKUBE_PROFILE"
+      minikube delete --profile $MINIKUBE_PROFILE
+    fi
 }
 
 # scrape will curl the specified component and output the response body to standard output.
