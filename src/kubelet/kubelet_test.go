@@ -178,12 +178,6 @@ func kubeletExclusions() []exclude.Func {
 			},
 		),
 
-		// Exclude metrics that are marked as optional.
-		exclude.Exclude(
-			exclude.Groups("container", "pod"),
-			exclude.Optional(),
-		),
-
 		// Exclude metrics that depend on limits when those limits are not set.
 		exclude.Exclude(exclude.Groups("pod", "container"), exclude.Dependent(utilizationDependencies)),
 
@@ -204,6 +198,42 @@ func kubeletExclusions() []exclude.Func {
 				return !asserter.EntityMetricIs(ent, "createdKind", "deployment")
 			},
 			exclude.Metrics("createdAt", "createdBy", "createdKind", "deploymentName"),
+		),
+
+		// Exclude daemonsetName metric for pods not created by a daemonset
+		exclude.Exclude(
+			exclude.Groups("pod", "container"),
+			func(_ string, _ *definition.Spec, ent *integration.Entity) bool {
+				return !asserter.EntityMetricIs(ent, "createdKind", "DaemonSet")
+			},
+			exclude.Metrics("createdAt", "createdBy", "createdKind", "daemonsetName"),
+		),
+
+		// Exclude jobName metric for pods not created by a job
+		exclude.Exclude(
+			exclude.Groups("pod", "container"),
+			func(_ string, _ *definition.Spec, ent *integration.Entity) bool {
+				return !asserter.EntityMetricIs(ent, "createdKind", "Job")
+			},
+			exclude.Metrics("createdAt", "createdBy", "createdKind", "jobName"),
+		),
+
+		// Exclude replicasetName metric for pods not created by a replicaset
+		exclude.Exclude(
+			exclude.Groups("pod", "container"),
+			func(_ string, _ *definition.Spec, ent *integration.Entity) bool {
+				return !asserter.EntityMetricIs(ent, "createdKind", "ReplicaSet")
+			},
+			exclude.Metrics("createdAt", "createdBy", "createdKind", "replicasetName"),
+		),
+
+		// Exclude statefulsetName metric for pods not created by a statefulset
+		exclude.Exclude(
+			exclude.Groups("pod", "container"),
+			func(_ string, _ *definition.Spec, ent *integration.Entity) bool {
+				return !asserter.EntityMetricIs(ent, "createdKind", "StatefulSet")
+			},
+			exclude.Metrics("createdAt", "createdBy", "createdKind", "statefulsetName"),
 		),
 
 		// Exclude metrics known to be missing for pods that are pending.
