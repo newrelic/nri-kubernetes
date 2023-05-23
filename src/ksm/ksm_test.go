@@ -31,6 +31,7 @@ func (nf NamespaceFilterMock) IsAllowed(namespace string) bool {
 func TestScraper(t *testing.T) {
 	// Create an asserter with the settings that are shared for all test scenarios.
 	asserter := asserter.New().
+		Silently().
 		Using(metric.KSMSpecs).
 		Excluding(
 			// Exclude service.loadBalancerIP unless service is e2e-lb (specially crafted to have a fake one)
