@@ -195,7 +195,7 @@ func kubeletExclusions() []exclude.Func {
 		exclude.Exclude(
 			exclude.Groups("pod", "container"),
 			func(_ string, _ *definition.Spec, ent *integration.Entity) bool {
-				return !asserter.EntityMetricIs(ent, "createdKind", "deployment")
+				return !asserter.EntityMetricIs(ent, "createdKind", "Deployment")
 			},
 			exclude.Metrics("createdAt", "createdBy", "createdKind", "deploymentName"),
 		),
