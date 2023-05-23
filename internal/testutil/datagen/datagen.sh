@@ -242,8 +242,9 @@ function bootstrap() {
         wait_for_pod $scrapper_namespace "-l app=daemonset" Ready
         wait_for_pod $scrapper_namespace "-l app=statefulset" Ready
         wait_for_pod $scrapper_namespace "-l app=deployment" Ready
-        wait_for_pod $scrapper_namespace "-l app=cronjob" PodScheduled
-        wait_for_pod $scrapper_namespace "-l app=failjob" PodScheduled
+        wait_for_pod $scrapper_namespace "-l app=cronjob" Initialized
+        wait_for_pod $scrapper_namespace "-l app=failjob" Initialized
+        wait_for_pod $scrapper_namespace "-l app=creating" Initialized
     fi
 
     echo "Waiting for scraper pod to be ready"

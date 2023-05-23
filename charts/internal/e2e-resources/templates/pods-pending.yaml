@@ -3,6 +3,8 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: {{ .Release.Name }}-container-creating
+  labels:
+    app: creating
 spec:
   containers:
     - name: alpine
@@ -18,7 +20,9 @@ spec:
 apiVersion: v1
 kind: Pod
 metadata:
-  name: {{ .Release.Name }}-pending
+  name: {{ .Release.Name }}-container-pending
+  labels:
+    app: pending
 spec:
   containers:
     - name: alpine
