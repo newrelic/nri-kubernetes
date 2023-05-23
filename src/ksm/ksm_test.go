@@ -49,6 +49,11 @@ func TestScraper(t *testing.T) {
 				exclude.Groups("job_name"),
 				exclude.Optional(),
 			),
+			// Kubernetes pod can be created without the need of a deployment
+			exclude.Exclude(
+				exclude.Groups("pod"),
+				exclude.Optional(),
+			),
 			// Kubernetes deployment's `condition` attribute operate in a true-or-NULL basis, so it won't be present if false
 			exclude.Exclude(
 				exclude.Groups("deployment"),
