@@ -31,6 +31,7 @@ func (nf NamespaceFilterMock) IsAllowed(namespace string) bool {
 func TestScraper(t *testing.T) {
 	// Create an asserter with the settings that are shared for all test scenarios.
 	asserter := asserter.New().
+		Silently().
 		Using(metric.KSMSpecs).
 		Excluding(
 			// Exclude service.loadBalancerIP unless service is e2e-lb (specially crafted to have a fake one)
@@ -47,6 +48,11 @@ func TestScraper(t *testing.T) {
 			// and failure (failed, failedPods, failedPodsReason) are marked as optional in src/metric/definition.go
 			exclude.Exclude(
 				exclude.Groups("job_name"),
+				exclude.Optional(),
+			),
+			// Kubernetes pod can be created without the need of a deployment
+			exclude.Exclude(
+				exclude.Groups("pod"),
 				exclude.Optional(),
 			),
 			// Kubernetes deployment's `condition` attribute operate in a true-or-NULL basis, so it won't be present if false

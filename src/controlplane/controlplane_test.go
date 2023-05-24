@@ -51,6 +51,7 @@ func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 	controlPlaneSpecs["api-server"] = metric.APIServerSpecs["api-server"]
 
 	asserter := asserter.New().
+		Silently().
 		Using(controlPlaneSpecs).
 		Excluding(
 			ExcludeRenamedMetricsBasedOnLabels,
@@ -129,6 +130,7 @@ func Test_Scraper_Autodiscover_cp_component_after_start(t *testing.T) {
 	t.Parallel()
 
 	asserter := asserter.New().
+		Silently().
 		Using(metric.SchedulerSpecs).
 		Excluding(
 			ExcludeRenamedMetricsBasedOnLabels,
@@ -198,6 +200,7 @@ func Test_Scraper_external_endpoint(t *testing.T) {
 	t.Parallel()
 
 	asserter := asserter.New().
+		Silently().
 		Using(metric.SchedulerSpecs).
 		Excluding(
 			ExcludeRenamedMetricsBasedOnLabels,
