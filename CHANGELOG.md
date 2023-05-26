@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.13.0
+
+## What's Changed
+
+* Bump chart by @htroisi in https://github.com/newrelic/nri-kubernetes/pull/750
+* Update kubelet static testing exclusions. by @htroisi in https://github.com/newrelic/nri-kubernetes/pull/759
+* Update `datagen.sh` by @juanjjaramillo in https://github.com/newrelic/nri-kubernetes/pull/762
+* Silence log messages that mask testing errors by @juanjjaramillo in https://github.com/newrelic/nri-kubernetes/pull/763
+* fix(deps): update module github.com/stretchr/testify to v1.8.3 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/756
+* chore(deps): update newrelic/k8s-events-forwarder docker tag to v1.42.1 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/755
+* chore(deps): update newrelic/infrastructure-bundle docker tag to v3.2.2 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/751
+* chore(deps): bump github.com/sirupsen/logrus from 1.9.0 to 1.9.2 by @juanjjaramillo in https://github.com/newrelic/nri-kubernetes/pull/765
+* fix(deps): update kubernetes packages to v0.27.2 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/740
+* NEWRELIC-5968 Mount containerd socket by @DavSanchez in https://github.com/newrelic/nri-kubernetes/pull/734
+* Integration tests for k8s 1.27 by @csongnr in https://github.com/newrelic/nri-kubernetes/pull/719
+* chore(deps): update module golang.org/x/crypto to v0.9.0 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/739
+
+**Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.12.0...v3.13.0
+
 ## 3.12.0
 
 ## What's Changed
