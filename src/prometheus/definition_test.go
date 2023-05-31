@@ -277,20 +277,16 @@ var summaryRawGroups = definition.RawGroups{
 							{
 								Quantile:         float64Ptr(0.5),
 								Value:            float64Ptr(42),
-								XXX_unrecognized: nil,
 							},
 							{
 								Quantile:         float64Ptr(0.9),
 								Value:            float64Ptr(43),
-								XXX_unrecognized: nil,
 							},
 							{
 								Quantile:         float64Ptr(0.99),
 								Value:            float64Ptr(44),
-								XXX_unrecognized: nil,
 							},
 						},
-						XXX_unrecognized: nil,
 					},
 				}, {
 					Labels: Labels{"l2": "v2", "l1": "v1", "handler": "other"},
@@ -301,20 +297,16 @@ var summaryRawGroups = definition.RawGroups{
 							{
 								Quantile:         float64Ptr(0.5),
 								Value:            float64Ptr(42),
-								XXX_unrecognized: nil,
 							},
 							{
 								Quantile:         float64Ptr(0.9),
 								Value:            float64Ptr(43),
-								XXX_unrecognized: nil,
 							},
 							{
 								Quantile:         float64Ptr(0.99),
 								Value:            float64Ptr(44),
-								XXX_unrecognized: nil,
 							},
 						},
-						XXX_unrecognized: nil,
 					},
 				},
 			},
@@ -336,20 +328,16 @@ var summaryMetricFamily = []MetricFamily{
 						{
 							Quantile:         float64Ptr(0.5),
 							Value:            float64Ptr(42),
-							XXX_unrecognized: nil,
 						},
 						{
 							Quantile:         float64Ptr(0.9),
 							Value:            float64Ptr(43),
-							XXX_unrecognized: nil,
 						},
 						{
 							Quantile:         float64Ptr(0.99),
 							Value:            float64Ptr(44),
-							XXX_unrecognized: nil,
 						},
 					},
-					XXX_unrecognized: nil,
 				},
 			},
 			{
@@ -361,20 +349,16 @@ var summaryMetricFamily = []MetricFamily{
 						{
 							Quantile:         float64Ptr(0.5),
 							Value:            float64Ptr(42),
-							XXX_unrecognized: nil,
 						},
 						{
 							Quantile:         float64Ptr(0.9),
 							Value:            float64Ptr(43),
-							XXX_unrecognized: nil,
 						},
 						{
 							Quantile:         float64Ptr(0.99),
 							Value:            float64Ptr(44),
-							XXX_unrecognized: nil,
 						},
 					},
-					XXX_unrecognized: nil,
 				},
 			},
 		},
@@ -975,20 +959,16 @@ func TestFetchFuncs_CorrectValue(t *testing.T) {
 										{
 											Quantile:         float64Ptr(0.5),
 											Value:            float64Ptr(math.NaN()),
-											XXX_unrecognized: nil,
 										},
 										{
 											Quantile:         float64Ptr(0.9),
 											Value:            float64Ptr(math.NaN()),
-											XXX_unrecognized: nil,
 										},
 										{
 											Quantile:         float64Ptr(0.99),
 											Value:            float64Ptr(44),
-											XXX_unrecognized: nil,
 										},
 									},
-									XXX_unrecognized: nil,
 								},
 							},
 						},
