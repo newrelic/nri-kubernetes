@@ -14,7 +14,7 @@ jobs:
     if: ${{ ! contains(github.event.pull_request.labels.*.name, 'ci/skip-e2e') }}
     runs-on: ubuntu-20.04
     strategy:
-      max-parallel: 3 # len(k8sVersion)/2 is a good number to have here
+      max-parallel: 5 # len(k8sVersion)/2 is a good number to have here
       matrix:
         # Latest patch version can be found in https://github.com/kubernetes/website/blob/main/content/en/releases/patch-releases.md
         # Some versions might not be available yet in https://storage.googleapis.com/kubernetes-release/release/v1.X.Y/bin/linux/amd64/kubelet
