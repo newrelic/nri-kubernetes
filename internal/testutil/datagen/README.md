@@ -12,6 +12,7 @@ Contains a set of dummy deployments and charts that can be used to scrape static
 `datagen.sh` script will deploy a series of dummy and required workloads to the cluster, making it a cluster containing at least one resource of all the resources we can possibly monitor.
 
 More specifically, it will deploy:
+- A minikube cluster for the specified Kubernetes version
 - The KSM chart, for the KSM services/endpoints discovery tests
 - The [`e2e-resources`](../../../e2e/charts/e2e-resources) chart, which includes multiple samples of resources we monitor:
   - Dummy Pods, Services, StatefulSets, DaemonSets and Deployments in several states
@@ -35,9 +36,9 @@ After this, it will deploy KSM and programmatically hit all the endpoints requir
 It will do this by spawning a privileged, `hostNetwork` `alpine:latest` pod (the _scraper pod_) in the cluster and running itself from inside.
 
 ## Usage
-
+Call the script specifying the Kubernetes version including only MAJOR.MINOR version. For example:
 ```
-./datagen.sh
+./datagen.sh 1.27
 ```
 
 ### `kube-state-metrics` version
