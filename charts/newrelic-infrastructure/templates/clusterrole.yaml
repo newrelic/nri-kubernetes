@@ -18,7 +18,7 @@ rules:
       - "services"
       - "nodes"
       - "namespaces"
-      - "pods" # For Windows integration, Pods required in list of resources
+      - "pods" # Needed for our Windows integration to be able to access KSM on a Linux node.
     verbs: [ "get", "list", "watch" ]
   - nonResourceURLs: ["/metrics"]
     verbs: ["get"]
