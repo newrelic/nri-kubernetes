@@ -30,6 +30,7 @@ This chart creates e2e resources for nri-kubernetes.
 |-----|------|---------|-------------|
 | cronjob.enabled | bool | `true` |  |
 | daemonSet.enabled | bool | `true` |  |
+| demo.enabled | bool | `false` |  |
 | deployment.enabled | bool | `true` |  |
 | failingJob.enabled | bool | `true` |  |
 | hpa.enabled | bool | `true` |  |
