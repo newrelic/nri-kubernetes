@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.14.0
+
+## What's Changed
+
+* Update chart and image versions by @juanjjaramillo in https://github.com/newrelic/nri-kubernetes/pull/769
+* Update static test data by @juanjjaramillo in https://github.com/newrelic/nri-kubernetes/pull/776
+* Update Prometheus dependencies by @juanjjaramillo in https://github.com/newrelic/nri-kubernetes/pull/775
+* Increase the number of parallel E2E tests by @juanjjaramillo in https://github.com/newrelic/nri-kubernetes/pull/780
+* Add demo mode for testing resources by @juanjjaramillo in https://github.com/newrelic/nri-kubernetes/pull/779
+* Update `datagen.sh` documentation by @juanjjaramillo in https://github.com/newrelic/nri-kubernetes/pull/777
+* chore(deps): update newrelic/k8s-events-forwarder docker tag to v1.42.3 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/781
+* chore(deps): update newrelic/infrastructure-bundle docker tag to v3.2.4 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/782
+* fix(deps): update module github.com/spf13/viper to v1.16.0 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/773
+* fix(deps): update module github.com/stretchr/testify to v1.8.4 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/772
+
+**Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.13.0...v3.14.0
+
 ## 3.13.0
 
 ## What's Changed
