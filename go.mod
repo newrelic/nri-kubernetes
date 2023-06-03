@@ -12,7 +12,7 @@ require (
 	github.com/sethgrid/pester v1.2.0
 	github.com/sirupsen/logrus v1.9.2
 	github.com/spf13/viper v1.16.0
-	github.com/stretchr/testify v1.8.3
+	github.com/stretchr/testify v1.8.4
 	google.golang.org/protobuf v1.30.0
 	k8s.io/api v0.27.2
 	k8s.io/apimachinery v0.27.2
