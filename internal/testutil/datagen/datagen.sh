@@ -377,11 +377,23 @@ $($KUBECTL_CMD get nodes -o wide)
 EOF
 }
 
+# Generate static test data for all supported versions
+function all_versions() {
+  for version in {19..27}; do
+    ./datagen.sh 1.$version || exit 1;
+  done
+
+  for version in {19..27}; do
+    rm -rf ../data/1_$version;
+    mv 1_$version ../data/;
+  done
+}
+
 # Script entrypoint
 command=$1
 
 case $command in
-scrape|bootstrap|cleanup|testinfo)
+scrape|bootstrap|cleanup|testinfo|all_versions)
     shift
     $command "$@"
     exit $?
