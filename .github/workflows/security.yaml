@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Run Trivy vulnerability scanner in repo mode
-        uses: aquasecurity/trivy-action@0.11.0
+        uses: aquasecurity/trivy-action@0.11.2
         if: ${{ ! github.event.schedule }} # Do not run inline checks when running periodically
         with:
           scan-type: fs
@@ -28,7 +28,7 @@ jobs:
           severity: 'HIGH,CRITICAL'
 
       - name: Run Trivy vulnerability scanner sarif output
-        uses: aquasecurity/trivy-action@0.11.0
+        uses: aquasecurity/trivy-action@0.11.2
         if: ${{ github.event.schedule }} # Generate sarif when running periodically
         with:
           scan-type: fs
