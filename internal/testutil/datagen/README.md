@@ -40,6 +40,12 @@ Call the script specifying the Kubernetes version including only MAJOR.MINOR ver
 ```
 ./datagen.sh 1.27
 ```
+Output will be generated in current directory and has to be manually moved to `../data/`
+
+If you want to scrape static test data for all supported test versions and rewrite existing data:
+```
+./datagen.sh all_versions
+```
 
 ### `kube-state-metrics` version
 The script chooses the image version to use for KSM according to the Kubernetes version used by the cluster. If new Kubernetes versions need to be supported, the script will print out an error message alerting about the missing mapping.
