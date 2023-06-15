@@ -1,6 +1,9 @@
 package prometheus
 
 import (
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	model "github.com/prometheus/client_model/go"
@@ -184,4 +187,66 @@ func TestQueryMatch_CustomName(t *testing.T) {
 	}
 
 	assert.Equal(t, expectedMetrics, q.Execute(&r))
+}
+
+func TestParseResponse(t *testing.T) {
+	chOne := make(chan *model.MetricFamily)
+	chTwo := make(chan *model.MetricFamily)
+
+	handlerOne := func(w http.ResponseWriter, r *http.Request) {
+		io.WriteString(w,
+			`# HELP kube_pod_status_phase The pods current phase. 
+			 # TYPE kube_pod_status_phase gauge
+			 kube_pod_status_phase{namespace="default",pod="123456789"} 1
+			 # HELP kube_custom_elasticsearch_health_status Elasticsearch CRD health status
+			 # TYPE kube_custom_elasticsearch_health_status stateset
+			 kube_custom_elasticsearch_health_status {customresource_group="elasticsearch.k8s.elastic.co"} 1
+			`)
+	}
+	handlerTwo := func(w http.ResponseWriter, r *http.Request) {
+		io.WriteString(w,
+			`# HELP kube_custom_elasticsearch_health_status Elasticsearch CRD health status
+			 # TYPE kube_custom_elasticsearch_health_status stateset
+			 kube_custom_elasticsearch_health_status {customresource_group="elasticsearch.k8s.elastic.co"} 1
+			 # HELP kube_pod_status_phase The pods current phase.
+			 # TYPE kube_pod_status_phase gauge
+			 kube_pod_status_phase{namespace="default",pod="123456789"} 1
+			`)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/foo", nil)
+	wOne := httptest.NewRecorder()
+	wTwo := httptest.NewRecorder()
+
+	handlerOne(wOne, req)
+	handlerTwo(wTwo, req)
+	respOne := wOne.Result()
+	respTwo := wTwo.Result()
+
+	var errOne error
+	var errTwo error
+	go func() {
+		errOne = parseResponse(respOne, chOne)
+	}()
+	go func() {
+		errTwo = parseResponse(respTwo, chTwo)
+	}()
+
+	var oneFamilies int
+	var twoFamilies int
+	for mf := range chOne {
+		_ = mf
+		oneFamilies++
+	}
+	for mf := range chTwo {
+		_ = mf
+		twoFamilies++
+	}
+
+	// Parse response will keep filling the channel until
+	// it encouters some sort of error
+	assert.Equal(t, 1, oneFamilies)
+	assert.Equal(t, 0, twoFamilies)
+	assert.NotNil(t, errOne)
+	assert.NotNil(t, errTwo)
 }
