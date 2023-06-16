@@ -248,7 +248,7 @@ func TestParseResponse(t *testing.T) {
 	}
 
 	// Parse response will keep filling the channel until
-	// it encounters some sort of error
+	// it encounters some sort of error.
 	assert.Equal(t, 1, oneFamilies)
 	assert.Equal(t, 0, twoFamilies)
 	assert.NotNil(t, errOne)
