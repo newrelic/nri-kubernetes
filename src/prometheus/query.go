@@ -132,7 +132,7 @@ func valueFromPrometheus(metricType model.MetricType, metric *model.Metric) Valu
  * Try our best to parse a response. Even if an error is encountered
  * midway through parsing we will put into the receiving channel any
  * metric families found along the way. We also return any error that
- * we did come along. Fail-fast, best attempt behaviour.
+ * we did come along. Fail-fast, best attempt behavior.
  */
 func parseResponse(resp *http.Response, ch chan<- *model.MetricFamily) error {
 	defer close(ch)
@@ -141,7 +141,7 @@ func parseResponse(resp *http.Response, ch chan<- *model.MetricFamily) error {
 	metricFamilies, err := parser.TextToMetricFamilies(resp.Body)
 
 	if err != nil {
-		err = fmt.Errorf("reading text format failed: %v", err)
+		err = fmt.Errorf("reading text format failed: %w", err)
 	}
 
 	for _, mf := range metricFamilies {
