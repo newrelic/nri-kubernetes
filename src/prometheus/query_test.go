@@ -196,7 +196,7 @@ func TestParseResponse(t *testing.T) {
 	chTwo := make(chan *model.MetricFamily)
 
 	handlerOne := func(w http.ResponseWriter, r *http.Request) {
-		io.WriteString(w,
+		_, err := io.WriteString(w,
 			`# HELP kube_pod_status_phase The pods current phase. 
 			 # TYPE kube_pod_status_phase gauge
 			 kube_pod_status_phase{namespace="default",pod="123456789"} 1
@@ -204,9 +204,10 @@ func TestParseResponse(t *testing.T) {
 			 # TYPE kube_custom_elasticsearch_health_status stateset
 			 kube_custom_elasticsearch_health_status {customresource_group="elasticsearch.k8s.elastic.co"} 1
 			`)
+		assert.NotNil(t, err)
 	}
 	handlerTwo := func(w http.ResponseWriter, r *http.Request) {
-		io.WriteString(w,
+		_, err := io.WriteString(w,
 			`# HELP kube_custom_elasticsearch_health_status Elasticsearch CRD health status
 			 # TYPE kube_custom_elasticsearch_health_status stateset
 			 kube_custom_elasticsearch_health_status {customresource_group="elasticsearch.k8s.elastic.co"} 1
@@ -214,6 +215,7 @@ func TestParseResponse(t *testing.T) {
 			 # TYPE kube_pod_status_phase gauge
 			 kube_pod_status_phase{namespace="default",pod="123456789"} 1
 			`)
+		assert.NotNil(t, err)
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "http://example.com/foo", nil)
