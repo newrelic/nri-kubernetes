@@ -246,8 +246,8 @@ func TestParseResponse(t *testing.T) {
 		twoFamilies++
 	}
 
-	defer responseOne.Body.Close()
-	defer responseTwo.Body.Close()
+	responseOne.Body.Close()
+	responseTwo.Body.Close()
 
 	// Parse response will keep filling the channel until
 	// it encounters some sort of error.
