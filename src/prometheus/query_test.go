@@ -226,8 +226,8 @@ func TestParseResponse(t *testing.T) {
 	responseOne := wOne.Result()
 	responseTwo := wTwo.Result()
 
-	defer responseOne.Body.Close() //nolint
-	defer responseTwo.Body.Close() //nolint
+	defer responseOne.Body.Close() //nolint:bodyclose
+	defer responseTwo.Body.Close() //nolint:bodyclose
 
 	var errOne error
 	var errTwo error
