@@ -226,9 +226,6 @@ func TestParseResponse(t *testing.T) {
 	responseOne := wOne.Result()
 	responseTwo := wTwo.Result()
 
-	defer responseOne.Body.Close() //nolint:bodyclose
-	defer responseTwo.Body.Close() //nolint:bodyclose
-
 	var errOne error
 	var errTwo error
 	go func() {
@@ -248,6 +245,9 @@ func TestParseResponse(t *testing.T) {
 		_ = mf
 		twoFamilies++
 	}
+
+	defer responseOne.Body.Close()
+	defer responseTwo.Body.Close()
 
 	// Parse response will keep filling the channel until
 	// it encounters some sort of error.
