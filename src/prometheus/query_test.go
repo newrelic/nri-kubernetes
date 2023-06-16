@@ -195,7 +195,7 @@ func TestParseResponse(t *testing.T) {
 	chOne := make(chan *model.MetricFamily)
 	chTwo := make(chan *model.MetricFamily)
 
-	handlerOne := func(w http.ResponseWriter, r *http.Request) {
+	handlerOne := func(w http.ResponseWriter) {
 		_, err := io.WriteString(w,
 			`# HELP kube_pod_status_phase The pods current phase. 
 			 # TYPE kube_pod_status_phase gauge
@@ -206,7 +206,7 @@ func TestParseResponse(t *testing.T) {
 			`)
 		assert.Nil(t, err)
 	}
-	handlerTwo := func(w http.ResponseWriter, r *http.Request) {
+	handlerTwo := func(w http.ResponseWriter) {
 		_, err := io.WriteString(w,
 			`# HELP kube_custom_elasticsearch_health_status Elasticsearch CRD health status
 			 # TYPE kube_custom_elasticsearch_health_status stateset
@@ -218,14 +218,16 @@ func TestParseResponse(t *testing.T) {
 		assert.Nil(t, err)
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "http://example.com/foo", nil)
 	wOne := httptest.NewRecorder()
 	wTwo := httptest.NewRecorder()
 
-	handlerOne(wOne, req)
-	handlerTwo(wTwo, req)
+	handlerOne(wOne)
+	handlerTwo(wTwo)
 	responseOne := wOne.Result()
 	responseTwo := wTwo.Result()
+
+	defer responseOne.Body.Close()
+	defer responseTwo.Body.Close()
 
 	var errOne error
 	var errTwo error

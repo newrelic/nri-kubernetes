@@ -139,7 +139,6 @@ func parseResponse(resp *http.Response, ch chan<- *model.MetricFamily) error {
 
 	var parser expfmt.TextParser
 	metricFamilies, err := parser.TextToMetricFamilies(resp.Body)
-
 	if err != nil {
 		err = fmt.Errorf("reading text format failed: %w", err)
 	}
