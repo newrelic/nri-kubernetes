@@ -190,6 +190,8 @@ func TestQueryMatch_CustomName(t *testing.T) {
 }
 
 func TestParseResponse(t *testing.T) {
+	t.Parallel()
+
 	chOne := make(chan *model.MetricFamily)
 	chTwo := make(chan *model.MetricFamily)
 
@@ -220,16 +222,16 @@ func TestParseResponse(t *testing.T) {
 
 	handlerOne(wOne, req)
 	handlerTwo(wTwo, req)
-	respOne := wOne.Result()
-	respTwo := wTwo.Result()
+	responseOne := wOne.Result()
+	responseTwo := wTwo.Result()
 
 	var errOne error
 	var errTwo error
 	go func() {
-		errOne = parseResponse(respOne, chOne)
+		errOne = parseResponse(responseOne, chOne)
 	}()
 	go func() {
-		errTwo = parseResponse(respTwo, chTwo)
+		errTwo = parseResponse(responseTwo, chTwo)
 	}()
 
 	var oneFamilies int
@@ -244,7 +246,7 @@ func TestParseResponse(t *testing.T) {
 	}
 
 	// Parse response will keep filling the channel until
-	// it encouters some sort of error
+	// it encounters some sort of error
 	assert.Equal(t, 1, oneFamilies)
 	assert.Equal(t, 0, twoFamilies)
 	assert.NotNil(t, errOne)

@@ -129,8 +129,8 @@ func valueFromPrometheus(metricType model.MetricType, metric *model.Metric) Valu
 }
 
 /**
- * Try our best to parse a response. Even if an error is encounterd
- * midway thorugh parsing we will put into the receiving channel any
+ * Try our best to parse a response. Even if an error is encountered
+ * midway through parsing we will put into the receiving channel any
  * metric families found along the way. We also return any error that
  * we did come along. Fail-fast, best attempt behaviour
  */
