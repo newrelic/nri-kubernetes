@@ -204,7 +204,7 @@ func TestParseResponse(t *testing.T) {
 			 # TYPE kube_custom_elasticsearch_health_status stateset
 			 kube_custom_elasticsearch_health_status {customresource_group="elasticsearch.k8s.elastic.co"} 1
 			`)
-		assert.NotNil(t, err)
+		assert.Nil(t, err)
 	}
 	handlerTwo := func(w http.ResponseWriter, r *http.Request) {
 		_, err := io.WriteString(w,
@@ -215,7 +215,7 @@ func TestParseResponse(t *testing.T) {
 			 # TYPE kube_pod_status_phase gauge
 			 kube_pod_status_phase{namespace="default",pod="123456789"} 1
 			`)
-		assert.NotNil(t, err)
+		assert.Nil(t, err)
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "http://example.com/foo", nil)
