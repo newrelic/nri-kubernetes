@@ -189,6 +189,7 @@ func TestQueryMatch_CustomName(t *testing.T) {
 	assert.Equal(t, expectedMetrics, q.Execute(&r))
 }
 
+//nolint:bodyclose
 func TestParseResponse(t *testing.T) {
 	t.Parallel()
 
@@ -226,6 +227,9 @@ func TestParseResponse(t *testing.T) {
 	responseOne := wOne.Result()
 	responseTwo := wTwo.Result()
 
+	defer responseOne.Body.Close()
+	defer responseTwo.Body.Close()
+
 	var errOne error
 	var errTwo error
 	go func() {
@@ -245,9 +249,6 @@ func TestParseResponse(t *testing.T) {
 		_ = mf
 		twoFamilies++
 	}
-
-	responseOne.Body.Close()
-	responseTwo.Body.Close()
 
 	// Parse response will keep filling the channel until
 	// it encounters some sort of error.
