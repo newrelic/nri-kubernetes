@@ -6,18 +6,18 @@ In order to run e2e tests locally you can do the following.
 
 Initialize a test cluster.
 ```shell
-minikube start --kubernetes-version=vX.X.X --container-runtime=containerd
+minikube start --container-runtime=containerd --kubernetes-version=v1.XX.X
 minikube addons enable metrics-server
 ```
 
-Note that the control plane flags in `e2e-values.yml` have been set meeting the minikube specifications. 
+<!-- Note that the control plane flags in `e2e-values.yml` have been set meeting the minikube specifications.  -->
 
 Then you need to build the binary and the image. Notice that  since the Dockerfile includes multiarch
 support, you may need to set `DOCKER_BUILDKIT=1` when running `docker build` for the `TARGETARCH`
 and `TARGETOS` args to be populated.
 ```shell
 make compile-multiarch # Compile the repo binaries that will be used to create an image for testing.
-export  DOCKER_BUILDKIT=1
+export DOCKER_BUILDKIT=1
 docker build -t e2e/nri-kubernetes:e2e  .
 minikube image load e2e/nri-kubernetes:e2e
 ```
@@ -35,7 +35,7 @@ go install github.com/newrelic/newrelic-integration-e2e-action@latest
 
 ```
 
-You need New Relic license key (Ingest - License), Api key (User key) and Account before running the tests. More information on how to find these keys, please see [this](https://docs.newrelic.com/docs/apis/intro-apis/new-relic-api-keys/). 
+You need New Relic's `LICENSE_KEY` (Ingest - License), `API_KEY` (User key) and `ACCOUNT_ID` before running the tests. More information on how to find these keys, please see [this](https://docs.newrelic.com/docs/apis/intro-apis/new-relic-api-keys/). 
 
 Set the following environment variables:
 ```shell
@@ -45,7 +45,7 @@ export API_KEY=xxx
 export ACCOUNT_ID=xxx
 ```
 
-Since some metrics are removed and added depending on the k8s version, the `EXCEPTION_FILE` should point, depending on the k8s version you are testing on, to one of the `/e2e/*-exception.yml` files.
+Since some metrics are removed and added depending on the k8s version, the `EXCEPTION_FILE` should point, depending on the k8s version you are testing on, to one of the `*-exceptions.yml` files.
 
 Run the following command to execute the test and make sure that it is ran at the root of the repo:
 
@@ -58,7 +58,7 @@ LICENSE_KEY=${LICENSE_KEY} EXCEPTIONS_SOURCE_FILE=${EXCEPTION_FILE}  go run gith
 
 NOTES: 
 For local testing purposes, we usually test against a staging environment. In order to enable testing against staging environment, the following modifications need to be made:
-- Open the the `/e2e/test-specs.yml` and add `--set global.nrStaging=true` to the end of any occurrences of this line `- helm upgrade --install ${SCENARIO_TAG} -n nr-${SCENARIO_TAG} --create-namespace ../charts/newrelic-infrastructure ...` .
+- Open the the `./test-specs.yml` and add `--set global.nrStaging=true` to the end of **all** occurrences of this line `- helm upgrade --install ${SCENARIO_TAG} -n nr-${SCENARIO_TAG} --create-namespace ../charts/newrelic-infrastructure ...` .
 - Add and set `--region="Staging"` the command that executes the tests. For example:
 ```shell
 LICENSE_KEY=${LICENSE_KEY} EXCEPTIONS_SOURCE_FILE=${EXCEPTION_FILE}  go run github.com/newrelic/newrelic-integration-e2e-action@latest \
