@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/newrelic/nri-kubernetes/v3/src/ksm/client"
@@ -47,7 +48,7 @@ func Test_Client_Read(t *testing.T) {
 	t.Parallel()
 
 	timeout := 200 * time.Millisecond
-	server := testKsmEndpoint(t, timeout)
+	server := testKsmEndpoint(t)
 
 	cpClient, err := client.New(client.WithMaxRetries(0), client.WithTimeout(timeout))
 	require.NoError(t, err)
@@ -84,13 +85,13 @@ func testHTTPServer(t *testing.T, requestsReceived *int, timeout time.Duration) 
 	return testServer
 }
 
-func testKsmEndpoint(t *testing.T, timeout time.Duration) *httptest.Server {
+func testKsmEndpoint(t *testing.T) *httptest.Server {
 	t.Helper()
 
 	testServer := httptest.NewServer(http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			io.WriteString(w,
+			_, err := io.WriteString(w,
 				`# HELP kube_pod_status_phase The pods current phase. 
 				 # TYPE kube_pod_status_phase gauge
 				 kube_pod_status_phase{namespace="default",pod="123456789"} 1
@@ -98,6 +99,7 @@ func testKsmEndpoint(t *testing.T, timeout time.Duration) *httptest.Server {
 				 # TYPE kube_custom_elasticsearch_health_status stateset
 				 kube_custom_elasticsearch_health_status {customresource_group="elasticsearch.k8s.elastic.co"} 1
 				`)
+			assert.Nil(t, err)
 		}))
 
 	t.Cleanup(func() {
