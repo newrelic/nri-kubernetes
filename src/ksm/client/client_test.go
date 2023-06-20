@@ -1,6 +1,7 @@
 package client_test
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -9,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/newrelic/nri-kubernetes/v3/src/ksm/client"
+	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
 )
 
 func Test_Client(t *testing.T) {
@@ -41,6 +43,27 @@ func Test_Client(t *testing.T) {
 	require.Equal(t, 3, requestsReceived)
 }
 
+func Test_Client_Read(t *testing.T) {
+	t.Parallel()
+
+	timeout := 200 * time.Millisecond
+	server := testKsmEndpoint(t, timeout)
+
+	cpClient, err := client.New(client.WithMaxRetries(0), client.WithTimeout(timeout))
+	require.NoError(t, err)
+
+	familyGetter := cpClient.MetricFamiliesGetFunc(server.URL)
+	query := prometheus.Query{
+		MetricName: "kube_pod_status_phase",
+	}
+	queries := []prometheus.Query{query}
+
+	families, err := familyGetter(queries)
+	require.NoError(t, err)
+
+	require.Equal(t, len(families), 1)
+}
+
 func testHTTPServer(t *testing.T, requestsReceived *int, timeout time.Duration) *httptest.Server {
 	t.Helper()
 
@@ -53,6 +76,29 @@ func testHTTPServer(t *testing.T, requestsReceived *int, timeout time.Duration) 
 
 		w.WriteHeader(http.StatusOK)
 	}))
+
+	t.Cleanup(func() {
+		testServer.Close()
+	})
+
+	return testServer
+}
+
+func testKsmEndpoint(t *testing.T, timeout time.Duration) *httptest.Server {
+	t.Helper()
+
+	testServer := httptest.NewServer(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			io.WriteString(w,
+				`# HELP kube_pod_status_phase The pods current phase. 
+				 # TYPE kube_pod_status_phase gauge
+				 kube_pod_status_phase{namespace="default",pod="123456789"} 1
+				 # HELP kube_custom_elasticsearch_health_status Elasticsearch CRD health status
+				 # TYPE kube_custom_elasticsearch_health_status stateset
+				 kube_custom_elasticsearch_health_status {customresource_group="elasticsearch.k8s.elastic.co"} 1
+				`)
+		}))
 
 	t.Cleanup(func() {
 		testServer.Close()
