@@ -187,7 +187,7 @@ func handleResponseWithFilter(resp *http.Response, queries []Query, logger *log.
 	}
 
 	if err != nil {
-		return nil, fmt.Errorf("parsing metrics: %s", err)
+		return nil, fmt.Errorf("parsing metrics: %w", err)
 	}
 
 	return metrics, nil
