@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.15.0 
+
+## What's Changed
+* Update CHANGELOG.md by @juanjjaramillo in https://github.com/newrelic/nri-kubernetes/pull/783
+* Bump versions by @juanjjaramillo in https://github.com/newrelic/nri-kubernetes/pull/784
+* fix(deps): update module github.com/sirupsen/logrus to v1.9.3 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/785
+* chore(deps): update aquasecurity/trivy-action action to v0.11.0 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/787
+* chore(deps): update newrelic/k8s-events-forwarder docker tag to v1.42.5 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/789
+* chore(deps): update newrelic/infrastructure-bundle docker tag to v3.2.7 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/788
+* Automate generating static test data for all supported Kubernetes versions by @juanjjaramillo in https://github.com/newrelic/nri-kubernetes/pull/792
+* Update E2E readme file by @juanjjaramillo in https://github.com/newrelic/nri-kubernetes/pull/801
+* chore(deps): update aquasecurity/trivy-action action to v0.11.2 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/794
+* chore(deps): update module golang.org/x/crypto to v0.10.0 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/795
+* fix(deps): update kubernetes packages to v0.27.3 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/797
+* bump alpine from 3.18.0 to 3.18.2 by @csongnr in https://github.com/newrelic/nri-kubernetes/pull/803
+* chore(deps): update newrelic/k8s-events-forwarder docker tag to v1.43.0 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/800
+
+
+**Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.14.0...v3.15.0
+
 ## 3.14.0
 
 ## What's Changed
