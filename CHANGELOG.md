@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 
 **Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.14.0...v3.15.0
+
 ## 3.14.0
 
 ## What's Changed
