@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.15.1
+
+## What's Changed
+* update changelog by @csongnr in https://github.com/newrelic/nri-kubernetes/pull/804
+* update chart version and reference latest docker image by @csongnr in https://github.com/newrelic/nri-kubernetes/pull/805
+* chore(deps): update newrelic/k8s-events-forwarder docker tag to v1.43.1 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/806
+* chore(deps): update newrelic/infrastructure-bundle docker tag to v3.2.9 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/807
+* Upgrade Go Version to 1.20 by @xqi-nr in https://github.com/newrelic/nri-kubernetes/pull/808
+
+
+**Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.15.0...v3.15.1
+
 ## 3.15.0 
 
 ## What's Changed
