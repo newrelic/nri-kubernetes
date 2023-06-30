@@ -62,6 +62,7 @@ func Test_Client_Read(t *testing.T) {
 	families, err := familyGetter(queries)
 	require.NoError(t, err)
 
+	// stateset parser failure, did not prevent kube_pod_status_phase from being reported
 	require.Equal(t, len(families), 1)
 }
 
@@ -85,6 +86,16 @@ func testHTTPServer(t *testing.T, requestsReceived *int, timeout time.Duration) 
 	return testServer
 }
 
+/**
+ * This endpoint simulates a potential response from the KSM
+ * metrics endpoint. There are two metric families present. One
+ * with TYPE gauge and another with TYPE stateset. Stateset is
+ * not a currently supported type in our parsing so parsing
+ * should immediately fail when the type is seen. Because the
+ * gauge metric family occurs before the stateset metric family
+ * we expect to successfully parse the gauge metrics before
+ * parsing failure occurs.
+ */
 func testKsmEndpoint(t *testing.T) *httptest.Server {
 	t.Helper()
 
