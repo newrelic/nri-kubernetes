@@ -150,7 +150,7 @@ func parseResponse(resp *http.Response, ch chan<- *model.MetricFamily) error {
 	return err
 }
 
-func handleResponseWithFilter(resp *http.Response, queries []Query) ([]MetricFamily, error) {
+func handleResponseWithFilter(resp *http.Response, queries []Query, logger *log.Logger) ([]MetricFamily, error) {
 	if resp == nil {
 		return nil, fmt.Errorf("response cannot be nil")
 	}
@@ -176,6 +176,14 @@ func handleResponseWithFilter(resp *http.Response, queries []Query) ([]MetricFam
 				metrics = append(metrics, f)
 			}
 		}
+	}
+
+	// parseResponse does some lenient parsing so metrics may be non-empty
+	// even when err is non-nil. We handle the cases here
+	if err != nil && len(metrics) > 0 {
+		// be lenient: log error case but don't bubble up failure
+		logger.Errorf(fmt.Sprintf("Failed while trying to parse metrics: %v", err))
+		err = nil
 	}
 
 	if err != nil {
@@ -209,7 +217,7 @@ func GetFilteredMetricFamilies(httpClient client.HTTPDoer, url string, queries [
 		return nil, fmt.Errorf("fetching metrics from %q: %w", url, err)
 	}
 
-	return handleResponseWithFilter(resp, queries)
+	return handleResponseWithFilter(resp, queries, logger)
 }
 
 func labelsFromPrometheus(pairs []*model.LabelPair) Labels {
