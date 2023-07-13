@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	model "github.com/prometheus/client_model/go"
-	"github.com/prometheus/prom2json"
+	"github.com/prometheus/common/expfmt"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/newrelic/nri-kubernetes/v3/src/client"
@@ -128,6 +128,28 @@ func valueFromPrometheus(metricType model.MetricType, metric *model.Metric) Valu
 	}
 }
 
+/**
+ * Try our best to parse a response. Even if an error is encountered
+ * midway through parsing we will put into the receiving channel any
+ * metric families found along the way. We also return any error that
+ * we did come along. Fail-fast, best attempt behavior.
+ */
+func parseResponse(resp *http.Response, ch chan<- *model.MetricFamily) error {
+	defer close(ch)
+
+	var parser expfmt.TextParser
+	metricFamilies, err := parser.TextToMetricFamilies(resp.Body)
+	if err != nil {
+		err = fmt.Errorf("reading text format failed: %w", err)
+	}
+
+	for _, mf := range metricFamilies {
+		ch <- mf
+	}
+
+	return err
+}
+
 func handleResponseWithFilter(resp *http.Response, queries []Query) ([]MetricFamily, error) {
 	if resp == nil {
 		return nil, fmt.Errorf("response cannot be nil")
@@ -144,7 +166,7 @@ func handleResponseWithFilter(resp *http.Response, queries []Query) ([]MetricFam
 
 	var err error
 	go func() {
-		err = prom2json.ParseResponse(resp, ch)
+		err = parseResponse(resp, ch)
 	}()
 
 	for promMetricFamily := range ch {
