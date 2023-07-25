@@ -275,16 +275,16 @@ var summaryRawGroups = definition.RawGroups{
 						SampleSum:   float64Ptr(45),
 						Quantile: []*model.Quantile{
 							{
-								Quantile:         float64Ptr(0.5),
-								Value:            float64Ptr(42),
+								Quantile: float64Ptr(0.5),
+								Value:    float64Ptr(42),
 							},
 							{
-								Quantile:         float64Ptr(0.9),
-								Value:            float64Ptr(43),
+								Quantile: float64Ptr(0.9),
+								Value:    float64Ptr(43),
 							},
 							{
-								Quantile:         float64Ptr(0.99),
-								Value:            float64Ptr(44),
+								Quantile: float64Ptr(0.99),
+								Value:    float64Ptr(44),
 							},
 						},
 					},
@@ -295,16 +295,16 @@ var summaryRawGroups = definition.RawGroups{
 						SampleSum:   float64Ptr(45),
 						Quantile: []*model.Quantile{
 							{
-								Quantile:         float64Ptr(0.5),
-								Value:            float64Ptr(42),
+								Quantile: float64Ptr(0.5),
+								Value:    float64Ptr(42),
 							},
 							{
-								Quantile:         float64Ptr(0.9),
-								Value:            float64Ptr(43),
+								Quantile: float64Ptr(0.9),
+								Value:    float64Ptr(43),
 							},
 							{
-								Quantile:         float64Ptr(0.99),
-								Value:            float64Ptr(44),
+								Quantile: float64Ptr(0.99),
+								Value:    float64Ptr(44),
 							},
 						},
 					},
@@ -326,16 +326,16 @@ var summaryMetricFamily = []MetricFamily{
 					SampleSum:   float64Ptr(45),
 					Quantile: []*model.Quantile{
 						{
-							Quantile:         float64Ptr(0.5),
-							Value:            float64Ptr(42),
+							Quantile: float64Ptr(0.5),
+							Value:    float64Ptr(42),
 						},
 						{
-							Quantile:         float64Ptr(0.9),
-							Value:            float64Ptr(43),
+							Quantile: float64Ptr(0.9),
+							Value:    float64Ptr(43),
 						},
 						{
-							Quantile:         float64Ptr(0.99),
-							Value:            float64Ptr(44),
+							Quantile: float64Ptr(0.99),
+							Value:    float64Ptr(44),
 						},
 					},
 				},
@@ -347,16 +347,16 @@ var summaryMetricFamily = []MetricFamily{
 					SampleSum:   float64Ptr(45),
 					Quantile: []*model.Quantile{
 						{
-							Quantile:         float64Ptr(0.5),
-							Value:            float64Ptr(42),
+							Quantile: float64Ptr(0.5),
+							Value:    float64Ptr(42),
 						},
 						{
-							Quantile:         float64Ptr(0.9),
-							Value:            float64Ptr(43),
+							Quantile: float64Ptr(0.9),
+							Value:    float64Ptr(43),
 						},
 						{
-							Quantile:         float64Ptr(0.99),
-							Value:            float64Ptr(44),
+							Quantile: float64Ptr(0.99),
+							Value:    float64Ptr(44),
 						},
 					},
 				},
@@ -957,16 +957,16 @@ func TestFetchFuncs_CorrectValue(t *testing.T) {
 									SampleSum:   float64Ptr(math.Inf(1)),
 									Quantile: []*model.Quantile{
 										{
-											Quantile:         float64Ptr(0.5),
-											Value:            float64Ptr(math.NaN()),
+											Quantile: float64Ptr(0.5),
+											Value:    float64Ptr(math.NaN()),
 										},
 										{
-											Quantile:         float64Ptr(0.9),
-											Value:            float64Ptr(math.NaN()),
+											Quantile: float64Ptr(0.9),
+											Value:    float64Ptr(math.NaN()),
 										},
 										{
-											Quantile:         float64Ptr(0.99),
-											Value:            float64Ptr(44),
+											Quantile: float64Ptr(0.99),
+											Value:    float64Ptr(44),
 										},
 									},
 								},
