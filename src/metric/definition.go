@@ -16,7 +16,7 @@ import (
 // Fetch Functions for computed metrics
 var (
 	workingSetBytes   = definition.FromRaw("workingSetBytes")
-	cpuUsedCores      = definition.Transform(definition.FromRaw("usageNanoCores"), fromNano)
+	cpuUsedCores      = definition.FilterAndTransform(definition.FromRaw("usageNanoCores"), filterCpuUsedCores, fromNano)
 	cpuLimitCores     = definition.Transform(definition.FromRaw("cpuLimitCores"), toCores)
 	cpuRequestedCores = definition.Transform(definition.FromRaw("cpuRequestedCores"), toCores)
 	processOpenFds    = prometheus.FromValueWithOverriddenName("process_open_fds", "processOpenFds")
@@ -1594,4 +1594,47 @@ func metricSetTypeGuesserWithCustomGroup(group string) definition.GuessFunc {
 	return func(_ string) (string, error) {
 		return definition.K8sMetricSetTypeGuesser(group) //nolint: wrapcheck
 	}
+}
+
+// filterCpuUsedCores checks for the correctness of the container metric cpuUsedCores returned by kubelet
+// cpuUsedCores a.k.a `usageNanoCores` value is set by cAdvisor and is returned by kubelet stats summary endpoint
+// There is an active bug where the metric value is sometimes impossibly high https://github.com/kubernetes/kubernetes/issues/114057
+// The cpuUsedCores along with cpuLimitCores is typically used to plot `cpuCoresUtilization` on the UI where cpuCoresUtilization = (cpuUsedCores/cpuLimitCores) * 100
+// cpuUsedCores has been observed to be absurd even when cpuUsedCores >  cpuLimitCores * 100
+// Please read the comments on the jira issue https://issues.newrelic.com/browse/NR-139168 for more details
+func filterCpuUsedCores(rawValue definition.FetchedValue, groupLabel, entityID string, groups definition.RawGroups) (definition.FilteredValue, error) {
+	// fetch raw cpuLimitCores value
+	group, ok := groups[groupLabel]
+	if !ok {
+		return nil, fmt.Errorf("group %q not found", groupLabel)
+	}
+
+	entity, ok := group[entityID]
+	if !ok {
+		return nil, fmt.Errorf("entity %q not found", entityID)
+	}
+
+	value, ok := entity["cpuLimitCores"]
+	if !ok {
+		return nil, fmt.Errorf("metric cpuLimitCores not found")
+	}
+
+	// apply transform before comparisons
+	cpuLimitCoresVal, err := toCores(value)
+	if err != nil {
+		return nil, err
+	}
+
+	cpuUsedCoresVal, err := fromNano(rawValue)
+	if err != nil {
+		return nil, err
+	}
+
+	// check for impossibly high cpuUsedCoresVal
+	if cpuUsedCoresVal.(float64) > cpuLimitCoresVal.(float64)*100 {
+		return nil, fmt.Errorf("impossibly high value %f received from kubelet for cpuUsedCoresVal", cpuUsedCoresVal.(float64))
+	}
+
+	// return valid raw value
+	return rawValue, nil
 }
