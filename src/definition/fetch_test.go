@@ -136,7 +136,7 @@ func TestTransformAndFilter(t *testing.T) { //nolint: funlen
 			name: "FetchFuncError",
 			args: args{
 				fetchFunc: FromRaw("dummy_metric"),
-				filterFunc: func(value FetchedValue, groupLabel, entityId string, groups RawGroups) (FilteredValue, error) {
+				filterFunc: func(value FetchedValue, groupLabel, entityID string, groups RawGroups) (FilteredValue, error) {
 					return 241414124, nil
 				},
 				transformFunc: func(value FetchedValue) (FetchedValue, error) {
@@ -159,7 +159,7 @@ func TestTransformAndFilter(t *testing.T) { //nolint: funlen
 			name: "FilterFuncError",
 			args: args{
 				fetchFunc: FromRaw("metric_name_1"),
-				filterFunc: func(value FetchedValue, groupLabel, entityId string, groups RawGroups) (FilteredValue, error) {
+				filterFunc: func(value FetchedValue, groupLabel, entityID string, groups RawGroups) (FilteredValue, error) {
 					return nil, errDummyFilter
 				},
 				transformFunc: func(value FetchedValue) (FetchedValue, error) {
@@ -182,7 +182,7 @@ func TestTransformAndFilter(t *testing.T) { //nolint: funlen
 			name: "TransformFuncError",
 			args: args{
 				fetchFunc: FromRaw("metric_name_1"),
-				filterFunc: func(value FetchedValue, groupLabel, entityId string, groups RawGroups) (FilteredValue, error) {
+				filterFunc: func(value FetchedValue, groupLabel, entityID string, groups RawGroups) (FilteredValue, error) {
 					return 24124124, nil
 				},
 				transformFunc: func(value FetchedValue) (FetchedValue, error) {
@@ -205,7 +205,7 @@ func TestTransformAndFilter(t *testing.T) { //nolint: funlen
 			name: "NoError",
 			args: args{
 				fetchFunc: FromRaw("metric_name_1"),
-				filterFunc: func(value FetchedValue, groupLabel, entityId string, groups RawGroups) (FilteredValue, error) {
+				filterFunc: func(value FetchedValue, groupLabel, entityID string, groups RawGroups) (FilteredValue, error) {
 					return 24124124, nil
 				},
 				transformFunc: func(value FetchedValue) (FetchedValue, error) {
