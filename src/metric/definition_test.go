@@ -288,7 +288,7 @@ func Test_filterCpuUsedCores(t *testing.T) { //nolint: funlen
 				},
 			},
 			want:    nil,
-			wantErr: "group \"dummyLabel\" not found",
+			wantErr: "group dummyLabel not found",
 		},
 		{
 			name: "GroupEntityNotFound",
@@ -305,7 +305,7 @@ func Test_filterCpuUsedCores(t *testing.T) { //nolint: funlen
 				},
 			},
 			want:    nil,
-			wantErr: "entity \"dummyEntity\" not found",
+			wantErr: "entity dummyEntity not found",
 		},
 		{
 			name: "CpuLimitCoresNotFound",
