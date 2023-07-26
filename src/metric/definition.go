@@ -18,7 +18,7 @@ import (
 // Fetch Functions for computed metrics
 var (
 	workingSetBytes   = definition.FromRaw("workingSetBytes")
-	_cpuUsedCores     = definition.TransformAndFilter(definition.FromRaw("usageNanoCores"), fromNano, filterCpuUsedCores)
+	_cpuUsedCores     = definition.TransformAndFilter(definition.FromRaw("usageNanoCores"), fromNano, filterCpuUsedCores) //nolint: gochecknoglobals // significant refactoring
 	cpuLimitCores     = definition.Transform(definition.FromRaw("cpuLimitCores"), toCores)
 	cpuRequestedCores = definition.Transform(definition.FromRaw("cpuRequestedCores"), toCores)
 	processOpenFds    = prometheus.FromValueWithOverriddenName("process_open_fds", "processOpenFds")
@@ -1599,6 +1599,7 @@ func metricSetTypeGuesserWithCustomGroup(group string) definition.GuessFunc {
 }
 
 // error checks.
+// nolint: gochecknoglobals // no other possibility
 var (
 	_errFetchedValueTypeCheck = fmt.Errorf("fetchedValue must be of type float64")
 	_errCpuLimitTypeCheck     = fmt.Errorf("cpuLimit must be of type float64")
