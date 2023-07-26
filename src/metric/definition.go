@@ -1612,6 +1612,8 @@ var (
 // There is an active bug where the metric value is sometimes impossibly high https://github.com/kubernetes/kubernetes/issues/114057.
 // The cpuUsedCores along with cpuLimitCores is typically used to plot `cpuCoresUtilization` on the UI where cpuCoresUtilization = (cpuUsedCores/cpuLimitCores) * 100.
 // cpuUsedCores has been observed to be absurd even when cpuUsedCores >  cpuLimitCores * 100.
+//
+//nolint:ireturn
 func filterCPUUsedCores(fetchedValue definition.FetchedValue, groupLabel, entityID string, groups definition.RawGroups) (definition.FilteredValue, error) {
 	// type assertion check
 	val, ok := fetchedValue.(float64)
