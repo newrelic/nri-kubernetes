@@ -288,7 +288,7 @@ func Test_filterCpuUsedCores(t *testing.T) { //nolint: funlen
 				},
 			},
 			want:    nil,
-			wantErr: "group dummyLabel not found",
+			wantErr: "group label not found",
 		},
 		{
 			name: "GroupEntityNotFound",
@@ -305,7 +305,7 @@ func Test_filterCpuUsedCores(t *testing.T) { //nolint: funlen
 				},
 			},
 			want:    nil,
-			wantErr: "entity dummyEntity not found",
+			wantErr: "entity Id not found",
 		},
 		{
 			name: "CpuLimitCoresNotFound",
@@ -356,7 +356,7 @@ func Test_filterCpuUsedCores(t *testing.T) { //nolint: funlen
 				},
 			},
 			want:    nil,
-			wantErr: "impossibly high value 2141241241241113344.000000 received from kubelet for cpuUsedCoresVal",
+			wantErr: "impossibly high value received from kubelet for cpuUsedCoresVal",
 		},
 		{
 			name: "ValidCpuUsedCoresValue",
