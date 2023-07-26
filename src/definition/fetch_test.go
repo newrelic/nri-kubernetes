@@ -111,8 +111,10 @@ func TestTransformBypassesError(t *testing.T) {
 	assert.Nil(t, v)
 }
 
-var dummyFilterError = fmt.Errorf("dummy filter error")
-var dummyTransformError = fmt.Errorf("dummy transform error")
+var (
+	dummyFilterError    = fmt.Errorf("dummy filter error")
+	dummyTransformError = fmt.Errorf("dummy transform error")
+)
 
 func TestTransformAndFilter(t *testing.T) { //nolint: funlen
 	type args struct {
@@ -224,6 +226,7 @@ func TestTransformAndFilter(t *testing.T) { //nolint: funlen
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			value, err := TransformAndFilter(tt.args.fetchFunc, tt.args.transformFunc, tt.args.filterFunc)(tt.args.groupLabel, tt.args.entityId, tt.args.raw)
 			if len(tt.wantErr) > 0 {
 				assert.EqualError(t, err, tt.wantErr, "wanted error %s, got %s", tt.wantErr, err.Error())

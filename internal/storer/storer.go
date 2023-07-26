@@ -36,7 +36,7 @@ type InMemoryStore struct {
 
 // Holder for any entry in the JSON storage.
 type jsonEntry struct {
-	//notice this is the timestamp of the creation of the jsonEntry, we do not keep track of the last-access timestamp.
+	// notice this is the timestamp of the creation of the jsonEntry, we do not keep track of the last-access timestamp.
 	timestamp time.Time
 	value     interface{}
 }

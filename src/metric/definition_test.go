@@ -134,7 +134,7 @@ func TestSubtract(t *testing.T) {
 }
 
 func TestUtilization(t *testing.T) {
-	var raw = definition.RawGroups{
+	raw := definition.RawGroups{
 		"group1": {
 			"entity1": {
 				"dividend": uint64(10),
@@ -167,11 +167,10 @@ func TestUtilization(t *testing.T) {
 		assert.NotNil(t, value)
 		assert.Equal(t, float64(50), value)
 	}
-
 }
 
 func TestUtilizationNotSupported(t *testing.T) {
-	var raw = definition.RawGroups{
+	raw := definition.RawGroups{
 		"group1": {
 			"entity1": {
 				"dividend": definition.FetchedValues{},
@@ -378,6 +377,7 @@ func Test_filterCpuUsedCores(t *testing.T) { //nolint: funlen
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := filterCpuUsedCores(tt.args.fetchedValue, tt.args.groupLabel, tt.args.entityID, tt.args.groups)
 			if len(tt.wantErr) > 0 {
 				assert.EqualErrorf(t, err, tt.wantErr, "expected %s, got %s", tt.wantErr, err.Error())
