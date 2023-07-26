@@ -1599,15 +1599,12 @@ func metricSetTypeGuesserWithCustomGroup(group string) definition.GuessFunc {
 }
 
 // error checks.
-// nolint: gochecknoglobals // no other possibility
 var (
 	_errFetchedValueTypeCheck = fmt.Errorf("fetchedValue must be of type float64")
 	_errCpuLimitTypeCheck     = fmt.Errorf("cpuLimit must be of type float64")
-	_errGroupLabelCheck       = func(groupLabel string) error { return fmt.Errorf("group %s not found", groupLabel) }
-	_errEntityCheck           = func(entityID string) error { return fmt.Errorf("entity %s not found", entityID) }
-	_errHighCpuUsedCores      = func(val float64) error {
-		return fmt.Errorf("impossibly high value %f received from kubelet for cpuUsedCoresVal", val)
-	}
+	_errGroupLabelCheck       = fmt.Errorf("group label not found")
+	_errEntityCheck           = fmt.Errorf("entity Id not found")
+	_errHighCpuUsedCores      = fmt.Errorf("impossibly high value received from kubelet for cpuUsedCoresVal")
 )
 
 // filterCpuUsedCores checks for the correctness of the container metric cpuUsedCores returned by kubelet.
@@ -1625,12 +1622,12 @@ func filterCpuUsedCores(fetchedValue definition.FetchedValue, groupLabel, entity
 	// fetch raw cpuLimitCores value
 	group, ok := groups[groupLabel]
 	if !ok {
-		return nil, _errGroupLabelCheck(groupLabel)
+		return nil, _errGroupLabelCheck
 	}
 
 	entity, ok := group[entityId]
 	if !ok {
-		return nil, _errEntityCheck(entityId)
+		return nil, _errEntityCheck
 	}
 
 	value, ok := entity["cpuLimitCores"]
@@ -1656,7 +1653,7 @@ func filterCpuUsedCores(fetchedValue definition.FetchedValue, groupLabel, entity
 
 	// check for impossibly high cpuUsedCoresVal
 	if val > cpuLimit*100 {
-		return nil, _errHighCpuUsedCores(val)
+		return nil, _errHighCpuUsedCores
 	}
 
 	// return valid raw value
