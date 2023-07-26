@@ -123,7 +123,7 @@ func TestTransformAndFilter(t *testing.T) { //nolint: funlen
 		filterFunc    FilterFunc
 		transformFunc TransformFunc
 		groupLabel    string
-		entityId      string
+		entityID      string
 		raw           RawGroups
 	}
 	tests := []struct {
@@ -143,7 +143,7 @@ func TestTransformAndFilter(t *testing.T) { //nolint: funlen
 					return 24124124, nil
 				},
 				groupLabel: "group1",
-				entityId:   "entity1",
+				entityID:   "entity1",
 				raw: RawGroups{
 					"group1": {
 						"entity1": {
@@ -166,7 +166,7 @@ func TestTransformAndFilter(t *testing.T) { //nolint: funlen
 					return 24124124, nil
 				},
 				groupLabel: "group1",
-				entityId:   "entity1",
+				entityID:   "entity1",
 				raw: RawGroups{
 					"group1": {
 						"entity1": {
@@ -189,7 +189,7 @@ func TestTransformAndFilter(t *testing.T) { //nolint: funlen
 					return nil, errDummyTransform
 				},
 				groupLabel: "group1",
-				entityId:   "entity1",
+				entityID:   "entity1",
 				raw: RawGroups{
 					"group1": {
 						"entity1": {
@@ -212,7 +212,7 @@ func TestTransformAndFilter(t *testing.T) { //nolint: funlen
 					return 5686865, nil
 				},
 				groupLabel: "group1",
-				entityId:   "entity1",
+				entityID:   "entity1",
 				raw: RawGroups{
 					"group1": {
 						"entity1": {
@@ -229,7 +229,7 @@ func TestTransformAndFilter(t *testing.T) { //nolint: funlen
 		tt := testCase
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			value, err := TransformAndFilter(tt.args.fetchFunc, tt.args.transformFunc, tt.args.filterFunc)(tt.args.groupLabel, tt.args.entityId, tt.args.raw)
+			value, err := TransformAndFilter(tt.args.fetchFunc, tt.args.transformFunc, tt.args.filterFunc)(tt.args.groupLabel, tt.args.entityID, tt.args.raw)
 			if len(tt.wantErr) > 0 {
 				assert.EqualError(t, err, tt.wantErr, "wanted error %s, got %s", tt.wantErr, err.Error())
 			} else {

@@ -1601,10 +1601,10 @@ func metricSetTypeGuesserWithCustomGroup(group string) definition.GuessFunc {
 // error checks.
 var (
 	errFetchedValueTypeCheck = fmt.Errorf("fetchedValue must be of type float64")
-	errCpuLimitTypeCheck     = fmt.Errorf("cpuLimit must be of type float64")
+	errCPULimitTypeCheck     = fmt.Errorf("cpuLimit must be of type float64")
 	errGroupLabelCheck       = fmt.Errorf("group label not found")
 	errEntityCheck           = fmt.Errorf("entity Id not found")
-	errHighCpuUsedCores      = fmt.Errorf("impossibly high value received from kubelet for cpuUsedCoresVal")
+	errHighCPUUsedCores      = fmt.Errorf("impossibly high value received from kubelet for cpuUsedCoresVal")
 )
 
 // filterCPUUsedCores checks for the correctness of the container metric cpuUsedCores returned by kubelet.
@@ -1648,12 +1648,12 @@ func filterCPUUsedCores(fetchedValue definition.FetchedValue, groupLabel, entity
 	// check type assertion
 	cpuLimit, ok := cpuLimitCoresVal.(float64)
 	if !ok {
-		return nil, errCpuLimitTypeCheck
+		return nil, errCPULimitTypeCheck
 	}
 
 	// check for impossibly high cpuUsedCoresVal
 	if val > cpuLimit*100 {
-		return nil, errHighCpuUsedCores
+		return nil, errHighCPUUsedCores
 	}
 
 	// return valid raw value

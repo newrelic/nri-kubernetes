@@ -25,7 +25,7 @@ type FilteredValue interface{}
 
 // FilterFunc applies a filtering function on the raw fetchedValue.
 // Return FilteredValue if the filter was successfully applied or error otherwise.
-type FilterFunc func(value FetchedValue, groupLabel, entityId string, groups RawGroups) (FilteredValue, error)
+type FilterFunc func(value FetchedValue, groupLabel, entityID string, groups RawGroups) (FilteredValue, error)
 
 // RawGroups are grouped raw metrics.
 // map[entityType][entityName][metricName]metricValue as interface{}
