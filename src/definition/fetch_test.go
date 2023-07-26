@@ -111,7 +111,10 @@ func TestTransformBypassesError(t *testing.T) {
 	assert.Nil(t, v)
 }
 
-func TestFilterAndTransform(t *testing.T) {
+var dummyFilterError = fmt.Errorf("dummy filter error")
+var dummyTransformError = fmt.Errorf("dummy transform error")
+
+func TestTransformAndFilter(t *testing.T) { //nolint: funlen
 	type args struct {
 		fetchFunc     FetchFunc
 		filterFunc    FilterFunc
@@ -130,7 +133,7 @@ func TestFilterAndTransform(t *testing.T) {
 			name: "FetchFuncError",
 			args: args{
 				fetchFunc: FromRaw("dummy_metric"),
-				filterFunc: func(value FetchedValue, groupLabel, entityID string, groups RawGroups) (FilteredValue, error) {
+				filterFunc: func(value FetchedValue, groupLabel, entityId string, groups RawGroups) (FilteredValue, error) {
 					return 241414124, nil
 				},
 				transformFunc: func(value FetchedValue) (FetchedValue, error) {
@@ -153,8 +156,8 @@ func TestFilterAndTransform(t *testing.T) {
 			name: "FilterFuncError",
 			args: args{
 				fetchFunc: FromRaw("metric_name_1"),
-				filterFunc: func(value FetchedValue, groupLabel, entityID string, groups RawGroups) (FilteredValue, error) {
-					return nil, fmt.Errorf("dummy filter error")
+				filterFunc: func(value FetchedValue, groupLabel, entityId string, groups RawGroups) (FilteredValue, error) {
+					return nil, dummyFilterError
 				},
 				transformFunc: func(value FetchedValue) (FetchedValue, error) {
 					return 24124124, nil
@@ -176,11 +179,11 @@ func TestFilterAndTransform(t *testing.T) {
 			name: "TransformFuncError",
 			args: args{
 				fetchFunc: FromRaw("metric_name_1"),
-				filterFunc: func(value FetchedValue, groupLabel, entityID string, groups RawGroups) (FilteredValue, error) {
+				filterFunc: func(value FetchedValue, groupLabel, entityId string, groups RawGroups) (FilteredValue, error) {
 					return 24124124, nil
 				},
 				transformFunc: func(value FetchedValue) (FetchedValue, error) {
-					return nil, fmt.Errorf("dummy transform error")
+					return nil, dummyTransformError
 				},
 				groupLabel: "group1",
 				entityId:   "entity1",
@@ -199,7 +202,7 @@ func TestFilterAndTransform(t *testing.T) {
 			name: "NoError",
 			args: args{
 				fetchFunc: FromRaw("metric_name_1"),
-				filterFunc: func(value FetchedValue, groupLabel, entityID string, groups RawGroups) (FilteredValue, error) {
+				filterFunc: func(value FetchedValue, groupLabel, entityId string, groups RawGroups) (FilteredValue, error) {
 					return 24124124, nil
 				},
 				transformFunc: func(value FetchedValue) (FetchedValue, error) {
@@ -215,13 +218,13 @@ func TestFilterAndTransform(t *testing.T) {
 					},
 				},
 			},
-			want:    5686865,
+			want:    24124124,
 			wantErr: "",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			value, err := FilterAndTransform(tt.args.fetchFunc, tt.args.filterFunc, tt.args.transformFunc)(tt.args.groupLabel, tt.args.entityId, tt.args.raw)
+			value, err := TransformAndFilter(tt.args.fetchFunc, tt.args.transformFunc, tt.args.filterFunc)(tt.args.groupLabel, tt.args.entityId, tt.args.raw)
 			if len(tt.wantErr) > 0 {
 				assert.EqualError(t, err, tt.wantErr, "wanted error %s, got %s", tt.wantErr, err.Error())
 			} else {

@@ -23,9 +23,9 @@ type FetchFunc func(groupLabel, entityID string, groups RawGroups) (FetchedValue
 // FilteredValue is the filtered value of an already fetched metric.
 type FilteredValue interface{}
 
-// FilterFunc applies a filtering function on the raw fetchedValue
-// Return FilteredValue if the filter was successfully applied or error otherwise
-type FilterFunc func(value FetchedValue, groupLabel, entityID string, groups RawGroups) (FilteredValue, error)
+// FilterFunc applies a filtering function on the raw fetchedValue.
+// Return FilteredValue if the filter was successfully applied or error otherwise.
+type FilterFunc func(value FetchedValue, groupLabel, entityId string, groups RawGroups) (FilteredValue, error)
 
 // RawGroups are grouped raw metrics.
 // map[entityType][entityName][metricName]metricValue as interface{}
@@ -67,18 +67,18 @@ func Transform(fetchFunc FetchFunc, transformFunc TransformFunc) FetchFunc {
 	}
 }
 
-// FilterAndTransform return a new FetchFunc that first applies a filterFunc to the result of the fetchFunc passed as argument
-// It then applies the transformFunc to the result of the filterFunc if the filter was successfully applied
-func FilterAndTransform(fetchFunc FetchFunc, filterFunc FilterFunc, transformFunc TransformFunc) FetchFunc {
+// TransformAndFilter return a new FetchFunc that first applies a TransformFunc to the result of the fetchFunc passed as argument.
+// It then applies the FilterFunc to the result of the TransformFunc if the transform was successfully applied.
+func TransformAndFilter(fetchFunc FetchFunc, transformFunc TransformFunc, filterFunc FilterFunc) FetchFunc {
 	return func(groupLabel, entityID string, groups RawGroups) (FetchedValue, error) {
 		fetchedVal, err := fetchFunc(groupLabel, entityID, groups)
 		if err != nil {
 			return nil, err
 		}
-		filteredValue, err := filterFunc(fetchedVal, groupLabel, entityID, groups)
+		fetchedVal, err = transformFunc(fetchedVal)
 		if err != nil {
 			return nil, err
 		}
-		return transformFunc(filteredValue)
+		return filterFunc(fetchedVal, groupLabel, entityID, groups)
 	}
 }

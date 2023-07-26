@@ -3,6 +3,7 @@ package metric
 import (
 	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"time"
 
 	sdkMetric "github.com/newrelic/infra-integrations-sdk/data/metric"
@@ -16,7 +17,7 @@ import (
 // Fetch Functions for computed metrics
 var (
 	workingSetBytes   = definition.FromRaw("workingSetBytes")
-	cpuUsedCores      = definition.FilterAndTransform(definition.FromRaw("usageNanoCores"), filterCpuUsedCores, fromNano)
+	cpuUsedCores      = definition.TransformAndFilter(definition.FromRaw("usageNanoCores"), fromNano, filterCpuUsedCores) //nolint gochecknoglobals
 	cpuLimitCores     = definition.Transform(definition.FromRaw("cpuLimitCores"), toCores)
 	cpuRequestedCores = definition.Transform(definition.FromRaw("cpuRequestedCores"), toCores)
 	processOpenFds    = prometheus.FromValueWithOverriddenName("process_open_fds", "processOpenFds")
@@ -1596,13 +1597,18 @@ func metricSetTypeGuesserWithCustomGroup(group string) definition.GuessFunc {
 	}
 }
 
-// filterCpuUsedCores checks for the correctness of the container metric cpuUsedCores returned by kubelet
-// cpuUsedCores a.k.a `usageNanoCores` value is set by cAdvisor and is returned by kubelet stats summary endpoint
-// There is an active bug where the metric value is sometimes impossibly high https://github.com/kubernetes/kubernetes/issues/114057
-// The cpuUsedCores along with cpuLimitCores is typically used to plot `cpuCoresUtilization` on the UI where cpuCoresUtilization = (cpuUsedCores/cpuLimitCores) * 100
-// cpuUsedCores has been observed to be absurd even when cpuUsedCores >  cpuLimitCores * 100
-// Please read the comments on the jira issue https://issues.newrelic.com/browse/NR-139168 for more details
-func filterCpuUsedCores(rawValue definition.FetchedValue, groupLabel, entityID string, groups definition.RawGroups) (definition.FilteredValue, error) {
+// filterCpuUsedCores checks for the correctness of the container metric cpuUsedCores returned by kubelet.
+// cpuUsedCores a.k.a `usageNanoCores` value is set by cAdvisor and is returned by kubelet stats summary endpoint.
+// There is an active bug where the metric value is sometimes impossibly high https://github.com/kubernetes/kubernetes/issues/114057.
+// The cpuUsedCores along with cpuLimitCores is typically used to plot `cpuCoresUtilization` on the UI where cpuCoresUtilization = (cpuUsedCores/cpuLimitCores) * 100.
+// cpuUsedCores has been observed to be absurd even when cpuUsedCores >  cpuLimitCores * 100.
+func filterCpuUsedCores(fetchedValue definition.FetchedValue, groupLabel, entityID string, groups definition.RawGroups) (definition.FilteredValue, error) {
+	// type assertion check
+	val, ok := fetchedValue.(float64)
+	if !ok {
+		return nil, fmt.Errorf("fetchedValue must be of type float64")
+	}
+
 	// fetch raw cpuLimitCores value
 	group, ok := groups[groupLabel]
 	if !ok {
@@ -1616,7 +1622,11 @@ func filterCpuUsedCores(rawValue definition.FetchedValue, groupLabel, entityID s
 
 	value, ok := entity["cpuLimitCores"]
 	if !ok {
-		return nil, fmt.Errorf("metric cpuLimitCores not found")
+		// there is likely no CPU limit set for the container which means we have to assume a reasonable value
+		// since there is no way to know the max cpu cores for the current node, use default max of 96 cores supported by most cloud providers
+		// a higher value wouldn't hurt our calculation as the cpuUsedCores value will be a super high number
+		log.StandardLogger().Warnf("cpuLimitCores metric not available. using default max 96 cores")
+		value = 96000 // 9600m k8s cpu unit
 	}
 
 	// apply transform before comparisons
@@ -1625,16 +1635,11 @@ func filterCpuUsedCores(rawValue definition.FetchedValue, groupLabel, entityID s
 		return nil, err
 	}
 
-	cpuUsedCoresVal, err := fromNano(rawValue)
-	if err != nil {
-		return nil, err
-	}
-
 	// check for impossibly high cpuUsedCoresVal
-	if cpuUsedCoresVal.(float64) > cpuLimitCoresVal.(float64)*100 {
-		return nil, fmt.Errorf("impossibly high value %f received from kubelet for cpuUsedCoresVal", cpuUsedCoresVal.(float64))
+	if val > cpuLimitCoresVal.(float64)*100 {
+		return nil, fmt.Errorf("impossibly high value %f received from kubelet for cpuUsedCoresVal", val)
 	}
 
 	// return valid raw value
-	return rawValue, nil
+	return fetchedValue, nil
 }

@@ -243,12 +243,12 @@ func TestMetricSetTypeGuesserWithCustomGroup(t *testing.T) {
 	}
 }
 
-func Test_filterCpuUsedCores(t *testing.T) {
+func Test_filterCpuUsedCores(t *testing.T) { //nolint: funlen
 	type args struct {
-		rawValue   definition.FetchedValue
-		groupLabel string
-		entityID   string
-		groups     definition.RawGroups
+		fetchedValue definition.FetchedValue
+		groupLabel   string
+		entityID     string
+		groups       definition.RawGroups
 	}
 	tests := []struct {
 		name    string
@@ -257,11 +257,28 @@ func Test_filterCpuUsedCores(t *testing.T) {
 		wantErr string
 	}{
 		{
+			name: "InvalidFetchedValueType",
+			args: args{
+				fetchedValue: 21412412,
+				groupLabel:   "dummyLabel",
+				entityID:     "entity_id_1",
+				groups: definition.RawGroups{
+					"test": {
+						"entity_id_1": definition.RawMetrics{
+							"raw_metric_name_1": "dummy_val",
+						},
+					},
+				},
+			},
+			want:    nil,
+			wantErr: "fetchedValue must be of type float64",
+		},
+		{
 			name: "GroupLabelNotFound",
 			args: args{
-				rawValue:   21412412,
-				groupLabel: "dummyLabel",
-				entityID:   "entity_id_1",
+				fetchedValue: 2.09,
+				groupLabel:   "dummyLabel",
+				entityID:     "entity_id_1",
 				groups: definition.RawGroups{
 					"test": {
 						"entity_id_1": definition.RawMetrics{
@@ -276,9 +293,9 @@ func Test_filterCpuUsedCores(t *testing.T) {
 		{
 			name: "GroupEntityNotFound",
 			args: args{
-				rawValue:   21412412,
-				groupLabel: "test",
-				entityID:   "dummyEntity",
+				fetchedValue: 2.09,
+				groupLabel:   "test",
+				entityID:     "dummyEntity",
 				groups: definition.RawGroups{
 					"test": {
 						"entity_id_1": definition.RawMetrics{
@@ -293,9 +310,9 @@ func Test_filterCpuUsedCores(t *testing.T) {
 		{
 			name: "CpuLimitCoresNotFound",
 			args: args{
-				rawValue:   21412412,
-				groupLabel: "test",
-				entityID:   "entity_id_1",
+				fetchedValue: 21.434,
+				groupLabel:   "test",
+				entityID:     "entity_id_1",
 				groups: definition.RawGroups{
 					"test": {
 						"entity_id_1": definition.RawMetrics{
@@ -304,15 +321,15 @@ func Test_filterCpuUsedCores(t *testing.T) {
 					},
 				},
 			},
-			want:    nil,
-			wantErr: "metric cpuLimitCores not found",
+			want:    21.434,
+			wantErr: "",
 		},
 		{
 			name: "CpuLimitCoresTransformError",
 			args: args{
-				rawValue:   21412412,
-				groupLabel: "test",
-				entityID:   "entity_id_1",
+				fetchedValue: 2.09,
+				groupLabel:   "test",
+				entityID:     "entity_id_1",
 				groups: definition.RawGroups{
 					"test": {
 						"entity_id_1": definition.RawMetrics{
@@ -325,67 +342,50 @@ func Test_filterCpuUsedCores(t *testing.T) {
 			wantErr: "error transforming to cores",
 		},
 		{
-			name: "CpuUsedCoresTransformError",
-			args: args{
-				rawValue:   "dummy_val",
-				groupLabel: "test",
-				entityID:   "entity_id_1",
-				groups: definition.RawGroups{
-					"test": {
-						"entity_id_1": definition.RawMetrics{
-							"cpuLimitCores": 21412412,
-						},
-					},
-				},
-			},
-			want:    nil,
-			wantErr: "error transforming to cpu cores",
-		},
-		{
 			name: "ImpossiblyHighCpuCoresError",
 			args: args{
-				rawValue:   uint64(2141241241241113445),
-				groupLabel: "test",
-				entityID:   "entity_id_1",
+				fetchedValue: 2141241241241113445.121,
+				groupLabel:   "test",
+				entityID:     "entity_id_1",
 				groups: definition.RawGroups{
 					"test": {
 						"entity_id_1": definition.RawMetrics{
-							"cpuLimitCores": 21,
+							"cpuLimitCores": 200,
 						},
 					},
 				},
 			},
 			want:    nil,
-			wantErr: "impossibly high value 2141241241.241113 received from kubelet for cpuUsedCoresVal",
+			wantErr: "impossibly high value 2141241241241113344.000000 received from kubelet for cpuUsedCoresVal",
 		},
 		{
 			name: "ValidCpuUsedCoresValue",
 			args: args{
-				rawValue:   uint64(2141),
-				groupLabel: "test",
-				entityID:   "entity_id_1",
+				fetchedValue: 2.09,
+				groupLabel:   "test",
+				entityID:     "entity_id_1",
 				groups: definition.RawGroups{
 					"test": {
 						"entity_id_1": definition.RawMetrics{
-							"cpuLimitCores": 2113344,
+							"cpuLimitCores": 8000,
 						},
 					},
 				},
 			},
-			want:    uint64(0x85d),
+			want:    2.09,
 			wantErr: "",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := filterCpuUsedCores(tt.args.rawValue, tt.args.groupLabel, tt.args.entityID, tt.args.groups)
+			got, err := filterCpuUsedCores(tt.args.fetchedValue, tt.args.groupLabel, tt.args.entityID, tt.args.groups)
 			if len(tt.wantErr) > 0 {
 				assert.EqualErrorf(t, err, tt.wantErr, "expected %s, got %s", tt.wantErr, err.Error())
 			} else {
 				assert.Nilf(t, err, "expected nil error")
 			}
 
-			assert.Equalf(t, tt.want, got, "filterCpuUsedCores(%v, %v, %v, %v)", tt.args.rawValue, tt.args.groupLabel, tt.args.entityID, tt.args.groups)
+			assert.Equalf(t, tt.want, got, "filterCpuUsedCores(%v, %v, %v, %v)", tt.args.fetchedValue, tt.args.groupLabel, tt.args.entityID, tt.args.groups)
 		})
 	}
 }

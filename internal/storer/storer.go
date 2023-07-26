@@ -130,7 +130,7 @@ func (ims InMemoryStore) StopVacuum() {
 	close(ims.stopChannel)
 }
 
-//Save implementation to respect interface.
+// Save implementation to respect interface.
 func (ims *InMemoryStore) Save() error {
 	// It does nothing, not needed in this implementation
 	return nil

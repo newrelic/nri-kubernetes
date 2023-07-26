@@ -32,7 +32,7 @@ type HTTPSinkOptions struct {
 	Client Doer
 }
 
-//New initialize HTTPSink struct.
+// New initialize HTTPSink struct.
 func New(options HTTPSinkOptions) (*HTTPSink, error) {
 	if options.Client == nil {
 		return nil, fmt.Errorf("client cannot be nil")
