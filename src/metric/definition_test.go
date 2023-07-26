@@ -243,6 +243,7 @@ func TestMetricSetTypeGuesserWithCustomGroup(t *testing.T) {
 }
 
 func Test_filterCpuUsedCores(t *testing.T) { //nolint: funlen
+	t.Parallel()
 	type args struct {
 		fetchedValue definition.FetchedValue
 		groupLabel   string
@@ -375,7 +376,8 @@ func Test_filterCpuUsedCores(t *testing.T) { //nolint: funlen
 			wantErr: "",
 		},
 	}
-	for _, tt := range tests {
+	for _, testCase := range tests {
+		tt := testCase
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			got, err := filterCpuUsedCores(tt.args.fetchedValue, tt.args.groupLabel, tt.args.entityID, tt.args.groups)

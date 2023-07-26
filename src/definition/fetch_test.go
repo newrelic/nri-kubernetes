@@ -117,6 +117,7 @@ var (
 )
 
 func TestTransformAndFilter(t *testing.T) { //nolint: funlen
+	t.Parallel()
 	type args struct {
 		fetchFunc     FetchFunc
 		filterFunc    FilterFunc
@@ -224,7 +225,8 @@ func TestTransformAndFilter(t *testing.T) { //nolint: funlen
 			wantErr: "",
 		},
 	}
-	for _, tt := range tests {
+	for _, testCase := range tests {
+		tt := testCase
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			value, err := TransformAndFilter(tt.args.fetchFunc, tt.args.transformFunc, tt.args.filterFunc)(tt.args.groupLabel, tt.args.entityId, tt.args.raw)
