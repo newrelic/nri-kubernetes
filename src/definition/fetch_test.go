@@ -112,8 +112,8 @@ func TestTransformBypassesError(t *testing.T) {
 }
 
 var (
-	dummyFilterError    = fmt.Errorf("dummy filter error")
-	dummyTransformError = fmt.Errorf("dummy transform error")
+	errDummyFilter    = fmt.Errorf("dummy filter error")
+	errDummyTransform = fmt.Errorf("dummy transform error")
 )
 
 func TestTransformAndFilter(t *testing.T) { //nolint: funlen
@@ -160,7 +160,7 @@ func TestTransformAndFilter(t *testing.T) { //nolint: funlen
 			args: args{
 				fetchFunc: FromRaw("metric_name_1"),
 				filterFunc: func(value FetchedValue, groupLabel, entityId string, groups RawGroups) (FilteredValue, error) {
-					return nil, dummyFilterError
+					return nil, errDummyFilter
 				},
 				transformFunc: func(value FetchedValue) (FetchedValue, error) {
 					return 24124124, nil
@@ -186,7 +186,7 @@ func TestTransformAndFilter(t *testing.T) { //nolint: funlen
 					return 24124124, nil
 				},
 				transformFunc: func(value FetchedValue) (FetchedValue, error) {
-					return nil, dummyTransformError
+					return nil, errDummyTransform
 				},
 				groupLabel: "group1",
 				entityId:   "entity1",

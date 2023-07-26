@@ -380,14 +380,14 @@ func Test_filterCpuUsedCores(t *testing.T) { //nolint: funlen
 		tt := testCase
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got, err := filterCpuUsedCores(tt.args.fetchedValue, tt.args.groupLabel, tt.args.entityID, tt.args.groups)
+			got, err := filterCPUUsedCores(tt.args.fetchedValue, tt.args.groupLabel, tt.args.entityID, tt.args.groups)
 			if len(tt.wantErr) > 0 {
 				assert.EqualErrorf(t, err, tt.wantErr, "expected %s, got %s", tt.wantErr, err.Error())
 			} else {
 				assert.Nilf(t, err, "expected nil error")
 			}
 
-			assert.Equalf(t, tt.want, got, "filterCpuUsedCores(%v, %v, %v, %v)", tt.args.fetchedValue, tt.args.groupLabel, tt.args.entityID, tt.args.groups)
+			assert.Equalf(t, tt.want, got, "filterCPUUsedCores(%v, %v, %v, %v)", tt.args.fetchedValue, tt.args.groupLabel, tt.args.entityID, tt.args.groups)
 		})
 	}
 }

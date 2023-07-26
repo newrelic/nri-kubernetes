@@ -18,7 +18,7 @@ import (
 // Fetch Functions for computed metrics
 var (
 	workingSetBytes   = definition.FromRaw("workingSetBytes")
-	_cpuUsedCores     = definition.TransformAndFilter(definition.FromRaw("usageNanoCores"), fromNano, filterCpuUsedCores) //nolint: gochecknoglobals // significant refactoring
+	_cpuUsedCores     = definition.TransformAndFilter(definition.FromRaw("usageNanoCores"), fromNano, filterCPUUsedCores) //nolint: gochecknoglobals // significant refactoring
 	cpuLimitCores     = definition.Transform(definition.FromRaw("cpuLimitCores"), toCores)
 	cpuRequestedCores = definition.Transform(definition.FromRaw("cpuRequestedCores"), toCores)
 	processOpenFds    = prometheus.FromValueWithOverriddenName("process_open_fds", "processOpenFds")
@@ -1600,34 +1600,34 @@ func metricSetTypeGuesserWithCustomGroup(group string) definition.GuessFunc {
 
 // error checks.
 var (
-	_errFetchedValueTypeCheck = fmt.Errorf("fetchedValue must be of type float64")
-	_errCpuLimitTypeCheck     = fmt.Errorf("cpuLimit must be of type float64")
-	_errGroupLabelCheck       = fmt.Errorf("group label not found")
-	_errEntityCheck           = fmt.Errorf("entity Id not found")
-	_errHighCpuUsedCores      = fmt.Errorf("impossibly high value received from kubelet for cpuUsedCoresVal")
+	errFetchedValueTypeCheck = fmt.Errorf("fetchedValue must be of type float64")
+	errCpuLimitTypeCheck     = fmt.Errorf("cpuLimit must be of type float64")
+	errGroupLabelCheck       = fmt.Errorf("group label not found")
+	errEntityCheck           = fmt.Errorf("entity Id not found")
+	errHighCpuUsedCores      = fmt.Errorf("impossibly high value received from kubelet for cpuUsedCoresVal")
 )
 
-// filterCpuUsedCores checks for the correctness of the container metric cpuUsedCores returned by kubelet.
+// filterCPUUsedCores checks for the correctness of the container metric cpuUsedCores returned by kubelet.
 // cpuUsedCores a.k.a `usageNanoCores` value is set by cAdvisor and is returned by kubelet stats summary endpoint.
 // There is an active bug where the metric value is sometimes impossibly high https://github.com/kubernetes/kubernetes/issues/114057.
 // The cpuUsedCores along with cpuLimitCores is typically used to plot `cpuCoresUtilization` on the UI where cpuCoresUtilization = (cpuUsedCores/cpuLimitCores) * 100.
 // cpuUsedCores has been observed to be absurd even when cpuUsedCores >  cpuLimitCores * 100.
-func filterCpuUsedCores(fetchedValue definition.FetchedValue, groupLabel, entityId string, groups definition.RawGroups) (definition.FilteredValue, error) {
+func filterCPUUsedCores(fetchedValue definition.FetchedValue, groupLabel, entityId string, groups definition.RawGroups) (definition.FilteredValue, error) {
 	// type assertion check
 	val, ok := fetchedValue.(float64)
 	if !ok {
-		return nil, _errFetchedValueTypeCheck
+		return nil, errFetchedValueTypeCheck
 	}
 
 	// fetch raw cpuLimitCores value
 	group, ok := groups[groupLabel]
 	if !ok {
-		return nil, _errGroupLabelCheck
+		return nil, errGroupLabelCheck
 	}
 
 	entity, ok := group[entityId]
 	if !ok {
-		return nil, _errEntityCheck
+		return nil, errEntityCheck
 	}
 
 	value, ok := entity["cpuLimitCores"]
@@ -1648,12 +1648,12 @@ func filterCpuUsedCores(fetchedValue definition.FetchedValue, groupLabel, entity
 	// check type assertion
 	cpuLimit, ok := cpuLimitCoresVal.(float64)
 	if !ok {
-		return nil, _errCpuLimitTypeCheck
+		return nil, errCpuLimitTypeCheck
 	}
 
 	// check for impossibly high cpuUsedCoresVal
 	if val > cpuLimit*100 {
-		return nil, _errHighCpuUsedCores
+		return nil, errHighCpuUsedCores
 	}
 
 	// return valid raw value
