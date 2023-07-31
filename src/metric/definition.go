@@ -1638,7 +1638,7 @@ func filterCPUUsedCores(fetchedValue definition.FetchedValue, groupLabel, entity
 		// since there is no way to know the max cpu cores for the current node, use default max of 96 cores supported by most cloud providers
 		// a higher value wouldn't hurt our calculation as the cpuUsedCores value will be a super high number
 		log.StandardLogger().Warnf("cpuLimitCores metric not available. using default max 96 cores")
-		value = 96000 // 9600m k8s cpu unit
+		value = 96000 // 96 * 1000m k8s cpu unit
 	}
 
 	// apply transform before comparisons
