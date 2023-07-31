@@ -20,6 +20,13 @@ type FetchedValues map[string]FetchedValue
 // Return FetchedValues if you want to prototype metrics.
 type FetchFunc func(groupLabel, entityID string, groups RawGroups) (FetchedValue, error)
 
+// FilteredValue is the filtered value of an already fetched metric.
+type FilteredValue interface{}
+
+// FilterFunc applies a filtering function on the raw fetchedValue.
+// Return FilteredValue if the filter was successfully applied or error otherwise.
+type FilterFunc func(value FetchedValue, groupLabel, entityID string, groups RawGroups) (FilteredValue, error)
+
 // RawGroups are grouped raw metrics.
 // map[entityType][entityName][metricName]metricValue as interface{}
 type RawGroups map[string]map[string]RawMetrics
@@ -57,5 +64,21 @@ func Transform(fetchFunc FetchFunc, transformFunc TransformFunc) FetchFunc {
 			return nil, err
 		}
 		return transformFunc(fetchedVal)
+	}
+}
+
+// TransformAndFilter return a new FetchFunc that first applies a TransformFunc to the result of the fetchFunc passed as argument.
+// It then applies the FilterFunc to the result of the TransformFunc if the transform was successfully applied.
+func TransformAndFilter(fetchFunc FetchFunc, transformFunc TransformFunc, filterFunc FilterFunc) FetchFunc {
+	return func(groupLabel, entityID string, groups RawGroups) (FetchedValue, error) {
+		fetchedVal, err := fetchFunc(groupLabel, entityID, groups)
+		if err != nil {
+			return nil, err
+		}
+		fetchedVal, err = transformFunc(fetchedVal)
+		if err != nil {
+			return nil, err
+		}
+		return filterFunc(fetchedVal, groupLabel, entityID, groups)
 	}
 }

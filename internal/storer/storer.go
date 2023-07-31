@@ -36,7 +36,7 @@ type InMemoryStore struct {
 
 // Holder for any entry in the JSON storage.
 type jsonEntry struct {
-	//notice this is the timestamp of the creation of the jsonEntry, we do not keep track of the last-access timestamp.
+	// notice this is the timestamp of the creation of the jsonEntry, we do not keep track of the last-access timestamp.
 	timestamp time.Time
 	value     interface{}
 }
@@ -130,7 +130,7 @@ func (ims InMemoryStore) StopVacuum() {
 	close(ims.stopChannel)
 }
 
-//Save implementation to respect interface.
+// Save implementation to respect interface.
 func (ims *InMemoryStore) Save() error {
 	// It does nothing, not needed in this implementation
 	return nil

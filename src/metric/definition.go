@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	sdkMetric "github.com/newrelic/infra-integrations-sdk/data/metric"
 
 	"github.com/newrelic/nri-kubernetes/v3/src/definition"
@@ -16,7 +18,7 @@ import (
 // Fetch Functions for computed metrics
 var (
 	workingSetBytes   = definition.FromRaw("workingSetBytes")
-	cpuUsedCores      = definition.Transform(definition.FromRaw("usageNanoCores"), fromNano)
+	_cpuUsedCores     = definition.TransformAndFilter(definition.FromRaw("usageNanoCores"), fromNano, filterCPUUsedCores) //nolint: gochecknoglobals // significant refactoring
 	cpuLimitCores     = definition.Transform(definition.FromRaw("cpuLimitCores"), toCores)
 	cpuRequestedCores = definition.Transform(definition.FromRaw("cpuRequestedCores"), toCores)
 	processOpenFds    = prometheus.FromValueWithOverriddenName("process_open_fds", "processOpenFds")
@@ -1263,7 +1265,7 @@ var KubeletSpecs = definition.SpecGroups{
 			// /stats/summary endpoint
 			{Name: "memoryUsedBytes", ValueFunc: definition.FromRaw("usageBytes"), Type: sdkMetric.GAUGE},
 			{Name: "memoryWorkingSetBytes", ValueFunc: workingSetBytes, Type: sdkMetric.GAUGE},
-			{Name: "cpuUsedCores", ValueFunc: cpuUsedCores, Type: sdkMetric.GAUGE},
+			{Name: "cpuUsedCores", ValueFunc: _cpuUsedCores, Type: sdkMetric.GAUGE},
 			{Name: "fsAvailableBytes", ValueFunc: definition.FromRaw("fsAvailableBytes"), Type: sdkMetric.GAUGE},
 			{Name: "fsCapacityBytes", ValueFunc: definition.FromRaw("fsCapacityBytes"), Type: sdkMetric.GAUGE},
 			{Name: "fsUsedBytes", ValueFunc: definition.FromRaw("fsUsedBytes"), Type: sdkMetric.GAUGE},
@@ -1312,8 +1314,8 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "label.*", ValueFunc: definition.Transform(definition.FromRaw("labels"), kubeletMetric.OneMetricPerLabel), Type: sdkMetric.ATTRIBUTE},
 
 			// computed
-			{Name: "cpuCoresUtilization", ValueFunc: toUtilization(cpuUsedCores, cpuLimitCores), Type: sdkMetric.GAUGE, Optional: true},
-			{Name: "requestedCpuCoresUtilization", ValueFunc: toUtilization(cpuUsedCores, cpuRequestedCores), Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "cpuCoresUtilization", ValueFunc: toUtilization(_cpuUsedCores, cpuLimitCores), Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "requestedCpuCoresUtilization", ValueFunc: toUtilization(_cpuUsedCores, cpuRequestedCores), Type: sdkMetric.GAUGE, Optional: true},
 			{Name: "memoryUtilization", ValueFunc: toUtilization(definition.FromRaw("usageBytes"), definition.FromRaw("memoryLimitBytes")), Type: sdkMetric.GAUGE, Optional: true},
 			{Name: "requestedMemoryUtilization", ValueFunc: toUtilization(definition.FromRaw("usageBytes"), definition.FromRaw("memoryRequestedBytes")), Type: sdkMetric.GAUGE, Optional: true},
 		},
@@ -1322,7 +1324,7 @@ var KubeletSpecs = definition.SpecGroups{
 		TypeGenerator: kubeletMetric.FromRawGroupsEntityTypeGenerator,
 		Specs: []definition.Spec{
 			{Name: "nodeName", ValueFunc: definition.FromRaw("nodeName"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "cpuUsedCores", ValueFunc: cpuUsedCores, Type: sdkMetric.GAUGE},
+			{Name: "cpuUsedCores", ValueFunc: _cpuUsedCores, Type: sdkMetric.GAUGE},
 			{Name: "cpuUsedCoreMilliseconds", ValueFunc: definition.Transform(definition.FromRaw("usageCoreNanoSeconds"), fromNanoToMilli), Type: sdkMetric.GAUGE},
 			{Name: "memoryUsedBytes", ValueFunc: definition.FromRaw("memoryUsageBytes"), Type: sdkMetric.GAUGE},
 			{Name: "memoryAvailableBytes", ValueFunc: definition.FromRaw("memoryAvailableBytes"), Type: sdkMetric.GAUGE},
@@ -1355,7 +1357,7 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "kubeletVersion", ValueFunc: definition.FromRaw("kubeletVersion"), Type: sdkMetric.ATTRIBUTE},
 			// computed
 			{Name: "fsCapacityUtilization", ValueFunc: toUtilization(definition.FromRaw("fsUsedBytes"), definition.FromRaw("fsCapacityBytes")), Type: sdkMetric.GAUGE},
-			{Name: "allocatableCpuCoresUtilization", ValueFunc: toUtilization(cpuUsedCores, definition.FromRaw("allocatableCpuCores")), Type: sdkMetric.GAUGE},
+			{Name: "allocatableCpuCoresUtilization", ValueFunc: toUtilization(_cpuUsedCores, definition.FromRaw("allocatableCpuCores")), Type: sdkMetric.GAUGE},
 			{Name: "allocatableMemoryUtilization", ValueFunc: toUtilization(workingSetBytes, definition.FromRaw("allocatableMemoryBytes")), Type: sdkMetric.GAUGE},
 		},
 	},
@@ -1594,4 +1596,68 @@ func metricSetTypeGuesserWithCustomGroup(group string) definition.GuessFunc {
 	return func(_ string) (string, error) {
 		return definition.K8sMetricSetTypeGuesser(group) //nolint: wrapcheck
 	}
+}
+
+// error checks.
+var (
+	errFetchedValueTypeCheck = fmt.Errorf("fetchedValue must be of type float64")
+	errCPULimitTypeCheck     = fmt.Errorf("cpuLimit must be of type float64")
+	errGroupLabelCheck       = fmt.Errorf("group label not found")
+	errEntityCheck           = fmt.Errorf("entity Id not found")
+	errHighCPUUsedCores      = fmt.Errorf("impossibly high value received from kubelet for cpuUsedCoresVal")
+)
+
+// filterCPUUsedCores checks for the correctness of the container metric cpuUsedCores returned by kubelet.
+// cpuUsedCores a.k.a `usageNanoCores` value is set by cAdvisor and is returned by kubelet stats summary endpoint.
+// There is an active bug where the metric value is sometimes impossibly high https://github.com/kubernetes/kubernetes/issues/114057.
+// The cpuUsedCores along with cpuLimitCores is typically used to plot `cpuCoresUtilization` on the UI where cpuCoresUtilization = (cpuUsedCores/cpuLimitCores) * 100.
+// cpuUsedCores has been observed to be absurd even when cpuUsedCores >  cpuLimitCores * 100.
+//
+//nolint:nolintlint,ireturn
+func filterCPUUsedCores(fetchedValue definition.FetchedValue, groupLabel, entityID string, groups definition.RawGroups) (definition.FilteredValue, error) {
+	// type assertion check
+	val, ok := fetchedValue.(float64)
+	if !ok {
+		return nil, errFetchedValueTypeCheck
+	}
+
+	// fetch raw cpuLimitCores value
+	group, ok := groups[groupLabel]
+	if !ok {
+		return nil, errGroupLabelCheck
+	}
+
+	entity, ok := group[entityID]
+	if !ok {
+		return nil, errEntityCheck
+	}
+
+	value, ok := entity["cpuLimitCores"]
+	if !ok {
+		// there is likely no CPU limit set for the container which means we have to assume a reasonable value
+		// since there is no way to know the max cpu cores for the current node, use default max of 96 cores supported by most cloud providers
+		// a higher value wouldn't hurt our calculation as the cpuUsedCores value will be a super high number
+		log.StandardLogger().Warnf("cpuLimitCores metric not available. using default max 96 cores")
+		value = 96000 // 96 * 1000m k8s cpu unit
+	}
+
+	// apply transform before comparisons
+	cpuLimitCoresVal, err := toCores(value)
+	if err != nil {
+		return nil, err
+	}
+
+	// check type assertion
+	cpuLimit, ok := cpuLimitCoresVal.(float64)
+	if !ok {
+		return nil, errCPULimitTypeCheck
+	}
+
+	// check for impossibly high cpuUsedCoresVal
+	if val > cpuLimit*100 {
+		return nil, errHighCPUUsedCores
+	}
+
+	// return valid raw value
+	return fetchedValue, nil
 }
