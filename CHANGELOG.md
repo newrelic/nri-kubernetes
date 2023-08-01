@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 3.15.3
+## What's Changed
+* bump app and chart version by @csongnr in https://github.com/newrelic/nri-kubernetes/pull/819
+* NR-139168: Fix k8s.container.cpuCoresUtilization metric calculation by @sachin-shankar in https://github.com/newrelic/nri-kubernetes/pull/817
+
+## New Contributors
+* @sachin-shankar made their first contribution in https://github.com/newrelic/nri-kubernetes/pull/817
+
+**Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.15.2...v3.15.3
+
+## 3.15.2
+## What's Changed
+* Bump Chart Versions by @xqi-nr in #810
+* Update Changelog by @xqi-nr in #809
+* chore(deps): Directly Use Prometheus Parser - remove prom2json dep by @isaacadeleke-nr in #799
+* fix(parsing): Log an error instead of fully failing on partial parsing failure by @isaacadeleke-nr in #802
+* fix(deps): update module google.golang.org/protobuf to v1.31.0 by @renovate in #811
+* chore(deps): update newrelic/k8s-events-forwarder docker tag to v1.45.0 by @renovate in #814
+* chore(deps): update newrelic/infrastructure-bundle docker tag to v3.2.11 by @renovate in #816
+* fix(deps): update kubernetes packages to v0.27.4 by @renovate in #815
+* chore(deps): update module golang.org/x/crypto to v0.11.0 by @renovate in #813
+* chore(deps): update newrelic/infrastructure-bundle docker tag to v3.2.12 by @renovate in #818
+
+## New Contributors
+@isaacadeleke-nr made their first contribution in #799
+
+**Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.15.1...v3.15.2
+
 ## 3.15.1
 
 ## What's Changed
