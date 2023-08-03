@@ -17,7 +17,27 @@ scenarios:
       - helm delete ${SCENARIO_TAG}-resources -n nr-${SCENARIO_TAG}
       - helm delete ${SCENARIO_TAG} -n nr-${SCENARIO_TAG}
     tests:
-      nrqls: []
+      nrqls:
+#        START PersistentVolume
+        - query: "FROM Metric SELECT latest(k8s.persistentvolume.statusPhase) as 'Status' WHERE metricName = 'k8s.persistentvolume.createdAt' and k8s.volumeName = '${SCENARIO_TAG}-resources'"
+          expected_results:
+            - key: "Status"
+              value: "Available"
+        - query: "FROM Metric SELECT latest(k8s.persistentvolume.capacityBytes) / 1024 / 1024 as 'Capacity (Mi)' WHERE metricName = 'k8s.persistentvolume.createdAt' and k8s.volumeName = '${SCENARIO_TAG}-resources'"
+          expected_results:
+            - key: "Capacity (Mi)"
+              lowerBoundedValue: 0
+#        END PersistentVolume
+#        START PersistentVolumeClaim
+        - query: "FROM Metric SELECT latest(k8s.persistentvolumeclaim.statusPhase) as 'Status' WHERE metricName = 'k8s.persistentvolumeclaim.createdAt' and k8s.pvcName = '${SCENARIO_TAG}-resources'"
+          expected_results:
+            - key: "Status"
+              value: "Bound"
+        - query: "FROM Metric SELECT latest(k8s.persistentvolumeclaim.requestedStorageBytes) / 1024 / 1024 as 'Requested Capacity (Mi)' WHERE k8s.pvcName = '${SCENARIO_TAG}-resources'"
+          expected_results:
+            - key: "Requested Capacity (Mi)"
+              value: 32
+#        END PersistentVolumeClaim
       entities: []
       metrics:
         - source: "k8s.yml"
