@@ -224,6 +224,104 @@ scenarios:
             - key: "Container restarts"
               value: 0.0
 #        END Cronjob
+#        START Deployment
+        - query: "FROM Metric SELECT latest(k8s.deployment.podsAvailable) as 'Pods Available' WHERE metricName = 'k8s.deployment.createdAt' and k8s.deploymentName = '${SCENARIO_TAG}-resources-depl'"
+          expected_results:
+            - key: "Pods Available"
+              value: 2
+        - query: "FROM Metric SELECT latest(k8s.deployment.podsDesired) as 'Pods Desired' WHERE metricName = 'k8s.deployment.createdAt' and k8s.deploymentName = '${SCENARIO_TAG}-resources-depl'"
+          expected_results:
+            - key: "Pods Desired"
+              value: 2
+        - query: "FROM Metric SELECT latest(k8s.deployment.podsTotal) as 'Pods Total' WHERE metricName = 'k8s.deployment.createdAt' and k8s.deploymentName = '${SCENARIO_TAG}-resources-depl'"
+          expected_results:
+            - key: "Pods Total"
+              value: 2
+        - query: "FROM Metric SELECT latest(k8s.deployment.podsUpdated) as 'Pods Updated' WHERE metricName = 'k8s.deployment.createdAt' and k8s.deploymentName = '${SCENARIO_TAG}-resources-depl'"
+          expected_results:
+            - key: "Pods Updated"
+              value: 2
+        - query: "FROM Metric SELECT latest(k8s.deployment.podsUnavailable) as 'Pods Unavailable' WHERE metricName = 'k8s.deployment.createdAt' and k8s.deploymentName = '${SCENARIO_TAG}-resources-depl'"
+          expected_results:
+            - key: "Pods Unavailable"
+              value: 0
+        - query: "FROM Metric SELECT latest(k8s.deployment.podsMissing) as 'Missing (Desired - Total)' WHERE metricName = 'k8s.deployment.createdAt' and k8s.deploymentName = '${SCENARIO_TAG}-resources-depl'"
+          expected_results:
+            - key: "Missing (Desired - Total)"
+              value: 0
+        - query: "FROM Metric SELECT latest(k8s.deployment.podsMaxUnavailable) as 'Pods MaxUnavailable' WHERE metricName = 'k8s.deployment.createdAt' and k8s.deploymentName = '${SCENARIO_TAG}-resources-depl'"
+          expected_results:
+            - key: "Pods MaxUnavailable"
+              value: 1
+        - query: "FROM Metric SELECT latest(k8s.deployment.podsReady) as 'Pods Ready' WHERE metricName = 'k8s.deployment.createdAt' and k8s.deploymentName = '${SCENARIO_TAG}-resources-depl'"
+          expected_results:
+            - key: "Pods Ready"
+              value: 2
+        - query: "FROM Metric SELECT max(k8s.pod.netTxBytesPerSecond) / 1000 AS 'Transferred (KBps)' WHERE k8s.deploymentName = '${SCENARIO_TAG}-resources-depl' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' FACET k8s.podName"
+          expected_results:
+            - key: "Transferred (KBps)"
+              lowerBoundedValue: 0.001
+            - key: "Transferred (KBps)"
+              lowerBoundedValue: 0.001
+        - query: "FROM Metric SELECT max(k8s.pod.netRxBytesPerSecond) / 1000 AS 'Received (KBps)' WHERE k8s.deploymentName = '${SCENARIO_TAG}-resources-depl' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' FACET k8s.podName"
+          expected_results:
+            - key: "Received (KBps)"
+              lowerBoundedValue: 0
+            - key: "Received (KBps)"
+              lowerBoundedValue: 0
+        - query: "FROM Metric SELECT max(k8s.pod.netErrorsPerSecond) AS 'Errors (per second)' WHERE k8s.deploymentName = '${SCENARIO_TAG}-resources-depl' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' FACET k8s.podName"
+          expected_results:
+            - key: "Errors (per second)"
+              value: 0
+            - key: "Errors (per second)"
+              value: 0
+        - query: "FROM Metric SELECT average(k8s.container.cpuUsedCores) AS 'CPU usage (cores)' WHERE k8s.deploymentName = '${SCENARIO_TAG}-resources-depl' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' FACET k8s.podName, k8s.containerName"
+          expected_results:
+            - key: "CPU usage (cores)"
+              lowerBoundedValue: 0
+            - key: "CPU usage (cores)"
+              lowerBoundedValue: 0
+        - query: "FROM Metric SELECT average(k8s.container.cpuCoresUtilization) / 100 AS 'CPU utilization (%)' WHERE k8s.deploymentName = '${SCENARIO_TAG}-resources-depl' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}'"
+          expected_results:
+            - key: "CPU utilization (%)"
+              value: nil
+        - query: "FROM Metric SELECT sum(k8s.container.cpuCfsThrottledPeriodsDelta) / sum(k8s.container.cpuCfsPeriodsDelta) AS 'CPU throttling (%)' WHERE k8s.deploymentName = '${SCENARIO_TAG}-resources-depl' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}'"
+          expected_results:
+            - key: "CPU throttling (%)"
+              value: nil
+        - query: "FROM Metric SELECT average(k8s.container.memoryWorkingSetBytes) AS 'Memory usage (bytes)' WHERE k8s.deploymentName = '${SCENARIO_TAG}-resources-depl' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' FACET k8s.podName, k8s.containerName"
+          expected_results:
+            - key: "Memory usage (bytes)"
+              lowerBoundedValue: 300000
+              upperBoundedValue: 600000
+            - key: "Memory usage (bytes)"
+              lowerBoundedValue: 300000
+              upperBoundedValue: 600000
+        - query: "FROM Metric SELECT average(k8s.container.memoryWorkingSetUtilization) / 100 AS 'Memory utilization (%)' WHERE k8s.deploymentName = '${SCENARIO_TAG}-resources-depl' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}'"
+          expected_results:
+            - key: "Memory utilization (%)"
+              value: nil
+        - query: "FROM Metric SELECT max(k8s.container.fsUsedBytes) AS 'Filesystem used (bytes)' WHERE k8s.deploymentName = '${SCENARIO_TAG}-resources-depl' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' FACET k8s.podName, k8s.containerName"
+          expected_results:
+            - key: "Filesystem used (bytes)"
+              value: 45056
+            - key: "Filesystem used (bytes)"
+              value: 45056
+        - query: "FROM Metric SELECT max(k8s.container.fsUsedPercent) / 100 AS 'Filesystem Utilization (%)' WHERE k8s.deploymentName = '${SCENARIO_TAG}-resources-depl' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' FACET k8s.podName, k8s.containerName"
+          expected_results:
+            - key: "Filesystem Utilization (%)"
+              lowerBoundedValue: 0.00000090
+              upperBoundedValue: 0.00000092
+            - key: "Filesystem Utilization (%)"
+              lowerBoundedValue: 0.00000090
+              upperBoundedValue: 0.00000092
+        - query: "SELECT sum(k8s.container.restartCountDelta) AS 'Container restarts' FROM Metric WHERE k8s.deploymentName = '${SCENARIO_TAG}-resources-depl' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' FACET k8s.podName, k8s.containerName"
+          expected_results:
+            - key: "Container restarts"
+              value: 0
+            - key: "Container restarts"
+              value: 0
+#        END Deployment
       entities: []
       metrics:
         - source: "k8s.yml"
