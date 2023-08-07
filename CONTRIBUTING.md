@@ -16,7 +16,7 @@ Before submitting an Issue, please search for similar ones in the
 
 1. Ensure any install or build dependencies are removed before the end of the layer when doing a build.
 2. Increase the version numbers in any examples files and the README.md to the new version that this Pull Request would represent. The versioning scheme we use is [SemVer](http://semver.org/).
-3. Add an entry to `CHANGELOG.md` under an appropiate L3 header like "### Bug fixes" under the "## Unreleased" L2 header.
+3. Add an entry to `CHANGELOG.md` under an appropriate L3 header like "### Bug fixes" under the "## Unreleased" L2 header.
   -  If a change does not require a changelog entry, add a "Skip Changelog" label to the pr. 
   - Pull requests with the "dependencies" label will be skipped by the changelog CI check.
 4. You may merge the Pull Request in once you have the sign-off of two other developers, or if you do not have permission to do that, you may request the second reviewer to merge it for you.
