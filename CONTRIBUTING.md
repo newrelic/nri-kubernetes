@@ -16,6 +16,21 @@ Before submitting an Issue, please search for similar ones in the
 
 1. Ensure any install or build dependencies are removed before the end of the layer when doing a build.
 2. Increase the version numbers in any examples files and the README.md to the new version that this Pull Request would represent. The versioning scheme we use is [SemVer](http://semver.org/).
+3. Add an entry to the CHANGELOG under the `Unreleased` section under an L3 header that specifies the type of your PR. If there is no L3 header for your type of PR, add a new L3 header. Here's an example of how it should look:
+  ```md
+    ## Unreleased
+
+    ### bugfix
+    - Fix some bug in some file
+  ```
+
+  - Here are the accepted L3 headers (case sensitive)
+    + `breaking`
+    + `security`
+    + `enhancement`
+    + `bugfix`
+    + `dependency`
+
 3. You may merge the Pull Request in once you have the sign-off of two other developers, or if you do not have permission to do that, you may request the second reviewer to merge it for you.
 
 ## Contributor License Agreement
