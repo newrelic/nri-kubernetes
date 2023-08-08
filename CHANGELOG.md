@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- Add changelog workflow
+
 ## 3.15.3
 ## What's Changed
 * bump app and chart version by @csongnr in https://github.com/newrelic/nri-kubernetes/pull/819
