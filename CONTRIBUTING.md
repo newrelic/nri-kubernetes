@@ -21,7 +21,7 @@ Before submitting an Issue, please search for similar ones in the
       ## Unreleased
 
       ### bugfix
-      - Fix some bug in some file
+      - Fix some bug in some file @yourGithubHandle [#123](linkToThisPR)
     ```
 
   - Here are the accepted L3 headers (case sensitive)
