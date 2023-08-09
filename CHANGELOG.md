@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### enhancement
 - Add changelog workflow by @svetlanabrennan in [#837](https://github.com/newrelic/nri-kubernetes/pull/837)
+- Update changelog workflow @svetlanabrennan in [#843](https://github.com/newrelic/nri-kubernetes/pull/843)
 - Testing
 
 ## 3.15.3
