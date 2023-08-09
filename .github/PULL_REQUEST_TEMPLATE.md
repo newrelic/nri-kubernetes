@@ -8,20 +8,22 @@ Please include a summary of the change in your pr and what it's fixing.
 
 Please delete options that are not relevant.
 
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] This change requires a documentation update
 - [ ] Security fix
+- [ ] New feature / enhancement (non-breaking change which adds functionality)
+- [ ] Bug fix (non-breaking change which fixes an issue)
+- [ ] This change requires a documentation update
 
-## How Has This Been Tested?
+## New Tests?
 
-Please describe the tests that you ran to verify your changes (if applicabe). Provide instructions so we can reproduce.
+Please describe the new tests that were added (if applicable).
 
-- [ ] Test A
+- [ ] This change requires changes in testing:
+  - [ ] unit tests
+  - [ ] e2e tests
 
 ## Checklist:
 
 - [ ] Add changelog entry following the [contributing guide](../CONTRIBUTING.md#pull-requests)
-- [ ] Unit tests have been added
+- [ ] Tests have been added
 - [ ] Documentation has been updated
