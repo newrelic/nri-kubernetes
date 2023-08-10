@@ -7,11 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### Added 
-* Add k8s 1.27 support by @csongnr in [#845](https://github.com/newrelic/nri-kubernetes/pull/845)
+
 
 ### enhancement
 - Add changelog workflow by @svetlanabrennan in [#837](https://github.com/newrelic/nri-kubernetes/pull/837)
+- Add k8s 1.27 support by @csongnr in [#845](https://github.com/newrelic/nri-kubernetes/pull/845)
 
 ## 3.15.3
 ## What's Changed
