@@ -17,8 +17,7 @@ jobs:
           # Only the latest commit of the feature branch is available
           # automatically. To diff with the base branch, we need to
           # fetch that too (and we only need its latest commit).
-          git fetch origin ${{ github.base_ref }} --depth=1
-          if [[ $(git diff --name-only FETCH_HEAD | grep --ignore-case CHANGELOG) ]]
+          if [[ -n $(git diff --name-only ${{ github.head_ref }}..${{ github.base_ref }}  | grep --ignore-case CHANGELOG) ]]
           then
             echo "The CHANGELOG file was modified. Looks good!"
           else
