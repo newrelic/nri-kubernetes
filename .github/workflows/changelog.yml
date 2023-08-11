@@ -9,6 +9,7 @@ on:
 jobs:
   changelog-entry:
     runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'dependencies') && !contains(github.event.pull_request.labels.*.name, 'Skip Changelog')}}
 
     steps:
       - uses: actions/checkout@v3
@@ -23,7 +24,7 @@ jobs:
             echo "The CHANGELOG file was modified. Looks good!"
           else
             echo "The CHANGELOG file was not modified."
-            echo "Please add a CHANGELOG entry to the appropriate header under \"Unreleased\"."
+            echo "Please add a CHANGELOG entry to the appropriate header under \"Unreleased\", or add the \"Skip Changelog\" label if not required."
             false
           fi
 
