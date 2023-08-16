@@ -164,7 +164,7 @@ spec:
             {{- with .Values.controlPlane.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- with .Values.controlPlane.resources }}
+          {{- with .Values.controlPlane.forwarder.resources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
       volumes:

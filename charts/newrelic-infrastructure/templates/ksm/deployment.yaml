@@ -151,7 +151,7 @@ spec:
             {{- with .Values.ksm.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- with .Values.ksm.resources }}
+          {{- with .Values.ksm.forwarder.resources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
       volumes:

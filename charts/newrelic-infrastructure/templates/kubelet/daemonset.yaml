@@ -203,7 +203,7 @@ spec:
             {{- with .Values.kubelet.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- with .Values.kubelet.resources }}
+          {{- with .Values.kubelet.agent.resources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
       volumes:
