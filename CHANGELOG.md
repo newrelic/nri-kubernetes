@@ -8,8 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### enhancement
-- Add changelog workflow by @svetlanabrennan in [#837](https://github.com/newrelic/nri-kubernetes/pull/837)
-- Update changelog workflow @svetlanabrennan in [#843](https://github.com/newrelic/nri-kubernetes/pull/843)
+- make chart resources not have defaults set @cdobbyn [#852](https://github.com/newrelic/nri-kubernetes/pull/852)
+- make chart have separate resource assignments @cdobbyn [#852](https://github.com/newrelic/nri-kubernetes/pull/852)
+- bump chart version @cdobbyn [#852](https://github.com/newrelic/nri-kubernetes/pull/852)
+
 
 ## 3.15.3
 ## What's Changed
