@@ -95,8 +95,8 @@ scenarios:
           expected_results:
             - key: "Capacity (Mi)"
               lowerBoundedValue: 0
-        #        END PersistentVolume
-        #        START PersistentVolumeClaim
+#        END PersistentVolume
+#        START PersistentVolumeClaim
         - query: "FROM Metric SELECT latest(k8s.persistentvolumeclaim.statusPhase) as 'Status' WHERE metricName = 'k8s.persistentvolumeclaim.createdAt' and k8s.pvcName = '${SCENARIO_TAG}-resources'"
           expected_results:
             - key: "Status"
