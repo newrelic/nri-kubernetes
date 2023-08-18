@@ -17,7 +17,69 @@ scenarios:
       - helm delete ${SCENARIO_TAG}-resources -n nr-${SCENARIO_TAG}
       - helm delete ${SCENARIO_TAG} -n nr-${SCENARIO_TAG}
     tests:
-      nrqls: []
+      nrqls:
+#        START Succeeded Pod - Kubelet
+        - query: "FROM Metric SELECT latest(if(k8s.pod.isReady = 1, 'True', 'False')) as 'Ready' WHERE k8s.podName LIKE '${SCENARIO_TAG}-nrk8s-kubelet-%'"
+          expected_results:
+            - key: "Ready"
+              value: True
+        - query: "FROM Metric SELECT latest(if(k8s.pod.isScheduled = 1, 'True', 'False')) as 'Scheduled' WHERE k8s.podName LIKE '${SCENARIO_TAG}-nrk8s-kubelet-%'"
+          expected_results:
+            - key: "Scheduled"
+              value: True
+        - query: "FROM Metric SELECT average(k8s.container.cpuUsedCores) AS 'CPU usage (cores)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-nrk8s-kubelet-%' FACET k8s.containerName"
+          expected_results:
+            - key: "CPU usage (cores)"
+              lowerBoundedValue: 0.001
+            - key: "CPU usage (cores)"
+              lowerBoundedValue: 0.001
+        - query: "FROM Metric SELECT average(k8s.container.cpuCoresUtilization) / 100 AS 'CPU utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-nrk8s-kubelet-%'"
+          expected_results:
+            - key: "CPU utilization (%)"
+              value: nil
+        - query: "FROM Metric SELECT sum(k8s.container.cpuCfsThrottledPeriodsDelta) / sum(k8s.container.cpuCfsPeriodsDelta) AS 'CPU throttling (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-nrk8s-kubelet-%'"
+          expected_results:
+            - key: "CPU throttling (%)"
+              value: nil
+        - query: "FROM Metric SELECT average(k8s.container.memoryWorkingSetBytes) AS 'Memory usage (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-nrk8s-kubelet-%' FACET k8s.containerName"
+          expected_results:
+            - key: "Memory usage (bytes)"
+              lowerBoundedValue: 15000000
+              upperBoundedValue: 25000000
+            - key: "Memory usage (bytes)"
+              lowerBoundedValue: 10000000
+              upperBoundedValue: 15000000
+        - query: "FROM Metric SELECT average(k8s.container.memoryWorkingSetUtilization) / 100 AS 'Memory utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-nrk8s-kubelet-%' FACET k8s.containerName"
+          expected_results:
+            - key: "Memory utilization (%)"
+              lowerBoundedValue: 0.001
+              upperBoundedValue: 1.00
+            - key: "Memory utilization (%)"
+              lowerBoundedValue: 0.001
+              upperBoundedValue: 1.00
+        - query: "SELECT max(k8s.container.fsUsedBytes) AS 'Filesystem usage (bytes)' FROM Metric WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-nrk8s-kubelet-%' FACET k8s.podName, k8s.containerName"
+          expected_results:
+            - key: "Filesystem usage (bytes)"
+              value: 61440
+            - key: "Filesystem usage (bytes)"
+              value: 28672
+        - query: "SELECT max(k8s.container.fsUsedPercent) / 100 AS 'Filesystem utilization (%)' FROM Metric WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-nrk8s-kubelet-%' FACET k8s.podName, k8s.containerName"
+          expected_results:
+            - key: "Filesystem utilization (%)"
+              lowerBoundedValue: 0.0000010
+              upperBoundedValue: 0.0000014
+            - key: "Filesystem utilization (%)"
+              lowerBoundedValue: 0.00000056
+              upperBoundedValue: 0.00000059
+        - query: "FROM Metric SELECT sum(k8s.container.restartCountDelta) AS 'Restart count' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-nrk8s-kubelet-%' FACET k8s.containerName"
+          expected_results:
+            - key: "Restart count"
+              value: 0
+            - key: "Restart count"
+              value: 0
+            - key: "Restart count"
+              value: 0
+#        END Succeeded Pod - Kubelet
       entities: []
       metrics:
         - source: "k8s.yml"
