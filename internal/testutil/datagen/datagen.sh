@@ -77,31 +77,19 @@ function main() {
 function setup() {
     case "$1" in
       "1.27")
-        K8S_VERSION="v1.27.3"
+        K8S_VERSION="v1.27.5"
         ;;
       "1.26")
-        K8S_VERSION="v1.26.3"
+        K8S_VERSION="v1.26.8"
         ;;
       "1.25")
-        K8S_VERSION="v1.25.8"
+        K8S_VERSION="v1.25.13"
         ;;
       "1.24")
-        K8S_VERSION="v1.24.12"
+        K8S_VERSION="v1.24.17"
         ;;
       "1.23")
         K8S_VERSION="v1.23.17"
-        ;;
-      "1.22")
-        K8S_VERSION="v1.22.17"
-        ;;
-      "1.21")
-        K8S_VERSION="v1.21.14"
-        ;;
-      "1.20")
-        K8S_VERSION="v1.20.15"
-        ;;
-      "1.19")
-        K8S_VERSION="v1.19.16"
         ;;
       *)
         echo "ERROR (${0##*/}:$LINENO): specific Kubernetes version needs to be defined for '$1'"
@@ -202,17 +190,8 @@ function bootstrap() {
         echo "Updating helm dependencies"
 
         case "$1" in
-          "1.27")
-            KSM_IMAGE_VERSION="v2.8.2"
-            ;;
-          "1.26" | "1.25")
-            KSM_IMAGE_VERSION="v2.7.0"
-            ;;
-          "1.24" | "1.23" | "1.22" | "1.21")
-            KSM_IMAGE_VERSION="v2.6.0"
-            ;;
-          "1.20" | "1.19" | "1.16")
-            KSM_IMAGE_VERSION="v2.3.0"
+          "1.27" | "1.26" | "1.25" | "1.24" | "1.23")
+            KSM_IMAGE_VERSION="v2.10.0"
             ;;
           *)
             echo "ERROR (${0##*/}:$LINENO): KSM image version needs to be defined for Kubernetes version $1"
@@ -379,11 +358,11 @@ EOF
 
 # Generate static test data for all supported versions
 function all_versions() {
-  for version in {19..27}; do
+  for version in {23..27}; do
     ./datagen.sh 1.$version || exit 1;
   done
 
-  for version in {19..27}; do
+  for version in {23..27}; do
     rm -rf ../data/1_$version;
     mv 1_$version ../data/;
   done
