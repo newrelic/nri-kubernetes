@@ -14,32 +14,12 @@ jobs:
     if: ${{ ! contains(github.event.pull_request.labels.*.name, 'ci/skip-e2e') }}
     runs-on: ubuntu-20.04
     strategy:
-      max-parallel: 5 # len(k8sVersion)/2 is a good number to have here
+      max-parallel: 6 # len(k8sVersion)/2 is a good number to have here
       matrix:
         # Latest patch version can be found in https://github.com/kubernetes/website/blob/main/content/en/releases/patch-releases.md
         # Some versions might not be available yet in https://storage.googleapis.com/kubernetes-release/release/v1.X.Y/bin/linux/amd64/kubelet
-        k8sVersion: [ "v1.27.3", "v1.26.0","v1.25.3", "v1.24.1", "v1.23.8", "v1.22.11", "v1.21.14", "v1.16.15" ]
-        cri: [ docker ]
-        exclude:
-          - k8sVersion: v1.24.1
-            cri: docker
-          - k8sVersion: v1.25.3
-            cri: docker
-          - k8sVersion: v1.26.0
-            cri: docker
-          - k8sVersion: v1.27.3
-            cri: docker
-        include:
-          - k8sVersion: v1.24.1
-            cri: containerd
-          - k8sVersion: v1.23.8
-            cri: containerd
-          - k8sVersion: v1.25.3
-            cri: containerd
-          - k8sVersion: v1.26.0
-            cri: containerd
-          - k8sVersion: v1.27.3
-            cri: containerd
+        k8sVersion: [ "v1.27.5", "v1.26.8","v1.25.13", "v1.24.17", "v1.23.17"]
+        cri: [ containerd ]
     env:
       DOCKER_BUILDKIT: '1' # Setting DOCKER_BUILDKIT=1 ensures TARGETOS and TARGETARCH are populated
     steps:

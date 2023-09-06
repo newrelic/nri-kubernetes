@@ -787,7 +787,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "conditionReplicaFailure", ValueFunc: prometheus.FromLabelValue("kube_deployment_status_condition_replica_failure", "status"), Type: sdkMetric.ATTRIBUTE, Optional: true},
 			{Name: "podsMaxUnavailable", ValueFunc: prometheus.FromValue("kube_deployment_spec_strategy_rollingupdate_max_unavailable"), Type: sdkMetric.GAUGE, Optional: true},
 			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_deployment_labels", "namespace"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_deployment_labels", "namespace"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_deployment_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "deploymentName", ValueFunc: prometheus.FromLabelValue("kube_deployment_labels", "deployment"), Type: sdkMetric.ATTRIBUTE},
 			// Important: The order of these lines is important: we could have the same label in different entities, and we would like to keep the value closer to deployment
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("namespace", "kube_namespace_labels"), Type: sdkMetric.ATTRIBUTE},
@@ -813,12 +813,12 @@ var KSMSpecs = definition.SpecGroups{
 			},
 			{
 				Name:      "namespaceName",
-				ValueFunc: prometheus.FromLabelValue("kube_service_labels", "namespace"),
+				ValueFunc: prometheus.FromLabelValue("kube_service_created", "namespace"),
 				Type:      sdkMetric.ATTRIBUTE,
 			},
 			{
 				Name:      "serviceName",
-				ValueFunc: prometheus.FromLabelValue("kube_service_labels", "service"),
+				ValueFunc: prometheus.FromLabelValue("kube_service_created", "service"),
 				Type:      sdkMetric.ATTRIBUTE,
 			},
 			{
@@ -869,12 +869,12 @@ var KSMSpecs = definition.SpecGroups{
 			},
 			{
 				Name:      "namespaceName",
-				ValueFunc: prometheus.FromLabelValue("kube_endpoint_labels", "namespace"),
+				ValueFunc: prometheus.FromLabelValue("kube_endpoint_created", "namespace"),
 				Type:      sdkMetric.ATTRIBUTE,
 			},
 			{
 				Name:      "endpointName",
-				ValueFunc: prometheus.FromLabelValue("kube_endpoint_labels", "endpoint"),
+				ValueFunc: prometheus.FromLabelValue("kube_endpoint_created", "endpoint"),
 				Type:      sdkMetric.ATTRIBUTE,
 			},
 			{
@@ -920,14 +920,12 @@ var KSMSpecs = definition.SpecGroups{
 		},
 	},
 	"horizontalpodautoscaler": {
-		IDGenerator: prometheus.FromLabelValueEntityIDGenerator("kube_horizontalpodautoscaler_labels", "horizontalpodautoscaler"),
+		IDGenerator: prometheus.FromLabelValueEntityIDGenerator("kube_horizontalpodautoscaler_info", "horizontalpodautoscaler"),
 		// group customized for backwards compatibility reasons (Metrics where renamed in KSM v2)
-		TypeGenerator:   prometheus.FromLabelValueEntityTypeGeneratorWithCustomGroup("kube_horizontalpodautoscaler_labels", "hpa"),
+		TypeGenerator:   prometheus.FromLabelValueEntityTypeGeneratorWithCustomGroup("kube_horizontalpodautoscaler_info", "hpa"),
 		NamespaceGetter: prometheus.FromLabelGetNamespace,
 		MsTypeGuesser:   metricSetTypeGuesserWithCustomGroup("hpa"), // group customized for backwards compatibility reasons
 		Specs: []definition.Spec{
-			// Kubernetes labels converted to Prometheus labels. not sure if interesting to get
-			{Name: "labels", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_labels"), Type: sdkMetric.GAUGE},
 			// The generation observed by the HorizontalPodAutoscaler controller. not sure if interesting to get
 			{Name: "metadataGeneration", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_metadata_generation"), Type: sdkMetric.GAUGE},
 			{Name: "maxReplicas", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_spec_max_replicas"), Type: sdkMetric.GAUGE},
@@ -1157,6 +1155,7 @@ var KSMQueries = []prometheus.Query{
 	{MetricName: "kube_endpoint_address_not_ready"},
 	{MetricName: "kube_endpoint_address_available"},
 	// hpa
+	{MetricName: "kube_horizontalpodautoscaler_info"},
 	{MetricName: "kube_horizontalpodautoscaler_labels"},
 	{MetricName: "kube_horizontalpodautoscaler_metadata_generation"},
 	{MetricName: "kube_horizontalpodautoscaler_spec_max_replicas"},
