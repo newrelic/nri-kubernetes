@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### enhancement
 - Update KSM version and chart, deprecate incompatible Kubernetes versions by @juanjjaramillo in [#867](https://github.com/newrelic/nri-kubernetes/pull/867)
 - Update unit testing data by @juanjjaramillo in [#868](https://github.com/newrelic/nri-kubernetes/pull/868)
+- Update Helm chart lint job by @juanjjaramillo in [#869](https://github.com/newrelic/nri-kubernetes/pull/869)
 
 ## 3.16.0
 ## What's Changed
