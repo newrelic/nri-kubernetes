@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- Update KSM version and chart, deprecate incompatible Kubernetes versions by @juanjjaramillo in [#867](https://github.com/newrelic/nri-kubernetes/pull/867)
+
 ## 3.16.0
 ## What's Changed
 - Add changelog workflow by @svetlanabrennan in [#837](https://github.com/newrelic/nri-kubernetes/pull/837)
