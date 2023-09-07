@@ -920,9 +920,9 @@ var KSMSpecs = definition.SpecGroups{
 		},
 	},
 	"horizontalpodautoscaler": {
-		IDGenerator: prometheus.FromLabelValueEntityIDGenerator("kube_horizontalpodautoscaler_info", "horizontalpodautoscaler"),
+		IDGenerator: prometheus.FromLabelValueEntityIDGenerator("kube_horizontalpodautoscaler_status_current_replicas", "horizontalpodautoscaler"),
 		// group customized for backwards compatibility reasons (Metrics where renamed in KSM v2)
-		TypeGenerator:   prometheus.FromLabelValueEntityTypeGeneratorWithCustomGroup("kube_horizontalpodautoscaler_info", "hpa"),
+		TypeGenerator:   prometheus.FromLabelValueEntityTypeGeneratorWithCustomGroup("kube_horizontalpodautoscaler_status_current_replicas", "hpa"),
 		NamespaceGetter: prometheus.FromLabelGetNamespace,
 		MsTypeGuesser:   metricSetTypeGuesserWithCustomGroup("hpa"), // group customized for backwards compatibility reasons
 		Specs: []definition.Spec{
