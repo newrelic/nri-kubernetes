@@ -42,34 +42,35 @@ func TestScraper(t *testing.T) {
 			// false.
 			exclude.Exclude(
 				exclude.Groups("horizontalpodautoscaler"),
-				exclude.Metrics("isActive", "isAble", "isLimited"),
+				exclude.Metrics("isLimited"),
 			),
 			// Kubernetes jobs either succeed or fail (but not both). Thus, the KSM metrics related to success (isComplete, completedAt)
 			// and failure (failed, failedPods, failedPodsReason) are marked as optional in src/metric/definition.go
 			exclude.Exclude(
 				exclude.Groups("job_name"),
-				exclude.Optional(),
+				exclude.Metrics("completedAt", "failedPods", "isComplete", "failed", "failedPodsReason"),
 			),
 			// Kubernetes pod can be created without the need of a deployment
 			exclude.Exclude(
 				exclude.Groups("pod"),
-				exclude.Optional(),
+				exclude.Metrics("deploymentName"),
 			),
 			// Kubernetes deployment's `condition` attribute operate in a true-or-NULL basis, so it won't be present if false
 			exclude.Exclude(
 				exclude.Groups("deployment"),
+				exclude.Metrics("conditionReplicaFailure"),
 			),
-			// kube_persistentvolume_claim_ref is marked as an optional metric since not all
+			// excluded pvcName and pvcNamespace (kube_persistentvolume_claim_ref) since not all
 			// persistent volumes have claims on them and we want to test that on our E2Es
+			// excluded createdAt (kube_persistentvolume_created) since it's marked as experimental
 			exclude.Exclude(
 				exclude.Groups("persistentvolume"),
-				exclude.Optional(),
+				exclude.Metrics("createdAd", "pvcName", "pvcNamespace"),
 			),
-			// kube_persistentvolumeclaim_created is marked as an optional metric since it not available for older versions of KSM.
-			// Similarly, a subset of labels for kube_persistentvolume_info are marked as optional since they not available for older versions of KSM.
+			// excluded createdAt (kube_persistentvolumeclaim_created) since it's marked as experimental
 			exclude.Exclude(
 				exclude.Groups("persistentvolumeclaim"),
-				exclude.Optional(),
+				exclude.Metrics("createdAt"),
 			),
 		).
 		AliasingGroups(map[string]string{"horizontalpodautoscaler": "hpa", "job_name": "job", "persistentvolumeclaim": "PersistentVolumeClaim", "persistentvolume": "PersistentVolume"})
