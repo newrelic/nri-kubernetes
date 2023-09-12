@@ -45,7 +45,7 @@ func TestScraper(t *testing.T) {
 				exclude.Metrics("isLimited"),
 			),
 			// Kubernetes jobs either succeed or fail (but not both). Thus, the KSM metrics related to success (isComplete, completedAt)
-			// and failure (failed, failedPods, failedPodsReason) are marked as optional in src/metric/definition.go
+			// and failure (failed, failedPods, failedPodsReason) are excluded.
 			exclude.Exclude(
 				exclude.Groups("job_name"),
 				exclude.Metrics("completedAt", "failedPods", "isComplete", "failed", "failedPodsReason"),
