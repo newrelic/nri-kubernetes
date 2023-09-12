@@ -65,7 +65,7 @@ func TestScraper(t *testing.T) {
 			// excluded createdAt (kube_persistentvolume_created) since it's marked as experimental
 			exclude.Exclude(
 				exclude.Groups("persistentvolume"),
-				exclude.Metrics("createdAd", "pvcName", "pvcNamespace"),
+				exclude.Metrics("createdAt", "pvcName", "pvcNamespace"),
 			),
 			// excluded createdAt (kube_persistentvolumeclaim_created) since it's marked as experimental
 			exclude.Exclude(
