@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Update unit testing data by @juanjjaramillo in [#868](https://github.com/newrelic/nri-kubernetes/pull/868)
 - Update Helm chart lint job by @juanjjaramillo in [#869](https://github.com/newrelic/nri-kubernetes/pull/869)
 - Update cpuLimitCores metric not available log to debug level in [#870](https://github.com/newrelic/nri-kubernetes/pull/870)
+- Updated KSM unit tests by @svetlanabrennan in [#876](https://github.com/newrelic/nri-kubernetes/pull/876)
 
 ### bugfix
 - Use a KSM stable metric instead of an experimental one by @juanjjaramillo in [#872](https://github.com/newrelic/nri-kubernetes/pull/872)
