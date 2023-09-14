@@ -12,7 +12,7 @@ jobs:
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'dependencies') && !contains(github.event.pull_request.labels.*.name, 'Skip Changelog')}}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Check for CHANGELOG file changes
         run: |
           # Only the latest commit of the feature branch is available
@@ -33,6 +33,6 @@ jobs:
     needs: changelog-entry
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Check if CHANGELOG is valid
         uses: newrelic/release-toolkit/validate-markdown@v1
