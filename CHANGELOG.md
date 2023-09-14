@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## enhancements
+- chore: Bump appVersion to 3.17.0 and chart to 3.22.0 [#886](https://github.com/newrelic/nri-kubernetes/pull/886)
+
 ## 3.17.0
 ### dependencies
 * chore(deps): bump docker/setup-qemu-action from 2 to 3 by @dependabot in https://github.com/newrelic/nri-kubernetes/pull/881
