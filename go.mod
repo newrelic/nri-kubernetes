@@ -57,9 +57,9 @@ require (
 	github.com/subosito/gotenv v1.4.2 // indirect
 	golang.org/x/net v0.13.0 // indirect
 	golang.org/x/oauth2 v0.8.0 // indirect
-	golang.org/x/sys v0.11.0 // indirect
-	golang.org/x/term v0.11.0 // indirect
-	golang.org/x/text v0.12.0 // indirect
+	golang.org/x/sys v0.12.0 // indirect
+	golang.org/x/term v0.12.0 // indirect
+	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
@@ -75,4 +75,4 @@ require (
 )
 
 // To avoid CVE-2022-27191 triggering a security scan
-replace golang.org/x/crypto => golang.org/x/crypto v0.12.0
+replace golang.org/x/crypto => golang.org/x/crypto v0.13.0
