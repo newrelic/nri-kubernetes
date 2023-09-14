@@ -15,7 +15,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 * chore(deps): bump docker/setup-buildx-action from 2 to 3 by @dependabot in https://github.com/newrelic/nri-kubernetes/pull/878
 * chore(deps): update actions/checkout action to v4 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/864
 * fix(deps): update kubernetes packages to v0.28.2 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/861
-* chore(deps): update helm release kube-state-metrics to v5.13.0 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/871
 * chore(deps): update newrelic/infrastructure-bundle docker tag to v3.2.16 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/859
 * chore(deps): update newrelic/k8s-events-forwarder docker tag to v1.47.0 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/860
 * chore(deps): update module golang.org/x/crypto to v0.13.0 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/866
