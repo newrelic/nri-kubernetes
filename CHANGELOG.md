@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## 3.17.0
+### dependencies
+* chore(deps): bump docker/setup-qemu-action from 2 to 3 by @dependabot in https://github.com/newrelic/nri-kubernetes/pull/881
+* chore(deps): bump docker/login-action from 2 to 3 by @dependabot in https://github.com/newrelic/nri-kubernetes/pull/880
+* chore(deps): bump manusa/actions-setup-minikube from 2.7.2 to 2.9.0 by @dependabot in https://github.com/newrelic/nri-kubernetes/pull/879
+* chore(deps): bump docker/setup-buildx-action from 2 to 3 by @dependabot in https://github.com/newrelic/nri-kubernetes/pull/878
+* chore(deps): update actions/checkout action to v4 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/864
+* fix(deps): update kubernetes packages to v0.28.2 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/861
+* chore(deps): update helm release kube-state-metrics to v5.13.0 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/871
+* chore(deps): update newrelic/infrastructure-bundle docker tag to v3.2.16 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/859
+* chore(deps): update newrelic/k8s-events-forwarder docker tag to v1.47.0 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/860
+* chore(deps): update module golang.org/x/crypto to v0.13.0 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/866
+* chore(deps): update aquasecurity/trivy-action action to v0.12.0 by @renovate in https://github.com/newrelic/nri-kubernetes/pull/862
+
 ### enhancement
 - Update KSM version and chart, deprecate incompatible Kubernetes versions by @juanjjaramillo in [#867](https://github.com/newrelic/nri-kubernetes/pull/867)
 - Update unit testing data by @juanjjaramillo in [#868](https://github.com/newrelic/nri-kubernetes/pull/868)
@@ -16,6 +30,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### bugfix
 - Use a KSM stable metric instead of an experimental one by @juanjjaramillo in [#872](https://github.com/newrelic/nri-kubernetes/pull/872)
+
+
+**Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.16.0...v3.17.0
 
 ## 3.16.0
 ## What's Changed
