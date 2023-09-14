@@ -31,7 +31,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### bugfix
 - Use a KSM stable metric instead of an experimental one by @juanjjaramillo in [#872](https://github.com/newrelic/nri-kubernetes/pull/872)
 
-
 **Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.16.0...v3.17.0
 
 ## 3.16.0
