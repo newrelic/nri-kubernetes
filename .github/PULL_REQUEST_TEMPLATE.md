@@ -1,29 +1,20 @@
-## Which problem is this PR solving?
-
-Please include a summary of the change in your pr and what it's fixing. 
-
-## Short description of the changes
+## Description
+<!-- Please include a summary of the change in your PR and what it's fixing.  -->
 
 ## Type of change
-
-Please delete options that are not relevant.
+<!-- Please check the relevant option. -->
 
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Security fix
 - [ ] New feature / enhancement (non-breaking change which adds functionality)
+- [ ] Security fix
 - [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] This change requires a documentation update
-
-## New Tests?
-
-Please describe the new tests that were added (if applicable).
-
-- [ ] This change requires changes in testing:
-  - [ ] unit tests
-  - [ ] e2e tests
 
 ## Checklist:
+<!-- Please check applicable options. -->
 
 - [ ] Add changelog entry following the [contributing guide](../CONTRIBUTING.md#pull-requests)
-- [ ] Tests have been added
 - [ ] Documentation has been updated
+- [ ] This change requires changes in testing:
+  - [ ] unit tests
+  - [ ] E2E tests
+  
