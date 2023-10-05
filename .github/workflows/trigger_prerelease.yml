@@ -1,0 +1,21 @@
+name: Trigger prerelease creation
+
+# This workflow triggers a prerelease creation with changelog and the release notes created by the release toolkit.
+# This workflow should be triggered merely from the default branch.
+# For more details about how to release follow https://github.com/newrelic/coreint-automation/blob/main/docs/release_runbook.md
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 12 * * 1" # Monday at 12pm UTC or 5am PT
+
+jobs:
+  trigger-prerelease:
+    uses: newrelic/k8s-metadata-injection/.github/workflows/trigger-prerelease-reusable.yml@main
+    with:
+      bot_email: '${{ vars.K8S_AGENTS_BOT_EMAIL }}'
+      bot_name: '${{ vars.K8S_AGENTS_BOT_NAME }}'
+    secrets:
+      bot_token: ${{ secrets.K8S_AGENTS_BOT_TOKEN }}
+      slack_channel:  ${{ secrets.K8S_AGENTS_SLACK_CHANNEL }}
+      slack_token: ${{ secrets.K8S_AGENTS_SLACK_TOKEN }}
