@@ -5,34 +5,8 @@ name: changelog
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
 
 jobs:
-  changelog-entry:
-    runs-on: ubuntu-latest
-    if: ${{ !contains(github.event.pull_request.labels.*.name, 'dependencies') && !contains(github.event.pull_request.labels.*.name, 'Skip Changelog')}}
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Check for CHANGELOG file changes
-        run: |
-          # Only the latest commit of the feature branch is available
-          # automatically. To diff with the base branch, we need to
-          # fetch that too (and we only need its latest commit).
-          git fetch origin ${{ github.base_ref }} --depth=1
-          if [[ $(git diff --name-only FETCH_HEAD | grep --ignore-case CHANGELOG) ]]
-          then
-            echo "The CHANGELOG file was modified. Looks good!"
-          else
-            echo "The CHANGELOG file was not modified."
-            echo "Please add a CHANGELOG entry to the appropriate header under \"Unreleased\", or add the \"Skip Changelog\" label if not required."
-            false
-          fi
-
-  lint-changelog:
-    runs-on: ubuntu-latest
-    needs: changelog-entry
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Check if CHANGELOG is valid
-        uses: newrelic/release-toolkit/validate-markdown@v1
+  check-changelog:
+    uses: newrelic/k8s-metadata-injection/.github/workflows/changelog-reusable.yml@main
