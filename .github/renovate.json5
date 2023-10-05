@@ -1,23 +1,8 @@
 {
   "extends": [
-    "config:base",
-    // Disable the creation of this issue that renovate updates with the pending issue we follow with Zenhub:
-    // https://github.com/newrelic/nri-kubernetes/issues/205
-    ":disableDependencyDashboard"
+    "github>newrelic/coreint-automation:renovate-base.json5"
   ],
-  // Label PRs with `dependencies`.
-  "labels": ["dependencies"],
-  "regexManagers": [
-    {
-      "fileMatch": [
-        '(^|/)values\.yaml$' // Is the same regex as "helmv3" but we have to change the regex.
-      ],
-      "datasourceTemplate": "docker",
-      "matchStrings": [
-        " *repository: (?<depName>.+)\n *tag: (?<currentValue>.+)"
-      ]
-    }
-  ],
+  ignoreDeps": ["ingress-nginx/kube-webhook-certgen"],
   "packageRules": [
     {
       "matchPackageNames": ["kube-state-metrics"],

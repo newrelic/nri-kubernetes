@@ -12,7 +12,6 @@ GOARCH ?=
 CGO_ENABLED ?= 0
 
 BUILD_DATE := $(shell date)
-COMMIT := $(shell git rev-parse HEAD)
 TAG ?= dev
 COMMIT ?= $(shell git rev-parse HEAD || echo "unknown")
 
@@ -91,3 +90,11 @@ local-env-start:
 .PHONY: tilt-up
 tilt-up:
 	eval $$(minikube docker-env); tilt up ; tilt down
+
+# rt-update-changelog runs the release-toolkit run.sh script by piping it into bash to update the CHANGELOG.md.
+# It also passes down to the script all the flags added to the make target. To check all the accepted flags,
+# see: https://github.com/newrelic/release-toolkit/blob/main/contrib/ohi-release-notes/run.sh
+#  e.g. `make rt-update-changelog -- -v`
+.PHONY: rt-update-changelog
+rt-update-changelog:
+	curl "https://raw.githubusercontent.com/newrelic/release-toolkit/v1/contrib/ohi-release-notes/run.sh" | bash -s -- $(filter-out $@,$(MAKECMDGOALS))
