@@ -12,7 +12,7 @@ jobs:
   e2eTests:
     # Do not run e2e tests if commit message or PR has skip-e2e.
     if: ${{ ! contains(github.event.pull_request.labels.*.name, 'ci/skip-e2e') }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       max-parallel: 6 # len(k8sVersion)/2 is a good number to have here
       matrix:
