@@ -1,12 +1,12 @@
 module github.com/newrelic/nri-kubernetes/v3
 
-go 1.20
+go 1.21
 
 require (
 	github.com/google/go-cmp v0.5.9
 	github.com/newrelic/infra-integrations-sdk v3.7.3+incompatible
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_model v0.4.0
+	github.com/prometheus/client_model v0.5.0
 	github.com/prometheus/common v0.44.0
 	github.com/prometheus/prom2json v1.3.3
 	github.com/segmentio/go-camelcase v0.0.0-20160726192923-7085f1e3c734
@@ -57,8 +57,8 @@ require (
 	github.com/subosito/gotenv v1.4.2 // indirect
 	golang.org/x/net v0.13.0 // indirect
 	golang.org/x/oauth2 v0.8.0 // indirect
-	golang.org/x/sys v0.12.0 // indirect
-	golang.org/x/term v0.12.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/term v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
@@ -75,4 +75,4 @@ require (
 )
 
 // To avoid CVE-2022-27191 triggering a security scan
-replace golang.org/x/crypto => golang.org/x/crypto v0.13.0
+replace golang.org/x/crypto => golang.org/x/crypto v0.14.0
