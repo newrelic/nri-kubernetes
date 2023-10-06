@@ -7,9 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancement
+## v3.18.0 - 2023-10-06
+
+### 🚀 Enhancements
 - Enable automatic release [#900](https://github.com/newrelic/nri-kubernetes/pull/900)
 - Bump appVersion to 3.17.0 and chart to 3.22.0 [#886](https://github.com/newrelic/nri-kubernetes/pull/886)
+
+### ⛓️ Dependencies
+- Upgraded alpine from 3.18.3 to 3.18.4
+- Updated go to 1.21
+- Updated golang.org/x/crypto to v0.14.0
+- Updated github.com/prometheus/client_model to v0.5.0 - [Changelog 🔗](https://github.com/prometheus/client_model/releases/tag/v0.5.0)
 
 ## 3.17.0
 ### dependencies
