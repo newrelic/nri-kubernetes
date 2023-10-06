@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-## enhancements
+### enhancement
 - Enable automatic release [#900](https://github.com/newrelic/nri-kubernetes/pull/900)
 - Bump appVersion to 3.17.0 and chart to 3.22.0 [#886](https://github.com/newrelic/nri-kubernetes/pull/886)
 
