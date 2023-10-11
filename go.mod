@@ -3,7 +3,7 @@ module github.com/newrelic/nri-kubernetes/v3
 go 1.21
 
 require (
-	github.com/google/go-cmp v0.5.9
+	github.com/google/go-cmp v0.6.0
 	github.com/newrelic/infra-integrations-sdk v3.7.3+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_model v0.5.0
