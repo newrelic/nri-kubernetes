@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.18.1 - 2023-10-12
+
+### ⛓️ Dependencies
+- Updated github.com/google/go-cmp to v0.6.0 - [Changelog 🔗](https://github.com/google/go-cmp/releases/tag/v0.6.0)
+- Updated github.com/spf13/viper to v1.17.0 - [Changelog 🔗](https://github.com/spf13/viper/releases/tag/v1.17.0)
+
 ## v3.18.0 - 2023-10-06
 
 ### 🚀 Enhancements
