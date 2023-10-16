@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### bugfix
+- Address CVE-2023-44487 and CVE-2023-39325 by juanjjaramillo in [PR #910](https://github.com/newrelic/nri-kubernetes/pull/910)
+
 ## v3.18.1 - 2023-10-12
 
 ### ⛓️ Dependencies
