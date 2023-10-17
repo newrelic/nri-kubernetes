@@ -9,4 +9,18 @@
       "allowedVersions": "<=5.12.1"
     }
   ],
+  "customManagers": [
+    {
+      "description": "Update minikube",
+      "customType": "regex",
+     "fileMatch": [
+        "(^|/)workflows/.*\\.ya?ml$"
+      ],
+      "matchStrings": [
+        "\\s+minikube version\"(?<currentValue>.*?)\"",
+      ],
+      "depNameTemplate": "manusa/actions-setup-minikube",
+      "datasourceTemplate": "minikube",
+    },
+  ],
 }
