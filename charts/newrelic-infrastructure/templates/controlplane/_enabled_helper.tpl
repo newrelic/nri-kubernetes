@@ -2,7 +2,7 @@
 Create ControlPlane Agent ConfigMap
 */}}
 {{- define "nriKubernetes.controlPlane.agentConfigMap" -}}
-{{- if and .Values.controlPlane.enabled (not (include "newrelic.common.gkeAutopilot" .)) -}}
+{{- if and (.Values.controlPlane.enabled) (not (include "newrelic.common.gkeAutopilot" .)) -}}
 true
 {{- end -}}
 {{- end -}}
@@ -38,7 +38,7 @@ true
 Create ControlPlane RoleBinding
 */}}
 {{- define "nriKubernetes.controlPlane.roleBinding" -}}
-{{- if and .Values.rbac.create (not (include "newrelic.common.gkeAutopilot" .)) }}
+{{- if and (.Values.rbac.create) (not (include "newrelic.common.gkeAutopilot" .)) }}
 true
 {{- end -}}
 {{- end -}}
@@ -47,7 +47,7 @@ true
 Create ControlPlane Scraper ConfigMap
 */}}
 {{- define "nriKubernetes.controlPlane.scraperConfigMap" -}}
-{{- if and .Values.controlPlane.enabled (not (include "newrelic.common.gkeAutopilot" .)) -}}
+{{- if and (.Values.controlPlane.enabled) (not (include "newrelic.common.gkeAutopilot" .)) -}}
 true
 {{- end -}}
 {{- end -}}
