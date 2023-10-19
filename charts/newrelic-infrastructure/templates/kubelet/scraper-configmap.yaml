@@ -15,4 +15,10 @@ data:
       {{- if .Values.kubelet.config }}
       {{- toYaml .Values.kubelet.config | nindent 6 }}
       {{- end }}
+      {{- if and (include "newrelic.common.gkeAutopilot" .) (not .Values.kubelet.config.schema) }}
+      {{- printf "schema: http" | nindent 6 }}
+      {{- end }}
+      {{- if and (include "newrelic.common.gkeAutopilot" .) (not .Values.kubelet.config.port) }}
+      {{- printf "port: 10255" | nindent 6 }}
+      {{- end }}
 {{- end }}

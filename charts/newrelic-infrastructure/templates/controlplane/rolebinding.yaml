@@ -1,4 +1,4 @@
-{{- if .Values.rbac.create }}
+{{- if include "nriKubernetes.controlPlane.roleBinding" . -}}
 {{- $namespaces := (include "nriKubernetes.controlPlane.roleBindingNamespaces" . | fromYaml) -}}
 {{- range $namespaces.roleBindingNamespaces }}
 ---

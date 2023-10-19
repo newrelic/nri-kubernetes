@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### 🐞 Bug fixes
 - Address CVE-2023-44487 and CVE-2023-39325 by juanjjaramillo in [PR #910](https://github.com/newrelic/nri-kubernetes/pull/910)
+- Adding support for GKE Autopilot [TBD]()
 
 ## v3.18.1 - 2023-10-12
 
@@ -107,7 +108,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 **Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.15.0...v3.15.1
 
-## 3.15.0 
+## 3.15.0
 
 ## What's Changed
 * Update CHANGELOG.md by @juanjjaramillo in https://github.com/newrelic/nri-kubernetes/pull/783
