@@ -56,7 +56,7 @@ true
 Create ControlPlane Service Account
 */}}
 {{- define "nriKubernetes.controlPlane.serviceAccount" -}}
-{{- if and (not (include "newrelic.common.serviceAccount.create") .) (not (include "newrelic.common.gkeAutopilot" .)) -}}
+{{- if and (include "newrelic.common.serviceAccount.create" .) (not (include "newrelic.common.gkeAutopilot" .)) -}}
 true
 {{- end -}}
 {{- end -}}
