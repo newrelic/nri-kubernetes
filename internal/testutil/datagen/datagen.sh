@@ -54,7 +54,7 @@ function main() {
 
     setup $1
 
-    K8S_VERSION=$($KUBECTL_CMD version --short 2>&1 | grep 'Server Version' | awk -F' v' '{ print $2; }' | awk -F. '{ print $1"."$2; }')
+    K8S_VERSION=$($KUBECTL_CMD version 2>&1 | grep 'Server Version' | awk -F' v' '{ print $2; }' | awk -F. '{ print $1"."$2; }')
     OUTPUT_FOLDER=$(echo $K8S_VERSION | sed 's/\./_/')
 
     # Install scraper pod and e2e resources.
@@ -76,6 +76,9 @@ function main() {
 
 function setup() {
     case "$1" in
+     "1.28")
+        K8S_VERSION="v1.28.0-rc.1 "
+        ;;
       "1.27")
         K8S_VERSION="v1.27.5"
         ;;
@@ -190,7 +193,7 @@ function bootstrap() {
         echo "Updating helm dependencies"
 
         case "$1" in
-          "1.27" | "1.26" | "1.25" | "1.24" | "1.23")
+          "1.28" | "1.27" | "1.26" | "1.25" | "1.24" | "1.23")
             KSM_IMAGE_VERSION="v2.10.0"
             ;;
           *)

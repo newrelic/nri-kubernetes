@@ -191,6 +191,9 @@ func kubeletExclusions() []exclude.Func {
 				"replicasetName", "statefulsetName"),
 		),
 
+		// exclude missing memoryUsedBytes metric for containers
+		exclude.Exclude(exclude.Groups("container"), exclude.Metrics("memoryUsedBytes")),
+
 		// Exclude deploymentName metric for pods not created by a deployment
 		exclude.Exclude(
 			exclude.Groups("pod", "container"),

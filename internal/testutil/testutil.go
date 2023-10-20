@@ -34,6 +34,7 @@ const (
 	Testdata125 = "1_25"
 	Testdata126 = "1_26"
 	Testdata127 = "1_27"
+	Testdata128 = "1_28"
 )
 
 // AllVersions returns a list of versions we have test data for.
@@ -46,6 +47,7 @@ func AllVersions() []Version {
 		Testdata125,
 		Testdata126,
 		Testdata127,
+		Testdata128,
 	}
 }
 
