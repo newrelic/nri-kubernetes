@@ -1,0 +1,66 @@
+suite: test resources for kubelet
+templates:
+  - kubelet/daemonset.yaml
+tests:
+  - it: kubelet container uses default resources
+    set:
+      cluster: test
+      licenseKey: test
+    asserts:
+      - template: kubelet/daemonset.yaml
+        equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            requests:
+              cpu: 100m
+              memory: 150M
+            limits:
+              memory: 300M
+  - it: agent container uses default resources
+    set:
+      cluster: test
+      licenseKey: test
+    asserts:
+      - template: kubelet/daemonset.yaml
+        equal:
+          path: spec.template.spec.containers[1].resources
+          value:
+            requests:
+              cpu: 100m
+              memory: 150M
+            limits:
+              memory: 300M
+  - it: kubelet container uses modified resources
+    set:
+      cluster: test
+      licenseKey: test
+      kubelet.resources.requests.cpu: 123m
+      kubelet.resources.requests.memory: 234Mi
+      kubelet.resources.limits.memory: 345Mi
+    asserts:
+      - template: kubelet/daemonset.yaml
+        equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            requests:
+              cpu: 123m
+              memory: 234Mi
+            limits:
+              memory: 345Mi
+  - it: agent container uses modified resources
+    set:
+      cluster: test
+      licenseKey: test
+      kubelet.agent.resources.requests.cpu: 12m
+      kubelet.agent.resources.requests.memory: 23Mi
+      kubelet.agent.resources.limits.memory: 34Mi
+    asserts:
+      - template: kubelet/daemonset.yaml
+        equal:
+          path: spec.template.spec.containers[1].resources
+          value:
+            requests:
+              cpu: 12m
+              memory: 23Mi
+            limits:
+              memory: 34Mi
