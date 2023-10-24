@@ -91,9 +91,6 @@ function setup() {
       "1.24")
         K8S_VERSION="v1.24.17"
         ;;
-      "1.23")
-        K8S_VERSION="v1.23.17"
-        ;;
       *)
         echo "ERROR (${0##*/}:$LINENO): specific Kubernetes version needs to be defined for '$1'"
         exit 1
@@ -193,7 +190,7 @@ function bootstrap() {
         echo "Updating helm dependencies"
 
         case "$1" in
-          "1.28" | "1.27" | "1.26" | "1.25" | "1.24" | "1.23")
+          "1.28" | "1.27" | "1.26" | "1.25" | "1.24")
             KSM_IMAGE_VERSION="v2.10.0"
             ;;
           *)
