@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.18.3 - 2023-10-23
+
+### ⛓️ Dependencies
+- Updated kubernetes packages to v0.28.3
+- Updated github.com/prometheus/common to v0.45.0 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.45.0)
+
 ## v3.18.2 - 2023-10-16
 
 ### 🐞 Bug fixes
