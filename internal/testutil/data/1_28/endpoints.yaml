@@ -3,13 +3,13 @@ items:
 - apiVersion: v1
   kind: Endpoints
   metadata:
-    creationTimestamp: "2023-10-20T16:39:03Z"
+    creationTimestamp: "2023-10-24T15:48:43Z"
     labels:
       endpointslice.kubernetes.io/skip-mirror: "true"
     name: kubernetes
     namespace: default
-    resourceVersion: "195"
-    uid: a7c8fd00-b9eb-4595-8223-1e9d1676bc07
+    resourceVersion: "202"
+    uid: f4841440-010a-46b6-bdaf-9c1e79c8fd53
   subsets:
   - addresses:
     - ip: 192.168.49.2
@@ -21,35 +21,35 @@ items:
   kind: Endpoints
   metadata:
     annotations:
-      control-plane.alpha.kubernetes.io/leader: '{"holderIdentity":"datagen-1-28_0c1397c4-1799-4089-b857-d27eaab66e44","leaseDurationSeconds":15,"acquireTime":"2023-10-20T16:39:48Z","renewTime":"2023-10-20T16:40:58Z","leaderTransitions":0}'
-    creationTimestamp: "2023-10-20T16:39:48Z"
+      control-plane.alpha.kubernetes.io/leader: '{"holderIdentity":"datagen-1-28_0a7b6e72-78ae-40ba-95d5-a6d0e2b79f40","leaseDurationSeconds":15,"acquireTime":"2023-10-24T15:49:28Z","renewTime":"2023-10-24T15:50:37Z","leaderTransitions":0}'
+    creationTimestamp: "2023-10-24T15:49:28Z"
     name: k8s.io-minikube-hostpath
     namespace: kube-system
-    resourceVersion: "866"
-    uid: 4d190f4c-e4d1-4073-b05c-4899c3db761b
+    resourceVersion: "808"
+    uid: de310e5b-0d53-4f5a-a753-fd1100081546
 - apiVersion: v1
   kind: Endpoints
   metadata:
     annotations:
-      endpoints.kubernetes.io/last-change-trigger-time: "2023-10-20T16:39:30Z"
-    creationTimestamp: "2023-10-20T16:39:17Z"
+      endpoints.kubernetes.io/last-change-trigger-time: "2023-10-24T15:49:13Z"
+    creationTimestamp: "2023-10-24T15:48:57Z"
     labels:
       k8s-app: kube-dns
       kubernetes.io/cluster-service: "true"
       kubernetes.io/name: CoreDNS
     name: kube-dns
     namespace: kube-system
-    resourceVersion: "421"
-    uid: aac2f897-c1ae-4126-8d1a-dc340636c5cf
+    resourceVersion: "389"
+    uid: 2d38c002-abe2-4186-9291-15c418f5d38e
   subsets:
   - addresses:
     - ip: 10.244.0.2
       nodeName: datagen-1-28
       targetRef:
         kind: Pod
-        name: coredns-5dd5756b68-vpkt6
+        name: coredns-5dd5756b68-46wv4
         namespace: kube-system
-        uid: b2eb6d64-069b-407a-b715-00e1d59cee70
+        uid: 9fd64ef2-cccf-487a-8baf-6ae5a641614b
     ports:
     - name: dns-tcp
       port: 53
@@ -64,8 +64,8 @@ items:
   kind: Endpoints
   metadata:
     annotations:
-      endpoints.kubernetes.io/last-change-trigger-time: "2023-10-20T16:39:35Z"
-    creationTimestamp: "2023-10-20T16:39:31Z"
+      endpoints.kubernetes.io/last-change-trigger-time: "2023-10-24T15:49:20Z"
+    creationTimestamp: "2023-10-24T15:49:14Z"
     labels:
       addonmanager.kubernetes.io/mode: Reconcile
       k8s-app: metrics-server
@@ -74,17 +74,17 @@ items:
       kubernetes.io/name: Metrics-server
     name: metrics-server
     namespace: kube-system
-    resourceVersion: "465"
-    uid: 0eead1d0-55cb-47b1-9242-55c46b40848c
+    resourceVersion: "433"
+    uid: 431b6ec2-7d48-4dcd-8367-ba8e20c02669
   subsets:
   - addresses:
     - ip: 10.244.0.3
       nodeName: datagen-1-28
       targetRef:
         kind: Pod
-        name: metrics-server-7c66d45ddc-rq6nf
+        name: metrics-server-7c66d45ddc-8z4fq
         namespace: kube-system
-        uid: 28e4340b-bd7c-41e1-b791-5020cbf3236d
+        uid: c7b1db0b-2f72-40aa-834e-3f5730d3521f
     ports:
     - name: https
       port: 4443
@@ -93,24 +93,24 @@ items:
   kind: Endpoints
   metadata:
     annotations:
-      endpoints.kubernetes.io/last-change-trigger-time: "2023-10-20T16:40:01Z"
-    creationTimestamp: "2023-10-20T16:39:38Z"
+      endpoints.kubernetes.io/last-change-trigger-time: "2023-10-24T15:49:46Z"
+    creationTimestamp: "2023-10-24T15:49:23Z"
     labels:
       app.kubernetes.io/managed-by: Helm
       run: php-apache
     name: e2e-hpa
     namespace: scraper
-    resourceVersion: "661"
-    uid: 09dcbc4c-6062-44f2-901d-e238f06f76d5
+    resourceVersion: "626"
+    uid: c6e98fee-0a91-4b84-b4e2-f9f5fd4d8956
   subsets:
   - addresses:
     - ip: 10.244.0.6
       nodeName: datagen-1-28
       targetRef:
         kind: Pod
-        name: e2e-hpa-97d79d4cd-lm47x
+        name: e2e-hpa-97d79d4cd-l8lzj
         namespace: scraper
-        uid: 05601976-3a00-467e-950a-348b5c6ed236
+        uid: 896248af-f929-4ba6-9d33-17b492f9c76f
     ports:
     - port: 80
       protocol: TCP
@@ -118,8 +118,8 @@ items:
   kind: Endpoints
   metadata:
     annotations:
-      endpoints.kubernetes.io/last-change-trigger-time: "2023-10-20T16:40:18Z"
-    creationTimestamp: "2023-10-20T16:39:38Z"
+      endpoints.kubernetes.io/last-change-trigger-time: "2023-10-24T15:49:54Z"
+    creationTimestamp: "2023-10-24T15:49:23Z"
     labels:
       app.kubernetes.io/component: metrics
       app.kubernetes.io/instance: e2e
@@ -130,17 +130,17 @@ items:
       helm.sh/chart: kube-state-metrics-5.12.1
     name: e2e-kube-state-metrics
     namespace: scraper
-    resourceVersion: "756"
-    uid: 8cedd9e4-9147-4ab4-94a8-ccf507143e7f
+    resourceVersion: "667"
+    uid: cfe17792-8393-4822-ad77-35c30326eab2
   subsets:
   - addresses:
     - ip: 10.244.0.7
       nodeName: datagen-1-28
       targetRef:
         kind: Pod
-        name: e2e-kube-state-metrics-86f7c9c6bb-8z9lw
+        name: e2e-kube-state-metrics-6b77d7bd74-hh55p
         namespace: scraper
-        uid: 58c378eb-7f4a-4944-b546-c43e90200cd4
+        uid: 42368bf4-44af-41d3-bbf9-9a07bf3143d5
     ports:
     - name: http
       port: 8080
@@ -149,31 +149,31 @@ items:
   kind: Endpoints
   metadata:
     annotations:
-      endpoints.kubernetes.io/last-change-trigger-time: "2023-10-20T16:40:27Z"
-    creationTimestamp: "2023-10-20T16:39:37Z"
+      endpoints.kubernetes.io/last-change-trigger-time: "2023-10-24T15:49:59Z"
+    creationTimestamp: "2023-10-24T15:49:23Z"
     labels:
       app: statefulset
       app.kubernetes.io/managed-by: Helm
     name: e2e-statefulset
     namespace: scraper
-    resourceVersion: "775"
-    uid: 494b4ca3-505b-4b2a-993d-e000f2804373
+    resourceVersion: "710"
+    uid: bf7d33dc-daed-4a01-82ea-8c5dd44bb31e
   subsets:
   - addresses:
-    - ip: 10.244.0.14
+    - ip: 10.244.0.13
       nodeName: datagen-1-28
       targetRef:
         kind: Pod
         name: e2e-statefulset-1
         namespace: scraper
-        uid: e908f0df-a06e-4324-9859-eaf25db32ac5
+        uid: 0b00ab12-893a-4b71-aa4d-83a273652197
     - ip: 10.244.0.8
       nodeName: datagen-1-28
       targetRef:
         kind: Pod
         name: e2e-statefulset-0
         namespace: scraper
-        uid: d18fb722-ae38-4ac7-ac9d-9aaa45c2f474
+        uid: 9723b1c7-2a69-454a-8fef-3e3598a473d2
     ports:
     - port: 8089
       protocol: TCP
