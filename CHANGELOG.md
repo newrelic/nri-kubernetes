@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- Add k8s 1.28 support by @svetlanabrennan in [#919](https://github.com/newrelic/nri-kubernetes/pull/919)
+
 ## v3.18.2 - 2023-10-16
 
 ### 🐞 Bug fixes
