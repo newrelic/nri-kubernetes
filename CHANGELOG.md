@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### enhancement
 - Add k8s v1.28.0-rc.1 support by @svetlanabrennan in [#919](https://github.com/newrelic/nri-kubernetes/pull/919)
 
+### bugfix
+- Fix `renovate` configuration by juanjjaramillo in [PR #921](https://github.com/newrelic/nri-kubernetes/pull/921)
+
 ## v3.18.3 - 2023-10-23
 
 ### ⛓️ Dependencies
