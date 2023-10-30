@@ -7,19 +7,23 @@
     {
       "matchPackageNames": ["kube-state-metrics"],
       "allowedVersions": "<=5.12.1"
-    }
+    },
+    {
+      "groupName": "Minikube version (batch update)",
+      "matchDepNames": ["manusa/actions-setup-minikube", "kubernetes/minikube"],
+    },
   ],
   "customManagers": [
     {
       "description": "Update minikube",
       "customType": "regex",
       "fileMatch": [
-        "(^|/)\\.github/workflows/.*\\.ya?ml$"
+        "^\.github/workflows/.+\.ya?ml$",
       ],
       "matchStrings": [
-        'minikube version: "(?<currentValue>.+)"'
+        "\\s+minikube version:\\s+(?<currentValue>v.*?)\\s+",
       ],
-      "depNameTemplate": "manusa/actions-setup-minikube",
+      "depNameTemplate": "kubernetes/minikube",
       "datasourceTemplate": "github-releases",
     },
   ],
