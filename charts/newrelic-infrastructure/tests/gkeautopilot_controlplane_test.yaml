@@ -1,0 +1,71 @@
+suite: GKE Autopilot
+templates:
+  - templates/controlplane/agent-configmap.yaml
+  - templates/controlplane/daemonset.yaml
+  - templates/controlplane/serviceaccount.yaml
+  - templates/controlplane/clusterrole.yaml
+  - templates/controlplane/rolebinding.yaml
+  - templates/controlplane/clusterrolebinding.yaml
+  - templates/controlplane/scraper-configmap.yaml
+  - templates/kubelet/daemonset.yaml
+  - templates/kubelet/scraper-configmap.yaml
+  - templates/kubelet/agent-configmap.yaml
+  - templates/kubelet/integrations-configmap.yaml
+  - templates/secret.yaml
+tests:
+  - it: Disables Control Plane
+    set:
+      licenseKey: test
+      cluster: test
+      gkeAutopilot: true
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: templates/controlplane/agent-configmap.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/controlplane/daemonset.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/controlplane/serviceaccount.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/controlplane/clusterrole.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/controlplane/rolebinding.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/controlplane/clusterrolebinding.yaml
+      - hasDocuments:
+          count: 0
+        template: templates/controlplane/scraper-configmap.yaml
+  - it: Default to false for kubelet hostNetwork
+    set:
+      licenseKey: test
+      cluster: test
+      gkeAutopilot: true
+    asserts:
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: false
+        template: templates/kubelet/daemonset.yaml
+  - it: Sets correct config for kubelet
+    set:
+      licenseKey: test
+      cluster: test
+      gkeAutopilot: true
+    asserts:
+      - equal:
+          path: data["nri-kubernetes.yml"]
+          value: |
+            interval: 15s
+            namespaceSelector: {}
+            kubelet:
+              enabled: true
+              retries: 3
+              scraperMaxReruns: 4
+              timeout: 10s
+              schema: http
+              port: 10255
+        template: templates/kubelet/scraper-configmap.yaml

@@ -11,7 +11,7 @@ true
 Create ControlPlane ClusterRole
 */}}
 {{- define "nriKubernetes.controlPlane.clusterRole" -}}
-{{- if and (.Values.controlPlane.enabled) (.Values.rbac.create) (not (include "newrelic.common.gkeAutopilot" .)) }}
+{{- if and (.Values.controlPlane.enabled) (.Values.rbac.create) (not (include "newrelic.common.gkeAutopilot" .)) -}}
 true
 {{- end -}}
 {{- end -}}
@@ -20,7 +20,7 @@ true
 Create ControlPlane ClusterRoleBinding
 */}}
 {{- define "nriKubernetes.controlPlane.clusterRoleBinding" -}}
-{{- if and (.Values.controlPlane.enabled) (.Values.rbac.create) (not (include "newrelic.common.gkeAutopilot" .)) }}
+{{- if and (.Values.controlPlane.enabled) (.Values.rbac.create) (not (include "newrelic.common.gkeAutopilot" .)) -}}
 true
 {{- end -}}
 {{- end -}}
@@ -29,7 +29,7 @@ true
 Create ControlPlane DaemonSet
 */}}
 {{- define "nriKubernetes.controlPlane.daemonSet" -}}
-{{- if and (.Values.controlPlane.enabled) (not (include "newrelic.common.gkeAutopilot" .)) (not (include "newrelic.fargate" .)) }}
+{{- if and (.Values.controlPlane.enabled) (not (include "newrelic.common.gkeAutopilot" .)) (not (include "newrelic.fargate" .)) -}}
 true
 {{- end -}}
 {{- end -}}
@@ -38,7 +38,7 @@ true
 Create ControlPlane RoleBinding
 */}}
 {{- define "nriKubernetes.controlPlane.roleBinding" -}}
-{{- if and (.Values.rbac.create) (not (include "newrelic.common.gkeAutopilot" .)) }}
+{{- if and (.Values.rbac.create) (not (include "newrelic.common.gkeAutopilot" .)) -}}
 true
 {{- end -}}
 {{- end -}}

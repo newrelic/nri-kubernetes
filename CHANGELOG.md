@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### 🐞 Bug fixes
 - Address CVE-2023-44487 and CVE-2023-39325 by juanjjaramillo in [PR #910](https://github.com/newrelic/nri-kubernetes/pull/910)
-- Adding support for GKE Autopilot [TBD]()
+- Adding support for GKE Autopilot [PR #916](https://github.com/newrelic/nri-kubernetes/pull/916)
 
 ## v3.18.1 - 2023-10-12
 
