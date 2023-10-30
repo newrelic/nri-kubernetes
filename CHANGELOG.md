@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### bugfix
+## v3.18.4 - 2023-10-30
+
+### 🐞 Bug fixes
 - Fix `renovate` configuration by juanjjaramillo in [PR #921](https://github.com/newrelic/nri-kubernetes/pull/921)
 
 ## v3.18.3 - 2023-10-23
