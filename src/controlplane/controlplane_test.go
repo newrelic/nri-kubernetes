@@ -109,17 +109,8 @@ func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 			}
 
 			// apiserverStorageObjects replaces etcObjectCounts in k8s versions above 1.23
-			if testutil.IsBelow(version, testutil.Testdata123) {
-				versionAsserter = versionAsserter.Excluding(
-					exclude.Metrics(
-						"apiserverStorageObjects",
-						"apiserverCurrentInflightRequestsMutating",
-						"apiserverCurrentInflightRequestsReadOnly",
-					),
-				)
-			} else {
-				versionAsserter = versionAsserter.Excluding(exclude.Metrics("etcdObjectCounts"))
-			}
+			versionAsserter = versionAsserter.Excluding(exclude.Metrics("etcdObjectCounts"))
+
 			// Call the asserter for the entities of this particular sub-test.
 			versionAsserter.On(i.Entities).Assert(t)
 		})
