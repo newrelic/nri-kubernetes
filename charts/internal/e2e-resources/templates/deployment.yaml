@@ -29,15 +29,15 @@ spec:
           volumeMounts:
             {{- if .Values.persistentVolumeClaim.enabled }}
             - mountPath: /pv
-              name: pv
+              name: pv-storage
             {{- end }}
             - mountPath: /emptydir
               name: an-empty-dir
       volumes:
         {{- if .Values.persistentVolumeClaim.enabled }}
-        - name: pv
+        - name: pv-storage
           persistentVolumeClaim:
-            claimName: {{ .Release.Name }}
+            claimName: {{ .Release.Name }}-pv-claim
         {{- end }}
         - name: an-empty-dir
           emptyDir:

@@ -2,12 +2,15 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-pv-storage
 spec:
+  storageClassName: {{ .Release.Name }}-pv-class
   accessModes:
     - ReadWriteOnce
   capacity:
-    storage: 5M
+    storage: 5Mi
+  volumeMode: Filesystem
   hostPath:
-    path: /data/pv0001/
+    path: /data/pv/
+    type: DirectoryOrCreate
 {{- end }}
