@@ -29,19 +29,19 @@ spec:
             imagePullPolicy: IfNotPresent
             resources:
               requests:
-                cpu: 400m
-                memory: 50Mi
+                cpu: 40m
+                memory: 15Mi
               limits:
-                cpu: 800m
-                memory: 100Mi
+                cpu: 80m
+                memory: 30Mi
             command:
             - perl
             - -Mbignum=bpi
             - -wle
             {{- if .Values.demo.enabled }}
-            - print bpi(15000)
+            - open(FH, '>', './{{ .Values.fileSystemTest.fileName }}') or die "Cannot open file - $!"; print FH bpi(100); close(FH); print bpi(4000)
             {{- else }}
-            - print bpi(1500)
+            - open(FH, '>', './{{ .Values.fileSystemTest.fileName }}') or die "Cannot open file - $!"; print FH bpi(100); close(FH); print bpi(1500)
             {{- end }}
           restartPolicy: OnFailure
 {{- end }}
