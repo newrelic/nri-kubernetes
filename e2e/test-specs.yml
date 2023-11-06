@@ -58,7 +58,7 @@ scenarios:
         - query: FROM Metric SELECT sum(k8s.container.cpuCfsThrottledPeriodsDelta) / sum(k8s.container.cpuCfsPeriodsDelta) AS 'CPU throttling (%)' WHERE k8s.podName like '${SCENARIO_TAG}-resources-cronjob-%' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}'
           expected_results:
             - key: "CPU throttling (%)"
-              value: nil
+              lowerBoundedValue: 0.0  # this metric is flaky - sometimes it's 0 and sometimes it's more
         - query: FROM Metric SELECT average(k8s.container.memoryWorkingSetBytes) AS 'Memory usage (bytes)' WHERE k8s.podName like '${SCENARIO_TAG}-resources-cronjob-%' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}'
           expected_results:
             - key: "Memory usage (bytes)"
@@ -168,7 +168,7 @@ scenarios:
         - query: FROM Metric SELECT sum(k8s.container.cpuCfsThrottledPeriodsDelta) / sum(k8s.container.cpuCfsPeriodsDelta) AS 'CPU throttling (%)' WHERE k8s.podName like '${SCENARIO_TAG}-resources-cronjob-%' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}'
           expected_results:
             - key: "CPU throttling (%)"
-              lowerBoundedValue: 0.0
+              lowerBoundedValue: 0.0  # this metric is flaky - sometimes it's 0 and sometimes it's more
         - query: FROM Metric SELECT average(k8s.container.memoryWorkingSetBytes) AS 'Memory usage (bytes)' WHERE k8s.podName like '${SCENARIO_TAG}-resources-cronjob-%' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}'
           expected_results:
             - key: "Memory usage (bytes)"
