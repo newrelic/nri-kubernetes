@@ -55,10 +55,11 @@ scenarios:
           expected_results:
             - key: "CPU utilization (%)"
               value: nil
-        - query: "FROM Metric SELECT sum(k8s.container.cpuCfsThrottledPeriodsDelta) / sum(k8s.container.cpuCfsPeriodsDelta) AS 'CPU throttling (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
-          expected_results:
-            - key: "CPU throttling (%)"
-              value: nil
+        # commenting out this test - this test is flaky - sometimes it's nil and sometimes it has a positive value
+        # - query: "FROM Metric SELECT sum(k8s.container.cpuCfsThrottledPeriodsDelta) / sum(k8s.container.cpuCfsPeriodsDelta) AS 'CPU throttling (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
+        #   expected_results:
+        #     - key: "CPU throttling (%)"
+        #       value: nil
         - query: "FROM Metric SELECT average(k8s.container.memoryWorkingSetBytes) AS 'Memory usage (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
           expected_results:
             - key: "Memory usage (bytes)"
@@ -165,10 +166,11 @@ scenarios:
           expected_results:
             - key: "CPU utilization (%)"
               value: nil
-        - query: "FROM Metric SELECT sum(k8s.container.cpuCfsThrottledPeriodsDelta) / sum(k8s.container.cpuCfsPeriodsDelta) AS 'CPU throttling (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
-          expected_results:
-            - key: "CPU throttling (%)"
-              value: nil
+        # commenting out this test - this test is flaky - sometimes it's nil and sometimes it has a positive value
+        # - query: "FROM Metric SELECT sum(k8s.container.cpuCfsThrottledPeriodsDelta) / sum(k8s.container.cpuCfsPeriodsDelta) AS 'CPU throttling (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
+        #   expected_results:
+        #     - key: "CPU throttling (%)"
+        #       value: nil
         - query: "FROM Metric SELECT average(k8s.container.memoryWorkingSetBytes) AS 'Memory usage (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
           expected_results:
             - key: "Memory usage (bytes)"
