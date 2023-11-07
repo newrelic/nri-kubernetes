@@ -38,7 +38,7 @@ scenarios:
         - query: FROM Metric SELECT max(k8s.pod.netTxBytesPerSecond) / 1000 AS 'Transferred (KBps)' WHERE k8s.podName like '${SCENARIO_TAG}-resources-cronjob-%' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}'
           expected_results:
             - key: "Transferred (KBps)"
-              lowerBoundedValue: 0.00  # this metric is flaky - sometimes it's 0 and sometimes it's more
+              lowerBoundedValue: 0.00  # using lowerBoundedValue instead of value: 0 because sometimes the max can be 0 and sometimes it can be more than 0
         - query: FROM Metric SELECT max(k8s.pod.netRxBytesPerSecond) / 1000 AS 'Received (KBps)' WHERE k8s.podName like '${SCENARIO_TAG}-resources-cronjob-%' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}'
           expected_results:
             - key: "Received (KBps)"
@@ -58,7 +58,7 @@ scenarios:
         - query: FROM Metric SELECT sum(k8s.container.cpuCfsThrottledPeriodsDelta) / sum(k8s.container.cpuCfsPeriodsDelta) AS 'CPU throttling (%)' WHERE k8s.podName like '${SCENARIO_TAG}-resources-cronjob-%' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}'
           expected_results:
             - key: "CPU throttling (%)"
-              lowerBoundedValue: 0.0  # this metric is flaky - sometimes it's 0 and sometimes it's more
+              lowerBoundedValue: 0.0  # using lowerBoundedValue instead of value: 0 because sometimes the max can be 0 and sometimes it can be more than 0
         - query: FROM Metric SELECT average(k8s.container.memoryWorkingSetBytes) AS 'Memory usage (bytes)' WHERE k8s.podName like '${SCENARIO_TAG}-resources-cronjob-%' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}'
           expected_results:
             - key: "Memory usage (bytes)"
@@ -148,7 +148,7 @@ scenarios:
         - query: FROM Metric SELECT max(k8s.pod.netTxBytesPerSecond) / 1000 AS 'Transferred (KBps)' WHERE k8s.podName like '${SCENARIO_TAG}-resources-cronjob-%' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}'
           expected_results:
             - key: "Transferred (KBps)"
-              lowerBoundedValue: 0.00 # this metric is flaky - sometimes it's 0 and sometimes it's more
+              lowerBoundedValue: 0.00 # using lowerBoundedValue instead of value: 0 because sometimes the max can be 0 and sometimes it can be more than 0
         - query: FROM Metric SELECT max(k8s.pod.netRxBytesPerSecond) / 1000 AS 'Received (KBps)' WHERE k8s.podName like '${SCENARIO_TAG}-resources-cronjob-%' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}'
           expected_results:
             - key: "Received (KBps)"
@@ -168,7 +168,7 @@ scenarios:
         - query: FROM Metric SELECT sum(k8s.container.cpuCfsThrottledPeriodsDelta) / sum(k8s.container.cpuCfsPeriodsDelta) AS 'CPU throttling (%)' WHERE k8s.podName like '${SCENARIO_TAG}-resources-cronjob-%' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}'
           expected_results:
             - key: "CPU throttling (%)"
-              lowerBoundedValue: 0.0  # this metric is flaky - sometimes it's 0 and sometimes it's more
+              lowerBoundedValue: 0.0  # using lowerBoundedValue instead of value: 0 because sometimes the max can be 0 and sometimes it can be more than 0
         - query: FROM Metric SELECT average(k8s.container.memoryWorkingSetBytes) AS 'Memory usage (bytes)' WHERE k8s.podName like '${SCENARIO_TAG}-resources-cronjob-%' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}'
           expected_results:
             - key: "Memory usage (bytes)"
