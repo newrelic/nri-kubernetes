@@ -49,6 +49,9 @@ scenarios:
             # Labels are attributes, not metrics. This erroneous metric has been removed
             - k8s.hpa.labels
 
+            # etcd_object_counts was deprecated in k8s 1.22 and removed in 1.23 (replaced by apiserver_storage_objects)
+            - k8s.apiserver.etcd.objectCount_*
+
   - description: |
       This scenario will verify that metrics from a k8s Cluster are correctly collected without privileges.
     before:
