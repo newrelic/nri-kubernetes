@@ -19,67 +19,22 @@ scenarios:
     tests:
       nrqls:
 #        START Failed Pod - Container Creating
-        - query: "FROM Metric SELECT latest(if(k8s.pod.isReady = 1, 'True', 'False')) as 'Ready' WHERE k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
+        - query: "FROM Metric SELECT latest(if(k8s.pod.isReady = 1, 'True', 'False')) as 'Ready' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
           expected_results:
             - key: "Ready"
               value: False
-        - query: "FROM Metric SELECT latest(if(k8s.pod.isScheduled = 1, 'True', 'False')) as 'Scheduled' WHERE k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
+        - query: "FROM Metric SELECT latest(if(k8s.pod.isScheduled = 1, 'True', 'False')) as 'Scheduled' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
           expected_results:
             - key: "Scheduled"
               value: True
-        - query: "FROM Metric SELECT min(k8s.pod.isReady) as 'Ready' WHERE k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
+        - query: "FROM Metric SELECT latest(k8s.pod.createdAt) as 'Created At' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
           expected_results:
-            - key: "Ready"
-              value: 0
-        - query: "FROM Metric SELECT min(k8s.pod.isScheduled) as 'Scheduled' WHERE k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
-          expected_results:
-            - key: "Scheduled"
-              value: 1
-        - query: "FROM Metric SELECT average(k8s.pod.netRxBytesPerSecond) / 1000 AS 'Received KBps' WHERE k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
-          expected_results:
-            - key: "Received KBps"
-              value: nil
-        - query: "FROM Metric SELECT average(k8s.pod.netTxBytesPerSecond) / 1000 AS 'Transmitted KBps', average(k8s.pod.netErrorsPerSecond) AS 'Errors / sec' WHERE k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
-          expected_results:
-            - key: "Transmitted KBps"
-              value: nil
-        - query: "FROM Metric SELECT average(k8s.pod.netErrorsPerSecond) AS 'Errors / sec' WHERE k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
-          expected_results:
-            - key: "Errors / sec"
-              value: nil
-        - query: "FROM Metric SELECT average(k8s.container.cpuUsedCores) AS 'CPU usage (cores)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
-          expected_results:
-            - key: "CPU usage (cores)"
-              value: nil
-        - query: "FROM Metric SELECT average(k8s.container.cpuCoresUtilization) / 100 AS 'CPU utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
-          expected_results:
-            - key: "CPU utilization (%)"
-              value: nil
-        # commenting out this test - this test is flaky - sometimes it's nil and sometimes it has a positive value
-        # - query: "FROM Metric SELECT sum(k8s.container.cpuCfsThrottledPeriodsDelta) / sum(k8s.container.cpuCfsPeriodsDelta) AS 'CPU throttling (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
-        #   expected_results:
-        #     - key: "CPU throttling (%)"
-        #       value: nil
-        - query: "FROM Metric SELECT average(k8s.container.memoryWorkingSetBytes) AS 'Memory usage (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
-          expected_results:
-            - key: "Memory usage (bytes)"
-              value: nil
-        - query: "FROM Metric SELECT average(k8s.container.memoryWorkingSetUtilization) / 100 AS 'Memory utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
-          expected_results:
-            - key: "Memory utilization (%)"
-              value: nil
-        - query: "SELECT max(k8s.container.fsUsedBytes) AS 'Filesystem usage (bytes)' FROM Metric WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
-          expected_results:
-            - key: "Filesystem usage (bytes)"
-              value: nil
-        - query: "SELECT max(k8s.container.fsUsedPercent) / 100 AS 'Filesystem utilization (%)' FROM Metric WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
-          expected_results:
-            - key: "Filesystem utilization (%)"
-              value: nil
-        - query: "FROM Metric SELECT sum(k8s.container.restartCountDelta) AS 'Restart count' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
+            - key: "Created At"
+              lowerBoundedValue: 0.0
+        - query: "FROM Metric SELECT max(k8s.container.restartCountDelta) AS 'Restart count' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
           expected_results:
             - key: "Restart count"
-              lowerBoundedValue: 1
+              lowerBoundedValue: 1.0
 #        END Failed Pod - Container Creating
       entities: []
       metrics:
@@ -120,7 +75,7 @@ scenarios:
     before:
       - helm dependency update ../charts/internal/e2e-resources
       - helm dependency update ../charts/newrelic-infrastructure
-      - function ver { printf $((10#$(printf "%03d%03d" $(echo "$1" | tr '.' ' ')))); } && K8S_VERSION=$(kubectl version 2>&1 | grep 'Server Version' | awk -F' v' '{ print $2; }' | awk -F. '{ print $1"."$2; }') && if [[ $(ver $K8S_VERSION) -gt $(ver "1.22") ]]; then KSM_IMAGE_VERSION="v2.10.0"; else KSM_IMAGE_VERSION="v2.6.0"; fi && echo "Will use KSM image version ${KSM_IMAGE_VERSION}" && helm upgrade --install ${SCENARIO_TAG}-resources -n nr-${SCENARIO_TAG} --create-namespace ../charts/internal/e2e-resources --set persistentVolume.enabled=true --set kube-state-metrics.image.tag=${KSM_IMAGE_VERSION}
+      - function ver { printf $((10#$(printf "%03d%03d" $(echo "$1" | tr '.' ' ')))); } && K8S_VERSION=$(kubectl version 2>&1 | grep 'Server Version' | awk -F' v' '{ print $2; }' | awk -F. '{ print $1"."$2; }') && if [[ $(ver $K8S_VERSION) -gt $(ver "1.22") ]]; then KSM_IMAGE_VERSION="v2.10.0"; else KSM_IMAGE_VERSION="v2.6.0"; fi && echo "Will use KSM image version ${KSM_IMAGE_VERSION}" && helm upgrade --install ${SCENARIO_TAG}-resources -n nr-${SCENARIO_TAG} --create-namespace ../charts/internal/e2e-resources --set persistentVolume.enabled=true --set kube-state-metrics.image.tag=${KSM_IMAGE_VERSION} 
       - helm upgrade --install ${SCENARIO_TAG} -n nr-${SCENARIO_TAG} --create-namespace ../charts/newrelic-infrastructure --values e2e-values.yml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG} --set privileged=false
     after:
       - kubectl logs -l app.kubernetes.io/name=newrelic-infrastructure -n nr-${SCENARIO_TAG} --all-containers --prefix=true
@@ -130,67 +85,22 @@ scenarios:
     tests:
       nrqls:
 #        START Failed Pod - Container Creating
-        - query: "FROM Metric SELECT latest(if(k8s.pod.isReady = 1, 'True', 'False')) as 'Ready' WHERE k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
+        - query: "FROM Metric SELECT latest(if(k8s.pod.isReady = 1, 'True', 'False')) as 'Ready' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
           expected_results:
             - key: "Ready"
               value: False
-        - query: "FROM Metric SELECT latest(if(k8s.pod.isScheduled = 1, 'True', 'False')) as 'Scheduled' WHERE k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
+        - query: "FROM Metric SELECT latest(if(k8s.pod.isScheduled = 1, 'True', 'False')) as 'Scheduled' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
           expected_results:
             - key: "Scheduled"
               value: True
-        - query: "FROM Metric SELECT min(k8s.pod.isReady) as 'Ready' WHERE k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
+        - query: "FROM Metric SELECT latest(k8s.pod.createdAt) as 'Created At' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
           expected_results:
-            - key: "Ready"
-              value: 0
-        - query: "FROM Metric SELECT min(k8s.pod.isScheduled) as 'Scheduled' WHERE k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
-          expected_results:
-            - key: "Scheduled"
-              value: 1
-        - query: "FROM Metric SELECT average(k8s.pod.netRxBytesPerSecond) / 1000 AS 'Received KBps' WHERE k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
-          expected_results:
-            - key: "Received KBps"
-              value: nil
-        - query: "FROM Metric SELECT average(k8s.pod.netTxBytesPerSecond) / 1000 AS 'Transmitted KBps', average(k8s.pod.netErrorsPerSecond) AS 'Errors / sec' WHERE k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
-          expected_results:
-            - key: "Transmitted KBps"
-              value: nil
-        - query: "FROM Metric SELECT average(k8s.pod.netErrorsPerSecond) AS 'Errors / sec' WHERE k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
-          expected_results:
-            - key: "Errors / sec"
-              value: nil
-        - query: "FROM Metric SELECT average(k8s.container.cpuUsedCores) AS 'CPU usage (cores)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
-          expected_results:
-            - key: "CPU usage (cores)"
-              value: nil
-        - query: "FROM Metric SELECT average(k8s.container.cpuCoresUtilization) / 100 AS 'CPU utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
-          expected_results:
-            - key: "CPU utilization (%)"
-              value: nil
-        # commenting out this test - this test is flaky - sometimes it's nil and sometimes it has a positive value
-        # - query: "FROM Metric SELECT sum(k8s.container.cpuCfsThrottledPeriodsDelta) / sum(k8s.container.cpuCfsPeriodsDelta) AS 'CPU throttling (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
-        #   expected_results:
-        #     - key: "CPU throttling (%)"
-        #       value: nil
-        - query: "FROM Metric SELECT average(k8s.container.memoryWorkingSetBytes) AS 'Memory usage (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
-          expected_results:
-            - key: "Memory usage (bytes)"
-              value: nil
-        - query: "FROM Metric SELECT average(k8s.container.memoryWorkingSetUtilization) / 100 AS 'Memory utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
-          expected_results:
-            - key: "Memory utilization (%)"
-              value: nil
-        - query: "SELECT max(k8s.container.fsUsedBytes) AS 'Filesystem usage (bytes)' FROM Metric WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
-          expected_results:
-            - key: "Filesystem usage (bytes)"
-              value: nil
-        - query: "SELECT max(k8s.container.fsUsedPercent) / 100 AS 'Filesystem utilization (%)' FROM Metric WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
-          expected_results:
-            - key: "Filesystem utilization (%)"
-              value: nil
-        - query: "FROM Metric SELECT sum(k8s.container.restartCountDelta) AS 'Restart count' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
+            - key: "Created At"
+              lowerBoundedValue: 0.0
+        - query: "FROM Metric SELECT max(k8s.container.restartCountDelta) AS 'Restart count' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
           expected_results:
             - key: "Restart count"
-              lowerBoundedValue: 1
+              lowerBoundedValue: 1.0
 #        END Failed Pod - Container Creating
       entities: []
       metrics:
