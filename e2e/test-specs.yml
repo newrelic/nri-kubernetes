@@ -19,24 +19,36 @@ scenarios:
     tests:
       nrqls:
 #        START PersistentVolume
-        - query: "FROM Metric SELECT latest(k8s.persistentvolume.statusPhase) as 'Status' WHERE metricName = 'k8s.persistentvolume.createdAt' and k8s.volumeName = '${SCENARIO_TAG}-resources'"
-          expected_results:
-            - key: "Status"
-              value: "Available"
-        - query: "FROM Metric SELECT latest(k8s.persistentvolume.capacityBytes) / 1024 / 1024 as 'Capacity (Mi)' WHERE metricName = 'k8s.persistentvolume.createdAt' and k8s.volumeName = '${SCENARIO_TAG}-resources'"
-          expected_results:
-            - key: "Capacity (Mi)"
-              lowerBoundedValue: 0
-#        END PersistentVolume
-#        START PersistentVolumeClaim
-        - query: "FROM Metric SELECT latest(k8s.persistentvolumeclaim.statusPhase) as 'Status' WHERE metricName = 'k8s.persistentvolumeclaim.createdAt' and k8s.pvcName = '${SCENARIO_TAG}-resources'"
+        - query: FROM Metric SELECT latest(k8s.persistentvolume.statusPhase) AS 'Status' WHERE metricName = 'k8s.persistentvolume.createdAt' AND k8s.volumeName = '${SCENARIO_TAG}-resources-pv-storage'
           expected_results:
             - key: "Status"
               value: "Bound"
-        - query: "FROM Metric SELECT latest(k8s.persistentvolumeclaim.requestedStorageBytes) / 1024 / 1024 as 'Requested Capacity (Mi)' WHERE k8s.pvcName = '${SCENARIO_TAG}-resources'"
+        - query: FROM Metric SELECT latest(k8s.persistentvolume.capacityBytes) / 1024 / 1024 AS 'Capacity (Mi)' WHERE metricName = 'k8s.persistentvolume.createdAt' AND k8s.volumeName = '${SCENARIO_TAG}-resources-pv-storage'
+          expected_results:
+            - key: "Capacity (Mi)"
+              value: 5.0
+        - query: FROM Metric SELECT latest(k8s.persistentvolume.createdAt) AS 'Created At' WHERE metricName = 'k8s.persistentvolume.createdAt' AND k8s.volumeName = '${SCENARIO_TAG}-resources-pv-storage' AND k8s.persistentvolume.storageClass = '${SCENARIO_TAG}-resources-pv-class'
+          expected_results:
+            - key: "Created At"
+              lowerBoundedValue: 0.0
+#        END PersistentVolume
+#        START PersistentVolumeClaim
+        - query: FROM Metric SELECT latest(k8s.persistentvolumeclaim.statusPhase) AS 'Status' WHERE metricName = 'k8s.persistentvolumeclaim.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.pvcName = '${SCENARIO_TAG}-resources-pv-claim'
+          expected_results:
+            - key: "Status"
+              value: "Bound"
+        - query: FROM Metric SELECT latest(k8s.persistentvolumeclaim.requestedStorageBytes) / 1024 / 1024 AS 'Requested Capacity (Mi)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.pvcName = '${SCENARIO_TAG}-resources-pv-claim'
           expected_results:
             - key: "Requested Capacity (Mi)"
-              value: 32
+              value: 3.0
+        - query: FROM Metric SELECT latest(k8s.persistentvolumeclaim.accessMode) AS 'Access Mode' WHERE metricName = 'k8s.persistentvolumeclaim.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.pvcName = '${SCENARIO_TAG}-resources-pv-claim' AND k8s.persistentvolumeclaim.storageClass = '${SCENARIO_TAG}-resources-pv-class'
+          expected_results:
+            - key: "Access Mode"
+              value: "ReadWriteOnce"
+        - query: FROM Metric SELECT latest(k8s.persistentvolumeclaim.createdAt) AS 'Created At' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.pvcName = '${SCENARIO_TAG}-resources-pv-claim' AND k8s.persistentvolumeclaim.storageClass = '${SCENARIO_TAG}-resources-pv-class'
+          expected_results:
+            - key: "Created At"
+              lowerBoundedValue: 0.0
 #        END PersistentVolumeClaim
       entities: []
       metrics:
@@ -87,24 +99,36 @@ scenarios:
     tests:
       nrqls:
 #        START PersistentVolume
-        - query: "FROM Metric SELECT latest(k8s.persistentvolume.statusPhase) as 'Status' WHERE metricName = 'k8s.persistentvolume.createdAt' and k8s.volumeName = '${SCENARIO_TAG}-resources'"
-          expected_results:
-            - key: "Status"
-              value: "Available"
-        - query: "FROM Metric SELECT latest(k8s.persistentvolume.capacityBytes) / 1024 / 1024 as 'Capacity (Mi)' WHERE metricName = 'k8s.persistentvolume.createdAt' and k8s.volumeName = '${SCENARIO_TAG}-resources'"
-          expected_results:
-            - key: "Capacity (Mi)"
-              lowerBoundedValue: 0
-#        END PersistentVolume
-#        START PersistentVolumeClaim
-        - query: "FROM Metric SELECT latest(k8s.persistentvolumeclaim.statusPhase) as 'Status' WHERE metricName = 'k8s.persistentvolumeclaim.createdAt' and k8s.pvcName = '${SCENARIO_TAG}-resources'"
+        - query: FROM Metric SELECT latest(k8s.persistentvolume.statusPhase) AS 'Status' WHERE metricName = 'k8s.persistentvolume.createdAt' AND k8s.volumeName = '${SCENARIO_TAG}-resources-pv-storage'
           expected_results:
             - key: "Status"
               value: "Bound"
-        - query: "FROM Metric SELECT latest(k8s.persistentvolumeclaim.requestedStorageBytes) / 1024 / 1024 as 'Requested Capacity (Mi)' WHERE k8s.pvcName = '${SCENARIO_TAG}-resources'"
+        - query: FROM Metric SELECT latest(k8s.persistentvolume.capacityBytes) / 1024 / 1024 AS 'Capacity (Mi)' WHERE metricName = 'k8s.persistentvolume.createdAt' AND k8s.volumeName = '${SCENARIO_TAG}-resources-pv-storage'
+          expected_results:
+            - key: "Capacity (Mi)"
+              value: 5.0
+        - query: FROM Metric SELECT latest(k8s.persistentvolume.createdAt) AS 'Created At' WHERE metricName = 'k8s.persistentvolume.createdAt' AND k8s.volumeName = '${SCENARIO_TAG}-resources-pv-storage' AND k8s.persistentvolume.storageClass = '${SCENARIO_TAG}-resources-pv-class'
+          expected_results:
+            - key: "Created At"
+              lowerBoundedValue: 0.0
+#        END PersistentVolume
+#        START PersistentVolumeClaim
+        - query: FROM Metric SELECT latest(k8s.persistentvolumeclaim.statusPhase) AS 'Status' WHERE metricName = 'k8s.persistentvolumeclaim.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.pvcName = '${SCENARIO_TAG}-resources-pv-claim'
+          expected_results:
+            - key: "Status"
+              value: "Bound"
+        - query: FROM Metric SELECT latest(k8s.persistentvolumeclaim.requestedStorageBytes) / 1024 / 1024 AS 'Requested Capacity (Mi)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.pvcName = '${SCENARIO_TAG}-resources-pv-claim'
           expected_results:
             - key: "Requested Capacity (Mi)"
-              value: 32
+              value: 3.0
+        - query: FROM Metric SELECT latest(k8s.persistentvolumeclaim.accessMode) AS 'Access Mode' WHERE metricName = 'k8s.persistentvolumeclaim.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.pvcName = '${SCENARIO_TAG}-resources-pv-claim' AND k8s.persistentvolumeclaim.storageClass = '${SCENARIO_TAG}-resources-pv-class'
+          expected_results:
+            - key: "Access Mode"
+              value: "ReadWriteOnce"
+        - query: FROM Metric SELECT latest(k8s.persistentvolumeclaim.createdAt) AS 'Created At' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.pvcName = '${SCENARIO_TAG}-resources-pv-claim' AND k8s.persistentvolumeclaim.storageClass = '${SCENARIO_TAG}-resources-pv-class'
+          expected_results:
+            - key: "Created At"
+              lowerBoundedValue: 0.0
 #        END PersistentVolumeClaim
       entities: []
       metrics:
