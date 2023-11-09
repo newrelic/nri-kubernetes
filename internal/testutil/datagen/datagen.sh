@@ -358,11 +358,11 @@ EOF
 
 # Generate static test data for all supported versions
 function all_versions() {
-  for version in {23..28}; do
+  for version in {24..28}; do
     ./datagen.sh 1.$version || exit 1;
   done
 
-  for version in {23..28}; do
+  for version in {24..28}; do
     rm -rf ../data/1_$version;
     mv 1_$version ../data/;
   done
