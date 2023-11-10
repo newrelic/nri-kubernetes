@@ -77,7 +77,7 @@ function main() {
 function setup() {
     case "$1" in
      "1.28")
-        K8S_VERSION="v1.28.3 "
+        K8S_VERSION="v1.28.3"
         ;;
       "1.27")
         K8S_VERSION="v1.27.5"
