@@ -18,7 +18,7 @@ and `TARGETOS` args to be populated.
 ```shell
 make compile-multiarch # Compile the repo binaries that will be used to create an image for testing.
 export DOCKER_BUILDKIT=1
-docker build -t e2e/nri-kubernetes:e2e  .
+docker build -t e2e/nri-kubernetes:e2e .
 minikube image load e2e/nri-kubernetes:e2e
 ```
 
