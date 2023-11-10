@@ -48,7 +48,7 @@ MINIKUBE_PROFILE="${MINIKUBE_PROFILE}-${1/./-}"
 # main subcommand runs the whole flow of the script: Bootstrap, scrape, and cleanup
 function main() {
     if [[ $# -eq 0 ]]; then
-      echo "Please provide Kubernetes version as MAJOR.MINOR (e.g., ${0##*/} 1.27)"
+      echo "Please provide Kubernetes version as MAJOR.MINOR (e.g., ${0##*/} 1.28)"
       exit 1
     fi
 
@@ -77,7 +77,7 @@ function main() {
 function setup() {
     case "$1" in
      "1.28")
-        K8S_VERSION="v1.28.0-rc.1 "
+        K8S_VERSION="v1.28.3"
         ;;
       "1.27")
         K8S_VERSION="v1.27.5"
@@ -358,11 +358,11 @@ EOF
 
 # Generate static test data for all supported versions
 function all_versions() {
-  for version in {23..27}; do
+  for version in {24..28}; do
     ./datagen.sh 1.$version || exit 1;
   done
 
-  for version in {23..27}; do
+  for version in {24..28}; do
     rm -rf ../data/1_$version;
     mv 1_$version ../data/;
   done
