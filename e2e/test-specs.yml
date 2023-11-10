@@ -18,6 +18,28 @@ scenarios:
       - helm delete ${SCENARIO_TAG} -n nr-${SCENARIO_TAG}
     tests:
       nrqls:
+#        START Failed Pod - Container Pending
+        - query: "FROM Metric SELECT latest(if(k8s.pod.isReady = 1, 'True', 'False')) as 'Ready' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-pending'"
+          expected_results:
+            - key: "Ready"
+              value: False
+        - query: "FROM Metric SELECT latest(if(k8s.pod.isScheduled = 1, 'True', 'False')) as 'Scheduled' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-pending'"
+          expected_results:
+            - key: "Scheduled"
+              value: False
+        - query: "FROM Metric SELECT latest(k8s.pod.createdAt) as 'Created At' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-pending'"
+          expected_results:
+            - key: "Created At"
+              lowerBoundedValue: 0.0
+        - query: "FROM Metric SELECT latest(k8s.nodeName) as 'Node Name' WHERE metricName = 'k8s.pod.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-pending'"
+          expected_results:
+            - key: "Node Name"
+              value: ""
+        - query: "FROM Metric SELECT max(k8s.container.restartCountDelta) AS 'Restart count' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-pending'"
+          expected_results:
+            - key: "Restart count"
+              value: nil
+#        END Failed Pod - Container Pending
 #        START Failed Pod - Container Creating
         - query: "FROM Metric SELECT latest(if(k8s.pod.isReady = 1, 'True', 'False')) as 'Ready' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
           expected_results:
@@ -250,6 +272,28 @@ scenarios:
       - helm delete ${SCENARIO_TAG} -n nr-${SCENARIO_TAG}
     tests:
       nrqls:
+#        START Failed Pod - Container Pending
+        - query: "FROM Metric SELECT latest(if(k8s.pod.isReady = 1, 'True', 'False')) as 'Ready' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-pending'"
+          expected_results:
+            - key: "Ready"
+              value: False
+        - query: "FROM Metric SELECT latest(if(k8s.pod.isScheduled = 1, 'True', 'False')) as 'Scheduled' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-pending'"
+          expected_results:
+            - key: "Scheduled"
+              value: False
+        - query: "FROM Metric SELECT latest(k8s.pod.createdAt) as 'Created At' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-pending'"
+          expected_results:
+            - key: "Created At"
+              lowerBoundedValue: 0.0
+        - query: "FROM Metric SELECT latest(k8s.nodeName) as 'Node Name' WHERE metricName = 'k8s.pod.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-pending'"
+          expected_results:
+            - key: "Node Name"
+              value: ""
+        - query: "FROM Metric SELECT max(k8s.container.restartCountDelta) AS 'Restart count' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-pending'"
+          expected_results:
+            - key: "Restart count"
+              value: nil
+#        END Failed Pod - Container Pending
 #        START Failed Pod - Container Creating
         - query: "FROM Metric SELECT latest(if(k8s.pod.isReady = 1, 'True', 'False')) as 'Ready' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName = '${SCENARIO_TAG}-resources-container-creating'"
           expected_results:
