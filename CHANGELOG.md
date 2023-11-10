@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### enhancement
 - Update E2E resources by @juanjjaramillo in [#926](https://github.com/newrelic/nri-kubernetes/pull/926)
 - Add failed pod container creating e2e tests in [#848](https://github.com/newrelic/nri-kubernetes/pull/848)
+- Add cronjob dashboard tests in [#827](https://github.com/newrelic/nri-kubernetes/pull/827)
 
 ## v3.19.0 - 2023-11-06
 
