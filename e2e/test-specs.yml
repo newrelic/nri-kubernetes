@@ -333,11 +333,11 @@ scenarios:
           expected_results:
             - key: "Restarts cumulative"
               value: 0.0
-        - query: FROM Metric SELECT average(k8s.container.cpuUsedCores) AS 'CPU usage (cores)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-daemonset%' AND k8s.containerName = 'compute-pi-digits'
+        - query: FROM Metric SELECT max(k8s.container.cpuUsedCores) AS 'CPU usage (cores)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-daemonset%' AND k8s.containerName = 'compute-pi-digits'
           expected_results:
             - key: "CPU usage (cores)"
               lowerBoundedValue: 0.01
-        - query: FROM Metric SELECT average(k8s.container.cpuCoresUtilization) / 100 AS 'CPU utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-daemonset%' AND k8s.containerName = 'compute-pi-digits'
+        - query: FROM Metric SELECT max(k8s.container.cpuCoresUtilization) / 100 AS 'CPU utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-daemonset%' AND k8s.containerName = 'compute-pi-digits'
           expected_results:
             - key: "CPU utilization (%)"
               lowerBoundedValue: 0.01
@@ -733,11 +733,11 @@ scenarios:
           expected_results:
             - key: "Restarts cumulative"
               value: 0.0
-        - query: FROM Metric SELECT average(k8s.container.cpuUsedCores) AS 'CPU usage (cores)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-daemonset%' AND k8s.containerName = 'compute-pi-digits'
+        - query: FROM Metric SELECT max(k8s.container.cpuUsedCores) AS 'CPU usage (cores)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-daemonset%' AND k8s.containerName = 'compute-pi-digits'
           expected_results:
             - key: "CPU usage (cores)"
               lowerBoundedValue: 0.01
-        - query: FROM Metric SELECT average(k8s.container.cpuCoresUtilization) / 100 AS 'CPU utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-daemonset%' AND k8s.containerName = 'compute-pi-digits'
+        - query: FROM Metric SELECT max(k8s.container.cpuCoresUtilization) / 100 AS 'CPU utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-daemonset%' AND k8s.containerName = 'compute-pi-digits'
           expected_results:
             - key: "CPU utilization (%)"
               lowerBoundedValue: 0.01
