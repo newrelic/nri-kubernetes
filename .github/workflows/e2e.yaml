@@ -19,7 +19,7 @@ jobs:
       matrix:
         # Latest patch version can be found in https://github.com/kubernetes/website/blob/main/content/en/releases/patch-releases.md
         # Some versions might not be available yet in https://storage.googleapis.com/kubernetes-release/release/v1.X.Y/bin/linux/amd64/kubelet
-        k8sVersion: [ "v1.28.0-rc.1", "v1.27.5", "v1.26.8","v1.25.13", "v1.24.17"]
+        k8sVersion: [ "v1.28.3", "v1.27.5", "v1.26.8","v1.25.13", "v1.24.17"]
         cri: [ containerd ]
     env:
       DOCKER_BUILDKIT: '1' # Setting DOCKER_BUILDKIT=1 ensures TARGETOS and TARGETARCH are populated
@@ -34,7 +34,7 @@ jobs:
           minikube version: v1.32.0
           kubernetes version: ${{ matrix.k8sVersion }}
           driver: docker
-          start args: "--nodes=2 --container-runtime=${{ matrix.cri }}"
+          start args: "--container-runtime=${{ matrix.cri }}"
       - name: Enable addons minikube needed for HPA
         run: |
           minikube addons enable metrics-server
@@ -64,8 +64,6 @@ jobs:
             echo "exceptions=1_26" >> $GITHUB_OUTPUT
           elif [ "$MINOR" -ge 27 ]; then
             echo "exceptions=1_27" >> $GITHUB_OUTPUT
-          elif [ "$MINOR" = "28-rc.1" ]; then
-            echo "exceptions=1_28" >> $GITHUB_OUTPUT
           elif [ "$MINOR" -ge 28 ]; then
             echo "exceptions=1_28" >> $GITHUB_OUTPUT
           fi

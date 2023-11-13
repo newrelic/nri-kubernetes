@@ -9,7 +9,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### enhancement
 - Add PV, PVC dashboards tests in [#829](https://github.com/newrelic/nri-kubernetes/pull/829)
+
+## v3.20.0 - 2023-11-13
+
+### 🚀 Enhancements
 - Update E2E resources by @juanjjaramillo in [#926](https://github.com/newrelic/nri-kubernetes/pull/926)
+- Replace k8s v1.28.0-rc.1 with k8s 1.28.3 by @svetlanabrennan in [#936](https://github.com/newrelic/nri-kubernetes/pull/936)
+- Add failed pod container pending e2e tests in [#849](https://github.com/newrelic/nri-kubernetes/pull/849)
+- Add failed pod container creating e2e tests in [#848](https://github.com/newrelic/nri-kubernetes/pull/848)
+- Add cronjob dashboard tests in [#827](https://github.com/newrelic/nri-kubernetes/pull/827)
+- Add daemonset dashboard tests in [#828](https://github.com/newrelic/nri-kubernetes/pull/828)
+
+### ⛓️ Dependencies
+- Updated golang.org/x/crypto to v0.15.0
 
 ## v3.19.0 - 2023-11-06
 
