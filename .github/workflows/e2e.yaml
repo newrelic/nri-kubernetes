@@ -34,7 +34,7 @@ jobs:
           minikube version: v1.32.0
           kubernetes version: ${{ matrix.k8sVersion }}
           driver: docker
-          start args: "--nodes=2 --container-runtime=${{ matrix.cri }}"
+          start args: "--container-runtime=${{ matrix.cri }}"
       - name: Enable addons minikube needed for HPA
         run: |
           minikube addons enable metrics-server
