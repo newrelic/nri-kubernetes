@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### enhancement
+- Automate local E2E test runs by @juanjjaramillo in [#938](https://github.com/newrelic/nri-kubernetes/pull/938)
 - Update E2E resources by @juanjjaramillo in [#926](https://github.com/newrelic/nri-kubernetes/pull/926)
 - Replace k8s v1.28.0-rc.1 with k8s 1.28.3 by @svetlanabrennan in [#936](https://github.com/newrelic/nri-kubernetes/pull/936)
 - Add failed pod container pending e2e tests in [#849](https://github.com/newrelic/nri-kubernetes/pull/849)
