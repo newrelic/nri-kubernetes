@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- Add PV, PVC dashboards tests in [#829](https://github.com/newrelic/nri-kubernetes/pull/829)
+
 ## v3.20.0 - 2023-11-13
 
 ### 🚀 Enhancements
