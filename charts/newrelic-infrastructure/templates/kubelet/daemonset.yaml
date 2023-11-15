@@ -59,6 +59,7 @@ spec:
       initContainers: {{- tpl (.Values.kubelet.initContainers | toYaml) . | nindent 8 }}
       {{- end }}
       containers:
+        {{- if not (.Values.kubelet.agentOnly) }}
         - name: kubelet
           image: {{ include "newrelic.common.images.image" ( dict "imageRoot" .Values.images.integration "context" .) }}
           imagePullPolicy: {{ .Values.images.integration.pullPolicy }}
@@ -102,6 +103,7 @@ spec:
           {{- with .Values.kubelet.resources }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
+        {{- end }}
         - name: agent
           image: {{ include "newrelic.common.images.image" ( dict "imageRoot" .Values.images.agent "context" .) }}
           args: [ "newrelic-infra" ]
