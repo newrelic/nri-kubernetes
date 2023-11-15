@@ -1,4 +1,4 @@
-{{- if .Values.kubelet.enabled -}}
+{{- if and (.Values.kubelet.enabled) (not (.Values.kubelet.agentOnly)) -}}
 ---
 apiVersion: v1
 kind: ConfigMap

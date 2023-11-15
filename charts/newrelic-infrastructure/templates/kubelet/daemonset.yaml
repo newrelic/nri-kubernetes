@@ -28,7 +28,9 @@ spec:
   template:
     metadata:
       annotations:
+        {{- if not (.Values.kubelet.agentOnly) }}
         checksum/nri-kubernetes: {{ include (print $.Template.BasePath "/kubelet/scraper-configmap.yaml") . | sha256sum }}
+        {{- end }}
         checksum/agent-config: {{ include (print $.Template.BasePath "/kubelet/agent-configmap.yaml") . | sha256sum }}
         {{- if include "newrelic.common.license.secret" . }}{{- /* If the is secret to template */}}
         checksum/license-secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
@@ -239,12 +241,14 @@ spec:
           emptyDir: {}
         - name: agent-tmpfs-tmp
           emptyDir: {}
+        {{- if not (.Values.kubelet.agentOnly) }}
         - name: nri-kubernetes-config
           configMap:
             name: {{ include "nriKubernetes.kubelet.fullname" . }}
             items:
               - key: nri-kubernetes.yml
                 path: nri-kubernetes.yml
+        {{- end }}
         - name: config
           configMap:
             name: {{ include "nriKubernetes.kubelet.fullname.agent" . }}
