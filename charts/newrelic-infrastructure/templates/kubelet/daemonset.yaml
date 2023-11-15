@@ -1,6 +1,6 @@
 {{- if (.Values.kubelet.enabled) }}
 apiVersion: apps/v1
-kind: DaemonSet
+kind: {{ if (.Values.kubelet.agentOnly) }}Deployment{{ else }}DaemonSet{{ end }}
 metadata:
   namespace: {{ .Release.Namespace }}
   labels:
@@ -11,8 +11,15 @@ metadata:
   annotations: {{ . | nindent 4 }}
   {{- end }}
 spec:
+  {{- if (.Values.kubelet.agentOnly) }}
+  {{- with .Values.strategy }}
+  strategy: {{ toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- if not (.Values.kubelet.agentOnly) }}
   {{- with .Values.updateStrategy }}
   updateStrategy: {{ toYaml . | nindent 4 }}
+  {{- end }}
   {{- end }}
   selector:
     matchLabels:
