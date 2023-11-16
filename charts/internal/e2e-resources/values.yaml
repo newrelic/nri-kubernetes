@@ -1,53 +1,55 @@
-# Enable crashing and pending pods
 pending:
+  # -- Enable crashing and pending pods
   enabled: true
 
-# Deploy a dummy cronjob
 cronjob:
+  # -- Deploy a dummy cronjob
   enabled: true
 
-# Deploy a failing job
 failingJob:
+  # -- Deploy a failing job
   enabled: true
 
-# Deploy a dummy daemonSet
 daemonSet:
+  # -- Deploy a dummy daemonSet
   enabled: true
 
-# Deploy a dummy statefulSet
 statefulSet:
+  # -- Deploy a dummy statefulSet
   enabled: true
 
-# Deploy a dummy deployment
 deployment:
+  # -- Deploy a dummy deployment
   enabled: true
 
-# Enable hpa resources
 hpa:
+  # -- Enable hpa resources
   enabled: true
 
-# Create PVs and PVCs
 persistentVolume:
+  # -- Create PVs
   enabled: true
 persistentVolumeClaim:
+  # -- Create PVCs
   enabled: true
 
-# Deploy a loadBalancer service
 loadBalancerService:
+  # -- Deploy a loadBalancer service
   enabled: true
   annotations: {}
-  fakeIP: ""  # If set, will deploy service with a loadBalancerIP set to this value
+  # -- If set, will deploy service with a loadBalancerIP set to this value
+  fakeIP: ""
 
-# Deploy the scraper pod
 scraper:
+  # -- Deploy the scraper pod
   enabled: false
 
-# Deploy in demo mode
-# Make entities consume non-negligible resources so metrics can be easily observed in the dashboards
-# This setting only applies to resources that would negatively impact testing times if enabled by default
 demo:
+  # -- Deploy in demo mode.
+  # Make entities consume non-negligible resources so metrics can be easily observed in the dashboards.
+  # This setting only applies to resources that would negatively impact testing times if enabled by default
   enabled: false
 
-# Variables for filesystem testing
+# -- Variables for filesystem testing
 fileSystemTest:
   fileName: 'pi.txt'
