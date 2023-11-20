@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancement
+## v3.21.0 - 2023-11-20
+
+### 🚀 Enhancements
 - Improve E2E resources chart by @juanjjaramillo in [#946](https://github.com/newrelic/nri-kubernetes/pull/946)
 - Update k8s.yaml by @juanjjaramillo in [#947](https://github.com/newrelic/nri-kubernetes/pull/947)
 - Automate local E2E test runs by @juanjjaramillo in [#938](https://github.com/newrelic/nri-kubernetes/pull/938)
@@ -15,6 +17,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add statefulset dashboard tests by @dbudziwojskiNR in [#830](https://github.com/newrelic/nri-kubernetes/pull/830)
 - Add deployment dashboard tests by @dbudziwojskiNR in [#832](https://github.com/newrelic/nri-kubernetes/pull/832)
 - Add failed job dashboard tests by @dbudziwojskiNR in [#855](https://github.com/newrelic/nri-kubernetes/pull/855)
+
+### ⛓️ Dependencies
+- Updated kubernetes packages to v0.28.4
 
 ## v3.20.0 - 2023-11-13
 
