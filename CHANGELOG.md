@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+### enhancement
+- Update reusable workflow dependency by @juanjjaramillo [#951](https://github.com/newrelic/nri-kubernetes/pull/951)
 
 ## v3.21.0 - 2023-11-20
 
