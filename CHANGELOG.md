@@ -6,8 +6,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
-### enhancement
+
+## v3.23.0 - 2023-12-09
+
+### 🚀 Enhancements
 - Trigger release creation by @juanjjaramillo [#958](https://github.com/newrelic/nri-kubernetes/pull/958)
+
+### ⛓️ Dependencies
+- Updated alpine to v3.19.0
+- Updated github.com/spf13/viper to v1.18.1 - [Changelog 🔗](https://github.com/spf13/viper/releases/tag/v1.18.1)
+- Updated golang.org/x/crypto to v0.16.0
+- Updated go to v1.21.5
 
 ## v3.22.0 - 2023-12-06
 
