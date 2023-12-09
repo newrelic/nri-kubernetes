@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+### enhancement
+- Trigger release creation by @juanjjaramillo [#958](https://github.com/newrelic/nri-kubernetes/pull/958)
 
 ## v3.22.0 - 2023-12-06
 
