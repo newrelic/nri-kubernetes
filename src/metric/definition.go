@@ -904,6 +904,7 @@ var KSMSpecs = definition.SpecGroups{
 		NamespaceGetter: prometheus.FromLabelGetNamespace,
 		Specs: []definition.Spec{
 			{Name: "createdAt", ValueFunc: prometheus.FromValue("kube_pod_created"), Type: sdkMetric.GAUGE},
+			{Name: "scheduledAt", ValueFunc: prometheus.FromValue("kube_pod_status_scheduled_time"), Type: sdkMetric.GAUGE},
 			{Name: "createdKind", ValueFunc: prometheus.FromLabelValue("kube_pod_info", "created_by_kind"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "createdBy", ValueFunc: prometheus.FromLabelValue("kube_pod_info", "created_by_name"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "nodeIP", ValueFunc: prometheus.FromLabelValue("kube_pod_info", "host_ip"), Type: sdkMetric.ATTRIBUTE},
@@ -917,6 +918,13 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "isScheduled", ValueFunc: definition.Transform(prometheus.FromLabelValue("kube_pod_status_scheduled", "condition"), toNumericBoolean), Type: sdkMetric.GAUGE},
 			{Name: "deploymentName", ValueFunc: ksmMetric.GetDeploymentNameForPod(), Type: sdkMetric.ATTRIBUTE},
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("pod", "kube_pod_labels"), Type: sdkMetric.ATTRIBUTE},
+			// computed
+			{
+				Name: "timeToSchedule", ValueFunc: Subtract(
+					definition.Transform(fetchWithDefault(prometheus.FromValue("kube_pod_status_scheduled_time"), 0), fromPrometheusNumeric),
+					definition.Transform(fetchWithDefault(prometheus.FromValue("kube_pod_created"), 0), fromPrometheusNumeric)),
+				Type: sdkMetric.GAUGE,
+			},
 		},
 	},
 	"horizontalpodautoscaler": {
@@ -1143,6 +1151,7 @@ var KSMQueries = []prometheus.Query{
 		Value: prometheus.GaugeValue(1),
 	}},
 	{MetricName: "kube_pod_start_time"},
+	{MetricName: "kube_pod_status_scheduled_time"},
 	{MetricName: "kube_service_created"},
 	{MetricName: "kube_service_labels"},
 	{MetricName: "kube_service_info"},
