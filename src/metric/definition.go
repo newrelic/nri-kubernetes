@@ -904,7 +904,6 @@ var KSMSpecs = definition.SpecGroups{
 		NamespaceGetter: prometheus.FromLabelGetNamespace,
 		Specs: []definition.Spec{
 			{Name: "createdAt", ValueFunc: prometheus.FromValue("kube_pod_created"), Type: sdkMetric.GAUGE},
-			{Name: "scheduledAt", ValueFunc: prometheus.FromValue("kube_pod_status_scheduled_time"), Type: sdkMetric.GAUGE},
 			{Name: "createdKind", ValueFunc: prometheus.FromLabelValue("kube_pod_info", "created_by_kind"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "createdBy", ValueFunc: prometheus.FromLabelValue("kube_pod_info", "created_by_name"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "nodeIP", ValueFunc: prometheus.FromLabelValue("kube_pod_info", "host_ip"), Type: sdkMetric.ATTRIBUTE},
@@ -918,13 +917,6 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "isScheduled", ValueFunc: definition.Transform(prometheus.FromLabelValue("kube_pod_status_scheduled", "condition"), toNumericBoolean), Type: sdkMetric.GAUGE},
 			{Name: "deploymentName", ValueFunc: ksmMetric.GetDeploymentNameForPod(), Type: sdkMetric.ATTRIBUTE},
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("pod", "kube_pod_labels"), Type: sdkMetric.ATTRIBUTE},
-			// computed
-			{
-				Name: "timeToSchedule", ValueFunc: Subtract(
-					definition.Transform(fetchWithDefault(prometheus.FromValue("kube_pod_status_scheduled_time"), 0), fromPrometheusNumeric),
-					definition.Transform(fetchWithDefault(prometheus.FromValue("kube_pod_created"), 0), fromPrometheusNumeric)),
-				Type: sdkMetric.GAUGE,
-			},
 		},
 	},
 	"horizontalpodautoscaler": {
@@ -1243,6 +1235,10 @@ var KubeletSpecs = definition.SpecGroups{
 
 			// /pods endpoint
 			{Name: "createdAt", ValueFunc: definition.Transform(definition.FromRaw("createdAt"), toTimestamp), Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "scheduledAt", ValueFunc: definition.Transform(definition.FromRaw("scheduledAt"), toTimestamp), Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "initializedAt", ValueFunc: definition.Transform(definition.FromRaw("initializedAt"), toTimestamp), Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "containersReadyAt", ValueFunc: definition.Transform(definition.FromRaw("containersReadyAt"), toTimestamp), Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "readyAt", ValueFunc: definition.Transform(definition.FromRaw("readyAt"), toTimestamp), Type: sdkMetric.GAUGE, Optional: true},
 			{Name: "startTime", ValueFunc: definition.Transform(definition.FromRaw("startTime"), toTimestamp), Type: sdkMetric.GAUGE},
 			{Name: "createdKind", ValueFunc: definition.FromRaw("createdKind"), Type: sdkMetric.ATTRIBUTE, Optional: true},
 			{Name: "createdBy", ValueFunc: definition.FromRaw("createdBy"), Type: sdkMetric.ATTRIBUTE, Optional: true},
@@ -1263,6 +1259,28 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "label.*", ValueFunc: definition.Transform(definition.FromRaw("labels"), kubeletMetric.OneMetricPerLabel), Type: sdkMetric.ATTRIBUTE},
 			{Name: "reason", ValueFunc: definition.FromRaw("reason"), Type: sdkMetric.ATTRIBUTE, Optional: true},
 			{Name: "message", ValueFunc: definition.FromRaw("message"), Type: sdkMetric.ATTRIBUTE, Optional: true},
+			// // computed
+			// {
+			// 	Name: "timeToSchedule", ValueFunc: Subtract(
+			// 		fetchWithDefault(definition.FromRaw("scheduledAt"), 0),
+			// 		fetchWithDefault(definition.FromRaw("createdAt"), 0)),
+			// 	Type: sdkMetric.GAUGE,
+			// },
+			// computed
+			{
+				Name: "timeToSchedule", ValueFunc: computeDuration(
+					definition.FromRaw("scheduledAt"),
+					definition.FromRaw("createdAt")),
+				Type:     sdkMetric.GAUGE,
+				Optional: true,
+			},
+			{
+				Name: "timeToReady", ValueFunc: computeDuration(
+					definition.FromRaw("readyAt"),
+					definition.FromRaw("createdAt")),
+				Type:     sdkMetric.GAUGE,
+				Optional: true,
+			},
 		},
 	},
 	"container": {
@@ -1552,6 +1570,25 @@ func fromPrometheusNumeric(value definition.FetchedValue) (definition.FetchedVal
 	}
 
 	return nil, fmt.Errorf("invalid type value '%v'. Expected 'gauge' or 'counter', got '%T'", value, value)
+}
+
+// computeDuration returns a new FetchFunc that subtracts 2 time values. It expects that the values are time.Time
+func computeDuration(left definition.FetchFunc, right definition.FetchFunc) definition.FetchFunc {
+	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
+		leftValue, err := left(groupLabel, entityID, groups)
+		if err != nil {
+			// The error is currently discarded completely, because the time may not be populated yet
+			return nil, nil
+		}
+		rightValue, err := right(groupLabel, entityID, groups)
+		if err != nil {
+			// The error is currently discarded completely, because the time may not be populated yet
+			return nil, nil
+		}
+
+		result := leftValue.(time.Time).Sub(rightValue.(time.Time))
+		return result.Seconds(), nil
+	}
 }
 
 // Subtract returns a new FetchFunc that subtracts 2 values. It expects that the values are float64
