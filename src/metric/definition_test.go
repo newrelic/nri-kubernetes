@@ -117,6 +117,29 @@ func TestComputePercentage(t *testing.T) {
 	assert.EqualError(t, err, "division by zero")
 }
 
+func TestComputeDuration(t *testing.T) {
+	// Test that 5 seconds - 2 seconds = 3 second duration
+	left := definition.FetchFunc(func(_, _ string, _ definition.RawGroups) (definition.FetchedValue, error) {
+		// return 5 seconds
+		var x time.Time
+		x = x.Add(time.Second * 5)
+		return x, nil
+	})
+
+	right := definition.FetchFunc(func(_, _ string, _ definition.RawGroups) (definition.FetchedValue, error) {
+		// return 2 seconds
+		var y time.Time
+		y = y.Add(time.Second * 2)
+		return y, nil
+	})
+
+	duration := computeDuration(left, right)
+	result, err := duration("", "", nil)
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, result, time.Duration(time.Second*3).Seconds())
+}
+
 func TestSubtract(t *testing.T) {
 	left := definition.FetchFunc(func(_, _ string, _ definition.RawGroups) (definition.FetchedValue, error) {
 		return prometheus.GaugeValue(10), nil

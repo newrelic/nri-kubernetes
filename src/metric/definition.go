@@ -1143,7 +1143,6 @@ var KSMQueries = []prometheus.Query{
 		Value: prometheus.GaugeValue(1),
 	}},
 	{MetricName: "kube_pod_start_time"},
-	{MetricName: "kube_pod_status_scheduled_time"},
 	{MetricName: "kube_service_created"},
 	{MetricName: "kube_service_labels"},
 	{MetricName: "kube_service_info"},
@@ -1259,13 +1258,7 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "label.*", ValueFunc: definition.Transform(definition.FromRaw("labels"), kubeletMetric.OneMetricPerLabel), Type: sdkMetric.ATTRIBUTE},
 			{Name: "reason", ValueFunc: definition.FromRaw("reason"), Type: sdkMetric.ATTRIBUTE, Optional: true},
 			{Name: "message", ValueFunc: definition.FromRaw("message"), Type: sdkMetric.ATTRIBUTE, Optional: true},
-			// // computed
-			// {
-			// 	Name: "timeToSchedule", ValueFunc: Subtract(
-			// 		fetchWithDefault(definition.FromRaw("scheduledAt"), 0),
-			// 		fetchWithDefault(definition.FromRaw("createdAt"), 0)),
-			// 	Type: sdkMetric.GAUGE,
-			// },
+
 			// computed
 			{
 				Name: "timeToSchedule", ValueFunc: computeDuration(
@@ -1577,13 +1570,11 @@ func computeDuration(left definition.FetchFunc, right definition.FetchFunc) defi
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 		leftValue, err := left(groupLabel, entityID, groups)
 		if err != nil {
-			// The error is currently discarded completely, because the time may not be populated yet
-			return nil, nil
+			return nil, err
 		}
 		rightValue, err := right(groupLabel, entityID, groups)
 		if err != nil {
-			// The error is currently discarded completely, because the time may not be populated yet
-			return nil, nil
+			return nil, err
 		}
 
 		result := leftValue.(time.Time).Sub(rightValue.(time.Time))
