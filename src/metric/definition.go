@@ -1258,22 +1258,6 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "label.*", ValueFunc: definition.Transform(definition.FromRaw("labels"), kubeletMetric.OneMetricPerLabel), Type: sdkMetric.ATTRIBUTE},
 			{Name: "reason", ValueFunc: definition.FromRaw("reason"), Type: sdkMetric.ATTRIBUTE, Optional: true},
 			{Name: "message", ValueFunc: definition.FromRaw("message"), Type: sdkMetric.ATTRIBUTE, Optional: true},
-
-			// computed
-			{
-				Name: "timeToSchedule", ValueFunc: computeDuration(
-					definition.FromRaw("scheduledAt"),
-					definition.FromRaw("createdAt")),
-				Type:     sdkMetric.GAUGE,
-				Optional: true,
-			},
-			{
-				Name: "timeToReady", ValueFunc: computeDuration(
-					definition.FromRaw("readyAt"),
-					definition.FromRaw("createdAt")),
-				Type:     sdkMetric.GAUGE,
-				Optional: true,
-			},
 		},
 	},
 	"container": {
@@ -1563,23 +1547,6 @@ func fromPrometheusNumeric(value definition.FetchedValue) (definition.FetchedVal
 	}
 
 	return nil, fmt.Errorf("invalid type value '%v'. Expected 'gauge' or 'counter', got '%T'", value, value)
-}
-
-// computeDuration returns a new FetchFunc that subtracts 2 time values. It expects that the values are time.Time
-func computeDuration(left definition.FetchFunc, right definition.FetchFunc) definition.FetchFunc {
-	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
-		leftValue, err := left(groupLabel, entityID, groups)
-		if err != nil {
-			return nil, err
-		}
-		rightValue, err := right(groupLabel, entityID, groups)
-		if err != nil {
-			return nil, err
-		}
-
-		result := leftValue.(time.Time).Sub(rightValue.(time.Time))
-		return result.Seconds(), nil
-	}
 }
 
 // Subtract returns a new FetchFunc that subtracts 2 values. It expects that the values are float64
