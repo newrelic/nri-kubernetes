@@ -191,6 +191,15 @@ func kubeletExclusions() []exclude.Func {
 				"replicasetName", "statefulsetName"),
 		),
 
+		// Exclude metrics for pods that are not ready which do not have readyAt or containersReadyAt timestamps
+		exclude.Exclude(
+			exclude.Groups("pod"),
+			func(_ string, _ *definition.Spec, ent *integration.Entity) bool {
+				return !asserter.EntityMetricIs(ent, "status", "isReady")
+			},
+			exclude.Metrics("containersReadyAt", "readyAt"),
+		),
+
 		// Exclude deploymentName metric for pods not created by a deployment
 		exclude.Exclude(
 			exclude.Groups("pod", "container"),
