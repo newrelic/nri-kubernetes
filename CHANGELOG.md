@@ -7,10 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+
 ## v3.24.0 - 2023-12-15
 
 ### 🚀 Enhancements
 - Add pod startup metrics by @w21froster [#964](https://github.com/newrelic/nri-kubernetes/pull/964)
+
+## v3.23.1 - 2023-12-25
+
+### ⛓️ Dependencies
+- Updated github.com/spf13/viper to v1.18.2 - [Changelog 🔗](https://github.com/spf13/viper/releases/tag/v1.18.2)
+- Updated google.golang.org/protobuf to v1.32.0
 
 ## v3.23.0 - 2023-12-09
 
