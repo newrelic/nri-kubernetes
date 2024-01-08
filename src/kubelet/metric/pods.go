@@ -281,10 +281,32 @@ func (f *PodsFetcher) fillPodStatus(r definition.RawMetrics, pod *v1.Pod) {
 
 	for _, c := range pod.Status.Conditions {
 		switch c.Type {
+		case "Initialized":
+			if c.Status == "True" {
+				if !c.LastTransitionTime.IsZero() {
+					r["initializedAt"] = c.LastTransitionTime.In(time.UTC)
+				}
+			}
 		case "Ready":
 			r["isReady"] = string(c.Status)
+			if c.Status == "True" {
+				if !c.LastTransitionTime.IsZero() {
+					r["readyAt"] = c.LastTransitionTime.In(time.UTC)
+				}
+			}
+		case "ContainersReady":
+			if c.Status == "True" {
+				if !c.LastTransitionTime.IsZero() {
+					r["containersReadyAt"] = c.LastTransitionTime.In(time.UTC)
+				}
+			}
 		case "PodScheduled":
 			r["isScheduled"] = string(c.Status)
+			if c.Status == "True" {
+				if !c.LastTransitionTime.IsZero() {
+					r["scheduledAt"] = c.LastTransitionTime.In(time.UTC)
+				}
+			}
 		}
 	}
 
