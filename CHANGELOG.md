@@ -6,7 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
-### enhancement
+
+## v3.24.0 - 2024-01-08
+
+### 🚀 Enhancements
 - Add pod startup metrics by @w21froster [#964](https://github.com/newrelic/nri-kubernetes/pull/964)
 
 ## v3.23.3 - 2024-01-08
