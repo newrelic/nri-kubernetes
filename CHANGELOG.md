@@ -6,16 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+### enhancement
+- Add pod startup metrics by @w21froster [#964](https://github.com/newrelic/nri-kubernetes/pull/964)
 
 ## v3.23.3 - 2024-01-08
 
 ### ⛓️ Dependencies
 - Updated golang.org/x/crypto to v0.18.0
-
-## v3.24.0 - 2023-12-15
-
-### 🚀 Enhancements
-- Add pod startup metrics by @w21froster [#964](https://github.com/newrelic/nri-kubernetes/pull/964)
 
 ## v3.23.2 - 2024-01-08
 
