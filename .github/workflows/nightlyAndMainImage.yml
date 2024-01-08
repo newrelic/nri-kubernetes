@@ -30,7 +30,7 @@ jobs:
         run: |
           make compile TAG=nightly-$(git rev-parse --short HEAD)
       - name: Upload artifact for docker build step
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           retention-days: 1
           name: nri-kubernetes-${{ matrix.goos }}-${{ matrix.goarch }}
@@ -55,7 +55,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Download all artifacts from build job
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: bin
 
@@ -77,7 +77,7 @@ jobs:
             -t $DOCKER_IMAGE_NAME:ci-scan \
             .
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.16.0
+        uses: aquasecurity/trivy-action@0.16.1
         with:
           image-ref: '${{ env.DOCKER_IMAGE_NAME }}:ci-scan'
           format: 'table'

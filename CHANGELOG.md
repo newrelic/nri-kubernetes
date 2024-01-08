@@ -7,11 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-
 ## v3.24.0 - 2023-12-15
 
 ### 🚀 Enhancements
 - Add pod startup metrics by @w21froster [#964](https://github.com/newrelic/nri-kubernetes/pull/964)
+
+## v3.23.2 - 2024-01-08
+
+### ⛓️ Dependencies
+- Updated kubernetes packages to v0.29.0
+
 
 ## v3.23.1 - 2023-12-25
 
