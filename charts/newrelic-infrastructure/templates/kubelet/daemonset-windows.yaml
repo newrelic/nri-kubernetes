@@ -1,0 +1,70 @@
+{{- if and .Values.kubelet.enabled .Values.kubelet.enableWindows }}
+{{- range .Values.kubelet.windowsOsList }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  namespace: {{ $.Release.Namespace }}
+  name: {{ include "nriKubernetes.kubelet.windows.fullname" $ }}-{{ .version }}
+  {{- $legacyAnnotation:= fromYaml (include "newrelic.compatibility.annotations" $) -}}
+  {{- with  include "newrelic.compatibility.valueWithFallback" (dict "legacy" $legacyAnnotation "supported" $.Values.kubelet.annotations )}}
+  annotations: {{ . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with $.Values.updateStrategy }}
+  updateStrategy: {{ toYaml . | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "newrelic.common.labels.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/component: kubelet
+  template:
+    metadata:
+      annotations:
+        checksum/nri-kubernetes: {{ include (print $.Template.BasePath "/kubelet/scraper-configmap.yaml") $ | sha256sum }}
+        checksum/agent-config: {{ include (print $.Template.BasePath "/kubelet/agent-configmap.yaml") $ | sha256sum }}
+        {{- if include "newrelic.common.license.secret" $ }}{{- /* If the is secret to template */}}
+        checksum/license-secret: {{ include (print $.Template.BasePath "/secret.yaml") $ | sha256sum }}
+        {{- end }}
+      labels:
+        {{- include "nriKubernetes.labels.podLabels" $ | nindent 8 }}
+        app.kubernetes.io/component: kubelet
+    spec:
+      {{- with include "newrelic.common.dnsConfig" $ }}
+      dnsConfig:
+        {{- . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "newrelic.common.serviceAccount.name" $ }}
+      containers:
+        - name: agent
+          image: newrelic/infrastructure-k8s:{{ .imageTag }}
+          imagePullPolicy: {{ $.Values.images.integration.pullPolicy }}
+          env:
+            - name: NRIA_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "newrelic.common.license.secretName" $ }}
+                  key: {{ include "newrelic.common.license.secretKeyName" $ }}
+            - name: "NRI_KUBERNETES_CLUSTERNAME"
+              value: {{ include "newrelic.common.cluster" $ }}
+            - name: "NRI_KUBERNETES_VERBOSE"
+              value: {{ include "newrelic.common.verboseLog.valueAsBoolean" $ | quote }}
+            - name: "NRK8S_NODE_NAME"
+              valueFrom:
+                fieldRef:
+                  apiVersion: "v1"
+                  fieldPath: "spec.nodeName"
+            - name: "CLUSTER_NAME"
+              value: {{ include "newrelic.common.cluster" $ }}
+            - name: "NRIA_PASSTHROUGH_ENVIRONMENT"
+              value: "KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,CLUSTER_NAME,CADVISOR_PORT,NRK8S_NODE_NAME,KUBE_STATE_METRICS_URL,ETCD_TLS_SECRET_NAME,ETCD_TLS_SECRET_NAMESPACE,API_SERVER_SECURE_PORT,NRIA_CACHE_PATH,TIMEOUT,DISCOVERY_CACHE_TTL"
+      nodeSelector:
+        node.kubernetes.io/windows-build: {{ .buildNumber }}
+        kubernetes.io/os: windows
+      tolerations:
+        - key: "node.kubernetes.io/os"
+          operator: "Equal"
+          value: "windows"
+          effect: "NoSchedule"
+---
+{{- end }}
+{{- end }}
