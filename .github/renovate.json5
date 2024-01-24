@@ -1,30 +1,11 @@
 {
   "extends": [
-    "github>newrelic/coreint-automation:renovate-base.json5"
+    "github>newrelic/k8s-agents-automation:renovate-base.json5"
   ],
-  ignoreDeps: ["ingress-nginx/kube-webhook-certgen"],
   "packageRules": [
     {
       "matchPackageNames": ["kube-state-metrics"],
       "allowedVersions": "<=5.12.1"
     },
-    {
-      "groupName": "Minikube version (batch update)",
-      "matchDepNames": ["manusa/actions-setup-minikube", "kubernetes/minikube"],
-    },
-  ],
-  "customManagers": [
-    {
-      "description": "Update minikube",
-      "customType": "regex",
-      "fileMatch": [
-        "^\.github/workflows/.+\.ya?ml$",
-      ],
-      "matchStrings": [
-        "\\s+minikube version:\\s+(?<currentValue>v.*?)\\s+",
-      ],
-      "depNameTemplate": "kubernetes/minikube",
-      "datasourceTemplate": "github-releases",
-    },
-  ],
+  ]
 }

@@ -1234,6 +1234,10 @@ var KubeletSpecs = definition.SpecGroups{
 
 			// /pods endpoint
 			{Name: "createdAt", ValueFunc: definition.Transform(definition.FromRaw("createdAt"), toTimestamp), Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "scheduledAt", ValueFunc: definition.Transform(definition.FromRaw("scheduledAt"), toTimestamp), Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "initializedAt", ValueFunc: definition.Transform(definition.FromRaw("initializedAt"), toTimestamp), Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "containersReadyAt", ValueFunc: definition.Transform(definition.FromRaw("containersReadyAt"), toTimestamp), Type: sdkMetric.GAUGE, Optional: true},
+			{Name: "readyAt", ValueFunc: definition.Transform(definition.FromRaw("readyAt"), toTimestamp), Type: sdkMetric.GAUGE, Optional: true},
 			{Name: "startTime", ValueFunc: definition.Transform(definition.FromRaw("startTime"), toTimestamp), Type: sdkMetric.GAUGE},
 			{Name: "createdKind", ValueFunc: definition.FromRaw("createdKind"), Type: sdkMetric.ATTRIBUTE, Optional: true},
 			{Name: "createdBy", ValueFunc: definition.FromRaw("createdBy"), Type: sdkMetric.ATTRIBUTE, Optional: true},

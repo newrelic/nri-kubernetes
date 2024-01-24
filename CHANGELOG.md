@@ -7,8 +7,76 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancement
+## v3.24.1 - 2024-01-22
+
+### ⛓️ Dependencies
+- Updated github.com/prometheus/common to v0.46.0 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.46.0)
+- Updated go to v1.21.6
+
+## v3.24.0 - 2024-01-08
+
+### 🚀 Enhancements
+- Add pod startup metrics by @w21froster [#964](https://github.com/newrelic/nri-kubernetes/pull/964)
+
+## v3.23.3 - 2024-01-08
+
+### ⛓️ Dependencies
+- Updated golang.org/x/crypto to v0.18.0
+
+## v3.23.2 - 2024-01-08
+
+### ⛓️ Dependencies
+- Updated kubernetes packages to v0.29.0
+
+
+## v3.23.1 - 2023-12-25
+
+### ⛓️ Dependencies
+- Updated github.com/spf13/viper to v1.18.2 - [Changelog 🔗](https://github.com/spf13/viper/releases/tag/v1.18.2)
+- Updated google.golang.org/protobuf to v1.32.0
+
+## v3.23.0 - 2023-12-09
+
+### 🚀 Enhancements
+- Trigger release creation by @juanjjaramillo [#958](https://github.com/newrelic/nri-kubernetes/pull/958)
+
+### ⛓️ Dependencies
+- Updated alpine to v3.19.0
+- Updated github.com/spf13/viper to v1.18.1 - [Changelog 🔗](https://github.com/spf13/viper/releases/tag/v1.18.1)
+- Updated golang.org/x/crypto to v0.16.0
+- Updated go to v1.21.5
+
+## v3.22.0 - 2023-12-06
+
+### 🚀 Enhancements
+- Update reusable workflow dependency by @juanjjaramillo [#951](https://github.com/newrelic/nri-kubernetes/pull/951)
+
+## v3.21.0 - 2023-11-20
+
+### 🚀 Enhancements
+- Improve E2E resources chart by @juanjjaramillo in [#946](https://github.com/newrelic/nri-kubernetes/pull/946)
+- Update k8s.yaml by @juanjjaramillo in [#947](https://github.com/newrelic/nri-kubernetes/pull/947)
+- Automate local E2E test runs by @juanjjaramillo in [#938](https://github.com/newrelic/nri-kubernetes/pull/938)
+- Add PV, PVC dashboards tests by @dbudziwojskiNR in [#829](https://github.com/newrelic/nri-kubernetes/pull/829)
+- Add statefulset dashboard tests by @dbudziwojskiNR in [#830](https://github.com/newrelic/nri-kubernetes/pull/830)
+- Add deployment dashboard tests by @dbudziwojskiNR in [#832](https://github.com/newrelic/nri-kubernetes/pull/832)
+- Add failed job dashboard tests by @dbudziwojskiNR in [#855](https://github.com/newrelic/nri-kubernetes/pull/855)
+
+### ⛓️ Dependencies
+- Updated kubernetes packages to v0.28.4
+
+## v3.20.0 - 2023-11-13
+
+### 🚀 Enhancements
 - Update E2E resources by @juanjjaramillo in [#926](https://github.com/newrelic/nri-kubernetes/pull/926)
+- Replace k8s v1.28.0-rc.1 with k8s 1.28.3 by @svetlanabrennan in [#936](https://github.com/newrelic/nri-kubernetes/pull/936)
+- Add failed pod container pending e2e tests by @dbudziwojskiNR in [#849](https://github.com/newrelic/nri-kubernetes/pull/849)
+- Add failed pod container creating e2e tests by @dbudziwojskiNR in [#848](https://github.com/newrelic/nri-kubernetes/pull/848)
+- Add cronjob dashboard tests by @dbudziwojskiNR in [#827](https://github.com/newrelic/nri-kubernetes/pull/827)
+- Add daemonset dashboard tests by @dbudziwojskiNR in [#828](https://github.com/newrelic/nri-kubernetes/pull/828)
+
+### ⛓️ Dependencies
+- Updated golang.org/x/crypto to v0.15.0
 
 ## v3.19.0 - 2023-11-06
 
