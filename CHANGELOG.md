@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+### bugfix
+- Update clusterrole.yaml by @akshaychopra5207 [#933](https://github.com/newrelic/nri-kubernetes/pull/933) and [#978](https://github.com/newrelic/nri-kubernetes/pull/978)
 
 ## v3.24.1 - 2024-01-22
 
