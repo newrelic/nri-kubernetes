@@ -6,8 +6,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
-### bugfix
+
+## v3.24.2 - 2024-01-29
+
+### 🐞 Bug fixes
 - Update clusterrole.yaml by @akshaychopra5207 [#933](https://github.com/newrelic/nri-kubernetes/pull/933) and [#978](https://github.com/newrelic/nri-kubernetes/pull/978)
+
+### ⛓️ Dependencies
+- Updated kubernetes packages to v0.29.1
+- Updated alpine to v3.19.1
 
 ## v3.24.1 - 2024-01-22
 
