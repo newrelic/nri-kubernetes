@@ -1,7 +1,7 @@
 OSFLAG := $(shell uname -s | tr A-Z a-z)
 OSFLAG := $(OSFLAG)_amd64
 BIN_DIR = ./bin
-TOOLS_DIR := $(BIN_DIR)/dev-tools
+TEST_COVERAGE_DIR := $(BIN_DIR)/test-coverage
 BINARY_NAME = nri-kubernetes
 E2E_BINARY_NAME := $(BINARY_NAME)-e2e
 GOFLAGS = -mod=readonly
@@ -69,7 +69,8 @@ compile-dev:
 .PHONY: test
 test:
 	@echo "[test] Running unit tests"
-	@go test ./... -count=1
+	@mkdir -p $(TEST_COVERAGE_DIR)
+	go test ./... -count=1 -coverprofile=$(TEST_COVERAGE_DIR)/coverage.out -covermode=count
 
 buildLicenseNotice:
 	@go list -mod=mod -m -json all | go-licence-detector -noticeOut=NOTICE.txt -rules ./assets/licence/rules.json  -noticeTemplate ./assets/licence/THIRD_PARTY_NOTICES.md.tmpl -noticeOut THIRD_PARTY_NOTICES.md -overrides ./assets/licence/overrides -includeIndirect

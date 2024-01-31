@@ -102,6 +102,8 @@ jobs:
           go-version-file: 'go.mod'
       - name: Run tests
         run: make test
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@eaaf4bedf32dbdc6b720b63067d99c4d77d6047d # v3.1.4
 
   static-analysis:
     name: Static analysis and linting
