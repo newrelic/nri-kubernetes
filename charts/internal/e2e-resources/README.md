@@ -9,8 +9,8 @@ This chart creates e2e resources for nri-kubernetes.
 | Name | Email | Url |
 | ---- | ------ | --- |
 | juanjjaramillo |  | <https://github.com/juanjjaramillo> |
-| svetlanabrennan |  | <https://github.com/svetlanabrennan> |
-| xqi-nr |  | <https://github.com/xqi-nr> |
+| csongnr |  | <https://github.com/csongnr> |
+| dbudziwojskiNR |  | <https://github.com/dbudziwojskiNR> |
 
 ## Requirements
 
