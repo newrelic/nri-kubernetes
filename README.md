@@ -3,6 +3,7 @@
 # New Relic integration for Kubernetes [![codecov](https://codecov.io/gh/newrelic/nri-kubernetes/graph/badge.svg?token=JEBGG88HG6)](https://codecov.io/gh/newrelic/nri-kubernetes)
 
 [//]: # (TEST TEST TEST)
+[//]: # (TEST TEST TEST)
 
 New Relic's Kubernetes integration gives you full observability into the health and performance of your environment,
 no matter whether you run Kubernetes on-premises or in the cloud.
