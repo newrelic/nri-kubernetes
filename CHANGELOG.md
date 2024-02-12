@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.25.1 - 2024-02-12
+
+### ⛓️ Dependencies
+- Updated github.com/newrelic/infra-integrations-sdk to v3.8.0+incompatible
+
 ## v3.25.0 - 2024-02-05
 
 ### 🚀 Enhancements
