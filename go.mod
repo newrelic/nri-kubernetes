@@ -4,7 +4,7 @@ go 1.21.6
 
 require (
 	github.com/google/go-cmp v0.6.0
-	github.com/newrelic/infra-integrations-sdk v3.8.0+incompatible
+	github.com/newrelic/infra-integrations-sdk v3.8.1+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_model v0.5.0
 	github.com/prometheus/common v0.46.0
