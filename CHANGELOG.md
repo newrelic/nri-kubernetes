@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.25.2 - 2024-02-19
+
+### ⛓️ Dependencies
+- Updated golang.org/x/crypto to v0.19.0
+- Updated github.com/newrelic/infra-integrations-sdk to v3.8.2+incompatible
+
 ## v3.25.1 - 2024-02-12
 
 ### ⛓️ Dependencies
