@@ -261,5 +261,4 @@ spec:
         {{- with .Values.kubelet.nodeSelector | default (fromYaml (include "newrelic.common.nodeSelector" .)) }}
         {{- toYaml . | nindent 8 }}
         {{- end -}}
-{{/*        {{ (.Values.kubelet.nodeSelector | default (fromYaml (include "newrelic.common.nodeSelector" .))) | toYaml | nindent 8 }}*/}}
 {{- end }}

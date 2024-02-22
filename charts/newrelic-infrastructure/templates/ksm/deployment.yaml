@@ -189,5 +189,4 @@ spec:
         {{- with .Values.ksm.nodeSelector | default (fromYaml (include "newrelic.common.nodeSelector" .)) }}
         {{- toYaml . | nindent 8 }}
         {{- end -}}
-{{/*        {{ (.Values.ksm.nodeSelector | default (fromYaml (include "newrelic.common.nodeSelector" .))) | toYaml | nindent 8 }}*/}}
 {{- end }}

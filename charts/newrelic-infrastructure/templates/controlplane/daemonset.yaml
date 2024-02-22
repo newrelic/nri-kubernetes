@@ -202,5 +202,4 @@ spec:
         {{- with .Values.controlPlane.nodeSelector | default (fromYaml (include "newrelic.common.nodeSelector" .)) }}
         {{- toYaml . | nindent 8 }}
         {{- end -}}
-{{/*        {{ (.Values.controlPlane.nodeSelector | default (fromYaml (include "newrelic.common.nodeSelector" .))) | toYaml | nindent 8 }}*/}}
 {{- end }}
