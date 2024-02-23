@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+### enhancement
+- Add linux node selector @dbudziwojskiNR [#1000](https://github.com/newrelic/nri-kubernetes/pull/1000)
 
 ## v3.25.2 - 2024-02-19
 
