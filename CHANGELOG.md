@@ -115,6 +115,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### 🐞 Bug fixes
 - Fix `renovate` configuration by juanjjaramillo in [PR #921](https://github.com/newrelic/nri-kubernetes/pull/921)
 
+### enhancement
+- Add granular resource config for kubelet in [#918](https://github.com/newrelic/nri-kubernetes/pull/918)
+
+
 ## v3.18.3 - 2023-10-23
 
 ### ⛓️ Dependencies
