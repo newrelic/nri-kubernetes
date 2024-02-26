@@ -2,7 +2,7 @@
 
 > **:exclamation: This Helm Chart is deprecated!**
 
-![Version: 2.10.13](https://img.shields.io/badge/Version-2.10.13-informational?style=flat-square) ![AppVersion: 2.13.13](https://img.shields.io/badge/AppVersion-2.13.13-informational?style=flat-square)
+![Version: 2.10.14](https://img.shields.io/badge/Version-2.10.14-informational?style=flat-square) ![AppVersion: 2.13.14](https://img.shields.io/badge/AppVersion-2.13.14-informational?style=flat-square)
 
 DEPRECATED: (In maintenance mode) Helm chart for deploying New Relic Infrastructure Agent v2
 
