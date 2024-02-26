@@ -285,7 +285,7 @@ Please notice that old [V3](https://docs.newrelic.com/docs/create-integrations/i
 
 ### Added
 
-- Added `restartCount` to containers in the `wainting` state
+- Added `restartCount` to containers in the `waiting` state
   - In case the container is in a crash loop the restart count would not be shown
 
 ## 1.26.3
