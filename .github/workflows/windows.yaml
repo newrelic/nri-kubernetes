@@ -88,8 +88,8 @@ jobs:
         if: ${{ ! github.event.pull_request }}
         uses: docker/login-action@v1
         with:
-          username: ${{ secrets.FSI_DOCKERHUB_USERNAME }}
-          password: ${{ secrets.FSI_DOCKERHUB_TOKEN }}
+          username: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
 
       - name: Push image
         if: ${{ ! github.event.pull_request }}
