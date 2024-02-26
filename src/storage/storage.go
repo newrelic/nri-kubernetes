@@ -21,7 +21,7 @@ var now = time.Now
 // Storage defines the interface of a Key-Value storage system, which is able to store the timestamp
 // where the key was stored.
 type Storage interface {
-	// Write stores a value for a given key. Implementors must save also the time when it was stored.
+	// Write stores a value for a given key. Implementers must save also the time when it was stored.
 	// The value can be any type.
 	Write(key string, value interface{}) error
 	// Read gets the value associated to a given key and stores in the value referenced by the pointer passed as argument.
@@ -62,7 +62,7 @@ func NewJSONDiskStorage(rootPath string) JSONDiskStorage {
 	return JSONDiskStorage{rootPath: rootPath}
 }
 
-// Write stores a value for a given key. Implementors must save also the time when it was stored.
+// Write stores a value for a given key. Implementers must save also the time when it was stored.
 // This implementation adds a restriction to the key name: it must be a valid file name (without extension).
 func (j JSONDiskStorage) Write(key string, value interface{}) error {
 	entry := jsonEntry{

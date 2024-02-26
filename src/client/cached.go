@@ -36,10 +36,10 @@ type DiscoveryCacherConfig struct {
 	Logger    *logrus.Logger
 }
 
-// Decomposer implementors must convert a HTTPClient into a data structure that can be Stored in the cache.
+// Decomposer implementers must convert a HTTPClient into a data structure that can be Stored in the cache.
 type Decomposer func(source HTTPClient) (interface{}, error)
 
-// Composer implementors must convert the data from the cached entities to a Client.
+// Composer implementers must convert the data from the cached entities to a Client.
 type Composer func(source interface{}, cacher *DiscoveryCacher, timeout time.Duration) (HTTPClient, error)
 
 // Discover tries to retrieve a HTTPClient from the cache, and otherwise engage the discovery process from the wrapped
@@ -217,8 +217,8 @@ func (d *MultiDiscoveryCacher) discoverAndCache(timeout time.Duration) ([]HTTPCl
 	return clients, nil
 }
 
-// MultiDecomposer implementors must convert a HTTPClient into a data structure that can be Stored in the cache.
+// MultiDecomposer implementers must convert a HTTPClient into a data structure that can be Stored in the cache.
 type MultiDecomposer func(sources []HTTPClient) (interface{}, error)
 
-// MultiComposer implementors must convert the cached data to a []HTTPClient.
+// MultiComposer implementers must convert the cached data to a []HTTPClient.
 type MultiComposer func(source interface{}, cacher *MultiDiscoveryCacher, timeout time.Duration) ([]HTTPClient, error)
