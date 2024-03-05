@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### enhancement
 - Automatically release E2E resources chart by @juanjjaramillo [#1013](https://github.com/newrelic/nri-kubernetes/pull/1013)
 
+### bugfix
+- Give GitHub token permission to release chart by @juanjjaramillo [#1014](https://github.com/newrelic/nri-kubernetes/pull/1014)
+
 ## v3.26.1 - 2024-03-04
 
 ### ⛓️ Dependencies
