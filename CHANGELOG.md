@@ -7,11 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancement
+## v3.27.0 - 2024-03-11
+
+### 🚀 Enhancements
 - Automatically release E2E resources chart by @juanjjaramillo [#1013](https://github.com/newrelic/nri-kubernetes/pull/1013)
 
-### bugfix
+### 🐞 Bug fixes
 - Give GitHub token permission to release chart by @juanjjaramillo [#1014](https://github.com/newrelic/nri-kubernetes/pull/1014)
+
+### ⛓️ Dependencies
+- Updated golang.org/x/crypto to v0.21.0
+- Updated google.golang.org/protobuf to v1.33.0
 
 ## v3.26.1 - 2024-03-04
 
