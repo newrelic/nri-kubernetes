@@ -41,11 +41,6 @@ spec:
         {{- end }}
       volumes:
         - name: storage
-        {{- if .Values.persistentVolumeClaim.enabled }}
-          persistentVolumeClaim:
-            claimName: {{ .Release.Name }}-pv-claim
-        {{- else }}
           emptyDir:
             sizeLimit: 30Mi
-        {{- end }}
   {{- end }}

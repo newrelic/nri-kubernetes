@@ -1,6 +1,6 @@
 # e2e-resources
 
-![Version: 1.12.0-devel](https://img.shields.io/badge/Version-1.12.0--devel-informational?style=flat-square)
+![Version: 1.13.0-devel](https://img.shields.io/badge/Version-1.13.0--devel-informational?style=flat-square)
 
 This chart creates e2e resources for nri-kubernetes.
 
