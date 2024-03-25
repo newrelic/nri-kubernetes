@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancement
+## v3.28.0 - 2024-03-25
+
+### 🚀 Enhancements
 - Update `e2e-resources` chart by @juanjjaramillo [#1018](https://github.com/newrelic/nri-kubernetes/pull/1018)
+
+### ⛓️ Dependencies
+- Updated kubernetes packages to v0.29.3
 
 ## v3.27.1 - 2024-03-18
 
