@@ -1,0 +1,70 @@
+name: Release E2E Resources Chart
+
+on:
+  push:
+    branches:
+      - main
+
+# Prevent two release workflows from running concurrently, which might cause WAR race conditions in the repository
+# Ref: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#concurrency
+concurrency: helm-e2e-resources
+
+env:
+  ORIGINAL_REPO_NAME: ${{ github.event.repository.full_name }}
+
+jobs:
+  # Sometimes chart-releaser might fetch an outdated index.yaml from gh-pages, causing a WAW hazard on the repo
+  # This job checks the remote file is up to date with the local one on release
+  validate-gh-pages-index:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          ref: gh-pages
+
+      - name: Download remote index file and check equality
+        run: |
+          curl -vsSL https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/index.yaml > index.yaml.remote
+          LOCAL="$(md5sum < index.yaml)"
+          REMOTE="$(md5sum < index.yaml.remote)"
+          echo "$LOCAL" = "$REMOTE"
+          test "$LOCAL" = "$REMOTE"
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [ validate-gh-pages-index ]
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        # chart-releaser need all the history of the repo to see what changed in the file tree and evaluate which charts need to be released
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Release E2E Resources chart
+        uses: helm/chart-releaser-action@a917fd15b20e8b64b94d9158ad54cd6345335584 # v1.6.0
+        with:
+          charts_dir: 'charts/internal'
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          CR_SKIP_EXISTING: true
+          CR_MAKE_RELEASE_LATEST: false
+
+  notify-failure:
+    if: ${{ always() && failure() }}
+    needs: [validate-gh-pages-index, release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify failure via Slack
+        uses: archive/github-actions-slack@v2.9.0
+        with:
+          slack-bot-user-oauth-access-token: ${{ secrets.K8S_AGENTS_SLACK_TOKEN }}
+          slack-channel: ${{ secrets.K8S_AGENTS_SLACK_CHANNEL }}
+          slack-text: "❌ `${{ env.ORIGINAL_REPO_NAME }}`: <${{ github.server_url }}/${{ env.ORIGINAL_REPO_NAME }}/actions/runs/${{ github.run_id }}|'Release E2E Resources Chart' failed>."

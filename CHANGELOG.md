@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.28.1 - 2024-04-01
+
+### ⛓️ Dependencies
+- Updated github.com/prometheus/common to v0.51.1 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.51.1)
+
+## v3.28.0 - 2024-03-25
+
+### 🚀 Enhancements
+- Update `e2e-resources` chart by @juanjjaramillo [#1018](https://github.com/newrelic/nri-kubernetes/pull/1018)
+
+### ⛓️ Dependencies
+- Updated kubernetes packages to v0.29.3
+
+## v3.27.1 - 2024-03-18
+
+### ⛓️ Dependencies
+- Updated github.com/prometheus/common to v0.50.0 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.50.0)
+
+## v3.27.0 - 2024-03-11
+
+### 🚀 Enhancements
+- Automatically release E2E resources chart by @juanjjaramillo [#1013](https://github.com/newrelic/nri-kubernetes/pull/1013)
+
+### 🐞 Bug fixes
+- Give GitHub token permission to release chart by @juanjjaramillo [#1014](https://github.com/newrelic/nri-kubernetes/pull/1014)
+
+### ⛓️ Dependencies
+- Updated golang.org/x/crypto to v0.21.0
+- Updated google.golang.org/protobuf to v1.33.0
+
+## v3.26.1 - 2024-03-04
+
+### ⛓️ Dependencies
+- Updated kubernetes packages to v0.29.2
+- Updated github.com/prometheus/client_model to v0.6.0 - [Changelog 🔗](https://github.com/prometheus/client_model/releases/tag/v0.6.0)
+- Updated github.com/prometheus/common to v0.48.0 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.48.0)
+
+## v3.26.0 - 2024-02-26
+
+### 🚀 Enhancements
+- Add linux node selector @dbudziwojskiNR [#1000](https://github.com/newrelic/nri-kubernetes/pull/1000)
+
 ## v3.25.2 - 2024-02-19
 
 ### ⛓️ Dependencies
