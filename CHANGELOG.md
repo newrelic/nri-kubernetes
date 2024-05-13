@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.28.6 - 2024-05-13
+
+### ⛓️ Dependencies
+- Updated google.golang.org/protobuf to v1.34.1
+
 ## v3.28.5 - 2024-05-06
 
 ### ⛓️ Dependencies
