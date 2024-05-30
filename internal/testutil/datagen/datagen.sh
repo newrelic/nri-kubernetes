@@ -53,8 +53,10 @@ function main() {
     fi
 
     setup $1
-
-    K8S_VERSION=$($KUBECTL_CMD version 2>&1 | grep 'Server Version' | awk -F' v' '{ print $2; }' | awk -F. '{ print $1"."$2; }')
+    
+    K8S_VERSION_MAJOR=$($KUBECTL_CMD version --output=json 2>&1  | grep -i -v "Warn" | jq -r '.serverVersion.major')
+    K8S_VERSION_MINOR=$($KUBECTL_CMD version --output=json 2>&1  | grep -i -v "Warn" | jq -r '.serverVersion.minor')
+    K8S_VERSION=$K8S_VERSION_MAJOR"."$K8S_VERSION_MINOR
     OUTPUT_FOLDER=$(echo $K8S_VERSION | sed 's/\./_/')
 
     # Install scraper pod and e2e resources.
@@ -76,6 +78,12 @@ function main() {
 
 function setup() {
     case "$1" in
+     "1.30")
+        K8S_VERSION="v1.30.1"
+        ;;
+     "1.29")
+        K8S_VERSION="v1.29.4"
+        ;;
      "1.28")
         K8S_VERSION="v1.28.3"
         ;;
@@ -87,9 +95,6 @@ function setup() {
         ;;
       "1.25")
         K8S_VERSION="v1.25.13"
-        ;;
-      "1.24")
-        K8S_VERSION="v1.24.17"
         ;;
       *)
         echo "ERROR (${0##*/}:$LINENO): specific Kubernetes version needs to be defined for '$1'"
@@ -188,9 +193,8 @@ function bootstrap() {
         fi
 
         echo "Updating helm dependencies"
-
         case "$1" in
-          "1.28" | "1.27" | "1.26" | "1.25" | "1.24")
+          "1.30" | "1.29" | "1.28" | "1.27" | "1.26" | "1.25")
             KSM_IMAGE_VERSION="v2.10.0"
             ;;
           *)

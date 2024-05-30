@@ -14,13 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        goos: [ linux ]
-        goarch: [ amd64, arm64, arm ]
+        goos: [linux]
+        goarch: [amd64, arm64, arm]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version-file: 'go.mod'
+          go-version-file: "go.mod"
       - name: Build integration
         env:
           GOOS: ${{ matrix.goos }}
@@ -34,7 +34,8 @@ jobs:
     timeout-minutes: 10
     strategy:
       matrix:
-        kubernetes-version: [ "v1.28.3", "v1.27.5", "v1.26.8","v1.25.13", "v1.24.17" ]
+        kubernetes-version:
+          ["v1.30.1", "v1.29.4", "v1.28.3", "v1.27.5", "v1.26.8", "v1.25.13"]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -42,7 +43,7 @@ jobs:
       - uses: helm/chart-testing-action@v2.6.1
       - uses: azure/setup-helm@v4
         with:
-          version: 'v3.0.0'
+          version: "v3.0.0"
 
       - name: Lint charts
         run: ct --config .github/ct.yaml lint --debug
@@ -76,7 +77,7 @@ jobs:
       - uses: actions/setup-go@v5
         if: steps.list-changed.outputs.changed == 'true'
         with:
-          go-version-file: 'go.mod'
+          go-version-file: "go.mod"
       - name: Create image for chart testing
         if: steps.list-changed.outputs.changed == 'true'
         run: |
@@ -93,13 +94,13 @@ jobs:
 
   test:
     name: Run tests
-    needs: [ build ]
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version-file: 'go.mod'
+          go-version-file: "go.mod"
       - name: Run tests
         run: make test
       - name: Upload coverage to Codecov
@@ -116,7 +117,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version-file: 'go.mod'
+          go-version-file: "go.mod"
       - uses: newrelic/newrelic-infra-checkers@v1
         with:
           golangci-lint-config: golangci-lint

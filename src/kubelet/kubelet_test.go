@@ -87,7 +87,7 @@ func TestScraper(t *testing.T) {
 
 			// Include specific exclusions that depend on version.
 			versionAsserter := asserter
-			if testutil.IsBelow(version, testutil.Testdata124) {
+			if testutil.IsBelow(version, testutil.Testdata125) {
 				versionAsserter = versionAsserter.Excluding(
 					exclude.Metrics("nodeCollectorEvictionsDelta", "containerOOMEventsDelta"))
 			}
