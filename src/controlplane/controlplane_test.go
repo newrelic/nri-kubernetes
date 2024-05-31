@@ -104,7 +104,7 @@ func Test_Scraper_Autodiscover_all_cp_components(t *testing.T) {
 
 			// Include specific exclusions that depend on version.
 			versionAsserter := asserter
-			//todo[ramk] double check here with the version 125
+			// todo[ramk] double check here with the version 125
 			if testutil.IsBelow(version, testutil.Testdata125) {
 				versionAsserter = versionAsserter.Excluding(exclude.Metrics("nodeCollectorEvictionsDelta"))
 			}
