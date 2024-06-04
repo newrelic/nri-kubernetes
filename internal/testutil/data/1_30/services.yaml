@@ -1,0 +1,249 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    creationTimestamp: "2024-06-04T20:25:08Z"
+    labels:
+      component: apiserver
+      provider: kubernetes
+    name: kubernetes
+    namespace: default
+    resourceVersion: "236"
+    uid: 695abca1-c74c-4784-8af3-b372e3c83cb2
+  spec:
+    clusterIP: 10.96.0.1
+    clusterIPs:
+    - 10.96.0.1
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 8443
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      prometheus.io/port: "9153"
+      prometheus.io/scrape: "true"
+    creationTimestamp: "2024-06-04T20:25:09Z"
+    labels:
+      k8s-app: kube-dns
+      kubernetes.io/cluster-service: "true"
+      kubernetes.io/name: CoreDNS
+    name: kube-dns
+    namespace: kube-system
+    resourceVersion: "279"
+    uid: efbab8aa-55f8-42a2-9601-0cbcfc57424f
+  spec:
+    clusterIP: 10.96.0.10
+    clusterIPs:
+    - 10.96.0.10
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: dns
+      port: 53
+      protocol: UDP
+      targetPort: 53
+    - name: dns-tcp
+      port: 53
+      protocol: TCP
+      targetPort: 53
+    - name: metrics
+      port: 9153
+      protocol: TCP
+      targetPort: 9153
+    selector:
+      k8s-app: kube-dns
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"addonmanager.kubernetes.io/mode":"Reconcile","k8s-app":"metrics-server","kubernetes.io/minikube-addons":"metrics-server","kubernetes.io/minikube-addons-endpoint":"metrics-server","kubernetes.io/name":"Metrics-server"},"name":"metrics-server","namespace":"kube-system"},"spec":{"ports":[{"name":"https","port":443,"protocol":"TCP","targetPort":"https"}],"selector":{"k8s-app":"metrics-server"}}}
+    creationTimestamp: "2024-06-04T20:25:39Z"
+    labels:
+      addonmanager.kubernetes.io/mode: Reconcile
+      k8s-app: metrics-server
+      kubernetes.io/minikube-addons: metrics-server
+      kubernetes.io/minikube-addons-endpoint: metrics-server
+      kubernetes.io/name: Metrics-server
+    name: metrics-server
+    namespace: kube-system
+    resourceVersion: "473"
+    uid: e0dbf771-5d0f-4c57-8167-0977557bd40d
+  spec:
+    clusterIP: 10.105.172.11
+    clusterIPs:
+    - 10.105.172.11
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: https
+    selector:
+      k8s-app: metrics-server
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: e2e
+      meta.helm.sh/release-namespace: scraper
+    creationTimestamp: "2024-06-04T20:25:49Z"
+    labels:
+      app.kubernetes.io/managed-by: Helm
+      run: php-apache
+    name: e2e-hpa
+    namespace: scraper
+    resourceVersion: "523"
+    uid: 17a8a552-288e-433d-9e1a-ad597e2517da
+  spec:
+    clusterIP: 10.103.70.17
+    clusterIPs:
+    - 10.103.70.17
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 80
+    selector:
+      run: php-apache
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: e2e
+      meta.helm.sh/release-namespace: scraper
+      prometheus.io/scrape: "true"
+    creationTimestamp: "2024-06-04T20:25:49Z"
+    labels:
+      app.kubernetes.io/component: metrics
+      app.kubernetes.io/instance: e2e
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: kube-state-metrics
+      app.kubernetes.io/part-of: kube-state-metrics
+      app.kubernetes.io/version: 2.10.0
+      helm.sh/chart: kube-state-metrics-5.12.1
+    name: e2e-kube-state-metrics
+    namespace: scraper
+    resourceVersion: "527"
+    uid: 99c3d88f-d837-4ad7-85af-4ed0d6f703e3
+  spec:
+    clusterIP: 10.105.103.122
+    clusterIPs:
+    - 10.105.103.122
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      app.kubernetes.io/instance: e2e
+      app.kubernetes.io/name: kube-state-metrics
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: e2e
+      meta.helm.sh/release-namespace: scraper
+    creationTimestamp: "2024-06-04T20:25:49Z"
+    labels:
+      app.kubernetes.io/managed-by: Helm
+    name: e2e-lb
+    namespace: scraper
+    resourceVersion: "522"
+    uid: 91020c3d-00a1-4701-b61b-6be364b2c263
+  spec:
+    allocateLoadBalancerNodePorts: true
+    clusterIP: 10.96.93.78
+    clusterIPs:
+    - 10.96.93.78
+    externalName: newrelic.com
+    externalTrafficPolicy: Cluster
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    loadBalancerIP: 127.1.2.3
+    ports:
+    - nodePort: 30631
+      port: 80
+      protocol: TCP
+      targetPort: 80
+    sessionAffinity: None
+    type: LoadBalancer
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: e2e
+      meta.helm.sh/release-namespace: scraper
+    creationTimestamp: "2024-06-04T20:25:49Z"
+    labels:
+      app: statefulset
+      app.kubernetes.io/managed-by: Helm
+    name: e2e-statefulset
+    namespace: scraper
+    resourceVersion: "516"
+    uid: e25708c2-a617-4bbe-af13-ef69f6cbc605
+  spec:
+    clusterIP: 10.97.116.181
+    clusterIPs:
+    - 10.97.116.181
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - port: 8089
+      protocol: TCP
+      targetPort: 8089
+    selector:
+      app: statefulset
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+kind: List
+metadata:
+  resourceVersion: ""
