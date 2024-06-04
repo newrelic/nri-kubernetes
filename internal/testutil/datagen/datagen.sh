@@ -54,7 +54,10 @@ function main() {
 
     setup $1
 
-    K8S_VERSION=$($KUBECTL_CMD version 2>&1 | grep 'Server Version' | awk -F' v' '{ print $2; }' | awk -F. '{ print $1"."$2; }')
+    K8S_VERSION_JSON=$($KUBECTL_CMD version -o json)
+    K8S_VERSION_MAJOR=$(echo $K8S_VERSION_JSON | jq '.serverVersion.major | tonumber')
+    K8S_VERSION_MINOR=$(echo $K8S_VERSION_JSON | jq '.serverVersion.minor | tonumber')
+    K8S_VERSION=$K8S_VERSION_MAJOR"."$K8S_VERSION_MINOR
     OUTPUT_FOLDER=$(echo $K8S_VERSION | sed 's/\./_/')
 
     # Install scraper pod and e2e resources.
