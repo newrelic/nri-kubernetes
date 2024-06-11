@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### bugfix
+- Fix expired certificated @dbudziwojskiNR [#1064](https://github.com/newrelic/nri-kubernetes/pull/1064)
+
 ## v3.28.8 - 2024-05-27
 
 ### ⛓️ Dependencies
