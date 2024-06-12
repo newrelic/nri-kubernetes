@@ -13,7 +13,7 @@ cd "`mkcert -CAROOT`"
 cat rootCA.pem
 ```
 
-Replace the contents of `rootCA.pem` with the contents of `rootCA.pem`. Do **NOT** copy the key file.
+Copy `rootCA.pem` into `src/integration/sink/testdata` replacing the expired cert. Do **NOT** copy `rootCA-key.pem` file.
 
 ### Generate the Server Certificate:
 

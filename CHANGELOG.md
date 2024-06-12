@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### enhancement
 - Add 1.29 and 1.30 support @dbudziwojskiNR [#1062](https://github.com/newrelic/nri-kubernetes/pull/1062)
 
+### bugfix
+- Fix expired certificated @dbudziwojskiNR [#1064](https://github.com/newrelic/nri-kubernetes/pull/1064)
+
 ## v3.28.8 - 2024-05-27
 
 ### ⛓️ Dependencies
