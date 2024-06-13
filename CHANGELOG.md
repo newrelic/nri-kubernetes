@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### bugfix
 - Fix expired certificated @dbudziwojskiNR [#1064](https://github.com/newrelic/nri-kubernetes/pull/1064)
+- Fix StorageSample.DiskCapacity metric badly report for devices mounted after the kubelet pod started [#1066](https://github.com/newrelic/nri-kubernetes/pull/1066/files)
 
 ## v3.28.8 - 2024-05-27
 
