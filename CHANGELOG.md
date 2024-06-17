@@ -10,9 +10,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### enhancement
 - Add 1.29 and 1.30 support and drop 1.25 and 1.24 @dbudziwojskiNR [#1062](https://github.com/newrelic/nri-kubernetes/pull/1062)
 
-### bugfix
+## v3.28.9 - 2024-06-17
+
+### 🐞 Bug fixes
 - Fix expired certificated @dbudziwojskiNR [#1064](https://github.com/newrelic/nri-kubernetes/pull/1064)
 - Fix StorageSample.DiskCapacity metric badly report for devices mounted after the kubelet pod started [#1066](https://github.com/newrelic/nri-kubernetes/pull/1066/files)
+
+### ⛓️ Dependencies
+- Updated google.golang.org/protobuf to v1.34.2
+- Updated github.com/spf13/viper to v1.19.0 - [Changelog 🔗](https://github.com/spf13/viper/releases/tag/v1.19.0)
+- Updated github.com/prometheus/common to v0.54.0 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.54.0)
+- Updated golang.org/x/crypto to v0.24.0
+- Updated go to v1.22.4
 
 ## v3.28.8 - 2024-05-27
 
