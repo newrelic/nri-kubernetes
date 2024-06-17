@@ -80,7 +80,7 @@ function main() {
 function setup() {
     case "$1" in
       "1.30")
-        K8S_VERSION="v1.30.1"
+        K8S_VERSION="v1.30.0"
         ;;
       "1.29")
         K8S_VERSION="v1.29.5"
