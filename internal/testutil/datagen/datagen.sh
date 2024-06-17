@@ -360,7 +360,7 @@ EOF
 }
 
 # Generate static test data for all supported versions
-function `all_versions()` {
+function all_versions() {
   for version in {26..30}; do
     ./datagen.sh 1.$version || exit 1;
   done
