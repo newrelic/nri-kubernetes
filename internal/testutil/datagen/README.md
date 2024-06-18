@@ -4,7 +4,7 @@ Contains a set of dummy deployments and charts that can be used to scrape static
 
 ## Requirements
 
-* `kubectl` and `helm` installed and configured
+* `kubectl`, `helm`, and `jq` installed and configured
 * Current `kubectl` context pointed to a preferably freshly-created local cluster.
 
 ## How it works
