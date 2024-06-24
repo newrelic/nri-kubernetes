@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancement
+## v3.29.0 - 2024-06-24
+
+### 🚀 Enhancements
 - Add 1.29 and 1.30 support and drop 1.25 and 1.24 @dbudziwojskiNR [#1062](https://github.com/newrelic/nri-kubernetes/pull/1062)
+
+### ⛓️ Dependencies
+- Updated kubernetes packages to v0.30.2
+- Updated alpine to v3.20.1
 
 ## v3.28.9 - 2024-06-17
 
