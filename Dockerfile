@@ -1,8 +1,9 @@
 ARG MODE=normal
-ARG BASE_IMAGE=newrelic/infrastructure-bundle:3.2.48
+ARG BASE_IMAGE=newrelic/infrastructure-bundle:3.2.30
 
 FROM $BASE_IMAGE AS base
 
+# test e2e tests for v2
 # Set by docker automatically
 # If building with `docker build`, make sure to set GOOS/GOARCH explicitly when calling make:
 # `make compile GOOS=something GOARCH=something`
