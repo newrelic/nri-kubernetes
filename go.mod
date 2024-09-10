@@ -1,6 +1,6 @@
 module github.com/newrelic/nri-kubernetes/v2
 
-go 1.22.5
+go 1.21.11
 
 require (
 	github.com/golang/protobuf v1.5.2
