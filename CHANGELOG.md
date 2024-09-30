@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.29.5 - 2024-09-30
+
+### ⛓️ Dependencies
+- Updated golang.org/x/crypto to v0.27.0
+- Updated go to v1.23.1
+- Updated kubernetes packages to v0.31.1
+- Updated github.com/prometheus/common to v0.59.1 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.59.1)
+- Updated alpine to v3.20.3
+
 ## v3.29.4 - 2024-08-12
 
 ### ⛓️ Dependencies
