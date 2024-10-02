@@ -7,7 +7,7 @@ require (
 	github.com/newrelic/infra-integrations-sdk v3.8.2+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_model v0.6.1
-	github.com/prometheus/common v0.59.1
+	github.com/prometheus/common v0.60.0
 	github.com/segmentio/go-camelcase v0.0.0-20160726192923-7085f1e3c734
 	github.com/sethgrid/pester v1.2.0
 	github.com/sirupsen/logrus v1.9.3
@@ -61,8 +61,8 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
-	golang.org/x/net v0.28.0 // indirect
-	golang.org/x/oauth2 v0.22.0 // indirect
+	golang.org/x/net v0.29.0 // indirect
+	golang.org/x/oauth2 v0.23.0 // indirect
 	golang.org/x/sys v0.25.0 // indirect
 	golang.org/x/term v0.24.0 // indirect
 	golang.org/x/text v0.18.0 // indirect
