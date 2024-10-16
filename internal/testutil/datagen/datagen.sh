@@ -62,10 +62,11 @@ KSM_IMAGE_VERSIONS=(
   "v2.10.0"
   "v2.10.0"
 )
-# Minor versions formatted like "1.31"
+# K8S_MINOR_VERSIONS are formatted like "1.28".
+# An RC version like "v1.28.0-rc.1" translates to "1.28", using "data/1_28" and "1_28-exceptions.yml".
 K8S_MINOR_VERSIONS=()
 for index in "${!K8S_PATCH_VERSIONS[@]}"; do
-  K8S_MINOR_VERSIONS[index]=$(echo ${K8S_PATCH_VERSIONS[index]} | sed -n 's/v\([0-9]\.[0-9][0-9]*\)\.[0-9][0-9]*/\1/p')
+  K8S_MINOR_VERSIONS[index]=$(echo ${K8S_PATCH_VERSIONS[index]} | sed -n 's/v\([0-9]\.[0-9][0-9]*\)\.[0-9].*/\1/p')
 done
 
 
@@ -102,6 +103,7 @@ function main() {
 }
 
 function setup() {
+    # Arg 1 is the K8s minor version like "1.28"
     for index in "${!K8S_MINOR_VERSIONS[@]}"; do
       if [[ ${K8S_MINOR_VERSIONS[index]} = "$1" ]]; then
         K8S_VERSION=${K8S_PATCH_VERSIONS[index]}
