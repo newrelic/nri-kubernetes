@@ -52,7 +52,7 @@ jobs:
       - name: Select metrics exception file
         id: exceptions-version
         run: |
-          MINOR=$(echo "${{ matrix.k8sVersion }}" | sed -n 's/v\([0-9]\)\.\([0-9][0-9]*\)\.[0-9][0-9]*/\1_\2/p')
+          MINOR=$(echo "${{ matrix.k8sVersion }}" | sed -n 's/v\([0-9]\)\.\([0-9][0-9]*\)\.[0-9].*/\1_\2/p')
           
           echo $MINOR
           echo "exceptions=$MINOR" >> $GITHUB_OUTPUT
