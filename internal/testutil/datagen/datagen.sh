@@ -45,6 +45,31 @@ MINIKUBE_PROFILE="${0##*/}"
 MINIKUBE_PROFILE=${MINIKUBE_PROFILE%.*}
 MINIKUBE_PROFILE="${MINIKUBE_PROFILE}-${1/./-}"
 
+# Supported Kubernetes versions to test against in format "v1.31.1".  Specify one patch version per supported minor version.
+# The patch version is used for the test, but the test is considered valid for all patches in the minor version.
+K8S_PATCH_VERSIONS=(
+  "v1.31.0"
+  "v1.30.0"
+  "v1.29.5"
+  "v1.28.3"
+  "v1.27.5"
+)
+# KSM version to use for the K8S_PATCH_VERSIONS, matched by index.
+KSM_IMAGE_VERSIONS=(
+  "v2.10.0"
+  "v2.10.0"
+  "v2.10.0"
+  "v2.10.0"
+  "v2.10.0"
+)
+# K8S_MINOR_VERSIONS are formatted like "1.28".
+# An RC version like "v1.28.0-rc.1" translates to "1.28", using "data/1_28" and "1_28-exceptions.yml".
+K8S_MINOR_VERSIONS=()
+for index in "${!K8S_PATCH_VERSIONS[@]}"; do
+  K8S_MINOR_VERSIONS[index]=$(echo ${K8S_PATCH_VERSIONS[index]} | sed -n 's/v\([0-9]\.[0-9][0-9]*\)\.[0-9].*/\1/p')
+done
+
+
 # main subcommand runs the whole flow of the script: Bootstrap, scrape, and cleanup
 function main() {
     if [[ $# -eq 0 ]]; then
@@ -78,27 +103,16 @@ function main() {
 }
 
 function setup() {
-    case "$1" in
-      "1.30")
-        K8S_VERSION="v1.30.0"
-        ;;
-      "1.29")
-        K8S_VERSION="v1.29.5"
-        ;;
-      "1.28")
-        K8S_VERSION="v1.28.3"
-        ;;
-      "1.27")
-        K8S_VERSION="v1.27.5"
-        ;;
-      "1.26")
-        K8S_VERSION="v1.26.8"
-        ;;
-      *)
+    # Arg 1 is the K8s minor version like "1.28"
+    for index in "${!K8S_MINOR_VERSIONS[@]}"; do
+      if [[ ${K8S_MINOR_VERSIONS[index]} = "$1" ]]; then
+        K8S_VERSION=${K8S_PATCH_VERSIONS[index]}
+      fi
+    done
+    if [ -z "${K8S_VERSION}" ]; then
         echo "ERROR (${0##*/}:$LINENO): specific Kubernetes version needs to be defined for '$1'"
         exit 1
-        ;;
-    esac
+    fi
     echo "minikube start --profile=$MINIKUBE_PROFILE --container-runtime=containerd --driver=docker --kubernetes-version=$K8S_VERSION"
     minikube start \
       --profile=$MINIKUBE_PROFILE \
@@ -192,16 +206,16 @@ function bootstrap() {
 
         echo "Updating helm dependencies"
 
-        case "$1" in
-          "1.30" | "1.29" | "1.28" | "1.27" | "1.26")
-            KSM_IMAGE_VERSION="v2.10.0"
-            ;;
-          *)
-            echo "ERROR (${0##*/}:$LINENO): KSM image version needs to be defined for Kubernetes version $1"
-            cleanup
-            exit 1
-            ;;
-        esac
+        for index in "${!K8S_MINOR_VERSIONS[@]}"; do
+          if [[ ${K8S_MINOR_VERSIONS[index]} = "$1" ]]; then
+            KSM_IMAGE_VERSION=${KSM_IMAGE_VERSIONS[index]}
+          fi
+        done
+        if [ -z "${KSM_IMAGE_VERSION}" ]; then
+          echo "ERROR (${0##*/}:$LINENO): KSM image version needs to be defined for Kubernetes version $1"
+          cleanup
+          exit 1
+        fi
         echo "Using KSM image $KSM_IMAGE_VERSION"
         
         helm dependency update $helm_e2e_path \
@@ -361,13 +375,14 @@ EOF
 
 # Generate static test data for all supported versions
 function all_versions() {
-  for version in {26..30}; do
-    ./datagen.sh 1.$version || exit 1;
+  for version in "${K8S_MINOR_VERSIONS[@]}"; do
+    ./datagen.sh $version || exit 1;
   done
 
-  for version in {26..30}; do
-    rm -rf ../data/1_$version;
-    mv 1_$version ../data/;
+  for version in "${K8S_MINOR_VERSIONS[@]}"; do
+    OUTPUT_FOLDER=$(echo $version | sed 's/\./_/')
+    rm -rf ../data/$OUTPUT_FOLDER;
+    mv $OUTPUT_FOLDER ../data/;
   done
 }
 
