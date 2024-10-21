@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.30.0 - 2024-10-15
+
+### 🚀 Enhancements
+- Add 1.31 support and drop 1.26 @zeitlerc [#1114](https://github.com/newrelic/nri-kubernetes/pull/1114)
+
+
+## v3.29.6 - 2024-10-07
+
+### ⛓️ Dependencies
+- Updated github.com/prometheus/common to v0.60.0 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.60.0)
+- Updated go to v1.23.2
+
 ## v3.29.5 - 2024-09-30
 
 ### ⛓️ Dependencies
