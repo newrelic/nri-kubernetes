@@ -7,11 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.30.1 - 2024-10-22
+
+### 🐞 Bug fixes
+- Remove node-role.kubernetes.io/master as a control plane selector since it was removed in Kube 1.24 and now causes warnings in 1.31 @zzeitlerc [#1118](https://github.com/newrelic/nri-kubernetes/pull/1118)
+
 ## v3.30.0 - 2024-10-15
 
 ### 🚀 Enhancements
 - Add 1.31 support and drop 1.26 @zeitlerc [#1114](https://github.com/newrelic/nri-kubernetes/pull/1114)
-
 
 ## v3.29.6 - 2024-10-07
 

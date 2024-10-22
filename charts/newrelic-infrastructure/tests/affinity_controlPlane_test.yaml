@@ -6,7 +6,7 @@ templates:
   - templates/agent-configmap.yaml
   - templates/secret.yaml
 tests:
-  - it: empty affinity defaults to master nodes
+  - it: empty affinity defaults to control plane nodes
     set:
       licenseKey: test
       cluster: test
@@ -29,9 +29,6 @@ tests:
                         operator: Exists
                   - matchExpressions:
                       - key: node-role.kubernetes.io/etcd
-                        operator: Exists
-                  - matchExpressions:
-                      - key: node-role.kubernetes.io/master
                         operator: Exists
         template: templates/controlplane/daemonset.yaml
 
@@ -91,9 +88,6 @@ tests:
                         operator: Exists
                   - matchExpressions:
                       - key: node-role.kubernetes.io/etcd
-                        operator: Exists
-                  - matchExpressions:
-                      - key: node-role.kubernetes.io/master
                         operator: Exists
         template: templates/controlplane/daemonset.yaml
 
