@@ -74,7 +74,7 @@ fallbacks to `affinity` (at root level), and if that value is empty, the chart f
 
 The same procedure applies to `nodeSelector` and `tolerations`.
 
-On the other hand, some components have affinities and tolerations predefined e.g. to be able to run kubelet pods on nodes that are tainted as master
+On the other hand, some components have affinities and tolerations predefined e.g. to be able to run kubelet pods on nodes that are tainted as control plane
 nodes or to schedule the KSM scraper on the same node of KSM to reduce the inter-node traffic.
 
 If you are having problems assigning pods to nodes it may be because of this. Take a look at the [`values.yaml`](values.yaml) to see if the pod that is
@@ -115,7 +115,7 @@ integrations that you have configured.
 | common.config.namespaceSelector | object | `{}` | Config for filtering ksm and kubelet metrics by namespace. |
 | containerSecurityContext | object | `{}` | Sets security context (at container level). Can be configured also with `global.containerSecurityContext` |
 | controlPlane | object | See `values.yaml` | Configuration for the control plane scraper. |
-| controlPlane.affinity | object | Deployed only in master nodes. | Affinity for the control plane DaemonSet. |
+| controlPlane.affinity | object | Deployed only in control plane nodes. | Affinity for the control plane DaemonSet. |
 | controlPlane.agentConfig | object | `{}` | Config for the Infrastructure agent that will forward the metrics to the backend. It will be merged with the configuration in `.common.agentConfig` See: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/ |
 | controlPlane.config.apiServer | object | Common settings for most K8s distributions. | API Server monitoring configuration |
 | controlPlane.config.apiServer.enabled | bool | `true` | Enable API Server monitoring |
