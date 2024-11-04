@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.30.1 - 2024-11-04
+
+### ⛓️ Dependencies
+- Updated github.com/prometheus/common to v0.60.1 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.60.1)
+
 ## v3.30.0 - 2024-10-28
 
 ### 🚀 Enhancements
