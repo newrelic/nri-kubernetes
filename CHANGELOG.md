@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### enhancement 
-- allow separation of resource settings on KSM and forwarder
+- Allow separation of resource settings on KSM and forwarder @jddcarreira [#1130](https://github.com/newrelic/nri-kubernetes/pull/1130)
 
 ## v3.30.1 - 2024-11-04
 
