@@ -23,14 +23,14 @@ images:
   forwarder:
     registry: ""
     repository: newrelic/k8s-events-forwarder
-    tag: 1.57.1
+    tag: 1.57.2
     pullPolicy: IfNotPresent
   # -- Image for the New Relic Infrastructure Agent plus integrations.
   # @default -- See `values.yaml`
   agent:
     registry: ""
     repository: newrelic/infrastructure-bundle
-    tag: 3.2.53
+    tag: 3.2.60
     pullPolicy: IfNotPresent
   # -- Image for the New Relic Kubernetes integration.
   # @default -- See `values.yaml`
@@ -221,7 +221,7 @@ controlPlane:
       effect: "NoExecute"
   nodeSelector: {}
   # -- Affinity for the control plane DaemonSet.
-  # @default -- Deployed only in master nodes.
+  # @default -- Deployed only in control plane nodes.
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -234,9 +234,6 @@ controlPlane:
                 operator: Exists
           - matchExpressions:
               - key: node-role.kubernetes.io/etcd
-                operator: Exists
-          - matchExpressions:
-              - key: node-role.kubernetes.io/master
                 operator: Exists
   # -- How to deploy the control plane scraper. If autodiscovery is in use, it should be `DaemonSet`.
   # Advanced users using static endpoints set this to `Deployment` to avoid reporting metrics twice.

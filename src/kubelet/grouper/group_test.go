@@ -127,7 +127,7 @@ func getNode() *v1.Node {
 				"kubernetes.io/arch":             "amd64",
 				"kubernetes.io/hostname":         "minikube",
 				"kubernetes.io/os":               "linux",
-				"node-role.kubernetes.io/master": "",
+				"node-role.kubernetes.io/control-plane": "",
 			},
 		},
 		Spec: v1.NodeSpec{
