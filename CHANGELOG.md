@@ -43,7 +43,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Updated github.com/prometheus/common to v0.59.1 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.59.1)
 - Updated alpine to v3.20.3
 
-
 ## v3.29.4 - 2024-08-12
 
 ### ⛓️ Dependencies
