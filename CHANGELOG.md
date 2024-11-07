@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement 
+- allow separation of resource settings on KSM and forwarder
+
 ## v3.29.4 - 2024-08-12
 
 ### ⛓️ Dependencies
