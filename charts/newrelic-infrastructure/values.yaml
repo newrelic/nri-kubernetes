@@ -30,7 +30,7 @@ images:
   agent:
     registry: ""
     repository: newrelic/infrastructure-bundle
-    tag: 3.2.59
+    tag: 3.2.60
     pullPolicy: IfNotPresent
   # -- Image for the New Relic Kubernetes integration.
   # @default -- See `values.yaml`
@@ -172,12 +172,23 @@ ksm:
   # Keep in mind that sharding is not supported at the moment, so memory usage for this component ramps up quickly on
   # large clusters.
   # @default -- 100m/150M -/850M
-  resources:
-    limits:
-      memory: 850M  # Bump me up if KSM pod shows restarts.
-    requests:
-      cpu: 100m
-      memory: 150M
+  ksm:
+    resources:
+      limits:
+        memory: 850M  # Bump me up if KSM pod shows restarts.
+      requests:
+        cpu: 100m
+        memory: 150M
+  # -- Resources for the Frowarder pod.
+  # large clusters.
+  # @default -- 100m/150M -/850M
+  forwarder:
+    resources:
+      limits:
+        memory: 850M  # Bump me up if KSM pod shows restarts.
+      requests:
+        cpu: 100m
+        memory: 150M
   config:
     # -- Timeout for the ksm API contacted by the integration
     timeout: 10s
