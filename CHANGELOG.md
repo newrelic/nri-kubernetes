@@ -6,9 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
-
+- 
 ### enhancement
 - Add 1.31 support and drop 1.26 @zeitlerc [#1114](https://github.com/newrelic/nri-kubernetes/pull/1114)
+- Update e2e-resources to able to run in demo mode on OpenShift @TmNguyen12 [#1133](https://github.com/newrelic/nri-kubernetes/pull/1133)
 
 ### bugfix
 - Remove node-role.kubernetes.io/master as a control plane selector since it was removed in Kube 1.24 and now causes warnings in 1.31 @zzeitlerc [#1118](https://github.com/newrelic/nri-kubernetes/pull/1118)
