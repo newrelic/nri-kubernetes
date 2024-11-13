@@ -17,7 +17,7 @@ spec:
       serviceAccountName: nri-bundle-sa
       containers:
       - name: calculate-pi
-        image:  image-registry.openshift-image-registry.svc:5000/e2e-openshift-running/python:3.9-slim
+        image: registry.access.redhat.com/ubi8/python-39:latest
         command: ["python", "/app/calculate_pi.py"]
         volumeMounts:
         - name: script-volume
