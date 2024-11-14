@@ -8,11 +8,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 - 
 ### enhancement
-- Add 1.31 support and drop 1.26 @zeitlerc [#1114](https://github.com/newrelic/nri-kubernetes/pull/1114)
 - Update e2e-resources to able to run in demo mode on OpenShift @TmNguyen12 [#1133](https://github.com/newrelic/nri-kubernetes/pull/1133)
 
-### bugfix
+## v3.31.0 - 2024-11-11
+
+### 🚀 Enhancements
+- Allow separation of resource settings on KSM and forwarder @jddcarreira [#1130](https://github.com/newrelic/nri-kubernetes/pull/1130)
+
+## v3.30.1 - 2024-11-04
+
+### ⛓️ Dependencies
+- Updated github.com/prometheus/common to v0.60.1 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.60.1)
+
+## v3.30.0 - 2024-10-28
+
+### 🚀 Enhancements
+- Add 1.31 support and drop 1.26 @zeitlerc [#1114](https://github.com/newrelic/nri-kubernetes/pull/1114)
+
+### 🐞 Bug fixes
 - Remove node-role.kubernetes.io/master as a control plane selector since it was removed in Kube 1.24 and now causes warnings in 1.31 @zzeitlerc [#1118](https://github.com/newrelic/nri-kubernetes/pull/1118)
+
+### ⛓️ Dependencies
+- Updated google.golang.org/protobuf to v1.35.1
+- Updated golang.org/x/crypto to v0.28.0
+- Updated kubernetes packages to v0.31.2
 
 ## v3.29.6 - 2024-10-07
 
