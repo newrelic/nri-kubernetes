@@ -26,6 +26,9 @@ spec:
       labels:
         app: statefulset
     spec:
+      {{- if .Values.openShift.enabled }}
+      serviceAccountName: nri-bundle-sa
+      {{- end }}
       containers:
         - name: compute-pi-digits
           image: perl:5.34.0
@@ -41,7 +44,7 @@ spec:
           - perl
           - -Mbignum=bpi
           - -wle
-          - while (true) { open(FH, '>', './{{ .Values.fileSystemTest.fileName }}') or die "Cannot open file - $!"; print FH bpi(100); close(FH); print bpi(2700) }
+          - 'while (1) { open(FH, ">", "/output/{{ .Values.fileSystemTest.fileName }}") or die "Cannot open file - $!"; print FH bpi(100); close(FH); print bpi(2700) }'
           volumeMounts:
             - mountPath: /output
               name: storage

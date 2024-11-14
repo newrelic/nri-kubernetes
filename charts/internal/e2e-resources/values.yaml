@@ -29,6 +29,8 @@ hpa:
 persistentVolume:
   # -- Create PVs
   enabled: true
+  # -- Changes PV type to run on multi-node clusters (e.g. GKE, OpenShift on GCP)
+  multiNode: false
 persistentVolumeClaim:
   # -- Create PVCs
   enabled: true
@@ -53,3 +55,9 @@ demo:
 # -- Variables for filesystem testing
 fileSystemTest:
   fileName: 'pi.txt'
+
+# Changes resource yaml files for running on OpenShift & MiniShift
+# OpenShift currently only runs on in demo mode
+openShift: 
+  enabled: false
+

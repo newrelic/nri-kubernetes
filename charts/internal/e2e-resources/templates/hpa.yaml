@@ -4,6 +4,35 @@ kind: Deployment
 metadata:
   name: {{ .Release.Name }}-hpa
 spec:
+  {{ if .Values.openShift.enabled }}
+  replicas: 1
+  selector:
+    matchLabels:
+      app: calculate-pi
+  template:
+    metadata:
+      labels:
+        app: calculate-pi
+    spec:
+      serviceAccountName: nri-bundle-sa
+      containers:
+      - name: calculate-pi
+        image: registry.access.redhat.com/ubi8/python-39:latest
+        command: ["python", "/app/calculate_pi.py"]
+        volumeMounts:
+        - name: script-volume
+          mountPath: /app
+        resources:
+          requests:
+            cpu: "100m"
+          limits:
+            cpu: "500m"
+        imagePullPolicy: IfNotPresent
+      volumes:
+      - name: script-volume
+        configMap:
+          name: calculate-pi-config
+  {{ else }}
   selector:
     matchLabels:
       run: php-apache
@@ -24,7 +53,37 @@ spec:
               cpu: 500m
             requests:
               cpu: 200m
+  {{ end }}
 ---
+{{ if .Values.openShift.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: calculate-pi-config
+data:
+  calculate_pi.py: |
+    from decimal import Decimal, getcontext
+
+    def calculate_pi(n):
+        getcontext().prec = n
+        pi = Decimal(0)
+        k = 0
+        while k < n:
+            pi += (Decimal(1) / (16 ** k)) * (
+                Decimal(4) / (8 * k + 1) -
+                Decimal(2) / (8 * k + 4) -
+                Decimal(1) / (8 * k + 5) -
+                Decimal(1) / (8 * k + 6)
+            )
+            k += 1
+        return pi
+
+    if __name__ == "__main__":
+        while True:
+            calculate_pi(1000)
+{{ end }}
+---
+{{ if not .Values.openShift.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -36,6 +95,7 @@ spec:
     - port: 80
   selector:
     run: php-apache
+{{ end }}
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
