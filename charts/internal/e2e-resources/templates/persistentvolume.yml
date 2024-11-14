@@ -10,7 +10,18 @@ spec:
   capacity:
     storage: 5Mi
   volumeMode: Filesystem
+  {{- if .Values.persistentVolume.multiNode }}
+  local:
+    path: /mnt/
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: Exists
+  {{- else }}
   hostPath:
-    path: /data/pv/
+    path: /mnt/
     type: DirectoryOrCreate
+  {{- end }}
 {{- end }}

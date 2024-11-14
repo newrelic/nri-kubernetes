@@ -39,9 +39,16 @@ spec:
             - -Mbignum=bpi
             - -wle
             {{- if .Values.demo.enabled }}
-            - open(FH, '>', './{{ .Values.fileSystemTest.fileName }}') or die "Cannot open file - $!"; print FH bpi(100); close(FH); print bpi(4000)
+            - open(FH, '>', '/output/{{ .Values.fileSystemTest.fileName }}') or die "Cannot open file - $!"; print FH bpi(100); close(FH); print bpi(4000)
             {{- else }}
-            - open(FH, '>', './{{ .Values.fileSystemTest.fileName }}') or die "Cannot open file - $!"; print FH bpi(100); close(FH); print bpi(1500)
+            - open(FH, '>', '/output/{{ .Values.fileSystemTest.fileName }}') or die "Cannot open file - $!"; print FH bpi(100); close(FH); print bpi(1500)
             {{- end }}
+            volumeMounts:
+              - mountPath: /output
+                name: storage
           restartPolicy: OnFailure
+          volumes:
+            - name: storage
+              emptyDir: 
+                sizeLimit: 30Mi
 {{- end }}

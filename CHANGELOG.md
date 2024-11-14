@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- Update e2e-resources to able to run in demo mode on OpenShift @TmNguyen12 [#1133](https://github.com/newrelic/nri-kubernetes/pull/1133)
+
 ## v3.31.0 - 2024-11-11
 
 ### 🚀 Enhancements

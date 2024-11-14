@@ -72,3 +72,34 @@ oc apply -f deploy/local-openshift.yaml
 ### Tips
 
 * If at any point you need to login to the guest VM, use the following command: `ssh -i ~/.crc/machines/crc/id_rsa core@$(crc ip)`
+
+### Deploying e2e-resources on OpenShift
+The namespace we'll be using as an example is `e2e-openshift-running` 
+
+1. Create a new service account to be assigned to the hpa and statefulset deployment pods 
+```
+oc create serviceaccount nri-bundle-sa
+```
+
+2. Add the `privileged` scc to your new user
+```
+oc adm policy add-scc-to-user privileged system:serviceaccounts:e2e-openshift-running:nri-bundle-sa
+```
+
+3. Enable OpenShift in the `charts/internal/e2e-resources/values.yaml` 
+```
+openShift: 
+  enabled: true
+```
+
+4. Enable multiNode if using OpenShift platform 
+```
+persistentVolume:
+  enabled: true
+  multiNode: true
+```
+
+5. Must run in `demo` mode 
+```
+helm upgrade --install e2e-resources --set demo.enabled=true charts/internal/e2e-resources -n e2e-openshift-running
+```
