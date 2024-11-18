@@ -7,8 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancement
+## v3.32.0 - 2024-11-18
+
+### 🚀 Enhancements
 - Update e2e-resources to able to run in demo mode on OpenShift @TmNguyen12 [#1133](https://github.com/newrelic/nri-kubernetes/pull/1133)
+
+### ⛓️ Dependencies
+- Updated golang.org/x/crypto to v0.29.0
+- Updated go to v1.23.3
+- Updated google.golang.org/protobuf to v1.35.2
 
 ## v3.31.0 - 2024-11-11
 
