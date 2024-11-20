@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.33.0 - 2024-11-20
+
+### 🚀 Enhancements
+
+- Updating the kubelet daemonset to allow consumers to specify different resource limits for each container in the pod.
+
+### 🚀 Enhancements
 ## v3.32.0 - 2024-11-18
 
 ### 🚀 Enhancements
