@@ -99,7 +99,7 @@ spec:
             {{- with .Values.kubelet.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- with .Values.kubelet.resources }}
+          {{- with .Values.kubelet.resources.kubelet }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
         - name: agent
@@ -204,7 +204,7 @@ spec:
             {{- with .Values.kubelet.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- with .Values.kubelet.resources }}
+          {{- with .Values.kubelet.resources.agent }}
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
       volumes:

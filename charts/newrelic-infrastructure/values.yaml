@@ -116,11 +116,18 @@ kubelet:
   extraVolumeMounts: []
   initContainers: []
   resources:
-    limits:
-      memory: 300M
-    requests:
-      cpu: 100m
-      memory: 150M
+    kubelet:
+      limits:
+        memory: 300M
+      requests:
+        cpu: 100m
+        memory: 150M
+    agent:
+      limits:
+        memory: 300M
+      requests:
+        cpu: 100m
+        memory: 150M
   config:
     # -- Timeout for the kubelet APIs contacted by the integration
     timeout: 10s
