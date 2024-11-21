@@ -1,5 +1,5 @@
 {{- if and (.Values.daemonSet.enabled) (.Values.windows.enabled) }}
-{{- range .Values.windows.windowsOsList }}
+{{- range .Values.windows.osList }}
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -23,3 +23,5 @@ spec:
       nodeSelector:
         kubernetes.io/os: windows
         node.kubernetes.io/windows-build: {{ .buildNumber }}
+  {{- end }}
+  {{- end }}
