@@ -61,3 +61,14 @@ fileSystemTest:
 openShift: 
   enabled: false
 
+windows:
+  # Enables running dummies on Windows nodes
+  enabled: false
+  # version is used for naming resources and the servercore image tag
+  # buildNumber is the major.minor.buildNumber matching the Windows Server version.
+  # https://kubernetes.io/docs/concepts/windows/user-guide/#handling-multiple-windows-versions-in-the-same-cluster
+  osList:
+    - version: ltsc2019
+      buildNumber: 10.0.17763
+    - version: ltsc2022
+      buildNumber: 10.0.20348

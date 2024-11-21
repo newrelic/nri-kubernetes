@@ -1,0 +1,33 @@
+{{- if and (.Values.deployment.enabled) (.Values.windows.enabled) }}
+{{- range .Values.windows.windowsOsList }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-deployment-windows-{{ .version }}
+spec:
+  paused: false
+  minReadySeconds: 6
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: deployment-windows-{{ .version }}
+  template:
+    metadata:
+      labels:
+        app: deployment-windows-{{ .version }}
+    spec:
+      containers:
+        - name: windows-sleep
+          image: mcr.microsoft.com/windows/servercore:{{ .version }}
+          command:
+          - powershell.exe
+          - -command
+          - "while($$true) { Start-Sleep -s 5 }"
+      nodeSelector:
+        kubernetes.io/os: windows
+        node.kubernetes.io/windows-build: {{ .buildNumber }}

@@ -47,6 +47,8 @@ spec:
               - mountPath: /output
                 name: storage
           restartPolicy: OnFailure
+          nodeSelector:
+            kubernetes.io/os: linux
           volumes:
             - name: storage
               emptyDir: 
