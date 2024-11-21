@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- Update e2e-resources to be able to run Windows containers @czeitler [#1141](https://github.com/newrelic/nri-kubernetes/pull/1141)
+
 ## v3.32.0 - 2024-11-18
 
 ### 🚀 Enhancements
