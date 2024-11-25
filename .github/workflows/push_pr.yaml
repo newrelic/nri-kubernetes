@@ -55,7 +55,7 @@ jobs:
           path: bin
       - name: Docker Build
         run: |
-          docker buildx build --file Dockerfile.windows --build-arg BASE_IMAGE_TAG=${{ matrix.baseImageTag }} --output type=tar,dest=/tmp/nri-kubernetes-${{ matrix.baseImageTag }}.tar .
+          docker build --file Dockerfile.windows --build-arg BASE_IMAGE_TAG=${{ matrix.baseImageTag }} --output type=tar,dest=/tmp/nri-kubernetes-${{ matrix.baseImageTag }}.tar .
       
       - name: Upload artifact
         uses: actions/upload-artifact@v4
