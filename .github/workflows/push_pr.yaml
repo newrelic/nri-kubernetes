@@ -44,9 +44,9 @@ jobs:
       matrix:
         include:
           - runsOn: windows-2019
-            baseImageTag: ltsc-2019-amd64
+            baseImageTag: ltsc2019-amd64
           - runsOn: windows-2022
-            baseImageTag: ltsc-2022-amd64
+            baseImageTag: ltsc2022-amd64
     runs-on: ${{ matrix.runsOn }}
     steps:
       - name: Download all artifacts from build job
@@ -55,7 +55,7 @@ jobs:
           path: bin
       - name: Docker Build
         run: |
-          docker buildx build -f Dockerfile.windows --build-arg BASE_IMAGE_TAG=${{ matrix.baseImageTag }} --output type=tar,dest=/tmp/nri-kubernetes-${{ matrix.baseImageTag }}.tar .
+          docker buildx build --file Dockerfile.windows --build-arg BASE_IMAGE_TAG=${{ matrix.baseImageTag }} --output type=tar,dest=/tmp/nri-kubernetes-${{ matrix.baseImageTag }}.tar .
       
       - name: Upload artifact
         uses: actions/upload-artifact@v4
