@@ -56,13 +56,13 @@ jobs:
       - name: Docker Build
         run: |
           docker build --file Dockerfile.windows --build-arg BASE_IMAGE_TAG=${{ matrix.baseImageTag }} -t nri-kubernetes:windows-${{ matrix.baseImageTag }} .
-          docker save nri-kubernetes:windows-${{ matrix.baseImageTag }} > /tmp/nri-kubernetes-${{ matrix.baseImageTag }}.tar
+          docker save nri-kubernetes:windows-${{ matrix.baseImageTag }} > nri-kubernetes-${{ matrix.baseImageTag }}.tar
       
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: nri-kubernetes-${{ matrix.baseImageTag }}
-          path: /tmp/nri-kubernetes-${{ matrix.baseImageTag }}.tar
+          path: nri-kubernetes-${{ matrix.baseImageTag }}.tar
 
   chart-lint:
     name: Helm chart Lint
