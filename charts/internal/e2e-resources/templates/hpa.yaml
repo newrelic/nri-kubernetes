@@ -28,6 +28,8 @@ spec:
           limits:
             cpu: "500m"
         imagePullPolicy: IfNotPresent
+      nodeSelector:
+        kubernetes.io/os: linux
       volumes:
       - name: script-volume
         configMap:
@@ -53,6 +55,8 @@ spec:
               cpu: 500m
             requests:
               cpu: 200m
+      nodeSelector:
+        kubernetes.io/os: linux
   {{ end }}
 ---
 {{ if .Values.openShift.enabled }}

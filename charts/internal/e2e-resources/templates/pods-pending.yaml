@@ -18,6 +18,8 @@ spec:
         requests:
           memory: 5M
           cpu: 5m
+  nodeSelector:
+    kubernetes.io/os: linux
 ---
 apiVersion: v1
 kind: Pod
@@ -31,4 +33,5 @@ spec:
       image: alpine:latest
   nodeSelector:
     not-existing: not-existing
+    kubernetes.io/os: linux
 {{- end }}
