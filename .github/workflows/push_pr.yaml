@@ -49,6 +49,7 @@ jobs:
             baseImageTag: ltsc2022-amd64
     runs-on: ${{ matrix.runsOn }}
     steps:
+      - uses: actions/checkout@v4
       - name: Download all artifacts from build job
         uses: actions/download-artifact@v4
         with:
