@@ -16,6 +16,9 @@ jobs:
       matrix:
         goos: [ linux ]
         goarch: [ amd64, arm64, arm ]
+      include:
+        - goos: windows
+          goarch: amd64
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -27,6 +30,38 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
         run: |
           make compile
+      - name: Upload artifact for docker build step
+        uses: actions/upload-artifact@v4
+        with:
+          retention-days: 1
+          name: nri-kubernetes-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: bin/nri-kubernetes-${{ matrix.goos }}-${{ matrix.goarch }}
+
+  docker-windows:
+    name: Docker image for
+    needs: [ build ]
+    strategy:
+      matrix:
+        include:
+          - runsOn: windows-2019
+            baseImageTag: ltsc-2019-amd64
+          - runsOn: windows-2022
+            baseImageTag: ltsc-2022-amd64
+    runs-on: ${{ matrix.runsOn }}
+    steps:
+      - name: Download all artifacts from build job
+        uses: actions/download-artifact@v4
+        with:
+          path: bin
+      - name: Docker Build
+        run: |
+          docker buildx build -f Dockerfile.windows --build-arg BASE_IMAGE_TAG=${{ matrix.baseImageTag }} --output type=tar,dest=/tmp/nri-kubernetes-${{ matrix.baseImageTag }}.tar .
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nri-kubernetes-${{ matrix.baseImageTag }}
+          path: /tmp/nri-kubernetes-${{ matrix.baseImageTag }}.tar
 
   chart-lint:
     name: Helm chart Lint
