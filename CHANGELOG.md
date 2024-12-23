@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.32.2 - 2024-12-23
+
+### ⛓️ Dependencies
+- Updated google.golang.org/protobuf to v1.36.0
+- Updated kubernetes packages to v0.32.0
+- Updated go to v1.23.4
+- Updated golang.org/x/crypto to v0.31.0
+- Updated github.com/prometheus/common to v0.61.0 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.61.0)
+
 ## v3.32.1 - 2024-12-09
 
 ### ⛓️ Dependencies
