@@ -775,9 +775,13 @@ func TestIntegrationPopulator_IntegrationVersionInInventory(t *testing.T) {
 
 	expectedInventory := inventory.New()
 	err = expectedInventory.SetItem("cluster", "name", defaultNS)
+	require.NoError(t, err)
 	err = expectedInventory.SetItem("cluster", "k8sVersion", config.K8sVersion.String())
+	require.NoError(t, err)
 	err = expectedInventory.SetItem("cluster", "newrelic.integrationVersion", integrationVersion)
+	require.NoError(t, err)
 	err = expectedInventory.SetItem("cluster", "newrelic.integrationName", "com.newrelic.kubernetes")
+	require.NoError(t, err)
 
 	populated, errs := definition.IntegrationPopulator(config)
 	assert.True(t, populated)
