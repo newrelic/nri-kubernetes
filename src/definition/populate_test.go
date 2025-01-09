@@ -767,6 +767,24 @@ func TestIntegrationPopulator_CustomMsTypeGuesser(t *testing.T) { //nolint: para
 	}
 }
 
+func TestIntegrationPopulator_IntegrationVersionInInventory(t *testing.T) {
+	integrationVersion := "2.3.1"
+	intgr, err := integration.New("nr.test", integrationVersion, integration.InMemoryStore())
+	require.NoError(t, err)
+	config := testConfig(intgr)
+
+	expectedInventory := inventory.New()
+	err = expectedInventory.SetItem("cluster", "name", defaultNS)
+	err = expectedInventory.SetItem("cluster", "k8sVersion", config.K8sVersion.String())
+	err = expectedInventory.SetItem("cluster", "newrelic.integrationVersion", integrationVersion)
+	err = expectedInventory.SetItem("cluster", "newrelic.integrationName", "com.newrelic.kubernetes")
+
+	populated, errs := definition.IntegrationPopulator(config)
+	assert.True(t, populated)
+	assert.Empty(t, errs)
+	assert.Equal(t, intgr.Entities[2].Inventory, expectedInventory)
+}
+
 type NamespaceFilterMock struct{}
 
 func (nf NamespaceFilterMock) IsAllowed(namespace string) bool {
