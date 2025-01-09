@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancements
+- Add K8s Integration version to Inventory @TmNguyen12 [#1153](https://github.com/newrelic/nri-kubernetes/pull/1153)
+
 ## v3.32.3 - 2024-12-30
 
 ### ⛓️ Dependencies
