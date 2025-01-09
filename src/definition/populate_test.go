@@ -768,6 +768,7 @@ func TestIntegrationPopulator_CustomMsTypeGuesser(t *testing.T) { //nolint: para
 }
 
 func TestIntegrationPopulator_IntegrationVersionInInventory(t *testing.T) {
+	t.Parallel()
 	integrationVersion := "2.3.1"
 	intgr, err := integration.New("nr.test", integrationVersion, integration.InMemoryStore())
 	require.NoError(t, err)
