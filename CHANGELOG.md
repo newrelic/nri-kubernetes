@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### enhancements
 - Add K8s Integration version to Inventory @TmNguyen12 [#1153](https://github.com/newrelic/nri-kubernetes/pull/1153)
 
+## v3.32.4 - 2025-01-13
+
+### ⛓️ Dependencies
+- Updated alpine to v3.21.2
+- Updated google.golang.org/protobuf to v1.36.2
+
 ## v3.32.3 - 2024-12-30
 
 ### ⛓️ Dependencies
