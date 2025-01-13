@@ -12,7 +12,6 @@ import (
 
 const NamespaceGroup = "namespace"
 const NamespaceFilteredLabel = "nrFiltered"
-const integrationName = "com.newrelic.kubernetes"
 
 // GuessFunc guesses from data.
 type GuessFunc func(groupLabel string) (string, error)
@@ -45,7 +44,7 @@ func populateCluster(i *integration.Integration, clusterName string, k8sVersion 
 		return err //nolint: wrapcheck
 	}
 
-	err = e.Inventory.SetItem("cluster", "newrelic.integrationName", integrationName)
+	err = e.Inventory.SetItem("cluster", "newrelic.integrationName", i.Name)
 	if err != nil {
 		return err //nolint: wrapcheck
 	}
