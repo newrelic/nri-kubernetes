@@ -13,7 +13,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
-	google.golang.org/protobuf v1.36.1
+	google.golang.org/protobuf v1.36.3
 	k8s.io/api v0.32.0
 	k8s.io/apimachinery v0.32.0
 	k8s.io/client-go v0.32.0
