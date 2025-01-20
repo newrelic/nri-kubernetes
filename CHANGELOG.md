@@ -7,8 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancements
+## v3.33.0 - 2025-01-20
+
+### 🚀 Enhancements
 - Add K8s Integration version to Inventory @TmNguyen12 [#1153](https://github.com/newrelic/nri-kubernetes/pull/1153)
+
+### ⛓️ Dependencies
+- Updated google.golang.org/protobuf to v1.36.3
+- Updated golang.org/x/crypto to v0.32.0
+- Updated kubernetes packages to v0.32.1
+- Updated go to v1.23.5
+- Updated github.com/prometheus/common to v0.62.0 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.62.0)
 
 ## v3.32.4 - 2025-01-13
 
