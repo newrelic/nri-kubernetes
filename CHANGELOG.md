@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.33.1 - 2025-01-27
+
+### ⛓️ Dependencies
+- Updated newrelic/k8s-events-forwarder to v1.60.1
+- Updated google.golang.org/protobuf to v1.36.4
+
 ## v3.33.0 - 2025-01-20
 
 ### 🚀 Enhancements
