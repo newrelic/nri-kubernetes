@@ -129,6 +129,11 @@ jobs:
         continue-on-error: ${{ github.event_name != 'pull_request' }}
         with:
           only-new-issues: true
+          args: --config=./.github/.golangci.yml
+          # Skip cache because of flaky behavior:
+          # https://github.com/golangci/golangci-lint/blob/master/.github/workflows/pr.yml#L49
+          skip-cache: true
+          skip-save-cache: true
 
   codespell:
     name: Codespell
