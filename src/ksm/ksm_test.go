@@ -123,7 +123,7 @@ func TestScraper(t *testing.T) {
 
 func TestScraper_FilterNamespace(t *testing.T) {
 	// We test with a specific version to not modify number of entities
-	version := testutil.Version(testutil.Testdata127)
+	version := testutil.Version(testutil.Testdata128)
 	t.Run(fmt.Sprintf("for_version_%s", version), func(t *testing.T) {
 		testServer, err := version.Server()
 		require.NoError(t, err)
@@ -154,7 +154,16 @@ func TestScraper_FilterNamespace(t *testing.T) {
 
 		err = scraper.Run(i)
 		require.NoError(t, err)
+		// For 1.27 the list of entities are
+		// coredns,coredns-5d78c9869d,default,e2e,
+		// k8s.io-minikube-hostpath,kindnet,kube-dns,kube-dns,kube-node-lease,kube-proxy,
+		// kube-public,kube-system,kubernetes,kubernetes,metrics-server,metrics-server,metrics-server,metrics-server-7746886d4f,
+		// pvc-9828df3d-ef71-4303-be32-c61e284024cb,scraper
 
-		assert.Equal(t, 21, len(i.Entities))
+		// For 1.28 and above, there are only 20 entities
+		// coredns,coredns-5dd5756b68,default,e2e-pv-storage,
+		// k8s.io-minikube-hostpath,kindnet,kube-dns,kube-dns,kube-node-lease,kube-proxy,
+		// kube-public,kube-system,kubernetes,kubernetes,metrics-server,metrics-server,metrics-server,metrics-server-7c66d45ddc,scraper
+		assert.Equal(t, 20, len(i.Entities))
 	})
 }
