@@ -8,7 +8,7 @@ cronjob:
 
 failingJob:
   # -- Deploy a failing job
-  enabled: true
+  enabled: false
 
 daemonSet:
   # -- Deploy a dummy daemonSet
@@ -16,7 +16,7 @@ daemonSet:
 
 statefulSet:
   # -- Deploy a dummy statefulSet
-  enabled: true
+  enabled: false
 
 deployment:
   # -- Deploy a dummy deployment
@@ -24,16 +24,16 @@ deployment:
 
 hpa:
   # -- Enable hpa resources
-  enabled: true
+  enabled: false
 
 persistentVolume:
   # -- Create PVs
-  enabled: true
+  enabled: false
   # -- Changes PV type to run on multi-node clusters (e.g. GKE, OpenShift on GCP)
   multiNode: false
 persistentVolumeClaim:
   # -- Create PVCs
-  enabled: true
+  enabled: false
 
 loadBalancerService:
   # -- Deploy a loadBalancer service
@@ -61,3 +61,5 @@ fileSystemTest:
 openShift: 
   enabled: false
 
+windows:
+  enabled: true
