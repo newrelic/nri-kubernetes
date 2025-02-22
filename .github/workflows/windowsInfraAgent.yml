@@ -35,8 +35,7 @@ jobs:
           go-version-file: 'go.mod'
           # I don't know how to get the nri-kubernetes version from here 
       - name: Generate date-based tag for testing
-        run: $tag = Get-Date -Format "yyyyMMddHHmmss"
-              echo "TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append
+        run: $tag = Get-Date -Format "yyyyMMddHHmmss"; echo "TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append
       - name: Get windows build
         id: osinfo
         shell: powershell
