@@ -1,0 +1,13 @@
+ARG WINDOWS_VERSION=2019
+
+FROM mcr.microsoft.com/windows/servercore:ltsc${WINDOWS_VERSION}
+
+SHELL ["powershell", "-Command"]
+
+USER ContainerAdministrator
+
+WORKDIR C:\\app
+
+COPY bin\\nri-kubernetes-windows-${WINDOWS_VERSION}-amd64.exe "C:\\app\\nri-kubernetes.exe"
+
+ENTRYPOINT ["C:\\app\\nri-kubernetes.exe"]
