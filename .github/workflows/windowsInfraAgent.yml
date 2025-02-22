@@ -1,0 +1,104 @@
+name: Windows build
+
+on:
+  push:
+    branches:
+      - windowsTest*
+  pull_request:
+    branches:
+      - windowsTest*
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build integration for
+    strategy:
+      fail-fast: false
+      matrix:
+        windows:
+          # Here we specify the GH runner where the image will be built.
+          # Tag must exist in both https://hub.docker.com/_/microsoft-windows-servercore and
+          # https://hub.docker.com/_/microsoft-windows-nanoserver, and must be matched with the runner.
+          # In theory, newer versions could build old images using --isolation=hyperv, but unfortunately hyperv is not
+          # enabled in GHA.
+          - runner: windows-2019
+            tag: ltsc2019
+          - runner: windows-2022
+            tag: ltsc2022
+    runs-on: ${{ matrix.windows.runner }}
+    env:
+      AGENT_VERSION: 1.60.1
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          # I don't know how to get the nri-kubernetes version from here 
+      - name: Generate date-based tag for testing
+        run: $tag = Get-Date -Format "yyyyMMddHHmmss"
+              echo "TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - name: Get windows build
+        id: osinfo
+        shell: powershell
+        run: |
+          Get-ComputerInfo
+      - name: Build agent container
+        shell: powershell
+        run: |
+          mkdir infrastructure-agent
+          cd infrastructure-agent
+
+          # Download installer from https://download.newrelic.com/infrastructure_agent/windows/
+          Invoke-WebRequest https://download.newrelic.com/infrastructure_agent/windows/newrelic-infra.${{ env.AGENT_VERSION }}.msi `
+            -OutFile newrelic-infra.${{ env.AGENT_VERSION }}.msi
+
+          Invoke-WebRequest https://download.newrelic.com/infrastructure_agent/windows/newrelic-infra.${{ env.AGENT_VERSION }}.msi.sum `
+            -OutFile newrelic-infra.${{ env.AGENT_VERSION }}.msi.sum
+          
+          $msiChecksum = Get-Content -Path "newrelic-infra.${{ env.AGENT_VERSION }}.msi.sum"
+          $computedChecksum = Get-FileHash -Path "newrelic-infra.${{ env.AGENT_VERSION }}.msi" -Algorithm SHA256
+          if ($msiChecksum -ne $computedChecksum.Hash) {
+            throw "Checksum verification failed for newrelic-infra.${{ env.AGENT_VERSION }}.msi"
+          }
+
+          docker build `
+            --pull `
+            --build-arg base_image_tag="${{ matrix.windows.tag }}" `
+            --build-arg image_version=${{ env.AGENT_VERSION }} `
+            --build-arg agent_version=${{ env.AGENT_VERSION }} `
+            --platform windows/amd64 `
+            -f Dockerfile.windows `
+            -t newrelic/infrastructure:${{ env.AGENT_VERSION }}-windows-${{ matrix.windows.tag }} .
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~\AppData\Local\go-build
+            ~\go\pkg\mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Build integration
+        shell: powershell
+        run: |
+          go build -o ./bin/nri-kubernetes-windows-amd64.exe ./cmd/nri-kubernetes
+      - name: Build nri-kubernetes container
+        shell: bash
+        run: |
+          docker build -f Dockerfile.windows \
+            --build-arg IMAGE_TAG=${{ env.AGENT_VERSION }}-windows-${{ matrix.windows.tag }} \
+            -t newrelic/nri-kubernetes:windows-${{ matrix.windows.tag }}-alpha-$tag \
+            .
+
+      - name: Login to DockerHub
+        # if: ${{ ! github.event.pull_request }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
+
+      - name: Push image
+        # if: ${{ ! github.event.pull_request }}
+        shell: bash
+        run: |
+          docker push newrelic/nri-kubernetes:windows-${{ matrix.windows.tag }}-alpha-$tag
