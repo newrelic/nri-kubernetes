@@ -13,7 +13,7 @@ jobs:
   build:
     name: Build integration for
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         windows:
           # Here we specify the GH runner where the image will be built.
@@ -54,7 +54,10 @@ jobs:
             -OutFile newrelic-infra.${{ env.AGENT_VERSION }}.msi.sum
           
           $msiChecksum = Get-Content -Path "newrelic-infra.${{ env.AGENT_VERSION }}.msi.sum"
+          echo "Checksum: $msiChecksum"
+
           $computedChecksum = Get-FileHash -Path "newrelic-infra.${{ env.AGENT_VERSION }}.msi" -Algorithm SHA256
+          echo "Computed checksum: $($computedChecksum.Hash)"
           if ($msiChecksum -ne $computedChecksum.Hash) {
             throw "Checksum verification failed for newrelic-infra.${{ env.AGENT_VERSION }}.msi"
           }
