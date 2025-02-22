@@ -67,7 +67,7 @@ jobs:
             --build-arg image_version=${{ env.AGENT_VERSION }} `
             --build-arg agent_version=${{ env.AGENT_VERSION }} `
             --platform windows/amd64 `
-            -f Dockerfile.windows `
+            -f Dockerfile.infraAgent `
             -t newrelic/infrastructure:${{ env.AGENT_VERSION }}-windows-${{ matrix.windows.tag }} .
 
       - uses: actions/cache@v4
@@ -85,6 +85,7 @@ jobs:
       - name: Build nri-kubernetes container
         shell: bash
         run: |
+          cd ..
           docker build -f Dockerfile.windows \
             --build-arg IMAGE_TAG=${{ env.AGENT_VERSION }}-windows-${{ matrix.windows.tag }} \
             -t newrelic/nri-kubernetes:windows-${{ matrix.windows.tag }}-alpha-$tag \
