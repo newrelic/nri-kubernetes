@@ -1,14 +1,17 @@
-ARG WINDOWS_VERSION=2019
+ARG BASE_IMAGE_TAG=ltsc2019
 
-FROM mcr.microsoft.com/windows/servercore:ltsc${WINDOWS_VERSION}
-SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+FROM mcr.microsoft.com/windows/servercore:${BASE_IMAGE_TAG}
+SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'Continue';"]
 
-# Downloaded from https://download.newrelic.com/infrastructure_agent/windows/newrelic-infra.msi in the github action workflow
-Add newrelic-infra.msi .
+ARG AGENT_VERSION
+
+# Downloaded from https://download.newrelic.com/infrastructure_agent/windows/newrelic-infra.${AGENT_VERSION}.msi in the github action workflow
+
+COPY newrelic-infra.${AGENT_VERSION}.msi .
 
 # this installs the infra agent
-RUN Start-Process msiexec.exe -ArgumentList '/i', 'C:\\newrelic-infra.msi', '/quiet', '/norestart' -NoNewWindow -Wait
-RUN Remove-Item 'C:\\newrelic-infra.msi'
+RUN Start-Process msiexec.exe -ArgumentList '/i', \"C:\\newrelic-infra.$Env:AGENT_VERSION.msi\", '/quiet', '/norestart' -NoNewWindow -Wait
+RUN Remove-Item \"C:\\newrelic-infra.$Env:AGENT_VERSION.msi\"
 
 # Service is not started by default
 RUN Set-Service -Name 'newrelic-infra' -StartupType disabled
@@ -19,7 +22,7 @@ ENTRYPOINT ["powershell", "C:\\start.ps1"]
 
 ENV NRIA_IS_CONTAINERIZED true
 ENV NRIA_OVERRIDE_HOST_ROOT ""
-ENV NRIA_IS_SECURE_FORWAD_ONLY true
+ENV NRIA_IS_SECURE_FORWARD_ONLY true
 ENV NRIA_HTTP_SERVER_ENABLED true
 ENV NRIA_HTTP_SERVER_PORT 8003
-ENV NRIA_LOG_FORWARD true 
+ENV NRIA_LOG_FORWARD true
