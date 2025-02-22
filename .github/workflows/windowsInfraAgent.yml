@@ -58,7 +58,7 @@ jobs:
 
           $computedChecksum = Get-FileHash -Path "newrelic-infra.${{ env.AGENT_VERSION }}.msi" -Algorithm SHA256
           echo "Computed checksum: $($computedChecksum.Hash)"
-          if ($msiChecksum -ne $computedChecksum.Hash) {
+          if ($msiChecksum -ne $computedChecksum.Hash.toLowerCase()) {
             throw "Checksum verification failed for newrelic-infra.${{ env.AGENT_VERSION }}.msi"
           }
 
