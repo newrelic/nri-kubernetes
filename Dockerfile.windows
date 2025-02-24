@@ -1,6 +1,8 @@
-ARG WINDOWS_VERSION=2019
+ARG base_image_tag=ltsc2019
 
-FROM mcr.microsoft.com/windows/servercore:ltsc${WINDOWS_VERSION}
+FROM mcr.microsoft.com/windows/servercore:${base_image_tag}
+
+ARG base_image_tag=ltsc2019
 
 SHELL ["powershell", "-Command"]
 
@@ -8,6 +10,6 @@ USER ContainerAdministrator
 
 WORKDIR C:\\app
 
-COPY bin\\nri-kubernetes-windows-${WINDOWS_VERSION}-amd64.exe "C:\\app\\nri-kubernetes.exe"
+COPY bin\\nri-kubernetes-windows-${base_image_tag}-amd64.exe "C:\\app\\nri-kubernetes.exe"
 
 ENTRYPOINT ["C:\\app\\nri-kubernetes.exe"]
