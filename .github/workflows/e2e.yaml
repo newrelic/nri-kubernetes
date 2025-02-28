@@ -19,15 +19,15 @@ jobs:
       matrix:
         # Latest patch version can be found in https://github.com/kubernetes/website/blob/main/content/en/releases/patch-releases.md
         # Some versions might not be available yet in https://storage.googleapis.com/kubernetes-release/release/v1.X.Y/bin/linux/amd64/kubelet
-        k8sVersion: ["v1.31.0", "v1.30.0", "v1.29.5", "v1.28.3", "v1.27.5"]
-        cri: [ containerd ]
+        k8sVersion: ["v1.32.0", "v1.31.0", "v1.30.0", "v1.29.5", "v1.28.3"]
+        cri: [containerd]
     env:
-      DOCKER_BUILDKIT: '1' # Setting DOCKER_BUILDKIT=1 ensures TARGETOS and TARGETARCH are populated
+      DOCKER_BUILDKIT: "1" # Setting DOCKER_BUILDKIT=1 ensures TARGETOS and TARGETARCH are populated
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version-file: 'go.mod'
+          go-version-file: "go.mod"
       - name: Setup Minikube
         uses: manusa/actions-setup-minikube@v2.13.1
         with:
@@ -53,7 +53,7 @@ jobs:
         id: exceptions-version
         run: |
           MINOR=$(echo "${{ matrix.k8sVersion }}" | sed -n 's/v\([0-9]\)\.\([0-9][0-9]*\)\.[0-9].*/\1_\2/p')
-          
+
           echo $MINOR
           echo "exceptions=$MINOR" >> $GITHUB_OUTPUT
       - name: Run e2e-test
