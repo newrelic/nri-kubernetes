@@ -39,6 +39,16 @@ func populateCluster(i *integration.Integration, clusterName string, k8sVersion 
 		return err
 	}
 
+	err = e.Inventory.SetItem("cluster", "newrelic.integrationVersion", i.IntegrationVersion)
+	if err != nil {
+		return err //nolint: wrapcheck
+	}
+
+	err = e.Inventory.SetItem("cluster", "newrelic.integrationName", i.Name)
+	if err != nil {
+		return err //nolint: wrapcheck
+	}
+
 	return ms.SetMetric("clusterK8sVersion", k8sVersionStr, metric.ATTRIBUTE)
 }
 

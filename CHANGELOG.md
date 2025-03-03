@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.33.3 - 2025-02-17
+
+### ⛓️ Dependencies
+- Updated alpine to v3.21.3
+
+## v3.33.2 - 2025-02-10
+
+### ⛓️ Dependencies
+- Updated google.golang.org/protobuf to v1.36.5
+
+## v3.33.1 - 2025-01-27
+
+### ⛓️ Dependencies
+- Updated newrelic/k8s-events-forwarder to v1.60.1
+- Updated google.golang.org/protobuf to v1.36.4
+
+## v3.33.0 - 2025-01-20
+
+### 🚀 Enhancements
+- Add K8s Integration version to Inventory @TmNguyen12 [#1153](https://github.com/newrelic/nri-kubernetes/pull/1153)
+
+### ⛓️ Dependencies
+- Updated google.golang.org/protobuf to v1.36.3
+- Updated golang.org/x/crypto to v0.32.0
+- Updated kubernetes packages to v0.32.1
+- Updated go to v1.23.5
+- Updated github.com/prometheus/common to v0.62.0 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.62.0)
+
+## v3.32.4 - 2025-01-13
+
+### ⛓️ Dependencies
+- Updated alpine to v3.21.2
+- Updated google.golang.org/protobuf to v1.36.2
+
+## v3.32.3 - 2024-12-30
+
+### ⛓️ Dependencies
+- Updated google.golang.org/protobuf to v1.36.1
+
+## v3.32.2 - 2024-12-23
+
+### ⛓️ Dependencies
+- Updated google.golang.org/protobuf to v1.36.0
+- Updated kubernetes packages to v0.32.0
+- Updated go to v1.23.4
+- Updated golang.org/x/crypto to v0.31.0
+- Updated github.com/prometheus/common to v0.61.0 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.61.0)
+
 ## v3.32.1 - 2024-12-09
 
 ### ⛓️ Dependencies
