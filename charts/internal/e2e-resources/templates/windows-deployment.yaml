@@ -1,0 +1,89 @@
+{{- if .Values.windows.is2019 }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: windows-server-2019
+  labels:
+    app: windows-server-2019
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: windows-server-2019
+template:
+  metadata:
+    labels:
+      app: windows-server-2019
+  spec:
+    nodeSelector:
+      kubernetes.io/os: windows
+      cloud.google.com/gke-windows-os-version: '2019'
+    tolerations: 
+      - key: "os"
+        operator: "Equal"
+        value: "windows"
+        effect: "NoSchedule"
+    containers:
+      - name: windows-server-2019
+        image: mcr.microsoft.com/windows/servercore:ltsc2019
+        resources:
+          requests:
+              cpu: "1" 
+              memory: "300Mi"
+          limits:
+              cpu: "2"
+              memory: "600Mi"
+        command:
+          - powershell
+          - " -Command"
+          - |
+            while ($true) {
+              Write-Host "Random Text: $(Get-Random)";
+              Start-Sleep -Seconds 3600;
+            }
+{{- end }}
+---
+{{- if .Values.windows.is2022 }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: windows-server-2022
+  labels:
+      app: windows-server-2022
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: windows-server-2022
+  template:
+    metadata:
+      labels:
+        app: windows-server-2022
+    spec:
+      nodeSelector:
+        kubernetes.io/os: windows
+        cloud.google.com/gke-windows-os-version: '2022'
+    tolerations: 
+        - key: "os"
+          operator: "Equal"
+          value: "windows"
+          effect: "NoSchedule"
+      containers:
+        - name: windows-server-2022
+          image: mcr.microsoft.com/windows/servercore:ltsc2022
+          resources:
+            requests:
+                cpu: "1" 
+                memory: "300Mi"
+            limits:
+                cpu: "2"
+                memory: "600Mi"
+          command:
+            - powershell
+            - " -Command"
+            - |
+              while ($true) {
+                Write-Host "Random Text: $(Get-Random)";
+                Start-Sleep -Seconds 3600;
+              }
+{{- end }}
