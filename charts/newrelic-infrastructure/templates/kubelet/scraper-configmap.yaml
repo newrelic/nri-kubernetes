@@ -1,4 +1,3 @@
-{{- if .Values.kubelet.enabled -}}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -10,9 +9,5 @@ metadata:
 data:
   nri-kubernetes.yml: |
     {{- (merge .Values.common.config (include "newrelic.integrationConfigDefaults" . | fromYaml)) | toYaml | nindent 4 }}
-    kubelet:
-      enabled: true
-      {{- if .Values.kubelet.config }}
-      {{- toYaml .Values.kubelet.config | nindent 6 }}
-      {{- end }}
-{{- end }}
+    operator:
+      enabled:  true
