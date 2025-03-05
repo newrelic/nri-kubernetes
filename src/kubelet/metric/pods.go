@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/sirupsen/logrus"
-	v1 "k8s.io/api/core/v1"
-
 	"github.com/newrelic/nri-kubernetes/v3/src/client"
 	"github.com/newrelic/nri-kubernetes/v3/src/definition"
+
+	log "github.com/sirupsen/logrus"
+	v1 "k8s.io/api/core/v1"
 )
 
 // KubeletPodsPath is the path where kubelet serves information about pods.
@@ -182,6 +182,16 @@ func fillContainerStatuses(pod *v1.Pod, dest map[string]definition.RawMetrics) {
 		name := c.Name
 		id := containerID(pod, name)
 
+		// Set the ExitCode. Zero if no terminated Exit Code.
+		var lastTerminatedExitCode int32 = 0
+		var lastTerminatedExitReason string = "None"
+		var lastTerminatedFinishedAt string
+		if c.LastTerminationState.Terminated != nil {
+			lastTerminatedExitCode = c.LastTerminationState.Terminated.ExitCode
+			lastTerminatedExitReason = c.LastTerminationState.Terminated.Reason
+			lastTerminatedFinishedAt = c.LastTerminationState.Terminated.FinishedAt.Time.In(time.UTC).Format(time.RFC3339)
+		}
+
 		dest[id] = make(definition.RawMetrics)
 
 		switch {
@@ -190,15 +200,23 @@ func fillContainerStatuses(pod *v1.Pod, dest map[string]definition.RawMetrics) {
 			dest[id]["startedAt"] = c.State.Running.StartedAt.Time.In(time.UTC) // TODO WE DO NOT REPORT THAT METRIC
 			dest[id]["restartCount"] = c.RestartCount
 			dest[id]["isReady"] = c.Ready
+			dest[id]["lastTerminatedExitCode"] = lastTerminatedExitCode
+			dest[id]["lastTerminatedExitReason"] = lastTerminatedExitReason
+			dest[id]["lastTerminatedTimestamp"] = lastTerminatedFinishedAt
 		case c.State.Waiting != nil:
 			dest[id]["status"] = "Waiting"
 			dest[id]["reason"] = c.State.Waiting.Reason
 			dest[id]["restartCount"] = c.RestartCount
+			dest[id]["lastTerminatedExitCode"] = lastTerminatedExitCode
+			dest[id]["lastTerminatedExitReason"] = lastTerminatedExitReason
+			dest[id]["lastTerminatedTimestamp"] = lastTerminatedFinishedAt
 		case c.State.Terminated != nil:
 			dest[id]["status"] = "Terminated"
 			dest[id]["reason"] = c.State.Terminated.Reason
 			dest[id]["restartCount"] = c.RestartCount
-			dest[id]["startedAt"] = c.State.Terminated.StartedAt.Time.In(time.UTC) // TODO WE DO NOT REPORT THAT METRIC
+			dest[id]["lastTerminatedExitCode"] = lastTerminatedExitCode
+			dest[id]["lastTerminatedExitReason"] = lastTerminatedExitReason
+			dest[id]["lastTerminatedTimestamp"] = lastTerminatedFinishedAt
 		default:
 			dest[id]["status"] = "Unknown"
 		}
