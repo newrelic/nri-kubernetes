@@ -3,10 +3,10 @@ name: Windows build
 on:
   push:
     branches:
-      - windowsTest*
+      - windowsImage*
   pull_request:
     branches:
-      - windowsTest*
+      - windowsImage*
   workflow_dispatch:
 
 jobs:
@@ -99,7 +99,6 @@ jobs:
 
       - name: Push image
         # if: ${{ ! github.event.pull_request }}
-        # if: false # disable push for now
         shell: powershell
         run: |
           docker push newrelic/nri-kubernetes:windows-${{ matrix.windows.tag }}-alpha-$Env:tag
