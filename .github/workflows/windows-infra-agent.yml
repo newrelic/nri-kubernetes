@@ -99,7 +99,7 @@ jobs:
 
       - name: Push image
         # if: ${{ ! github.event.pull_request }}
-        if: false # disable push for now
+        # if: false # disable push for now
         shell: powershell
         run: |
           docker push newrelic/nri-kubernetes:windows-${{ matrix.windows.tag }}-alpha-$Env:tag

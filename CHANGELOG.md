@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### 🚀 Enhancements
 - Add options for Windows server 2019 and Windows server 2022 deployments in E2E-resources @TmNguyen12 [#1149](https://github.com/newrelic/nri-kubernetes/pull/1149)
+- Add new Github Action to build and push Windows server 2019 & 2022 images for infrastructure-agent and nri-kubernetes @TmNguyen12 @kondracek-nr [#1175](https://github.com/newrelic/nri-kubernetes/pull/1175)
 
 ## v3.33.3 - 2025-02-17
 
