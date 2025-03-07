@@ -193,7 +193,10 @@ integrations that you have configured.
 | tolerations | list | `[]` | Sets pod's tolerations to node taints almost globally. (See [Affinities and tolerations](README.md#affinities-and-tolerations)) |
 | updateStrategy | object | See `values.yaml` | Update strategy for the deployed DaemonSets. |
 | verboseLog | bool | `false` | Sets the debug logs to this integration or all integrations if it is set globally. Can be configured also with `global.verboseLog` |
-| `windowsNodeSelector` | object |  `{ kubernetes.io/os: windows, node.kubernetes.io/windows-build: BUILD_NUMBER }` | Sets windows pod's selector. Refer to [Windows support](#tbd) | 
+| windowsNodeSelector | object |  `{ kubernetes.io/os: windows, node.kubernetes.io/windows-build: BUILD_NUMBER }` | Sets windows pod's selector. Refer to [Windows support](#tbd) |
+| windowsOsList.agentImage | string | `""` | Overrides the infrastructure-agent windows image |
+| windowsOsList.integrationImage | string | `""` | Overrides the nri-kubernetes windows image |
+
 
 ## Maintainers
 
