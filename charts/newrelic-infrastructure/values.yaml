@@ -45,6 +45,25 @@ images:
     tag: 1.63.0
     pullPolicy: IfNotPresent
 
+enableWindows: false
+# For every entry in this Windows OS list, we will create an independent DaemonSet which will get deployed
+# on Windows nodes running each specific Windows version and build number. Note that
+# Windows containers can only be executed on hosts running the exact same Windows version and build number,
+# because Kubernetes only supports process isolation and not Hyper-V isolation (as of March 2025).
+windowsOsList:
+  # Limited support for only LTSC2019/LTSC2022
+  # https://kubernetes.io/docs/setup/production-environment/windows/intro-windows-in-kubernetes/#windows-os-version-support
+  - version: ltsc2019
+    imageTagSuffix: windows-ltsc-2019
+    buildNumber: 10.0.17763
+    agentImage: ""
+    integrationImage: ""
+  - version: ltsc2022
+    imageTagSuffix: windows-ltsc-2022
+    buildNumber: 10.0.20348
+    agentImage: ""
+    integrationImage: ""
+
 # -- Config that applies to all instances of the solution: kubelet, ksm, control plane and sidecars.
 # @default -- See `values.yaml`
 common:
@@ -97,6 +116,13 @@ kubelet:
     - operator: "Exists"
       effect: "NoExecute"
   nodeSelector: {}
+
+  # Note that the Windows DaemonSet already contains a node selector label based on their OS (kubernetes.io/os: windows).
+  # and build number (node.kubernetes.io/windows-build: {{ .buildNumber }}, to ensure that each version of the DaemonSet
+  # gets deployed only on those Windows nodes running the exact same Windows version and build number. Note that
+  # Windows containers can only be executed on hosts running the exact same Windows version and build number.
+  windowsNodeSelector: {}
+
   # -- (bool) Sets pod's hostNetwork. When set bypasses global/common variable
   # @default -- Not set
   hostNetwork:
