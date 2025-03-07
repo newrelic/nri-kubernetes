@@ -4,6 +4,7 @@ templates:
   - templates/controlplane/scraper-configmap.yaml
   - templates/controlplane/agent-configmap.yaml
   - templates/kubelet/daemonset.yaml
+  - templates/kubelet/daemonset-windows.yaml
   - templates/kubelet/scraper-configmap.yaml
   - templates/kubelet/agent-configmap.yaml
   - templates/kubelet/integrations-configmap.yaml
@@ -15,6 +16,7 @@ templates:
 tests:
   - it: annotations are not populated if nothing is set
     set:
+      enableWindows: true
       licenseKey: test
       cluster: test
     asserts:
@@ -27,8 +29,12 @@ tests:
       - isNull:
           path: metadata.annotations
         template: templates/kubelet/daemonset.yaml
+      - isNull:
+          path: metadata.annotations
+        template: templates/kubelet/daemonset-windows.yaml
   - it: annotations are populated from supported value
     set:
+      enableWindows: true
       licenseKey: test
       cluster: test
       kubelet:
@@ -62,8 +68,15 @@ tests:
             test1: "one"
             test2: "two"
         template: templates/kubelet/daemonset.yaml
+      - equal:
+          path: metadata.annotations
+          value:
+            test1: "one"
+            test2: "two"
+        template: templates/kubelet/daemonset-windows.yaml
   - it: annotations are populated from supported value even if legacy is present
     set:
+      enableWindows: true
       licenseKey: test
       cluster: test
       kubelet:
@@ -101,8 +114,15 @@ tests:
             test1: "one"
             test2: "two"
         template: templates/kubelet/daemonset.yaml
+      - equal:
+          path: metadata.annotations
+          value:
+            test1: "one"
+            test2: "two"
+        template: templates/kubelet/daemonset-windows.yaml
   - it: annotations are populated from legacy value
     set:
+      enableWindows: true
       licenseKey: test
       cluster: test
       daemonSet:
@@ -128,3 +148,9 @@ tests:
             test1: "one"
             test2: "two"
         template: templates/kubelet/daemonset.yaml
+      - equal:
+          path: metadata.annotations
+          value:
+            test1: "one"
+            test2: "two"
+        template: templates/kubelet/daemonset-windows.yaml
