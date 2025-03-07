@@ -1,6 +1,7 @@
 suite: Test NRIA_OVERRIDE_HOST_ROOT
 templates:
   - templates/kubelet/daemonset.yaml
+  - templates/kubelet/daemonset-windows.yaml
   - templates/kubelet/scraper-configmap.yaml
   - templates/kubelet/agent-configmap.yaml
   - templates/kubelet/integrations-configmap.yaml
@@ -31,3 +32,16 @@ tests:
             name: "NRIA_OVERRIDE_HOST_ROOT"
             value: ""
         template: templates/kubelet/daemonset.yaml
+  - it: NRIA_OVERRIDE_HOST_ROOT is present in windows daemonsets, (no privileged mode functionality)
+    set:
+      enableWindows: true
+      licenseKey: test
+      cluster: test
+      privileged: false
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: "NRIA_OVERRIDE_HOST_ROOT"
+            value: ""
+        template: templates/kubelet/daemonset-windows.yaml
