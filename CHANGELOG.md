@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- Add Windows Helm templates and unit tests for kubelet support @TmNguyen12 [#1176](https://github.com/newrelic/nri-kubernetes/pull/1176)
+
 ## v3.40.0 - 2025-05-19
 
 ### 🚀 Enhancements
@@ -49,6 +52,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### 🚀 Enhancements
 - Added support for last terminated exit code in metrics @danielstokes [#1173](https://github.com/newrelic/nri-kubernetes/pull/1173)
+
+## v3.35.1 - 2025-03-24
 
 ### ⛓️ Dependencies
 - Updated google.golang.org/protobuf to v1.36.6
