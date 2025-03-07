@@ -511,7 +511,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 **Full Changelog**: https://github.com/newrelic/nri-kubernetes/compare/v3.15.0...v3.15.1
 
-## 3.15.0 
+## 3.15.0
 
 ## What's Changed
 * Update CHANGELOG.md by @juanjjaramillo in https://github.com/newrelic/nri-kubernetes/pull/783
@@ -951,7 +951,7 @@ Please notice that old [V3](https://docs.newrelic.com/docs/create-integrations/i
 * Upgrade Docker image to use Tini entrypoint solving:
   * reaps orphaned zombie process attached to PID 1
   * correctly forwards signals to CMD process
-  Read for more details: https://blog.phusion.nl/2015/01/20/docker-and-the-pid-1-zombie-reaping-problem/
+    Read for more details: https://blog.phusion.nl/2015/01/20/docker-and-the-pid-1-zombie-reaping-problem/
 * Upgraded Docker base image `newrelic/infrastructure-bundle` to v1.5.1.
   For more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.5.1).
 
@@ -1006,10 +1006,10 @@ Please notice that old [V3](https://docs.newrelic.com/docs/create-integrations/i
 }
 ```
 
-  This scenario only happens when the default interface is eth0. Kubernetes
-  source code has it hardcoded that eth0 is the default. In the following
-  example you can see that we only have network metrics inside the interfaces
-  list, in this case there is no eth0 on the and the default interface is ens5:
+This scenario only happens when the default interface is eth0. Kubernetes
+source code has it hardcoded that eth0 is the default. In the following
+example you can see that we only have network metrics inside the interfaces
+list, in this case there is no eth0 on the and the default interface is ens5:
 
 ```
 "network": {
@@ -1040,17 +1040,17 @@ Please notice that old [V3](https://docs.newrelic.com/docs/create-integrations/i
  ]
 ```
 
-  In cases like this, the integration will look for the default interface
-  inside the interfaces list and use those values. The default interface name
-  is retrieved from the network route file (default /proc/net/route).
+In cases like this, the integration will look for the default interface
+inside the interfaces list and use those values. The default interface name
+is retrieved from the network route file (default /proc/net/route).
 
-  When running the unprivileged version of the integration we don't have access
-  to the route file, the integration won't be able to get the default interface
-  name and won't send network metrics for the unless there's a network
-  interface called eth0.
+When running the unprivileged version of the integration we don't have access
+to the route file, the integration won't be able to get the default interface
+name and won't send network metrics for the unless there's a network
+interface called eth0.
 
-  For Pods, this issue is mainly present when using hostNetwok since they
-  shared the same network interfaces with the Node.
+For Pods, this issue is mainly present when using hostNetwok since they
+shared the same network interfaces with the Node.
 
 * Upgraded Docker base image `newrelic/infrastructure-bundle` to v1.4.2.
   For more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.4.2).
@@ -1075,7 +1075,7 @@ Please notice that old [V3](https://docs.newrelic.com/docs/create-integrations/i
 ### Changed
 
 * Upgraded Docker base image `newrelic/infrastructure-bundle` to v1.4.0.
-   For more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.4.0).
+  For more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.4.0).
 
 ## 1.23.1
 
@@ -1105,32 +1105,32 @@ Please notice that old [V3](https://docs.newrelic.com/docs/create-integrations/i
 ### Changed
 
 * Upgraded Docker base image `newrelic/infrastructure-bundle` to v1.3.9.
-   For more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.3.9).
+  For more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.3.9).
 
 ## 1.21.0
 
 ### Added
 
 * Resources allocatable and capacity are retrieved from the apiserver and
-   added to the `K8sNodeSample` as `capacity<ResourceName>` and
-   `allocatable<ResourceName>`.
+  added to the `K8sNodeSample` as `capacity<ResourceName>` and
+  `allocatable<ResourceName>`.
 * The Kubernetes server version is retrieved from the apiserver and cached
-   with the `APIServerCacheK8SVersionTTL` config option. The Kubernetes version
-   is added to the `K8sClusterSample` as `clusterK8sVersion` and to inventory.
+  with the `APIServerCacheK8SVersionTTL` config option. The Kubernetes version
+  is added to the `K8sClusterSample` as `clusterK8sVersion` and to inventory.
 * Add support for static pods status for Kubernetes server versions 1.15 or
-   newer.
+  newer.
 
 ### Changed
 
 * Upgraded Docker base image `newrelic/infrastructure-bundle` to v1.3.8.
-   For more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.3.8).
+  For more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.3.8).
 
 ## 1.20.0
 
 ### Changed
 
 * Upgraded Docker base image `newrelic/infrastructure-bundle` to v1.3.5.
-   For more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.3.5).
+  For more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.3.5).
 
 ## 1.19.0
 
@@ -1143,43 +1143,43 @@ Please notice that old [V3](https://docs.newrelic.com/docs/create-integrations/i
 ### Changed
 
 * Upgraded Docker base image `newrelic/infrastructure-bundle` to v1.3.4.
-   For more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.3.4).
+  For more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.3.4).
 
 ## 1.18.0
 
 ### Changed
 
 * Upgraded Docker base image `newrelic/infrastructure-bundle` to v1.3.2.
-   For more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.3.2).
+  For more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.3.2).
 
 ## 1.17.0
 
 ### Added
 
 * Added the necessary files for building a windows image of the integration.
-   The windows image needs to be manually created and it's still not in our
-   CI/CD pipeline. We have the files for building it but we are not publishing
-   it. The latest supported image for Windows, at the time of writing, is
-   1.16.0.
+  The windows image needs to be manually created and it's still not in our
+  CI/CD pipeline. We have the files for building it but we are not publishing
+  it. The latest supported image for Windows, at the time of writing, is
+  1.16.0.
 * Upgraded Docker base image `newrelic/infrastructure-bundle` to v1.3.0.
-   For more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.3.0).
+  For more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.3.0).
 
 ## 1.16.0
 
 ### Added
 
 * Support for completely avoid querying Kube State Metrics. It's behind the `DISABLE_KUBE_STATE_METRICS` environment variable
-   and its default value is `false`. Note that disabling this will imply in missing metrics that are collected from KSM
-   and possibly missing features in the Kubernetes Cluster Explorer. Please, refer to our [official documentation on this
-   configuration option](https://docs.newrelic.com/docs/integrations/kubernetes-integration/installation/kubernetes-installation-configuration#disable-kube-state-metrics) for more information.
+  and its default value is `false`. Note that disabling this will imply in missing metrics that are collected from KSM
+  and possibly missing features in the Kubernetes Cluster Explorer. Please, refer to our [official documentation on this
+  configuration option](https://docs.newrelic.com/docs/integrations/kubernetes-integration/installation/kubernetes-installation-configuration#disable-kube-state-metrics) for more information.
 
 ## 1.15.0
 
 ### Added
 
 * Support for querying Kube State Metrics instances behind [kube-rbac-proxy](https://github.com/brancz/kube-rbac-proxy).
-   It **ONLY works when the label-based KSM discovery is enabled through the `KUBE_STATE_METRICS_POD_LABEL` environment variable**.
-   2 new configuration environment variables are added:
+  It **ONLY works when the label-based KSM discovery is enabled through the `KUBE_STATE_METRICS_POD_LABEL` environment variable**.
+  2 new configuration environment variables are added:
   * KUBE_STATE_METRICS_SCHEME: defaults to `http`. Valid values are `http` and `https`.
   * KUBE_STATE_METRICS_PORT: defaults to `8080`. On a standard setup of **kube-rbac-proxy** this should be set to `8443`.
 * OpenShift Control Plane components are now automatically discovered.
@@ -1194,15 +1194,15 @@ Please notice that old [V3](https://docs.newrelic.com/docs/create-integrations/i
 * Fix a bug that was preventing `selector.<key>` type attributes to not be
   added to some of the `K8sServiceSample`.
 * The integration now uses `newrelic/infrastructure-bundle` as the base image. The version used
-   is `1.2.0`, for more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.2.0).
+  is `1.2.0`, for more information on the release please see the [New Relic Infrastructure Bundle release notes](https://github.com/newrelic/infrastructure-bundle/releases/tag/1.2.0).
 
 ## 1.13.2
 
 ### Changed
 
 * The integration now uses the infrastructure agent v1.9.0-bundle. For more
-   information refer to the [infrastructure agent release notes](https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/)
-   between versions v1.8.32 and v1.9.0.
+  information refer to the [infrastructure agent release notes](https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/)
+  between versions v1.8.32 and v1.9.0.
 
 ## 1.13.1
 
@@ -1217,11 +1217,11 @@ Please notice that old [V3](https://docs.newrelic.com/docs/create-integrations/i
 * Added samples for Statefulsets, Daemonsets, Endpoints and Services.
 * API Server metrics can now be queried using the secure port. Configure the port using the `API_SERVER_SECURE_PORT` environment variable. The ClusterRole has been updated to allow this query to happen.
 * The integration now uses the infrastructure agent v1.8.32-bundle. For more
-   information refer to the [infrastructure agent release notes](https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/)
-   between versions v1.8.23 and v1.8.32.
+  information refer to the [infrastructure agent release notes](https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/)
+  between versions v1.8.23 and v1.8.32.
 
-   The bundle container contains a subset of [On-host integrations](https://docs.newrelic.com/docs/integrations/new-relic-integrations/get-started/introduction-infrastructure-integrations) that are supported by New Relic.
-   This also includes the ability to "Auto Discover" services running on Kubernetes in a similar way to our [Container auto-discovery](https://docs.newrelic.com/docs/integrations/host-integrations/installation/container-auto-discovery)
+  The bundle container contains a subset of [On-host integrations](https://docs.newrelic.com/docs/integrations/new-relic-integrations/get-started/introduction-infrastructure-integrations) that are supported by New Relic.
+  This also includes the ability to "Auto Discover" services running on Kubernetes in a similar way to our [Container auto-discovery](https://docs.newrelic.com/docs/integrations/host-integrations/installation/container-auto-discovery)
 * The integration has been renamed from `nr-kubernetes` to `nri-kubernetes`.
 
 ## 1.12.0
@@ -1230,64 +1230,64 @@ Please notice that old [V3](https://docs.newrelic.com/docs/create-integrations/i
 
 * Control Plane components can now also be discovered using the `tier` and `component` labels, besides `k8s-app`.
 * The integration now uses the infrastructure agent v1.8.23. For more
-   information refer to the [infrastructure agent release notes](https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/)
-   between versions v1.5.75 and v1.8.23.
+  information refer to the [infrastructure agent release notes](https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/)
+  between versions v1.5.75 and v1.8.23.
 
 ## 1.11.0
 
 ### Changed
 
 * The old way of determining Leader/Follower status has been switched to a
-   job based architecture. The old Leader/Follower was needed to detect which nri-kubernetes Pod
-   should query Kube State Metrics (a.k.a. the Leader), but it was hard to add additional scrape targets (e.g. control plane).
-   Important notice: The output logs have been changed. Before the integration logged whether
-   it was Follower or a Leader, and this has been changed to show which jobs are executed.
+  job based architecture. The old Leader/Follower was needed to detect which nri-kubernetes Pod
+  should query Kube State Metrics (a.k.a. the Leader), but it was hard to add additional scrape targets (e.g. control plane).
+  Important notice: The output logs have been changed. Before the integration logged whether
+  it was Follower or a Leader, and this has been changed to show which jobs are executed.
 
-   Following are 2 examples of logs that are being output by the integration before and after this update.
+  Following are 2 examples of logs that are being output by the integration before and after this update.
 
-   Before, logs for leaders:
+  Before, logs for leaders:
 
    ```
    Auto-discovered role: Leader
    ```
 
-   After, equivalent example, now using jobs:
+  After, equivalent example, now using jobs:
 
    ```
    Running job: kubelet
    Running job: kube state metrics
    ```
 
-   Before, logs for followers:
+  Before, logs for followers:
 
    ```
    Auto-disovered role: Follower
    ```
 
-   After, equivalent example, now using jobs:
+  After, equivalent example, now using jobs:
 
    ```
    Running job: kubelet
    ```
 
-   These 2 before & after examples are identical in the targets & information they scrape.
+  These 2 before & after examples are identical in the targets & information they scrape.
 
 * The e2e test package has been updated to work with this refactor.
 
 ### Added
 
 * Control Plane Monitoring: the integration will automatically detect if it's running on a master node using
-   its Kubernetes pod's labels, which are retrieved from the API Server. If it finds itself running on a master
-   node, these additional jobs will run:
+  its Kubernetes pod's labels, which are retrieved from the API Server. If it finds itself running on a master
+  node, these additional jobs will run:
   * ETCD
   * API Server
   * Controller Manager
   * Scheduler
 
-   All jobs, except ETCD, will work out of the box with no further configuration needed.
-   ETCD exposes its metrics using Mutual TLS, which can be configured as follows.
+  All jobs, except ETCD, will work out of the box with no further configuration needed.
+  ETCD exposes its metrics using Mutual TLS, which can be configured as follows.
 
-   First, create a secret containing the following fields:
+  First, create a secret containing the following fields:
 
    ```
    key: <private_key_data, PEM format>
@@ -1296,35 +1296,35 @@ Please notice that old [V3](https://docs.newrelic.com/docs/create-integrations/i
    insecureSkipVerify: <optional, bool 'true' or 'false', default: 'false'>
    ```
 
-   Which can be created like this (expecting the files `key`, `cert` and `cacert` to be present):
+  Which can be created like this (expecting the files `key`, `cert` and `cacert` to be present):
 
    ```
    kubectl create secret generic etcd-server-tls --from-file=./key --from-file=./cert --from-file=./cacert
    ```
 
-   Then, configure the integration to use this secret using these environment variables.
+  Then, configure the integration to use this secret using these environment variables.
 
    ```
    ETCD_TLS_SECRET_NAME: etcd-server-tls
    ETCD_TLS_SECRET_NAMESPACE: default
    ```
 
-   If everything is configured properly the integration should start collecting ETCD metrics.
+  If everything is configured properly the integration should start collecting ETCD metrics.
 * A new command, called kubernetes-static has been added, which enables the
-   integration to be run locally on your machine, without deploying it to k8s.
-   It uses a static set of exports from kubelet & KSM.
+  integration to be run locally on your machine, without deploying it to k8s.
+  It uses a static set of exports from kubelet & KSM.
 * A new way to query a specific Kube State Metrics (KSM) pod  when running multiple redundant pods: by Label Selector.
-   If you want to target a certain KSM instance, you can now use the `KUBE_STATE_METRICS_POD_LABEL` environment variable.
-   If this variable has been set (and KUBE_STATE_METRICS_URL is unset) the integration will find the KSM pod by this variable.
+  If you want to target a certain KSM instance, you can now use the `KUBE_STATE_METRICS_POD_LABEL` environment variable.
+  If this variable has been set (and KUBE_STATE_METRICS_URL is unset) the integration will find the KSM pod by this variable.
 
-   For example:
+  For example:
 
       ```shell script
       # Label a specific KSM pod. Always set the value to the string "true".
       kubectl label pod kube-state-metrics please-use-this-ksm-pod=true
       ```
 
-   Configure `nri-kubernetes` to use this KSM pod:
+  Configure `nri-kubernetes` to use this KSM pod:
 
    ```yaml
     env:
@@ -1421,7 +1421,7 @@ Please notice that old [V3](https://docs.newrelic.com/docs/create-integrations/i
 ### Changed
 
 * Always request metrics from kube-state-metrics in the text format. In kube-state-metrics v1.5 this is the default
-regardless of the format requested.
+  regardless of the format requested.
 
 ## 1.6.0
 
