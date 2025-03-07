@@ -4,7 +4,7 @@ nameOverride: ""
 fullnameOverride: ""
 
 # -- Name of the Kubernetes cluster monitored. Can be configured also with `global.cluster`
-cluster: ""
+cluster: "j"
 # -- This set this license key to use. Can be configured also with `global.licenseKey`
 licenseKey: ""
 # -- In case you don't want to have the license key in you values, this allows you to point to a user created secret to get the key from there. Can be configured also with `global.customSecretName`
@@ -37,8 +37,22 @@ images:
   integration:
     registry: ""
     repository: newrelic/nri-kubernetes
-    tag:
+    tag: 3.33.2
     pullPolicy: IfNotPresent
+    image: "" #left blank unless you want to use a custom image
+
+enableWindows: false
+windowsOsList:
+  - version: ltsc2019
+    imageTagSuffix: windows-ltsc-2019
+    buildNumber: 10.0.17763
+    agentImage: ""
+    integrationImage: ""
+  - version: ltsc2022
+    imageTagSuffix: windows-ltsc-2022
+    buildNumber: 10.0.20348
+    agentImage: ""
+    integrationImage: ""
 
 # -- Config that applies to all instances of the solution: kubelet, ksm, control plane and sidecars.
 # @default -- See `values.yaml`
@@ -92,6 +106,13 @@ kubelet:
     - operator: "Exists"
       effect: "NoExecute"
   nodeSelector: {}
+
+  # Note that the Windows DaemonSet already contains a node selector label based on their OS (kubernetes.io/os: windows).
+  # and build number (node.kubernetes.io/windows-build: {{ .buildNumber }}, to ensure that each version of the DaemonSet
+  # gets deployed only on those Windows nodes running the exact same Windows version and build number. Note that
+  # Windows containers can only be executed on hosts running the exact same Windows version and build number.
+  windowsNodeSelector: {}
+
   # -- (bool) Sets pod's hostNetwork. When set bypasses global/common variable
   # @default -- Not set
   hostNetwork:

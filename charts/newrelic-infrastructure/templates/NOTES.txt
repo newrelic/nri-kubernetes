@@ -110,10 +110,6 @@ future. Please migrate your agent config to the new format in the `common.agentC
 {{ $errors = printf "%s\n\n%s" $errors (include "newrelic.compatibility.message.image" . ) }}
 {{- end }}
 
-{{- if .Values.enableWindows }}
-{{ $errors = printf "%s\n\n%s" $errors (include "newrelic.compatibility.message.windows" . ) }}
-{{- end }}
-
 {{- if ( or .Values.controllerManagerEndpointUrl  .Values.schedulerEndpointUrl .Values.etcdEndpointUrl .Values.apiServerEndpointUrl )}}
 {{ $errors = printf "%s\n\n%s" $errors (include "newrelic.compatibility.message.apiURL" . ) }}
 {{- end }}
