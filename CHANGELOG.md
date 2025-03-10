@@ -7,9 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.34.0 - 2025-03-10
+
 ### 🚀 Enhancements
 - Add options for Windows server 2019 and Windows server 2022 deployments in E2E-resources @TmNguyen12 [#1149](https://github.com/newrelic/nri-kubernetes/pull/1149)
-
 
 ## v3.33.3 - 2025-02-17
 
