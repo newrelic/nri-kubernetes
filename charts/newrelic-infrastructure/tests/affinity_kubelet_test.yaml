@@ -1,5 +1,6 @@
 suite: test kubelet's affinity
 templates:
+  - templates/kubelet/daemonset-windows.yaml
   - templates/kubelet/daemonset.yaml
   - templates/kubelet/scraper-configmap.yaml
   - templates/kubelet/agent-configmap.yaml
@@ -15,6 +16,9 @@ tests:
       - isNull:
           path: spec.template.spec.affinity
         template: templates/kubelet/daemonset.yaml
+      - isNull:
+          path: spec.template.spec.affinity
+        template: templates/kubelet/daemonset-windows.yaml
 
   - it: affinity in fargate mode has defaults
     set:
@@ -35,6 +39,26 @@ tests:
                     - fargate
         template: templates/kubelet/daemonset.yaml
 
+  - it: affinity in fargate mode has defaults - windows
+    set:
+      licenseKey: test
+      cluster: test
+      fargate: true
+      enableWindows: true
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchExpressions:
+                  - key: eks.amazonaws.com/compute-type
+                    operator: NotIn
+                    values:
+                    - fargate
+        template: templates/kubelet/daemonset-windows.yaml
+
   - it: affinity is set by legacy value
     set:
       licenseKey: test
@@ -52,6 +76,24 @@ tests:
               legacy: legacy
         template: templates/kubelet/daemonset.yaml
 
+  - it: affinity is set by legacy value - windows
+    set:
+      enableWindows: true
+      licenseKey: test
+      cluster: test
+      global.affinity: {}
+      affinity: {}
+      nodeAffinity:
+        legacy: legacy
+      kubelet.affinity: {}
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            nodeAffinity:  # Legacy value is nodeAffinity and templates affinity objects
+              legacy: legacy
+        template: templates/kubelet/daemonset-windows.yaml
+
   - it: affinity is set by supported value
     set:
       licenseKey: test
@@ -67,6 +109,24 @@ tests:
           value:
             supported: supported
         template: templates/kubelet/daemonset.yaml
+
+  - it: affinity is set by supported value - windows
+    set:
+      enableWindows: true
+      licenseKey: test
+      cluster: test
+      global.affinity: {}
+      affinity: {}
+      nodeAffinity: {}
+      kubelet.affinity:
+        supported: supported
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            supported: supported
+        template: templates/kubelet/daemonset-windows.yaml
+
 
 # This is an expected behavior from the common library and tested there but as we are overwriting this
 # helper is a good idea to retest it in case any library update brakes our expected behavior
@@ -87,6 +147,25 @@ tests:
             local: local
         template: templates/kubelet/daemonset.yaml
 
+  - it: global is overridable by local in common-library - windows
+    set:
+      enableWindows: true
+      licenseKey: test
+      cluster: test
+      global.affinity:
+        global: global
+      affinity:
+        local: local
+      nodeAffinity: {}
+      kubelet.affinity: {}
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            local: local
+        template: templates/kubelet/daemonset-windows.yaml
+
+
   - it: global is overridable by legacy value
     set:
       licenseKey: test
@@ -105,6 +184,25 @@ tests:
               legacy: legacy
         template: templates/kubelet/daemonset.yaml
 
+  - it: global is overridable by legacy value - windows
+    set:
+      enableWindows: true
+      licenseKey: test
+      cluster: test
+      global.affinity:
+        global: global
+      affinity: {}
+      nodeAffinity:
+        legacy: legacy
+      kubelet.affinity: {}
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            nodeAffinity:  # Legacy value is nodeAffinity and templates affinity objects
+              legacy: legacy
+        template: templates/kubelet/daemonset-windows.yaml
+
   - it: global is overridable by supported value
     set:
       licenseKey: test
@@ -121,6 +219,24 @@ tests:
           value:
             supported: supported
         template: templates/kubelet/daemonset.yaml
+
+  - it: global is overridable by supported value - windows
+    set:
+      enableWindows: true
+      licenseKey: test
+      cluster: test
+      global.affinity:
+        global: global
+      affinity: {}
+      nodeAffinity: {}
+      kubelet.affinity:
+        supported: supported
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            supported: supported
+        template: templates/kubelet/daemonset-windows.yaml
 
   - it: common-library's local is overridable by legacy value
     set:
@@ -140,6 +256,25 @@ tests:
               legacy: legacy
         template: templates/kubelet/daemonset.yaml
 
+  - it: common-library's local is overridable by legacy value - windows
+    set:
+      licenseKey: test
+      cluster: test
+      global.affinity: {}
+      affinity:
+        local: local
+      nodeAffinity:
+        legacy: legacy
+      kubelet.affinity: {}
+      enableWindows: true
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            nodeAffinity:  # Legacy value is nodeAffinity and templates affinity objects
+              legacy: legacy
+        template: templates/kubelet/daemonset-windows.yaml
+
   - it: common-library's local is overridable by supported value
     set:
       licenseKey: test
@@ -156,3 +291,21 @@ tests:
           value:
             supported: supported
         template: templates/kubelet/daemonset.yaml
+
+  - it: common-library's local is overridable by supported value - windows
+    set:
+      enableWindows: true
+      licenseKey: test
+      cluster: test
+      global.affinity: {}
+      affinity:
+        local: local
+      nodeAffinity: {}
+      kubelet.affinity:
+        supported: supported
+    asserts:
+      - equal:
+          path: spec.template.spec.affinity
+          value:
+            supported: supported
+        template: templates/kubelet/daemonset-windows.yaml

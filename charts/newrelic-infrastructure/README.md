@@ -197,6 +197,16 @@ integrations that you have configured.
 | windowsOsList.agentImage | string | `""` | Overrides the infrastructure-agent windows image |
 | windowsOsList.integrationImage | string | `""` | Overrides the nri-kubernetes windows image |
 
+## Running tests locally
+
+- Install Helm's 'chart-testing' utilities
+  - `brew install chart-testing`
+  - `brew install yamllint`
+  - `helm plugin install https://github.com/helm-unittest/helm-unittest`
+- Run linter and yaml validation
+  - `ct lint-and-install`
+- Run unit tests: 
+  - `helm unittest charts/newrelic-logging`
 
 ## Maintainers
 

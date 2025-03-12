@@ -4,6 +4,7 @@ templates:
   - templates/controlplane/scraper-configmap.yaml
   - templates/controlplane/agent-configmap.yaml
   - templates/kubelet/daemonset.yaml
+  - templates/kubelet/daemonset-windows.yaml
   - templates/kubelet/scraper-configmap.yaml
   - templates/kubelet/agent-configmap.yaml
   - templates/kubelet/integrations-configmap.yaml
@@ -15,6 +16,7 @@ templates:
 tests:
   - it: hostNetwork defaults (includes the values.yaml)
     set:
+      enableWindows: true
       licenseKey: test
       cluster: test
     asserts:
@@ -30,9 +32,14 @@ tests:
           path: spec.template.spec.hostNetwork
           value: false
         template: templates/kubelet/daemonset.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: false
+        template: templates/kubelet/daemonset-windows.yaml
 
   - it: hostNetwork is false if nothing is set
     set:
+      enableWindows: true
       licenseKey: test
       cluster: test
       global.hostNetwork: null
@@ -51,9 +58,14 @@ tests:
           path: spec.template.spec.hostNetwork
           value: false
         template: templates/kubelet/daemonset.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: false
+        template: templates/kubelet/daemonset-windows.yaml
 
   - it: hostNetwork is set by the common library
     set:
+      enableWindows: true
       licenseKey: test
       cluster: test
       global.hostNetwork: null
@@ -72,9 +84,14 @@ tests:
           path: spec.template.spec.hostNetwork
           value: true
         template: templates/kubelet/daemonset.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: true
+        template: templates/kubelet/daemonset-windows.yaml
 
   - it: controlPlane hostNetwork is overridable to true
     set:
+      enableWindows: true
       licenseKey: test
       cluster: test
       global.hostNetwork: null
@@ -93,9 +110,14 @@ tests:
           path: spec.template.spec.hostNetwork
           value: false
         template: templates/kubelet/daemonset.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: false
+        template: templates/kubelet/daemonset-windows.yaml
 
   - it: controlPlane hostNetwork is overridable to false
     set:
+      enableWindows: true
       licenseKey: test
       cluster: test
       global.hostNetwork: null
@@ -114,9 +136,14 @@ tests:
           path: spec.template.spec.hostNetwork
           value: true
         template: templates/kubelet/daemonset.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: true
+        template: templates/kubelet/daemonset-windows.yaml
 
   - it: ksm hostNetwork is overridable to true
     set:
+      enableWindows: true
       licenseKey: test
       cluster: test
       global.hostNetwork: null
@@ -135,9 +162,14 @@ tests:
           path: spec.template.spec.hostNetwork
           value: false
         template: templates/kubelet/daemonset.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: false
+        template: templates/kubelet/daemonset-windows.yaml
 
   - it: ksm hostNetwork is overridable to false
     set:
+      enableWindows: true
       licenseKey: test
       cluster: test
       global.hostNetwork: null
@@ -156,9 +188,14 @@ tests:
           path: spec.template.spec.hostNetwork
           value: true
         template: templates/kubelet/daemonset.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: true
+        template: templates/kubelet/daemonset-windows.yaml
 
   - it: kubelet hostNetwork is overridable to true
     set:
+      enableWindows: true
       licenseKey: test
       cluster: test
       global.hostNetwork: null
@@ -177,9 +214,14 @@ tests:
           path: spec.template.spec.hostNetwork
           value: true
         template: templates/kubelet/daemonset.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: true
+        template: templates/kubelet/daemonset-windows.yaml
 
   - it: kubelet hostNetwork is overridable to false
     set:
+      enableWindows: true
       licenseKey: test
       cluster: test
       global.hostNetwork: null
@@ -198,3 +240,7 @@ tests:
           path: spec.template.spec.hostNetwork
           value: false
         template: templates/kubelet/daemonset.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: false
+        template: templates/kubelet/daemonset-windows.yaml

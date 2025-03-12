@@ -4,6 +4,7 @@ templates:
   - templates/controlplane/scraper-configmap.yaml
   - templates/controlplane/agent-configmap.yaml
   - templates/kubelet/daemonset.yaml
+  - templates/kubelet/daemonset-windows.yaml
   - templates/kubelet/scraper-configmap.yaml
   - templates/kubelet/agent-configmap.yaml
   - templates/kubelet/integrations-configmap.yaml
@@ -195,3 +196,38 @@ tests:
           path: spec.template.spec.containers[1].securityContext.runAsUser
           value: 1111
         template: templates/kubelet/daemonset.yaml
+
+  - it: securityContext is populated with windows defaults
+    set:
+      licenseKey: test
+      cluster: test
+      enableWindows: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext
+          value:
+            windowsOptions:
+              runAsUserName: 'ContainerUser'
+        documentIndex: 0
+        template: templates/kubelet/daemonset-windows.yaml
+      - equal:
+          path: spec.template.spec.containers[1].securityContext
+          value:
+            windowsOptions:
+              runAsUserName: 'ContainerAdministrator'
+        documentIndex: 0
+        template: templates/kubelet/daemonset-windows.yaml
+      - equal:
+          path: spec.template.spec.containers[0].securityContext
+          value:
+            windowsOptions:
+              runAsUserName: 'ContainerUser'
+        documentIndex: 1
+        template: templates/kubelet/daemonset-windows.yaml
+      - equal:
+          path: spec.template.spec.containers[1].securityContext
+          value:
+            windowsOptions:
+              runAsUserName: 'ContainerAdministrator'
+        documentIndex: 1
+        template: templates/kubelet/daemonset-windows.yaml
