@@ -33,8 +33,8 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 
 {{- /* Return a YAML with the mode to be added to the labels */ -}}
 {{- define "nriKubernetes._mode" -}}
-{{- if include "newrelic.common.privileged" . -}}
-    mode: privileged
+{{- if and (include "newrelic.common.privileged" .) (not .Values.enableWindows) -}}
+  mode: privileged
 {{- else -}}
     mode: unprivileged
 {{- end -}}
@@ -116,3 +116,12 @@ readOnlyRootFilesystem: true
 
 {{- toYaml $finalSecurityContext -}}
 {{- end -}}
+
+{{- define "windowsIntegrationImage" -}}
+  {{ include "newrelic.common.images.image" ( dict "imageRoot" $.Values.images.integration "context" $ "imageTagSuffix" .imageTagSuffix) }}
+{{- end}}
+
+
+{{- define "windowsAgentImage" -}}
+  {{ include "newrelic.common.images.image" ( dict "imageRoot" $.Values.images.agent "context" $ "imageTagSuffix" .imageTagSuffix) }}
+{{- end}}
