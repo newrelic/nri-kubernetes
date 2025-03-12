@@ -30,7 +30,7 @@ spec:
         {{- end }}
         checksum/integrations_config: {{ include (print $.Template.BasePath "/kubelet/integrations-configmap.yaml") $ | sha256sum }}
         {{- with $.Values.podAnnotations }}
-        {{- toYaml $ | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
         {{- include "nriKubernetes.labels.podLabels" $ | nindent 8 }}
@@ -38,18 +38,14 @@ spec:
     spec:
       {{- with include "newrelic.common.images.renderPullSecrets" ( dict "pullSecrets" (list $.Values.images.pullSecrets) "context" $) }}
       imagePullSecrets:
-        {{- $ | nindent 8 }}
+        {{- . | nindent 8 }}
       {{- end }}
       {{- with include "newrelic.common.dnsConfig" $ }}
       dnsConfig:
-        {{- $ | nindent 8 }}
+        {{- . | nindent 8 }}
       {{- end }}
       {{- with include "newrelic.common.priorityClassName" $ }}
       priorityClassName: {{ $ }}
-      {{- end }}
-      {{- with include "newrelic.common.securityContext.pod" $ }}
-      securityContext:
-        {{- $ | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "newrelic.common.serviceAccount.name" $ }}
       hostNetwork: {{ include "nriKubernetes.kubelet.hostNetwork.value" $ }}
@@ -64,10 +60,9 @@ spec:
         - name: kubelet
           image: {{ .integrationImage | default (include "windowsIntegrationImage" $) }}
           imagePullPolicy: {{ $.Values.images.integration.pullPolicy }}
-          {{- with include "nriKubernetes.securityContext.container" $ | fromYaml }}
           securityContext:
-            {{- toYaml $ | nindent 12 }}
-          {{- end }}
+            windowsOptions:
+              runAsUserName: "ContainerUser"
           env:
             - name: "NRI_KUBERNETES_SINK_HTTP_PORT"
               value: {{ get (fromYaml (include "nriKubernetes.kubelet.agentConfig" $)) "http_server_port" | quote }}
@@ -89,29 +84,28 @@ spec:
                   fieldPath: "status.hostIP"
 
             {{- with $.Values.kubelet.extraEnv }}
-            {{- toYaml $ | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- with $.Values.kubelet.extraEnvFrom }}
-          envFrom: {{ toYaml $ | nindent 12 }}
+          envFrom: {{ toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
             - name: nri-kubernetes-config
               mountPath: /etc/newrelic-infra/nri-kubernetes.yml
               subPath: nri-kubernetes.yml
             {{- with $.Values.kubelet.extraVolumeMounts }}
-            {{- toYaml $ | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- with $.Values.kubelet.resources }}
-          resources: {{ toYaml $ | nindent 12 }}
+          resources: {{ toYaml . | nindent 12 }}
           {{- end }}
         - name: agent
           image: {{ .agentImage | default (include "windowsAgentImage" $)}}
           args: [ "newrelic-infra" ]
           imagePullPolicy: {{ $.Values.images.agent.pullPolicy }}
-          {{- with include "nriKubernetes.kubelet.securityContext.agentContainer" $ | fromYaml }}
           securityContext:
-            {{- toYaml $ | nindent 12 }}
-          {{- end }}
+            windowsOptions:
+              runAsUserName: "ContainerAdministrator"
           ports:
             - containerPort: {{ get (fromYaml (include "nriKubernetes.kubelet.agentConfig" $)) "http_server_port" }}
           env:
@@ -171,10 +165,10 @@ spec:
                   fieldPath: "status.hostIP"
 
             {{- with $.Values.kubelet.extraEnv }}
-            {{- toYaml $ | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- with $.Values.kubelet.extraEnvFrom }}
-          envFrom: {{ toYaml $ | nindent 12 }}
+          envFrom: {{ toYaml . | nindent 12 }}
           {{- end }}
           volumeMounts:
             - name: config
@@ -192,7 +186,7 @@ spec:
             {{- toYaml $ | nindent 12 }}
             {{- end }}
           {{- with $.Values.kubelet.resources }}
-          resources: {{ toYaml $ | nindent 12 }}
+          resources: {{ toYaml . | nindent 12 }}
           {{- end }}
       volumes:
         - name: agent-tmpfs-data
@@ -217,7 +211,7 @@ spec:
           configMap:
             name: {{ include "nriKubernetes.kubelet.fullname.integrations" $ }}
         {{- with $.Values.kubelet.extraVolumes }}
-        {{- toYaml $ | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
       {{- with include "nriKubernetes.kubelet.affinity" $ }}
       affinity:
