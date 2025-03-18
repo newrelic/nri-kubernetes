@@ -1,0 +1,15 @@
+ARG BASE_IMAGE_TAG=ltsc2019
+
+FROM mcr.microsoft.com/windows/servercore:${base_image_tag}
+
+ARG BASE_IMAGE_TAG=ltsc2019
+
+SHELL ["powershell", "-Command"]
+
+USER ContainerAdministrator
+
+WORKDIR C:\\app
+
+COPY bin\\nri-kubernetes-windows-${BASE_IMAGE_TAG}-amd64.exe "C:\\app\\nri-kubernetes.exe"
+
+ENTRYPOINT ["C:\\app\\nri-kubernetes.exe"]
