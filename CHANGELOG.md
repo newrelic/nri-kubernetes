@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.36.0 - 2025-03-24
+
+### 🚀 Enhancements
+- Added support for last terminated exit code in metrics @danielstokes [#1173](https://github.com/newrelic/nri-kubernetes/pull/1173)
+
 ## v3.35.0 - 2025-03-17
 
 ### 🚀 Enhancements

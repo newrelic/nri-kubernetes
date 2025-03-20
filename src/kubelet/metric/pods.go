@@ -183,8 +183,8 @@ func fillContainerStatuses(pod *v1.Pod, dest map[string]definition.RawMetrics) {
 		id := containerID(pod, name)
 
 		// Set the ExitCode. Zero if no terminated Exit Code.
-		var lastTerminatedExitCode int32 = 0
-		var lastTerminatedExitReason string = "None"
+		var lastTerminatedExitCode int32
+		var lastTerminatedExitReason = "None"
 		var lastTerminatedFinishedAt string
 		if c.LastTerminationState.Terminated != nil {
 			lastTerminatedExitCode = c.LastTerminationState.Terminated.ExitCode
