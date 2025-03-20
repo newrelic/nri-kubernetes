@@ -182,7 +182,7 @@ func handleResponseWithFilter(resp *http.Response, queries []Query, logger *log.
 	// even when err is non-nil. We handle the cases here
 	if err != nil && len(metrics) > 0 {
 		// be lenient: log error case but don't bubble up failure
-		logger.Errorf(fmt.Sprintf("Failed while trying to parse metrics: %v", err))
+		logger.Errorf("Failed while trying to parse metrics: %v", err)
 		err = nil
 	}
 

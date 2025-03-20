@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.35.0 - 2025-03-17
+
+### 🚀 Enhancements
+- Add v1.32 support and drop support for v1.27 @kpattaswamy [#1178](https://github.com/newrelic/nri-kubernetes/pull/1178)
+
+## v3.34.0 - 2025-03-10
+
+### 🚀 Enhancements
+- Add options for Windows server 2019 and Windows server 2022 deployments in E2E-resources @TmNguyen12 [#1149](https://github.com/newrelic/nri-kubernetes/pull/1149)
+- Add new Github Action to build and push Windows server 2019 & 2022 images for infrastructure-agent and nri-kubernetes @TmNguyen12 @kondracek-nr [#1175](https://github.com/newrelic/nri-kubernetes/pull/1175)
+
+## v3.33.3 - 2025-02-17
+
+### ⛓️ Dependencies
+- Updated alpine to v3.21.3
+
 ## v3.33.2 - 2025-02-10
 
 ### ⛓️ Dependencies

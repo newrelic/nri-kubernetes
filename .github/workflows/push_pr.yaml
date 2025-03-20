@@ -34,7 +34,7 @@ jobs:
     timeout-minutes: 10
     strategy:
       matrix:
-        kubernetes-version: ["v1.31.0", "v1.30.0", "v1.29.5", "v1.28.3", "v1.27.5"]
+        kubernetes-version: ["v1.32.0", "v1.31.0", "v1.30.0", "v1.29.5", "v1.28.3"]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -103,7 +103,7 @@ jobs:
       - name: Run tests
         run: make test
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@13ce06bfc6bbe3ecf90edbbf1bc32fe5978ca1d3 # v5.3.1
+        uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # v5.4.0
         with:
           fail_ci_if_error: false
         env:
