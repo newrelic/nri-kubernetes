@@ -9,15 +9,15 @@ scenarios:
     before:
       - helm dependency update ../charts/internal/e2e-resources
       - helm dependency update ../charts/newrelic-infrastructure
-      - function ver { printf $((10#$(printf "%03d%03d" $(echo "$1" | tr '.' ' ')))); } && K8S_VERSION=$(kubectl version 2>&1 | grep 'Server Version' | awk -F' v' '{ print $2; }' | awk -F. '{ print $1"."$2; }') && if [[ $(ver $K8S_VERSION) -gt $(ver "1.22") ]]; then KSM_IMAGE_VERSION="v2.10.0"; else KSM_IMAGE_VERSION="v2.6.0"; fi && echo "Will use KSM image version ${KSM_IMAGE_VERSION}" && helm upgrade --install ${SCENARIO_TAG}-resources --namespace nr-${SCENARIO_TAG} --create-namespace ../charts/internal/e2e-resources --set persistentVolume.enabled=true --set kube-state-metrics.image.tag=${KSM_IMAGE_VERSION}
-      - helm upgrade --install ${SCENARIO_TAG} --namespace nr-${SCENARIO_TAG} --create-namespace ../charts/newrelic-infrastructure --values e2e-values.yml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG}
+      # - function ver { printf $((10#$(printf "%03d%03d" $(echo "$1" | tr '.' ' ')))); } && K8S_VERSION=$(kubectl version 2>&1 | grep 'Server Version' | awk -F' v' '{ print $2; }' | awk -F. '{ print $1"."$2; }') && if [[ $(ver $K8S_VERSION) -gt $(ver "1.22") ]]; then KSM_IMAGE_VERSION="v2.10.0"; else KSM_IMAGE_VERSION="v2.6.0"; fi && echo "Will use KSM image version ${KSM_IMAGE_VERSION}" && helm upgrade --install ${SCENARIO_TAG}-resources --namespace nr-${SCENARIO_TAG} --create-namespace ../charts/internal/e2e-resources --set persistentVolume.enabled=true --set kube-state-metrics.image.tag=${KSM_IMAGE_VERSION}
+      # - helm upgrade --install ${SCENARIO_TAG} --namespace nr-${SCENARIO_TAG} --create-namespace ../charts/newrelic-infrastructure --values e2e-values.yml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG}
       # Allow for resources to settle before starting checks
       - sleep 60
     after:
       - kubectl logs --selector app.kubernetes.io/name=newrelic-infrastructure --namespace nr-${SCENARIO_TAG} --all-containers --prefix=true
       - kubectl get pods --namespace nr-${SCENARIO_TAG}
-      - helm delete ${SCENARIO_TAG}-resources --namespace nr-${SCENARIO_TAG}
-      - helm delete ${SCENARIO_TAG} --namespace nr-${SCENARIO_TAG}
+      # - helm delete ${SCENARIO_TAG}-resources --namespace nr-${SCENARIO_TAG}
+      # - helm delete ${SCENARIO_TAG} --namespace nr-${SCENARIO_TAG}
     tests:
       nrqls:
 #        START PersistentVolume
@@ -518,6 +518,145 @@ scenarios:
             - key: "Container restarts"
               value: 0.0
 #        END Deployment
+#        START Windows
+        - query: FROM Metric SELECT latest(k8s.deployment.podsAvailable) AS 'Pods Available' WHERE metricName = 'k8s.deployment.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server'
+        - query: SELECT sum(PodsAvailable) FROM (FROM Metric SELECT uniqueCount(k8s.deployment.podsAvailable) AS 'PodsAvailable' WHERE metricName = 'k8s.deployment.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName LIKE '${SCENARIO_TAG}-resources-windows-server-%' WHERE k8s.clusterName = '${SCENARIO_TAG}' FACET k8s.deploymentName)
+          expected_results:
+            - key: "Pods Available"
+              value: 2.0
+        - query: FROM Metric SELECT latest(k8s.deployment.podsDesired) AS 'Pods Desired' WHERE metricName = 'k8s.deployment.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server'
+          expected_results:
+            - key: "Pods Desired"
+              value: 2.0
+        - query: FROM Metric SELECT latest(k8s.deployment.podsTotal) AS 'Pods Total' WHERE metricName = 'k8s.deployment.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server'
+          expected_results:
+            - key: "Pods Total"
+              value: 2.0
+        - query: FROM Metric SELECT latest(k8s.deployment.podsUpdated) AS 'Pods Updated' WHERE metricName = 'k8s.deployment.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server'
+          expected_results:
+            - key: "Pods Updated"
+              value: 2.0
+        - query: FROM Metric SELECT latest(k8s.deployment.podsUnavailable) AS 'Pods Unavailable' WHERE metricName = 'k8s.deployment.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server'
+          expected_results:
+            - key: "Pods Unavailable"
+              value: 0.0
+        - query: FROM Metric SELECT latest(k8s.deployment.podsMissing) AS 'Pods Missing' WHERE metricName = 'k8s.deployment.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server'
+          expected_results:
+            - key: "Pods Missing"
+              value: 0.0
+        - query: FROM Metric SELECT latest(k8s.deployment.podsMaxUnavailable) AS 'Pods MaxUnavailable' WHERE metricName = 'k8s.deployment.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server'
+          expected_results:
+            - key: "Pods MaxUnavailable"
+              value: 1.0
+        - query: FROM Metric SELECT latest(k8s.deployment.podsReady) AS 'Pods Ready' WHERE metricName = 'k8s.deployment.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server'
+          expected_results:
+            - key: "Pods Ready"
+              value: 2.0
+        - query: FROM Metric SELECT latest(k8s.deployment.createdAt) AS 'Created At' WHERE metricName = 'k8s.deployment.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server'
+          expected_results:
+            - key: "Created At"
+              lowerBoundedValue: 0.0
+        - query: FROM Metric SELECT latest(k8s.deployment.conditionAvailable) AS 'Condition Available' WHERE metricName = 'k8s.deployment.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server'
+          expected_results:
+            - key: "Condition Available"
+              value: "true"
+        - query: FROM Metric SELECT latest(k8s.deployment.conditionProgressing) AS 'Condition Progressing' WHERE metricName = 'k8s.deployment.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server'
+          expected_results:
+            - key: "Condition Progressing"
+              value: "true"
+        - query: FROM Metric SELECT latest(k8s.deployment.isPaused) AS 'Paused' WHERE metricName = 'k8s.deployment.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server'
+          expected_results:
+            - key: "Paused"
+              value: 0.0
+        - query: FROM Metric SELECT latest(k8s.deployment.metadataGeneration) AS 'Metadata Generation' WHERE metricName = 'k8s.deployment.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server'
+          expected_results:
+            - key: "Metadata Generation"
+              value: 1.0
+        - query: FROM Metric SELECT latest(k8s.deployment.observedGeneration) AS 'Observed Generation' WHERE metricName = 'k8s.deployment.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server'
+          expected_results:
+            - key: "Observed Generation"
+              value: 1.0
+        - query: FROM Metric SELECT latest(k8s.pod.isReady) AS 'Pod Ready' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-windows-server%'
+          expected_results:
+            - key: "Pod Ready"
+              value: 1.0
+        - query: FROM Metric SELECT latest(k8s.pod.isScheduled) AS 'Pod Scheduled' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-windows-server%'
+          expected_results:
+            - key: "Pod Scheduled"
+              value: 1.0
+        - query: FROM Metric SELECT max(k8s.pod.netTxBytesPerSecond) / 1000 AS 'Transferred (KBps)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-windows-server%'
+          expected_results:
+            - key: "Transferred (KBps)"
+              lowerBoundedValue: 0.0
+        - query: FROM Metric SELECT max(k8s.pod.netRxBytesPerSecond) / 1000 AS 'Received (KBps)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-windows-server%'
+          expected_results:
+            - key: "Received (KBps)"
+              lowerBoundedValue: 0.0
+        - query: FROM Metric SELECT max(k8s.pod.netErrorsPerSecond) AS 'Errors (per second)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-windows-server%'
+          expected_results:
+            - key: "Errors (per second)"
+              lowerBoundedValue: 0.0
+        - query: FROM Metric SELECT max(k8s.container.memoryRequestedBytes) / 1024 / 1024 AS 'Memory Requested (MiB)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-windows-server%' AND k8s.containerName = 'compute-pi-digits'
+          expected_results:
+            - key: "Memory Requested (MiB)"
+              value: 15.0
+        - query: FROM Metric SELECT max(k8s.container.memoryLimitBytes) / 1024 / 1024 AS 'Memory Limit (MiB)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-windows-server%' AND k8s.containerName = 'compute-pi-digits'
+          expected_results:
+            - key: "Memory Limit (MiB)"
+              value: 30.0
+        - query: FROM Metric SELECT max(k8s.container.cpuRequestedCores) AS 'CPU Requested (cores)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-windows-server%' AND k8s.containerName = 'compute-pi-digits'
+          expected_results:
+            - key: "CPU Requested (cores)"
+              value: 0.04
+        - query: FROM Metric SELECT max(k8s.container.cpuLimitCores) AS 'CPU Limit (cores)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-windows-server%' AND k8s.containerName = 'compute-pi-digits'
+          expected_results:
+            - key: "CPU Limit (cores)"
+              value: 0.08
+        - query: FROM Metric SELECT max(k8s.container.restartCountDelta) AS 'Restarts delta' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-windows-server%' AND k8s.containerName = 'compute-pi-digits'
+          expected_results:
+            - key: "Restarts delta"
+              value: 0.0
+        - query: FROM Metric SELECT max(k8s.container.restartCount) AS 'Restarts cumulative' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-windows-server%' AND k8s.containerName = 'compute-pi-digits'
+          expected_results:
+            - key: "Restarts cumulative"
+              value: 0.0
+        - query: FROM Metric SELECT max(k8s.container.cpuUsedCores) AS 'CPU usage (cores)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-windows-server%' AND k8s.containerName = 'compute-pi-digits'
+          expected_results:
+            - key: "CPU usage (cores)"
+              lowerBoundedValue: 0.01
+        - query: FROM Metric SELECT max(k8s.container.cpuCoresUtilization) / 100 AS 'CPU utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-windows-server%' AND k8s.containerName = 'compute-pi-digits'
+          expected_results:
+            - key: "CPU utilization (%)"
+              lowerBoundedValue: 0.01
+        - query: FROM Metric SELECT max(k8s.container.cpuCfsThrottledPeriodsDelta) AS 'CPU Throttled Periods Delta' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-windows-server%' AND k8s.containerName = 'compute-pi-digits'
+          expected_results:
+            - key: "CPU Throttled Periods Delta"
+              lowerBoundedValue: 0.0
+        - query: FROM Metric SELECT max(k8s.container.cpuCfsPeriodsDelta) AS 'CPU Periods Delta' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-windows-server%' AND k8s.containerName = 'compute-pi-digits'
+          expected_results:
+            - key: "CPU Periods Delta"
+              lowerBoundedValue: 0.0
+        - query: FROM Metric SELECT max(k8s.container.memoryWorkingSetBytes) AS 'Memory usage (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-windows-server%' AND k8s.containerName = 'compute-pi-digits'
+          expected_results:
+            - key: "Memory usage (bytes)"
+              lowerBoundedValue: 1.0
+        - query: FROM Metric SELECT max(k8s.container.memoryWorkingSetUtilization) / 100 AS 'Memory utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-windows-server%' AND k8s.containerName = 'compute-pi-digits'
+          expected_results:
+            - key: "Memory utilization (%)"
+              lowerBoundedValue: 0.01
+        - query: FROM Metric SELECT max(k8s.container.fsUsedBytes) AS 'Filesystem used (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-windows-server%' AND k8s.containerName = 'compute-pi-digits'
+          expected_results:
+            - key: "Filesystem used (bytes)"
+              lowerBoundedValue: 1.0
+        - query: FROM Metric SELECT max(k8s.container.fsUsedPercent) / 100 AS 'Filesystem Utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-windows-server%' AND k8s.containerName = 'compute-pi-digits'
+          expected_results:
+            - key: "Filesystem Utilization (%)"
+              lowerBoundedValue: 0.0000001
+        - query: FROM Metric SELECT max(k8s.container.restartCountDelta) AS 'Container restarts' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-windows-server' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-windows-server%' AND k8s.containerName = 'compute-pi-digits'
+          expected_results:
+            - key: "Container restarts"
+              value: 0.0
+#        END Windows
 #        START DaemonSet
         - query: FROM Metric SELECT latest(k8s.daemonset.podsAvailable) AS 'Pods Available' WHERE metricName = 'k8s.daemonset.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.daemonsetName = '${SCENARIO_TAG}-resources-daemonset'
           expected_results:

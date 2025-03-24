@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: windows-server-2019
+  name: {{ .Release.Name }}-windows-server-2019
   labels:
     app: windows-server-2019
 spec:
@@ -18,11 +18,11 @@ template:
     nodeSelector:
       kubernetes.io/os: windows
       cloud.google.com/gke-windows-os-version: '2019'
-    tolerations: 
-      - key: "os"
-        operator: "Equal"
-        value: "windows"
-        effect: "NoSchedule"
+    tolerations:
+    - key: "os"
+      operator: "Equal"
+      value: "windows"
+      effect: "NoSchedule"
     containers:
       - name: windows-server-2019
         image: mcr.microsoft.com/windows/servercore:ltsc2019
@@ -47,7 +47,7 @@ template:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: windows-server-2022
+  name: {{ .Release.Name }}-windows-server-2022
   labels:
       app: windows-server-2022
 spec:
