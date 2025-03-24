@@ -72,3 +72,5 @@ require (
 
 // To avoid CVE-2022-27191 triggering a security scan
 replace golang.org/x/crypto => golang.org/x/crypto v0.36.0
+
+replace github.com/newrelic/newrelic-integration-e2e-action => /Users/kondracek/github/k8s/public/newrelic-integration-e2e-action
