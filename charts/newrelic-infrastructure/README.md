@@ -204,9 +204,9 @@ integrations that you have configured.
   - `brew install yamllint`
   - `helm plugin install https://github.com/helm-unittest/helm-unittest`
 - Run linter and yaml validation
-  - `ct lint-and-install`
+  - `ct lint-and-install` from this folder
 - Run unit tests: 
-  - `helm unittest charts/newrelic-logging`
+  - `helm unittest .`
 
 ## Maintainers
 
