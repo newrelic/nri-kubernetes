@@ -11,7 +11,7 @@ tests:
           interval: 41s
     asserts:
       - failedTemplate:
-          errorPattern: "Intervals larger than \\d+s are not supported"
+          errorMessage: "raw: Intervals larger than 40s are not supported"
   - it: Fails to render with small intervals
     set:
       licenseKey: test
@@ -21,7 +21,7 @@ tests:
           interval: 1s
     asserts:
       - failedTemplate:
-          errorPattern: "Intervals smaller than \\d+s are not supported"
+          errorMessage: "raw: Intervals smaller than 10s are not supported"
   - it: Non-seconds intervals are rejected
     set:
       licenseKey: test
@@ -31,4 +31,4 @@ tests:
           interval: 1m
     asserts:
       - failedTemplate:
-          errorPattern: "Interval must be between \\d+s and \\d+s"
+          errorMessage: "raw: Interval must be between 10s and 40s"
