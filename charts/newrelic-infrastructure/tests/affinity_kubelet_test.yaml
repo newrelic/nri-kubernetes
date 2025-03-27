@@ -8,15 +8,16 @@ templates:
   - templates/agent-configmap.yaml
   - templates/secret.yaml
 tests:
-  - it: affinity has defaults
+  - it: affinity has defaults of blank
     set:
       licenseKey: test
       cluster: test
+      enableWindows: true
     asserts:
-      - isNull:
+      - notExists:
           path: spec.template.spec.affinity
         template: templates/kubelet/daemonset.yaml
-      - isNull:
+      - notExists:
           path: spec.template.spec.affinity
         template: templates/kubelet/daemonset-windows.yaml
 
