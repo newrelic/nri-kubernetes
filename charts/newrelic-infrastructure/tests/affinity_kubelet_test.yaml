@@ -14,10 +14,10 @@ tests:
       cluster: test
       enableWindows: true
     asserts:
-      - notExists:
+      - isNull:
           path: spec.template.spec.affinity
         template: templates/kubelet/daemonset.yaml
-      - notExists:
+      - isNull:
           path: spec.template.spec.affinity
         template: templates/kubelet/daemonset-windows.yaml
 
