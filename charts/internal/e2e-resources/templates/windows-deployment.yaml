@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: windows-server-2019
+  name: {{ .Release.Name }}-windows-server-2019
   labels:
     app: windows-server-2019
 spec:
@@ -17,18 +17,22 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/os: windows
-        cloud.google.com/gke-windows-os-version: '2019'
+        node.kubernetes.io/windows-build: 10.0.17763
       tolerations:
         - key: "os"
           operator: "Equal"
           value: "windows"
+          effect: "NoSchedule"
+        - key: "windows-build"
+          operator: "Equal"
+          value: "10.0.17763"
           effect: "NoSchedule"
       containers:
         - name: windows-server-2019
           image: mcr.microsoft.com/windows/servercore:ltsc2019
           resources:
             requests:
-                cpu: "1"
+                cpu: "1" 
                 memory: "300Mi"
             limits:
                 cpu: "2"
@@ -47,7 +51,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: windows-server-2022
+  name: {{ .Release.Name }}-windows-server-2022
   labels:
       app: windows-server-2022
 spec:
@@ -62,12 +66,16 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/os: windows
-        cloud.google.com/gke-windows-os-version: '2022'
+        node.kubernetes.io/windows-build: 10.0.20348
       tolerations:
-          - key: "os"
-            operator: "Equal"
-            value: "windows"
-            effect: "NoSchedule"
+        - key: "os"
+          operator: "Equal"
+          value: "windows"
+          effect: "NoSchedule"
+        - key: "windows-build"
+          operator: "Equal"
+          value: "10.0.20348"
+          effect: "NoSchedule"
       containers:
         - name: windows-server-2022
           image: mcr.microsoft.com/windows/servercore:ltsc2022

@@ -1,6 +1,7 @@
 suite: test tolerations for kubelet
 templates:
   - templates/kubelet/daemonset.yaml
+  - templates/kubelet/daemonset-windows.yaml
   - templates/kubelet/scraper-configmap.yaml
   - templates/kubelet/agent-configmap.yaml
   - templates/kubelet/integrations-configmap.yaml
@@ -9,6 +10,7 @@ templates:
 tests:
   - it: kubelet tolerations uses its defaults with everything null/empty
     set:
+      enableWindows: true
       licenseKey: test
       cluster: test
       global: {}
@@ -23,9 +25,18 @@ tests:
               effect: "NoSchedule"
             - operator: "Exists"
               effect: "NoExecute"
+      - template: templates/kubelet/daemonset-windows.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - operator: "Exists"
+              effect: "NoSchedule"
+            - operator: "Exists"
+              effect: "NoExecute"
 
   - it: kubelet tolerations uses globals
     set:
+      enableWindows: true
       licenseKey: test
       cluster: test
       global.tolerations:
@@ -40,9 +51,16 @@ tests:
           value:
             - test: test
             - test2: test2
+      - template: templates/kubelet/daemonset-windows.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - test: test
+            - test2: test2
 
   - it: kubelet tolerations uses local tolerations
     set:
+      enableWindows: true
       licenseKey: test
       cluster: test
       global: {}
@@ -57,9 +75,16 @@ tests:
           value:
             - test: test
             - test2: test2
+      - template: templates/kubelet/daemonset-windows.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - test: test
+            - test2: test2
 
   - it: kubelet tolerations uses kubelet tolerations
     set:
+      enableWindows: true
       licenseKey: test
       cluster: test
       global: {}
@@ -74,9 +99,16 @@ tests:
           value:
             - test: test
             - test2: test2
+      - template: templates/kubelet/daemonset-windows.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - test: test
+            - test2: test2
 
   - it: kubelet global tolerations overridable by local
     set:
+      enableWindows: true
       licenseKey: test
       cluster: test
       global.tolerations:
@@ -93,9 +125,16 @@ tests:
           value:
             - local: local
             - local2: local2
+      - template: templates/kubelet/daemonset-windows.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - local: local
+            - local2: local2
 
   - it: kubelet global tolerations overridable by kubelet tolerations
     set:
+      enableWindows: true
       licenseKey: test
       cluster: test
       global.tolerations:
@@ -112,9 +151,16 @@ tests:
           value:
             - kubelet: kubelet
             - kubelet2: kubelet2
+      - template: templates/kubelet/daemonset-windows.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - kubelet: kubelet
+            - kubelet2: kubelet2
 
   - it: kubelet local tolerations overridable by kubelet tolerations
     set:
+      enableWindows: true
       licenseKey: test
       cluster: test
       global.tolerations: []
@@ -131,9 +177,16 @@ tests:
           value:
             - kubelet: kubelet
             - kubelet2: kubelet2
+      - template: templates/kubelet/daemonset-windows.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - kubelet: kubelet
+            - kubelet2: kubelet2
 
   - it: With every toleration, kubelet gets precedence
     set:
+      enableWindows: true
       licenseKey: test
       cluster: test
       global.tolerations: []
@@ -145,6 +198,12 @@ tests:
         - kubelet2: kubelet2
     asserts:
       - template: templates/kubelet/daemonset.yaml
+        equal:
+          path: spec.template.spec.tolerations
+          value:
+            - kubelet: kubelet
+            - kubelet2: kubelet2
+      - template: templates/kubelet/daemonset-windows.yaml
         equal:
           path: spec.template.spec.tolerations
           value:
