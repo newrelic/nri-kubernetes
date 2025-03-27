@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### 🚀 Enhancements
 - Add options for Windows server 2019 and Windows server 2022 deployments in E2E-resources @TmNguyen12 [#1149](https://github.com/newrelic/nri-kubernetes/pull/1149)
-- Add Windows Helm templates and unit tests for kubelet support @TmNguyen12 [#1176] (https://github.com/newrelic/nri-kubernetes/pull/1176)
+- Add Windows Helm templates and unit tests for kubelet support @TmNguyen12 [#1176](https://github.com/newrelic/nri-kubernetes/pull/1176)
 
 ## v3.33.3 - 2025-02-17
 

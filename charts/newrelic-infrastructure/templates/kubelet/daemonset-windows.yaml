@@ -223,7 +223,7 @@ spec:
       {{- end }}
       nodeSelector:
         {{- if $.Values.kubelet.windowsNodeSelector }}
-{{ toYaml $.Values.kubelet.windowsNodeSelector | indent 8 }}
+{{- toYaml $.Values.kubelet.windowsNodeSelector | indent 8 }}
         {{- else }}
         kubernetes.io/os: windows
         # Windows containers can only be deployed on hosts with the same Windows version
