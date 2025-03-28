@@ -1,0 +1,56 @@
+{{- if .Values.windows.is2019 }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: windows-statefulset-2019
+  labels:
+    app: windows-statefulset-2019
+spec:
+  selector:
+    app: windows-statefulset-2019
+  ports:
+    - port: 8090
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: windows-statefulset-2019
+spec:
+  serviceName: windows-statefulset-2019
+  replicas: 1
+  selector:
+    matchLabels:
+      app: windows-statefulset-2019
+  template:
+    metadata:
+      labels:
+        app: windows-statefulset-2019
+    spec:
+      nodeSelector:
+        kubernetes.io/os: windows
+        cloud.google.com/gke-windows-os-version: '2019'
+      tolerations:
+        - key: "os"
+          operator: "Equal"
+          value: "windows"
+          effect: "NoSchedule"
+      containers:
+        - name: windows-statefulset-2019
+          image: mcr.microsoft.com/windows/servercore:ltsc2019
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 250m
+              memory: 100Mi
+            limits:
+              cpu: 500m
+              memory: 200Mi
+          command:
+            - powershell
+            - " -Command"
+            - |
+              while ($true) {
+                Write-Host "Random Text: $(Get-Random)";
+                Start-Sleep -Seconds 3600;
+              }
+{{- end }}
