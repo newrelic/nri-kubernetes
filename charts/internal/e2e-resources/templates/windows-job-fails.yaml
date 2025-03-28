@@ -1,0 +1,77 @@
+{{- if and .Values.failingJob.enabled .Values.windows.is2019 }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2019" .}}-failjob
+spec:
+  activeDeadlineSeconds: 200
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        app: failjob-w-2019
+    spec:
+      nodeSelector:
+        kubernetes.io/os: windows
+        node.kubernetes.io/windows-build: 10.0.17763
+      tolerations:
+        - key: "node.kubernetes.io/os"
+          operator: "Equal"
+          value: "windows"
+          effect: "NoSchedule"
+        - key: "node.kubernetes.io/windows-build"
+          operator: "Equal"
+          value: "10.0.17763"
+          effect: "NoSchedule"
+      restartPolicy: Never
+      containers:
+        - name: main
+          image: mcr.microsoft.com/windows/servercore:ltsc2019
+          command:
+            - powershell
+            - " -Command"
+            - |
+              Write-Host "Hello world! I'm going to exit with 42 to simulate a software bug."
+              exit 42
+  backoffLimit: 6
+{{- end }}
+---
+{{- if and .Values.failingJob.enabled .Values.windows.is2022 }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2022" .}}-failjob
+spec:
+  activeDeadlineSeconds: 200
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        app: failjob-w-2022
+    spec:
+      nodeSelector:
+        kubernetes.io/os: windows
+        node.kubernetes.io/windows-build: 10.0.20348
+      tolerations:
+        - key: "node.kubernetes.io/os"
+          operator: "Equal"
+          value: "windows"
+          effect: "NoSchedule"
+        - key: "node.kubernetes.io/windows-build"
+          operator: "Equal"
+          value: "10.0.20348"
+          effect: "NoSchedule"
+      restartPolicy: Never
+      containers:
+        - name: main
+          image: mcr.microsoft.com/windows/servercore:ltsc2022
+          command:
+            - powershell
+            - " -Command"
+            - |
+              Write-Host "Hello world! I'm going to exit with 42 to simulate a software bug."
+              exit 42
+  backoffLimit: 6
+{{- end }}

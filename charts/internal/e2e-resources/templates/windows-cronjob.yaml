@@ -1,0 +1,103 @@
+{{- if and .Values.cronjob.enabled .Values.windows.is2019}}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2019" .}}-cronjob
+spec:
+  concurrencyPolicy: Allow
+  schedule: "* * * * *"
+  suspend: false
+  startingDeadlineSeconds: 200
+  jobTemplate:
+    spec:
+      parallelism: 1
+      completions: 1
+      activeDeadlineSeconds: 540
+      backoffLimit: 6
+      template:
+        metadata:
+          labels:
+            app: cronjob-w-2019
+        spec:
+          nodeSelector:
+            kubernetes.io/os: windows
+            node.kubernetes.io/windows-build: 10.0.17763
+          tolerations:
+            - key: "node.kubernetes.io/os"
+              operator: "Equal"
+              value: "windows"
+              effect: "NoSchedule"
+            - key: "node.kubernetes.io/windows-build"
+              operator: "Equal"
+              value: "10.0.17763"
+              effect: "NoSchedule"
+          restartPolicy: OnFailure
+          containers:
+          - name: random-text
+            image: mcr.microsoft.com/windows/servercore:ltsc2019
+            imagePullPolicy: IfNotPresent
+            resources:
+              requests:
+                cpu: "250m"
+                memory: "100Mi"
+              limits:
+                cpu: "500m"
+                memory: "200Mi"
+            command:
+            - powershell
+            - " -Command"
+            - |
+              Write-Host "Random Text: $(Get-Random)";
+{{- end }}
+---
+{{- if and .Values.cronjob.enabled .Values.windows.is2022}}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2022" .}}-cronjob
+spec:
+  concurrencyPolicy: Allow
+  schedule: "* * * * *"
+  suspend: false
+  startingDeadlineSeconds: 200
+  jobTemplate:
+    spec:
+      parallelism: 1
+      completions: 1
+      activeDeadlineSeconds: 540
+      backoffLimit: 6
+      template:
+        metadata:
+          labels:
+            app: cronjob-w-2022
+        spec:
+          nodeSelector:
+            kubernetes.io/os: windows
+            node.kubernetes.io/windows-build: 10.0.20348
+          tolerations:
+            - key: "node.kubernetes.io/os"
+              operator: "Equal"
+              value: "windows"
+              effect: "NoSchedule"
+            - key: "node.kubernetes.io/windows-build"
+              operator: "Equal"
+              value: "10.0.20348"
+              effect: "NoSchedule"
+          restartPolicy: OnFailure
+          containers:
+            - name: random-text
+              image: mcr.microsoft.com/windows/servercore:ltsc2022
+              imagePullPolicy: IfNotPresent
+              resources:
+                requests:
+                  cpu: "250m"
+                  memory: "100Mi"
+                limits:
+                  cpu: "500m"
+                  memory: "200Mi"
+              command:
+                - powershell
+                - " -Command"
+                - |
+                  Write-Host "Random Text: $(Get-Random)";
+{{- end }}
