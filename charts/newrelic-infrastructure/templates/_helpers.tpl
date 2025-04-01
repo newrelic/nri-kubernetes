@@ -117,11 +117,11 @@ readOnlyRootFilesystem: true
 {{- toYaml $finalSecurityContext -}}
 {{- end -}}
 
-{{- define "windowsIntegrationImage" -}}
+{{- define "nriKubernetes.windowsIntegrationImage" -}}
   {{ include "newrelic.common.images.image" ( dict "imageRoot" $.Values.images.integration "context" $ "imageTagSuffix" .imageTagSuffix) }}
 {{- end}}
 
 
-{{- define "windowsAgentImage" -}}
+{{- define "nriKubernetes.windowsInfraAgentImage" -}}
   {{ include "newrelic.common.images.image" ( dict "imageRoot" $.Values.images.agent "context" $ "imageTagSuffix" .imageTagSuffix) }}
 {{- end}}

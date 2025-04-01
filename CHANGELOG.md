@@ -7,12 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### 🚀 Enhancements
+### enhancements
 - Add options for Windows server 2019 and Windows server 2022 deployments in E2E-resources @TmNguyen12 [#1149](https://github.com/newrelic/nri-kubernetes/pull/1149)
 - Add Windows Helm templates and unit tests for kubelet support @TmNguyen12 [#1176](https://github.com/newrelic/nri-kubernetes/pull/1176)
+- Added support for last terminated exit code in metrics @danielstokes [#1173](https://github.com/newrelic/nri-kubernetes/pull/1173)
 
 ## v3.35.1 - 2025-03-24
-- Added support for last terminated exit code in metrics @danielstokes [#1173](https://github.com/newrelic/nri-kubernetes/pull/1173)
 
 ### ⛓️ Dependencies
 - Updated github.com/spf13/viper to v1.20.0 - [Changelog 🔗](https://github.com/spf13/viper/releases/tag/v1.20.0)

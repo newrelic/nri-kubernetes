@@ -58,7 +58,7 @@ spec:
       {{- end }}
       containers:
         - name: kubelet
-          image: {{ .integrationImage | default (include "windowsIntegrationImage" $) }}
+          image: {{ .integrationImage | default (include "nriKubernetes.windowsIntegrationImage" $) }}
           imagePullPolicy: {{ $.Values.images.integration.pullPolicy }}
           securityContext:
             windowsOptions:
@@ -100,7 +100,7 @@ spec:
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
         - name: agent
-          image: {{ .agentImage | default (include "windowsAgentImage" $)}}
+          image: {{ .agentImage | default (include "nriKubernetes.windowsInfraAgentImage" $)}}
           args: [ "newrelic-infra" ]
           imagePullPolicy: {{ $.Values.images.agent.pullPolicy }}
           securityContext:
@@ -223,7 +223,7 @@ spec:
       {{- end }}
       nodeSelector:
         {{- if $.Values.kubelet.windowsNodeSelector }}
-          {{- toYaml $.Values.kubelet.windowsNodeSelector | nindent 8 }}
+{{ toYaml $.Values.kubelet.windowsNodeSelector | indent 8 }}
         {{- else }}
         kubernetes.io/os: windows
         # Windows containers can only be deployed on hosts with the same Windows version

@@ -4,10 +4,8 @@ kind: PodSecurityPolicy
 metadata:
   name: privileged-{{ include "newrelic.common.naming.fullname" . }}
 spec:
-{{- if not .Values.enableWindows }}
   allowedCapabilities:
   - '*'
-{{- end }}
   fsGroup:
     rule: RunAsAny
   privileged: true
