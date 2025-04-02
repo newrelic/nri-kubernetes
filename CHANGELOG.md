@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.37.0 - 2025-04-??
+
+### 🚀 Enhancements
+- Converted `lastTerminatedFinishedAt` to `int64` Unix timestamp in `pods.go` @sadafarshad [#1191](https://github.com/newrelic/nri-kubernetes/pull/1191)
+
 ## v3.36.0 - 2025-03-31
 
 ### 🚀 Enhancements
