@@ -48,10 +48,6 @@ spec:
       priorityClassName: {{ $ }}
       {{- end }}
       serviceAccountName: {{ include "newrelic.common.serviceAccount.name" $ }}
-      hostNetwork: {{ include "nriKubernetes.kubelet.hostNetwork.value" $ }}
-      {{- if include "nriKubernetes.kubelet.hostNetwork" $ }}
-      dnsPolicy: ClusterFirstWithHostNet
-      {{- end }}
 
       {{- if $.Values.kubelet.initContainers }}
       initContainers: {{- tpl ($.Values.kubelet.initContainers | toYaml) $ | nindent 8 }}
@@ -157,7 +153,7 @@ spec:
             - name: "NRIA_PASSTHROUGH_ENVIRONMENT"
               value: "CLUSTER_NAME"
 
-            {{- /* Needed for autodiscovery since hostNetwork=false */}}
+            {{- /* Needed for autodiscovery since hostNetwork=false, windows containers do not support Hostnetwork without a HostProcess container */}}
             - name: "NRIA_HOST"
               valueFrom:
                 fieldRef:
