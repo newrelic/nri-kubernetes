@@ -1,0 +1,160 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Node
+  metadata:
+    annotations:
+      kubeadm.alpha.kubernetes.io/cri-socket: unix:///run/containerd/containerd.sock
+      node.alpha.kubernetes.io/ttl: "0"
+      volumes.kubernetes.io/controller-managed-attach-detach: "true"
+    creationTimestamp: "2025-04-03T18:11:25Z"
+    labels:
+      beta.kubernetes.io/arch: arm64
+      beta.kubernetes.io/os: linux
+      kubernetes.io/arch: arm64
+      kubernetes.io/hostname: datagen-1-28
+      kubernetes.io/os: linux
+      minikube.k8s.io/commit: dd5d320e41b5451cdf3c01891bc4e13d189586ed
+      minikube.k8s.io/name: datagen-1-28
+      minikube.k8s.io/primary: "true"
+      minikube.k8s.io/updated_at: 2025_04_03T11_11_28_0700
+      minikube.k8s.io/version: v1.35.0
+      node-role.kubernetes.io/control-plane: ""
+      node.kubernetes.io/exclude-from-external-load-balancers: ""
+    name: datagen-1-28
+    resourceVersion: "868"
+    uid: ad45368a-8885-41d6-ae18-4f77aef7ab47
+  spec:
+    podCIDR: 10.244.0.0/24
+    podCIDRs:
+    - 10.244.0.0/24
+  status:
+    addresses:
+    - address: 192.168.49.2
+      type: InternalIP
+    - address: datagen-1-28
+      type: Hostname
+    allocatable:
+      cpu: "5"
+      ephemeral-storage: 61202244Ki
+      hugepages-1Gi: "0"
+      hugepages-2Mi: "0"
+      hugepages-32Mi: "0"
+      hugepages-64Ki: "0"
+      memory: 8039872Ki
+      pods: "110"
+    capacity:
+      cpu: "5"
+      ephemeral-storage: 61202244Ki
+      hugepages-1Gi: "0"
+      hugepages-2Mi: "0"
+      hugepages-32Mi: "0"
+      hugepages-64Ki: "0"
+      memory: 8039872Ki
+      pods: "110"
+    conditions:
+    - lastHeartbeatTime: "2025-04-03T18:14:32Z"
+      lastTransitionTime: "2025-04-03T18:11:25Z"
+      message: kubelet has sufficient memory available
+      reason: KubeletHasSufficientMemory
+      status: "False"
+      type: MemoryPressure
+    - lastHeartbeatTime: "2025-04-03T18:14:32Z"
+      lastTransitionTime: "2025-04-03T18:11:25Z"
+      message: kubelet has no disk pressure
+      reason: KubeletHasNoDiskPressure
+      status: "False"
+      type: DiskPressure
+    - lastHeartbeatTime: "2025-04-03T18:14:32Z"
+      lastTransitionTime: "2025-04-03T18:11:25Z"
+      message: kubelet has sufficient PID available
+      reason: KubeletHasSufficientPID
+      status: "False"
+      type: PIDPressure
+    - lastHeartbeatTime: "2025-04-03T18:14:32Z"
+      lastTransitionTime: "2025-04-03T18:11:26Z"
+      message: kubelet is posting ready status
+      reason: KubeletReady
+      status: "True"
+      type: Ready
+    daemonEndpoints:
+      kubeletEndpoint:
+        Port: 10250
+    images:
+    - names:
+      - docker.io/library/perl@sha256:2584f46a92d1042b25320131219e5832c5b3e75086dfaaff33e4fda7a9f47d99
+      - docker.io/library/perl:5.34.0
+      sizeBytes: 327591300
+    - names:
+      - registry.k8s.io/hpa-example@sha256:581697a37f0e136db86d6b30392f0db40ce99c8248a7044c770012f4e8491544
+      - registry.k8s.io/hpa-example:latest
+      sizeBytes: 164030864
+    - names:
+      - registry.k8s.io/etcd@sha256:e013d0d5e4e25d00c61a7ff839927a1f36479678f11e49502b53a5e0b14f10c3
+      - registry.k8s.io/etcd:3.5.9-0
+      sizeBytes: 86464836
+    - names:
+      - docker.io/kindest/kindnetd@sha256:e35e1050b69dcd16eb021c3bf915bdd9a591d4274108ac374bd941043673c108
+      - docker.io/kindest/kindnetd:v20241108-5c6d2daf
+      sizeBytes: 35310383
+    - names:
+      - registry.k8s.io/kube-apiserver@sha256:8db46adefb0f251da210504e2ce268c36a5a7c630667418ea4601f63c9057a2d
+      - registry.k8s.io/kube-apiserver:v1.28.3
+      sizeBytes: 31557550
+    - names:
+      - registry.k8s.io/kube-controller-manager@sha256:640661231facded984f698e79315bceb5391b04e5159662e940e6e5ab2098707
+      - registry.k8s.io/kube-controller-manager:v1.28.3
+      sizeBytes: 30344361
+    - names:
+      - docker.io/kindest/kindnetd@sha256:4a58d1cd2b45bf2460762a51a4aa9c80861f460af35800c05baab0573f923052
+      - docker.io/kindest/kindnetd:v20230809-80a64d96
+      sizeBytes: 25324029
+    - names:
+      - registry.k8s.io/kube-proxy@sha256:73a9f275e1fa5f0b9ae744914764847c2c4fdc66e9e528d67dea70007f9a6072
+      - registry.k8s.io/kube-proxy:v1.28.3
+      sizeBytes: 21981421
+    - names:
+      - registry.k8s.io/metrics-server/metrics-server@sha256:ffcb2bf004d6aa0a17d90e0247cf94f2865c8901dcab4427034c341951c239f9
+      sizeBytes: 17862852
+    - names:
+      - registry.k8s.io/kube-scheduler@sha256:2cfaab2fe5e5937bc37f3d05f3eb7a4912a981ab8375f1d9c2c3190b259d1725
+      - registry.k8s.io/kube-scheduler:v1.28.3
+      sizeBytes: 17063462
+    - names:
+      - registry.k8s.io/coredns/coredns@sha256:a0ead06651cf580044aeb0a0feba63591858fb2e43ade8c9dea45a6a89ae7e5e
+      - registry.k8s.io/coredns/coredns:v1.10.1
+      sizeBytes: 14557471
+    - names:
+      - registry.k8s.io/kube-state-metrics/kube-state-metrics@sha256:ec5d6f6be2280212da0e55572b67d76f29c0342b3b6d24cc47b32d80ee3374a4
+      - registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.10.0
+      sizeBytes: 12157803
+    - names:
+      - gcr.io/k8s-minikube/storage-provisioner@sha256:18eb69d1418e854ad5a19e399310e52808a8321e4c441c1dddad8977a0d7a944
+      - gcr.io/k8s-minikube/storage-provisioner:v5
+      sizeBytes: 8034419
+    - names:
+      - docker.io/library/bash@sha256:64defcbc5126c2d81122b4fb78a629a6d27068f0842c4a8302b8273415b12e30
+      - docker.io/library/bash:5
+      sizeBytes: 6803529
+    - names:
+      - docker.io/library/alpine@sha256:a8560b36e8b8210634f77d9f7f9efd7ffa463e380b75e2e74aff4511df3ef88c
+      - docker.io/library/alpine:latest
+      sizeBytes: 4003869
+    - names:
+      - registry.k8s.io/pause@sha256:7031c1b283388d2c2e09b57badb803c05ebed362dc88d84b480cc47f72a21097
+      - registry.k8s.io/pause:3.9
+      sizeBytes: 268051
+    nodeInfo:
+      architecture: arm64
+      bootID: 1de6a6d4-5904-4a3b-b8c4-10969b0ba5ca
+      containerRuntimeVersion: containerd://1.7.24
+      kernelVersion: 5.15.49-linuxkit-pr
+      kubeProxyVersion: v1.28.3
+      kubeletVersion: v1.28.3
+      machineID: f07278592f6a4592aa603ea08933e952
+      operatingSystem: linux
+      osImage: Ubuntu 22.04.5 LTS
+      systemUUID: f07278592f6a4592aa603ea08933e952
+kind: List
+metadata:
+  resourceVersion: ""
