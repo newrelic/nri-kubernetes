@@ -7,9 +7,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
+    "github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 
+    "github.com/newrelic/nri-kubernetes/v3/internal/logutil"
 	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 	"github.com/newrelic/nri-kubernetes/v3/src/kubelet/metric/testdata"
 )
@@ -51,7 +52,10 @@ func TestFetchFunc(t *testing.T) {
 	g, err := f.DoPodsFetch()
 
 	assert.NoError(t, err)
-	assert.Equal(t, testdata.ExpectedRawData, g)
+
+    if diff := cmp.Diff(testdata.ExpectedRawData, g); diff != "" {
+           t.Errorf("unexpected difference: %s", diff)
+    }
 }
 
 func TestNewPodsFetchFunc_StatusNoOK(t *testing.T) {
