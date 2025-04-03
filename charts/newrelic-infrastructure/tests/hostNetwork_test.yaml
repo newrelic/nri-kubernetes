@@ -32,10 +32,6 @@ tests:
           path: spec.template.spec.hostNetwork
           value: false
         template: templates/kubelet/daemonset.yaml
-      - equal:
-          path: spec.template.spec.hostNetwork
-          value: false
-        template: templates/kubelet/daemonset-windows.yaml
 
   - it: hostNetwork is false if nothing is set
     set:
@@ -58,10 +54,6 @@ tests:
           path: spec.template.spec.hostNetwork
           value: false
         template: templates/kubelet/daemonset.yaml
-      - equal:
-          path: spec.template.spec.hostNetwork
-          value: false
-        template: templates/kubelet/daemonset-windows.yaml
 
   - it: hostNetwork is set by the common library
     set:
@@ -84,10 +76,6 @@ tests:
           path: spec.template.spec.hostNetwork
           value: true
         template: templates/kubelet/daemonset.yaml
-      - equal:
-          path: spec.template.spec.hostNetwork
-          value: true
-        template: templates/kubelet/daemonset-windows.yaml
 
   - it: controlPlane hostNetwork is overridable to true
     set:
@@ -110,10 +98,6 @@ tests:
           path: spec.template.spec.hostNetwork
           value: false
         template: templates/kubelet/daemonset.yaml
-      - equal:
-          path: spec.template.spec.hostNetwork
-          value: false
-        template: templates/kubelet/daemonset-windows.yaml
 
   - it: controlPlane hostNetwork is overridable to false
     set:
@@ -136,10 +120,6 @@ tests:
           path: spec.template.spec.hostNetwork
           value: true
         template: templates/kubelet/daemonset.yaml
-      - equal:
-          path: spec.template.spec.hostNetwork
-          value: true
-        template: templates/kubelet/daemonset-windows.yaml
 
   - it: ksm hostNetwork is overridable to true
     set:
@@ -162,10 +142,6 @@ tests:
           path: spec.template.spec.hostNetwork
           value: false
         template: templates/kubelet/daemonset.yaml
-      - equal:
-          path: spec.template.spec.hostNetwork
-          value: false
-        template: templates/kubelet/daemonset-windows.yaml
 
   - it: ksm hostNetwork is overridable to false
     set:
@@ -188,10 +164,6 @@ tests:
           path: spec.template.spec.hostNetwork
           value: true
         template: templates/kubelet/daemonset.yaml
-      - equal:
-          path: spec.template.spec.hostNetwork
-          value: true
-        template: templates/kubelet/daemonset-windows.yaml
 
   - it: kubelet hostNetwork is overridable to true
     set:
@@ -214,10 +186,6 @@ tests:
           path: spec.template.spec.hostNetwork
           value: true
         template: templates/kubelet/daemonset.yaml
-      - equal:
-          path: spec.template.spec.hostNetwork
-          value: true
-        template: templates/kubelet/daemonset-windows.yaml
 
   - it: kubelet hostNetwork is overridable to false
     set:
@@ -240,7 +208,3 @@ tests:
           path: spec.template.spec.hostNetwork
           value: false
         template: templates/kubelet/daemonset.yaml
-      - equal:
-          path: spec.template.spec.hostNetwork
-          value: false
-        template: templates/kubelet/daemonset-windows.yaml
