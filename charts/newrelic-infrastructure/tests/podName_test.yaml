@@ -4,6 +4,7 @@ templates:
   - templates/controlplane/scraper-configmap.yaml
   - templates/controlplane/agent-configmap.yaml
   - templates/kubelet/daemonset.yaml
+  - templates/kubelet/daemonset-windows.yaml
   - templates/kubelet/scraper-configmap.yaml
   - templates/kubelet/agent-configmap.yaml
   - templates/kubelet/integrations-configmap.yaml
@@ -15,6 +16,7 @@ templates:
 tests:
   - it: name is created as expected
     set:
+      enableWindows: true
       licenseKey: test
       cluster: test
     asserts:
@@ -30,6 +32,17 @@ tests:
           path: metadata.name
           value: RELEASE-NAME-nrk8s-kubelet
         template: templates/kubelet/daemonset.yaml
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-nrk8s-kubelet-windows-ltsc-2019
+        documentIndex: 0
+        template: templates/kubelet/daemonset-windows.yaml
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-nrk8s-kubelet-windows-ltsc-2022
+        documentIndex: 1
+        template: templates/kubelet/daemonset-windows.yaml
+      
   - it: name is overridden as expected
     set:
       licenseKey: test
