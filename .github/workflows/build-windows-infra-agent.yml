@@ -6,11 +6,36 @@ on:
       - windows/**
     paths:
       - 'charts/newrelic-infrastructure/values.yaml'
-  workflow_dispatch:
 
 jobs:
+  check-version-change:
+    runs-on: ubuntu-latest
+    outputs:
+      version_changed: ${{ steps.version-check.outputs.version_changed }}
+      new_agent_version: ${{ steps.version-check.outputs.new_agent_version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for version change
+        id: version-check
+        run: |
+          OLD_VERSION=$(git show ${{ github.event.before }}:charts/newrelic-infrastructure/values.yaml | yq '.windowsAgent.tag')
+          NEW_VERSION=$(yq '.windowsAgent.tag' charts/newrelic-infrastructure/values.yaml)
+          
+          echo "Old version: $OLD_VERSION"
+          echo "New version: $NEW_VERSION"
+
+          if [ "$OLD_VERSION" != "$NEW_VERSION" ]; then
+            echo "version_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "version_changed=false" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "new_agent_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
   build:
     name: Build integration for
+    needs: check-version-change
+    if: needs.check-version-change.outputs.version_changed == 'true'
     strategy:
       fail-fast: true
       matrix:
@@ -25,9 +50,8 @@ jobs:
           - runner: windows-2022
             tag: ltsc2022
     runs-on: ${{ matrix.windows.runner }}
-    if: contains(github.event.pull_request.title, 'update newrelic/infrastructure-agent')
     env:
-      AGENT_VERSION: ${{ fromJson(github.event.pull_request.body).windowsAgent.tag }}
+      AGENT_VERSION: ${{ needs.check-version-change.outputs.new_agent_version }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
