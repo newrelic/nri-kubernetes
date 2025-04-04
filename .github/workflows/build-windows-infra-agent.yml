@@ -51,7 +51,7 @@ jobs:
 
           Invoke-WebRequest https://download.newrelic.com/infrastructure_agent/windows/newrelic-infra.${{ env.AGENT_VERSION }}.msi.sum `
             -OutFile newrelic-infra.${{ env.AGENT_VERSION }}.msi.sum
-          
+
           $msiChecksumAll = Get-Content -Path "newrelic-infra.${{ env.AGENT_VERSION }}.msi.sum"
           $msiChecksumFirst = $msiChecksumAll.Split(" ")[0]
           echo "Checksum: $msiChecksumFirst"
