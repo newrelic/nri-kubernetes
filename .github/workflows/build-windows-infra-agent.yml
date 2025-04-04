@@ -4,8 +4,8 @@ on:
   pull_request:
     branches:
       - windowsImage*
-    paths:
-      - 'charts/newrelic-infrastructure/values.yaml'
+    # paths:
+    #   - 'charts/newrelic-infrastructure/values.yaml'
   workflow_dispatch:
 
 jobs:
@@ -42,7 +42,7 @@ jobs:
         shell: powershell
         run: |
           cd infrastructure-agent
-          echo ${{ env.$AGENT_VERSION }}
+          echo ${{ env.AGENT_VERSION }}
           echo "Building newrelic/infrastructure-windows:agent-${{ env.AGENT_VERSION }}-windows-${{ matrix.windows.tag }}-alpha-$Env:tag"
 
           # Download installer from https://download.newrelic.com/infrastructure_agent/windows/
