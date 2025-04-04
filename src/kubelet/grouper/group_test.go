@@ -14,6 +14,8 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/v3/src/kubelet/metric/testdata"
 	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
+
+	"github.com/google/go-cmp/cmp"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -115,7 +117,10 @@ func TestGroup(t *testing.T) {
 	r, errGroup := kubeletGrouper.Group(nil)
 
 	assert.Nil(t, errGroup)
-	assert.Equal(t, testdata.ExpectedGroupData, r)
+
+	if diff := cmp.Diff(testdata.ExpectedGroupData, r); diff != "" {
+           t.Errorf("unexpected difference: %s", diff)
+	}
 
 }
 
