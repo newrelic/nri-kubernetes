@@ -54,7 +54,7 @@ func TestFetchFunc(t *testing.T) {
 	assert.NoError(t, err)
 
 	if diff := cmp.Diff(testdata.ExpectedRawData, g); diff != "" {
-           t.Errorf("unexpected difference: %s", diff)
+		t.Errorf("unexpected difference: %s", diff)
 	}
 }
 
