@@ -75,3 +75,18 @@ LICENSE_KEY=${LICENSE_KEY} EXCEPTIONS_SOURCE_FILE=${EXCEPTIONS_SOURCE_FILE}  go 
 ```   
 
 You may check [e2e workflow](../.github/workflows/e2e.yaml) to have more details about how this is used in development workflow.
+
+### Running Windows tests
+Trying to run e2e tests for Windows nodes? Weird! Currently, you can run e2e tests for Windows nodes only locally. This is because we cannot test Windows nodes using Minikube or Kind, so we need to have our local kubeconfig pointing to an existing cluster in the cloud. Because of this, there are also several metrics associated with the control plane that you'll find are missing. These are accounted for in the special `*-windows.yaml` exception files. Here's how to run these e2e tests locally:
+- Switch your kubeconfig to a cluster that has Windows nodes in the cloud: `kubectx <your-cluster-name>`
+- Your env vars will look similar to the above, with the exception of the `EXCEPTIONS_SOURCE_FILE`: `export EXCEPTIONS_SOURCE_FILE=1_32-exceptions-windows.yaml`
+```shell
+- Run the following to execute tests:
+```shell
+LICENSE_KEY=${LICENSE_KEY} EXCEPTIONS_SOURCE_FILE=${EXCEPTIONS_SOURCE_FILE}  go run github.com/newrelic/newrelic-integration-e2e-action@latest \
+     --commit_sha=test-string --retry_attempts=5 --retry_seconds=60 \
+	 --account_id=${ACCOUNT_ID} --api_key=${API_KEY} --license_key=${LICENSE_KEY} \
+	 --spec_path=./e2e/test-specs-windows.yml --verbose_mode=true --agent_enabled="false" 
+```
+
+Automating the Windows tests is a work in progress, so stay tuned for more updates on this!
