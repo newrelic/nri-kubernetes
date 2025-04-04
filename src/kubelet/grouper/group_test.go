@@ -119,7 +119,7 @@ func TestGroup(t *testing.T) {
 	assert.Nil(t, errGroup)
 
 	if diff := cmp.Diff(testdata.ExpectedGroupData, r); diff != "" {
-           t.Errorf("unexpected difference: %s", diff)
+		t.Errorf("unexpected difference: %s", diff)
 	}
 
 }
@@ -129,9 +129,9 @@ func getNode() *v1.Node {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "minikube",
 			Labels: map[string]string{
-				"kubernetes.io/arch":             "amd64",
-				"kubernetes.io/hostname":         "minikube",
-				"kubernetes.io/os":               "linux",
+				"kubernetes.io/arch":                    "amd64",
+				"kubernetes.io/hostname":                "minikube",
+				"kubernetes.io/os":                      "linux",
 				"node-role.kubernetes.io/control-plane": "",
 			},
 		},
