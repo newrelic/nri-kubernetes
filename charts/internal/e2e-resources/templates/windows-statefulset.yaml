@@ -1,19 +1,30 @@
 {{- if and .Values.deployment.enabled .Values.windows.is2019 }}
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Service
 metadata:
-  name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2019" .}}
+  name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2019" .}}-ss
   labels:
-    app: windows-server-2019
+    app: windows-statefulset-2019
 spec:
+  selector:
+    app: windows-statefulset-2019
+  ports:
+    - port: 8090
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2019" .}}-ss
+spec:
+  serviceName: windows-statefulset-2019
   replicas: 1
   selector:
     matchLabels:
-      app: windows-server-2019
+      app: windows-statefulset-2019
   template:
     metadata:
       labels:
-        app: windows-server-2019
+        app: windows-statefulset-2019
     spec:
       nodeSelector:
         kubernetes.io/os: windows
@@ -28,8 +39,9 @@ spec:
           value: "10.0.17763"
           effect: "NoSchedule"
       containers:
-        - name: windows-server-2019
+        - name: windows-statefulset-2019
           image: mcr.microsoft.com/windows/servercore:ltsc2019
+          imagePullPolicy: IfNotPresent
           resources:
             requests:
               cpu: "250m"
@@ -48,21 +60,32 @@ spec:
 {{- end }}
 ---
 {{- if and .Values.deployment.enabled .Values.windows.is2022 }}
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Service
 metadata:
-  name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2022" .}}
+  name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2022" .}}-ss
   labels:
-      app: windows-server-2022
+    app: windows-statefulset-2022
 spec:
+  selector:
+    app: windows-statefulset-2022
+  ports:
+    - port: 8090
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2022" .}}-ss
+spec:
+  serviceName: windows-statefulset-2022
   replicas: 1
   selector:
     matchLabels:
-      app: windows-server-2022
+      app: windows-statefulset-2022
   template:
     metadata:
       labels:
-        app: windows-server-2022
+        app: windows-statefulset-2022
     spec:
       nodeSelector:
         kubernetes.io/os: windows
@@ -77,8 +100,9 @@ spec:
           value: "10.0.20348"
           effect: "NoSchedule"
       containers:
-        - name: windows-server-2022
+        - name: windows-statefulset-2022
           image: mcr.microsoft.com/windows/servercore:ltsc2022
+          imagePullPolicy: IfNotPresent
           resources:
             requests:
               cpu: "250m"
