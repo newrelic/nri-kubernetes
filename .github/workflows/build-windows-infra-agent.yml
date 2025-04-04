@@ -15,22 +15,17 @@ jobs:
       new_agent_version: ${{ steps.version-check.outputs.new_agent_version }}
     steps:
       - uses: actions/checkout@v4
-      - name: Check for version change
+      - name: Check if windowsAgent.tag was modified
         id: version-check
         run: |
-          OLD_VERSION=$(git show ${{ github.event.before }}:charts/newrelic-infrastructure/values.yaml | yq '.windowsAgent.tag')
-          NEW_VERSION=$(yq '.windowsAgent.tag' charts/newrelic-infrastructure/values.yaml)
-          
-          echo "Old version: $OLD_VERSION"
-          echo "New version: $NEW_VERSION"
-
-          if [ "$OLD_VERSION" != "$NEW_VERSION" ]; then
+          if git diff --name-only HEAD~1 HEAD | grep -q 'charts/newrelic-infrastructure/values.yaml'; then
+            NEW_VERSION=$(yq '.windowsAgent.tag' charts/newrelic-infrastructure/values.yaml)
+            echo "windowsAgent.tag was modified. New version: $NEW_VERSION"
             echo "version_changed=true" >> $GITHUB_OUTPUT
+            echo "new_agent_version=$NEW_VERSION" >> $GITHUB_OUTPUT
           else
+            echo "windowsAgent.tag was not modified."
             echo "version_changed=false" >> $GITHUB_OUTPUT
-          fi
-          
-          echo "new_agent_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
   build:
     name: Build integration for
