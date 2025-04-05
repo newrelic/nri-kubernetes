@@ -3,7 +3,7 @@ name: Build Windows Infrastructure Agent
 on:
   push:
     branches:
-      - windows/**
+      - main
     paths:
       - 'charts/newrelic-infrastructure/values.yaml'
 
@@ -16,22 +16,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
-      - name: Debug values.yaml
+          fetch-depth: 2 # Fetch the latest commit and its parent
+      - name: Debug latest commit
         run: |
-          echo "Contents of values.yaml:"
-          cat charts/newrelic-infrastructure/values.yaml
-      - name: Check if images.windowsAgent.tag was modified
+          echo "Inspecting the latest commit in main:"
+          git log -1
+          echo "Changes in the latest commit:"
+          git diff HEAD~1 HEAD -- charts/newrelic-infrastructure/values.yaml || echo "No changes in values.yaml"
+      - name: Check if latest commit modifies images.windowsAgent.tag
         id: version-check
         run: |
-          # Check if the specific key `images.windowsAgent.tag` was modified
           if git diff HEAD~1 HEAD -- charts/newrelic-infrastructure/values.yaml | grep -E '^\+.*images\.windowsAgent\.tag|^\-.*images\.windowsAgent\.tag'; then
             NEW_VERSION=$(yq '.images.windowsAgent.tag // "null"' charts/newrelic-infrastructure/values.yaml)
-            echo "images.windowsAgent.tag was modified. New version: $NEW_VERSION"
+            echo "images.windowsAgent.tag was modified in the latest commit. New version: $NEW_VERSION"
             echo "version_changed=true" >> $GITHUB_OUTPUT
             echo "new_agent_version=$NEW_VERSION" >> $GITHUB_OUTPUT
           else
-            echo "images.windowsAgent.tag was not modified."
+            echo "images.windowsAgent.tag was not modified in the latest commit."
             echo "version_changed=false" >> $GITHUB_OUTPUT
           fi
 
