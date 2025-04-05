@@ -25,7 +25,7 @@ jobs:
         id: version-check
         run: |
           # Check if the specific key `images.windowsAgent.tag` was modified
-          if git diff HEAD~1 HEAD -- charts/newrelic-infrastructure/values.yaml | grep -q 'images.windowsAgent.tag'; then
+          if git diff HEAD~1 HEAD -- charts/newrelic-infrastructure/values.yaml | grep -E '^\+.*images\.windowsAgent\.tag|^\-.*images\.windowsAgent\.tag'; then
             NEW_VERSION=$(yq '.images.windowsAgent.tag // "null"' charts/newrelic-infrastructure/values.yaml)
             echo "images.windowsAgent.tag was modified. New version: $NEW_VERSION"
             echo "version_changed=true" >> $GITHUB_OUTPUT
