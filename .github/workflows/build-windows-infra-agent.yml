@@ -17,16 +17,21 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
-      - name: Check if windowsAgent.tag was modified
+      - name: Debug values.yaml
+        run: |
+          echo "Contents of values.yaml:"
+          cat charts/newrelic-infrastructure/values.yaml
+      - name: Check if images.windowsAgent.tag was modified
         id: version-check
         run: |
-          if git diff --name-only HEAD~1 HEAD | grep -q 'charts/newrelic-infrastructure/values.yaml'; then
-            NEW_VERSION=$(yq '.windowsAgent.tag' charts/newrelic-infrastructure/values.yaml)
-            echo "windowsAgent.tag was modified. New version: $NEW_VERSION"
+          # Check if the specific key `images.windowsAgent.tag` was modified
+          if git diff HEAD~1 HEAD -- charts/newrelic-infrastructure/values.yaml | grep -q 'images.windowsAgent.tag'; then
+            NEW_VERSION=$(yq '.images.windowsAgent.tag // "null"' charts/newrelic-infrastructure/values.yaml)
+            echo "images.windowsAgent.tag was modified. New version: $NEW_VERSION"
             echo "version_changed=true" >> $GITHUB_OUTPUT
             echo "new_agent_version=$NEW_VERSION" >> $GITHUB_OUTPUT
           else
-            echo "windowsAgent.tag was not modified."
+            echo "images.windowsAgent.tag was not modified."
             echo "version_changed=false" >> $GITHUB_OUTPUT
           fi
 
