@@ -36,7 +36,7 @@ jobs:
             echo "WINDOW_AGENT_SECTION: $WINDOW_AGENT_SECTION"
 
             if echo "$WINDOW_AGENT_SECTION" | grep -E -q "^[+-][ ]+tag:"; then
-              TAG_NEW=$(echo "$WINDOW_AGENT_SECTION" | grep -E "^\+[ ]+tag:" | awk '{print $2}')
+              TAG_NEW=$(echo "$WINDOW_AGENT_SECTION" | grep -E "^\+[ ]+tag:" | sed 's/^\+[ ]*tag:[ ]*//')
               VERSION_CHANGED="true"
               echo "WindowsAgent tag was changed to $TAG_NEW"
             else
