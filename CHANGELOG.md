@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancements
+## v3.37.0 - 2025-04-07
+
+### 🚀 Enhancements
 - Add options for Windows server 2019 and Windows server 2022 deployments in E2E-resources @TmNguyen12 [#1149]
 - Converted `lastTerminatedTimestamp` to `int64` Unix timestamp @sadafarshad [#1198](https://github.com/newrelic/nri-kubernetes/pull/1198)
 
