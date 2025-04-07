@@ -26,27 +26,27 @@ jobs:
       - name: Check if latest commit modifies images.windowsAgent.tag
         id: version-check
         run: |
-          DIFF_OUTPUT=$(git diff HEAD~1 -- charts/newrelic-infrastructure/values.yaml)
-          TAG_OLD=""
+          DIFF_OUTPUT=$(git diff HEAD~1 HEAD -- charts/newrelic-infrastructure/values.yaml)
           TAG_NEW=""
           VERSION_CHANGED="false"
 
-          CHUNK=$(echo "$DIFF_OUTPUT" | awk '/images:/,/\}/' | awk '/windowsAgent:/,/^\s*[a-z]/')
+          if echo "$DIFF_OUTPUT" | grep -q "windowsAgent:"; then
 
-          if echo "$CHUNK" | grep -E "^[+-]\s+tag:" > /dev/null; then
-            TAG_NEW=$(echo "$CHUNK" | grep -E "^\+\s+tag:" | sed 's/^\+\s\+tag:\s\+//')
-            
-            # Set version changed flag to true
-            VERSION_CHANGED="true"
+            WINDOW_AGENT_SECTION=$(echo "$DIFF_OUTPUT" | sed -n '/windowsAgent:/,/pullPolicy:/p')
+            echo "WINDOW_AGENT_SECTION: $WINDOW_AGENT_SECTION"
 
-            echo "Tag was changed from to $TAG_NEW in windowsAgent section"
+            if echo "$WINDOW_AGENT_SECTION" | grep -E -q "^[+-][ ]+tag:"; then
+              TAG_NEW=$(echo "$WINDOW_AGENT_SECTION" | grep -E "^\+[ ]+tag:" | awk '{print $2}')
+              VERSION_CHANGED="true"
+              echo "WindowsAgent tag was changed to $TAG_NEW"
+            else
+              echo "No tag changes in windowsAgent section"
+            fi
           else
-            echo "No tag changes in windowsAgent section"
+            echo "WindowsAgent section not found in diff"
           fi
 
-          # Output the variables for GitHub Actions
-          echo "tag_old=$TAG_OLD" >> $GITHUB_OUTPUT
-          echo "tag_new=$TAG_NEW" >> $GITHUB_OUTPUT
+          echo "new_agent_version=$TAG_NEW" >> $GITHUB_OUTPUT
           echo "version_changed=$VERSION_CHANGED" >> $GITHUB_OUTPUT
 
   build:
