@@ -17,13 +17,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2 # Fetch the latest commit and its parent
-      - name: Debug latest commit
-        run: |
-          echo "Inspecting the latest commit in main:"
-          git log -1
-          echo "Changes in the latest commit:"
-          git diff HEAD~1 HEAD -- charts/newrelic-infrastructure/values.yaml || echo "No changes in values.yaml"
-      - name: Check if latest commit modifies images.windowsAgent.tag
+      - name: Check if latest commit modifies images.windowsAgent.tag (version)
         id: version-check
         run: |
           DIFF_OUTPUT=$(git diff HEAD~1 HEAD -- charts/newrelic-infrastructure/values.yaml)
@@ -82,34 +76,40 @@ jobs:
       - name: Build agent container
         shell: powershell
         run: |
+          $matrixTag = "${{ matrix.windows.tag }}"
+          $agentVersion = "${{ env.AGENT_VERSION }}"
+          
+          echo "Matrix tag: $matrixTag"
+          echo "Agent version: $agentVersion"
+
           cd infrastructure-agent
-          echo ${{ env.AGENT_VERSION }}
-          echo "Building newrelic/infrastructure-windows:agent-${{ env.AGENT_VERSION }}-windows-${{ matrix.windows.tag }}-alpha-$Env:tag"
+          
+          echo "Building newrelic/infrastructure-windows:agent-$Env.AGENT_VERSION-windows-$matrixTag-alpha"
 
           # Download installer from https://download.newrelic.com/infrastructure_agent/windows/
-          Invoke-WebRequest https://download.newrelic.com/infrastructure_agent/windows/newrelic-infra.${{ env.AGENT_VERSION }}.msi `
-            -OutFile newrelic-infra.${{ env.AGENT_VERSION }}.msi
+          Invoke-WebRequest https://download.newrelic.com/infrastructure_agent/windows/newrelic-infra.$Env.AGENT_VERSION.msi `
+            -OutFile newrelic-infra.$Env:AGENT_VERSION.msi
 
-          Invoke-WebRequest https://download.newrelic.com/infrastructure_agent/windows/newrelic-infra.${{ env.AGENT_VERSION }}.msi.sum `
-            -OutFile newrelic-infra.${{ env.AGENT_VERSION }}.msi.sum
+          Invoke-WebRequest https://download.newrelic.com/infrastructure_agent/windows/newrelic-infra.$Env.AGENT_VERSION.msi.sum `
+            -OutFile newrelic-infra.$Env.AGENT_VERSION.msi.sum
 
-          $msiChecksumAll = Get-Content -Path "newrelic-infra.${{ env.AGENT_VERSION }}.msi.sum"
+          $msiChecksumAll = Get-Content -Path "newrelic-infra.$Env.AGENT_VERSION.msi.sum"
           $msiChecksumFirst = $msiChecksumAll.Split(" ")[0]
           echo "Checksum: $msiChecksumFirst"
 
-          $computedChecksum = Get-FileHash -Path "newrelic-infra.${{ env.AGENT_VERSION }}.msi" -Algorithm SHA256
+          $computedChecksum = Get-FileHash -Path "newrelic-infra.$Env.AGENT_VERSION.msi" -Algorithm SHA256
           $lowerCaseComputed = $computedChecksum.Hash.ToLower()
           if ($msiChecksumFirst -ne $lowerCaseComputed) {
-            throw "Checksum verification failed for newrelic-infra.${{ env.AGENT_VERSION }}.msi"
+            throw "Checksum verification failed for newrelic-infra.$Env.AGENT_VERSION.msi"
           }
 
           docker build `
             --pull `
-            --build-arg BASE_IMAGE_TAG="${{ matrix.windows.tag }}" `
-            --build-arg AGENT_VERSION="${{ env.AGENT_VERSION }}" `
+            --build-arg BASE_IMAGE_TAG="$matrixTag" `
+            --build-arg AGENT_VERSION="$agentVersion" `
             --platform windows/amd64 `
             -f Dockerfile.infraAgent `
-            -t newrelic/infrastructure-windows:agent-${{ env.AGENT_VERSION }}-windows-${{ matrix.windows.tag }}-alpha-$Env:tag .
+            -t newrelic/infrastructure-windows:agent-$agentVersion-windows-$matrixTag-alpha .
 
       - name: Login to DockerHub
         # if: ${{ ! github.event.pull_request }}
@@ -122,4 +122,6 @@ jobs:
         # if: ${{ ! github.event.pull_request }}
         shell: powershell
         run: |
-          docker push newrelic/infrastructure-windows:agent-${{ env.AGENT_VERSION }}-windows-${{ matrix.windows.tag }}-alpha-$Env:tag
+          $matrixTag = "${{ matrix.windows.tag }}"
+          $agentVersion = "${{ env.AGENT_VERSION }}"
+          docker push newrelic/infrastructure-windows:agent-$agentVersion-windows-$matrixTag-alpha
