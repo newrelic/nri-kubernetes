@@ -1,0 +1,130 @@
+name: Build Windows Infrastructure Agent Image
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'charts/newrelic-infrastructure/values.yaml'
+
+jobs:
+  check-version-change:
+    runs-on: ubuntu-latest
+    outputs:
+      version_changed: ${{ steps.version-check.outputs.version_changed }}
+      new_agent_version: ${{ steps.version-check.outputs.new_agent_version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # Fetch the latest commit and its parent
+      - name: Check if latest commit modifies images.windowsAgent.tag (version)
+        id: version-check
+        run: |
+          DIFF_OUTPUT=$(git diff HEAD~1 HEAD -- charts/newrelic-infrastructure/values.yaml)
+          TAG_NEW=""
+          VERSION_CHANGED="false"
+
+          if echo "$DIFF_OUTPUT" | grep -q "windowsAgent:"; then
+
+            WINDOW_AGENT_SECTION=$(echo "$DIFF_OUTPUT" | sed -n '/windowsAgent:/,/pullPolicy:/p')
+            echo "WINDOW_AGENT_SECTION: $WINDOW_AGENT_SECTION"
+
+            if echo "$WINDOW_AGENT_SECTION" | grep -E -q "^[+-][ ]+tag:"; then
+              TAG_NEW=$(echo "$WINDOW_AGENT_SECTION" | grep -E "^\+[ ]+tag:" | sed 's/^\+[ ]*tag:[ ]*//')
+              VERSION_CHANGED="true"
+              echo "WindowsAgent tag was changed to $TAG_NEW"
+            else
+              echo "No tag changes in windowsAgent section"
+            fi
+          else
+            echo "WindowsAgent section not found in diff"
+          fi
+
+          echo "new_agent_version=$TAG_NEW" >> $GITHUB_OUTPUT
+          echo "version_changed=$VERSION_CHANGED" >> $GITHUB_OUTPUT
+
+  build:
+    name: Build integration for
+    needs: check-version-change
+    if: needs.check-version-change.outputs.version_changed == 'true'
+    strategy:
+      fail-fast: true
+      matrix:
+        windows:
+          # Here we specify the GH runner where the image will be built.
+          # Tag must exist in both https://hub.docker.com/_/microsoft-windows-servercore and
+          # https://hub.docker.com/_/microsoft-windows-nanoserver, and must be matched with the runner.
+          # In theory, newer versions could build old images using --isolation=hyperv, but unfortunately hyperv is not
+          # enabled in GHA.
+          - runner: windows-2019
+            tag: ltsc2019
+          - runner: windows-2022
+            tag: ltsc2022
+    runs-on: ${{ matrix.windows.runner }}
+    env:
+      AGENT_VERSION: ${{ needs.check-version-change.outputs.new_agent_version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+      - name: Get windows build
+        id: osinfo
+        shell: powershell
+        run: |
+          Get-ComputerInfo
+      - name: Build agent container
+        shell: powershell
+        run: |
+          $matrixTag = "${{ matrix.windows.tag }}"
+          $agentVersion = "${{ env.AGENT_VERSION }}"
+          
+          echo "Matrix tag: $matrixTag"
+          echo "Agent version: $agentVersion"
+
+          cd infrastructure-agent
+          
+          echo "Building newrelic/infrastructure-windows:agent-$agentVersion-windows-$matrixTag"
+
+          # Download installer from https://download.newrelic.com/infrastructure_agent/windows/
+          Invoke-WebRequest https://download.newrelic.com/infrastructure_agent/windows/newrelic-infra.$agentVersion.msi `
+            -OutFile newrelic-infra.$agentVersion.msi
+
+          Invoke-WebRequest https://download.newrelic.com/infrastructure_agent/windows/newrelic-infra.$agentVersion.msi.sum `
+            -OutFile newrelic-infra.$agentVersion.msi.sum
+
+          $msiChecksumAll = Get-Content -Path "newrelic-infra.$agentVersion.msi.sum"
+          $msiChecksumFirst = $msiChecksumAll.Split(" ")[0]
+          echo "Checksum: $msiChecksumFirst"
+
+          $computedChecksum = Get-FileHash -Path "newrelic-infra.$agentVersion.msi" -Algorithm SHA256
+          $lowerCaseComputed = $computedChecksum.Hash.ToLower()
+          if ($msiChecksumFirst -ne $lowerCaseComputed) {
+            throw "Checksum verification failed for newrelic-infra.$agentVersion.msi"
+          }
+
+          docker build `
+            --pull `
+            --build-arg BASE_IMAGE_TAG="$matrixTag" `
+            --build-arg AGENT_VERSION="$agentVersion" `
+            --platform windows/amd64 `
+            -f Dockerfile.infraAgent `
+            -t newrelic/infrastructure-windows:agent-$agentVersion-windows-$matrixTag .
+
+      - name: Login to DockerHub
+        # if: ${{ ! github.event.pull_request }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
+
+      - name: Push image
+        # if: ${{ ! github.event.pull_request }}
+        shell: powershell
+        run: |
+          $matrixTag = "${{ matrix.windows.tag }}"
+          $agentVersion = "${{ env.AGENT_VERSION }}"
+          echo "Matrix tag: $matrixTag"
+          echo "Agent version: $agentVersion"
+
+          docker push newrelic/infrastructure-windows:agent-$agentVersion-windows-$matrixTag
