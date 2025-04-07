@@ -1314,7 +1314,7 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "reason", ValueFunc: definition.FromRaw("reason"), Type: sdkMetric.ATTRIBUTE, Optional: true}, // Previously called statusWaitingReason
 			{Name: "lastTerminatedExitCode", ValueFunc: definition.FromRaw("lastTerminatedExitCode"), Type: sdkMetric.GAUGE, Optional: true},
 			{Name: "lastTerminatedExitReason", ValueFunc: definition.FromRaw("lastTerminatedExitReason"), Type: sdkMetric.ATTRIBUTE, Optional: true},
-			{Name: "lastTerminatedTimestamp", ValueFunc: definition.FromRaw("lastTerminatedTimestamp"), Type: sdkMetric.ATTRIBUTE, Optional: true},
+			{Name: "lastTerminatedTimestamp", ValueFunc: definition.FromRaw("lastTerminatedTimestamp"), Type: sdkMetric.GAUGE, Optional: true},
 
 			// Inherit from pod
 			{Name: "label.*", ValueFunc: definition.Transform(definition.FromRaw("labels"), kubeletMetric.OneMetricPerLabel), Type: sdkMetric.ATTRIBUTE},
