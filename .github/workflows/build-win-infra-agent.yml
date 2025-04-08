@@ -68,11 +68,6 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
-      - name: Get windows build
-        id: osinfo
-        shell: powershell
-        run: |
-          Get-ComputerInfo
       - name: Build agent container
         shell: powershell
         run: |
