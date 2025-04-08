@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2019" .}}-ss
+  name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2019" .}}-statefulset
   labels:
     app: windows-statefulset-2019
 spec:
@@ -14,7 +14,7 @@ spec:
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2019" .}}-ss
+  name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2019" .}}-statefulset
 spec:
   serviceName: windows-statefulset-2019
   replicas: 1
@@ -63,19 +63,19 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2022" .}}-ss
+  name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2022" .}}-statefulset
   labels:
     app: windows-statefulset-2022
 spec:
   selector:
     app: windows-statefulset-2022
   ports:
-    - port: 8090
+    - port: 8091
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2022" .}}-ss
+  name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2022" .}}-statefulset
 spec:
   serviceName: windows-statefulset-2022
   replicas: 1
