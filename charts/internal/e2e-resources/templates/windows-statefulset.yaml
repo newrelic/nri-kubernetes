@@ -4,10 +4,10 @@ kind: Service
 metadata:
   name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2019" .}}-statefulset
   labels:
-    app: windows-statefulset-2019
+    app: statefulset-w-2019
 spec:
   selector:
-    app: windows-statefulset-2019
+    app: statefulset-w-2019
   ports:
     - port: 8090
 ---
@@ -16,15 +16,15 @@ kind: StatefulSet
 metadata:
   name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2019" .}}-statefulset
 spec:
-  serviceName: windows-statefulset-2019
+  serviceName: statefulset-w-2019
   replicas: 1
   selector:
     matchLabels:
-      app: windows-statefulset-2019
+      app: statefulset-w-2019
   template:
     metadata:
       labels:
-        app: windows-statefulset-2019
+        app: statefulset-w-2019
     spec:
       nodeSelector:
         kubernetes.io/os: windows
@@ -39,7 +39,7 @@ spec:
           value: "10.0.17763"
           effect: "NoSchedule"
       containers:
-        - name: windows-statefulset-2019
+        - name: random-text
           image: mcr.microsoft.com/windows/servercore:ltsc2019
           imagePullPolicy: IfNotPresent
           resources:
@@ -65,10 +65,10 @@ kind: Service
 metadata:
   name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2022" .}}-statefulset
   labels:
-    app: windows-statefulset-2022
+    app: statefulset-w-2022
 spec:
   selector:
-    app: windows-statefulset-2022
+    app: statefulset-w-2022
   ports:
     - port: 8091
 ---
@@ -77,15 +77,15 @@ kind: StatefulSet
 metadata:
   name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2022" .}}-statefulset
 spec:
-  serviceName: windows-statefulset-2022
+  serviceName: statefulset-w-2022
   replicas: 1
   selector:
     matchLabels:
-      app: windows-statefulset-2022
+      app: statefulset-w-2022
   template:
     metadata:
       labels:
-        app: windows-statefulset-2022
+        app: statefulset-w-2022
     spec:
       nodeSelector:
         kubernetes.io/os: windows
@@ -100,7 +100,7 @@ spec:
           value: "10.0.20348"
           effect: "NoSchedule"
       containers:
-        - name: windows-statefulset-2022
+        - name: random-text
           image: mcr.microsoft.com/windows/servercore:ltsc2022
           imagePullPolicy: IfNotPresent
           resources:
