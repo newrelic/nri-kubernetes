@@ -76,11 +76,11 @@ LICENSE_KEY=${LICENSE_KEY} EXCEPTIONS_SOURCE_FILE=${EXCEPTIONS_SOURCE_FILE}  go 
 
 You may check [e2e workflow](../.github/workflows/e2e.yaml) to have more details about how this is used in development workflow.
 
-### Running Windows tests
-Trying to run e2e tests for Windows nodes? Weird! Currently, you can run e2e tests for Windows nodes only locally. This is because we cannot test Windows nodes using Minikube or Kind, so we need to have our local kubeconfig pointing to an existing cluster in the cloud. Because of this, there are also several metrics associated with the control plane that you'll find are missing. These are accounted for in the special `*-windows.yaml` exception files. Here's how to run these e2e tests locally:
+### Running Windows e2e tests
+Trying to run e2e tests for Windows nodes? Currently, you can run e2e tests for Windows nodes locally - we have not yet built in automation. This is because we cannot test Windows nodes using Minikube or Kind, so we need to have our local kubeconfig pointing to an existing cluster in the cloud. Because of this, there are also several metrics associated with the control plane that you'll find are missing. These are accounted for in the special `*-windows.yaml` exception files. Here's how to run these e2e tests locally:
+- Follow the above guidance on setting `LICENSE_KEY`, `API_KEY`, and `ACCOUNT_ID`. `EXCEPTIONS_SOURCE_FILE` will be a bit different as you'll want to target one of the Windows files: `export EXCEPTIONS_SOURCE_FILE=1_32-exceptions-windows.yaml`
+- In e2e-values.yaml, add overrides for `agentImage` and `integrationImage` if desired
 - Switch your kubeconfig to a cluster that has Windows nodes in the cloud: `kubectx <your-cluster-name>`
-- Your env vars will look similar to the above, with the exception of the `EXCEPTIONS_SOURCE_FILE`: `export EXCEPTIONS_SOURCE_FILE=1_32-exceptions-windows.yaml`
-```shell
 - Run the following to execute tests:
 ```shell
 LICENSE_KEY=${LICENSE_KEY} EXCEPTIONS_SOURCE_FILE=${EXCEPTIONS_SOURCE_FILE}  go run github.com/newrelic/newrelic-integration-e2e-action@latest \
