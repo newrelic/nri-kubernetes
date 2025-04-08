@@ -112,14 +112,12 @@ jobs:
             -t newrelic/infrastructure-windows:agent-$agentVersion-windows-$matrixTag .
 
       - name: Login to DockerHub
-        # if: ${{ ! github.event.pull_request }}
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
           password: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
 
       - name: Push image
-        # if: ${{ ! github.event.pull_request }}
         shell: powershell
         run: |
           $matrixTag = "${{ matrix.windows.tag }}"
