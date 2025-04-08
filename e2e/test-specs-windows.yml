@@ -1,5 +1,5 @@
 description: |
-  End-to-end tests for k8s integration
+  End-to-end tests for k8s integration - Windows
 
 custom_test_key: k8s.clusterName
 
@@ -966,6 +966,50 @@ scenarios:
             - key: "Container restarts"
               value: 0.0
 #        END Windows 2022 DaemonSet
+#        START Windows 2019 Failed Job
+        - query: FROM Metric SELECT latest(k8s.job.activePods) AS 'Active Pods' WHERE metricName = 'k8s.job.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.jobName = '${SCENARIO_TAG}-resources-win-2019-failjob'
+          expected_results:
+            - key: "Active Pods"
+              value: 0.0
+        - query: FROM Metric SELECT latest(k8s.job.succeededPods) AS 'Succeeded Pods' WHERE metricName = 'k8s.job.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.jobName = '${SCENARIO_TAG}-resources-win-2019-failjob'
+          expected_results:
+            - key: "Succeeded Pods"
+              value: 0.0
+        - query: FROM Metric SELECT latest(k8s.job.failedPods) AS 'Failed Pods' WHERE metricName = 'k8s.job.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.jobName = '${SCENARIO_TAG}-resources-win-2019-failjob'
+          expected_results:
+            - key: "Failed Pods"
+              value: 1.0
+        - query: FROM Metric SELECT if(latest(k8s.job.isComplete), 'Complete', if(latest(k8s.job.failed), 'Failed', '-')) AS 'State' WHERE metricName = 'k8s.job.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.jobName = '${SCENARIO_TAG}-resources-win-2019-failjob'
+          expected_results:
+            - key: "constant"
+              value: "Failed"
+        - query: FROM Metric WITH k8s.job.completedAt - k8s.job.startedAt AS duration SELECT if(latest(duration), latest(duration), '-') AS 'Duration (sec)' WHERE metricName = 'k8s.job.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.jobName = '${SCENARIO_TAG}-resources-win-2019-failjob'
+          expected_results:
+            - key: "constant"
+              value: "-"
+#        END Windows 2019 Failed Job
+#        START Windows 2022 Failed Job
+        - query: FROM Metric SELECT latest(k8s.job.activePods) AS 'Active Pods' WHERE metricName = 'k8s.job.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.jobName = '${SCENARIO_TAG}-resources-win-2019-failjob'
+          expected_results:
+            - key: "Active Pods"
+              value: 0.0
+        - query: FROM Metric SELECT latest(k8s.job.succeededPods) AS 'Succeeded Pods' WHERE metricName = 'k8s.job.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.jobName = '${SCENARIO_TAG}-resources-win-2019-failjob'
+          expected_results:
+            - key: "Succeeded Pods"
+              value: 0.0
+        - query: FROM Metric SELECT latest(k8s.job.failedPods) AS 'Failed Pods' WHERE metricName = 'k8s.job.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.jobName = '${SCENARIO_TAG}-resources-win-2019-failjob'
+          expected_results:
+            - key: "Failed Pods"
+              value: 1.0
+        - query: FROM Metric SELECT if(latest(k8s.job.isComplete), 'Complete', if(latest(k8s.job.failed), 'Failed', '-')) AS 'State' WHERE metricName = 'k8s.job.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.jobName = '${SCENARIO_TAG}-resources-win-2019-failjob'
+          expected_results:
+            - key: "constant"
+              value: "Failed"
+        - query: FROM Metric WITH k8s.job.completedAt - k8s.job.startedAt AS duration SELECT if(latest(duration), latest(duration), '-') AS 'Duration (sec)' WHERE metricName = 'k8s.job.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.jobName = '${SCENARIO_TAG}-resources-win-2019-failjob'
+          expected_results:
+            - key: "constant"
+              value: "-"
+#        END Windows 2022 Failed Job
       entities: []
       metrics:
         - source: "k8s.yml"
