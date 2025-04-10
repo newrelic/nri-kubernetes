@@ -1,0 +1,25 @@
+name: Release nri-kubernetes image
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-integration:
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: newrelic/nri-kubernetes/.github/workflows/test-trigger.yml@test_workflowsA
+    with:
+      repo_name: nri-kubernetes
+      artifact_path: bin/
+      docker_image_name: newrelic/nri-kubernetes-internal
+      chart_directory: charts/newrelic-infrastructure
+      enable_windows: true
+      z_pre_release: true
+      z_tag_name: v0.0.1
+    secrets:
+      dockerhub_username: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
+      dockerhub_token: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
+      bot_token: ${{ secrets.K8S_AGENTS_BOT_TOKEN }}
+      slack_channel: ${{ secrets.K8S_AGENTS_SLACK_CHANNEL }}
+      slack_token: ${{ secrets.K8S_AGENTS_SLACK_TOKEN }}
