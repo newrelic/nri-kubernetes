@@ -45,6 +45,11 @@ on:
         type: string
         required: false
         default: v0.0.0
+      z_build_linux:
+        description: Whether to build linux image or not
+        type: boolean
+        required: false
+        default: false
     # secrets need to be passed in for reusable workflows
     secrets:
       dockerhub_username:
@@ -70,6 +75,7 @@ jobs:
   build:
     name: Build integration for
     runs-on: ubuntu-latest
+    if: ${{ inputs.z_build_linux }}
     strategy:
       matrix:
         goos: [ linux ]

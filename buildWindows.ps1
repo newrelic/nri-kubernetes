@@ -1,10 +1,10 @@
 param(
     [string]$WinVersion = "ltsc2019",
     [string]$BinaryName = "nri-kubernetes",
-    [string]$BinDir = "./bin"
-    [string]$Commit = (git rev-parse HEAD).Trim()
-    [string]$Tag = "dev"
-    [string]$CGO_ENABLED = 0
+    [string]$BinDir = "./bin",
+    [string]$Commit = (git rev-parse HEAD).Trim(),
+    [string]$Tag = "dev",
+    [string]$CGO_ENABLED = 0,
     [string]$BuildDate = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
 )
 
