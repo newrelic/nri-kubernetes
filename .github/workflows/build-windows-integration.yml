@@ -50,7 +50,7 @@ jobs:
       - name: Build integration
         shell: powershell
         run: |
-          go build -o ./bin/nri-kubernetes-windows-${{ matrix.windows.tag }}-amd64.exe ./cmd/nri-kubernetes
+          go build -X "main.integrationVersion=$ENV.tag" -o ./bin/nri-kubernetes-windows-${{ matrix.windows.tag }}-amd64.exe ./cmd/nri-kubernetes
       - name: Build nri-kubernetes container
         shell: powershell
         run: |
