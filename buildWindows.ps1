@@ -12,6 +12,11 @@ if (!(Test-Path -Path $BinDir)) {
     New-Item -ItemType Directory -Path $BinDir -Force
 }
 
+Write-Host "[compile-windows] Current folder structure:"
+Get-ChildItem -Recurse | ForEach-Object { Write-Host $_.FullName }
+
+
+
 Write-Host "[compile-windows] Building $BindaryName for Windows"
 
 if ($env:CGO_ENABLED) { $GO_ENABLED = $env:CGO_ENABLED}
@@ -24,3 +29,9 @@ $LdFlags = "-X 'main.integrationVersion=$Tag' -X 'main.gitCommit=$Commit' -X 'ma
 
 Write-Host "go build -ldflags="$LdFlags" -o "$BinDir/$BinaryName-windows-$WinVersion-amd64.exe" ./cmd/nri-kubernetes"
 go build -ldflags="$LdFlags" -o "$BinDir/$BinaryName-windows-$WinVersion-amd64.exe" ./cmd/nri-kubernetes
+
+Write-Host "[compile-windows] Final folder structure:"
+Get-ChildItem -Recurse | ForEach-Object { Write-Host $_.FullName }
+
+Write-Host "[compile-windows] Contents of the bin folder:"
+Get-ChildItem -Path $BinDir | ForEach-Object { Write-Host $_.FullName }
