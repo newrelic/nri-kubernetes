@@ -39,7 +39,7 @@ on:
         description: Whether the release is a pre-release or not, override for testing
         type: boolean
         required: true
-        default: true
+        default: false
       z_tag_name:
         description: The tag name override for github.event.release.tag_name
         type: string
@@ -197,7 +197,6 @@ jobs:
           go-version-file: 'go.mod'
       - name: Build integration
         env:
-          GOOS: ${{ matrix.goos }}
           GOARCH: amd64
           COMMIT: ${{ github.sha }}
           DATE: ${{ env.DATE }}
@@ -238,7 +237,7 @@ jobs:
       - name: Generate docker image version from git tag
         id: set-new-version
         run: |
-          zTagName = ${{ inputs.z_tag_name}}
+          zTagName = "${{ inputs.z_tag_name}}"
           if ("$zTagName" -match '^[v]?[0-9.]*[0-9]$') {
               $DOCKER_IMAGE_TAG = "$zTagName" -replace '^v', ''
               "DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -308,19 +307,6 @@ jobs:
           echo "DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG" >> $GITHUB_ENV
           echo "DATE=`date`" >> $GITHUB_ENV
       - uses: actions/checkout@v4
-      - name: Set up Go
-        uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5.3.0
-        with:
-          go-version-file: './go.mod'
-      - name: Build integration
-        env:
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
-          COMMIT: ${{ github.sha }}
-          DATE: ${{ env.DATE }}
-          TAG: ${{ env.DOCKER_IMAGE_TAG }}
-        run: |
-          make compile
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to DockerHub
@@ -331,24 +317,22 @@ jobs:
       
       - name: Create and Push Manifest
         run: |
-          # Pull the multi-arch Linux image to extract SHA256 digests
-          docker pull $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-pre-linux-multi
+          docker pull "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-pre-linux-multi"
           
           # Extract SHA256 digest for arm64 variant
-          arm64_image=$(docker inspect --format='{{range .RepoDigests}}{{if contains "arm64" .}}{{.}}{{end}}{{end}}' $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-pre-linux-multi)
+          arm64_image=$(docker inspect --format='{{range .RepoDigests}}{{if contains "arm64" .}}{{.}}{{end}}{{end}}' "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-pre-linux-multi")
           if [ -z "$arm64_image" ]; then
             # Alternative extraction if the above doesn't find it
-            arm64_image=$(docker manifest inspect $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-pre-linux-multi | jq -r '.manifests[] | select(.platform.architecture=="arm64") | "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-" + .digest')
+            arm64_image=$(docker manifest inspect "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-pre-linux-multi" | jq -r '.manifests[] | select(.platform.architecture=="arm64") | "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-" + .digest')
           fi
           
           # Extract SHA256 digest for amd64 variant
-          amd64_image=$(docker inspect --format='{{range .RepoDigests}}{{if contains "amd64" .}}{{.}}{{end}}{{end}}' $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-pre-linux-multi)
+          amd64_image=$(docker inspect --format='{{range .RepoDigests}}{{if contains "amd64" .}}{{.}}{{end}}{{end}}' "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-pre-linux-multi")
           if [ -z "$amd64_image" ]; then
             # Alternative extraction if the above doesn't find it
-            amd64_image=$(docker manifest inspect $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-pre-linux-multi | jq -r '.manifests[] | select(.platform.architecture=="amd64") | "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-" + .digest')
+            amd64_image=$(docker manifest inspect "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-pre-linux-multi" | jq -r '.manifests[] | select(.platform.architecture=="amd64") | "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-" + .digest')
           fi
           
-          # Define Windows image references
           windows2019_image="$DOCKER_IMAGE_NAME:test-$DOCKER_IMAGE_TAG-windows-ltsc2019"
           windows2022_image="$DOCKER_IMAGE_NAME:test-$DOCKER_IMAGE_TAG-windows-ltsc2022"
           
@@ -357,23 +341,20 @@ jobs:
           echo "Windows 2019 image: ${windows2019_image}"
           echo "Windows 2022 image: ${windows2022_image}"
           
-          # Create the manifest
-          docker manifest create $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-myLatest \
+          docker manifest create "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-myLatest" \
             --amend "${arm64_image}" \
             --amend "${amd64_image}" \
             --amend "${windows2019_image}" \
             --amend "${windows2022_image}"
           
-          # Annotate Windows images with correct metadata
-          docker manifest annotate $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-myLatest \
+          docker manifest annotate "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-myLatest" \
             "${windows2019_image}" \
             --os windows --arch amd64 --os-version 10.0.17763
           
-          docker manifest annotate $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-myLatest \
+          docker manifest annotate "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-myLatest" \
             "${windows2022_image}" \
             --os windows --arch amd64 --os-version 10.0.20348
           
-          # Push the manifest
-          docker manifest push $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-myLatest
+          docker manifest push "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-myLatest"
           
           echo "Multi-architecture manifest created and pushed successfully!"
