@@ -247,6 +247,7 @@ jobs:
               "DATE=$(Get-Date)" | Out-File -FilePath $env:GITHUB_ENV -Append
               "new-version=$DOCKER_IMAGE_TAG" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           }
+      - uses: actions/checkout@v4
       - name: Download Windows artifacts from build job with bin path
         if: ${{ inputs.artifact_path }}
         uses: actions/download-artifact@v4
