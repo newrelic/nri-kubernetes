@@ -151,7 +151,7 @@ jobs:
       - name: Build and push docker prerelease image
         if: ${{ inputs.z_pre_release }}
         run: |
-          DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG}-pre-linux-multi
+          DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG}-pre
           docker buildx build --push --platform=$DOCKER_PLATFORMS \
             --build-arg "COMMIT=$COMMIT" \
             --build-arg "DATE=$DATE" \
@@ -334,44 +334,51 @@ jobs:
       
       - name: Create and Push Manifest
         run: |
-          docker pull "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-pre-linux-multi"
-          
-          # Extract SHA256 digest for arm64 variant
-          arm64_image=$(docker inspect --format="{{range .RepoDigests}}{{if contains "arm64" .}}{{.}}{{end}}{{end}}" "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-pre-linux-multi")
-          if [ -z "$arm64_image" ]; then
-            # Alternative extraction if the above doesn't find it
-            arm64_image=$(docker manifest inspect "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-pre-linux-multi" | jq -r '.manifests[] | select(.platform.architecture=="arm64") | "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-" + .digest')
-          fi
-          
-          # Extract SHA256 digest for amd64 variant
-          amd64_image=$(docker inspect --format='{{range .RepoDigests}}{{if contains "amd64" .}}{{.}}{{end}}{{end}}' "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-pre-linux-multi")
-          if [ -z "$amd64_image" ]; then
-            # Alternative extraction if the above doesn't find it
-            amd64_image=$(docker manifest inspect "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-pre-linux-multi" | jq -r '.manifests[] | select(.platform.architecture=="amd64") | "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-" + .digest')
-          fi
-          
+          IMAGE_TAG="${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-pre" 
+
           windows2019_image="${DOCKER_IMAGE_NAME}:test-${DOCKER_IMAGE_TAG}-windows-ltsc2019"
           windows2022_image="${DOCKER_IMAGE_NAME}:test-${DOCKER_IMAGE_TAG}-windows-ltsc2022"
-          
+
+          docker pull $IMAGE_TAG
+
+          echo "Extracting Linux architecture digests..."
+          manifest_data=$(docker manifest inspect $IMAGE_TAG)
+
+          arm64_image=$(echo "$manifest_data" | jq -r --arg name "${DOCKER_IMAGE_NAME}" \
+            '.manifests[] | select(.platform.architecture=="arm64" and .platform.os=="linux") | $name + "@" + .digest')
+
+          armv7_image=$(echo "$manifest_data" | jq -r --arg name "${DOCKER_IMAGE_NAME}" \
+            '.manifests[] | select(.platform.architecture=="arm" and .platform.variant=="v7" and .platform.os=="linux") | $name + "@" + .digest')
+
+          amd64_image=$(echo "$manifest_data" | jq -r --arg name "${DOCKER_IMAGE_NAME}" \
+            '.manifests[] | select(.platform.architecture=="amd64" and .platform.os=="linux") | $name + "@" + .digest')
+
           echo "Linux ARM64 image: ${arm64_image}"
+          echo "Linux ARMv7 image: ${armv7_image}"
           echo "Linux AMD64 image: ${amd64_image}"
           echo "Windows 2019 image: ${windows2019_image}"
           echo "Windows 2022 image: ${windows2022_image}"
-          
-          docker manifest create "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-myLatest" \
-            --amend "${arm64_image}" \
-            --amend "${amd64_image}" \
-            --amend "${windows2019_image}" \
-            --amend "${windows2022_image}"
-          
-          docker manifest annotate "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-myLatest" \
-            "${windows2019_image}" \
-            --os windows --arch amd64 --os-version 10.0.17763
-          
-          docker manifest annotate "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-myLatest" \
-            "${windows2022_image}" \
-            --os windows --arch amd64 --os-version 10.0.20348
-          
-          docker manifest push "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-myLatest"
-          
-          echo "Multi-architecture manifest created and pushed successfully!"
+
+          echo "Creating new manifest with the same name with all architectures..."
+          manifest_cmd="docker manifest create $IMAGE_TAG"
+
+          [ -n "$arm64_image" ] && manifest_cmd="$manifest_cmd --amend '$arm64_image'"
+          [ -n "$armv7_image" ] && manifest_cmd="$manifest_cmd --amend '$armv7_image'"
+          [ -n "$amd64_image" ] && manifest_cmd="$manifest_cmd --amend '$amd64_image'"
+          docker manifest inspect "${windows2019_image}" &>/dev/null && manifest_cmd="$manifest_cmd --amend '$windows2019_image'"
+          docker manifest inspect "${windows2022_image}" &>/dev/null && manifest_cmd="$manifest_cmd --amend '$windows2022_image'"
+
+          echo "Executing: $manifest_cmd"
+          eval $manifest_cmd
+
+          echo "Annotating Windows images..."
+          docker manifest inspect "${windows2019_image}" &>/dev/null && \
+            docker manifest annotate $IMAGE_TAG $windows2019_image \
+              --os windows --arch amd64 --os-version 10.0.17763
+
+          docker manifest inspect "${windows2022_image}" &>/dev/null && \
+            docker manifest annotate $IMAGE_TAG $windows2022_image \
+              --os windows --arch amd64 --os-version 10.0.20348
+
+          echo "Pushing combined manifest..."
+          docker manifest push $IMAGE_TAG
