@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### dependency
+- Update linters @dbudziwojskiNR [#1166](https://github.com/newrelic/nri-kubernetes/pull/1166)
+
 ### enhancements
 - Updated `lastTerminatedTimestamp` to use `time.Time` instead of `int64` for better time handling @sadafarshad [#1203](https://github.com/newrelic/nri-kubernetes/pull/1203)
 
