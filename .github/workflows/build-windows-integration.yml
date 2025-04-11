@@ -26,8 +26,6 @@ jobs:
           - runner: windows-2022
             tag: ltsc2022
     runs-on: ${{ matrix.windows.runner }}
-    env:
-      AGENT_VERSION: 1.62.0 # hard-coded agent version for now
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -40,35 +38,6 @@ jobs:
         shell: powershell
         run: |
           Get-ComputerInfo
-      - name: Build agent container
-        shell: powershell
-        run: |
-          cd infrastructure-agent
-
-          # Download installer from https://download.newrelic.com/infrastructure_agent/windows/
-          Invoke-WebRequest https://download.newrelic.com/infrastructure_agent/windows/newrelic-infra.${{ env.AGENT_VERSION }}.msi `
-            -OutFile newrelic-infra.${{ env.AGENT_VERSION }}.msi
-
-          Invoke-WebRequest https://download.newrelic.com/infrastructure_agent/windows/newrelic-infra.${{ env.AGENT_VERSION }}.msi.sum `
-            -OutFile newrelic-infra.${{ env.AGENT_VERSION }}.msi.sum
-          
-          $msiChecksumAll = Get-Content -Path "newrelic-infra.${{ env.AGENT_VERSION }}.msi.sum"
-          $msiChecksumFirst = $msiChecksumAll.Split(" ")[0]
-          echo "Checksum: $msiChecksumFirst"
-
-          $computedChecksum = Get-FileHash -Path "newrelic-infra.${{ env.AGENT_VERSION }}.msi" -Algorithm SHA256
-          $lowerCaseComputed = $computedChecksum.Hash.ToLower()
-          if ($msiChecksumFirst -ne $lowerCaseComputed) {
-            throw "Checksum verification failed for newrelic-infra.${{ env.AGENT_VERSION }}.msi"
-          }
-
-          docker build `
-            --pull `
-            --build-arg BASE_IMAGE_TAG="${{ matrix.windows.tag }}" `
-            --build-arg AGENT_VERSION="${{ env.AGENT_VERSION }}" `
-            --platform windows/amd64 `
-            -f Dockerfile.infraAgent `
-            -t newrelic/nri-kubernetes:agent-${{ env.AGENT_VERSION }}-windows-${{ matrix.windows.tag }}-alpha-$Env:tag .
 
       - uses: actions/cache@v4
         with:
@@ -102,4 +71,3 @@ jobs:
         shell: powershell
         run: |
           docker push newrelic/nri-kubernetes:windows-${{ matrix.windows.tag }}-alpha-$Env:tag
-          docker push newrelic/nri-kubernetes:agent-${{ env.AGENT_VERSION }}-windows-${{ matrix.windows.tag }}-alpha-$Env:tag
