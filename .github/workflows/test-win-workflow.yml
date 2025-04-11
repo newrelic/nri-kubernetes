@@ -252,8 +252,13 @@ jobs:
         if: ${{ inputs.artifact_path }}
         uses: actions/download-artifact@v4
         with:
+          path: bin
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
           pattern: '*-windows-*'
           path: bin
+          merge-multiple: true
       - name: Download Windows artifacts from build job without bin path
         if: ${{ ! inputs.artifact_path }}
         uses: actions/download-artifact@v4
