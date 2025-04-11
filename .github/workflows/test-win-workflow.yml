@@ -38,7 +38,7 @@ on:
       z_pre_release:
         description: Whether the release is a pre-release or not, override for testing
         type: boolean
-        required: true
+        required: false
         default: false
       z_tag_name:
         description: The tag name override for github.event.release.tag_name
@@ -176,11 +176,8 @@ jobs:
       fail-fast: true
       matrix:
         windows:
-          # Here we specify the GH runner where the image will be built.
           # Tag must exist in both https://hub.docker.com/_/microsoft-windows-servercore and
           # https://hub.docker.com/_/microsoft-windows-nanoserver, and must be matched with the runner.
-          # In theory, newer versions could build old images using --isolation=hyperv, but unfortunately hyperv is not
-          # enabled in GHA.
           - runner: windows-2019
             tag: ltsc2019
           - runner: windows-2022
@@ -190,7 +187,7 @@ jobs:
       - name: Build env args
         shell: powershell
         run: |
-              $zTagName = "${{ inputs.z_tag_name}}"
+              $zTagName = "${{ inputs.z_tag_name }}"
               if ("$zTagName" -notmatch '^[v]?[0-9.]*[0-9]$') {
                 throw "Tag name does not match expected pattern"
               }
@@ -279,11 +276,11 @@ jobs:
           $dockerImageTag = "test-${{ env.DOCKER_IMAGE_TAG}}"
 
           docker build --push --platform windows/amd64 -f Dockerfile.windows `
-            --build-arg BASE_IMAGE_TAG=$matrixTag `
-            --build-arg "COMMIT=$commit" `
-            --build-arg "DATE=$date" `
-            --build-arg "TAG=$dockerImageTag" `
-              -t $dockerImageName:$dockerImageTag-windows-$matrixTag . `
+            --build-arg "BASE_IMAGE_TAG=${matrixTag}" `
+            --build-arg "COMMIT=${commit}" `
+            --build-arg "DATE=${date}" `
+            --build-arg "TAG=${dockerImageTag}" `
+              -t "${dockerImageName}:${dockerImageTag}-windows-$matrixTag" . `
 
       - name: Build and push winodws docker release image
         if: ${{ ! inputs.z_pre_release }}
@@ -296,11 +293,11 @@ jobs:
           $dockerImageTag = "test-${{ env.DOCKER_IMAGE_TAG}}"
 
           docker build --push --platform windows/amd64 -f Dockerfile.windows `
-            --build-arg BASE_IMAGE_TAG=$matrixTag `
-            --build-arg "COMMIT=$commit" `
-            --build-arg "DATE=$date" `
-            --build-arg "TAG=$dockerImageTag" `
-              -t $dockerImageName:$dockerImageTag-windows-$matrixTag . `
+            --build-arg "BASE_IMAGE_TAG=${matrixTag}" `
+            --build-arg "COMMIT=${commit}" `
+            --build-arg "DATE=${date}" `
+            --build-arg "TAG=${dockerImageTag}" `
+              -t "${dockerImageName}:${dockerImageTag}-windows-${matrixTag}" . `
   create-multi-platform-arch:
     name: Create Multi-Arch Manifest
     runs-on: ubuntu-latest
@@ -323,44 +320,44 @@ jobs:
       
       - name: Create and Push Manifest
         run: |
-          docker pull "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-pre-linux-multi"
+          docker pull "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-pre-linux-multi"
           
           # Extract SHA256 digest for arm64 variant
-          arm64_image=$(docker inspect --format='{{range .RepoDigests}}{{if contains "arm64" .}}{{.}}{{end}}{{end}}' "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-pre-linux-multi")
+          arm64_image=$(docker inspect --format="{{range .RepoDigests}}{{if contains "arm64" .}}{{.}}{{end}}{{end}}" "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-pre-linux-multi")
           if [ -z "$arm64_image" ]; then
             # Alternative extraction if the above doesn't find it
-            arm64_image=$(docker manifest inspect "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-pre-linux-multi" | jq -r '.manifests[] | select(.platform.architecture=="arm64") | "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-" + .digest')
+            arm64_image=$(docker manifest inspect "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-pre-linux-multi" | jq -r '.manifests[] | select(.platform.architecture=="arm64") | "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-" + .digest')
           fi
           
           # Extract SHA256 digest for amd64 variant
-          amd64_image=$(docker inspect --format='{{range .RepoDigests}}{{if contains "amd64" .}}{{.}}{{end}}{{end}}' "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-pre-linux-multi")
+          amd64_image=$(docker inspect --format='{{range .RepoDigests}}{{if contains "amd64" .}}{{.}}{{end}}{{end}}' "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-pre-linux-multi")
           if [ -z "$amd64_image" ]; then
             # Alternative extraction if the above doesn't find it
-            amd64_image=$(docker manifest inspect "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-pre-linux-multi" | jq -r '.manifests[] | select(.platform.architecture=="amd64") | "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-" + .digest')
+            amd64_image=$(docker manifest inspect "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-pre-linux-multi" | jq -r '.manifests[] | select(.platform.architecture=="amd64") | "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-" + .digest')
           fi
           
-          windows2019_image="$DOCKER_IMAGE_NAME:test-$DOCKER_IMAGE_TAG-windows-ltsc2019"
-          windows2022_image="$DOCKER_IMAGE_NAME:test-$DOCKER_IMAGE_TAG-windows-ltsc2022"
+          windows2019_image="${DOCKER_IMAGE_NAME}:test-${DOCKER_IMAGE_TAG}-windows-ltsc2019"
+          windows2022_image="${DOCKER_IMAGE_NAME}:test-${DOCKER_IMAGE_TAG}-windows-ltsc2022"
           
           echo "Linux ARM64 image: ${arm64_image}"
           echo "Linux AMD64 image: ${amd64_image}"
           echo "Windows 2019 image: ${windows2019_image}"
           echo "Windows 2022 image: ${windows2022_image}"
           
-          docker manifest create "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-myLatest" \
+          docker manifest create "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-myLatest" \
             --amend "${arm64_image}" \
             --amend "${amd64_image}" \
             --amend "${windows2019_image}" \
             --amend "${windows2022_image}"
           
-          docker manifest annotate "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-myLatest" \
+          docker manifest annotate "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-myLatest" \
             "${windows2019_image}" \
             --os windows --arch amd64 --os-version 10.0.17763
           
-          docker manifest annotate "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-myLatest" \
+          docker manifest annotate "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-myLatest" \
             "${windows2022_image}" \
             --os windows --arch amd64 --os-version 10.0.20348
           
-          docker manifest push "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-myLatest"
+          docker manifest push "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-myLatest"
           
           echo "Multi-architecture manifest created and pushed successfully!"
