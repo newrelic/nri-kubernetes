@@ -281,7 +281,7 @@ jobs:
             --build-arg "COMMIT=${commit}" `
             --build-arg "DATE=${date}" `
             --build-arg "TAG=${dockerImageTag}" `
-              -t "${$finalTag}" .
+              -t "${finalTag}" .
           
           docker push "${finalTag}"
 
@@ -300,7 +300,7 @@ jobs:
             --build-arg "COMMIT=${commit}" `
             --build-arg "DATE=${date}" `
             --build-arg "TAG=${dockerImageTag}" `
-              -t "${$finalTag}" .
+              -t "${finalTag}" .
           docker push "${finalTag}"
 
   create-multi-platform-arch:
