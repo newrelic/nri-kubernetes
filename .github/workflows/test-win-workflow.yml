@@ -266,6 +266,9 @@ jobs:
       - name: List files
         shell: powershell
         run: Get-ChildItem -Force
+      - name: List bin 
+        shell: powershell
+        run: Get-ChildItem -Path bin -Recurse
       - name: Build and push windows docker prerelease image
         if: ${{ inputs.z_pre_release }}
         shell: powershell
