@@ -274,14 +274,14 @@ jobs:
           $commit = "${{ env.COMMIT }}"
           $dockerImageName = "${{ env.DOCKER_IMAGE_NAME}}"
           $dockerImageTag = "test-${{ env.DOCKER_IMAGE_TAG}}"
-          $finalTag = "${dockerImageName}:${dockerImageTag}-windows-$matrixTag"
+          $finalTag = "${dockerImageName}:${dockerImageTag}-windows-${matrixTag}"
 
           docker build --platform windows/amd64 -f Dockerfile.windows `
             --build-arg "BASE_IMAGE_TAG=${matrixTag}" `
             --build-arg "COMMIT=${commit}" `
             --build-arg "DATE=${date}" `
             --build-arg "TAG=${dockerImageTag}" `
-              -t "${$finalTag}" . `
+              -t "${$finalTag}" .
           
           docker push "${finalTag}"
 
@@ -294,13 +294,13 @@ jobs:
           $commit = "${{ env.COMMIT }}"
           $dockerImageName = "${{ env.DOCKER_IMAGE_NAME}}"
           $dockerImageTag = "test-${{ env.DOCKER_IMAGE_TAG}}"
-          $finalTag = "${dockerImageName}:${dockerImageTag}-windows-$matrixTag"
+          $finalTag = "${dockerImageName}:${dockerImageTag}-windows-${matrixTag}"
           docker build --platform windows/amd64 -f Dockerfile.windows `
             --build-arg "BASE_IMAGE_TAG=${matrixTag}" `
             --build-arg "COMMIT=${commit}" `
             --build-arg "DATE=${date}" `
             --build-arg "TAG=${dockerImageTag}" `
-              -t "${$finalTag}" . `
+              -t "${$finalTag}" .
           docker push "${finalTag}"
 
   create-multi-platform-arch:
