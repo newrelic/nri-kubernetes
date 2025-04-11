@@ -194,29 +194,29 @@ jobs:
               $DOCKER_IMAGE_TAG = "$zTagName" -replace '^v',''
               echo "DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG" >> $env:GITHUB_ENV
               echo "DATE=$(Get-Date)" >> $env:GITHUB_ENV
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: 'go.mod'
-      - name: Build integration
-        env:
-          GOARCH: amd64
-          COMMIT: ${{ github.sha }}
-          DATE: ${{ env.DATE }}
-          TAG: ${{ env.DOCKER_IMAGE_TAG }}
-        shell: powershell
-        run: | 
-          $env:COMMIT = "${{ github.sha }}"
-          $env:DATE = "${{ env.DATE }}"
-          $env:TAG = "${{ env.DOCKER_IMAGE_TAG }}"
-          $env:WinVersion = "${{ matrix.windows.tag }}"
-          ./buildWindows.ps1
-      - name: Upload artifact for docker build step
-        uses: actions/upload-artifact@v4
-        with:
-          retention-days: 1
-          name: ${{ inputs.repo_name }}-windows-${{ matrix.windows.tag }}-amd64
-          path: ${{ inputs.artifact_path }}${{ inputs.repo_name }}-windows-${{ matrix.windows.tag }}-amd64.exe
+      # - uses: actions/checkout@v4
+      # - uses: actions/setup-go@v5
+      #   with:
+      #     go-version-file: 'go.mod'
+      # - name: Build integration
+      #   env:
+      #     GOARCH: amd64
+      #     COMMIT: ${{ github.sha }}
+      #     DATE: ${{ env.DATE }}
+      #     TAG: ${{ env.DOCKER_IMAGE_TAG }}
+      #   shell: powershell
+      #   run: | 
+      #     $env:COMMIT = "${{ github.sha }}"
+      #     $env:DATE = "${{ env.DATE }}"
+      #     $env:TAG = "${{ env.DOCKER_IMAGE_TAG }}"
+      #     $env:WinVersion = "${{ matrix.windows.tag }}"
+      #     ./buildWindows.ps1
+      # - name: Upload artifact for docker build step
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     retention-days: 1
+      #     name: ${{ inputs.repo_name }}-windows-${{ matrix.windows.tag }}-amd64
+      #     path: ${{ inputs.artifact_path }}${{ inputs.repo_name }}-windows-${{ matrix.windows.tag }}-amd64.exe
   
   docker-integration-windows:
     name: Release docker
@@ -247,8 +247,6 @@ jobs:
               "DATE=$(Get-Date)" | Out-File -FilePath $env:GITHUB_ENV -Append
               "new-version=$DOCKER_IMAGE_TAG" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           }
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
       - name: Download Windows artifacts from build job with bin path
         if: ${{ inputs.artifact_path }}
         uses: actions/download-artifact@v4
@@ -276,13 +274,16 @@ jobs:
           $commit = "${{ env.COMMIT }}"
           $dockerImageName = "${{ env.DOCKER_IMAGE_NAME}}"
           $dockerImageTag = "test-${{ env.DOCKER_IMAGE_TAG}}"
+          $finalTag = "${dockerImageName}:${dockerImageTag}-windows-$matrixTag"
 
-          docker buildx build --push --platform windows/amd64 -f Dockerfile.windows `
+          docker build --platform windows/amd64 -f Dockerfile.windows `
             --build-arg "BASE_IMAGE_TAG=${matrixTag}" `
             --build-arg "COMMIT=${commit}" `
             --build-arg "DATE=${date}" `
             --build-arg "TAG=${dockerImageTag}" `
-              -t "${dockerImageName}:${dockerImageTag}-windows-$matrixTag" . `
+              -t "${$finalTag}" . `
+          
+          docker push "${finalTag}"
 
       - name: Build and push winodws docker release image
         if: ${{ ! inputs.z_pre_release }}
@@ -293,13 +294,15 @@ jobs:
           $commit = "${{ env.COMMIT }}"
           $dockerImageName = "${{ env.DOCKER_IMAGE_NAME}}"
           $dockerImageTag = "test-${{ env.DOCKER_IMAGE_TAG}}"
-
-          docker buildx build --push --platform windows/amd64 -f Dockerfile.windows `
+          $finalTag = "${dockerImageName}:${dockerImageTag}-windows-$matrixTag"
+          docker build --platform windows/amd64 -f Dockerfile.windows `
             --build-arg "BASE_IMAGE_TAG=${matrixTag}" `
             --build-arg "COMMIT=${commit}" `
             --build-arg "DATE=${date}" `
             --build-arg "TAG=${dockerImageTag}" `
-              -t "${dockerImageName}:${dockerImageTag}-windows-${matrixTag}" . `
+              -t "${$finalTag}" . `
+          docker push "${finalTag}"
+
   create-multi-platform-arch:
     name: Create Multi-Arch Manifest
     runs-on: ubuntu-latest
