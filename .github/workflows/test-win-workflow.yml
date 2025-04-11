@@ -247,6 +247,8 @@ jobs:
               "DATE=$(Get-Date)" | Out-File -FilePath $env:GITHUB_ENV -Append
               "new-version=$DOCKER_IMAGE_TAG" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           }
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Download Windows artifacts from build job with bin path
         if: ${{ inputs.artifact_path }}
         uses: actions/download-artifact@v4
@@ -275,7 +277,7 @@ jobs:
           $dockerImageName = "${{ env.DOCKER_IMAGE_NAME}}"
           $dockerImageTag = "test-${{ env.DOCKER_IMAGE_TAG}}"
 
-          docker build --push --platform windows/amd64 -f Dockerfile.windows `
+          docker buildx build --push --platform windows/amd64 -f Dockerfile.windows `
             --build-arg "BASE_IMAGE_TAG=${matrixTag}" `
             --build-arg "COMMIT=${commit}" `
             --build-arg "DATE=${date}" `
@@ -292,7 +294,7 @@ jobs:
           $dockerImageName = "${{ env.DOCKER_IMAGE_NAME}}"
           $dockerImageTag = "test-${{ env.DOCKER_IMAGE_TAG}}"
 
-          docker build --push --platform windows/amd64 -f Dockerfile.windows `
+          docker buildx build --push --platform windows/amd64 -f Dockerfile.windows `
             --build-arg "BASE_IMAGE_TAG=${matrixTag}" `
             --build-arg "COMMIT=${commit}" `
             --build-arg "DATE=${date}" `
