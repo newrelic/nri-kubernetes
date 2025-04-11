@@ -194,29 +194,29 @@ jobs:
               $DOCKER_IMAGE_TAG = "$zTagName" -replace '^v',''
               echo "DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG" >> $env:GITHUB_ENV
               echo "DATE=$(Get-Date)" >> $env:GITHUB_ENV
-      # - uses: actions/checkout@v4
-      # - uses: actions/setup-go@v5
-      #   with:
-      #     go-version-file: 'go.mod'
-      # - name: Build integration
-      #   env:
-      #     GOARCH: amd64
-      #     COMMIT: ${{ github.sha }}
-      #     DATE: ${{ env.DATE }}
-      #     TAG: ${{ env.DOCKER_IMAGE_TAG }}
-      #   shell: powershell
-      #   run: | 
-      #     $env:COMMIT = "${{ github.sha }}"
-      #     $env:DATE = "${{ env.DATE }}"
-      #     $env:TAG = "${{ env.DOCKER_IMAGE_TAG }}"
-      #     $env:WinVersion = "${{ matrix.windows.tag }}"
-      #     ./buildWindows.ps1
-      # - name: Upload artifact for docker build step
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     retention-days: 1
-      #     name: ${{ inputs.repo_name }}-windows-${{ matrix.windows.tag }}-amd64
-      #     path: ${{ inputs.artifact_path }}${{ inputs.repo_name }}-windows-${{ matrix.windows.tag }}-amd64.exe
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+      - name: Build integration
+        env:
+          GOARCH: amd64
+          COMMIT: ${{ github.sha }}
+          DATE: ${{ env.DATE }}
+          TAG: ${{ env.DOCKER_IMAGE_TAG }}
+        shell: powershell
+        run: | 
+          $env:COMMIT = "${{ github.sha }}"
+          $env:DATE = "${{ env.DATE }}"
+          $env:TAG = "${{ env.DOCKER_IMAGE_TAG }}"
+          $env:WinVersion = "${{ matrix.windows.tag }}"
+          ./buildWindows.ps1
+      - name: Upload artifact for docker build step
+        uses: actions/upload-artifact@v4
+        with:
+          retention-days: 1
+          name: ${{ inputs.repo_name }}-windows-${{ matrix.windows.tag }}-amd64
+          path: ${{ inputs.artifact_path }}${{ inputs.repo_name }}-windows-${{ matrix.windows.tag }}-amd64.exe
   
   docker-integration-windows:
     name: Release docker
