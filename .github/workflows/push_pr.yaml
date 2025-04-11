@@ -117,7 +117,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
-      - uses: newrelic/newrelic-infra-checkers@v1
+      - uses: newrelic/newrelic-infra-checkers@a46bb9956ecad6e9cf47674291fc13dc20650a34 # v1.4.4
         with:
           golangci-lint-config: golangci-lint
       # - name: Semgrep
@@ -125,14 +125,11 @@ jobs:
       #   with:
       #     auditOn: push
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@ec5d18412c0aeab7936cb16880d708ba2a64e1ae # v6.2.0
+        uses: golangci/golangci-lint-action@1481404843c368bc19ca9406f87d6e0fc97bdcfd # v7.0.0
         continue-on-error: ${{ github.event_name != 'pull_request' }}
         with:
           only-new-issues: true
-          # Skip cache because of flaky behavior:
-          # https://github.com/golangci/golangci-lint/blob/master/.github/workflows/pr.yml#L49
-          skip-cache: true
-          skip-save-cache: true
+          version: v2.0
 
   codespell:
     name: Codespell
