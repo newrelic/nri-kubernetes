@@ -131,6 +131,9 @@ var expectedEntities = []*integration.Entity{
 					"status":                     "Running",
 					"isReady":                    float64(1),
 					//"reason":               "",      // TODO ?
+					"lastTerminatedExitCode":         float64(0),
+					"lastTerminatedExitReason":       "Completed",
+					"lastTerminatedTimestamp":        float64(1.51974487e+09),
 					"displayName":                    "newrelic-infra", // From entity attributes
 					"clusterName":                    "test-cluster",   // From entity attributes
 					"label.controller-revision-hash": "3887482659",
