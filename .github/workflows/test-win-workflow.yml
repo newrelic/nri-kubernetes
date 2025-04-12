@@ -183,33 +183,29 @@ jobs:
           - runner: windows-2022
             tag: ltsc2022
     runs-on: ${{ matrix.windows.runner }}
+    if: ${{ inputs.enable_windows }}
     steps:
       - name: Build env args
         shell: powershell
         run: |
-              $zTagName = "${{ inputs.z_tag_name }}"
-              if ("$zTagName" -notmatch '^[v]?[0-9.]*[0-9]$') {
-                throw "Tag name does not match expected pattern"
-              }
-              $DOCKER_IMAGE_TAG = "$zTagName" -replace '^v',''
-              echo "DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG" >> $env:GITHUB_ENV
-              echo "DATE=$(Get-Date)" >> $env:GITHUB_ENV
+          $zTagName = "${{ inputs.z_tag_name}}"
+          if ("$zTagName" -match '^[v]?[0-9.]*[0-9]$') {
+              $DOCKER_IMAGE_TAG = "$zTagName" -replace '^v', ''
+              "DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG" | Out-File -FilePath $env:GITHUB_ENV -Append
+              "DATE=$(Get-Date)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          }
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
       - name: Build integration
+        shell: powershell
         env:
-          GOARCH: amd64
           COMMIT: ${{ github.sha }}
           DATE: ${{ env.DATE }}
           TAG: ${{ env.DOCKER_IMAGE_TAG }}
-        shell: powershell
-        run: | 
-          $env:COMMIT = "${{ github.sha }}"
-          $env:DATE = "${{ env.DATE }}"
-          $env:TAG = "${{ env.DOCKER_IMAGE_TAG }}"
-          $env:WinVersion = "${{ matrix.windows.tag }}"
+          WIN_VERSION: ${{ matrix.windows.tag }}
+        run: |
           ./buildWindows.ps1
       - name: Upload artifact for docker build step
         uses: actions/upload-artifact@v4
@@ -234,7 +230,6 @@ jobs:
       new-version: ${{ steps.set-new-version.outputs.new-version }}
     env:
       DOCKER_IMAGE_NAME: ${{ inputs.docker_image_name }}
-      DOCKER_PLATFORMS: "windows/amd64" # Must be consistent with the matrix from the job above
       COMMIT: ${{ github.sha }}
     steps:
       - name: Generate docker image version from git tag

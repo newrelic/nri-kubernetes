@@ -20,10 +20,10 @@ Get-ChildItem -Recurse | ForEach-Object { Write-Host $_.FullName }
 Write-Host "[compile-windows] Building $BindaryName for Windows"
 
 if ($env:CGO_ENABLED) { $GO_ENABLED = $env:CGO_ENABLED}
-if ($env:Tag) { $Tag = $env:Tag}
-if ($env:WinVersion) { $WinVersion = $env:WinVersion}
-if ($env:Commit) { $Commit = $env:Commit}
-if ($env:BuildDate) { $BuildDate = $env:BuildDate}
+if ($env:TAG) { $Tag = $env:TAG}
+if ($env:WIN_VERSION) { $WinVersion = $env:WIN_VERSION}
+if ($env:COMMIT) { $Commit = $env:COMMIT}
+if ($env:DATE) { $BuildDate = $env:DATE}
 
 $LdFlags = "-X 'main.integrationVersion=$Tag' -X 'main.gitCommit=$Commit' -X 'main.buildDate=$BuildDate'"
 
