@@ -284,11 +284,14 @@ jobs:
           FINAL_TAG: "${{ inputs.docker_image_name }}:${{ needs.build-env-args.outputs.docker_image_tag }}-windows-${{ matrix.windows.tag }}"
         shell: powershell
         run: |
+          echo $env:DOCKER_IMAGE_TAG
+          echo $env:FINAL_TAG
+
           docker build --platform windows/amd64 -f Dockerfile.windows `
             --build-arg "BASE_IMAGE_TAG=$env:MATRIX_TAG" `
-            --build-arg "COMMIT=$env:COMMIT `
+            --build-arg "COMMIT=$env:COMMIT" `
             --build-arg "DATE=$env:DATE" `
-            --build-arg "TAG=${dockerImageTag}" `
+            --build-arg "TAG=$env:DOCKER_IMAGE_TAG" `
               -t "$env:FINAL_TAG" .
           
           docker push "$env:FINAL_TAG"
