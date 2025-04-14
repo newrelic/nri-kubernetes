@@ -342,6 +342,8 @@ jobs:
           if [ ${{ !inputs.z_pre_release }} ]; then
             IMAGE_TAG="${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}"
           fi
+
+          echo "Creating manifest for $IMAGE_TAG"
           
           windows2019_image="${IMAGE_TAG}-windows-ltsc2019"
           windows2022_image="${IMAGE_TAG}-windows-ltsc2022"
@@ -349,7 +351,7 @@ jobs:
           docker pull $IMAGE_TAG
 
           echo "Extracting Linux architecture digests..."
-          manifest_data=$(docker manifest inspect $IMAGE_TAG)
+          manifest_data=$(docker manifest inspect ${IMAGE_TAG})
 
           arm64_image=$(echo "$manifest_data" | jq -r --arg name "$DOCKER_IMAGE_NAME" \
             '.manifests[] | select(.platform.architecture=="arm64" and .platform.os=="linux") | $name + "@" + .digest')
@@ -367,27 +369,28 @@ jobs:
           echo "Windows 2022 image: ${windows2022_image}"
 
           echo "Creating new manifest with the same name with all architectures..."
-          manifest_cmd="docker manifest create $IMAGE_TAG"
+          manifest_cmd="docker manifest create ${IMAGE_TAG}"
 
-          [ -n "$arm64_image" ] && manifest_cmd="$manifest_cmd --amend '$arm64_image'"
-          [ -n "$armv7_image" ] && manifest_cmd="$manifest_cmd --amend '$armv7_image'"
-          [ -n "$amd64_image" ] && manifest_cmd="$manifest_cmd --amend '$amd64_image'"
-          docker manifest inspect "${windows2019_image}" &>/dev/null && manifest_cmd="$manifest_cmd --amend '$windows2019_image'"
-          docker manifest inspect "${windows2022_image}" &>/dev/null && manifest_cmd="$manifest_cmd --amend '$windows2022_image'"
+          [ -n "${arm64_image}" ] && manifest_cmd="${manifest_cmd} --amend '${arm64_image}'"
+          [ -n "${armv7_image}" ] && manifest_cmd="${manifest_cmd} --amend '${armv7_image}'"
+          [ -n "${amd64_image}" ] && manifest_cmd="${manifest_cmd} --amend '${amd64_image}'"
+          docker manifest inspect "${windows2019_image}" &>/dev/null && manifest_cmd="${manifest_cmd} --amend '${windows2019_image}'"
+          docker manifest inspect "${windows2022_image}" &>/dev/null && manifest_cmd="${manifest_cmd} --amend '${windows2022_image}'"
 
-          echo "Executing: $manifest_cmd"
+          echo "Executing: ${manifest_cmd}"
           eval $manifest_cmd
 
           echo "Annotating Windows images..."
           if docker manifest inspect "${windows2019_image}" &>/dev/null; then
-            docker manifest annotate $IMAGE_TAG $windows2019_image \
+            docker manifest annotate ${IMAGE_TAG} ${windows2019_image} \
               --os windows --arch amd64 --os-version 10.0.17763
           fi
 
           if docker manifest inspect "${windows2022_image}" &>/dev/null; then
-            docker manifest annotate $IMAGE_TAG $windows2022_image \
+            docker manifest annotate ${IMAGE_TAG} ${windows2022_image} \
               --os windows --arch amd64 --os-version 10.0.20348
           fi
 
+          echo "about to push manifest for ${IMAGE_TAG}"
           echo "Pushing combined manifest..."
-          docker manifest push $IMAGE_TAG
+          docker manifest push ${IMAGE_TAG}
