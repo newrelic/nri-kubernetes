@@ -251,17 +251,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: bin
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
           pattern: '*-windows-*'
-          path: bin
           merge-multiple: true
       - name: Download Windows artifacts from build job without bin path
         if: ${{ ! inputs.artifact_path }}
         uses: actions/download-artifact@v4
         with:
-          name: '*-windows-*'
+          pattern: '*-windows-*'
+          merge-multiple: true
       - uses: docker/login-action@v3
         with:
           username: ${{ secrets.dockerhub_username }}
@@ -294,9 +291,7 @@ jobs:
             --build-arg "DATE=${env:DATE}" `
             --build-arg "TAG=${env:DOCKER_IMAGE_TAG}" `
               -t "${env:FINAL_TAG}" .
-          
           docker push "${env:FINAL_TAG}"
-
       - name: Build and push winodws docker release image
         if: ${{ ! inputs.z_pre_release }}
         shell: powershell
@@ -315,8 +310,8 @@ jobs:
               -t "${finalTag}" .
           docker push "${finalTag}"
 
-  create-multi-platform-arch:
-    name: Create Multi-Arch Manifest
+  create-multi-platform-arch-manifest:
+    name: Create Multi-Arch-Multi-Platform Manifest
     runs-on: ubuntu-latest
     needs: [build-env-args, docker-integration, docker-integration-windows]
     env:
@@ -342,10 +337,14 @@ jobs:
           DOCKER_IMAGE_NAME: ${{ inputs.docker_image_name }}
           DOCKER_IMAGE_TAG: ${{ needs.build-env-args.outputs.docker_image_tag }}
         run: |
-          IMAGE_TAG="$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-pre" 
-
-          windows2019_image="$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-windows-ltsc2019"
-          windows2022_image="$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG-windows-ltsc2022"
+          IMAGE_TAG="${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-pre" 
+                    
+          if [ ${{ !inputs.z_pre_release }} ]; then
+            IMAGE_TAG="${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}"
+          fi
+          
+          windows2019_image="${IMAGE_TAG}-windows-ltsc2019"
+          windows2022_image="${IMAGE_TAG}-windows-ltsc2022"
 
           docker pull $IMAGE_TAG
 
@@ -380,13 +379,15 @@ jobs:
           eval $manifest_cmd
 
           echo "Annotating Windows images..."
-          docker manifest inspect "${windows2019_image}" &>/dev/null && \
+          if docker manifest inspect "${windows2019_image}" &>/dev/null; then
             docker manifest annotate $IMAGE_TAG $windows2019_image \
               --os windows --arch amd64 --os-version 10.0.17763
+          fi
 
-          docker manifest inspect "${windows2022_image}" &>/dev/null && \
+          if docker manifest inspect "${windows2022_image}" &>/dev/null; then
             docker manifest annotate $IMAGE_TAG $windows2022_image \
               --os windows --arch amd64 --os-version 10.0.20348
+          fi
 
           echo "Pushing combined manifest..."
           docker manifest push $IMAGE_TAG
