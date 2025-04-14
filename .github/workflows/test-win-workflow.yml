@@ -83,8 +83,8 @@ jobs:
       - name: Build env args
         id: build-env-args
         run: |
-          echo "${{ github.event.release.tag_name }}" | grep -E '^[v]?[0-9.]*[0-9]$'
-          DOCKER_IMAGE_TAG=$(echo "${{ github.event.release.tag_name }}" | sed 's/^v//')
+          echo "${{ inputs.z_tag_name}}" | grep -E '^[v]?[0-9.]*[0-9]$'
+          DOCKER_IMAGE_TAG=$(echo "${{ inputs.z_tag_name}}" | sed 's/^v//')
           echo "docker-image-tag=$DOCKER_IMAGE_TAG" >> $GITHUB_OUTPUT
           echo "DATE=`date`" >> $GITHUB_OUTPUT
           echo "new-version=$DOCKER_IMAGE_TAG" >> $GITHUB_OUTPUT
