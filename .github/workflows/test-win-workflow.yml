@@ -289,6 +289,7 @@ jobs:
           DATE: ${{ needs.build-env-args.outputs.date }}
           MATRIX_TAG: ${{ matrix.windows.tag }}
           PRE_RELEASE_DOCKER_IMAGE_TAG: "${{ needs.build-env-args.outputs.docker_image_tag }}-pre"
+          WIN_DIR: ${{ inputs.windows_directory }}
         shell: powershell
         run: |
           $env:FINAL_TAG = "${env:DOCKER_IMAGE_NAME}:${env:PRE_RELEASE_DOCKER_IMAGE_TAG}-windows-${env:MATRIX_TAG}"
@@ -296,7 +297,13 @@ jobs:
           echo $env:PRE_RELEASE_DOCKER_IMAGE_TAG
           echo $env:FINAL_TAG
 
-          docker build --platform windows/amd64 -f Dockerfile.windows `
+          if ([string]::IsNullOrEmpty($env:WIN_DIR)) {
+            $dockerfilePath = "Dockerfile.windows"
+          } else {
+            $dockerfilePath = Join-Path $env:WIN_DIR "Dockerfile.windows"
+          }
+
+          docker build --platform windows/amd64 -f $dockerfilePath `
             --build-arg "BASE_IMAGE_TAG=${env:MATRIX_TAG}" `
             --build-arg "COMMIT=${env:COMMIT}" `
             --build-arg "DATE=${env:DATE}" `
