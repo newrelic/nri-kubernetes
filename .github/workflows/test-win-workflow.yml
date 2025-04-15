@@ -50,6 +50,11 @@ on:
         type: boolean
         required: false
         default: false
+      windows_directory:
+        description: Location of Windows build files
+        type: string
+        required: false
+        default: ''
     # secrets need to be passed in for reusable workflows
     secrets:
       dockerhub_username:
@@ -213,8 +218,14 @@ jobs:
           DATE: ${{ needs.build-env-args.outputs.date }}
           TAG: ${{ needs.build-env-args.outputs.docker_image_tag }}
           WIN_VERSION: ${{ matrix.windows.tag }}
+          WIN_DIR: ${{ inputs.windows_directory }}
         run: |
-          ./buildWindows.ps1
+          if ([string]::IsNullOrEmpty($env:WIN_DIR)) {
+            ./build.ps1
+          } else {
+            $scriptPath = Join-Path $env:WIN_DIR "build.ps1"
+            & $scriptPath
+          }
       - name: Upload artifact for docker build step
         uses: actions/upload-artifact@v4
         with:
