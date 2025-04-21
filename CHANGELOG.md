@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.38.0 - 2025-04-14
+
+### 🚀 Enhancements
+- Updated `lastTerminatedTimestamp` to use `time.Time` instead of `int64` for better time handling @sadafarshad [#1203](https://github.com/newrelic/nri-kubernetes/pull/1203)
+
+### ⛓️ Dependencies
+- Updated kubernetes packages to v0.32.3
+- Updated go to v1.24.2
+- Updated golang.org/x/crypto to v0.37.0
+
+## v3.37.0 - 2025-04-07
+
+### 🚀 Enhancements
+- Add options for Windows server 2019 and Windows server 2022 deployments in E2E-resources @TmNguyen12 [#1149]
+- Converted `lastTerminatedTimestamp` to `int64` Unix timestamp @sadafarshad [#1198](https://github.com/newrelic/nri-kubernetes/pull/1198)
+
 ## v3.36.0 - 2025-03-31
 
 ### 🚀 Enhancements

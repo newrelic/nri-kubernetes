@@ -23,14 +23,14 @@ images:
   forwarder:
     registry: ""
     repository: newrelic/k8s-events-forwarder
-    tag: 1.63.0
+    tag: 1.63.1
     pullPolicy: IfNotPresent
   # -- Image for the New Relic Infrastructure Agent plus integrations.
   # @default -- See `values.yaml`
   agent:
     registry: ""
     repository: newrelic/infrastructure-bundle
-    tag: 3.2.70
+    tag: 3.2.71
     pullPolicy: IfNotPresent
   # -- Image for the New Relic Kubernetes integration.
   # @default -- See `values.yaml`
@@ -38,6 +38,11 @@ images:
     registry: ""
     repository: newrelic/nri-kubernetes
     tag:
+    pullPolicy: IfNotPresent
+  windowsAgent:
+    registry: ""
+    repository: newrelic/infrastructure-agent
+    tag: 1.63.0
     pullPolicy: IfNotPresent
 
 # -- Config that applies to all instances of the solution: kubelet, ksm, control plane and sidecars.
