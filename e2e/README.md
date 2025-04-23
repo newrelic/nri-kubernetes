@@ -75,3 +75,18 @@ LICENSE_KEY=${LICENSE_KEY} EXCEPTIONS_SOURCE_FILE=${EXCEPTIONS_SOURCE_FILE}  go 
 ```   
 
 You may check [e2e workflow](../.github/workflows/e2e.yaml) to have more details about how this is used in development workflow.
+
+### Running Windows e2e tests
+Trying to run e2e tests for Windows nodes? Currently, you can run e2e tests for Windows nodes locally - we have not yet built in automation. This is because we cannot test Windows nodes using Minikube or Kind, so we need to have our local kubeconfig pointing to an existing cluster in the cloud. Because of this, there are also several metrics associated with the control plane that you'll find are missing. These are accounted for in the special `*-windows.yaml` exception files. Here's how to run these e2e tests locally:
+- Follow the above guidance on setting `LICENSE_KEY`, `API_KEY`, and `ACCOUNT_ID`. `EXCEPTIONS_SOURCE_FILE` will be a bit different as you'll want to target one of the Windows files: `export EXCEPTIONS_SOURCE_FILE=1_32-exceptions-windows.yaml`
+- In e2e-values.yaml, add overrides for `agentImage` and `integrationImage` if desired. This is for the nri-kubernetes installation.
+- Switch your kubeconfig to a cluster that has Windows nodes in the cloud: `kubectx <your-cluster-name>`
+- Run the following at the root of the repo to execute tests. If you are setting your own SCENARIO_TAG, add `--scenario_tag=$SCENARIO_TAG` to your command:
+```shell
+LICENSE_KEY=${LICENSE_KEY} EXCEPTIONS_SOURCE_FILE=${EXCEPTIONS_SOURCE_FILE}  go run github.com/newrelic/newrelic-integration-e2e-action@latest \
+     --commit_sha=test-string --retry_attempts=5 --retry_seconds=60 \
+	 --account_id=${ACCOUNT_ID} --api_key=${API_KEY} --license_key=${LICENSE_KEY} \
+	 --spec_path=./e2e/test-specs-windows.yml --verbose_mode=true --agent_enabled="false" 
+```
+
+Automating the Windows tests is a work in progress, so stay tuned for more updates on this!
