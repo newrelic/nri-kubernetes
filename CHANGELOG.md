@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancements
+- Adds local e2e testing for Windows nodes @TmNguyen12 @kondracek-kr [#1185](https://github.com/newrelic/nri-kubernetes/pull/1185)
+
 ## v3.38.0 - 2025-04-14
 
 ### 🚀 Enhancements
