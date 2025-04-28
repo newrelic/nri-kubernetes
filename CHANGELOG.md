@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancements
+## v3.39.0 - 2025-04-28
+
+### 🚀 Enhancements
 - Adds local e2e testing for Windows nodes @TmNguyen12 @kondracek-kr [#1185](https://github.com/newrelic/nri-kubernetes/pull/1185)
+
+### ⛓️ Dependencies
+- Updated github.com/prometheus/client_model to v0.6.2 - [Changelog 🔗](https://github.com/prometheus/client_model/releases/tag/v0.6.2)
 
 ## v3.38.0 - 2025-04-14
 
