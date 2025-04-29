@@ -6,7 +6,8 @@ metadata:
   namespace: {{ $.Release.Namespace }}
   labels:
     kubernetes.io/os: windows
-    {{- include "nriKubernetes.labels" $ | nindent 4 }}
+    mode: unprivileged
+    {{- include "newrelic.common.labels" $ | nindent 4 }}
   name: {{ join "-" (list (include "nriKubernetes.kubelet.fullname" $) .imageTagSuffix) }}
   {{- $legacyAnnotation:= fromYaml (include "newrelic.compatibility.annotations" $) -}}
   {{- with  include "newrelic.compatibility.valueWithFallback" (dict "legacy" $legacyAnnotation "supported" $.Values.kubelet.annotations )}}
@@ -33,8 +34,10 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
-        {{- include "nriKubernetes.labels.podLabels" $ | nindent 8 }}
         app.kubernetes.io/component: kubelet
+        mode: unprivileged
+        {{- include "newrelic.common.labels.podLabels" $ | nindent 8 }}
+
     spec:
       {{- with include "newrelic.common.images.renderPullSecrets" ( dict "pullSecrets" (list $.Values.images.pullSecrets) "context" $) }}
       imagePullSecrets:
@@ -48,6 +51,7 @@ spec:
       priorityClassName: {{ $ }}
       {{- end }}
       serviceAccountName: {{ include "newrelic.common.serviceAccount.name" $ }}
+      hostNetwork: false
 
       {{- if $.Values.kubelet.initContainers }}
       initContainers: {{- tpl ($.Values.kubelet.initContainers | toYaml) $ | nindent 8 }}
@@ -168,16 +172,16 @@ spec:
           {{- end }}
           volumeMounts:
             - name: config
-              mountPath: C:\etc\newrelic-infra.yml
+              mountPath: "C:\\Program Files\\New Relic\\newrelic-infra\\newrelic-infra.yml"
               subPath: newrelic-infra.yml
             - name: nri-integrations-cfg-volume
-              mountPath: C:\etc\newrelic-infra\integrations.d\
+              mountPath: "C:\\Program Files\\New Relic\\newrelic-infra\\integrations.d"
             - name: agent-tmpfs-data
-              mountPath: C:\var\db\nnewrelic-infra\data
+              mountPath: "C:\\ProgramData\\New Relic\\newrelic-infra\\data"
             - name: agent-tmpfs-user-data
-              mountPath: C:\var\db\newrelic-infra\user_data
+              mountPath: "C:\\ProgramData\\New Relic\\newrelic-infra\\user_data"
             - name: agent-tmpfs-tmp
-              mountPath: C:\tmp
+              mountPath: "C:\\ProgramData\\New Relic\\newrelic-infra\\tmp"
             {{- with $.Values.kubelet.extraVolumeMounts }}
             {{- toYaml $ | nindent 12 }}
             {{- end }}
