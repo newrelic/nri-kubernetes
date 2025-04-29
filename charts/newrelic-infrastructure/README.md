@@ -136,7 +136,6 @@ integrations that you have configured.
 | customSecretName | string | `""` | In case you don't want to have the license key in you values, this allows you to point to a user created secret to get the key from there. Can be configured also with `global.customSecretName` |
 | dnsConfig | object | `{}` | Sets pod's dnsConfig. Can be configured also with `global.dnsConfig` |
 | enableProcessMetrics | bool | `false` | Collect detailed metrics from processes running in the host. This defaults to true for accounts created before July 20, 2020. ref: https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/new-relic-infrastructure-agent-1120 |
-| enableWindows | bool | `false` | Enables collection of metrics from Windows containers. Refer to [Windows support](Windows.md) section for more details. |
 | fedramp.enabled | bool | `false` | Enables FedRAMP. Can be configured also with `global.fedramp.enabled` |
 | fullnameOverride | string | `""` | Override the full name of the release |
 | hostNetwork | bool | `false` | Sets pod's hostNetwork. Can be configured also with `global.hostNetwork` |
@@ -193,9 +192,6 @@ integrations that you have configured.
 | tolerations | list | `[]` | Sets pod's tolerations to node taints almost globally. (See [Affinities and tolerations](README.md#affinities-and-tolerations)) |
 | updateStrategy | object | See `values.yaml` | Update strategy for the deployed DaemonSets. |
 | verboseLog | bool | `false` | Sets the debug logs to this integration or all integrations if it is set globally. Can be configured also with `global.verboseLog` |
-| windowsNodeSelector | object |  `{ kubernetes.io/os: windows, node.kubernetes.io/windows-build: BUILD_NUMBER }` | Sets windows pod's selector. Refer to [Windows support](../../Windows.md) |
-| windowsOsList.agentImage | string | `""` | Overrides the infrastructure-agent windows image |
-| windowsOsList.integrationImage | string | `""` | Overrides the nri-kubernetes windows image |
 
 ## Running tests locally
 

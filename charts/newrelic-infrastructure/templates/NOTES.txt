@@ -95,6 +95,12 @@ We have automatically translated your `config` setting to the new format, but th
 future. Please migrate your agent config to the new format in the `common.agentConfig` key.
 {{- end }}
 
+{{- if .Values.enableWindows }}
+WARNING: `enableWindows` is not supported
+===============================
+Windows support is considered unreleased for nri-kubernetes v3 at this time. Install at your own risk!
+{{- end }}
+
 
 {{ $errors:= "" }}
 
