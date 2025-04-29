@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### 🚀 Enhancements
+- Add v1.33 support and drop support for v1.28 @danielstokes [#1212](https://github.com/newrelic/nri-kubernetes/pull/1212)
+
 ## v3.39.0 - 2025-04-28
 
 ### 🚀 Enhancements
