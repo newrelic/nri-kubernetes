@@ -1,16 +1,19 @@
-{{- if and .Values.daemonSet.enabled .Values.windows.is2019 }}
+{{- if and .Values.deployment.enabled .Values.windows.is2019 }}
 apiVersion: apps/v1
-kind: DaemonSet
+kind: Deployment
 metadata:
-  name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2019" .}}-daemonset
+  name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2019" .}}
+  labels:
+    app: windows-server-2019
 spec:
+  replicas: 1
   selector:
     matchLabels:
-      app: daemonset-w-2019
+      app: windows-server-2019
   template:
     metadata:
       labels:
-        app: daemonset-w-2019
+        app: windows-server-2019
     spec:
       nodeSelector:
         kubernetes.io/os: windows
@@ -25,9 +28,8 @@ spec:
           value: "10.0.17763"
           effect: "NoSchedule"
       containers:
-        - name: random-text
+        - name: windows-server-2019
           image: mcr.microsoft.com/windows/servercore:ltsc2019
-          imagePullPolicy: IfNotPresent
           resources:
             requests:
               cpu: "250m"
@@ -43,39 +45,24 @@ spec:
                 Write-Host "Random Text: $(Get-Random)";
                 Start-Sleep -Seconds 10;
               }
-          volumeMounts:
-            - mountPath: /output
-              name: storage
-        {{- if .Values.demo.enabled }}
-        - name: failing-container
-          image: mcr.microsoft.com/windows/servercore:ltsc2019
-          command:
-            - powershell
-            - " -Command"
-            - |
-              Write-Host "Hello world! I'm going to exit with 42 to simulate a software bug."
-              Start-Sleep -Seconds 300
-              exit 42
-        {{- end }}
-      volumes:
-        - name: storage
-          emptyDir:
-            sizeLimit: 30Mi
 {{- end }}
 ---
-{{- if and .Values.daemonSet.enabled .Values.windows.is2022 }}
+{{- if and .Values.deployment.enabled .Values.windows.is2022 }}
 apiVersion: apps/v1
-kind: DaemonSet
+kind: Deployment
 metadata:
-  name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2022" .}}-daemonset
+  name: {{ include "nriKubernetes.e2e.kubelet.fullname.windows2022" .}}
+  labels:
+    app: windows-server-2022
 spec:
+  replicas: 1
   selector:
     matchLabels:
-      app: daemonset-w-2022
+      app: windows-server-2022
   template:
     metadata:
       labels:
-        app: daemonset-w-2022
+        app: windows-server-2022
     spec:
       nodeSelector:
         kubernetes.io/os: windows
@@ -90,9 +77,8 @@ spec:
           value: "10.0.20348"
           effect: "NoSchedule"
       containers:
-        - name: random-text
+        - name: windows-server-2022
           image: mcr.microsoft.com/windows/servercore:ltsc2022
-          imagePullPolicy: IfNotPresent
           resources:
             requests:
               cpu: "250m"
@@ -108,22 +94,4 @@ spec:
                 Write-Host "Random Text: $(Get-Random)";
                 Start-Sleep -Seconds 10;
               }
-          volumeMounts:
-            - mountPath: /output
-              name: storage
-        {{- if .Values.demo.enabled }}
-        - name: failing-container
-          image: mcr.microsoft.com/windows/servercore:ltsc2022
-          command:
-            - powershell
-            - " -Command"
-            - |
-              Write-Host "Hello world! I'm going to exit with 42 to simulate a software bug."
-              Start-Sleep -Seconds 300
-              exit 42
-        {{- end }}
-      volumes:
-        - name: storage
-          emptyDir:
-            sizeLimit: 30Mi
 {{- end }}

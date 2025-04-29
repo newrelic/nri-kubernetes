@@ -53,8 +53,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### 🚀 Enhancements
 - Added support for last terminated exit code in metrics @danielstokes [#1173](https://github.com/newrelic/nri-kubernetes/pull/1173)
 
-## v3.35.1 - 2025-03-24
-
 ### ⛓️ Dependencies
 - Updated google.golang.org/protobuf to v1.36.6
 - Updated github.com/prometheus/common to v0.63.0 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.63.0)
