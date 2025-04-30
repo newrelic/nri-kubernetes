@@ -358,12 +358,5 @@ jobs:
           DOCKER_IMAGE_NAME: ${{ inputs.docker_image_name }}
           DOCKER_IMAGE_TAG: ${{ needs.build-env-args.outputs.docker_image_tag }}
         run: |
-          IMAGE_TAG="${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-pre" 
-          
-          if [ "${{ inputs.z_pre_release }}" = "false" ] ; then
-            IMAGE_TAG="${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}"
-          fi
-          echo "IMAGE_TAG=${IMAGE_TAG}"
-
           chmod +x ./windows/util/create-manifest.sh
-          ./windows/util/create-manifest.sh --docker-image-name ${IMAGE_TAG} --docker-image-tag ${DOCKER_IMAGE_TAG} --is-prerelease ${{ inputs.z_pre_release}}
+          ./windows/util/create-manifest.sh --docker-image-name ${DOCKER_IMAGE_NAME} --docker-image-tag ${DOCKER_IMAGE_TAG} --is-prerelease ${{ inputs.z_pre_release}}
