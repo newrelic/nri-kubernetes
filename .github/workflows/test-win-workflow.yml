@@ -139,7 +139,7 @@ jobs:
       DOCKER_IMAGE_NAME: ${{ inputs.docker_image_name }}
       DOCKER_PLATFORMS: "linux/amd64,linux/arm64,linux/arm" # Must be consistent with the matrix from the job above
       COMMIT: ${{ github.sha }}
-      Z_PRELEASE: ${{ inputs.z_pre_release }}
+      Z_PRERELEASE: ${{ inputs.z_pre_release }}
       Z_TAG_NAME: ${{ inputs.z_tag_name }}
     steps:
       - name: Generate docker image version from git tag
@@ -312,21 +312,34 @@ jobs:
           docker push "${env:FINAL_TAG}"
       - name: Build and push winodws docker release image
         if: ${{ ! inputs.z_pre_release }}
+        env:
+          NEW_VERSION: ${{ needs.build-env-args.outputs.new-version }}
+          DOCKER_IMAGE_NAME: ${{ inputs.docker_image_name }}
+          COMMIT: ${{ github.sha }}
+          DATE: ${{ needs.build-env-args.outputs.date }}
+          MATRIX_TAG: ${{ matrix.windows.tag }}
+          RELEASE_DOCKER_IMAGE_TAG: ${{ needs.build-env-args.outputs.docker_image_tag }}
+          WIN_DIR: ${{ inputs.windows_directory }}
         shell: powershell
         run: |
-          $matrixTag = "${{ matrix.windows.tag }}"
-          $date = "${{ env.DATE }}"
-          $commit = "${{ env.COMMIT }}"
-          $dockerImageName = "${{ env.DOCKER_IMAGE_NAME}}"
-          $dockerImageTag = "test-${{ env.DOCKER_IMAGE_TAG}}"
-          $finalTag = "${dockerImageName}:${dockerImageTag}-windows-${matrixTag}"
-          docker build --platform windows/amd64 -f Dockerfile.windows `
-            --build-arg "BASE_IMAGE_TAG=${matrixTag}" `
-            --build-arg "COMMIT=${commit}" `
-            --build-arg "DATE=${date}" `
-            --build-arg "TAG=${dockerImageTag}" `
-              -t "${finalTag}" .
-          docker push "${finalTag}"
+          $env:FINAL_TAG = "${env:DOCKER_IMAGE_NAME}:${env:RELEASE_DOCKER_IMAGE_TAG}-windows-${env:MATRIX_TAG}"
+
+          echo $env:RELEASE_DOCKER_IMAGE_TAG
+          echo $env:FINAL_TAG
+
+          if ([string]::IsNullOrEmpty($env:WIN_DIR)) {
+            $dockerfilePath = "Dockerfile.windows"
+          } else {
+            $dockerfilePath = Join-Path $env:WIN_DIR "Dockerfile.windows"
+          }
+
+          docker build --platform windows/amd64 -f $dockerfilePath `
+            --build-arg "BASE_IMAGE_TAG=${env:MATRIX_TAG}" `
+            --build-arg "COMMIT=${env:COMMIT}" `
+            --build-arg "DATE=${env:DATE}" `
+            --build-arg "TAG=${env:DOCKER_IMAGE_TAG}" `
+              -t "${env:FINAL_TAG}" .
+          docker push "${env:FINAL_TAG}"
 
   create-multi-platform-arch-manifest:
     name: Create Multi-Arch-Multi-Platform Manifest
@@ -350,8 +363,10 @@ jobs:
       - name: Install regctl
         run: |
           REGCTL_VERSION=v0.8.3
-          curl -L "https://github.com/regclient/regclient/releases/download/${REGCTL_VERSION}/regctl-linux-amd64" > /usr/local/bin/regctl
-          chmod 755 /usr/local/bin/regctl
+          mkdir -p $HOME/bin
+          curl -L "https://github.com/regclient/regclient/releases/download/${REGCTL_VERSION}/regctl-linux-amd64" > $HOME/bin/regctl
+          chmod 755 $HOME/bin/regctl
+          export PATH=$HOME/bin:$PATH
           regctl version
       - name: Create and Push Manifest
         env: 
@@ -359,4 +374,4 @@ jobs:
           DOCKER_IMAGE_TAG: ${{ needs.build-env-args.outputs.docker_image_tag }}
         run: |
           chmod +x ./windows/util/create-manifest.sh
-          ./windows/util/create-manifest.sh --docker-image-name ${DOCKER_IMAGE_NAME} --docker-image-tag ${DOCKER_IMAGE_TAG} --is-prerelease ${{ inputs.z_pre_release}}
+          ./windows/util/create-manifest.sh --docker-image-name ${DOCKER_IMAGE_NAME} --docker-image-tag ${DOCKER_IMAGE_TAG} --is-prerelease "${{ inputs.z_pre_release}}"
