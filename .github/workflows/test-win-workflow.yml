@@ -350,8 +350,8 @@ jobs:
       - name: Install regctl
         run: |
           REGCTL_VERSION=v0.8.3
-          curl -L "https://github.com/regclient/regclient/releases/download/${REGCTL_VERSION}/regctl-linux-amd64" > regctl
-          chmod 755 regctl
+          curl -L "https://github.com/regclient/regclient/releases/download/${REGCTL_VERSION}/regctl-linux-amd64" > /usr/local/bin/regctl
+          chmod 755 /usr/local/bin/regctl
           regctl version
       - name: Create and Push Manifest
         env: 
