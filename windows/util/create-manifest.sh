@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 set -o errexit
-set -o nounset
+# set -o nounset
 set -o pipefail
+
+echo "Before parsing args:"
+echo "DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME:-'not set'}"
+echo "DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG:-'not set'}"
+echo "IS_PRERELEASE=${IS_PRERELEASE:-'not set'}"
 
 DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME:-""}
 DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG:-""}
@@ -18,9 +23,28 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-for var in DOCKER_IMAGE_NAME DOCKER_IMAGE_TAG IS_PRERELEASE; do
-  [[ -z "${!var}" ]] && echo "Error: $var is required." && exit 1
-done
+echo "After parsing args:"
+echo "DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME}"
+echo "DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG}"
+echo "IS_PRERELEASE=${IS_PRERELEASE}"
+
+
+# for var in DOCKER_IMAGE_NAME DOCKER_IMAGE_TAG IS_PRERELEASE; do
+#   [[ -z "${!var}" ]] && echo "Error: $var is required." && exit 1
+# done
+
+if [[ -z "${DOCKER_IMAGE_NAME}" ]]; then
+  echo "Error: DOCKER_IMAGE_NAME is required."
+  exit 1
+fi
+if [[ -z "${DOCKER_IMAGE_TAG}" ]]; then
+  echo "Error: DOCKER_IMAGE_TAG is required."
+  exit 1
+fi
+if [[ -z "${IS_PRERELEASE}" ]]; then
+  echo "Error: IS_PRERELEASE is required."
+  exit 1
+fi
 
 IMAGE_TAG="${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}$([[ "$IS_PRERELEASE" != "false" ]] && echo "-pre")"
 echo "IMAGE_TAG=${IMAGE_TAG}"
