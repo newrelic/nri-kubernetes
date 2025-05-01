@@ -28,11 +28,6 @@ echo "DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME}"
 echo "DOCKER_IMAGE_TAG=${DOCKER_IMAGE_TAG}"
 echo "IS_PRERELEASE=${IS_PRERELEASE}"
 
-
-# for var in DOCKER_IMAGE_NAME DOCKER_IMAGE_TAG IS_PRERELEASE; do
-#   [[ -z "${!var}" ]] && echo "Error: $var is required." && exit 1
-# done
-
 if [[ -z "${DOCKER_IMAGE_NAME}" ]]; then
   echo "Error: DOCKER_IMAGE_NAME is required."
   exit 1
@@ -46,7 +41,11 @@ if [[ -z "${IS_PRERELEASE}" ]]; then
   exit 1
 fi
 
-IMAGE_TAG="${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}$([[ "$IS_PRERELEASE" != "false" ]] && echo "-pre")"
+if [[ "${IS_PRERELEASE}" != "false" ]]; then 
+  IMAGE_TAG="${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}-pre"
+else
+  IMAGE_TAG="${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}"
+fi
 echo "IMAGE_TAG=${IMAGE_TAG}"
 
 windows2019_image="${IMAGE_TAG}-windows-ltsc2019"
