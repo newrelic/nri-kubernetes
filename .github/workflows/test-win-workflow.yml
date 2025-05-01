@@ -367,6 +367,7 @@ jobs:
           curl -L "https://github.com/regclient/regclient/releases/download/${REGCTL_VERSION}/regctl-linux-amd64" > $HOME/bin/regctl
           chmod 755 $HOME/bin/regctl
           export PATH=$HOME/bin:$PATH
+          echo "$HOME/bin" >> $GITHUB_PATH
           regctl version
       - name: Create and Push Manifest
         env: 
