@@ -25,6 +25,8 @@ const (
 	httpsScheme  = "https"
 )
 
+var errBadStatusCode = fmt.Errorf("non-200 status code")
+
 // Connector provides an interface to retrieve connParams to connect to a Kubelet instance.
 type Connector interface {
 	Connect() (*connParams, error)
@@ -221,9 +223,9 @@ func (dp *defaultConnector) checkConnectionHTTPS(hostURL string, tripperBearerRe
 func checkConnection(connParams connParams, endpoint string) error {
 	connParams.url.Path = path.Join(connParams.url.Path, endpoint)
 
-	request, err := http.NewRequest(http.MethodGet, connParams.url.String(), nil)
+	request, err := http.NewRequestWithContext(context.Background(), http.MethodGet, connParams.url.String(), nil)
 	if err != nil {
-		return fmt.Errorf("creating request to %q: %v", connParams.url.String(), err)
+		return fmt.Errorf("creating request to %q: %w", connParams.url.String(), err)
 	}
 
 	resp, err := connParams.client.Do(request)
@@ -233,7 +235,7 @@ func checkConnection(connParams connParams, endpoint string) error {
 	defer resp.Body.Close() // nolint: errcheck
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("calling %s got non-200 status code: %d", connParams.url.String(), resp.StatusCode)
+		return fmt.Errorf("calling %s got %w: %d", connParams.url.String(), errBadStatusCode, resp.StatusCode)
 	}
 
 	return nil
