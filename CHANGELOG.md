@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.39.1 - 2025-05-12
+
+### 🚀 Enhancements
+- Endpoint used to test network connectivity on startup is now configurable.
+
 ## v3.39.1 - 2025-05-05
 
 ### ⛓️ Dependencies
