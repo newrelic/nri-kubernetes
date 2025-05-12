@@ -138,6 +138,13 @@ func (dp *defaultConnector) getPort() (int32, error) {
 	return port, nil
 }
 
+func (dp *defaultConnector) getTestConnectionEndpoint() string {
+	if dp.config.TestConnectionEndpoint != "" {
+		return dp.config.TestConnectionEndpoint
+	}
+	return healthzPath
+}
+
 func (dp *defaultConnector) schemeFor(kubeletPort int32) string {
 	if dp.config.Kubelet.Scheme != "" {
 		dp.logger.Debugf("Setting Kubelet Endpoint Scheme %s as specified by user config", dp.config.Kubelet.Scheme)
@@ -182,7 +189,7 @@ func (dp *defaultConnector) checkConnectionAPIProxy(apiServer string, nodeName s
 
 	dp.logger.Debugf("Testing kubelet connection through API proxy: %s%s", apiURL.Host, conn.url.Path)
 
-	if err = checkConnection(conn); err != nil {
+	if err = checkConnection(conn, dp.getTestConnectionEndpoint()); err != nil {
 		return nil, fmt.Errorf("checking connection via API proxy: %w", err)
 	}
 
@@ -193,7 +200,7 @@ func (dp *defaultConnector) checkConnectionHTTP(hostURL string) (*connParams, er
 	dp.logger.Debugf("testing kubelet connection over plain http to %s", hostURL)
 
 	conn := dp.defaultConnParamsHTTP(hostURL)
-	if err := checkConnection(conn); err != nil {
+	if err := checkConnection(conn, dp.getTestConnectionEndpoint()); err != nil {
 		return nil, fmt.Errorf("checking connection via API proxy: %w", err)
 	}
 
@@ -204,29 +211,29 @@ func (dp *defaultConnector) checkConnectionHTTPS(hostURL string, tripperBearerRe
 	dp.logger.Debugf("testing kubelet connection over https to %s", hostURL)
 
 	conn := dp.defaultConnParamsHTTPS(hostURL, tripperBearerRefreshing)
-	if err := checkConnection(conn); err != nil {
+	if err := checkConnection(conn, dp.getTestConnectionEndpoint()); err != nil {
 		return nil, fmt.Errorf("checking connection via API proxy: %w", err)
 	}
 
 	return &conn, nil
 }
 
-func checkConnection(conn connParams) error {
-	conn.url.Path = path.Join(conn.url.Path, healthzPath)
+func checkConnection(connParams connParams, endpoint string) error {
+	connParams.url.Path = path.Join(connParams.url.Path, endpoint)
 
-	r, err := http.NewRequest(http.MethodGet, conn.url.String(), nil)
+	request, err := http.NewRequest(http.MethodGet, connParams.url.String(), nil)
 	if err != nil {
-		return fmt.Errorf("creating request to %q: %v", conn.url.String(), err)
+		return fmt.Errorf("creating request to %q: %v", connParams.url.String(), err)
 	}
 
-	resp, err := conn.client.Do(r)
+	resp, err := connParams.client.Do(request)
 	if err != nil {
-		return fmt.Errorf("connecting to %q: %w", conn.url.String(), err)
+		return fmt.Errorf("connecting to %q: %w", connParams.url.String(), err)
 	}
 	defer resp.Body.Close() // nolint: errcheck
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("calling %s got non-200 status code: %d", conn.url.String(), resp.StatusCode)
+		return fmt.Errorf("calling %s got non-200 status code: %d", connParams.url.String(), resp.StatusCode)
 	}
 
 	return nil
