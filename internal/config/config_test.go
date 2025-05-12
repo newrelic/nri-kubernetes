@@ -38,6 +38,7 @@ func TestLoadConfig(t *testing.T) {
 		})
 
 		t.Run("takes_test_connection_endpoint_from_env", func(t *testing.T) {
+			t.Parallel()
 			_ = os.Setenv("NRI_KUBERNETES_TESTCONNECTIONENDPOINT", "metrics")
 
 			c, err := config.LoadConfig(fakeDataDir, workingData)
