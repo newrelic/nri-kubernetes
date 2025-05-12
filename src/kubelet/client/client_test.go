@@ -82,12 +82,10 @@ func TestConnectionTestRequest(t *testing.T) {
 	t.Parallel()
 	s, requests := testHTTPSServerWithEndpoints(t, []string{healthz, prometheusMetric, kubeletMetric})
 
-	k8sClient, cf, inClusterConfig := getTestData(s)
-
 	t.Run("should_use_healthz_endpoint_by_default", func(t *testing.T) {
 		t.Parallel()
 		clear(requests)
-
+		k8sClient, cf, inClusterConfig := getTestData(s)
 		_, err := client.New(
 			client.DefaultConnector(k8sClient, cf, inClusterConfig, logutil.Debug),
 			client.WithLogger(logutil.Debug),
@@ -103,6 +101,7 @@ func TestConnectionTestRequest(t *testing.T) {
 	t.Run("should_use_endpoint_from_config", func(t *testing.T) {
 		t.Parallel()
 		clear(requests)
+		k8sClient, cf, inClusterConfig := getTestData(s)
 		cf.TestConnectionEndpoint = prometheusMetric
 		_, err := client.New(
 			client.DefaultConnector(k8sClient, cf, inClusterConfig, logutil.Debug),
