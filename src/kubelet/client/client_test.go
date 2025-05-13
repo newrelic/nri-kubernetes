@@ -78,6 +78,45 @@ func TestClientCalls(t *testing.T) {
 	})
 }
 
+func TestConnectionTestRequest(t *testing.T) {
+	t.Parallel()
+	s, requests := testHTTPSServerWithEndpoints(t, []string{healthz, prometheusMetric, kubeletMetric})
+
+	t.Run("should_use_healthz_endpoint_by_default", func(t *testing.T) {
+		t.Parallel()
+		clear(requests)
+		k8sClient, cf, inClusterConfig := getTestData(s)
+		_, err := client.New(
+			client.DefaultConnector(k8sClient, cf, inClusterConfig, logutil.Debug),
+			client.WithLogger(logutil.Debug),
+			client.WithMaxRetries(retries),
+		)
+		require.NoError(t, err)
+		require.NotNil(t, requests)
+
+		_, found := requests[healthz]
+		assert.True(t, found)
+	})
+
+	t.Run("should_use_endpoint_from_config", func(t *testing.T) {
+		t.Parallel()
+		clear(requests)
+		k8sClient, cf, inClusterConfig := getTestData(s)
+		cf.TestConnectionEndpoint = prometheusMetric
+		_, err := client.New(
+			client.DefaultConnector(k8sClient, cf, inClusterConfig, logutil.Debug),
+			client.WithLogger(logutil.Debug),
+			client.WithMaxRetries(retries),
+		)
+
+		require.NoError(t, err)
+		require.NotNil(t, requests)
+
+		_, found := requests[prometheusMetric]
+		assert.True(t, found)
+	})
+}
+
 func TestClientCallsViaAPIProxy(t *testing.T) {
 	t.Parallel()
 
@@ -322,8 +361,9 @@ func getTestData(s *httptest.Server) (*fake.Clientset, *config.Config, *rest.Con
 	c := fake.NewSimpleClientset(getTestNode(port))
 
 	cf := &config.Config{
-		NodeName: nodeName,
-		NodeIP:   u.Hostname(),
+		NodeName:               nodeName,
+		NodeIP:                 u.Hostname(),
+		TestConnectionEndpoint: "",
 	}
 
 	inClusterConfig := &rest.Config{

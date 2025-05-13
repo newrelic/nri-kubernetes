@@ -36,6 +36,15 @@ func TestLoadConfig(t *testing.T) {
 			require.Equal(t, "different_value", c.ClusterName)
 			require.Equal(t, "fake-node", c.NodeName)
 		})
+
+		t.Run("takes_test_connection_endpoint_from_env", func(t *testing.T) {
+			t.Parallel()
+			_ = os.Setenv("NRI_KUBERNETES_TESTCONNECTIONENDPOINT", "metrics")
+
+			c, err := config.LoadConfig(fakeDataDir, workingData)
+			require.NoError(t, err)
+			require.Equal(t, "metrics", c.TestConnectionEndpoint)
+		})
 	})
 	// This test checks that viper custom key delimiter is working as expected by using the old default dot delimiter
 	// as key.
