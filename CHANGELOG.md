@@ -7,10 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-## v3.39.1 - 2025-05-12
-
-### 🚀 Enhancements
-- Endpoint used to test network connectivity on startup is now configurable.
+### enhancements
+- Endpoint used to test network connectivity on startup is now configurable. @Philip-R-Beckwith [#1218](https://github.com/newrelic/nri-kubernetes/pull/1218)
 
 ## v3.39.1 - 2025-05-05
 
