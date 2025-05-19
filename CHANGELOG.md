@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancements
+## v3.40.0 - 2025-05-19
+
+### 🚀 Enhancements
 - Endpoint used to test network connectivity on startup is now configurable. @Philip-R-Beckwith [#1218](https://github.com/newrelic/nri-kubernetes/pull/1218)
+
+### ⛓️ Dependencies
+- Updated go to v1.24.3
+- Updated golang.org/x/crypto to v0.38.0
 
 ## v3.39.1 - 2025-05-05
 
