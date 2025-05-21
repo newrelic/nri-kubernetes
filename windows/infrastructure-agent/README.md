@@ -1,10 +1,9 @@
-Purpose:
-This folder contains files and scripts used for automating the build process of the Windows infrastructure agent.
+# nri-kubernetes - Windows Agent Build Automation
 
-Status:
+This folder contains files and scripts used for automating the build process of the Kubernetes agent for Windows. These scripts are run via GitHub Actions and result in Windows-compatible images for LTSC 2019 and LTSC 2022.
 
-    ⚠️ Currently Unsupported
-    This feature is not officially supported at this time. The contents of this folder are intended for internal testing and development purposes only.
+The target Dockerhub repository is [newrelic/infrastrucutre-windows](https://hub.docker.com/r/newrelic/infrastructure-windows). This repository does not use a combined manifest, so the Windows images are additionally tagged with `ltsc2019` and `ltsc2022`.
 
-Note:
-Official support for the Windows agent is planned for a future release. Please do not use these files in production environments until support is formally announced.
+### Relevant GHA workflow files
+- [build-win-infra-agent](https://github.com/newrelic/nri-kubernetes/blob/main/.github/workflows/build-win-infra-agent.yml)
+- 

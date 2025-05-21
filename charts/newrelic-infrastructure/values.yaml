@@ -42,24 +42,32 @@ images:
     repository: newrelic/nri-kubernetes
     tag:
     pullPolicy: IfNotPresent
+  # -- Image for the New Relic Kubernetes integration - Windows.
+  # @default -- See `values.yaml`
   windowsIntegration:
     registry: ""
     repository: newrelic/nri-kubernetes
     tag:
     pullPolicy: IfNotPresent
+  # -- Image for the New Relic Infrastructure Agent - Windows.
+  # @default -- See `values.yaml`
   windowsAgent:
     registry: ""
     repository: newrelic/infrastructure
     tag: 1.65.1
     pullPolicy: IfNotPresent
 
+# -- Enable Windows node monitoring.
+# @default -- `false`
 enableWindows: false
 # For every entry in this Windows OS list, we will create an independent DaemonSet which will get deployed
 # on Windows nodes running each specific Windows version and build number. Note that
 # Windows containers can only be executed on hosts running the exact same Windows version and build number,
 # because Kubernetes only supports process isolation and not Hyper-V isolation (as of March 2025).
+# -- Additional configuration for Windows node DaemonSets.
 windowsOsList:
-  # Limited support for only LTSC2019/LTSC2022
+  # Support for only LTSC2019/LTSC2022
+  # @default -- See `values.yaml`
   # https://kubernetes.io/docs/setup/production-environment/windows/intro-windows-in-kubernetes/#windows-os-version-support
   - version: ltsc2019
     imageTagSuffix: ltsc2019
@@ -137,10 +145,9 @@ kubelet:
   # and build number (node.kubernetes.io/windows-build: {{ .buildNumber }}, to ensure that each version of the DaemonSet
   # gets deployed only on those Windows nodes running the exact same Windows version and build number. Note that
   # Windows containers can only be executed on hosts running the exact same Windows version and build number.
+  # -- Node selector for the Windows kubelet DaemonSet.
   windowsNodeSelector: {}
-
-  # -- (bool) Sets pod's hostNetwork. When set bypasses global/common variable
-  # Note - does not apply to Windows nodes
+  # -- (bool) Sets pod's hostNetwork. When set bypasses global/common variable. Note - does not apply to Windows nodes
   # @default -- Not set
   hostNetwork:
   affinity: {}

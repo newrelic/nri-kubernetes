@@ -77,6 +77,22 @@ nodes or to schedule the KSM scraper on the same node of KSM to reduce the inter
 If you are having problems assigning pods to nodes it may be because of this. Take a look at the [`values.yaml`](values.yaml) to see if the pod that is
 not having your expected behavior has any predefined value.
 
+#### Windows node selector
+If `enableWindows` is set to `true`, the predefined `nodeSelector` settings are important. If it is necessary to change these, please be cognizant of which
+nodes are being targeted. The default `nodeSelector` settings allow the pods to run on Windows nodes corresponding to the relevant Windows Server versions (2019 & 2022).
+```yaml
+nodeSelector:
+  kubernetes.io/os: windows
+  node.kubernetes.io/windows-build: 10.0.17763 # Windows Server 2019
+```
+
+```yaml
+nodeSelector:
+  kubernetes.io/os: windows
+  node.kubernetes.io/windows-build: 10.0.20348 # Windows Server 2022
+```
+
+
 ### `hostNetwork` toggle
 
 In versions below v3, changing the `privileged` mode affected the `hostNetwork`. We changed this behavior and now you can set pods to use `hostNetwork`
@@ -89,6 +105,10 @@ This is because the most common configuration of the control plane components is
 If your cluster security policy does not allow to use `hostNetwork`, you can disable it control plane monitoring by setting `controlPlane.enabled` to
 `false.`
 
+#### Windows
+Please be aware that `hostNetwork` is not supported on Windows nodes at this time. If `enableWindows` is set to `true`, the chart will automatically
+set `hostNetwork` to `false` for the Windows kubelet Daemonset. `hostNetwork` may be set to true for components that are not deployed to Windows nodes, however.
+
 ### `privileged` toggle
 
 The default value for `privileged` [from the common library](https://github.com/newrelic/helm-charts/blob/master/library/common-library/README.md) is
@@ -99,6 +119,40 @@ This is because when `kubelet` pods need to run in privileged mode to fetch cpu,
 If your cluster security policy does not allow to have `privileged` in your pod' security context, you can disable it by setting `privileged` to
 `false` taking into account that you will lose all the metrics from the host and some metadata from the host that are added to the metrics of the
 integrations that you have configured.
+
+#### Windows
+Please be aware that `privileged` is not supported on Windows nodes at this time. If `enableWindows` is set to `true`, the chart will automatically set `privileged`
+to `false` for the Windows kubelet DaemonSet. `privileged` may be set to true for components that are not deployed to Windows nodes, however.
+
+### More on Windows
+
+#### DaemonSet ceation
+As mentioned above, you may set `enableWindows` to `true` to enable Windows support in this chart. When enabled, this chart will create kubelet DaemonSets for the LTSC 2019
+& LTSC 2022 versions of Windows Server, which will schedule pods to their corresponding nodes.
+
+Please note that by default, the chart will create DaemonSets for _both_ stated Windows versions. If, for example, the target Kubernetes cluster does not include LTSC 2019 nodes,
+a DaemonSet will still be created but will indicate no desired pods.
+
+Example `kubectl -n newrelic get daemonsets` output where the cluster has two Linux nodes, one Windows LTSC 2022 node, and no Windows LTSC 2019 nodes:
+```shell
+kubectl -n newrelic get daemonsets
+NAME                                                DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR                                                          AGE
+<...snip...>
+newrelic-bundle-nrk8s-kubelet                       2         2         2       2            2           kubernetes.io/os=linux                                                 24h
+newrelic-bundle-nrk8s-kubelet-windows-ltsc2019      0         0         0       0            0           kubernetes.io/os=windows,node.kubernetes.io/windows-build=10.0.17763   24h
+newrelic-bundle-nrk8s-kubelet-windows-ltsc2022      1         1         1       1            1           kubernetes.io/os=windows,node.kubernetes.io/windows-build=10.0.20348   24h
+```
+
+If desired, you can prevent the chart from creating the unnecessary DaemonSet including the `windowsOsList` key in your custom `values.yaml` file & indicating only the desired version:
+```yaml
+windowsOsList:
+  - version: ltsc2022                      # Human-readable version identifier
+    imageTagSuffix: ltsc2022               # Tag to be used for nodes running the windows version above
+    buildNumber: 10.0.20348                # Build number for the nodes running the version above. Used as a selector.
+```
+
+#### Agent Integrations
+Infrastructure Agent integrations (Kafka, Cassandra, Redis, etc.) are not supported for Windows nodes at this time.
 
 {{ template "chart.valuesSection" . }}
 
