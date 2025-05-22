@@ -93,7 +93,6 @@ func (client *Client) Get(urlPath string) (*http.Response, error) {
 	e.Path = path.Join(client.endpoint.Path, urlPath)
 
 	result, err := client.GetURI(e)
-
 	if err != nil {
 		return nil, fmt.Errorf("error getting path %s: %w ", urlPath, err)
 	}
