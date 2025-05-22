@@ -5,6 +5,10 @@ TEST_COVERAGE_DIR := $(BIN_DIR)/test-coverage
 BINARY_NAME = nri-kubernetes
 E2E_BINARY_NAME := $(BINARY_NAME)-e2e
 GOFLAGS = -mod=readonly
+GO_BIN_DIR = ~/go/bin
+
+GOTOOLS ?=
+GOTOOLS += " go.elastic.co/go-licence-detector@v0.7.0"
 
 # GOOS and GOARCH will likely come from env
 GOOS ?=
@@ -72,8 +76,18 @@ test:
 	@mkdir -p $(TEST_COVERAGE_DIR)
 	go test ./... -count=1 -coverprofile=$(TEST_COVERAGE_DIR)/coverage.out -covermode=count
 
+.PHONY: install-tools
+install-tools:
+	@for tool in $(GOTOOLS); do \
+		go install $$tool; \
+	done
+	@echo '[go-install] Done.'
+
 buildLicenseNotice:
-	@go list -mod=mod -m -json all | go-licence-detector -noticeOut=NOTICE.txt -rules ./assets/licence/rules.json  -noticeTemplate ./assets/licence/THIRD_PARTY_NOTICES.md.tmpl -noticeOut THIRD_PARTY_NOTICES.md -overrides ./assets/licence/overrides -includeIndirect
+	@$(MAKE) install-tools
+	@go list -mod=mod -m -json all | $(GO_BIN_DIR)/go-licence-detector -noticeOut=NOTICE.txt -rules ./assets/licence/rules.json -noticeTemplate ./assets/licence/THIRD_PARTY_NOTICES.md.tmpl -noticeOut THIRD_PARTY_NOTICES.md -overrides ./assets/licence/overrides -includeIndirect ;
+	@echo '[buildLicenseNotice] Complete. Please check THIRD_PARTY_NOTICES.md'
+
 
 .PHONY: run-static
 run-static:
