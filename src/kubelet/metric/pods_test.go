@@ -25,7 +25,7 @@ func (c *testClient) Get(path string) (*http.Response, error) {
 	return c.Do(req)
 }
 
-func (c *testClient) GetUri(url url.URL) (*http.Response, error) {
+func (c *testClient) GetURI(url url.URL) (*http.Response, error) {
 	req := httptest.NewRequest(http.MethodGet, url.String(), nil)
 	return c.Do(req)
 }

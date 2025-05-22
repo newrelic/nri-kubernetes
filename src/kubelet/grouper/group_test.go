@@ -29,7 +29,7 @@ type testClient struct {
 	handler http.HandlerFunc
 }
 
-func (c *testClient) GetUri(uri url.URL) (*http.Response, error) {
+func (c *testClient) GetURI(uri url.URL) (*http.Response, error) {
 	req := httptest.NewRequest(http.MethodGet, uri.String(), nil)
 	return c.Do(req)
 }

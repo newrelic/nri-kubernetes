@@ -90,17 +90,29 @@ func (c *Client) Get(urlPath string) (*http.Response, error) {
 	// Notice that this is the client to interact with kubelet. In case of CAdvisor the MetricFamiliesGetFunc is used
 	e := c.endpoint
 	e.Path = path.Join(c.endpoint.Path, urlPath)
-	return c.GetUri(e)
+
+	result, err := c.GetURI(e)
+
+	if err != nil {
+		return nil, fmt.Errorf("Error geting path %s: %w ", urlPath, err)
+	}
+
+	return result, nil
 }
 
-func (client *Client) GetUri(uri url.URL) (*http.Response, error) {
+func (client *Client) GetURI(uri url.URL) (*http.Response, error) {
 	r, err := http.NewRequest(http.MethodGet, uri.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("error creating request to: %s. Got error: %s ", uri.String(), err)
 	}
 
 	client.logger.Debugf("Calling Kubelet endpoint: %s", r.URL.String())
-	return client.doer.Do(r)
+
+	result, err := client.doer.Do(r)
+	if err != nil {
+		return nil, fmt.Errorf("Error geting url %s: %w ", uri.String(), err)
+	}
+	return result, nil
 }
 
 // MetricFamiliesGetFunc returns a function that obtains metric families from a list of prometheus queries.

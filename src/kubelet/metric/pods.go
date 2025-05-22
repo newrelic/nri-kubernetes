@@ -123,9 +123,9 @@ func (podsFetcher *PodsFetcher) DoPodsFetch() (definition.RawGroups, error) {
 
 func (podsFetcher *PodsFetcher) Fetch() (*http.Response, error) {
 	if podsFetcher.useKubeService {
-		return podsFetcher.client.GetUri(podsFetcher.uri)
+		return podsFetcher.client.GetURI(podsFetcher.uri) //nolint:wrapcheck
 	}
-	return podsFetcher.client.Get(KubeletPodsPath)
+	return podsFetcher.client.Get(KubeletPodsPath) //nolint:wrapcheck
 }
 
 // NewPodsFetcher returns a new PodsFetcher.
