@@ -74,16 +74,15 @@ func (podsFetcher *PodsFetcher) DoPodsFetch() (definition.RawGroups, error) {
 		"container": make(map[string]definition.RawMetrics),
 	}
 
-	return podsFetcher.fillGaps(raw), nil
+	return podsFetcher.fillGaps(raw, pods), nil
 }
 
-func (podsFetcher *PodsFetcher) fillGaps(raw definition.RawGroups) definition.RawGroups {
+func (podsFetcher *PodsFetcher) fillGaps(raw definition.RawGroups, pods v1.PodList) definition.RawGroups { //nolint:gocyclo
 	// If missing, we get the nodeIP from any other container in the node.
 	// Due to Kubelet "Wrong Pending status" bug. See https://github.com/kubernetes/kubernetes/pull/57106
 	var missingNodeIPContainerIDs []string
 	var missingNodeIPPodIDs []string
 	var nodeIP string
-	var pods v1.PodList
 
 	for _, p := range pods.Items {
 		id := podID(&p)
@@ -279,7 +278,7 @@ func isFakePendingPod(s v1.PodStatus) bool {
 }
 
 // TODO handle errors and missing data
-func (podsFetcher *PodsFetcher) fetchPodData(pod *v1.Pod) definition.RawMetrics { //
+func (podsFetcher *PodsFetcher) fetchPodData(pod *v1.Pod) definition.RawMetrics {
 	metrics := definition.RawMetrics{
 		"namespace": pod.GetObjectMeta().GetNamespace(),
 		"podName":   pod.GetObjectMeta().GetName(),
@@ -329,7 +328,7 @@ func (podsFetcher *PodsFetcher) fetchPodData(pod *v1.Pod) definition.RawMetrics 
 	return metrics
 }
 
-func (podsFetcher *PodsFetcher) fillPodStatus(r definition.RawMetrics, pod *v1.Pod) { //nolint:gocognit
+func (podsFetcher *PodsFetcher) fillPodStatus(r definition.RawMetrics, pod *v1.Pod) { //nolint:gocognit,gocyclo
 	// TODO Review if those Fake Pending Pods are still an issue
 	if isFakePendingPod(pod.Status) {
 		r["status"] = "Running"
