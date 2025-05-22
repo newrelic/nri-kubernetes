@@ -1,4 +1,4 @@
-name: Windows build
+name: Windows build for testing
 
 on:
   push:
@@ -49,15 +49,30 @@ jobs:
             ${{ runner.os }}-go-
       - name: Build integration
         shell: powershell
+        env:
+          COMMIT: ${{ github.sha }}
+          WIN_VERSION: ${{ matrix.windows.tag }}
         run: |
-          go build -o ./bin/nri-kubernetes-windows-${{ matrix.windows.tag }}-amd64.exe ./cmd/nri-kubernetes
+          cd windows
+          cd nri-kubernetes
+          echo "Building newrelic/nri-kubernetes:windows-${{ matrix.windows.tag }}-alpha-$Env:tag"
+          #env:WIN_VERSION= ${{ matrix.windows.tag }}
+          ./build.ps1
+
       - name: Build nri-kubernetes container
         shell: powershell
+        env:
+          DOCKER_IMAGE_NAME: ${{ inputs.docker_image_name }}
+          COMMIT: ${{ github.sha }}
+          MATRIX_TAG: ${{ matrix.windows.tag }}
         run: |
           ls
           docker build --file Dockerfile.windows `
             --build-arg BASE_IMAGE_TAG=${{ matrix.windows.tag }} `
-            -t newrelic/nri-kubernetes:windows-${{ matrix.windows.tag }}-alpha-$Env:tag . `
+            --build-arg "COMMIT=${env:COMMIT}" `
+            --build-arg "DATE=${env:DATE}" `
+            --build-arg "TAG=dev" `
+            -t newrelic/nri-kubernetes-internal:windows-${{ matrix.windows.tag }}-alpha-$Env:tag . `
 
       - name: Login to DockerHub
         # if: ${{ ! github.event.pull_request }}

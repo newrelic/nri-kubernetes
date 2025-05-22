@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.40.0 - 2025-05-19
+
+### 🚀 Enhancements
+- Endpoint used to test network connectivity on startup is now configurable. @Philip-R-Beckwith [#1218](https://github.com/newrelic/nri-kubernetes/pull/1218)
+
+### ⛓️ Dependencies
+- Updated go to v1.24.3
+- Updated golang.org/x/crypto to v0.38.0
+
+## v3.39.1 - 2025-05-05
+
+### ⛓️ Dependencies
+- Updated kubernetes packages to v0.33.0
+
+## v3.39.0 - 2025-04-28
+
+### 🚀 Enhancements
+- Adds local e2e testing for Windows nodes @TmNguyen12 @kondracek-kr [#1185](https://github.com/newrelic/nri-kubernetes/pull/1185)
+
+### ⛓️ Dependencies
+- Updated github.com/prometheus/client_model to v0.6.2 - [Changelog 🔗](https://github.com/prometheus/client_model/releases/tag/v0.6.2)
+
 ## v3.38.0 - 2025-04-14
 
 ### 🚀 Enhancements

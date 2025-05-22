@@ -37,6 +37,8 @@ type Config struct {
 	KubeconfigPath string `mapstructure:"kubeconfigPath"`
 	// NodeIP is the main IP for the node where the integration is running. Used to connect to the Kubelet.
 	NodeIP string `mapstructure:"nodeIP"`
+	// TestConnectionEndpoint is the endpoint to use to test http connectivity. useful for environments where healthz is inaccessible like GKE-autopilot.
+	TestConnectionEndpoint string `mapstructure:"testConnectionEndpoint"`
 	// NodeName is the name of the node where the integration is running. Used to retrieve node info from the API
 	// Server, and to connect to the Kubelet through the API Server proxy if direct connection fails.
 	NodeName string `mapstructure:"nodeName"`
@@ -279,6 +281,7 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	v.SetDefault("kubelet|networkRouteFile", DefaultNetworkRouteFile)
 	v.SetDefault("nodeName", "node")
 	v.SetDefault("nodeIP", "node")
+	v.SetDefault("testConnectionEndpoint", "/healthz")
 
 	// Sane connection defaults
 	v.SetDefault("sink|type", SinkTypeHTTP)
