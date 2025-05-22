@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"testing"
 
@@ -21,6 +22,11 @@ type testClient struct {
 
 func (c *testClient) Get(path string) (*http.Response, error) {
 	req := httptest.NewRequest(http.MethodGet, path, nil)
+	return c.Do(req)
+}
+
+func (c *testClient) GetUri(url url.URL) (*http.Response, error) {
+	req := httptest.NewRequest(http.MethodGet, url.String(), nil)
 	return c.Do(req)
 }
 
@@ -48,7 +54,7 @@ func TestFetchFunc(t *testing.T) {
 		handler: servePayload,
 	}
 
-	f := NewPodsFetcher(logutil.Debug, &c)
+	f := NewBasicPodsFetcher(logutil.Debug, &c)
 	g, err := f.DoPodsFetch()
 
 	assert.NoError(t, err)
@@ -111,7 +117,7 @@ func assertError(t *testing.T, errorMessage string, handler http.HandlerFunc) {
 		handler: handler,
 	}
 
-	f := NewPodsFetcher(logutil.Debug, &c)
+	f := NewBasicPodsFetcher(logutil.Debug, &c)
 	g, err := f.DoPodsFetch()
 
 	assert.EqualError(t, err, errorMessage)
