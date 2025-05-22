@@ -279,7 +279,7 @@ func isFakePendingPod(s v1.PodStatus) bool {
 }
 
 // TODO handle errors and missing data
-func (podsFetcher *PodsFetcher) fetchPodData(pod *v1.Pod) definition.RawMetrics {
+func (podsFetcher *PodsFetcher) fetchPodData(pod *v1.Pod) definition.RawMetrics { //
 	metrics := definition.RawMetrics{
 		"namespace": pod.GetObjectMeta().GetNamespace(),
 		"podName":   pod.GetObjectMeta().GetName(),
@@ -329,7 +329,7 @@ func (podsFetcher *PodsFetcher) fetchPodData(pod *v1.Pod) definition.RawMetrics 
 	return metrics
 }
 
-func (podsFetcher *PodsFetcher) fillPodStatus(r definition.RawMetrics, pod *v1.Pod) {
+func (podsFetcher *PodsFetcher) fillPodStatus(r definition.RawMetrics, pod *v1.Pod) { //nolint:gocognit
 	// TODO Review if those Fake Pending Pods are still an issue
 	if isFakePendingPod(pod.Status) {
 		r["status"] = "Running"
