@@ -3,8 +3,12 @@ package metric
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/newrelic/nri-kubernetes/v3/internal/config"
 	"io/ioutil"
+	"k8s.io/client-go/rest"
 	"net/http"
+	"net/url"
+	"path"
 	"strings"
 	"time"
 
@@ -17,22 +21,26 @@ import (
 
 // KubeletPodsPath is the path where kubelet serves information about pods.
 const KubeletPodsPath = "/pods"
+const KubeServiceKubeletPodsPath = "/api/v1/pods"
+const nodeSelectorQuery = "fieldSelector=spec.nodeName=%s"
 
 // PodsFetcher queries the kubelet and fetches the information of pods
 // running on the node. It contains an in-memory cache to store the
 // results and avoid querying the kubelet multiple times in the same
 // integration execution.
 type PodsFetcher struct {
-	logger *log.Logger
-	client client.HTTPGetter
+	logger         *log.Logger
+	client         client.HTTPGetter
+	useKubeService bool
+	uri            url.URL
 }
 
 // DoPodsFetch used to have a cache that was invalidated each execution of the integration
 // TODO: could we move this to informers?
-func (f *PodsFetcher) DoPodsFetch() (definition.RawGroups, error) {
-	f.logger.Debugf("Retrieving the list of pods")
+func (podsFetcher *PodsFetcher) DoPodsFetch() (definition.RawGroups, error) {
+	podsFetcher.logger.Debugf("Retrieving the list of pods")
 
-	r, err := f.client.Get(KubeletPodsPath)
+	r, err := podsFetcher.Fetch()
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +82,7 @@ func (f *PodsFetcher) DoPodsFetch() (definition.RawGroups, error) {
 
 	for _, p := range pods.Items {
 		id := podID(&p)
-		raw["pod"][id] = f.fetchPodData(&p)
+		raw["pod"][id] = podsFetcher.fetchPodData(&p)
 
 		if _, ok := raw["pod"][id]["nodeIP"]; ok && nodeIP == "" {
 			nodeIP = raw["pod"][id]["nodeIP"].(string)
@@ -86,7 +94,7 @@ func (f *PodsFetcher) DoPodsFetch() (definition.RawGroups, error) {
 			raw["pod"][id]["nodeIP"] = nodeIP
 		}
 
-		containers := f.fetchContainersData(&p)
+		containers := podsFetcher.fetchContainersData(&p)
 		for id, c := range containers {
 			raw["container"][id] = c
 
@@ -113,15 +121,46 @@ func (f *PodsFetcher) DoPodsFetch() (definition.RawGroups, error) {
 	return raw, nil
 }
 
+func (podsFetcher *PodsFetcher) Fetch() (*http.Response, error) {
+	if podsFetcher.useKubeService {
+		return podsFetcher.client.GetUri(podsFetcher.uri)
+	}
+	return podsFetcher.client.Get(KubeletPodsPath)
+}
+
 // NewPodsFetcher returns a new PodsFetcher.
-func NewPodsFetcher(l *log.Logger, c client.HTTPGetter) *PodsFetcher {
+func NewBasicPodsFetcher(l *log.Logger, c client.HTTPGetter) *PodsFetcher {
 	return &PodsFetcher{
-		logger: l,
-		client: c,
+		logger:         l,
+		client:         c,
+		useKubeService: false,
 	}
 }
 
-func (f *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]definition.RawMetrics {
+// NewPodsFetcher returns a new PodsFetcher.
+func NewPodsFetcher(l *log.Logger, c client.HTTPGetter, config *config.Config) *PodsFetcher {
+	if config.Kubelet.FetchPodsFromKubeService {
+		inClusterConfig, _ := rest.InClusterConfig()
+		var uri, _ = url.Parse(inClusterConfig.Host)
+		uri.Path = path.Join(uri.Path, KubeServiceKubeletPodsPath)
+		uri.RawQuery = fmt.Sprintf(nodeSelectorQuery, config.NodeName)
+
+		return &PodsFetcher{
+			logger:         l,
+			client:         c,
+			uri:            *uri,
+			useKubeService: true,
+		}
+	}
+
+	return &PodsFetcher{
+		logger:         l,
+		client:         c,
+		useKubeService: false,
+	}
+}
+
+func (podsFetcher *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]definition.RawMetrics {
 	statuses := make(map[string]definition.RawMetrics)
 	fillContainerStatuses(pod, statuses)
 
@@ -235,14 +274,14 @@ func isFakePendingPod(s v1.PodStatus) bool {
 }
 
 // TODO handle errors and missing data
-func (f *PodsFetcher) fetchPodData(pod *v1.Pod) definition.RawMetrics {
+func (podsFetcher *PodsFetcher) fetchPodData(pod *v1.Pod) definition.RawMetrics {
 	metrics := definition.RawMetrics{
 		"namespace": pod.GetObjectMeta().GetNamespace(),
 		"podName":   pod.GetObjectMeta().GetName(),
 		"nodeName":  pod.Spec.NodeName,
 	}
 
-	f.fillPodStatus(metrics, pod)
+	podsFetcher.fillPodStatus(metrics, pod)
 
 	if v := pod.Status.HostIP; v != "" {
 		metrics["nodeIP"] = v
@@ -285,14 +324,14 @@ func (f *PodsFetcher) fetchPodData(pod *v1.Pod) definition.RawMetrics {
 	return metrics
 }
 
-func (f *PodsFetcher) fillPodStatus(r definition.RawMetrics, pod *v1.Pod) {
+func (podsFetcher *PodsFetcher) fillPodStatus(r definition.RawMetrics, pod *v1.Pod) {
 	// TODO Review if those Fake Pending Pods are still an issue
 	if isFakePendingPod(pod.Status) {
 		r["status"] = "Running"
 		r["isReady"] = "True"
 		r["isScheduled"] = "True"
 
-		f.logger.Debugf("Fake Pending Pod marked as Running")
+		podsFetcher.logger.Debugf("Fake Pending Pod marked as Running")
 
 		return
 	}
