@@ -3,7 +3,6 @@ package metric
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/newrelic/nri-kubernetes/v3/internal/config"
 	"io/ioutil"
 	"k8s.io/client-go/rest"
 	"net/http"
@@ -12,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/newrelic/nri-kubernetes/v3/internal/config"
 	"github.com/newrelic/nri-kubernetes/v3/src/client"
 	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 

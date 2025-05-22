@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -86,12 +87,12 @@ func New(connector Connector, opts ...OptionFunc) (*Client, error) {
 }
 
 // Get implements HTTPGetter interface by sending GET request using configured client.
-func (c *Client) Get(urlPath string) (*http.Response, error) {
+func (client *Client) Get(urlPath string) (*http.Response, error) {
 	// Notice that this is the client to interact with kubelet. In case of CAdvisor the MetricFamiliesGetFunc is used
-	e := c.endpoint
-	e.Path = path.Join(c.endpoint.Path, urlPath)
+	e := client.endpoint
+	e.Path = path.Join(client.endpoint.Path, urlPath)
 
-	result, err := c.GetURI(e)
+	result, err := client.GetURI(e)
 
 	if err != nil {
 		return nil, fmt.Errorf("Error getting path %s: %w ", urlPath, err)
@@ -101,9 +102,9 @@ func (c *Client) Get(urlPath string) (*http.Response, error) {
 }
 
 func (client *Client) GetURI(uri url.URL) (*http.Response, error) {
-	r, err := http.NewRequest(http.MethodGet, uri.String(), nil)
+	r, err := http.NewRequestWithContext(context.Background(), http.MethodGet, uri.String(), nil)
 	if err != nil {
-		return nil, fmt.Errorf("error creating request to: %s. Got error: %s ", uri.String(), err)
+		return nil, fmt.Errorf("error creating request to: %s. Got error: %w ", uri.String(), err)
 	}
 
 	client.logger.Debugf("Calling Kubelet endpoint: %s", r.URL.String())
@@ -116,12 +117,12 @@ func (client *Client) GetURI(uri url.URL) (*http.Response, error) {
 }
 
 // MetricFamiliesGetFunc returns a function that obtains metric families from a list of prometheus queries.
-func (c *Client) MetricFamiliesGetFunc(url string) prometheus.FetchAndFilterMetricsFamilies {
+func (client *Client) MetricFamiliesGetFunc(url string) prometheus.FetchAndFilterMetricsFamilies {
 	return func(queries []prometheus.Query) ([]prometheus.MetricFamily, error) {
-		e := c.endpoint
-		e.Path = path.Join(c.endpoint.Path, url)
+		e := client.endpoint
+		e.Path = path.Join(client.endpoint.Path, url)
 
-		mFamily, err := prometheus.GetFilteredMetricFamilies(c.doer, e.String(), queries, c.logger)
+		mFamily, err := prometheus.GetFilteredMetricFamilies(client.doer, e.String(), queries, client.logger)
 		if err != nil {
 			return nil, fmt.Errorf("getting filtered metric families %q: %w", e.String(), err)
 		}
