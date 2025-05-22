@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"k8s.io/client-go/rest"
 	"net/http"
 	"net/url"
 	"path"
@@ -14,6 +13,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/internal/config"
 	"github.com/newrelic/nri-kubernetes/v3/src/client"
 	"github.com/newrelic/nri-kubernetes/v3/src/definition"
+	"k8s.io/client-go/rest"
 
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
