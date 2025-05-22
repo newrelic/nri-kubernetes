@@ -74,11 +74,16 @@ func (podsFetcher *PodsFetcher) DoPodsFetch() (definition.RawGroups, error) {
 		"container": make(map[string]definition.RawMetrics),
 	}
 
+	return podsFetcher.fillGaps(raw), nil
+}
+
+func (podsFetcher *PodsFetcher) fillGaps(raw definition.RawGroups) definition.RawGroups {
 	// If missing, we get the nodeIP from any other container in the node.
 	// Due to Kubelet "Wrong Pending status" bug. See https://github.com/kubernetes/kubernetes/pull/57106
 	var missingNodeIPContainerIDs []string
 	var missingNodeIPPodIDs []string
 	var nodeIP string
+	var pods v1.PodList
 
 	for _, p := range pods.Items {
 		id := podID(&p)
@@ -118,7 +123,7 @@ func (podsFetcher *PodsFetcher) DoPodsFetch() (definition.RawGroups, error) {
 		raw["container"][id]["nodeIP"] = nodeIP
 	}
 
-	return raw, nil
+	return raw
 }
 
 func (podsFetcher *PodsFetcher) Fetch() (*http.Response, error) {
