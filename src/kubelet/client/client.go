@@ -94,7 +94,7 @@ func (c *Client) Get(urlPath string) (*http.Response, error) {
 	result, err := c.GetURI(e)
 
 	if err != nil {
-		return nil, fmt.Errorf("Error geting path %s: %w ", urlPath, err)
+		return nil, fmt.Errorf("Error getting path %s: %w ", urlPath, err)
 	}
 
 	return result, nil
@@ -110,7 +110,7 @@ func (client *Client) GetURI(uri url.URL) (*http.Response, error) {
 
 	result, err := client.doer.Do(r)
 	if err != nil {
-		return nil, fmt.Errorf("Error geting url %s: %w ", uri.String(), err)
+		return nil, fmt.Errorf("Error getting url %s: %w ", uri.String(), err)
 	}
 	return result, nil
 }
