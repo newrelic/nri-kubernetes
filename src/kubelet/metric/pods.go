@@ -139,7 +139,7 @@ func NewBasicPodsFetcher(l *log.Logger, c client.HTTPGetter) *PodsFetcher {
 
 // NewPodsFetcher returns a new PodsFetcher.
 func NewPodsFetcher(l *log.Logger, c client.HTTPGetter, config *config.Config) *PodsFetcher {
-	if config.Kubelet.FetchPodsFromKubeService {
+	if config.FetchPodsFromKubeService {
 		inClusterConfig, _ := rest.InClusterConfig()
 		var uri, _ = url.Parse(inClusterConfig.Host)
 		uri.Path = path.Join(uri.Path, KubeServiceKubeletPodsPath)
