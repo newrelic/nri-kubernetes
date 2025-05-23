@@ -145,6 +145,8 @@ func NewBasicPodsFetcher(l *log.Logger, c client.HTTPGetter) *PodsFetcher {
 // NewPodsFetcher returns a new PodsFetcher.
 func NewPodsFetcher(log *log.Logger, c client.HTTPGetter, config *config.Config) *PodsFetcher {
 	if config.FetchPodsFromKubeService {
+		log.Info("Using Kubernetes service to fetch pods.")
+
 		uri, _ := url.Parse(getKubeServiceHost())
 		uri.Path = path.Join(uri.Path, KubeServiceKubeletPodsPath)
 		uri.RawQuery = fmt.Sprintf(nodeSelectorQuery, config.NodeName)
