@@ -73,8 +73,11 @@ spec:
               value: {{ include "newrelic.common.cluster" . }}
             - name: "NRI_KUBERNETES_VERBOSE"
               value: {{ include "newrelic.common.verboseLog.valueAsBoolean" . | quote }}
+
+              {{ if .Values.kubelet.fetchPodsFromKubeService }}
             - name: "NRI_KUBERNETES_FETCH_PODS_FROM_KUBE_SERVICE"
-              value: {{ .Values.kubelet.fetchPodsFromKubeService }}
+              value: "true"
+              {{ end }}
 
             - name: "NRI_KUBERNETES_NODENAME"
               valueFrom:
