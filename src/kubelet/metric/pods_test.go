@@ -2,7 +2,6 @@ package metric
 
 import (
 	"fmt"
-	"github.com/newrelic/nri-kubernetes/v3/internal/config"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -14,6 +13,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/newrelic/nri-kubernetes/v3/internal/config"
 	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
 	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 	"github.com/newrelic/nri-kubernetes/v3/src/kubelet/metric/testdata"
@@ -135,7 +135,7 @@ func TestShouldUseKubeServiceURL(test *testing.T) { //nolint: paralleltest
 	assert.Equal(test, expectedURL, scrapedURL)
 }
 
-func TestShouldUseKubeletURLWhenBasicPodsFetcherBuilt(test *testing.T) { //nolint: paralleltest
+func TestShouldUseKubeletURLWhenBasicPodsFetcherBuilt(test *testing.T) {
 	test.Parallel()
 	scrapedURL := ""
 	c := testClient{
