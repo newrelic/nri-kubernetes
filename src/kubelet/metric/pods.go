@@ -171,7 +171,7 @@ func getKubeServiceHost() string {
 		return inClusterConfig.Host
 	}
 
-	return fmt.Sprintf("https://%s:%s", os.Getenv("KUBERNETES_SERVICE_HOST"), os.Getenv("KUBERNETES_SERVICE_PORT"))
+	return fmt.Sprintf("https://%s:%s", os.Getenv("KUBERNETES_SERVICE_HOST"), os.Getenv("KUBERNETES_SERVICE_PORT")) //nolint: nosprintfhostport
 }
 
 func (podsFetcher *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]definition.RawMetrics {

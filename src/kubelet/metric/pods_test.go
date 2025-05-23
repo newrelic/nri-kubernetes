@@ -70,7 +70,8 @@ func TestFetchFunc(t *testing.T) {
 	}
 }
 
-func TestFetchFuncasdf(test *testing.T) {
+func TestFetchFunFromKubeService(test *testing.T) {
+	test.Parallel()
 	c := testClient{
 		handler: servePayload,
 	}
@@ -93,10 +94,10 @@ func TestFetchFuncasdf(test *testing.T) {
 	}
 }
 
-func TestBuildsHostFromEnvVars(test *testing.T) {
+func TestBuildsHostFromEnvVars(test *testing.T) { //nolint: paralleltest
 	expectedIP := "123:45:67:89"
 	expectedPort := "1011"
-	expectedHost := fmt.Sprintf("https://%s:%s", expectedIP, expectedPort)
+	expectedHost := fmt.Sprintf("https://%s:%s", expectedIP, expectedPort) //nolint: nosprintfhostport
 
 	os.Setenv("KUBERNETES_SERVICE_HOST", expectedIP)
 	os.Setenv("KUBERNETES_SERVICE_PORT", expectedPort)
@@ -104,11 +105,11 @@ func TestBuildsHostFromEnvVars(test *testing.T) {
 	assert.Equal(test, expectedHost, getKubeServiceHost())
 }
 
-func TestShouldUseKubeServiceURL(t *testing.T) {
+func TestShouldUseKubeServiceURL(test *testing.T) { //nolint: paralleltest
 	expectedIP := "111:222:33:44"
 	expectedPort := "5555"
 	nodeName := "my_Node"
-	expectedURL := fmt.Sprintf("https://%s:%s/api/v1/pods?fieldSelector=spec.nodeName=%s", expectedIP, expectedPort, nodeName)
+	expectedURL := fmt.Sprintf("https://%s:%s/api/v1/pods?fieldSelector=spec.nodeName=%s", expectedIP, expectedPort, nodeName) //nolint: nosprintfhostport
 	scrapedURL := ""
 
 	os.Setenv("KUBERNETES_SERVICE_HOST", expectedIP)
@@ -130,11 +131,12 @@ func TestShouldUseKubeServiceURL(t *testing.T) {
 
 	_, err := podFetch.DoPodsFetch()
 
-	assert.NoError(t, err)
-	assert.Equal(t, expectedURL, scrapedURL)
+	assert.NoError(test, err)
+	assert.Equal(test, expectedURL, scrapedURL)
 }
 
-func TestShouldUseKubeletURL(t *testing.T) {
+func TestShouldUseKubeletURLWhenBasicPodsFetcherBuilt(test *testing.T) { //nolint: paralleltest
+	test.Parallel()
 	scrapedURL := ""
 	c := testClient{
 		handler: func(writer http.ResponseWriter, request *http.Request) {
@@ -146,11 +148,12 @@ func TestShouldUseKubeletURL(t *testing.T) {
 	podFetch := NewBasicPodsFetcher(logutil.Debug, &c)
 	_, err := podFetch.DoPodsFetch()
 
-	assert.NoError(t, err)
-	assert.Equal(t, "https://127.0.0.1:738/pods", scrapedURL)
+	assert.NoError(test, err)
+	assert.Equal(test, "https://127.0.0.1:738/pods", scrapedURL)
 }
 
-func TestShouldAlsoUseKubeletURL(t *testing.T) {
+func TestShouldUseKubeletURL(test *testing.T) {
+	test.Parallel()
 	expectedIP := "111:222:33:44"
 	expectedPort := "5555"
 	nodeName := "my_Node"
@@ -175,8 +178,8 @@ func TestShouldAlsoUseKubeletURL(t *testing.T) {
 
 	_, err := podFetch.DoPodsFetch()
 
-	assert.NoError(t, err)
-	assert.Equal(t, "https://127.0.0.1:738/pods", scrapedURL)
+	assert.NoError(test, err)
+	assert.Equal(test, "https://127.0.0.1:738/pods", scrapedURL)
 }
 
 func TestNewPodsFetchFunc_StatusNoOK(t *testing.T) {
