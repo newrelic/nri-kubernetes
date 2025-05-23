@@ -60,6 +60,20 @@ jobs:
         uses: newrelic/newrelic-integration-e2e-action@v1
         env:
           EXCEPTIONS_SOURCE_FILE: ${{ steps.exceptions-version.outputs.exceptions }}-exceptions.yml
+          FETCH_PODS_FROM_KUBE_SERVICE: "false"
+        with:
+          retry_seconds: 60
+          retry_attempts: 5
+          agent_enabled: false
+          spec_path: e2e/test-specs.yml
+          account_id: ${{ secrets.K8S_AGENTS_E2E_ACCOUNT_ID }}
+          api_key: ${{ secrets.K8S_AGENTS_E2E_API_KEY }}
+          license_key: ${{ secrets.K8S_AGENTS_E2E_LICENSE_KEY }}
+      - name: Run e2e-kube-service-pod-fetch
+        uses: newrelic/newrelic-integration-e2e-action@v1
+        env:
+          EXCEPTIONS_SOURCE_FILE: ${{ steps.exceptions-version.outputs.exceptions }}-exceptions.yml
+          FETCH_PODS_FROM_KUBE_SERVICE: "true"
         with:
           retry_seconds: 60
           retry_attempts: 5

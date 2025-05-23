@@ -84,7 +84,7 @@ func main() {
 		logger.Fatal(err)
 	}
 
-	podsFetcher := kubeletmetric.NewPodsFetcher(logger, kubeletClient)
+	podsFetcher := kubeletmetric.NewBasicPodsFetcher(logger, kubeletClient)
 	kubeletGrouper, err := kubeletGrouper.New(
 		kubeletGrouper.Config{
 			NodeGetter: nodeGetter,

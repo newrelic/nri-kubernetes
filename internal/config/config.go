@@ -130,6 +130,8 @@ type KSM struct {
 type Kubelet struct {
 	// Enabled controls whether Kubelet scraping will be attempted.
 	Enabled bool `mapstructure:"enabled"`
+	// FetchPodsFromKubeService fetches pods from the kube service instead of local node.
+	FetchPodsFromKubeService bool `mapstructure:"fetchPodsFromKubeService"`
 	// Port controls which port will be used to connect to the kubelet.
 	// If zero, the kubelet port will be discovered from the status of the Node object in the API Server.
 	Port int32 `mapstructure:"port"`
@@ -294,6 +296,7 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	v.SetDefault("kubelet|timeout", DefaultTimeout)
 	v.SetDefault("kubelet|retries", DefaultRetries)
 	v.SetDefault("kubelet|scraperMaxReruns", DefaultScraperMaxReruns)
+	v.SetDefault("kubelet|fetchPodsFromKubeService", false)
 
 	v.SetDefault("controlPlane|timeout", DefaultTimeout)
 	v.SetDefault("controlPlane|retries", DefaultRetries)
