@@ -163,11 +163,11 @@ integrations that you have configured.
 | kubelet.config.scraperMaxReruns | int | `4` | Max number of scraper rerun when scraper runtime error happens |
 | kubelet.config.timeout | string | `"10s"` | Timeout for the kubelet APIs contacted by the integration |
 | kubelet.enabled | bool | `true` | Enable kubelet monitoring. Advanced users only. Setting this to `false` is not supported and will break the New Relic experience. |
-| kubelet.fetchPodsFromKubeService | bool | 'false' | Fetches the list of pods from the kubernetes service instead of the local kubelet.  |
 | kubelet.extraEnv | list | `[]` | Add user environment variables to the agent |
 | kubelet.extraEnvFrom | list | `[]` | Add user environment from configMaps or secrets as variables to the agent |
 | kubelet.extraVolumeMounts | list | `[]` | Defines where to mount volumes specified with `extraVolumes` |
 | kubelet.extraVolumes | list | `[]` | Volumes to mount in the containers |
+| kubelet.fetchPodsFromKubeService | bool | 'false' | Fetches the list of pods from the kubernetes service instead of the local kubelet.  |
 | kubelet.hostNetwork | bool | Not set | Sets pod's hostNetwork. When set bypasses global/common variable |
 | kubelet.tolerations | list | Schedules in all tainted nodes | Tolerations for the control plane DaemonSet. |
 | labels | object | `{}` | Additional labels for chart objects. Can be configured also with `global.labels` |
