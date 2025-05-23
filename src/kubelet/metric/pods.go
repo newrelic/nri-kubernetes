@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"strings"
 	"time"
@@ -142,15 +143,14 @@ func NewBasicPodsFetcher(l *log.Logger, c client.HTTPGetter) *PodsFetcher {
 }
 
 // NewPodsFetcher returns a new PodsFetcher.
-func NewPodsFetcher(l *log.Logger, c client.HTTPGetter, config *config.Config) *PodsFetcher {
+func NewPodsFetcher(log *log.Logger, c client.HTTPGetter, config *config.Config) *PodsFetcher {
 	if config.FetchPodsFromKubeService {
-		inClusterConfig, _ := rest.InClusterConfig()
-		uri, _ := url.Parse(inClusterConfig.Host)
+		uri, _ := url.Parse(getKubeServiceHost())
 		uri.Path = path.Join(uri.Path, KubeServiceKubeletPodsPath)
 		uri.RawQuery = fmt.Sprintf(nodeSelectorQuery, config.NodeName)
 
 		return &PodsFetcher{
-			logger:         l,
+			logger:         log,
 			client:         c,
 			uri:            *uri,
 			useKubeService: true,
@@ -158,10 +158,20 @@ func NewPodsFetcher(l *log.Logger, c client.HTTPGetter, config *config.Config) *
 	}
 
 	return &PodsFetcher{
-		logger:         l,
+		logger:         log,
 		client:         c,
 		useKubeService: false,
 	}
+}
+
+func getKubeServiceHost() string {
+	inClusterConfig, err := rest.InClusterConfig()
+
+	if err == nil {
+		return inClusterConfig.Host
+	}
+
+	return fmt.Sprintf("https://%s:%s", os.Getenv("KUBERNETES_SERVICE_HOST"), os.Getenv("KUBERNETES_SERVICE_PORT"))
 }
 
 func (podsFetcher *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]definition.RawMetrics {

@@ -1,11 +1,14 @@
 package metric
 
 import (
+	"fmt"
+	"github.com/newrelic/nri-kubernetes/v3/internal/config"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"path"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -20,8 +23,11 @@ type testClient struct {
 	handler http.HandlerFunc
 }
 
-func (c *testClient) Get(path string) (*http.Response, error) {
-	req := httptest.NewRequest(http.MethodGet, path, nil)
+func (c *testClient) Get(urlPath string) (*http.Response, error) {
+	uri, _ := url.Parse("https://127.0.0.1:738")
+	uri.Path = path.Join(uri.Path, urlPath)
+
+	req := httptest.NewRequest(http.MethodGet, uri.String(), nil)
 	return c.Do(req)
 }
 
@@ -62,6 +68,115 @@ func TestFetchFunc(t *testing.T) {
 	if diff := cmp.Diff(testdata.ExpectedRawData, g); diff != "" {
 		t.Errorf("unexpected difference: %s", diff)
 	}
+}
+
+func TestFetchFuncasdf(test *testing.T) {
+	c := testClient{
+		handler: servePayload,
+	}
+
+	os.Setenv("KUBERNETES_SERVICE_HOST", "127.0.0.1")
+	os.Setenv("KUBERNETES_SERVICE_PORT", "8080")
+
+	podFetch := NewPodsFetcher(logutil.Debug, &c, &config.Config{
+		NodeName: "minicube",
+		Kubelet: config.Kubelet{
+			FetchPodsFromKubeService: true,
+		},
+	})
+	podFetchResult, err := podFetch.DoPodsFetch()
+
+	assert.NoError(test, err)
+
+	if diff := cmp.Diff(testdata.ExpectedRawData, podFetchResult); diff != "" {
+		test.Errorf("unexpected difference: %s", diff)
+	}
+}
+
+func TestBuildsHostFromEnvVars(test *testing.T) {
+	expectedIP := "123:45:67:89"
+	expectedPort := "1011"
+	expectedHost := fmt.Sprintf("https://%s:%s", expectedIP, expectedPort)
+
+	os.Setenv("KUBERNETES_SERVICE_HOST", expectedIP)
+	os.Setenv("KUBERNETES_SERVICE_PORT", expectedPort)
+
+	assert.Equal(test, expectedHost, getKubeServiceHost())
+}
+
+func TestShouldUseKubeServiceURL(t *testing.T) {
+	expectedIP := "111:222:33:44"
+	expectedPort := "5555"
+	nodeName := "my_Node"
+	expectedURL := fmt.Sprintf("https://%s:%s/api/v1/pods?fieldSelector=spec.nodeName=%s", expectedIP, expectedPort, nodeName)
+	scrapedURL := ""
+
+	os.Setenv("KUBERNETES_SERVICE_HOST", expectedIP)
+	os.Setenv("KUBERNETES_SERVICE_PORT", expectedPort)
+
+	c := testClient{
+		handler: func(writer http.ResponseWriter, request *http.Request) {
+			scrapedURL = request.URL.String()
+			servePayload(writer, request)
+		},
+	}
+
+	podFetch := NewPodsFetcher(logutil.Debug, &c, &config.Config{
+		NodeName: nodeName,
+		Kubelet: config.Kubelet{
+			FetchPodsFromKubeService: true,
+		},
+	})
+
+	_, err := podFetch.DoPodsFetch()
+
+	assert.NoError(t, err)
+	assert.Equal(t, expectedURL, scrapedURL)
+}
+
+func TestShouldUseKubeletURL(t *testing.T) {
+	scrapedURL := ""
+	c := testClient{
+		handler: func(writer http.ResponseWriter, request *http.Request) {
+			scrapedURL = request.URL.String()
+			servePayload(writer, request)
+		},
+	}
+
+	podFetch := NewBasicPodsFetcher(logutil.Debug, &c)
+	_, err := podFetch.DoPodsFetch()
+
+	assert.NoError(t, err)
+	assert.Equal(t, "https://127.0.0.1:738/pods", scrapedURL)
+}
+
+func TestShouldAlsoUseKubeletURL(t *testing.T) {
+	expectedIP := "111:222:33:44"
+	expectedPort := "5555"
+	nodeName := "my_Node"
+	scrapedURL := ""
+
+	os.Setenv("KUBERNETES_SERVICE_HOST", expectedIP)
+	os.Setenv("KUBERNETES_SERVICE_PORT", expectedPort)
+
+	c := testClient{
+		handler: func(writer http.ResponseWriter, request *http.Request) {
+			scrapedURL = request.URL.String()
+			servePayload(writer, request)
+		},
+	}
+
+	podFetch := NewPodsFetcher(logutil.Debug, &c, &config.Config{
+		NodeName: nodeName,
+		Kubelet: config.Kubelet{
+			FetchPodsFromKubeService: false,
+		},
+	})
+
+	_, err := podFetch.DoPodsFetch()
+
+	assert.NoError(t, err)
+	assert.Equal(t, "https://127.0.0.1:738/pods", scrapedURL)
 }
 
 func TestNewPodsFetchFunc_StatusNoOK(t *testing.T) {
