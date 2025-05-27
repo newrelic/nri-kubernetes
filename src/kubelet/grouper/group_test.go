@@ -29,6 +29,11 @@ type testClient struct {
 	handler http.HandlerFunc
 }
 
+func (c *testClient) GetURI(uri url.URL) (*http.Response, error) {
+	req := httptest.NewRequest(http.MethodGet, uri.String(), nil)
+	return c.Do(req)
+}
+
 func (c *testClient) Get(path string) (*http.Response, error) {
 	req := httptest.NewRequest(http.MethodGet, path, nil)
 	return c.Do(req)
@@ -93,7 +98,7 @@ func TestGroup(t *testing.T) {
 		},
 	}
 
-	podsFetcher := metric.NewPodsFetcher(
+	podsFetcher := metric.NewBasicPodsFetcher(
 		log.StandardLogger(),
 		&c,
 	)

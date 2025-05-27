@@ -95,7 +95,7 @@ func (s *Scraper) Run(i *integration.Integration) error {
 			Client:     s.Kubelet,
 			NodeGetter: s.nodeGetter,
 			Fetchers: []data.FetchFunc{
-				kubeletMetric.NewPodsFetcher(s.logger, s.Kubelet).DoPodsFetch,
+				kubeletMetric.NewPodsFetcher(s.logger, s.Kubelet, s.config).DoPodsFetch,
 				kubeletMetric.CadvisorFetchFunc(fetchAndFilterPrometheus, metric.CadvisorQueries),
 			},
 			DefaultNetworkInterface: s.defaultNetworkInterface,

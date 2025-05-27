@@ -131,11 +131,24 @@ function run_tests() {
     export ACCOUNT_ID=${ACCOUNT_ID}
     export API_KEY=${API_KEY}
     export LICENSE_KEY=${LICENSE_KEY}
-    EXCEPTIONS_SOURCE_FILE=${EXCEPTIONS_SOURCE_FILE} LICENSE_KEY=${LICENSE_KEY} go run github.com/newrelic/newrelic-integration-e2e-action@latest \
+    run_e2e
+    run_e2e_kube_service_pod_fetch
+}
+
+function run_e2e() {
+    EXCEPTIONS_SOURCE_FILE=${EXCEPTIONS_SOURCE_FILE} LICENSE_KEY=${LICENSE_KEY} FETCH_PODS_FROM_KUBE_SERVICE="false" go run github.com/newrelic/newrelic-integration-e2e-action@latest \
         --commit_sha=test-string --retry_attempts=5 --retry_seconds=60 \
             --account_id=${ACCOUNT_ID} --api_key=${API_KEY} --license_key=${LICENSE_KEY} \
             --spec_path=test-specs.yml --verbose_mode=true --agent_enabled="false"
 }
+
+function run_e2e_kube_service_pod_fetch() {
+    EXCEPTIONS_SOURCE_FILE=${EXCEPTIONS_SOURCE_FILE} LICENSE_KEY=${LICENSE_KEY} FETCH_PODS_FROM_KUBE_SERVICE="true" go run github.com/newrelic/newrelic-integration-e2e-action@latest \
+        --commit_sha=test-string --retry_attempts=5 --retry_seconds=60 \
+            --account_id=${ACCOUNT_ID} --api_key=${API_KEY} --license_key=${LICENSE_KEY} \
+            --spec_path=test-specs.yml --verbose_mode=true --agent_enabled="false"
+}
+
 
 function teardown() {
     echo "🔄 Teardown"
