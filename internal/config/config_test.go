@@ -45,6 +45,15 @@ func TestLoadConfig(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, "metrics", c.TestConnectionEndpoint)
 		})
+
+		t.Run("takes_fetch_pod_from_kube_service_from_env", func(t *testing.T) {
+			t.Parallel()
+			_ = os.Setenv("NRI_KUBERNETES_KUBELET_FETCHPODSFROMKUBESERVICE", "true")
+
+			c, err := config.LoadConfig(fakeDataDir, workingData)
+			require.NoError(t, err)
+			require.Equal(t, true, c.FetchPodsFromKubeService)
+		})
 	})
 	// This test checks that viper custom key delimiter is working as expected by using the old default dot delimiter
 	// as key.
