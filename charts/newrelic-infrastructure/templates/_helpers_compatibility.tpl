@@ -123,12 +123,6 @@ Please configure the API Server port as a part of 'apiServer.autodiscover[].endp
 ------
 {{- end -}}
 
-{{- define "newrelic.compatibility.message.windows" -}}
-nri-kubernetes v3 does not support deploying into windows Nodes.
-Please use the latest 2.x version of the chart.
-
-------
-{{- end -}}
 
 {{- define "newrelic.compatibility.message.etcdSecrets" -}}
 Values "etcdTlsSecretName" and "etcdTlsSecretNamespace" are no longer supported, please specify them as a part of the
