@@ -33,7 +33,7 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 
 {{- /* Return a YAML with the mode to be added to the labels */ -}}
 {{- define "nriKubernetes._mode" -}}
-{{- if include "newrelic.common.privileged" . -}}
+{{- if and (include "newrelic.common.privileged" .) (not .Values.gkeAutopilot) -}}
     mode: privileged
 {{- else -}}
     mode: unprivileged
@@ -124,4 +124,24 @@ readOnlyRootFilesystem: true
 
 {{- define "nriKubernetes.windowsInfraAgentImage" -}}
   {{ include "newrelic.common.images.image" ( dict "imageRoot" $.Values.images.agent "context" $ "imageTagSuffix" .imageTagSuffix) }}
+{{- end}}
+
+{{ define "nriKubernetes.testConnectionEndpoint" -}}
+    {{- if .Values.gkeAutopilot}}
+    "/metrics"
+    {{else if .Values.kubelet.testConnectionEndpoint}}
+    {{ .Values.kubelet.testConnectionEndpoint }}
+    {{ end -}}
+{{- end}}
+
+{{ define "nriKubernetes.fetchPodsFromKubeService" -}}
+    {{ or .Values.gkeAutopilot .Values.kubelet.fetchPodsFromKubeService | quote }}
+{{- end}}
+
+{{ define "nriKubernetes.controlPlane.enabled" -}}
+    {{ and (.Values.controlPlane.enabled) (not .Values.gkeAutopilot) }}
+{{- end}}
+
+{{ define "nriKubernetes.privileged" -}}
+    {{ and (include "newrelic.common.privileged" .) (not .Values.gkeAutopilot) }}
 {{- end}}

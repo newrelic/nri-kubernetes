@@ -12,7 +12,7 @@ readOnlyRootFilesystem: true
 {{- /* This is the container security context for the agent */ -}}
 {{- define "nriKubernetes.kubelet.securityContext.agentContainer" -}}
 {{- $defaults := dict -}}
-{{- if include "newrelic.common.privileged" . -}}
+{{- if include "nriKubernetes.privileged" . -}}
 {{- $defaults = fromYaml ( include "nriKubernetes.kubelet.securityContext.privileged" . ) -}}
 {{- else -}}
 {{- $defaults = fromYaml ( include "nriKubernetes.securityContext.containerDefaults" . ) -}}

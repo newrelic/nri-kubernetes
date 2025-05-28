@@ -74,10 +74,10 @@ spec:
             - name: "NRI_KUBERNETES_VERBOSE"
               value: {{ include "newrelic.common.verboseLog.valueAsBoolean" . | quote }}
 
-              {{ if .Values.kubelet.fetchPodsFromKubeService }}
+            - name: "NRI_KUBERNETES_TESTCONNECTIONENDPOINT"
+              value: {{ include "nriKubernetes.testConnectionEndpoint" . }}
             - name: "NRI_KUBERNETES_KUBELET_FETCHPODSFROMKUBESERVICE"
-              value: "true"
-              {{ end }}
+              value: {{ include "nriKubernetes.fetchPodsFromKubeService" . }}
 
             - name: "NRI_KUBERNETES_NODENAME"
               valueFrom:
@@ -136,7 +136,7 @@ spec:
                   apiVersion: "v1"
                   fieldPath: "spec.nodeName"
 
-            {{- if not (include "newrelic.common.privileged" .) }}
+            {{- if not (include "nriKubernetes.privileged" .) }}
             # Override NRIA_OVERRIDE_HOST_ROOT to empty if unprivileged. This must be done as an env var as the
             # `k8s-events-forwarder` and `infrastructure-bundle` images ship this very same env var set to /host.
             - name: "NRIA_OVERRIDE_HOST_ROOT"
@@ -186,7 +186,7 @@ spec:
               subPath: newrelic-infra.yml
             - name: nri-integrations-cfg-volume
               mountPath: /etc/newrelic-infra/integrations.d/
-            {{- if include "newrelic.common.privileged" . }}
+            {{- if include "nriKubernetes.privileged" . }}
             - name: dev
               mountPath: /dev
             - name: host-containerd-socket
@@ -213,7 +213,7 @@ spec:
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
       volumes:
-        {{- if include "newrelic.common.privileged" . }}
+        {{- if include "nriKubernetes.privileged" . }}
         - name: dev
           hostPath:
             path: /dev

@@ -20,7 +20,7 @@ You have specified ksm or kubelet integration components as not enabled.
 Those components are needed to have the full experience on NROne kubernetes explorer.
 {{- end }}
 
-{{- if and .Values.controlPlane.enabled (not (include "nriKubernetes.controlPlane.hostNetwork" .)) }}
+{{- if and (include "nriKubernetes.controlPlane.enabled" .) (not (include "nriKubernetes.controlPlane.hostNetwork" .)) }}
 Warning:
 ========
 
@@ -53,7 +53,7 @@ affinity:
                 - fargate
 {{- end }}
 
-{{- if and .Values.nodeAffinity .Values.controlPlane.enabled }}
+{{- if and .Values.nodeAffinity (include "nriKubernetes.controlPlane.enabled" .) }}
 WARNING: `nodeAffinity` is deprecated
 =====================================
 
