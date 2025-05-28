@@ -194,6 +194,17 @@ integrations that you have configured.
 | updateStrategy | object | See `values.yaml` | Update strategy for the deployed DaemonSets. |
 | verboseLog | bool | `false` | Sets the debug logs to this integration or all integrations if it is set globally. Can be configured also with `global.verboseLog` |
 
+## Running tests locally
+
+- Install Helm's 'chart-testing' utilities
+  - `brew install chart-testing`
+  - `brew install yamllint`
+  - `helm plugin install https://github.com/helm-unittest/helm-unittest`
+- Run linter and yaml validation
+  - `ct lint-and-install` from this folder
+- Run unit tests: 
+  - `helm unittest .`
+
 ## Maintainers
 
 * [juanjjaramillo](https://github.com/juanjjaramillo)
