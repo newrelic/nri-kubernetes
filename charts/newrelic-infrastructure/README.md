@@ -136,7 +136,6 @@ integrations that you have configured.
 | customSecretName | string | `""` | In case you don't want to have the license key in you values, this allows you to point to a user created secret to get the key from there. Can be configured also with `global.customSecretName` |
 | dnsConfig | object | `{}` | Sets pod's dnsConfig. Can be configured also with `global.dnsConfig` |
 | enableProcessMetrics | bool | `false` | Collect detailed metrics from processes running in the host. This defaults to true for accounts created before July 20, 2020. ref: https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/new-relic-infrastructure-agent-1120 |
-| enableWindows | bool | `false` |  |
 | fedramp.enabled | bool | `false` | Enables FedRAMP. Can be configured also with `global.fedramp.enabled` |
 | fullnameOverride | string | `""` | Override the full name of the release |
 | hostNetwork | bool | `false` | Sets pod's hostNetwork. Can be configured also with `global.hostNetwork` |
@@ -168,7 +167,6 @@ integrations that you have configured.
 | kubelet.extraEnvFrom | list | `[]` | Add user environment from configMaps or secrets as variables to the agent |
 | kubelet.extraVolumeMounts | list | `[]` | Defines where to mount volumes specified with `extraVolumes` |
 | kubelet.extraVolumes | list | `[]` | Volumes to mount in the containers |
-| kubelet.hostNetwork | bool | Not set | Sets pod's hostNetwork. When set bypasses global/common variable Note - does not apply to Windows nodes |
 | kubelet.tolerations | list | Schedules in all tainted nodes | Tolerations for the control plane DaemonSet. |
 | labels | object | `{}` | Additional labels for chart objects. Can be configured also with `global.labels` |
 | licenseKey | string | `""` | This set this license key to use. Can be configured also with `global.licenseKey` |
@@ -193,16 +191,17 @@ integrations that you have configured.
 | tolerations | list | `[]` | Sets pod's tolerations to node taints almost globally. (See [Affinities and tolerations](README.md#affinities-and-tolerations)) |
 | updateStrategy | object | See `values.yaml` | Update strategy for the deployed DaemonSets. |
 | verboseLog | bool | `false` | Sets the debug logs to this integration or all integrations if it is set globally. Can be configured also with `global.verboseLog` |
-| windowsOsList[0].agentImage | string | `""` |  |
-| windowsOsList[0].buildNumber | string | `"10.0.17763"` |  |
-| windowsOsList[0].imageTagSuffix | string | `"windows-ltsc-2019"` |  |
-| windowsOsList[0].integrationImage | string | `""` |  |
-| windowsOsList[0].version | string | `"ltsc2019"` |  |
-| windowsOsList[1].agentImage | string | `""` |  |
-| windowsOsList[1].buildNumber | string | `"10.0.20348"` |  |
-| windowsOsList[1].imageTagSuffix | string | `"windows-ltsc-2022"` |  |
-| windowsOsList[1].integrationImage | string | `""` |  |
-| windowsOsList[1].version | string | `"ltsc2022"` |  |
+
+## Running tests locally
+
+- Install Helm's 'chart-testing' utilities
+    - `brew install chart-testing`
+    - `brew install yamllint`
+    - `helm plugin install https://github.com/helm-unittest/helm-unittest`
+- Run linter and yaml validation
+    - `ct lint-and-install` from this folder
+- Run unit tests:
+    - `helm unittest .`
 
 ## Maintainers
 
