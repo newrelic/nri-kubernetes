@@ -16,6 +16,9 @@ RUN Remove-Item \"C:\\newrelic-infra.$Env:AGENT_VERSION.msi\"
 # Service is not started by default
 RUN Set-Service -Name 'newrelic-infra' -StartupType disabled
 
+# Grant permissions to the ContainerUser for the New Relic Infra agent data directory
+RUN icacls \"C:\\ProgramData\\New Relic\\newrelic-infra\" /grant ContainerUser:(F)
+
 # we use this to start the agent, and to get the output from its log file
 COPY start.ps1 C:\\start.ps1
 ENTRYPOINT ["powershell", "C:\\start.ps1"]
