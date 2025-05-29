@@ -33,7 +33,7 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 
 {{- /* Return a YAML with the mode to be added to the labels */ -}}
 {{- define "nriKubernetes._mode" -}}
-{{- if include "newrelic.common.privileged" . -}}
+{{- if include "nriKubernetes.privileged" . -}}
     mode: privileged
 {{- else -}}
     mode: unprivileged
@@ -127,9 +127,7 @@ readOnlyRootFilesystem: true
 {{- end}}
 
 {{- define "nriKubernetes.privileged" -}}
-{{- if .Values.gkeAutopilot -}}
-false
-{{- else -}}
+{{- if and (include "newrelic.common.privileged" .) (not .Values.gkeAutopilot) -}}
 {{- include "newrelic.common.privileged" . -}}
 {{- end -}}
 {{- end -}}

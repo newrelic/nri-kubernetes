@@ -6,7 +6,7 @@ http_server_enabled: true
 http_server_port: 8003
 features:
   docker_enabled: false
-{{- if not ( include "newrelic.common.privileged" . ) }}
+{{- if not ( include "nriKubernetes.privileged" . ) }}
 is_secure_forward_only: true
 {{- end }}
 {{- /*
