@@ -167,6 +167,8 @@ integrations that you have configured.
 | kubelet.extraEnvFrom | list | `[]` | Add user environment from configMaps or secrets as variables to the agent |
 | kubelet.extraVolumeMounts | list | `[]` | Defines where to mount volumes specified with `extraVolumes` |
 | kubelet.extraVolumes | list | `[]` | Volumes to mount in the containers |
+| kubelet.fetchPodsFromKubeService | bool | 'false' | Fetches the list of pods from the kubernetes service instead of the local kubelet.  |
+| kubelet.hostNetwork | bool | Not set | Sets pod's hostNetwork. When set bypasses global/common variable |
 | kubelet.tolerations | list | Schedules in all tainted nodes | Tolerations for the control plane DaemonSet. |
 | labels | object | `{}` | Additional labels for chart objects. Can be configured also with `global.labels` |
 | licenseKey | string | `""` | This set this license key to use. Can be configured also with `global.licenseKey` |
@@ -195,13 +197,13 @@ integrations that you have configured.
 ## Running tests locally
 
 - Install Helm's 'chart-testing' utilities
-    - `brew install chart-testing`
-    - `brew install yamllint`
-    - `helm plugin install https://github.com/helm-unittest/helm-unittest`
+  - `brew install chart-testing`
+  - `brew install yamllint`
+  - `helm plugin install https://github.com/helm-unittest/helm-unittest`
 - Run linter and yaml validation
-    - `ct lint-and-install` from this folder
+  - `ct lint-and-install` from this folder
 - Run unit tests:
-    - `helm unittest .`
+  - `helm unittest .`
 
 ## Maintainers
 
