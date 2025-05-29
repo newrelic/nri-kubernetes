@@ -7,10 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### bug fixes
+### bugfix
 - FetchPodsFromKubeService config was setting a wrongly formatted environment variable. 
 
-### enhancements
+### enhancement
 - Kubelet pod fetch can be configured to use KUBE_SERVICE endpoint instead of local node. @Philip-R-Beckwith [#1228](https://github.com/newrelic/nri-kubernetes/pull/1228)
 
 ## v3.40.0 - 2025-05-19
