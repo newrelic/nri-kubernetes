@@ -125,3 +125,11 @@ readOnlyRootFilesystem: true
 {{- define "nriKubernetes.windowsInfraAgentImage" -}}
   {{ include "newrelic.common.images.image" ( dict "imageRoot" $.Values.images.agent "context" $ "imageTagSuffix" .imageTagSuffix) }}
 {{- end}}
+
+{{- define "nriKubernetes.privileged" -}}
+{{- if .Values.gkeAutopilot -}}
+false
+{{- else -}}
+{{- include "newrelic.common.privileged" . -}}
+{{- end -}}
+{{- end -}}

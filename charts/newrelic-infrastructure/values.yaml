@@ -12,6 +12,8 @@ customSecretName: ""
 # -- In case you don't want to have the license key in you values, this allows you to point to which secret key is the license key located. Can be configured also with `global.customSecretLicenseKey`
 customSecretLicenseKey: ""
 
+gkeAutopilot: false
+
 # -- Images used by the chart for the integration and agents.
 # @default -- See `values.yaml`
 images:
@@ -107,7 +109,10 @@ kubelet:
   # -- Enable kubelet monitoring.
   # Advanced users only. Setting this to `false` is not supported and will break the New Relic experience.
   enabled: true
+  # Setting this to true will force the kubelet to reach out to the /pods endpoint from the kube service rather than the local node.
   fetchPodsFromKubeService: false
+  # Overrides the endpoint on the local kubelet that is used to check the pod can connect to the local node's service.
+  testConnectionEndpoint: "/healthz"
   annotations: {}
   # -- Tolerations for the control plane DaemonSet.
   # @default -- Schedules in all tainted nodes
