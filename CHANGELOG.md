@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- Config option for GKE-Autopilot to automatically configure necessary settings.  @Philip-R-Beckwith [1235](https://github.com/newrelic/nri-kubernetes/pull/1235)
+
 ### bugfix
-- FetchPodsFromKubeService config was setting a wrongly formatted environment variable. 
+- FetchPodsFromKubeService config was setting a wrongly formatted environment variable. @Philip-R-Beckwith [1231](https://github.com/newrelic/nri-kubernetes/pull/1231)
 
 ### enhancement
 - Kubelet pod fetch can be configured to use KUBE_SERVICE endpoint instead of local node. @Philip-R-Beckwith [#1228](https://github.com/newrelic/nri-kubernetes/pull/1228)
