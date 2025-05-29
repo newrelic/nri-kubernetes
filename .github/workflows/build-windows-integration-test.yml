@@ -67,7 +67,7 @@ jobs:
           MATRIX_TAG: ${{ matrix.windows.tag }}
         run: |
           ls
-          docker build --file Dockerfile.windows `
+          docker build --file ./windows/nri-kubernetes/Dockerfile.windows `
             --build-arg BASE_IMAGE_TAG=${{ matrix.windows.tag }} `
             --build-arg "COMMIT=${env:COMMIT}" `
             --build-arg "DATE=${env:DATE}" `
@@ -85,4 +85,4 @@ jobs:
         # if: ${{ ! github.event.pull_request }}
         shell: powershell
         run: |
-          docker push newrelic/nri-kubernetes:windows-${{ matrix.windows.tag }}-alpha-$Env:tag
+          docker push newrelic/nri-kubernetes-internal:windows-${{ matrix.windows.tag }}-alpha-$Env:tag
