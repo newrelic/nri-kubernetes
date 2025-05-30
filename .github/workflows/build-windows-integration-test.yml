@@ -86,3 +86,8 @@ jobs:
         shell: powershell
         run: |
           docker push newrelic/nri-kubernetes:windows-${{ matrix.windows.tag }}-alpha-$Env:tag
+      - name: Output pushed image tag
+        shell: powershell
+        run: |
+          $image = "newrelic/nri-kubernetes:windows-${{ matrix.windows.tag }}-alpha-$Env:tag"
+          echo "image=$image" | Out-File -FilePath $env:GITHUB_OUTPUT -Append

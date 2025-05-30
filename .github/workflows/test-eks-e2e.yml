@@ -31,3 +31,14 @@ jobs:
       - name: Verify cluster access
         run: |
           kubectl get nodes
+      - name: Trigger build-windows-integration-tes workflow
+        uses: newrelic/nri-kubernetes/.github/workflows/build-windows-integration-test.yml@testEKSe2e
+        id: trigger_build
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          workflow: build-windows-integration-test.yml
+          ref: ${{ github.ref }}
+      - name: Echo output from build-windows-integration-test
+        run: |
+          echo "Output from build-windows-integration-test: ${{ steps.trigger_build.outputs.result }}"
