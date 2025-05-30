@@ -202,14 +202,16 @@ integrations that you have configured.
   - `helm plugin install https://github.com/helm-unittest/helm-unittest`
 - Run linter and yaml validation
   - `ct lint-and-install` from this folder
-- Run unit tests: 
+- Run unit tests:
   - `helm unittest .`
 
 ## Maintainers
 
-* [juanjjaramillo](https://github.com/juanjjaramillo)
-* [csongnr](https://github.com/csongnr)
+* [danielstokes](https://github.com/danielstokes)
 * [dbudziwojskiNR](https://github.com/dbudziwojskiNR)
+* [kondracek-nr](https://github.com/kondracek-nr)
+* [Philip-R-Beckwith](https://github.com/Philip-R-Beckwith)
+* [TmNguyen12](https://github.com/TmNguyen12)
 
 ## Past Contributors
 
