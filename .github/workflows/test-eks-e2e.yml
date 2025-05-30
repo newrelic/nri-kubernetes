@@ -11,9 +11,14 @@ permissions:
   contents: read
 
 jobs:
+  create-windows-image:
+    uses: "newrelic/nri-kubernetes/.github/workflows/build-windows-integration-test.yml@testEKSe2e"
+    with:
+      repository: ${{ github.repository }}
+      workflow: build-windows-integration-test.yml
+      ref: ${{ github.ref }}
   e2e:
     runs-on: windows-2019
-
     steps:
       - uses: actions/checkout@v4 
       - uses: actions/setup-go@v5
@@ -31,14 +36,6 @@ jobs:
       - name: Verify cluster access
         run: |
           kubectl get nodes
-      - name: Trigger build-windows-integration-tes workflow
-        uses: newrelic/nri-kubernetes/.github/workflows/build-windows-integration-test.yml@testEKSe2e
-        id: trigger_build
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          repository: ${{ github.repository }}
-          workflow: build-windows-integration-test.yml
-          ref: ${{ github.ref }}
       - name: Echo output from build-windows-integration-test
         run: |
-          echo "Output from build-windows-integration-test: ${{ steps.trigger_build.outputs.result }}"
+            echo "Output from build-windows-integration-test: ${{ jobs.create-windows-image.outputs.result }}"
