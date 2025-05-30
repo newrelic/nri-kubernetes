@@ -13,10 +13,6 @@ permissions:
 jobs:
   create-windows-image:
     uses: "newrelic/nri-kubernetes/.github/workflows/build-windows-integration-test.yml@testEKSe2e"
-    with:
-      repository: ${{ github.repository }}
-      workflow: build-windows-integration-test.yml
-      ref: ${{ github.ref }}
   e2e:
     needs: create-windows-image
     runs-on: windows-2019
