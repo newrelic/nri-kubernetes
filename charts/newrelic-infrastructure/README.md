@@ -138,6 +138,7 @@ integrations that you have configured.
 | enableProcessMetrics | bool | `false` | Collect detailed metrics from processes running in the host. This defaults to true for accounts created before July 20, 2020. ref: https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/new-relic-infrastructure-agent-1120 |
 | fedramp.enabled | bool | `false` | Enables FedRAMP. Can be configured also with `global.fedramp.enabled` |
 | fullnameOverride | string | `""` | Override the full name of the release |
+| gkeAutopilot | bool | `false` | Sets this to true when using a GKE Autopilot cluster. This will disable the controlplane scraper set privileged mode to false, and override the endpoints that the kubelet uses to fetch pods and test its connection. |
 | hostNetwork | bool | `false` | Sets pod's hostNetwork. Can be configured also with `global.hostNetwork` |
 | images | object | See `values.yaml` | Images used by the chart for the integration and agents. |
 | images.agent | object | See `values.yaml` | Image for the New Relic Infrastructure Agent plus integrations. |
