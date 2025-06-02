@@ -9,6 +9,19 @@ on:
       - windowsImage*
   workflow_dispatch:
   workflow_call:
+    inputs:
+      windows_directory:
+        description: Location of Windows build files
+        type: string
+        required: false
+        default: "windows/nri-kubernetes"
+    secrets:
+      K8S_AGENTS_DOCKERHUB_USERNAME:
+        description: DockerHub username for pushing images
+        required: true
+      K8S_AGENTS_DOCKERHUB_TOKEN:
+        description: DockerHub token for pushing images
+        required: true
 
 jobs:
   build:
@@ -34,12 +47,6 @@ jobs:
           go-version-file: 'go.mod'
       - name: Generate date-based tag for testing
         run: $tag = Get-Date -Format "yyyyMMddHHmmss"; echo "TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append
-      - name: Get windows build
-        id: osinfo
-        shell: powershell
-        run: |
-          Get-ComputerInfo
-
       - uses: actions/cache@v4
         with:
           path: |
@@ -52,13 +59,23 @@ jobs:
         shell: powershell
         env:
           COMMIT: ${{ github.sha }}
+          DATE: ${{ needs.build-env-args.outputs.date }}
+          TAG: "e2e-testing-${{ github.sha }}"
           WIN_VERSION: ${{ matrix.windows.tag }}
+          WIN_DIR: ${{ inputs.windows_directory }}
         run: |
-          cd windows
-          cd nri-kubernetes
-          echo "Building newrelic/nri-kubernetes:windows-${{ matrix.windows.tag }}-alpha-$Env:tag"
-          #env:WIN_VERSION= ${{ matrix.windows.tag }}
-          ./build.ps1
+          if ([string]::IsNullOrEmpty($env:WIN_DIR)) {
+            ./build.ps1
+          } else {
+            $scriptPath = Join-Path $env:WIN_DIR "build.ps1"
+            & $scriptPath
+          }
+        # run: |
+        #   cd windows
+        #   cd nri-kubernetes
+        #   echo "Building newrelic/nri-kubernetes:windows-${{ matrix.windows.tag }}-e2e-testing-$Env:tag"
+        #   #env:WIN_VERSION= ${{ matrix.windows.tag }}
+        #   ./build.ps1
 
       - name: Build nri-kubernetes container
         shell: powershell
@@ -67,13 +84,16 @@ jobs:
           COMMIT: ${{ github.sha }}
           MATRIX_TAG: ${{ matrix.windows.tag }}
         run: |
+          $env:DOCKER_TAG = "windows-${{ matrix.windows.tag }}-e2e-testing-$Env:tag"
+          echo "DOCKER_TAG=$env:DOCKER_TAG" | Out-File -FilePath $env:GITHUB_ENV -Append
+          
           ls
           docker build --file Dockerfile.windows `
             --build-arg BASE_IMAGE_TAG=${{ matrix.windows.tag }} `
             --build-arg "COMMIT=${env:COMMIT}" `
             --build-arg "DATE=${env:DATE}" `
-            --build-arg "TAG=dev" `
-            -t newrelic/nri-kubernetes-internal:windows-${{ matrix.windows.tag }}-alpha-$Env:tag . `
+            --build-arg "TAG=$env:DOCKER_TAG" `
+            -t newrelic/nri-kubernetes-internal:$env:DOCKER_TAG . `
 
       - name: Login to DockerHub
         # if: ${{ ! github.event.pull_request }}
@@ -86,9 +106,10 @@ jobs:
         # if: ${{ ! github.event.pull_request }}
         shell: powershell
         run: |
-          docker push newrelic/nri-kubernetes:windows-${{ matrix.windows.tag }}-alpha-$Env:tag
+          docker push newrelic/nri-kubernetes-internal:$Env:DOCKER_TAG
+          Write-Output "Pushed newrelic/nri-kubernetes-internal:$Env:DOCKER_TAG"
       - name: Output pushed image tag
         shell: powershell
         run: |
-          $image = "newrelic/nri-kubernetes:windows-${{ matrix.windows.tag }}-alpha-$Env:tag"
+          $image = "newrelic/nri-kubernetes:$env:DOCKER_TAG"
           echo "image=$image" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
