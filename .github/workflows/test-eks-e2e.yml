@@ -49,6 +49,14 @@ jobs:
           password: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
       - name: Setup Access to Private Docker Registry
         run: |
+          if ! kubectl get secret nri-kubernetes-internal-dockerhub >/dev/null 2>&1; then
+            kubectl create secret docker-registry nri-kubernetes-internal-dockerhub \
+              --docker-server=docker.io \
+              --docker-username=${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }} \
+              --docker-password=${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
+          else
+            echo "Secret nri-kubernetes-internal-dockerhub already exists, skipping creation."
+          fi
           kubectl create secret docker-registry nri-kubernetes-internal-dockerhub \
             --docker-server=docker.io \
             --docker-username=${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }} \
