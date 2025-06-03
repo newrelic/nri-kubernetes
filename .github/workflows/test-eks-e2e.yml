@@ -50,7 +50,7 @@ jobs:
       - name: Setup Access to Private Docker Registry
         run: |
           if ! kubectl get secret "nri-kubernetes-internal-dockerhub" >/dev/null 2>&1; then
-            kubectl create secret docker-registry nri-kubernetes-internal-dockerhub \
+            kubectl create secret docker-registry nri-kubernetes-internal-dockerhub -n nr-windows-test\
               --docker-server=docker.io \
               --docker-username=${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }} \
               --docker-password=${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }} \ 
@@ -73,11 +73,11 @@ jobs:
         env:
           EXCEPTIONS_SOURCE_FILE: 1-31-exceptions.yml
           FETCH_PODS_FROM_KUBE_SERVICE: "false"
-          SCENARIO_TAG: "windows"
         with:
           retry_seconds: 60
           retry_attempts: 5
           agent_enabled: false
+          scenario_tag: "windows-test"
           spec_path: e2e/test-specs-windows.yml
           account_id: ${{ secrets.K8S_AGENTS_E2E_ACCOUNT_ID }}
           api_key: ${{ secrets.K8S_AGENTS_E2E_API_KEY }}
