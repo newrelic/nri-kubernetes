@@ -59,6 +59,10 @@ jobs:
           helm repo add newrelic https://helm-charts.newrelic.com
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
           helm repo update
+      - name: Add PullSecret to e2e-values.yml
+        run: |
+          echo "pullSecret: nri-kubernetes-internal-dockerhub" >> e2e/e2e-values.yml
+          cat e2e/e2e-values.yml
       - name: Run e2e-test
         uses: newrelic/newrelic-integration-e2e-action@v1
         env:
