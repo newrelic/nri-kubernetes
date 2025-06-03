@@ -19,8 +19,18 @@ jobs:
     secrets:
       K8S_AGENTS_DOCKERHUB_USERNAME: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
       K8S_AGENTS_DOCKERHUB_TOKEN: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
+  generate-key:
+    runs-on: ubuntu-latest
+    outputs:
+      run_key: ${{ steps.random-string.outputs.random_string }}
+    steps:
+      - name: just a small random 5 letter string
+        id: random-string
+        run: |
+          echo "random_string=$(cat /dev/urandom | tr -dc 'a-z' | fold -w 5 | head -n 1)" >> $GITHUB_OUTPUT
   e2e:
-    needs: create-windows-image
+    needs: [ create-windows-image, generate-key ]
+    name: E2E Test on EKS
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4 
@@ -50,7 +60,7 @@ jobs:
       - name: Setup Access to Private Docker Registry
         run: |
           if ! kubectl get secret "nri-kubernetes-internal-dockerhub" >/dev/null 2>&1; then
-            kubectl create secret docker-registry nri-kubernetes-internal-dockerhub -n nr-windows-test\
+            kubectl create secret docker-registry nri-kubernetes-internal-dockerhub -n nr-wintest-${{ needs.generate-key.outputs.run_key }}\
               --docker-server=docker.io \
               --docker-username=${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }} \
               --docker-password=${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }} \ 
@@ -77,7 +87,7 @@ jobs:
           retry_seconds: 60
           retry_attempts: 5
           agent_enabled: false
-          scenario_tag: "windows-test"
+          scenario_tag: "wintest-${{ needs.generate-key.outputs.run_key }}"
           spec_path: e2e/test-specs-windows.yml
           account_id: ${{ secrets.K8S_AGENTS_E2E_ACCOUNT_ID }}
           api_key: ${{ secrets.K8S_AGENTS_E2E_API_KEY }}
