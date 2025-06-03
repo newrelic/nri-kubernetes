@@ -108,7 +108,7 @@ jobs:
         shell: powershell
         env:
           COMMIT: ${{ github.sha }}
-          MATRIX_TAG: ltsc2019
+          MATRIX_TAG: ${{ matrix.windows.tag }}
           WIN_DIR: ${{ inputs.windows_directory }}
         run: |
           $env:DOCKER_TAG = "windows-${{ matrix.windows.tag }}-e2e-testing-$Env:tag"
