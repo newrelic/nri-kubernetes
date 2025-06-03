@@ -112,7 +112,7 @@ jobs:
         # if: ${{ ! github.event.pull_request }}
         shell: powershell
         run: |
-          docker push -f $dockerfilePath newrelic/nri-kubernetes-internal:$Env:DOCKER_TAG
+          docker push newrelic/nri-kubernetes-internal:$Env:DOCKER_TAG
           Write-Output "Pushed newrelic/nri-kubernetes-internal:$Env:DOCKER_TAG"
       - name: Output pushed image tag
         shell: powershell
