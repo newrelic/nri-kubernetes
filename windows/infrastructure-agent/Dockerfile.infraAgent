@@ -16,13 +16,16 @@ RUN Remove-Item \"C:\\newrelic-infra.$Env:AGENT_VERSION.msi\"
 # Service is not started by default
 RUN Set-Service -Name 'newrelic-infra' -StartupType disabled
 
+# Grant permissions to the ContainerUser for directory access
+RUN icacls 'C:\ProgramData\New Relic\newrelic-infra' /grant Users:'(OI)(CI)M' /T
+
 # we use this to start the agent, and to get the output from its log file
 COPY start.ps1 C:\\start.ps1
 ENTRYPOINT ["powershell", "C:\\start.ps1"]
 
-ENV NRIA_IS_CONTAINERIZED true
-ENV NRIA_OVERRIDE_HOST_ROOT ""
-ENV NRIA_IS_SECURE_FORWARD_ONLY true
-ENV NRIA_HTTP_SERVER_ENABLED true
-ENV NRIA_HTTP_SERVER_PORT 8003
-ENV NRIA_LOG_FORWARD true
+ENV NRIA_IS_CONTAINERIZED=true
+ENV NRIA_OVERRIDE_HOST_ROOT=""
+ENV NRIA_IS_SECURE_FORWARD_ONLY=true
+ENV NRIA_HTTP_SERVER_ENABLED=true
+ENV NRIA_HTTP_SERVER_PORT=8003
+ENV NRIA_LOG_FORWARD=true
