@@ -82,12 +82,19 @@ jobs:
         env:
           COMMIT: ${{ github.sha }}
           MATRIX_TAG: ${{ matrix.windows.tag }}
+          WIN_DIR: ${{ inputs.windows_directory }}
         run: |
           $env:DOCKER_TAG = "windows-${{ matrix.windows.tag }}-e2e-testing-$Env:tag"
           echo "DOCKER_TAG=$env:DOCKER_TAG" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+          if ([string]::IsNullOrEmpty($env:WIN_DIR)) {
+            $dockerfilePath = "Dockerfile.windows"
+          } else {
+            $dockerfilePath = Join-Path $env:WIN_DIR "Dockerfile.windows"
+          }
           
           ls
-          docker build --file Dockerfile.windows `
+          docker build --platform windows/amd64 -f $dockerfilePath `
             --build-arg BASE_IMAGE_TAG=${{ matrix.windows.tag }} `
             --build-arg "COMMIT=${env:COMMIT}" `
             --build-arg "DATE=${env:DATE}" `
@@ -105,7 +112,7 @@ jobs:
         # if: ${{ ! github.event.pull_request }}
         shell: powershell
         run: |
-          docker push newrelic/nri-kubernetes-internal:$Env:DOCKER_TAG
+          docker push -f $dockerfilePath newrelic/nri-kubernetes-internal:$Env:DOCKER_TAG
           Write-Output "Pushed newrelic/nri-kubernetes-internal:$Env:DOCKER_TAG"
       - name: Output pushed image tag
         shell: powershell
