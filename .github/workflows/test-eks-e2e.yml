@@ -27,7 +27,7 @@ jobs:
       - name: just a small random 5 letter string
         id: random-string
         run: |
-          echo "random_string=$(cat /dev/urandom | tr -dc 'a-z' | fold -w 5 | head -n 1)" >> $GITHUB_OUTPUT
+          echo "random_string=$(head -c20 /dev/urandom | base64 | tr -dc 'a-z' | head -c5)" >> $GITHUB_OUTPUT
   e2e:
     needs: [ create-windows-image, generate-key ]
     name: E2E Test on EKS
