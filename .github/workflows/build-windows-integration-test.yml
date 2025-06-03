@@ -44,7 +44,7 @@ jobs:
           if [[ -z "${{ inputs.windows_version_tag }}" ]]; then
             echo "matrix={\"windows\":[{\"runner\":\"windows-2019\",\"tag\":\"ltsc2019\"},{\"runner\":\"windows-2022\",\"tag\":\"ltsc2022\"}]}" >> $GITHUB_OUTPUT
           else
-            echo "matrix={\"windows\":[{\"runner\":\"windows-${{ inputs.last4 }}\",\"tag\":\"${{ inputs.windows_version_tag }}\"}]}" >> $GITHUB_OUTPUT
+            echo "matrix={\"windows\":[{\"runner\":\"windows-$last4\",\"tag\":\"${{ inputs.windows_version_tag }}\"}]}" >> $GITHUB_OUTPUT
           fi
 
           echo "Final matrix: $(cat $GITHUB_OUTPUT)"
