@@ -10,7 +10,7 @@ scenarios:
       - helm dependency update ../charts/internal/e2e-resources
       - helm dependency update ../charts/newrelic-infrastructure
       - echo "Installing e2e-resources using SCENARIO_TAG ${SCENARIO_TAG}"; KSM_IMAGE_VERSION="v2.13.0"; echo "Will use KSM image version ${KSM_IMAGE_VERSION}" && helm upgrade --install ${SCENARIO_TAG}-resources --namespace nr-${SCENARIO_TAG} --create-namespace ../charts/internal/e2e-resources --set persistentVolume.enabled=true --set kube-state-metrics.image.tag=${KSM_IMAGE_VERSION} --set windows.is2019=true --set windows.is2022=true --set demo.enabled=true
-      #- TODO: uncomment when nri-k8s chart changes are merged. helm upgrade --install ${SCENARIO_TAG} --namespace nr-${SCENARIO_TAG} --create-namespace ../charts/newrelic-infrastructure --values e2e-values.yml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG} --set enableWindows=true
+      - helm upgrade --install ${SCENARIO_TAG} --namespace nr-${SCENARIO_TAG} --create-namespace ../charts/newrelic-infrastructure --values e2e-values.yml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG} --set enableWindows=true
       # Allow for resources to settle before starting checks
       - sleep 30 # Windows resources take longer to settle
     after:

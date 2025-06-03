@@ -20,7 +20,7 @@ jobs:
       K8S_AGENTS_DOCKERHUB_TOKEN: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
   e2e:
     needs: create-windows-image
-    runs-on: windows-2019
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4 
       - uses: actions/setup-go@v5
@@ -40,4 +40,34 @@ jobs:
           kubectl get nodes
       - name: Echo output from build-windows-integration-test
         run: |
-            echo "Output from build-windows-integration-test: ${{ needs.create-windows-image.outputs.result }}"
+            echo "Output from build-windows-integration-test: ${{ needs.create-windows-image.outputs.image }}"
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
+      - name: Setup Access to Private Docker Registry
+        run: |
+          kubectl create secret docker-registry nri-kubernetes-internal-dockerhub \
+            --docker-server=docker.io \
+            --docker-username=${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }} \
+            --docker-password=${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
+      - name: Setup Helm
+        run: |
+          chmod go-r /home/runner/.kube/config
+          helm repo add newrelic https://helm-charts.newrelic.com
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo update
+      - name: Run e2e-test
+        uses: newrelic/newrelic-integration-e2e-action@v1
+        env:
+          EXCEPTIONS_SOURCE_FILE: 1-31-exceptions.yml
+          FETCH_PODS_FROM_KUBE_SERVICE: "false"
+        with:
+          retry_seconds: 60
+          retry_attempts: 5
+          agent_enabled: false
+          spec_path: e2e/test-specs-windows.yml
+          account_id: ${{ secrets.K8S_AGENTS_E2E_ACCOUNT_ID }}
+          api_key: ${{ secrets.K8S_AGENTS_E2E_API_KEY }}
+          license_key: ${{ secrets.K8S_AGENTS_E2E_LICENSE_KEY }}
