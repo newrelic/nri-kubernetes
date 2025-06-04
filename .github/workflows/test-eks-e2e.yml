@@ -45,7 +45,7 @@ jobs:
           role-session-name: gha-e2e-test-session
       - name: Update kubeconfig
         run: |
-          aws eks update-kubeconfig --name tnguyen-bubbles --region us-west-1
+          aws eks update-kubeconfig --name ${{ secrets.K8S_EKS_TEST_CLUSTERNAME}} --region us-west-1
       - name: Verify cluster access
         run: |
           kubectl get nodes
