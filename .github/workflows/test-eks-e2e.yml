@@ -42,7 +42,7 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::${{ secrets.K8S_AWS_ACCOUNT_ID }}:role/${{ secrets.K8S_AWS_GHA_ROLE_TEST }}
           aws-region: us-west-1
-          role-session-name: gha-e2e-test-session
+          role-session-name: ${{ secrets.K8S_AWS_GHA_ROLE_TEST }}-test-session
       - name: Update kubeconfig
         run: |
           aws eks update-kubeconfig --name ${{ secrets.K8S_EKS_TEST_CLUSTERNAME}} --region us-west-1
