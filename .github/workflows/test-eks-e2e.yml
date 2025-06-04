@@ -70,6 +70,11 @@ jobs:
           else
             echo "Secret nri-kubernetes-internal-dockerhub already exists, skipping creation."
           fi
+      - name: Compile, Build and load Images
+        run: |
+          GOOS=linux GOARCH=amd64 make compile # Set GOOS and GOARCH explicitly since Dockerfile expects them in the binary name
+          docker build -t newrelic/nri-kubernetes-internal:e2e  .
+          docker push newrelic/nri-kubernetes-internal:e2e
       - name: Setup Helm
         run: |
           chmod go-r /home/runner/.kube/config
@@ -78,8 +83,9 @@ jobs:
           helm repo update
       - name: Add PullSecret to e2e-values.yml
         run: |
-          echo "pullSecret: nri-kubernetes-internal-dockerhub" >> e2e/e2e-values.yml
-          cat e2e/e2e-values.yml
+          # echo "pullSecrets: nri-kubernetes-internal-dockerhub" >> e2e/e2e-values.yml
+          # cat e2e/e2e-values.yml
+          cat e2e/e2e-values-windows.yml
       - name: Run e2e-test
         uses: newrelic/newrelic-integration-e2e-action@v1
         env:
