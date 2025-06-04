@@ -75,13 +75,13 @@ spec:
               value: {{ include "newrelic.common.verboseLog.valueAsBoolean" . | quote }}
 
             - name: "NRI_KUBERNETES_TESTCONNECTIONENDPOINT"
-              {{ if .Values.gkeAutopilot}}
+              {{ if include "newrelic.common.gkeAutopilot" .}}
               value:  "/metrics"
               {{else}}
               value: {{.Values.kubelet.testConnectionEndpoint | default "/healthz"}}
               {{end}}
 
-              {{ if or .Values.gkeAutopilot .Values.kubelet.fetchPodsFromKubeService }}
+              {{ if or .Values.kubelet.fetchPodsFromKubeService (include "newrelic.common.gkeAutopilot" .) }}
             - name: "NRI_KUBERNETES_KUBELET_FETCHPODSFROMKUBESERVICE"
               value: "true"
               {{ end }}
