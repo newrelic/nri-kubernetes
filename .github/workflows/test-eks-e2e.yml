@@ -59,12 +59,14 @@ jobs:
           password: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
       - name: Setup Access to Private Docker Registry
         run: |
+          namespace="nr-wintest-${{ needs.generate-key.outputs.run_key }}"
+          kubectl create namespace $namespace || echo "Namespace $namespace already exists, skipping creation."
+          
           if ! kubectl get secret "nri-kubernetes-internal-dockerhub" >/dev/null 2>&1; then
             kubectl create secret docker-registry nri-kubernetes-internal-dockerhub -n nr-wintest-${{ needs.generate-key.outputs.run_key }}\
               --docker-server=docker.io \
               --docker-username=${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }} \
               --docker-password=${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }} \ 
-              -n newrelic
           else
             echo "Secret nri-kubernetes-internal-dockerhub already exists, skipping creation."
           fi
