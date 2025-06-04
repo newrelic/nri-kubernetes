@@ -72,7 +72,7 @@ Returns fargate
 TODO: Remove this
 This is still being used instead of a full migration to newrelic.common.fargate
 because we're checking global for fargate.
-Removing this would be a minor breaking change. 
+Removing this would be a minor breaking change.
 */}}
 {{- define "newrelic.fargate" -}}
 {{- if include "newrelic.common.fargate" -}}
