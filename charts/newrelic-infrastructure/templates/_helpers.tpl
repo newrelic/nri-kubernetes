@@ -75,7 +75,7 @@ because we're checking global for fargate.
 Removing this would be a minor breaking change.
 */}}
 {{- define "newrelic.fargate" -}}
-{{- if include "newrelic.common.fargate" -}}
+{{- if include "newrelic.common.fargate" . -}}
 true
 {{- else if .Values.global -}}
   {{- if .Values.global.fargate -}}
