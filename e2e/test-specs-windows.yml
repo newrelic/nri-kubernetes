@@ -17,7 +17,7 @@ scenarios:
       - kubectl logs --selector app.kubernetes.io/name=newrelic-infrastructure --namespace nr-${SCENARIO_TAG} --all-containers --prefix=true
       - kubectl get pods --namespace nr-${SCENARIO_TAG}
       - helm delete ${SCENARIO_TAG}-resources --namespace nr-${SCENARIO_TAG}
-      #- helm delete ${SCENARIO_TAG} --namespace nr-${SCENARIO_TAG}
+      - helm delete ${SCENARIO_TAG} --namespace nr-${SCENARIO_TAG}
     tests:
       nrqls:
 #       START Windows Cronjob 2019
