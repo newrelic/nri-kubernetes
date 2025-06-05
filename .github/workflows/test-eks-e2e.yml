@@ -19,17 +19,18 @@ jobs:
   #   secrets:
   #     K8S_AGENTS_DOCKERHUB_USERNAME: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
   #     K8S_AGENTS_DOCKERHUB_TOKEN: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
-  # generate-key:
-  #   runs-on: ubuntu-latest
-  #   outputs:
-  #     run_key: ${{ steps.random-string.outputs.random_string }}
-  #   steps:
-  #     - name: just a small random 5 letter string
-  #       id: random-string
-  #       run: |
-  #         echo "random_string=$(head -c20 /dev/urandom | base64 | tr -dc 'a-z' | head -c5)" >> $GITHUB_OUTPUT
+  generate-key:
+    runs-on: ubuntu-latest
+    outputs:
+      run_key: ${{ steps.random-string.outputs.random_string }}
+    steps:
+      - name: just a small random 5 letter string
+        id: random-string
+        run: |
+          echo "random_string=$(head -c20 /dev/urandom | base64 | tr -dc 'a-z' | head -c5)" >> $GITHUB_OUTPUT
   e2e:
     # needs: [ create-windows-image, generate-key ]
+    needs: generate-key
     name: E2E Test on EKS
     runs-on: ubuntu-latest
     steps:
