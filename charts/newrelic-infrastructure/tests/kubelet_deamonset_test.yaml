@@ -1,0 +1,55 @@
+suite: Kubelet Configs
+templates:
+  - templates/kubelet/daemonset.yaml
+  - templates/kubelet/scraper-configmap.yaml
+  - templates/kubelet/agent-configmap.yaml
+  - templates/kubelet/integrations-configmap.yaml
+  - templates/secret.yaml
+release:
+  name: my-release
+  namespace: my-namespace
+tests:
+  - it: Should use test connection endpoint from values.yaml
+    set:
+      licenseKey: test
+      cluster: test
+      kubelet.testConnectionEndpoint: "/test-endpoint"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: "NRI_KUBERNETES_TESTCONNECTIONENDPOINT"
+            value: "/test-endpoint"
+        template: templates/kubelet/daemonset.yaml
+
+  - it: Should use kube service for pod fetch
+    set:
+      licenseKey: test
+      cluster: test
+      kubelet.fetchPodsFromKubeService: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: "NRI_KUBERNETES_KUBELET_FETCHPODSFROMKUBESERVICE"
+            value: "true"
+        template: templates/kubelet/daemonset.yaml
+
+  - it: Default Settings test
+    set:
+      licenseKey: test
+      cluster: test
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: "NRI_KUBERNETES_KUBELET_FETCHPODSFROMKUBESERVICE"
+            value: "true"
+        template: templates/kubelet/daemonset.yaml
+
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: "NRI_KUBERNETES_TESTCONNECTIONENDPOINT"
+            value: "/healthz"
+        template: templates/kubelet/daemonset.yaml

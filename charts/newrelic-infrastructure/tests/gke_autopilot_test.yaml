@@ -1,0 +1,105 @@
+suite: GKE Autopilot
+templates:
+  - templates/kubelet/daemonset.yaml
+  - templates/kubelet/scraper-configmap.yaml
+  - templates/kubelet/agent-configmap.yaml
+  - templates/kubelet/integrations-configmap.yaml
+  - templates/secret.yaml
+  - templates/controlplane/daemonset.yaml
+  - templates/controlplane/scraper-configmap.yaml
+  - templates/controlplane/agent-configmap.yaml
+release:
+  name: my-release
+  namespace: my-namespace
+tests:
+  - it: Default Settings test
+    set:
+      licenseKey: test
+      cluster: test
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: "NRI_KUBERNETES_KUBELET_FETCHPODSFROMKUBESERVICE"
+            value: "true"
+        template: templates/kubelet/daemonset.yaml
+
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: "NRI_KUBERNETES_TESTCONNECTIONENDPOINT"
+            value: "/healthz"
+        template: templates/kubelet/daemonset.yaml
+
+      - notContains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: "NRIA_OVERRIDE_HOST_ROOT"
+            value: ""
+        template: templates/kubelet/daemonset.yaml
+
+      - contains:
+          path: spec.template.spec.containers[1].volumeMounts
+          content:
+            name: dev
+            mountPath: /dev
+        template: templates/kubelet/daemonset.yaml
+
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: dev
+            hostPath:
+              path: /dev
+        template: templates/kubelet/daemonset.yaml
+
+      - exists:
+          path: spec
+        template: templates/controlplane/daemonset.yaml
+
+
+  - it: GKE-Autopilot true
+    set:
+      licenseKey: test
+      cluster: test
+      gkeAutopilot: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: "NRI_KUBERNETES_TESTCONNECTIONENDPOINT"
+            value: "/metrics"
+        template: templates/kubelet/daemonset.yaml
+
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: "NRI_KUBERNETES_KUBELET_FETCHPODSFROMKUBESERVICE"
+            value: "true"
+        template: templates/kubelet/daemonset.yaml
+
+      - contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: "NRIA_OVERRIDE_HOST_ROOT"
+            value: ""
+        template: templates/kubelet/daemonset.yaml
+
+      - notContains:
+          path: spec.template.spec.containers[1].volumeMounts
+          content:
+            name: dev
+            mountPath: /dev
+        template: templates/kubelet/daemonset.yaml
+
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: dev
+            hostPath:
+              path: /dev
+        template: templates/kubelet/daemonset.yaml
+
+      - notExists:
+          path: spec
+        template: templates/controlplane/daemonset.yaml

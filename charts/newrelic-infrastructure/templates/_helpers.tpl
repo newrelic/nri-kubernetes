@@ -33,7 +33,7 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 
 {{- /* Return a YAML with the mode to be added to the labels */ -}}
 {{- define "nriKubernetes._mode" -}}
-{{- if include "newrelic.common.privileged" . -}}
+{{- if include "nriKubernetes.privileged" . -}}
     mode: privileged
 {{- else -}}
     mode: unprivileged
@@ -68,10 +68,15 @@ Add `mode` label to the labels that come from the common library for podLabels
 
 {{/*
 Returns fargate
+
+TODO: Remove this
+This is still being used instead of a full migration to newrelic.common.fargate
+because we're checking global for fargate.
+Removing this would be a minor breaking change.
 */}}
 {{- define "newrelic.fargate" -}}
-{{- if .Values.fargate -}}
-  {{- .Values.fargate -}}
+{{- if include "newrelic.common.fargate" . -}}
+true
 {{- else if .Values.global -}}
   {{- if .Values.global.fargate -}}
     {{- .Values.global.fargate -}}
@@ -121,7 +126,18 @@ readOnlyRootFilesystem: true
   {{ include "newrelic.common.images.image" ( dict "imageRoot" $.Values.images.integration "context" $ "imageTagSuffix" .imageTagSuffix) }}
 {{- end}}
 
-
 {{- define "nriKubernetes.windowsInfraAgentImage" -}}
   {{ include "newrelic.common.images.image" ( dict "imageRoot" $.Values.images.agent "context" $ "imageTagSuffix" .imageTagSuffix) }}
 {{- end}}
+
+{{- define "nriKubernetes.controlPlane.enabled" -}}
+{{- if and .Values.controlPlane.enabled (not (include "newrelic.common.gkeAutopilot" .) ) -}}
+{{- .Values.controlPlane.enabled -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "nriKubernetes.privileged" -}}
+{{- if and (include "newrelic.common.privileged" .) (not (include "newrelic.common.gkeAutopilot" .)) -}}
+{{- include "newrelic.common.privileged" . -}}
+{{- end -}}
+{{- end -}}
