@@ -11,25 +11,25 @@ permissions:
   contents: read
 
 jobs:
-  create-windows-image:
-    uses: "newrelic/nri-kubernetes/.github/workflows/build-windows-integration-test.yml@testEKSe2e"
-    with:
-      windows_directory: "windows/nri-kubernetes"
-      windows_version_tag: ltsc2022
-    secrets:
-      K8S_AGENTS_DOCKERHUB_USERNAME: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
-      K8S_AGENTS_DOCKERHUB_TOKEN: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
-  generate-key:
-    runs-on: ubuntu-latest
-    outputs:
-      run_key: ${{ steps.random-string.outputs.random_string }}
-    steps:
-      - name: just a small random 5 letter string
-        id: random-string
-        run: |
-          echo "random_string=$(head -c20 /dev/urandom | base64 | tr -dc 'a-z' | head -c5)" >> $GITHUB_OUTPUT
+  # create-windows-image:
+  #   uses: "newrelic/nri-kubernetes/.github/workflows/build-windows-integration-test.yml@testEKSe2e"
+  #   with:
+  #     windows_directory: "windows/nri-kubernetes"
+  #     windows_version_tag: ltsc2022
+  #   secrets:
+  #     K8S_AGENTS_DOCKERHUB_USERNAME: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
+  #     K8S_AGENTS_DOCKERHUB_TOKEN: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
+  # generate-key:
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     run_key: ${{ steps.random-string.outputs.random_string }}
+  #   steps:
+  #     - name: just a small random 5 letter string
+  #       id: random-string
+  #       run: |
+  #         echo "random_string=$(head -c20 /dev/urandom | base64 | tr -dc 'a-z' | head -c5)" >> $GITHUB_OUTPUT
   e2e:
-    needs: [ create-windows-image, generate-key ]
+    # needs: [ create-windows-image, generate-key ]
     name: E2E Test on EKS
     runs-on: ubuntu-latest
     steps:
@@ -49,9 +49,9 @@ jobs:
       - name: Verify cluster access
         run: |
           kubectl get nodes
-      - name: Echo output from build-windows-integration-test
-        run: |
-            echo "Output from build-windows-integration-test: ${{ needs.create-windows-image.outputs.image }}"
+      # - name: Echo output from build-windows-integration-test
+      #   run: |
+      #       echo "Output from build-windows-integration-test: ${{ needs.create-windows-image.outputs.image }}"
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
@@ -70,11 +70,11 @@ jobs:
           else
             echo "Secret nri-kubernetes-internal-dockerhub already exists, skipping creation."
           fi
-      - name: Compile, Build and load Images
-        run: |
-          GOOS=linux GOARCH=amd64 make compile # Set GOOS and GOARCH explicitly since Dockerfile expects them in the binary name
-          docker build -t newrelic/nri-kubernetes-internal:e2e  .
-          docker push newrelic/nri-kubernetes-internal:e2e
+      # - name: Compile, Build and load Images
+      #   run: |
+      #     GOOS=linux GOARCH=amd64 make compile # Set GOOS and GOARCH explicitly since Dockerfile expects them in the binary name
+      #     docker build -t newrelic/nri-kubernetes-internal:e2e  .
+      #     docker push newrelic/nri-kubernetes-internal:e2e
       - name: Setup Helm
         run: |
           chmod go-r /home/runner/.kube/config
@@ -88,7 +88,7 @@ jobs:
       - name: Run e2e-test
         uses: newrelic/newrelic-integration-e2e-action@v1
         env:
-          EXCEPTIONS_SOURCE_FILE: 1_31-exceptions.yml
+          EXCEPTIONS_SOURCE_FILE: 1_31-exceptions-windows.yml
           FETCH_PODS_FROM_KUBE_SERVICE: "false"
         with:
           retry_seconds: 60
