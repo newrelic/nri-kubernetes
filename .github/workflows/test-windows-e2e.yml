@@ -42,10 +42,10 @@ jobs:
             exceptions_file: '1_29-exceptions-windows.yml'
             eks_cluster_name: 'tnguyen-blue29'
             iam_role: 'github-actions-role-tnguyen-blue29'
-          - kubernetes_version: 'v1.33.0'
-            exceptions_file: '1_33-exceptions-windows.yml'
-            eks_cluster_name: 'tnguyen-blue33'
-            iam_role: 'github-actions-role-tnguyen-blue33'
+          - kubernetes_version: 'v1.32.0'
+            exceptions_file: '1_32-exceptions-windows.yml'
+            eks_cluster_name: 'tnguyen-blue32'
+            iam_role: 'github-actions-role-tnguyen-blue32'
     name: E2E Test on EKS
     runs-on: ubuntu-latest
     steps:
@@ -114,3 +114,8 @@ jobs:
           account_id: ${{ secrets.K8S_AGENTS_E2E_ACCOUNT_ID }}
           api_key: ${{ secrets.K8S_AGENTS_E2E_API_KEY }}
           license_key: ${{ secrets.K8S_AGENTS_E2E_LICENSE_KEY }}
+      - name: Cleanup
+        run: |
+          helm uninstall ${{needs.generate-key.outputs.run_key}} -n nr-${{ needs.generate-key.outputs.run_key }} || echo "Helm release ${{ needs.generate-key.outputs.run_key }} already deleted or does not exist."
+          helm uninstall ${{needs.generate-key.outputs.run_key}}-resources -n nr-${{ needs.generate-key.outputs.run_key }} || echo "Helm release ${{ needs.generate-key.outputs.run_key }}-resources already deleted or does not exist."
+          kubectl delete namespace nr-${{ needs.generate-key.outputs.run_key }} || echo "Namespace nr-${{ needs.generate-key.outputs.run_key }} already deleted or does not exist."
