@@ -25,7 +25,7 @@ jobs:
             tag: ltsc2019
           - runner: windows-2022
             tag: ltsc2022
-    runs-on: ${{ matrix.windows.runner }}
+    runs-on: windows-x64-8-core
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -55,7 +55,7 @@ jobs:
         run: |
           cd windows
           cd nri-kubernetes
-          echo "Building newrelic/nri-kubernetes:windows-${{ matrix.windows.tag }}-alpha-$Env:tag"
+          echo "Building newrelic/nri-kubernetes-internal:windows-${{ matrix.windows.tag }}-alpha-$Env:tag"
           #env:WIN_VERSION= ${{ matrix.windows.tag }}
           ./build.ps1
 
@@ -85,4 +85,4 @@ jobs:
         # if: ${{ ! github.event.pull_request }}
         shell: powershell
         run: |
-          docker push newrelic/nri-kubernetes:windows-${{ matrix.windows.tag }}-alpha-$Env:tag
+          docker push newrelic/nri-kubernetes-internal:windows-${{ matrix.windows.tag }}-alpha-$Env:tag
