@@ -67,7 +67,7 @@ jobs:
           MATRIX_TAG: ${{ matrix.windows.tag }}
         run: |
           ls
-          docker build --file Dockerfile.windows `
+          docker build --file windows/nri-kubernetes/Dockerfile.windows `
             --build-arg BASE_IMAGE_TAG=${{ matrix.windows.tag }} `
             --build-arg "COMMIT=${env:COMMIT}" `
             --build-arg "DATE=${env:DATE}" `
