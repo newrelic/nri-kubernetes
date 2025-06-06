@@ -40,10 +40,10 @@ jobs:
         runner:
           - kubernetes_version: 'v1.28.0'
             exceptions_file: '1_28-exceptions-windows.yml'
-            eks_cluster_name: ${{ secrets.K8S_EKS_CLUSTER_NAME_1_28 }}
+            eks_cluster_name: 'tnguyen-blue28'
           - kubernetes_version: 'v1.33.0'
             exceptions_file: '1_33-exceptions-windows.yml'
-            eks_cluster_name: $${{ secrets.K8S_EKS_CLUSTER_NAME_1_33 }}
+            eks_cluster_name: 'tnguyen-blue33'
     name: E2E Test on EKS
     runs-on: ubuntu-latest
     steps:
