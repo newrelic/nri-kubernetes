@@ -102,7 +102,7 @@ jobs:
           MATRIX_TAG: ${{ matrix.windows.tag }}
           WIN_DIR: ${{ inputs.windows_directory }}
         run: |
-          if ${{ inputs.scenario_tag }}; then
+          if ("${{ inputs.scenario_tag }}"); then
             $env:tag = "${{ inputs.scenario_tag }}"
           }
           $env:DOCKER_TAG = "windows-${{ matrix.windows.tag }}-e2e-testing-$Env:tag"
