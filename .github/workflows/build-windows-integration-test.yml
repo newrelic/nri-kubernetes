@@ -3,28 +3,66 @@ name: Windows build for testing
 on:
   push:
     branches:
-      - windowsImage*
+      - buildWinImage/*
   pull_request:
     branches:
-      - windowsImage*
+      - buildWinImage/*
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      windows_directory:
+        description: Location of Windows build files
+        type: string
+        required: false
+        default: "windows/nri-kubernetes"
+      only_this_windows_version_tag:
+        description: (ltsc2019 or ltsc2022) Specify the Windows version to build. Leave blank for both 2019 and 2022.
+        type: string
+        required: false
+      scenario_tag:
+        description: Tag for the scenario being tested
+        type: string
+        required: false
+        default: "e2e-testing"
+    secrets:
+      K8S_AGENTS_DOCKERHUB_USERNAME:
+        description: DockerHub username for pushing images
+        required: true
+      K8S_AGENTS_DOCKERHUB_TOKEN:
+        description: DockerHub token for pushing images
+        required: true
+
+permissions:
+  contents: read
 
 jobs:
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        run: |
+          if [[ -n "${{ inputs.only_this_windows_version_tag }}" ]]; then
+            tag="${{ inputs.only_this_windows_version_tag }}"
+            last4="${tag: -4}"
+            echo "Last 4 digits of tag: $last4"
+          fi
+
+          if [[ -z "${{ inputs.only_this_windows_version_tag }}" ]]; then
+            echo "matrix={\"windows\":[{\"runner\":\"windows-x64-8-core\",\"tag\":\"ltsc2019\"},{\"runner\":\"windows-x64-8-core\",\"tag\":\"ltsc2022\"}]}" >> $GITHUB_OUTPUT
+          else
+            echo "matrix={\"windows\":[{\"runner\":\"windows-x64-8-core\",\"tag\":\"${{ inputs.only_this_windows_version_tag }}\"}]}" >> $GITHUB_OUTPUT
+          fi
+
+          echo "Final matrix: $(cat $GITHUB_OUTPUT)"
+
   build:
     name: Build integration for
+    needs: generate-matrix
     strategy:
       fail-fast: true
-      matrix:
-        windows:
-          # Here we specify the GH runner where the image will be built.
-          # Tag must exist in both https://hub.docker.com/_/microsoft-windows-servercore and
-          # https://hub.docker.com/_/microsoft-windows-nanoserver, and must be matched with the runner.
-          # In theory, newer versions could build old images using --isolation=hyperv, but unfortunately hyperv is not
-          # enabled in GHA.
-          - runner: windows-2019
-            tag: ltsc2019
-          - runner: windows-2022
-            tag: ltsc2022
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     runs-on: ${{ matrix.windows.runner }}
     steps:
       - uses: actions/checkout@v4
@@ -33,12 +71,6 @@ jobs:
           go-version-file: 'go.mod'
       - name: Generate date-based tag for testing
         run: $tag = Get-Date -Format "yyyyMMddHHmmss"; echo "TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append
-      - name: Get windows build
-        id: osinfo
-        shell: powershell
-        run: |
-          Get-ComputerInfo
-
       - uses: actions/cache@v4
         with:
           path: |
@@ -51,28 +83,47 @@ jobs:
         shell: powershell
         env:
           COMMIT: ${{ github.sha }}
+          DATE: ${{ needs.build-env-args.outputs.date }}
+          TAG: "e2e-testing-${{ github.sha }}"
           WIN_VERSION: ${{ matrix.windows.tag }}
+          WIN_DIR: ${{ inputs.windows_directory }}
         run: |
-          cd windows
-          cd nri-kubernetes
-          echo "Building newrelic/nri-kubernetes:windows-${{ matrix.windows.tag }}-alpha-$Env:tag"
-          #env:WIN_VERSION= ${{ matrix.windows.tag }}
-          ./build.ps1
+          if ([string]::IsNullOrEmpty($env:WIN_DIR)) {
+            ./build.ps1
+          } else {
+            $scriptPath = Join-Path $env:WIN_DIR "build.ps1"
+            & $scriptPath
+          }
 
       - name: Build nri-kubernetes container
         shell: powershell
         env:
-          DOCKER_IMAGE_NAME: ${{ inputs.docker_image_name }}
           COMMIT: ${{ github.sha }}
           MATRIX_TAG: ${{ matrix.windows.tag }}
+          WIN_DIR: ${{ inputs.windows_directory }}
+          SCENARIO_TAG: ${{ inputs.scenario_tag }}
         run: |
+          if (-not [string]::IsNullOrEmpty($env:SCENARIO_TAG)) {
+            $env:tag = $env:SCENARIO_TAG
+            Write-Output "Using scenario tag: $env:tag"
+          }
+
+          $env:DOCKER_TAG = "windows-${{ matrix.windows.tag }}-e2e-testing-$env:tag"
+          echo "DOCKER_TAG=$env:DOCKER_TAG" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+          if ([string]::IsNullOrEmpty($env:WIN_DIR)) {
+            $dockerfilePath = "Dockerfile.windows"
+          } else {
+            $dockerfilePath = Join-Path $env:WIN_DIR "Dockerfile.windows"
+          }
+          
           ls
-          docker build --file Dockerfile.windows `
+          docker build --platform windows/amd64 -f $dockerfilePath `
             --build-arg BASE_IMAGE_TAG=${{ matrix.windows.tag }} `
             --build-arg "COMMIT=${env:COMMIT}" `
             --build-arg "DATE=${env:DATE}" `
-            --build-arg "TAG=dev" `
-            -t newrelic/nri-kubernetes-internal:windows-${{ matrix.windows.tag }}-alpha-$Env:tag . `
+            --build-arg "TAG=$env:DOCKER_TAG" `
+            -t newrelic/nri-kubernetes-internal:$env:DOCKER_TAG . `
 
       - name: Login to DockerHub
         # if: ${{ ! github.event.pull_request }}
@@ -85,4 +136,10 @@ jobs:
         # if: ${{ ! github.event.pull_request }}
         shell: powershell
         run: |
-          docker push newrelic/nri-kubernetes:windows-${{ matrix.windows.tag }}-alpha-$Env:tag
+          docker push newrelic/nri-kubernetes-internal:$env:DOCKER_TAG
+          Write-Output "Pushed newrelic/nri-kubernetes-internal:$env:DOCKER_TAG"
+      - name: Output pushed image tag
+        shell: powershell
+        run: |
+          $image = "newrelic/nri-kubernetes-internal:$env:DOCKER_TAG"
+          echo "image=$image" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
