@@ -34,7 +34,6 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
   generate-matrix:
@@ -139,5 +138,5 @@ jobs:
       - name: Output pushed image tag
         shell: powershell
         run: |
-          $image = "newrelic/nri-kubernetes:$env:DOCKER_TAG"
+          $image = "newrelic/nri-kubernetes-internal:$env:DOCKER_TAG"
           echo "image=$image" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
