@@ -101,11 +101,14 @@ jobs:
           COMMIT: ${{ github.sha }}
           MATRIX_TAG: ${{ matrix.windows.tag }}
           WIN_DIR: ${{ inputs.windows_directory }}
+          SCENARIO_TAG: ${{ inputs.scenario_tag }}
         run: |
-          if ("${{ inputs.scenario_tag }}"); then
-            $env:tag = "${{ inputs.scenario_tag }}"
+          if (-not [string]::IsNullOrEmpty($env:SCENARIO_TAG)) {
+            $env:tag = $env:SCENARIO_TAG
+            Write-Output "Using scenario tag: $env:tag"
           }
-          $env:DOCKER_TAG = "windows-${{ matrix.windows.tag }}-e2e-testing-$Env:tag"
+
+          $env:DOCKER_TAG = "windows-${{ matrix.windows.tag }}-e2e-testing-$env:tag"
           echo "DOCKER_TAG=$env:DOCKER_TAG" | Out-File -FilePath $env:GITHUB_ENV -Append
 
           if ([string]::IsNullOrEmpty($env:WIN_DIR)) {
@@ -133,8 +136,8 @@ jobs:
         # if: ${{ ! github.event.pull_request }}
         shell: powershell
         run: |
-          docker push newrelic/nri-kubernetes-internal:$Env:DOCKER_TAG
-          Write-Output "Pushed newrelic/nri-kubernetes-internal:$Env:DOCKER_TAG"
+          docker push newrelic/nri-kubernetes-internal:$env:DOCKER_TAG
+          Write-Output "Pushed newrelic/nri-kubernetes-internal:$env:DOCKER_TAG"
       - name: Output pushed image tag
         shell: powershell
         run: |
