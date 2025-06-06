@@ -41,9 +41,11 @@ jobs:
           - kubernetes_version: 'v1.28.0'
             exceptions_file: '1_28-exceptions-windows.yml'
             eks_cluster_name: 'tnguyen-blue28'
+            iam_role: 'github-actions-role-tnguyen-blue28'
           - kubernetes_version: 'v1.33.0'
             exceptions_file: '1_33-exceptions-windows.yml'
             eks_cluster_name: 'tnguyen-blue33'
+            iam_role: 'github-actions-role-tnguyen-blue33'
     name: E2E Test on EKS
     runs-on: ubuntu-latest
     steps:
@@ -54,9 +56,9 @@ jobs:
       - name: Configure AWS Credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v3
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.K8S_AWS_ACCOUNT_ID }}:role/${{ secrets.K8S_AWS_GHA_ROLE_TEST }}
+          role-to-assume: arn:aws:iam::${{ secrets.K8S_AWS_ACCOUNT_ID }}:role/${{ matrix.runner.iam_role }}
           aws-region: us-west-1
-          role-session-name: ${{ secrets.K8S_AWS_GHA_ROLE_TEST }}-test-session
+          role-session-name: ${{ matrix.runner.iam_role }}-test-session
       - name: Update kubeconfig
         run: |
           aws eks update-kubeconfig --name ${{ matrix.runner.eks_cluster_name }} --region us-west-1

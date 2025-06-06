@@ -32,6 +32,10 @@ on:
         description: DockerHub token for pushing images
         required: true
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   generate-matrix:
     runs-on: ubuntu-latest
@@ -99,6 +103,9 @@ jobs:
           MATRIX_TAG: ${{ matrix.windows.tag }}
           WIN_DIR: ${{ inputs.windows_directory }}
         run: |
+          if ${{ inputs.scenario_tag }}; then
+            $env:tag = "${{ inputs.scenario_tag }}"
+          }
           $env:DOCKER_TAG = "windows-${{ matrix.windows.tag }}-e2e-testing-$Env:tag"
           echo "DOCKER_TAG=$env:DOCKER_TAG" | Out-File -FilePath $env:GITHUB_ENV -Append
 
