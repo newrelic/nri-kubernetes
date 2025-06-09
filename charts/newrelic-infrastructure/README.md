@@ -139,7 +139,6 @@ integrations that you have configured.
 | enableWindows | bool | `false` |  |
 | fedramp.enabled | bool | `false` | Enables FedRAMP. Can be configured also with `global.fedramp.enabled` |
 | fullnameOverride | string | `""` | Override the full name of the release |
-| gkeAutopilot | bool | `false` | Sets this to true when using a GKE Autopilot cluster. This will disable the controlplane scraper set privileged mode to false, and override the endpoints that the kubelet uses to fetch pods and test its connection. |
 | hostNetwork | bool | `false` | Sets pod's hostNetwork. Can be configured also with `global.hostNetwork` |
 | images | object | See `values.yaml` | Images used by the chart for the integration and agents. |
 | images.agent | object | See `values.yaml` | Image for the New Relic Infrastructure Agent plus integrations. |
@@ -182,6 +181,7 @@ integrations that you have configured.
 | podSecurityContext | object | `{}` | Sets security context (at pod level). Can be configured also with `global.podSecurityContext` |
 | priorityClassName | string | `""` | Sets pod's priorityClassName. Can be configured also with `global.priorityClassName` |
 | privileged | bool | `true` | Run the integration with full access to the host filesystem and network. Running in this mode allows reporting fine-grained cpu, memory, process and network metrics for your nodes. |
+| provider | string | `nil` | This chart has support for GKE_AUTOPILOT, if booting in an autopilot cluster, set this to "GKE_AUTOPILOT" |
 | proxy | string | `""` | Configures the integration to send all HTTP/HTTPS request through the proxy in that URL. The URL should have a standard format like `https://user:password@hostname:port`. Can be configured also with `global.proxy` |
 | rbac.create | bool | `true` | Whether the chart should automatically create the RBAC objects required to run. |
 | rbac.pspEnabled | bool | `false` | Whether the chart should create Pod Security Policy objects. |
