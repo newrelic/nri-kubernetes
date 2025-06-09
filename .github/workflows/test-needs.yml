@@ -62,6 +62,7 @@ jobs:
       ${{
         always() &&
         needs.job_a.outputs.boolean_output == 'true' &&
+        (! github.event.release.prerelease) && 
         (needs.job_skip.result == 'success' || needs.job_skip.result == 'skipped')
       }}
     steps:
