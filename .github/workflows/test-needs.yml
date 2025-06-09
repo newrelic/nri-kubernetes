@@ -58,6 +58,12 @@ jobs:
   job_e:
     runs-on: ubuntu-latest
     needs: [ job_a2, job_c, job_skip ]
+    if: >-
+      ${{
+        always() &&
+        needs.job_a.outputs.boolean_output == 'true' &&
+        (needs.job_skip.result == 'success' || needs.job_skip.result == 'skipped')
+      }}
     steps:
       - name: Echo from Job E
         run: echo "This is Job E (needs job_a and job_b, always runs if job_a output is true)"
