@@ -10,11 +10,6 @@ on:
   workflow_dispatch:
   workflow_call:
     inputs:
-      windows_directory:
-        description: Location of Windows build files
-        type: string
-        required: false
-        default: "windows/nri-kubernetes"
       only_this_windows_version_tag:
         description: (ltsc2019 or ltsc2022) Specify the Windows version to build. Leave blank for both 2019 and 2022.
         type: string
@@ -86,21 +81,17 @@ jobs:
           DATE: ${{ needs.build-env-args.outputs.date }}
           TAG: "e2e-testing-${{ github.sha }}"
           WIN_VERSION: ${{ matrix.windows.tag }}
-          WIN_DIR: ${{ inputs.windows_directory }}
+          WIN_DIR: 'windows/nri-kubernetes'
         run: |
-          if ([string]::IsNullOrEmpty($env:WIN_DIR)) {
-            ./build.ps1
-          } else {
             $scriptPath = Join-Path $env:WIN_DIR "build.ps1"
             & $scriptPath
-          }
 
       - name: Build nri-kubernetes container
         shell: powershell
         env:
           COMMIT: ${{ github.sha }}
           MATRIX_TAG: ${{ matrix.windows.tag }}
-          WIN_DIR: ${{ inputs.windows_directory }}
+          WIN_DIR: 'windows/nri-kubernetes'
           SCENARIO_TAG: ${{ inputs.scenario_tag }}
         run: |
           if (-not [string]::IsNullOrEmpty($env:SCENARIO_TAG)) {
@@ -111,11 +102,7 @@ jobs:
           $env:DOCKER_TAG = "windows-${{ matrix.windows.tag }}-e2e-testing-$env:tag"
           echo "DOCKER_TAG=$env:DOCKER_TAG" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-          if ([string]::IsNullOrEmpty($env:WIN_DIR)) {
-            $dockerfilePath = "Dockerfile.windows"
-          } else {
-            $dockerfilePath = Join-Path $env:WIN_DIR "Dockerfile.windows"
-          }
+          $dockerfilePath = Join-Path $env:WIN_DIR "Dockerfile.windows"
           
           ls
           docker build --platform windows/amd64 -f $dockerfilePath `
