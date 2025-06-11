@@ -25,7 +25,6 @@ jobs:
     needs: generate-key
     uses: "newrelic/nri-kubernetes/.github/workflows/build-windows-integration-test.yml@testEKSe2e"
     with:
-      windows_directory: "windows/nri-kubernetes"
       # leave this empty to build both ltsc2019 and ltsc2022
       only_this_windows_version_tag:
       scenario_tag: ${{ needs.generate-key.outputs.run_key }}
