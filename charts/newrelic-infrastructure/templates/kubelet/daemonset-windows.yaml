@@ -180,8 +180,6 @@ spec:
               mountPath: "C:\\ProgramData\\New Relic\\newrelic-infra\\data"
             - name: agent-tmpfs-user-data
               mountPath: "C:\\ProgramData\\New Relic\\newrelic-infra\\user_data"
-            - name: agent-tmpfs-tmp
-              mountPath: "C:\\ProgramData\\New Relic\\newrelic-infra\\tmp"
             {{- with $.Values.kubelet.extraVolumeMounts }}
             {{- toYaml $ | nindent 12 }}
             {{- end }}
