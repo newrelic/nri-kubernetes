@@ -62,7 +62,7 @@ spec:
           imagePullPolicy: {{ $.Values.images.integration.pullPolicy }}
           securityContext:
             windowsOptions:
-              runAsUserName: "ContainerUser"
+              runAsUserName: "ContainerAdministrator"
           env:
             - name: "NRI_KUBERNETES_SINK_HTTP_PORT"
               value: {{ get (fromYaml (include "nriKubernetes.kubelet.agentConfig" $)) "http_server_port" | quote }}
