@@ -6,7 +6,6 @@ SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPref
 ARG AGENT_VERSION
 
 # Downloaded from https://download.newrelic.com/infrastructure_agent/windows/newrelic-infra.${AGENT_VERSION}.msi in the github action workflow
-
 COPY newrelic-infra.${AGENT_VERSION}.msi .
 
 # this installs the infra agent
@@ -18,6 +17,7 @@ RUN Set-Service -Name 'newrelic-infra' -StartupType disabled
 
 # Grant permissions to the ContainerUser for directory access
 RUN icacls 'C:\ProgramData\New Relic\newrelic-infra' /grant Users:'(OI)(CI)M' /T
+RUN icacls 'C:\Program Files\New Relic\newrelic-infra\newrelic-integrations' /grant Users:'(OI)(CI)M' /T
 
 # we use this to start the agent, and to get the output from its log file
 COPY start.ps1 C:\\start.ps1
