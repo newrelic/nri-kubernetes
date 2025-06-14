@@ -105,7 +105,7 @@ spec:
           imagePullPolicy: {{ $.Values.images.agent.pullPolicy }}
           securityContext:
             windowsOptions:
-              runAsUserName: "ContainerAdministrator"
+              runAsUserName: "ContainerUser"
           ports:
             - containerPort: {{ get (fromYaml (include "nriKubernetes.kubelet.agentConfig" $)) "http_server_port" }}
           env:
@@ -176,12 +176,6 @@ spec:
               subPath: newrelic-infra.yml
             - name: nri-integrations-cfg-volume
               mountPath: "C:\\Program Files\\New Relic\\newrelic-infra\\integrations.d"
-            - name: agent-tmpfs-data
-              mountPath: "C:\\ProgramData\\New Relic\\newrelic-infra\\data"
-            - name: agent-tmpfs-user-data
-              mountPath: "C:\\ProgramData\\New Relic\\newrelic-infra\\user_data"
-            - name: agent-tmpfs-tmp
-              mountPath: "C:\\ProgramData\\New Relic\\newrelic-infra\\tmp"
             {{- with $.Values.kubelet.extraVolumeMounts }}
             {{- toYaml $ | nindent 12 }}
             {{- end }}
@@ -189,12 +183,6 @@ spec:
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
       volumes:
-        - name: agent-tmpfs-data
-          emptyDir: {}
-        - name: agent-tmpfs-user-data
-          emptyDir: {}
-        - name: agent-tmpfs-tmp
-          emptyDir: {}
         - name: nri-kubernetes-config
           configMap:
             name: {{ include "nriKubernetes.kubelet.fullname" $ }}
