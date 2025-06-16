@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### bugfix
-- Internal backend and CI-related adjustments for future platform compatibility. @TmNguyen12 [1250](https://github.com/newrelic/nri-kubernetes/pull/1250)
+- Internal backend and CI-related adjustments for future platform compatibility. @TmNguyen12 [#1250](https://github.com/newrelic/nri-kubernetes/pull/1250)
 
 ## v3.42.0 - 2025-06-09
 
