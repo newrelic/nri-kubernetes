@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### bugfix
+- Internal backend and CI-related adjustments for future platform compatibility 
+
 ## v3.42.0 - 2025-06-09
 
 ### 🚀 Enhancements
