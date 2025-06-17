@@ -116,7 +116,8 @@ jobs:
           account_id: ${{ secrets.K8S_AGENTS_E2E_ACCOUNT_ID }}
           api_key: ${{ secrets.K8S_AGENTS_E2E_API_KEY }}
           license_key: ${{ secrets.K8S_AGENTS_E2E_LICENSE_KEY }}
-      - name: Cleanup
+      - name: Cleanup Testing Resources
+        if: always()
         run: |
           helm uninstall ${{needs.generate-key.outputs.run_key}} -n nr-${{ needs.generate-key.outputs.run_key }} || echo "Helm release ${{ needs.generate-key.outputs.run_key }} already deleted or does not exist."
           helm uninstall ${{needs.generate-key.outputs.run_key}}-resources -n nr-${{ needs.generate-key.outputs.run_key }} || echo "Helm release ${{ needs.generate-key.outputs.run_key }}-resources already deleted or does not exist."
