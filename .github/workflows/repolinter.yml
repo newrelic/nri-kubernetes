@@ -12,6 +12,8 @@ jobs:
   repolint:
     name: Run Repolinter
     runs-on: ubuntu-latest
+    permissions:
+      contents: read   # checkout the repository and read workflow files
     steps:
       - name: Test Default Branch
         id: default-branch
