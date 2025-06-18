@@ -7,6 +7,10 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled]
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   check-changelog:
     uses: newrelic/k8s-agents-automation/.github/workflows/reusable-changelog.yml@main

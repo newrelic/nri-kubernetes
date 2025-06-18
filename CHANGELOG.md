@@ -7,8 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancement
-- Config option for GKE-Autopilot to automatically configure necessary settings.  @Philip-R-Beckwith [1235](https://github.com/newrelic/nri-kubernetes/pull/1235)
+## v3.42.1 - 2025-06-16
+
+### 🐞 Bug fixes
+- Internal backend and CI-related adjustments for future platform compatibility. @TmNguyen12 [#1250](https://github.com/newrelic/nri-kubernetes/pull/1250)
+
+## v3.42.0 - 2025-06-09
+
+### 🚀 Enhancements
+- Config option for GKE-Autopilot to automatically configure necessary settings. @Philip-R-Beckwith [1235](https://github.com/newrelic/nri-kubernetes/pull/1235)
 
 ## v3.41.0 - 2025-06-02
 
