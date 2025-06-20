@@ -104,8 +104,6 @@ allowPrivilegeEscalation: false
 readOnlyRootFilesystem: true
 {{- end -}}
 
-
-
 {{- /* Allow to change pod defaults dynamically based if we are running in privileged mode or not */ -}}
 {{- define "nriKubernetes.securityContext.container" -}}
 {{- $defaults := fromYaml ( include "nriKubernetes.securityContext.containerDefaults" . ) -}}
@@ -122,14 +120,6 @@ readOnlyRootFilesystem: true
 {{- toYaml $finalSecurityContext -}}
 {{- end -}}
 
-{{- define "nriKubernetes.windowsIntegrationImage" -}}
-  {{ include "newrelic.common.images.image" ( dict "imageRoot" $.Values.images.integration "context" $ "imageTagSuffix" .imageTagSuffix) }}
-{{- end}}
-
-{{- define "nriKubernetes.windowsInfraAgentImage" -}}
-  {{ include "newrelic.common.images.image" ( dict "imageRoot" $.Values.images.agent "context" $ "imageTagSuffix" .imageTagSuffix) }}
-{{- end}}
-
 {{- define "nriKubernetes.controlPlane.enabled" -}}
 {{- if and .Values.controlPlane.enabled (not (include "newrelic.common.gkeAutopilot" .) ) -}}
 {{- .Values.controlPlane.enabled -}}
@@ -141,3 +131,30 @@ readOnlyRootFilesystem: true
 {{- include "newrelic.common.privileged" . -}}
 {{- end -}}
 {{- end -}}
+
+{{- /* Windows image string processing */ -}}
+{{- /* Windows Agent is more complicated because of how we've set up agent build automation. */ -}}
+{{- /* This may be simplified once infrastructure-bundle accommodates Windows. */ -}}
+{{- define "nriKubernetes.windowsImageRep" -}}
+{{ if ne .Values.images.windowsAgent.repository "newrelic/infrastructure" }}
+.Values.images.windowsAgent.repository
+{{- else -}}
+repository: newrelic/infrastructure-windows
+{{ end }}
+{{- end -}}
+
+{{- define "nriKubernetes.updatedWindowsAgentImageDict" -}}
+{{- $updatedWindowsImageRepository := fromYaml ( include "nriKubernetes.windowsImageRep" . ) -}}
+{{- $baseWindowsImageDict := .Values.images.windowsAgent }}
+{{- $windowsImageDict := mustMergeOverwrite $baseWindowsImageDict $updatedWindowsImageRepository -}}
+{{- toYaml $windowsImageDict -}}
+{{- end -}}
+
+{{- define "nriKubernetes.windowsAgentImage" -}}
+  {{ include "newrelic.common.images.image" ( dict "imageRoot" (include "nriKubernetes.updatedWindowsAgentImageDict" . | fromYaml) "context" $ ) }}
+{{- end}}
+
+{{- /* Windows Integration */ -}}
+{{- define "nriKubernetes.windowsIntegrationImage" -}}
+  {{ include "newrelic.common.images.image" ( dict "imageRoot" $.Values.images.windowsIntegration "context" $ ) }}
+{{- end}}

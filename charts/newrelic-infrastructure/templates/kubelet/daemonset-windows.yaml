@@ -8,7 +8,7 @@ metadata:
     kubernetes.io/os: windows
     mode: unprivileged
     {{- include "newrelic.common.labels" $ | nindent 4 }}
-  name: {{ join "-" (list (include "nriKubernetes.kubelet.fullname" $) .imageTagSuffix) }}
+  name: {{ join "-" (list (include "nriKubernetes.kubelet.fullname" $) "windows" .version) }}
   {{- $legacyAnnotation:= fromYaml (include "newrelic.compatibility.annotations" $) -}}
   {{- with  include "newrelic.compatibility.valueWithFallback" (dict "legacy" $legacyAnnotation "supported" $.Values.kubelet.annotations )}}
   annotations: {{ . | nindent 4 }}
@@ -58,8 +58,12 @@ spec:
       {{- end }}
       containers:
         - name: kubelet
-          image: {{ .integrationImage | default (include "nriKubernetes.windowsIntegrationImage" $) }}
-          imagePullPolicy: {{ $.Values.images.integration.pullPolicy }}
+          {{- if and (ne $.Values.images.windowsIntegration.registry "") (ne .imageTagSuffix "") }}
+          image: {{ default (printf "%s-%s" ((include "nriKubernetes.windowsIntegrationImage" $) | trimAll "\"") .imageTagSuffix | quote) .integrationImage }}
+          {{- else }}
+          image: {{ default (include "nriKubernetes.windowsIntegrationImage" $) .integrationImage }}
+          {{- end }}
+          imagePullPolicy: {{ $.Values.images.windowsIntegration.pullPolicy }}
           securityContext:
             windowsOptions:
               runAsUserName: "ContainerUser"
@@ -100,9 +104,13 @@ spec:
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
         - name: agent
-          image: {{ .agentImage | default (include "nriKubernetes.windowsInfraAgentImage" $)}}
+          {{- if ne .imageTagSuffix "" }}
+          image: {{ default (printf "%s-%s" ((include "nriKubernetes.windowsAgentImage" $) | trimAll "\"") .imageTagSuffix | quote) .agentImage }}
+          {{- else }}
+          image: {{ default (include "nriKubernetes.windowsAgentImage" $) .integrationImage }}
+          {{- end }}
           args: [ "newrelic-infra" ]
-          imagePullPolicy: {{ $.Values.images.agent.pullPolicy }}
+          imagePullPolicy: {{ $.Values.images.windowsAgent.pullPolicy }}
           securityContext:
             windowsOptions:
               runAsUserName: "ContainerUser"
