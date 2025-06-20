@@ -8,7 +8,7 @@ metadata:
     kubernetes.io/os: windows
     mode: unprivileged
     {{- include "newrelic.common.labels" $ | nindent 4 }}
-  name: {{ join "-" (list (include "nriKubernetes.kubelet.fullname" $) .imageTagSuffix) }}
+  name: {{ join "-" (list (include "nriKubernetes.kubelet.fullname" $) "windows" .version) }}
   {{- $legacyAnnotation:= fromYaml (include "newrelic.compatibility.annotations" $) -}}
   {{- with  include "newrelic.compatibility.valueWithFallback" (dict "legacy" $legacyAnnotation "supported" $.Values.kubelet.annotations )}}
   annotations: {{ . | nindent 4 }}
@@ -58,7 +58,7 @@ spec:
       {{- end }}
       containers:
         - name: kubelet
-          image: {{ .integrationImage | default (include "nriKubernetes.windowsIntegrationImage" $) }}
+          image: {{ default (include "newrelic.common.images.image" ( dict "imageRoot" $.Values.images.integration "context" $ )) .integrationImage }}
           imagePullPolicy: {{ $.Values.images.integration.pullPolicy }}
           securityContext:
             windowsOptions:
@@ -100,7 +100,7 @@ spec:
           resources: {{ toYaml . | nindent 12 }}
           {{- end }}
         - name: agent
-          image: {{ .agentImage | default (include "nriKubernetes.windowsInfraAgentImage" $)}}
+          image: {{ default (printf "%s-%s" ((include "nriKubernetes.windowsInfraAgentImage" $) | trimAll "\"") .version | quote) .agentImage }}
           args: [ "newrelic-infra" ]
           imagePullPolicy: {{ $.Values.images.agent.pullPolicy }}
           securityContext:
