@@ -104,8 +104,6 @@ allowPrivilegeEscalation: false
 readOnlyRootFilesystem: true
 {{- end -}}
 
-
-
 {{- /* Allow to change pod defaults dynamically based if we are running in privileged mode or not */ -}}
 {{- define "nriKubernetes.securityContext.container" -}}
 {{- $defaults := fromYaml ( include "nriKubernetes.securityContext.containerDefaults" . ) -}}
@@ -122,12 +120,8 @@ readOnlyRootFilesystem: true
 {{- toYaml $finalSecurityContext -}}
 {{- end -}}
 
-{{- define "nriKubernetes.windowsIntegrationImage" -}}
-  {{ include "newrelic.common.images.image" ( dict "imageRoot" $.Values.images.integration "context" $ "imageTagSuffix" .imageTagSuffix) }}
-{{- end}}
-
 {{- define "nriKubernetes.windowsInfraAgentImage" -}}
-  {{ include "newrelic.common.images.image" ( dict "imageRoot" $.Values.images.agent "context" $ "imageTagSuffix" .imageTagSuffix) }}
+  {{ include "newrelic.common.images.image" ( dict "imageRoot" $.Values.images.windowsTempAgent "context" $ ) }}
 {{- end}}
 
 {{- define "nriKubernetes.controlPlane.enabled" -}}
