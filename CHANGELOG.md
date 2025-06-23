@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.42.2 - 2025-06-23
+
+### ⛓️ Dependencies
+- Updated golang.org/x/crypto to v0.39.0
+- Updated go to v1.24.4
+
 ## v3.42.1 - 2025-06-16
 
 ### 🐞 Bug fixes
