@@ -42,6 +42,11 @@ images:
     repository: newrelic/nri-kubernetes
     tag:
     pullPolicy: IfNotPresent
+  windowsIntegration:
+    registry: ""
+    repository: newrelic/nri-kubernetes
+    tag:
+    pullPolicy: IfNotPresent
   windowsAgent:
     registry: ""
     repository: newrelic/infrastructure
@@ -57,14 +62,18 @@ windowsOsList:
   # Limited support for only LTSC2019/LTSC2022
   # https://kubernetes.io/docs/setup/production-environment/windows/intro-windows-in-kubernetes/#windows-os-version-support
   - version: ltsc2019
-    imageTagSuffix: windows-ltsc-2019
+    imageTagSuffix: ltsc2019
     buildNumber: 10.0.17763
+    # @ignored
     agentImage: ""
+    # @ignored
     integrationImage: ""
   - version: ltsc2022
-    imageTagSuffix: windows-ltsc-2022
+    imageTagSuffix: ltsc2022
     buildNumber: 10.0.20348
+    # @ignored
     agentImage: ""
+    # @ignored
     integrationImage: ""
 
 # -- Config that applies to all instances of the solution: kubelet, ksm, control plane and sidecars.
