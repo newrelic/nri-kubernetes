@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - testWindows/*
-      - windowsAutoTests*
   pull_request:
     branches:
       - main
@@ -14,6 +13,10 @@ permissions:
   id-token: write
   contents: read
   pull-requests: read
+
+concurrency:
+  group: windows-e2e-tests
+  cancel-in-progress: false
 
 jobs:
   generate-key:
