@@ -1,0 +1,218 @@
+suite: kubelet image generation
+templates:
+  - templates/kubelet/daemonset.yaml
+  - templates/kubelet/daemonset-windows.yaml
+  - templates/kubelet/scraper-configmap.yaml
+  - templates/kubelet/agent-configmap.yaml
+  - templates/kubelet/integrations-configmap.yaml
+  - templates/secret.yaml
+release:
+  name: my-release
+  namespace: my-namespace
+tests:
+  - it: Should set the image tag correctly for linux-based integration image - default
+    set:
+      licenseKey: test
+      cluster: test
+      images.integration.tag: 1.0.0
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "newrelic/nri-kubernetes:1.0.0"
+        template: templates/kubelet/daemonset.yaml
+
+  - it: Should set the image tag correctly for linux-based infra agent image - default
+    set:
+      licenseKey: test
+      cluster: test
+      images.agent.tag: 2.0.0
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: "newrelic/infrastructure-bundle:2.0.0"
+        template: templates/kubelet/daemonset.yaml
+
+  - it: Should set the image tag correctly for Windows-based integration image - default
+    set:
+      licenseKey: test
+      cluster: test
+      enableWindows: true
+      images.windowsIntegration.tag: 1.0.0
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "newrelic/nri-kubernetes:1.0.0"
+        template: templates/kubelet/daemonset-windows.yaml
+
+  - it: Should set the image tag correctly for Windows-based agent image - default
+    set:
+      licenseKey: test
+      cluster: test
+      enableWindows: true
+      images.windowsAgent.tag: 2.0.0
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: "newrelic/infrastructure-windows:2.0.0-ltsc2019"
+        template: templates/kubelet/daemonset-windows.yaml
+        documentIndex: 0
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: "newrelic/infrastructure-windows:2.0.0-ltsc2022"
+        template: templates/kubelet/daemonset-windows.yaml
+        documentIndex: 1
+
+  - it: Should set the image tag correctly for linux-based integration image - customer-supplied
+    set:
+      licenseKey: test
+      cluster: test
+      images.integration.registry: "myreg"
+      images.integration.repository: "myrepo/k8s-integration"
+      images.integration.tag: 1.0.0
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "myreg/myrepo/k8s-integration:1.0.0"
+        template: templates/kubelet/daemonset.yaml
+
+  - it: Should set the image tag correctly for linux-based infra agent image - customer-supplied
+    set:
+      licenseKey: test
+      cluster: test
+      images.agent.registry: "myreg"
+      images.agent.repository: "myrepo/k8s-agents"
+      images.agent.tag: 2.0.0
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: "myreg/myrepo/k8s-agents:2.0.0"
+        template: templates/kubelet/daemonset.yaml
+
+  - it: Should set the image tag correctly for Windows-based integration image - customer-supplied, imageSuffixTag default
+    set:
+      licenseKey: test
+      cluster: test
+      enableWindows: true
+      images.windowsIntegration.registry: "myreg"
+      images.windowsIntegration.repository: "winrepo/k8s-integration"
+      images.windowsIntegration.tag: 1.0.0
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "myreg/winrepo/k8s-integration:1.0.0-ltsc2019"
+        template: templates/kubelet/daemonset-windows.yaml
+        documentIndex: 0
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "myreg/winrepo/k8s-integration:1.0.0-ltsc2022"
+        template: templates/kubelet/daemonset-windows.yaml
+        documentIndex: 1
+
+  - it: Should set the image tag correctly for Windows-based agent image - customer-supplied, imageSuffixTag default
+    set:
+      licenseKey: test
+      cluster: test
+      enableWindows: true
+      images.windowsAgent.registry: "myreg"
+      images.windowsAgent.repository: "winrepo/k8s-agent"
+      images.windowsAgent.tag: 2.0.0
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: "myreg/winrepo/k8s-agent:2.0.0-ltsc2019"
+        template: templates/kubelet/daemonset-windows.yaml
+        documentIndex: 0
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: "myreg/winrepo/k8s-agent:2.0.0-ltsc2022"
+        template: templates/kubelet/daemonset-windows.yaml
+        documentIndex: 1
+
+  - it: Should set the image tag correctly for Windows-based integration image - customer-supplied, no imageSuffixTag
+    set:
+      licenseKey: test
+      cluster: test
+      enableWindows: true
+      images.windowsIntegration.registry: "myreg"
+      images.windowsIntegration.repository: "winrepo/k8s-integration"
+      images.windowsIntegration.tag: 1.0.0
+      windowsOsList:
+        - version: "ltsc2019"
+          imageTagSuffix: ""
+        - version: "ltsc2022"
+          imageTagSuffix: ""
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "myreg/winrepo/k8s-integration:1.0.0"
+        template: templates/kubelet/daemonset-windows.yaml
+
+  - it: Should set the image tag correctly for Windows-based agent image - customer-supplied, no imageSuffixTag
+    set:
+      licenseKey: test
+      cluster: test
+      enableWindows: true
+      images.windowsAgent.registry: "myreg"
+      images.windowsAgent.repository: "winrepo/k8s-agent"
+      images.windowsAgent.tag: 2.0.0
+      windowsOsList:
+        - version: "ltsc2019"
+          imageTagSuffix: ""
+        - version: "ltsc2022"
+          imageTagSuffix: ""
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: "myreg/winrepo/k8s-agent:2.0.0"
+        template: templates/kubelet/daemonset-windows.yaml
+
+  - it: Should set the image tag correctly for Windows-based integration image - customer-supplied, new imageSuffixTag
+    set:
+      licenseKey: test
+      cluster: test
+      enableWindows: true
+      images.windowsIntegration.registry: "myreg"
+      images.windowsIntegration.repository: "winrepo/k8s-integration"
+      images.windowsIntegration.tag: 1.0.0
+      windowsOsList:
+        - version: "ltsc2019"
+          imageTagSuffix: "2019"
+        - version: "ltsc2022"
+          imageTagSuffix: "2022"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "myreg/winrepo/k8s-integration:1.0.0-2019"
+        template: templates/kubelet/daemonset-windows.yaml
+        documentIndex: 0
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "myreg/winrepo/k8s-integration:1.0.0-2022"
+        template: templates/kubelet/daemonset-windows.yaml
+        documentIndex: 1
+
+  - it: Should set the image tag correctly for Windows-based agent image - customer-supplied, new imageSuffixTag
+    set:
+      licenseKey: test
+      cluster: test
+      enableWindows: true
+      images.windowsAgent.registry: "myreg"
+      images.windowsAgent.repository: "winrepo/k8s-agent"
+      images.windowsAgent.tag: 2.0.0
+      windowsOsList:
+        - version: "ltsc2019"
+          imageTagSuffix: "2019"
+        - version: "ltsc2022"
+          imageTagSuffix: "2022"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: "myreg/winrepo/k8s-agent:2.0.0-2019"
+        template: templates/kubelet/daemonset-windows.yaml
+        documentIndex: 0
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: "myreg/winrepo/k8s-agent:2.0.0-2022"
+        template: templates/kubelet/daemonset-windows.yaml
+        documentIndex: 1
+
