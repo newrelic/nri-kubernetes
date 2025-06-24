@@ -25,7 +25,7 @@ try {
     Write-Host "[compile-windows] Current folder structure:"
     Get-ChildItem -Recurse | ForEach-Object { Write-Host $_.FullName }
 
-    Write-Host "[compile-windows] Building $BindaryName for Windows"
+    Write-Host "[compile-windows] Building $BinaryName for Windows"
 
     if ($env:CGO_ENABLED) { $GO_ENABLED = $env:CGO_ENABLED}
     if ($env:TAG) { $Tag = $env:TAG}

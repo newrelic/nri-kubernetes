@@ -77,11 +77,13 @@ LICENSE_KEY=${LICENSE_KEY} EXCEPTIONS_SOURCE_FILE=${EXCEPTIONS_SOURCE_FILE}  go 
 You may check [e2e workflow](../.github/workflows/e2e.yaml) to have more details about how this is used in development workflow.
 
 ### Running Windows e2e tests
-Trying to run e2e tests for Windows nodes? Currently, you can run e2e tests for Windows nodes locally - we have not yet built in automation. This is because we cannot test Windows nodes using Minikube or Kind, so we need to have our local kubeconfig pointing to an existing cluster in the cloud. Because of this, there are also several metrics associated with the control plane that you'll find are missing. These are accounted for in the special `*-windows.yaml` exception files. Here's how to run these e2e tests locally:
-- Follow the above guidance on setting `LICENSE_KEY`, `API_KEY`, and `ACCOUNT_ID`. `EXCEPTIONS_SOURCE_FILE` will be a bit different as you'll want to target one of the Windows files: `export EXCEPTIONS_SOURCE_FILE=1_32-exceptions-windows.yaml`
-- In e2e-values.yaml, add overrides for `agentImage` and `integrationImage` if desired. This is for the nri-kubernetes installation.
-- Switch your kubeconfig to a cluster that has Windows nodes in the cloud: `kubectx <your-cluster-name>`
-- Run the following at the root of the repo to execute tests. If you are setting your own SCENARIO_TAG, add `--scenario_tag=$SCENARIO_TAG` to your command:
+Trying to run e2e tests for Windows nodes? Currently, you can run e2e tests for Windows nodes locally - we have not yet built in automation. This is because we cannot test Windows nodes using Minikube or Kind, so we need to have our local kubeconfig pointing to an existing cluster in the cloud. Because of this, there are also several metrics associated with the control plane that you'll find are missing. These are accounted for in the special `1_XX-exceptions-windows.yml` exception files. Here's how to run these e2e tests locally:
+
+1. Follow the above guidance on setting `LICENSE_KEY`, `API_KEY`, and `ACCOUNT_ID`. `EXCEPTIONS_SOURCE_FILE` will be a bit different as you'll want to target one of the Windows files: `export EXCEPTIONS_SOURCE_FILE=1_32-exceptions-windows.yaml`
+2. Make a duplicate of `e2e-values-windows-template.yml` and name it `e2e-values-windows.yml`
+3. Add the correct windows nri-kubernetes images to the two `integrationImage:` fields 
+4. Switch to the correct kubernetes context that your Windows nodes are on
+5.  Run the following at the root of the repo to execute tests. If you are setting your own SCENARIO_TAG, add `--scenario_tag=$SCENARIO_TAG` to your command:
 ```shell
 LICENSE_KEY=${LICENSE_KEY} EXCEPTIONS_SOURCE_FILE=${EXCEPTIONS_SOURCE_FILE}  go run github.com/newrelic/newrelic-integration-e2e-action@latest \
      --commit_sha=test-string --retry_attempts=5 --retry_seconds=60 \

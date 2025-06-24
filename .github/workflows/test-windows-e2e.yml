@@ -1,0 +1,129 @@
+name: Run Windows E2E on EKS
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - testWindows/*
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: windows-e2e-tests
+  cancel-in-progress: false
+
+jobs:
+  generate-key:
+    runs-on: ubuntu-latest
+    outputs:
+      run_key: ${{ steps.random-string.outputs.random_string }}
+    steps:
+      - name: just a small random 5 letter string
+        id: random-string
+        run: |
+          echo "random_string=$(head -c20 /dev/urandom | base64 | tr -dc 'a-z' | head -c5)" >> $GITHUB_OUTPUT
+  create-windows-image:
+    name: Create Windows Image for E2E Test
+    needs: generate-key
+    uses: "./.github/workflows/build-windows-integration-test.yml"
+    with:
+      # leave this empty to build both ltsc2019 and ltsc2022
+      only_this_windows_version_tag:
+      scenario_tag: ${{ needs.generate-key.outputs.run_key }}
+    secrets:
+      K8S_AGENTS_DOCKERHUB_USERNAME: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
+      K8S_AGENTS_DOCKERHUB_TOKEN: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
+  e2e:
+    needs: [ create-windows-image, generate-key ]
+    strategy:
+      fail-fast: false
+      matrix:
+        runner:
+          - kubernetes_version: 'v1.29.0'
+            exceptions_file: '1_29-exceptions-windows.yml'
+            eks_cluster_name: 'test-win-1-29'
+            iam_role: 'gha-role-test-win-1-29'
+          - kubernetes_version: 'v1.32.0'
+            exceptions_file: '1_32-exceptions-windows.yml'
+            eks_cluster_name: 'test-win-1-32'
+            iam_role: 'gha-role-test-win-1-32'
+    name: E2E Test on EKS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4 
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+      - name: Configure AWS Credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.K8S_AWS_ACCOUNT_ID }}:role/${{ matrix.runner.iam_role }}
+          aws-region: us-west-1
+          role-session-name: ${{ matrix.runner.iam_role }}-test-session
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name ${{ matrix.runner.eks_cluster_name }} --region us-west-1
+      - name: Verify cluster access
+        run: |
+          kubectl get nodes
+      - name: Echo output from build-windows-integration-test
+        run: |
+            echo "Output from build-windows-integration-test: ${{ needs.create-windows-image.outputs.image }}"
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
+      - name: Setup Access to Private Docker Registry
+        run: |
+          namespace="nr-${{ needs.generate-key.outputs.run_key }}"
+          kubectl create namespace $namespace || echo "Namespace $namespace already exists, skipping creation."
+
+          if ! kubectl get secret "nri-kubernetes-internal-dockerhub" >/dev/null 2>&1; then
+            kubectl create secret docker-registry nri-kubernetes-internal-dockerhub -n nr-${{ needs.generate-key.outputs.run_key }}\
+              --docker-server=docker.io \
+              --docker-username=${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }} \
+              --docker-password=${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
+          else
+            echo "Secret nri-kubernetes-internal-dockerhub already exists, skipping creation."
+          fi
+      - name: Setup Helm
+        run: |
+          chmod go-r /home/runner/.kube/config
+          helm repo add newrelic https://helm-charts.newrelic.com
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo update
+      - name: Add PullSecret to e2e-values.yml
+        run: |
+          export IMAGE_2019="newrelic/nri-kubernetes-internal:windows-ltsc2019-e2e-testing-${{ needs.generate-key.outputs.run_key }}"
+          export IMAGE_2022="newrelic/nri-kubernetes-internal:windows-ltsc2022-e2e-testing-${{ needs.generate-key.outputs.run_key }}"
+          
+          envsubst < e2e/e2e-values-windows-template.yml > e2e/e2e-values-windows.yml
+
+          cat e2e/e2e-values-windows.yml
+      - name: Run e2e-test
+        uses: newrelic/newrelic-integration-e2e-action@v1
+        env:
+          EXCEPTIONS_SOURCE_FILE: ${{ matrix.runner.exceptions_file }}
+          FETCH_PODS_FROM_KUBE_SERVICE: "false"
+        with:
+          retry_seconds: 60
+          retry_attempts: 5
+          agent_enabled: false
+          scenario_tag: ${{ needs.generate-key.outputs.run_key }}
+          spec_path: e2e/test-specs-windows.yml
+          account_id: ${{ secrets.K8S_AGENTS_E2E_ACCOUNT_ID }}
+          api_key: ${{ secrets.K8S_AGENTS_E2E_API_KEY }}
+          license_key: ${{ secrets.K8S_AGENTS_E2E_LICENSE_KEY }}
+      - name: Cleanup Testing Resources
+        if: always()
+        run: |
+          helm uninstall ${{needs.generate-key.outputs.run_key}} -n nr-${{ needs.generate-key.outputs.run_key }} || echo "Helm release ${{ needs.generate-key.outputs.run_key }} already deleted or does not exist."
+          helm uninstall ${{needs.generate-key.outputs.run_key}}-resources -n nr-${{ needs.generate-key.outputs.run_key }} || echo "Helm release ${{ needs.generate-key.outputs.run_key }}-resources already deleted or does not exist."
+          kubectl delete namespace nr-${{ needs.generate-key.outputs.run_key }} || echo "Namespace nr-${{ needs.generate-key.outputs.run_key }} already deleted or does not exist."
