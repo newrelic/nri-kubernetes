@@ -107,6 +107,9 @@ Note: when running the local-dev-environment with a Kubernetes cluster `< v1.21`
 
 * See [OpenShift.md](./OpenShift.md) for more details regarding running locally OpenShift environments.
 
+## Running locally with Windows nodes
+Minikube does not support Windows worker nodes at this time, so local build & testing support is limited. 
+
 ## Support
 
 Should you need assistance with New Relic products, you are in good hands with several support diagnostic tools and support channels.
