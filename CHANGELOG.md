@@ -7,13 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### note
-Announcing support for Windows node monitoring! This release includes the ability to monitor Windows nodes in Kubernetes clusters. This
-feature is in Preview - please opt in to the New Relic Pre-release program via the New Relic Guided Install process.
+## v3.43.0 - 2025-06-30
 
+### note
+Announcing support for Windows node monitoring! This release includes the ability to monitor Windows nodes in Kubernetes clusters. This feature is in Preview - please opt in to the New Relic Pre-release program via the New Relic Guided Install process.
 See the [New Relic Pre Release Policy](https://docs.newrelic.com/docs/licenses/license-information/referenced-policies/new-relic-pre-release-policy/) for more information and terms.
 
-### enhancement
+### 🚀 Enhancements
 - Adds support for Windows node monitoring in Kubernetes clusters. @TmNguyen12 @kondracek-nr [#1258](https://github.com/newrelic/nri-kubernetes/pull/1258)
 
 ## v3.42.2 - 2025-06-23
