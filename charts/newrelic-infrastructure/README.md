@@ -80,6 +80,21 @@ nodes or to schedule the KSM scraper on the same node of KSM to reduce the inter
 If you are having problems assigning pods to nodes it may be because of this. Take a look at the [`values.yaml`](values.yaml) to see if the pod that is
 not having your expected behavior has any predefined value.
 
+#### Windows node selector
+If `enableWindows` is set to `true`, the predefined `nodeSelector` settings are important. If it is necessary to change these, please be cognizant of which
+nodes are being targeted. The default `nodeSelector` settings allow the pods to run on Windows nodes corresponding to the relevant Windows Server versions (2019 & 2022).
+```yaml
+nodeSelector:
+  kubernetes.io/os: windows
+  node.kubernetes.io/windows-build: 10.0.17763 # Windows Server 2019
+```
+
+```yaml
+nodeSelector:
+  kubernetes.io/os: windows
+  node.kubernetes.io/windows-build: 10.0.20348 # Windows Server 2022
+```
+
 ### `hostNetwork` toggle
 
 In versions below v3, changing the `privileged` mode affected the `hostNetwork`. We changed this behavior and now you can set pods to use `hostNetwork`
@@ -92,6 +107,10 @@ This is because the most common configuration of the control plane components is
 If your cluster security policy does not allow to use `hostNetwork`, you can disable it control plane monitoring by setting `controlPlane.enabled` to
 `false.`
 
+#### Windows
+Please be aware that `hostNetwork` is not supported on Windows nodes at this time. If `enableWindows` is set to `true`, the chart will automatically
+set `hostNetwork` to `false` for the Windows kubelet Daemonset. `hostNetwork` may be set to true for components that are not deployed to Windows nodes, however.
+
 ### `privileged` toggle
 
 The default value for `privileged` [from the common library](https://github.com/newrelic/helm-charts/blob/master/library/common-library/README.md) is
@@ -102,6 +121,40 @@ This is because when `kubelet` pods need to run in privileged mode to fetch cpu,
 If your cluster security policy does not allow to have `privileged` in your pod' security context, you can disable it by setting `privileged` to
 `false` taking into account that you will lose all the metrics from the host and some metadata from the host that are added to the metrics of the
 integrations that you have configured.
+
+#### Windows
+Please be aware that `privileged` is not supported on Windows nodes at this time. If `enableWindows` is set to `true`, the chart will automatically set `privileged`
+to `false` for the Windows kubelet DaemonSet. `privileged` may be set to true for components that are not deployed to Windows nodes, however.
+
+### More on Windows
+
+#### DaemonSet creation
+As mentioned above, you may set `enableWindows` to `true` to enable Windows support in this chart. When enabled, this chart will create kubelet DaemonSets for the LTSC 2019
+& LTSC 2022 versions of Windows Server, which will schedule pods to their corresponding nodes.
+
+Please note that by default, the chart will create DaemonSets for _both_ stated Windows versions. If, for example, the target Kubernetes cluster does not include LTSC 2019 nodes,
+a DaemonSet will still be created but will indicate no desired pods.
+
+Example `kubectl -n newrelic get daemonsets` output where the cluster has two Linux nodes, one Windows LTSC 2022 node, and no Windows LTSC 2019 nodes:
+```shell
+kubectl -n newrelic get daemonsets
+NAME                                                DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR                                                          AGE
+<...snip...>
+newrelic-bundle-nrk8s-kubelet                       2         2         2       2            2           kubernetes.io/os=linux                                                 24h
+newrelic-bundle-nrk8s-kubelet-windows-ltsc2019      0         0         0       0            0           kubernetes.io/os=windows,node.kubernetes.io/windows-build=10.0.17763   24h
+newrelic-bundle-nrk8s-kubelet-windows-ltsc2022      1         1         1       1            1           kubernetes.io/os=windows,node.kubernetes.io/windows-build=10.0.20348   24h
+```
+
+If desired, you can prevent the chart from creating the unnecessary DaemonSet including the `windowsOsList` key in your custom `values.yaml` file & indicating only the desired version:
+```yaml
+windowsOsList:
+  - version: ltsc2022                      # Human-readable version identifier
+    imageTagSuffix: ltsc2022               # Tag to be used for nodes running the windows version above
+    buildNumber: 10.0.20348                # Build number for the nodes running the version above. Used as a selector.
+```
+
+#### Agent Integrations
+Infrastructure Agent integrations (Kafka, Cassandra, Redis, etc.) are not supported for Windows nodes at this time.
 
 ## Values
 
@@ -136,7 +189,7 @@ integrations that you have configured.
 | customSecretName | string | `""` | In case you don't want to have the license key in you values, this allows you to point to a user created secret to get the key from there. Can be configured also with `global.customSecretName` |
 | dnsConfig | object | `{}` | Sets pod's dnsConfig. Can be configured also with `global.dnsConfig` |
 | enableProcessMetrics | bool | `false` | Collect detailed metrics from processes running in the host. This defaults to true for accounts created before July 20, 2020. ref: https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/new-relic-infrastructure-agent-1120 |
-| enableWindows | bool | `false` |  |
+| enableWindows | bool | `false` | Enable Windows node monitoring. |
 | fedramp.enabled | bool | `false` | Enables FedRAMP. Can be configured also with `global.fedramp.enabled` |
 | fullnameOverride | string | `""` | Override the full name of the release |
 | hostNetwork | bool | `false` | Sets pod's hostNetwork. Can be configured also with `global.hostNetwork` |
@@ -145,6 +198,8 @@ integrations that you have configured.
 | images.forwarder | object | See `values.yaml` | Image for the New Relic Infrastructure Agent sidecar. |
 | images.integration | object | See `values.yaml` | Image for the New Relic Kubernetes integration. |
 | images.pullSecrets | list | `[]` | The secrets that are needed to pull images from a custom registry. |
+| images.windowsAgent | object | See `values.yaml` | Image for the New Relic Infrastructure Agent - Windows. |
+| images.windowsIntegration | object | See `values.yaml` | Image for the New Relic Kubernetes integration - Windows. |
 | integrations | object | `{}` | Config files for other New Relic integrations that should run in this cluster. |
 | ksm | object | See `values.yaml` | Configuration for the Deployment that collects state metrics from KSM (kube-state-metrics). |
 | ksm.affinity | object | Deployed in the same node as KSM | Affinity for the KSM Deployment. |
@@ -168,8 +223,9 @@ integrations that you have configured.
 | kubelet.extraEnvFrom | list | `[]` | Add user environment from configMaps or secrets as variables to the agent |
 | kubelet.extraVolumeMounts | list | `[]` | Defines where to mount volumes specified with `extraVolumes` |
 | kubelet.extraVolumes | list | `[]` | Volumes to mount in the containers |
-| kubelet.hostNetwork | bool | Not set | Sets pod's hostNetwork. When set bypasses global/common variable Note - does not apply to Windows nodes |
+| kubelet.hostNetwork | bool | Not set | Sets pod's hostNetwork. When set bypasses global/common variable. Note - does not apply to Windows nodes |
 | kubelet.tolerations | list | Schedules in all tainted nodes | Tolerations for the control plane DaemonSet. |
+| kubelet.windowsNodeSelector | object | `{}` | Node selector for the Windows kubelet DaemonSet. |
 | labels | object | `{}` | Additional labels for chart objects. Can be configured also with `global.labels` |
 | licenseKey | string | `""` | This set this license key to use. Can be configured also with `global.licenseKey` |
 | lowDataMode | bool | `false` (See [Low data mode](README.md#low-data-mode)) | Send less data by incrementing the interval from `15s` (the default when `lowDataMode` is `false` or `nil`) to `30s`. Non-nil values of `common.config.interval` will override this value. |
@@ -194,16 +250,7 @@ integrations that you have configured.
 | tolerations | list | `[]` | Sets pod's tolerations to node taints almost globally. (See [Affinities and tolerations](README.md#affinities-and-tolerations)) |
 | updateStrategy | object | See `values.yaml` | Update strategy for the deployed DaemonSets. |
 | verboseLog | bool | `false` | Sets the debug logs to this integration or all integrations if it is set globally. Can be configured also with `global.verboseLog` |
-| windowsOsList[0].agentImage | string | `""` |  |
-| windowsOsList[0].buildNumber | string | `"10.0.17763"` |  |
-| windowsOsList[0].imageTagSuffix | string | `"windows-ltsc-2019"` |  |
-| windowsOsList[0].integrationImage | string | `""` |  |
-| windowsOsList[0].version | string | `"ltsc2019"` |  |
-| windowsOsList[1].agentImage | string | `""` |  |
-| windowsOsList[1].buildNumber | string | `"10.0.20348"` |  |
-| windowsOsList[1].imageTagSuffix | string | `"windows-ltsc-2022"` |  |
-| windowsOsList[1].integrationImage | string | `""` |  |
-| windowsOsList[1].version | string | `"ltsc2022"` |  |
+| windowsOsList | list | `[{"buildNumber":"10.0.17763","imageTagSuffix":"ltsc2019","version":"ltsc2019"},{"buildNumber":"10.0.20348","imageTagSuffix":"ltsc2022","version":"ltsc2022"}]` | Additional configuration for Windows node DaemonSets. |
 
 ## Maintainers
 
