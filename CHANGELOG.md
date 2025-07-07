@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+
+- Add support for Kubernetes v1.33.0 and deprecate v1.28.X @TmNguyen12
+
 ## v3.43.0 - 2025-06-30
 
 ### note
