@@ -61,7 +61,7 @@ jobs:
         with:
           go-version-file: 'go.mod'
       - name: Configure AWS Credentials via OIDC
-        uses: aws-actions/configure-aws-credentials@v3
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::${{ secrets.K8S_AWS_ACCOUNT_ID }}:role/${{ matrix.runner.iam_role }}
           aws-region: us-west-1
