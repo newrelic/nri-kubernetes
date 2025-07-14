@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.43.1 - 2025-07-14
+
+### ⛓️ Dependencies
+- Updated go to v1.24.5
+- Updated aquasecurity/trivy-action to v0.32.0
+- Updated kubernetes packages to v0.33.2
+- Updated github.com/prometheus/common to v0.65.0 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.65.0)
+
 ## v3.43.0 - 2025-06-30
 
 ### note
