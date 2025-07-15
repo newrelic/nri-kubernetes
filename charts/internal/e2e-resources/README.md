@@ -17,7 +17,7 @@ This chart creates e2e resources for nri-kubernetes.
 | Repository | Name | Version |
 |------------|------|---------|
 | https://helm-charts.newrelic.com | common-library | 1.3.1 |
-| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.12.1 |
+| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.30.1 |
 
 ## Values
 
