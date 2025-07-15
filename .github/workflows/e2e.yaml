@@ -37,6 +37,7 @@ jobs:
         with:
           minikube version: v1.36.0
           kubernetes version: ${{ matrix.k8sVersion }}
+          github token: ${{ secrets.GITHUB_TOKEN }}
           driver: docker
           start args: "--container-runtime=${{ matrix.cri }}"
       - name: Enable addons minikube needed for HPA
