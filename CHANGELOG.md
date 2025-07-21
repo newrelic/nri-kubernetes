@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### dependency
+## v3.43.2 - 2025-07-21
 
+### dependency
 - Update kube-state-metrics chart version from 5.12.1 to 5.30.1 @TmNguyen12 [#1266](https://github.com/newrelic/nri-kubernetes/pull/1266)
+
+### ⛓️ Dependencies
+- Updated golang.org/x/crypto to v0.40.0
+- Updated alpine to v3.22.1
 
 ## v3.43.1 - 2025-07-14
 
