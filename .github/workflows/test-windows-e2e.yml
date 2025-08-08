@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - testWindows/*
+      - test-windows-*
   pull_request:
     branches:
       - main
@@ -60,6 +60,13 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
+      - name: Create Cluster Specific Scenario Tag and Namespace Env
+        id: create-scenario-tag-and-ns
+        run: |
+          scenario_tag="${{ needs.generate-key.outputs.run_key }}-${{ matrix.runner.eks_cluster_name }}"
+          echo "scenario_tag=$scenario_tag" >> "$GITHUB_OUTPUT"
+          new_namespace="nr-$scenario_tag"
+          echo "new_namespace=$new_namespace" >> "$GITHUB_OUTPUT"
       - name: Configure AWS Credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -81,12 +88,13 @@ jobs:
           username: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
           password: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
       - name: Setup Access to Private Docker Registry
+        env:
+          NEW_NAMESPACE: ${{ steps.create-scenario-tag-and-ns.outputs.new_namespace }}
         run: |
-          namespace="nr-${{ needs.generate-key.outputs.run_key }}"
-          kubectl create namespace $namespace || echo "Namespace $namespace already exists, skipping creation."
+          kubectl create namespace $NEW_NAMESPACE || echo "Namespace $NEW_NAMESPACE already exists, skipping creation."
 
-          if ! kubectl get secret "nri-kubernetes-internal-dockerhub" >/dev/null 2>&1; then
-            kubectl create secret docker-registry nri-kubernetes-internal-dockerhub -n nr-${{ needs.generate-key.outputs.run_key }}\
+          if ! kubectl get secret "nri-kubernetes-internal-dockerhub" -n $NEW_NAMESPACE >/dev/null 2>&1; then
+            kubectl create secret docker-registry nri-kubernetes-internal-dockerhub -n $NEW_NAMESPACE \
               --docker-server=docker.io \
               --docker-username=${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }} \
               --docker-password=${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
@@ -116,14 +124,17 @@ jobs:
           retry_seconds: 60
           retry_attempts: 5
           agent_enabled: false
-          scenario_tag: ${{ needs.generate-key.outputs.run_key }}
+          scenario_tag: ${{ steps.create-scenario-tag-and-ns.outputs.scenario_tag }}
           spec_path: e2e/test-specs-windows.yml
           account_id: ${{ secrets.K8S_AGENTS_E2E_ACCOUNT_ID }}
           api_key: ${{ secrets.K8S_AGENTS_E2E_API_KEY }}
           license_key: ${{ secrets.K8S_AGENTS_E2E_LICENSE_KEY }}
       - name: Cleanup Testing Resources
         if: always()
+        env:
+          NEW_NAMESPACE: ${{ steps.create-scenario-tag-and-ns.outputs.new_namespace }}
+          SCENARIO_TAG: ${{ steps.create-scenario-tag-and-ns.outputs.scenario_tag }}
         run: |
-          helm uninstall ${{needs.generate-key.outputs.run_key}} -n nr-${{ needs.generate-key.outputs.run_key }} || echo "Helm release ${{ needs.generate-key.outputs.run_key }} already deleted or does not exist."
-          helm uninstall ${{needs.generate-key.outputs.run_key}}-resources -n nr-${{ needs.generate-key.outputs.run_key }} || echo "Helm release ${{ needs.generate-key.outputs.run_key }}-resources already deleted or does not exist."
-          kubectl delete namespace nr-${{ needs.generate-key.outputs.run_key }} || echo "Namespace nr-${{ needs.generate-key.outputs.run_key }} already deleted or does not exist."
+          helm uninstall $SCENARIO_TAG -n $NEW_NAMESPACE || echo "Helm release $SCENARIO_TAG already deleted or does not exist."
+          helm uninstall $SCENARIO_TAG-resources -n $NEW_NAMESPACE || echo "Helm release $SCENARIO_TAG-resources already deleted or does not exist."
+          kubectl delete namespace $NEW_NAMESPACE || echo "Namespace $NEW_NAMESPACE already deleted or does not exist."
