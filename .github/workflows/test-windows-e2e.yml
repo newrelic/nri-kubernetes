@@ -116,7 +116,7 @@ jobs:
           retry_seconds: 60
           retry_attempts: 5
           agent_enabled: false
-          scenario_tag: ${{ needs.generate-key.outputs.run_key }}-${{ matrix.runner.kubernetes_version}}
+          scenario_tag: ${{ needs.generate-key.outputs.run_key }}-${{ matrix.runner.eks_cluster_name }}
           spec_path: e2e/test-specs-windows.yml
           account_id: ${{ secrets.K8S_AGENTS_E2E_ACCOUNT_ID }}
           api_key: ${{ secrets.K8S_AGENTS_E2E_API_KEY }}
