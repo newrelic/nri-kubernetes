@@ -60,6 +60,11 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
+      - name: Create Cluster Specific Scenario Tag and Namespace Env
+        run: |
+          echo "scenario_tag=${{ needs.generate-key.outputs.run_key }}-${{ matrix.runner.eks_cluster_name }}" >> $GITHUB_ENV
+          new_namespace="nr-${{ env.scenario_tag }}"
+          echo "new_namespace=$new_namespace" >> $GITHUB_ENV
       - name: Configure AWS Credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -82,11 +87,10 @@ jobs:
           password: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
       - name: Setup Access to Private Docker Registry
         run: |
-          namespace="nr-${{ needs.generate-key.outputs.run_key }}"
-          kubectl create namespace $namespace || echo "Namespace $namespace already exists, skipping creation."
+          kubectl create namespace ${{ env.new_namespace }} || echo "Namespace ${{ env.new_namespace }} already exists, skipping creation."
 
-          if ! kubectl get secret "nri-kubernetes-internal-dockerhub" >/dev/null 2>&1; then
-            kubectl create secret docker-registry nri-kubernetes-internal-dockerhub -n nr-${{ needs.generate-key.outputs.run_key }}\
+          if ! kubectl get secret "nri-kubernetes-internal-dockerhub" -n ${{ env.new_namespace }} >/dev/null 2>&1; then
+            kubectl create secret docker-registry nri-kubernetes-internal-dockerhub -n ${{ env.new_namespace }} \
               --docker-server=docker.io \
               --docker-username=${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }} \
               --docker-password=${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
@@ -116,7 +120,7 @@ jobs:
           retry_seconds: 60
           retry_attempts: 5
           agent_enabled: false
-          scenario_tag: ${{ needs.generate-key.outputs.run_key }}-${{ matrix.runner.eks_cluster_name }}
+          scenario_tag: ${{ env.scenario_tag }}
           spec_path: e2e/test-specs-windows.yml
           account_id: ${{ secrets.K8S_AGENTS_E2E_ACCOUNT_ID }}
           api_key: ${{ secrets.K8S_AGENTS_E2E_API_KEY }}
@@ -124,6 +128,6 @@ jobs:
       - name: Cleanup Testing Resources
         if: always()
         run: |
-          helm uninstall ${{needs.generate-key.outputs.run_key}} -n nr-${{ needs.generate-key.outputs.run_key }} || echo "Helm release ${{ needs.generate-key.outputs.run_key }} already deleted or does not exist."
-          helm uninstall ${{needs.generate-key.outputs.run_key}}-resources -n nr-${{ needs.generate-key.outputs.run_key }} || echo "Helm release ${{ needs.generate-key.outputs.run_key }}-resources already deleted or does not exist."
-          kubectl delete namespace nr-${{ needs.generate-key.outputs.run_key }} || echo "Namespace nr-${{ needs.generate-key.outputs.run_key }} already deleted or does not exist."
+          helm uninstall ${{ env.scenario_tag }} -n ${{ env.new_namespace }} || echo "Helm release ${{ env.scenario_tag }} already deleted or does not exist."
+          helm uninstall ${{ env.scenario_tag }}-resources -n ${{ env.new_namespace }} || echo "Helm release ${{ env.scenario_tag }}-resources already deleted or does not exist."
+          kubectl delete namespace ${{ env.new_namespace }} || echo "Namespace ${{ env.new_namespace }} already deleted or does not exist."
