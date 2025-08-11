@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancement
+## v3.44.0 - 2025-08-11
+
+### 🚀 Enhancements
 - Add v1.33 support and drop support for v1.28 @TmNguyen12 [#1274](https://github.com/newrelic/nri-kubernetes/pull/1274)
 
+### ⛓️ Dependencies
+- Updated google.golang.org/protobuf to v1.36.7
 
 ## v3.43.3 - 2025-08-04
 
