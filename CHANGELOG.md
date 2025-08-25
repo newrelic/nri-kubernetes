@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancement 
+## v3.45.0 - 2025-08-25
+
+### 🚀 Enhancements
 - Update `e2e-resources` chart @TmNguyen12 [#1282](https://github.com/newrelic/nri-kubernetes/pull/1282)
+
+### ⛓️ Dependencies
+- Updated google.golang.org/protobuf to v1.36.8
 
 ## v3.44.1 - 2025-08-18
 
