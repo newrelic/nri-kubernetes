@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.45.1 - 2025-09-08
+
+### ⛓️ Dependencies
+- Updated golang.org/x/crypto to v0.41.0
+- Updated go to v1.25.0
+- Updated aquasecurity/trivy-action to v0.33.0
+
 ## v3.45.0 - 2025-08-25
 
 ### 🚀 Enhancements
