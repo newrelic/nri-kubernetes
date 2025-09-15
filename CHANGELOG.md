@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.45.2 - 2025-09-15
+
+### ⛓️ Dependencies
+- Updated go to v1.25.1
+- Updated github.com/spf13/viper to v1.21.0 - [Changelog 🔗](https://github.com/spf13/viper/releases/tag/v1.21.0)
+- Updated google.golang.org/protobuf to v1.36.9
+- Updated actions/setup-go to v6
+
 ## v3.45.1 - 2025-09-08
 
 ### ⛓️ Dependencies
