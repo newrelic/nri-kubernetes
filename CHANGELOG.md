@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+###bugfix
+- fix e2e-tests no longer use the "constant" key @TmNguyen12 ()[]
+
 ## v3.45.2 - 2025-09-15
 
 ### ⛓️ Dependencies
