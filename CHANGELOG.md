@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### bugfix
+- change image for e2e-resources/hpa to multiarch image @TmNguyen12[#1298](https://github.com/newrelic/nri-kubernetes/pull/1298)
+
 ## v3.45.2 - 2025-09-15
 
 ### ⛓️ Dependencies
