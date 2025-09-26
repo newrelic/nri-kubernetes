@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- Add v1.34 support and drop support for v1.29 @TmNguyen12 [#1300](https://github.com/newrelic/nri-kubernetes/pull/1300)
+
 ### bugfix
 - fix e2e-tests no longer use the "constant" key @TmNguyen12 [#1299](https://github.com/newrelic/nri-kubernetes/pull/1299)
 
