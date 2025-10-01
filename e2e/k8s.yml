@@ -15183,3 +15183,54 @@ entities:
       - event_type
       - provider
       - networkTag.*
+  - entityType: K8sResourceQuota
+    metrics:
+      - name: k8s.resourcequota.createdAt
+        type: gauge
+        defaultResolution: 15
+        unit: count
+        migrationInformation:
+          legacyEventType: K8sResourceQuotaSample
+          legacyNames:
+            - createdAt
+      # This wildcard matches all the metrics dynamically created by your custom
+      # fetchResourceQuotas function (e.g., podsHard, secretsUsed, limits.cpuHard).
+      - name: k8s.resourcequota.*
+        type: gauge
+        defaultResolution: 15
+        unit: count # Or bytes, depending on the specific metric
+        migrationInformation:
+          legacyEventType: K8sResourceQuotaSample
+          legacyNames:
+            - "*" # Matches all legacy names
+    tags:
+      - name: k8s.clusterName
+        type: string
+        migrationInformation:
+          legacyNames:
+            - clusterName
+          legacyEventTypes:
+            - K8sResourceQuotaSample
+      - name: k8s.namespaceName
+        type: string
+        migrationInformation:
+          legacyNames:
+            - namespaceName
+          legacyEventTypes:
+            - K8sResourceQuotaSample
+      - name: k8s.resourcequotaName
+        type: string
+        migrationInformation:
+          legacyNames:
+            - quotaName
+          legacyEventTypes:
+            - K8sResourceQuotaSample
+      # This wildcard is what will validate the Kubernetes labels you added.
+      - name: tags.*
+        type: string
+        description: User-defined Kubernetes labels.
+        migrationInformation:
+          legacyNames:
+            - label.*
+          legacyEventTypes:
+            - K8sResourceQuotaSample

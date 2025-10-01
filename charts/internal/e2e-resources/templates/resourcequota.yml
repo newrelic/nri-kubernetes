@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: {{ .Release.Name }}-resourcequota
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: my-resource-quota-resource
+    team: k8-test
+    environment: test
+  annotations:
+    "description": "ResourceQuota for testing purposes in the test environment."
+    "owner": "test-team"
+spec:
+  hard:
+    pods: "600"                                      # Limit the total number of pods
+    secrets: "100"                                   # Limit total number of secrets
+
+---
+
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: nri-test-namespace-quota
+  namespace: nri-test-namespace
+spec:
+  hard:
+    pods: "10"
+    secrets: "20"
+    requests.cpu: "1"
+    requests.memory: "1Gi"
+    limits.cpu: "2"
+    limits.memory: "2Gi"
+    persistentvolumeclaims: "5"                     # Limit total number of PVCs
+    services: "10"                                  # Limit total number of services
+    replicationcontrollers: "5"                     # Limit total number of replication controllers
+    configmaps: "10"                                # Limit total number of config maps
+    resourcequotas: "1"                             # Limit total number of resource quotas
+    services.loadbalancers: "2"                     # Limit number of external load balancer services
+    services.nodeports: "5"                         # Limit number of nodeport servic

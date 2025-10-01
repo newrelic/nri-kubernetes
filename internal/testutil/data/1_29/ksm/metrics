@@ -1825,3 +1825,40 @@ kube_storageclass_created{storageclass="standard"} 1.717531887e+09
 # TYPE kube_storageclass_annotations gauge
 # HELP kube_storageclass_labels [STABLE] Kubernetes labels converted to Prometheus labels.
 # TYPE kube_storageclass_labels gauge
+# HELP kube_resourcequota_created [STABLE] Unix creation timestamp
+# TYPE kube_resourcequota_created gauge
+kube_resourcequota_created{namespace="scraper",resourcequota="e2e-resourcequota"} 1.75917299e+09
+# HELP kube_resourcequota [STABLE] Information about resource quota.
+# TYPE kube_resourcequota gauge
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="secrets",type="hard"} 10
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="services.nodeports",type="hard"} 5
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="limits.cpu",type="hard"} 10
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="persistentvolumeclaims",type="hard"} 5
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="requests.cpu",type="hard"} 4
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="resourcequotas",type="hard"} 1
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="requests.memory",type="hard"} 8.589934592e+09
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="services",type="hard"} 10
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="services.loadbalancers",type="hard"} 2
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="configmaps",type="hard"} 10
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="limits.memory",type="hard"} 1.7179869184e+10
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="pods",type="hard"} 10
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="replicationcontrollers",type="hard"} 5
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="services.loadbalancers",type="used"} 1
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="services.nodeports",type="used"} 1
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="configmaps",type="used"} 1
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="pods",type="used"} 10
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="replicationcontrollers",type="used"} 0
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="resourcequotas",type="used"} 1
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="services",type="used"} 4
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="secrets",type="used"} 2
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="limits.cpu",type="used"} 0.905
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="limits.memory",type="used"} 1.622864e+08
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="persistentvolumeclaims",type="used"} 1
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="requests.cpu",type="used"} 0.405
+kube_resourcequota{namespace="scraper",resourcequota="e2e-resourcequota",resource="requests.memory",type="used"} 8.36432e+07
+# HELP kube_resourcequota_annotations Kubernetes annotations converted to Prometheus labels.
+# TYPE kube_resourcequota_annotations gauge
+kube_resourcequota_annotations{annotation_foo="foo",namespace="scraper",resourcequota="e2e-resourcequota"} 1
+# HELP kube_resourcequota_labels [STABLE] Kubernetes labels converted to Prometheus labels.
+# TYPE kube_resourcequota_labels gauge
+kube_resourcequota_labels{label_hello="world",namespace="scraper",resourcequota="e2e-resourcequota"} 2

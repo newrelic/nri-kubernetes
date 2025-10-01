@@ -1,6 +1,7 @@
 package prometheus
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -484,6 +485,74 @@ func FromLabelValue(key, label string) definition.FetchFunc {
 	}
 }
 
+// FromResourceQuotasAggregation processes the slice of kube_resourcequota metrics
+// for a single ResourceQuota entity. It aggregates the separate "hard" limit and
+// "used" value metrics for each resource type (e.g., "pods", "secrets") into a
+// structured format.
+//
+// This approach is necessary because a single Kubernetes ResourceQuota object is
+// represented by multiple individual time series in Prometheus. This function
+// consolidates them into a more queryable format.
+//
+// The function returns a definition.FetchedValues map where each key is a
+// resource name (e.g., "pods") and the corresponding value is a JSON string
+// containing both the hard and used values for that resource.
+// For example:
+//
+//	"pods":    `{"hard":10, "used":8}`
+//	"secrets": `{"hard":20, "used":5}`
+func FromResourceQuotasAggregation(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
+	// 1. Fetch the raw metric data, which we know is a slice.
+	rawMetrics, err := definition.FromRaw("kube_resourcequota")(groupLabel, entityID, groups)
+	if err != nil {
+		return nil, fmt.Errorf("could not fetch kube_resourcequota data: %w", err)
+	}
+
+	// 2. Confirm the data is a slice of metrics.
+	metrics, ok := rawMetrics.([]Metric)
+	if !ok {
+		return nil, fmt.Errorf("expected metric type for kube_resourcequota to be []prometheus.Metric, but it was not")
+	}
+
+	// 3. Create an intermediate map to aggregate hard and used values for each resource.
+	// Structure: map[resourceName]map[type]value, e.g., {"pods": {"hard": 10, "used": 5}}
+	aggregatedValues := make(map[string]map[string]interface{})
+
+	// 4. Loop through each metric and populate the intermediate map.
+	for _, m := range metrics {
+		resource, okResource := m.Labels["resource"]
+		quotaType, okType := m.Labels["type"]
+
+		if !okResource || !okType {
+			continue // Skip if required labels are missing.
+		}
+
+		// Ensure the inner map is initialized for the resource.
+		if _, ok := aggregatedValues[resource]; !ok {
+			aggregatedValues[resource] = make(map[string]interface{})
+		}
+
+		aggregatedValues[resource][quotaType] = m.Value
+	}
+
+	// 5. Create the final map and marshal the aggregated values into JSON.
+	fetchedValues := make(definition.FetchedValues)
+	for resource, values := range aggregatedValues {
+		jsonValue, err := json.Marshal(values)
+		if err != nil {
+			// If a specific resource fails to marshal, we can skip it and continue.
+			// Or return the error if any failure should stop the whole process.
+			return nil, fmt.Errorf("could not marshal resource quota for '%s' to JSON: %w", resource, err)
+		}
+
+		// The key is the resource name (e.g., "pods", "secrets").
+		// The value is the JSON string (e.g., `{"hard":600,"used":10}`).
+		fetchedValues[resource] = string(jsonValue)
+	}
+
+	return fetchedValues, nil
+}
+
 // suffixLabelsInOrder takes the given metricName and appends, in alphabetical
 // order, the given labels in the form of <label_key>_<label_value>.
 func suffixLabelsInOrder(metricName string, labels Labels) string {
@@ -817,6 +886,12 @@ func labelsFromMetric(
 func InheritAllLabelsFrom(parentGroupLabel, relatedMetricKey string) definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 		return labelsFromMetric(parentGroupLabel, relatedMetricKey, groupLabel, entityID, groups, "label")
+	}
+}
+
+func InheritAllAnnotationsFrom(parentGroupLabel, relatedMetricKey string) definition.FetchFunc {
+	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
+		return labelsFromMetric(parentGroupLabel, relatedMetricKey, groupLabel, entityID, groups, "annotation")
 	}
 }
 

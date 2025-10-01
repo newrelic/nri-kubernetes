@@ -942,6 +942,38 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "isLimited", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_status_condition_limited")},
 		},
 	},
+	"resourcequota": {
+		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_resourcequota_created", "resourcequota"),
+		TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_resourcequota_created"),
+		NamespaceGetter: prometheus.FromLabelGetNamespace,
+		Specs: []definition.Spec{
+			{
+				Name:      "createdAt",
+				ValueFunc: prometheus.FromValue("kube_resourcequota_created"),
+				Type:      sdkMetric.GAUGE,
+			},
+			{
+				Name: "namespaceName",
+				ValueFunc: prometheus.FromLabelValue(
+					"kube_resourcequota_created",
+					"namespace",
+				),
+				Type: sdkMetric.ATTRIBUTE,
+			},
+			{
+				Name:      "resource.*",
+				ValueFunc: prometheus.FromResourceQuotasAggregation,
+				Type:      sdkMetric.ATTRIBUTE, // This type will be applied to all generated metrics.
+			},
+			{
+				Name:      "resourceQuotaName",
+				ValueFunc: prometheus.FromLabelValue("kube_resourcequota_created", "resourcequota"),
+				Type:      sdkMetric.ATTRIBUTE,
+			},
+			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("resourcequota", "kube_resourcequota_labels"), Type: sdkMetric.ATTRIBUTE, Optional: true},
+			{Name: "annotation.*", ValueFunc: prometheus.InheritAllAnnotationsFrom("resourcequota", "kube_resourcequota_annotations"), Type: sdkMetric.ATTRIBUTE, Optional: true},
+		},
+	},
 }
 
 // KSMQueries are the queries we will do to KSM in order to fetch all the raw metrics.
@@ -1200,6 +1232,10 @@ var KSMQueries = []prometheus.Query{
 		Value: prometheus.GaugeValue(1),
 	}},
 	{MetricName: "kube_node_spec_unschedulable"},
+	{MetricName: "kube_resourcequota"},
+	{MetricName: "kube_resourcequota_created"},
+	{MetricName: "kube_resourcequota_labels"},
+	{MetricName: "kube_resourcequota_annotations"},
 }
 
 // CadvisorQueries are the queries we will do to the kubelet metrics cadvisor endpoint in order to fetch all the raw metrics.
