@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### bugfix
+## v3.45.3 - 2025-09-29
+
+### 🐞 Bug fixes
 - fix e2e-tests no longer use the "constant" key @TmNguyen12 [#1299](https://github.com/newrelic/nri-kubernetes/pull/1299)
 
 ## v3.45.2 - 2025-09-15
