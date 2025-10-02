@@ -2,6 +2,7 @@ package populator
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/newrelic/infra-integrations-sdk/data/attribute"
 	"github.com/newrelic/infra-integrations-sdk/data/metric"
@@ -10,165 +11,90 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
 )
 
-// It includes logic to split a single group into multiple sub-entities based on the 'SplitByLabel' spec.
-// IntegrationPopulator populates an integration with the given metrics and definition.
-// It includes logic to split a single group into multiple sub-entities based on the 'SplitByLabel' spec.
+// processingUnit holds all the pre-calculated information needed to create and populate a single entity.
+type processingUnit struct {
+	entityID   string
+	entityType string
+	rawMetrics definition.RawMetrics
+}
+
+// IntegrationPopulator is the main orchestrator that populates an integration.Integration
+// object from the grouped metric data.
 func IntegrationPopulator(config *definition.IntegrationPopulateConfig) (bool, []error) {
 	var populated bool
 	var errs []error
 
 	for groupLabel, entities := range config.Groups {
 		for entityID, rawMetrics := range entities {
-			// DEBUG: Print the top-level group and entity being processed.
-			fmt.Printf("--- Processing Group: %s, EntityID: %s ---\n", groupLabel, entityID)
-
 			specGroup, ok := config.Specs[groupLabel]
 			if !ok {
 				continue
 			}
 
-			// Namespace filtering logic (no changes here).
+			var extraAttributes []attribute.Attribute
 			if config.Filterer != nil {
 				if nsGetter := specGroup.NamespaceGetter; nsGetter != nil {
 					ns := nsGetter(rawMetrics)
 					if groupLabel != definition.NamespaceGroup {
 						if !config.Filterer.IsAllowed(ns) {
-							continue
+							continue // This is the filter for non-namespace groups.
 						}
+					} else {
+						isFiltered := strconv.FormatBool(!config.Filterer.IsAllowed(ns))
+						extraAttributes = []attribute.Attribute{attribute.Attr(definition.NamespaceFilteredLabel, isFiltered)}
 					}
-					// 'else' block for adding NamespaceFilteredLabel is omitted for brevity but would be here.
 				}
 			}
 
-			// Check if this group needs to be split into sub-entities.
-			if specGroup.SplitByLabel != "" {
-				// DEBUG: Announce that we are entering the special sub-grouping path.
-				fmt.Printf("Found 'SplitByLabel: %s'. Entering sub-grouping logic.\n", specGroup.SplitByLabel)
-				// Determine which metric name to use for the slice.
-				sliceMetricName := specGroup.SliceMetricName
-				if sliceMetricName == "" {
-					// Fallback to groupLabel if not specified, for simpler cases.
-					sliceMetricName = groupLabel
-				}
-
-				// DEBUG: Inspect the contents of rawMetrics before we try to access it.
-				fmt.Printf("Inspecting rawMetrics map for entity '%s':\n", entityID)
-				for key, value := range rawMetrics {
-					fmt.Printf("  - Key: %-30s | Type: %T\n", key, value)
-				}
-
-				mainMetricSlice, ok := rawMetrics[sliceMetricName].([]prometheus.Metric)
-				if !ok {
-					// DEBUG: Explicitly state that the type assertion failed.
-					fmt.Printf("DEBUG: FATAL! Type assertion to []prometheus.Metric FAILED. The actual type was %T.\n", rawMetrics[groupLabel])
-
-					errs = append(errs, fmt.Errorf("group %q with SplitByLabel requires a slice of metrics, but found %T", groupLabel, rawMetrics[groupLabel]))
-					continue
-				}
-
-				// DEBUG: Show how many metrics we are about to split.
-				fmt.Printf("Found %d metrics in the slice to split.\n", len(mainMetricSlice))
-
-				subGroups := make(map[string]definition.RawMetrics)
-
-				for _, metric := range mainMetricSlice {
-					splitValue, ok := metric.Labels[specGroup.SplitByLabel]
-					if !ok {
-						continue
-					}
-
-					// Get or create the RawMetrics map for this sub-group key (e.g., "secrets").
-					subGroupMetrics, exists := subGroups[splitValue]
-					if !exists {
-						subGroupMetrics = make(definition.RawMetrics)
-						// Copy the shared metrics (like _created, _labels) just once when the sub-group is first created.
-						for k, v := range rawMetrics {
-							if k != sliceMetricName { // Do not copy the large, unfiltered slice.
-								subGroupMetrics[k] = v
-							}
-						}
-						subGroups[splitValue] = subGroupMetrics
-					}
-
-					// Get or create the metric slice within the sub-group's map.
-					slice, ok := subGroupMetrics[sliceMetricName].([]prometheus.Metric)
-					if !ok {
-						slice = make([]prometheus.Metric, 0)
-					}
-
-					// Append the current metric to the slice for this sub-group.
-					subGroupMetrics[sliceMetricName] = append(slice, metric)
-				}
-
-				// 2. Generate the Entity Type ONCE, using the original entityID for context.
-				generatedEntityType, err := specGroup.TypeGenerator(groupLabel, entityID, config.Groups, config.ClusterName)
-				if err != nil {
-					errs = append(errs, fmt.Errorf("error generating entity type for %s: %s", entityID, err))
-					continue
-				}
-
-				// 3. Loop through the created sub-groups and create a unique entity for each.
-				for _, subGroupMetrics := range subGroups {
-					// This is the new, unique ID for our sub-entity.
-					//subEntityID := fmt.Sprintf("%s_%s", entityID, subGroupKey)
-					subEntityID := entityID
-
-					// Create the entity directly with the new ID and the generated type.
-					e, err := config.Integration.Entity(subEntityID, generatedEntityType)
-					if err != nil {
-						errs = append(errs, err)
-						continue
-					}
-
-					// Add standard attributes.
-					extraAttributes := []attribute.Attribute{
-						attribute.Attr("clusterName", config.ClusterName),
-						attribute.Attr("displayName", e.Metadata.Name),
-					}
-					e.AddAttributes(extraAttributes...)
-
-					// Create the metric set.
-					msTypeGuesser := config.MsTypeGuesser
-					if customGuesser := specGroup.MsTypeGuesser; customGuesser != nil {
-						msTypeGuesser = customGuesser
-					}
-					msType, err := msTypeGuesser(groupLabel)
-					if err != nil {
-						errs = append(errs, err)
-						continue
-					}
-					ms := e.NewMetricSet(msType)
-
-					// Create a temporary, scoped RawGroups map for this sub-entity.
-					groupsForThisSubEntity := definition.RawGroups{
-						groupLabel: {
-							subEntityID: subGroupMetrics,
-						},
-					}
-
-					// Call metricSetPopulate with the correctly scoped data.
-					wasPopulated, populateErrs := metricSetPopulate(ms, groupLabel, subEntityID, groupsForThisSubEntity, config.Specs)
-					if len(populateErrs) > 0 {
-						errs = append(errs, populateErrs...)
-					}
-					if wasPopulated {
-						populated = true
-					}
-				}
-
-				// We're done with this group, continue to the next one.
+			unitsToProcess, err := prepareProcessingUnits(config, groupLabel, entityID, rawMetrics)
+			if err != nil {
+				errs = append(errs, err)
 				continue
 			}
 
-			// DEBUG: Announce that we are taking the default path.
-			fmt.Printf(">>> Populating SINGLE ENTITY with ID: %s\n", entityID)
+			for _, unit := range unitsToProcess {
+				e, err := config.Integration.Entity(unit.entityID, unit.entityType)
+				if err != nil {
+					errs = append(errs, err)
+					continue
+				}
 
-			singlePopulated, singleErrs := populateSingleEntity(config, groupLabel, entityID, rawMetrics, config.Groups)
-			if len(singleErrs) > 0 {
-				errs = append(errs, singleErrs...)
-			}
-			if singlePopulated {
-				populated = true
+				extraAttributes = append(
+					extraAttributes,
+					attribute.Attr("clusterName", config.ClusterName),
+					attribute.Attr("displayName", e.Metadata.Name),
+				)
+
+				// Add entity attributes, which will propagate to all metric.Sets.
+				// This was previously (on sdk v2) done by msManipulators.
+				e.AddAttributes(
+					extraAttributes...,
+				)
+
+				msTypeGuesser := config.MsTypeGuesser
+				if customGuesser := specGroup.MsTypeGuesser; customGuesser != nil {
+					msTypeGuesser = customGuesser
+				}
+				msType, err := msTypeGuesser(groupLabel)
+				if err != nil {
+					errs = append(errs, err)
+					continue
+				}
+				ms := e.NewMetricSet(msType)
+
+				groupsForThisEntity := definition.RawGroups{
+					groupLabel: {unit.entityID: unit.rawMetrics},
+				}
+
+				wasPopulated, populateErrs := metricSetPopulate(ms, groupLabel, unit.entityID, groupsForThisEntity, config.Specs)
+				if len(populateErrs) > 0 {
+					for _, err := range populateErrs {
+						errs = append(errs, fmt.Errorf("error populating metric for entity ID %s: %s", entityID, err))
+					}
+				}
+				if wasPopulated {
+					populated = true
+				}
 			}
 		}
 	}
@@ -182,82 +108,117 @@ func IntegrationPopulator(config *definition.IntegrationPopulateConfig) (bool, [
 	return populated, errs
 }
 
-// populateSingleEntity creates and populates a single entity in the integration.
-// It correctly scopes the data passed to the metric population step.
-func populateSingleEntity(config *definition.IntegrationPopulateConfig, groupLabel, entityID string, metrics definition.RawMetrics, allGroups definition.RawGroups) (bool, []error) {
-	var errs []error
-	var msEntityType string
+// prepareProcessingUnits prepares a slice of one or more processingUnits.
+func prepareProcessingUnits(config *definition.IntegrationPopulateConfig, groupLabel, entityID string, rawMetrics definition.RawMetrics) ([]processingUnit, error) {
+	specGroup := config.Specs[groupLabel]
 
-	// ID and Type Generators use the full 'allGroups' map for context if needed.
-	msEntityID := entityID
-	if generator := config.Specs[groupLabel].IDGenerator; generator != nil {
-		generatedEntityID, err := generator(groupLabel, entityID, allGroups)
+	if specGroup.SplitByLabel != "" {
+		subGroups, err := splitGroup(rawMetrics, specGroup.SliceMetricName, groupLabel, specGroup.SplitByLabel)
 		if err != nil {
-			return false, []error{fmt.Errorf("error generating entity ID for %s: %s", entityID, err)}
+			return nil, err
 		}
-		msEntityID = generatedEntityID
-	}
-
-	if generatorType := config.Specs[groupLabel].TypeGenerator; generatorType != nil {
-		generatedEntityType, err := generatorType(groupLabel, entityID, allGroups, config.ClusterName)
+		entityType, err := specGroup.TypeGenerator(groupLabel, entityID, config.Groups, config.ClusterName)
 		if err != nil {
-			return false, []error{fmt.Errorf("error generating entity type for %s: %s", entityID, err)}
+			return nil, fmt.Errorf("error generating entity type for parent %s: %w", entityID, err)
 		}
-		msEntityType = generatedEntityType
+		units := make([]processingUnit, 0, len(subGroups))
+		for subGroupKey, subGroupMetrics := range subGroups {
+			units = append(units, processingUnit{
+				entityID:   fmt.Sprintf("%s_%s", entityID, subGroupKey),
+				entityType: entityType,
+				rawMetrics: subGroupMetrics,
+			})
+		}
+		return units, nil
 	}
 
-	// Create the entity in the integration payload.
-	e, err := config.Integration.Entity(msEntityID, msEntityType)
-	if err != nil {
-		return false, []error{err}
+	finalEntityID := entityID // Start with the raw ID from the grouper.
+
+	if generator := specGroup.IDGenerator; generator != nil {
+		// The IDGenerator uses the raw entityID for its lookup.
+		generatedID, err := generator(groupLabel, entityID, config.Groups)
+		if err != nil {
+			return nil, fmt.Errorf("error generating entity ID for %s: %s", entityID, err)
+		}
+		finalEntityID = generatedID // Store the new ID for final use.
 	}
 
-	// Add common attributes.
-	extraAttributes := []attribute.Attribute{
-		attribute.Attr("clusterName", config.ClusterName),
-		attribute.Attr("displayName", e.Metadata.Name),
-	}
-	e.AddAttributes(extraAttributes...)
-
-	// Create the MetricSet for this entity.
-	msTypeGuesser := config.MsTypeGuesser
-	if customGuesser := config.Specs[groupLabel].MsTypeGuesser; customGuesser != nil {
-		msTypeGuesser = customGuesser
-	}
-	msType, err := msTypeGuesser(groupLabel)
-	if err != nil {
-		return false, []error{err}
+	var entityType string
+	if generatorType := specGroup.TypeGenerator; generatorType != nil {
+		generatedType, err := generatorType(groupLabel, entityID, config.Groups, config.ClusterName)
+		if err != nil {
+			return nil, fmt.Errorf("error generating entity type for %s: %s", entityID, err)
+		}
+		entityType = generatedType
 	}
 
-	ms := e.NewMetricSet(msType)
-
-	// Create a temporary, scoped RawGroups map containing only the metrics for this specific entity.
-	groupsForThisEntity := definition.RawGroups{
-		groupLabel: {
-			entityID: metrics,
+	return []processingUnit{
+		{
+			entityID:   finalEntityID,
+			entityType: entityType,
+			rawMetrics: rawMetrics,
 		},
+	}, nil
+
+	return []processingUnit{
+		{
+			entityID:   entityID,
+			entityType: entityType,
+			rawMetrics: rawMetrics,
+		},
+	}, nil
+}
+
+// splitGroup takes a RawMetrics map that contains a slice of metrics and splits
+// it into a map of smaller RawMetrics, partitioned by the unique values of the splitByLabel.
+func splitGroup(rawMetrics definition.RawMetrics, sliceMetricName, groupLabel, splitByLabel string) (map[string]definition.RawMetrics, error) {
+	if sliceMetricName == "" {
+		sliceMetricName = groupLabel
 	}
 
-	// Pass the correctly scoped map to metricSetPopulate.
-	wasPopulated, populateErrs := metricSetPopulate(ms, groupLabel, entityID, groupsForThisEntity, config.Specs)
-	if len(populateErrs) > 0 {
-		for _, err := range populateErrs {
-			errs = append(errs, fmt.Errorf("error populating metric for entity ID %s: %s", entityID, err))
+	mainMetricSlice, ok := rawMetrics[sliceMetricName].([]prometheus.Metric)
+	if !ok {
+		return nil, fmt.Errorf("group %q with SplitByLabel requires a slice of metrics for key %q, but found %T", groupLabel, sliceMetricName, rawMetrics[sliceMetricName])
+	}
+
+	subGroups := make(map[string]definition.RawMetrics)
+	for _, metric := range mainMetricSlice {
+		splitValue, ok := metric.Labels[splitByLabel]
+		if !ok {
+			continue // Skip metrics that don't have the label to split by.
 		}
+
+		// Get or create the RawMetrics map for this sub-group key (e.g., "secrets").
+		subGroupMetrics, exists := subGroups[splitValue]
+		if !exists {
+			subGroupMetrics = make(definition.RawMetrics)
+			// Copy shared metrics (like _created, _labels) from the parent group just once.
+			for k, v := range rawMetrics {
+				if k != sliceMetricName { // Do not copy the large, unfiltered slice itself.
+					subGroupMetrics[k] = v
+				}
+			}
+			subGroups[splitValue] = subGroupMetrics
+		}
+
+		// Get or create the metric slice within the sub-group's map.
+		slice, ok := subGroupMetrics[sliceMetricName].([]prometheus.Metric)
+		if !ok {
+			slice = make([]prometheus.Metric, 0)
+		}
+
+		// Append the current metric to the slice for this sub-group.
+		subGroupMetrics[sliceMetricName] = append(slice, metric)
 	}
 
-	return wasPopulated, errs
+	return subGroups, nil
 }
 
 func metricSetPopulate(ms *metric.Set, groupLabel, entityID string, groups definition.RawGroups, specs definition.SpecGroups) (populated bool, errs []error) {
-	// DEBUG: Print the entity this metric set belongs to.
-	fmt.Printf("--- Populating metrics for Entity: %s ---\n", entityID)
-
 	for _, ex := range specs[groupLabel].Specs {
 		val, err := ex.ValueFunc(groupLabel, entityID, groups)
 		if err != nil {
 			if !ex.Optional {
-				fmt.Printf("  [ERROR] Cannot fetch value for metric %q: %v\n", ex.Name, err)
 				errs = append(errs, fmt.Errorf("cannot fetch value for metric %q: %w", ex.Name, err))
 			}
 			continue
@@ -267,21 +228,8 @@ func metricSetPopulate(ms *metric.Set, groupLabel, entityID string, groups defin
 			continue // Skip nil values
 		}
 
-		if typedMultiple, ok := val.(definition.FetchedTypedValues); ok {
-			for k, typedV := range typedMultiple {
-				// Use the type from the value (typedV.Type) instead of the spec (ex.Type).
-				err := ms.SetMetric(k, typedV.Value, typedV.Type)
-				if err != nil { /* ... error handling ... */
-					errs = append(errs, fmt.Errorf("cannot set metric %s with value %v in metric set, %s", k, typedV.Value, err))
-				}
-				populated = true
-			}
-			// Fallback to the original logic for older ValueFuncs.
-		} else if multiple, ok := val.(definition.FetchedValues); ok {
+		if multiple, ok := val.(definition.FetchedValues); ok {
 			for k, v := range multiple {
-				// DEBUG: Print each key-value pair from a multi-value fetcher.
-				fmt.Printf("  [Metric] Key: %-30s | Value: %v\n", k, v)
-
 				err := ms.SetMetric(k, v, ex.Type)
 				if err != nil {
 					if !ex.Optional {
@@ -292,9 +240,6 @@ func metricSetPopulate(ms *metric.Set, groupLabel, entityID string, groups defin
 				populated = true
 			}
 		} else {
-			// DEBUG: Print the key-value pair for a single-value fetcher.
-			fmt.Printf("  [Metric] Key: %-30s | Value: %v\n", ex.Name, val)
-
 			err := ms.SetMetric(ex.Name, val, ex.Type)
 			if err != nil {
 				if !ex.Optional {

@@ -1,4 +1,4 @@
-package definition_test
+package populator
 
 import (
 	"fmt"
@@ -250,7 +250,7 @@ func TestIntegrationPopulator_CorrectValue(t *testing.T) {
 	}
 	expectedEntityData2.Metrics = []*metric.Set{expectedMetricSet2}
 
-	populated, errs := definition.IntegrationPopulator(testConfig(intgr))
+	populated, errs := IntegrationPopulator(testConfig(intgr))
 	assert.True(t, populated)
 	assert.Empty(t, errs)
 	assert.Contains(t, intgr.Entities, expectedEntityData1)
@@ -300,7 +300,7 @@ func TestIntegrationPopulator_PartialResult(t *testing.T) {
 	config := testConfig(intgr)
 	config.Specs = metricSpecsWithIncompatibleType
 
-	populated, errs := definition.IntegrationPopulator(config)
+	populated, errs := IntegrationPopulator(config)
 	assert.True(t, populated)
 	assert.Contains(t, intgr.Entities, expectedEntityData1)
 	assert.Contains(t, intgr.Entities, expectedEntityData2)
@@ -319,7 +319,7 @@ func TestIntegrationPopulator_EntitiesDataNotPopulated_EmptyMetricGroups(t *test
 	config := testConfig(intgr)
 	config.Groups = metricGroupEmpty
 
-	populated, errs := definition.IntegrationPopulator(config)
+	populated, errs := IntegrationPopulator(config)
 	assert.False(t, populated)
 	assert.Nil(t, errs)
 	assert.Equal(t, expectedData, intgr.Entities)
@@ -346,7 +346,7 @@ func TestIntegrationPopulator_EntitiesDataNotPopulated_ErrorSettingEntities(t *t
 	config := testConfig(intgr)
 	config.Groups = metricGroupEmptyEntityID
 
-	populated, errs := definition.IntegrationPopulator(config)
+	populated, errs := IntegrationPopulator(config)
 	assert.False(t, populated)
 	assert.EqualError(t, errs[0], "entity name and type are required when defining one")
 	assert.Equal(t, expectedData, intgr.Entities)
@@ -392,7 +392,7 @@ func TestIntegrationPopulator_MetricsSetsNotPopulated_OnlyEntity(t *testing.T) {
 	config := testConfig(intgr)
 	config.Specs = metricSpecsIncorrect
 
-	populated, errs := definition.IntegrationPopulator(config)
+	populated, errs := IntegrationPopulator(config)
 
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
@@ -467,7 +467,7 @@ func TestIntegrationPopulator_EntityIDGenerator(t *testing.T) {
 	config.Groups = raw
 	config.Specs = withGeneratorSpec
 
-	populated, errs := definition.IntegrationPopulator(config)
+	populated, errs := IntegrationPopulator(config)
 
 	assert.True(t, populated)
 	assert.Empty(t, errs)
@@ -497,7 +497,7 @@ func TestIntegrationPopulator_EntityIDGeneratorFuncWithError(t *testing.T) {
 	config := testConfig(intgr)
 	config.Specs = specsWithGeneratorFuncError
 
-	populated, errs := definition.IntegrationPopulator(config)
+	populated, errs := IntegrationPopulator(config)
 
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
@@ -604,7 +604,7 @@ func TestIntegrationPopulator_PopulateOnlySpecifiedGroups(t *testing.T) {
 	config.Specs = withGeneratorSpec
 	config.Groups = groups
 
-	populated, errs := definition.IntegrationPopulator(config)
+	populated, errs := IntegrationPopulator(config)
 
 	assert.True(t, populated)
 	assert.Empty(t, errs)
@@ -659,7 +659,7 @@ func TestIntegrationPopulator_EntityTypeGeneratorFuncWithError(t *testing.T) {
 	config := testConfig(intgr)
 	config.Specs = specsWithGeneratorFuncError
 
-	populated, errs := definition.IntegrationPopulator(config)
+	populated, errs := IntegrationPopulator(config)
 
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
@@ -685,7 +685,7 @@ func TestIntegrationPopulator_msTypeGuesserFuncWithError(t *testing.T) {
 	config := testConfig(intgr)
 	config.MsTypeGuesser = msTypeGuesserFuncWithError
 
-	populated, errs := definition.IntegrationPopulator(config)
+	populated, errs := IntegrationPopulator(config)
 
 	assert.False(t, populated)
 	assert.Len(t, errs, 2)
@@ -698,7 +698,7 @@ func TestIntegrationPopulator_MetricFormatFilterNamespace(t *testing.T) {
 	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
 	require.NoError(t, err)
 
-	populated, errs := definition.IntegrationPopulator(testConfigMetricFormatWithFilterer(intgr))
+	populated, errs := IntegrationPopulator(testConfigMetricFormatWithFilterer(intgr))
 
 	assert.True(t, populated)
 	// Only cluster entity and nsB
@@ -710,7 +710,7 @@ func TestIntegrationPopulator_PrometheusFormatFilterNamespace(t *testing.T) {
 	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
 	require.NoError(t, err)
 
-	populated, errs := definition.IntegrationPopulator(testConfigPrometheusFormatWithFilterer(intgr))
+	populated, errs := IntegrationPopulator(testConfigPrometheusFormatWithFilterer(intgr))
 
 	assert.True(t, populated)
 	// Only cluster entity, nsB test entities and namespace group entities
@@ -754,7 +754,7 @@ func TestIntegrationPopulator_CustomMsTypeGuesser(t *testing.T) { //nolint: para
 		},
 	}
 
-	populated, errs := definition.IntegrationPopulator(config)
+	populated, errs := IntegrationPopulator(config)
 	assert.True(t, populated)
 	assert.Empty(t, errs)
 	for _, e := range intgr.Entities {
@@ -784,10 +784,128 @@ func TestIntegrationPopulator_IntegrationVersionInInventory(t *testing.T) {
 	err = expectedInventory.SetItem("cluster", "newrelic.integrationName", "com.newrelic.kubernetes")
 	require.NoError(t, err)
 
-	populated, errs := definition.IntegrationPopulator(config)
+	populated, errs := IntegrationPopulator(config)
 	assert.True(t, populated)
 	assert.Empty(t, errs)
 	assert.Equal(t, intgr.Entities[2].Inventory, expectedInventory)
+}
+
+// In populator_test.go
+
+func TestPrepareProcessingUnits(t *testing.T) {
+	// --- Mock Data and Specs for the test ---
+
+	// Mock Spec for a simple, single-entity group.
+	singleEntitySpec := definition.SpecGroup{
+		IDGenerator: func(groupLabel, rawEntityID string, g definition.RawGroups) (string, error) {
+			return fmt.Sprintf("%s-generated", rawEntityID), nil
+		},
+		TypeGenerator: func(groupLabel string, rawEntityID string, g definition.RawGroups, clusterName string) (string, error) {
+			return "k8s:test:single", nil
+		},
+	}
+
+	// Mock Spec for a group that needs to be split.
+	splitEntitySpec := definition.SpecGroup{
+		TypeGenerator: func(groupLabel string, rawEntityID string, g definition.RawGroups, clusterName string) (string, error) {
+			return "k8s:test:resourcequota", nil
+		},
+		SplitByLabel:    "resource",
+		SliceMetricName: "kube_resourcequota",
+	}
+
+	// Mock RawMetrics for the split group.
+	splitRawMetrics := definition.RawMetrics{
+		"kube_resourcequota_created": prometheus.Metric{Value: prometheus.GaugeValue(123)},
+		"kube_resourcequota": []prometheus.Metric{
+			{Labels: prometheus.Labels{"resource": "pods", "type": "hard"}, Value: prometheus.GaugeValue(10)},
+			{Labels: prometheus.Labels{"resource": "secrets", "type": "hard"}, Value: prometheus.GaugeValue(20)},
+			{Labels: prometheus.Labels{"resource": "pods", "type": "used"}, Value: prometheus.GaugeValue(5)},
+		},
+	}
+
+	// --- Test Cases ---
+
+	testCases := []struct {
+		name          string
+		groupLabel    string
+		entityID      string
+		rawMetrics    definition.RawMetrics
+		specGroup     definition.SpecGroup
+		expectedUnits int
+		assertFunc    func(t *testing.T, units []processingUnit)
+	}{
+		{
+			name:          "Single_Entity_Path",
+			groupLabel:    "test",
+			entityID:      "single-entity-01",
+			rawMetrics:    definition.RawMetrics{"metric1": 1},
+			specGroup:     singleEntitySpec,
+			expectedUnits: 1,
+			assertFunc: func(t *testing.T, units []processingUnit) {
+				assert.Equal(t, "single-entity-01-generated", units[0].entityID)
+				assert.Equal(t, "k8s:test:single", units[0].entityType)
+				assert.Equal(t, 1, units[0].rawMetrics["metric1"])
+			},
+		},
+		{
+			name:          "Split_By_Label_Path",
+			groupLabel:    "resourcequota",
+			entityID:      "parent_entity_id",
+			rawMetrics:    splitRawMetrics,
+			specGroup:     splitEntitySpec,
+			expectedUnits: 2, // Should split into "pods" and "secrets"
+			assertFunc: func(t *testing.T, units []processingUnit) {
+				// Find the "pods" sub-unit
+				var podsUnit processingUnit
+				for _, u := range units {
+					if strings.HasSuffix(u.entityID, "_pods") {
+						podsUnit = u
+						break
+					}
+				}
+				require.NotNil(t, podsUnit.rawMetrics, "pods unit not found")
+				assert.Equal(t, "parent_entity_id_pods", podsUnit.entityID)
+				assert.Equal(t, "k8s:test:resourcequota", podsUnit.entityType)
+
+				// Check that shared metrics were copied
+				assert.Contains(t, podsUnit.rawMetrics, "kube_resourcequota_created")
+
+				// Check that the slice was correctly filtered (should only have 2 pod metrics)
+				podMetrics, ok := podsUnit.rawMetrics["kube_resourcequota"].([]prometheus.Metric)
+				require.True(t, ok)
+				assert.Len(t, podMetrics, 2)
+				assert.Equal(t, "pods", podMetrics[0].Labels["resource"])
+				assert.Equal(t, "pods", podMetrics[1].Labels["resource"])
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			config := &definition.IntegrationPopulateConfig{
+				// We only need Groups and Specs for this test.
+				Groups: definition.RawGroups{
+					tc.groupLabel: {
+						tc.entityID: tc.rawMetrics,
+					},
+				},
+				Specs: definition.SpecGroups{
+					tc.groupLabel: tc.specGroup,
+				},
+			}
+
+			// --- Execute the function under test ---
+			units, err := prepareProcessingUnits(config, tc.groupLabel, tc.entityID, tc.rawMetrics)
+
+			// --- Assertions ---
+			require.NoError(t, err)
+			require.Len(t, units, tc.expectedUnits)
+			if tc.assertFunc != nil {
+				tc.assertFunc(t, units)
+			}
+		})
+	}
 }
 
 type NamespaceFilterMock struct{}

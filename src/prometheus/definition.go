@@ -1,7 +1,6 @@
 package prometheus
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -9,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	sdkMetric "github.com/newrelic/infra-integrations-sdk/data/metric"
 	model "github.com/prometheus/client_model/go"
 
 	"github.com/newrelic/nri-kubernetes/v3/src/definition"
@@ -464,70 +462,75 @@ func FromValueWithOverriddenName(metricName string, nameOverride string, labelsF
 	}
 }
 
-// FromLabelValue creates a FetchFunc that fetches values from prometheus metrics labels.
+// FromLabelValue creates a FetchFunc that fetches a value from a Prometheus metric's label.
+//
+// It is a higher-order function that takes the source metric name (`key`) and the desired
+// label name (`label`) and returns a FetchFunc.
+//
+// The returned function is robust and can handle two types of raw metric data:
+//   - A single Metric: It will look for the label on that metric.
+//   - A slice of Metrics ([]Metric): It will look for the label on the *first* metric
+//     in the slice, assuming the label is consistent across all metrics in the group.
+//
+// It returns an error if the source metric is not found, if the data is of an
+// unexpected type, or if the specified label does not exist on the metric.
 func FromLabelValue(key, label string) definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 		value, err := definition.FromRaw(key)(groupLabel, entityID, groups)
 		if err != nil {
-			return nil, err
+			return nil, err // Propagate errors from the underlying fetcher.
 		}
 
-		v, ok := value.(Metric)
-		if !ok {
-			return nil, fmt.Errorf("incompatible metric type. Expected: Metric. Got: %T", value)
-		}
+		var l string
+		var ok bool
 
-		l, ok := v.Labels[label]
-		if !ok {
-			return nil, errors.New("label not found in prometheus metric")
+		switch v := value.(type) {
+		case Metric:
+			l, ok = v.Labels[label]
+			if !ok {
+				return nil, fmt.Errorf("label %q not found on metric %q", label, key)
+			}
+		case []Metric:
+			if len(v) == 0 {
+				return nil, fmt.Errorf("metric slice for key %q was empty", key)
+			}
+			// Assume the label is consistent across all metrics in the slice.
+			l, ok = v[0].Labels[label]
+			if !ok {
+				return nil, fmt.Errorf("label %q not found in the first metric for key %q", label, key)
+			}
+		default:
+			return nil, fmt.Errorf("incompatible metric type for %q. Expected: Metric or []Metric. Got: %T", key, value)
 		}
 
 		return l, nil
 	}
 }
 
-// FromSliceMetricUnpacker creates a FetchFunc that takes a slice of metrics
-// and unpacks it. It creates one attribute from a specified label (attributeKeyLabel)
-// and then creates metrics from another label (metricKeyLabel).
+// FromFlattenedMetrics creates a FetchFunc that processes a slice of metrics
+// and "unpacks" it into a flat map of metrics.
 //
-// For example, given the 'kube_resourcequota' slice, it can create:
-// attribute 'resource: "pods"' and metrics 'hard: 10', 'used: 5'.
-func FromSliceMetricUnpacker(metricName, attributeKeyLabel, metricKeyLabel string) definition.FetchFunc {
-	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
-		rawMetrics, err := definition.FromRaw(metricName)(groupLabel, entityID, groups)
-		if err != nil {
-			return nil, err
-		}
-		metrics, ok := rawMetrics.([]Metric)
-		if !ok || len(metrics) == 0 {
-			return nil, nil // No data is not an error.
-		}
-
-		fetchedValues := make(definition.FetchedValues)
-
-		// 1. Create the main attribute (e.g., resource: "pods").
-		//    The value is the same for all metrics in the pre-filtered slice.
-		attributeValue, ok := metrics[0].Labels[attributeKeyLabel]
-		if !ok {
-			return nil, fmt.Errorf("metric is missing the required attribute label '%s'", attributeKeyLabel)
-		}
-		fetchedValues[attributeKeyLabel] = attributeValue
-
-		// 2. Loop to create the individual metrics (e.g., hard: 10, used: 1).
-		for _, m := range metrics {
-			metricKey, ok := m.Labels[metricKeyLabel]
-			if !ok {
-				continue
-			}
-			metricKey = fmt.Sprintf("%s (%s)", metricKey, metricKeyLabel)
-			fetchedValues[metricKey] = m.Value
-		}
-
-		return fetchedValues, nil
-	}
-}
-
-func FromSliceMetricUnpackerTyped(metricName, attributeKeyLabel, metricKeyLabel string) definition.FetchFunc {
+// It is designed for Prometheus metrics where multiple time series represent different
+// aspects of a single logical entity, like kube_resourcequota.
+//
+// Parameters:
+//   - metricName: The name of the metric in the RawMetrics map that holds the slice (e.g., "kube_resourcequota").
+//   - metricKeyLabel: The label on the source metrics whose value will become the key for the unpacked numeric metrics (e.g., "type", which has values "hard" and "used").
+//
+// Example:
+//
+// Given a slice of metrics like:
+//
+//	Metric{Labels: {"resource": "pods", "type": "hard"}, Value: 10}
+//	Metric{Labels: {"resource": "pods", "type": "used"}, Value: 8}
+//
+// Calling FromFlattenedMetrics("...", "type") will produce:
+//
+//	{
+//	  "hard": 10,
+//	  "used": 8,
+//	}
+func FromFlattenedMetrics(metricName, metricKeyLabel string) definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 		rawMetrics, err := definition.FromRaw(metricName)(groupLabel, entityID, groups)
 		if err != nil {
@@ -536,80 +539,20 @@ func FromSliceMetricUnpackerTyped(metricName, attributeKeyLabel, metricKeyLabel 
 
 		metrics, ok := rawMetrics.([]Metric)
 		if !ok || len(metrics) == 0 {
+			// No data to process is not an error.
 			return nil, nil
 		}
 
-		// This now returns our new FetchedTypedValues map.
-		fetchedValues := make(definition.FetchedTypedValues)
+		fetchedValues := make(definition.FetchedValues)
 
-		// 1. Create the main attribute.
-		attributeValue, ok := metrics[0].Labels[attributeKeyLabel]
-		if !ok {
-			return nil, fmt.Errorf("metric is missing required label '%s'", attributeKeyLabel)
-		}
-
-		// Assign the value AND its type.
-		fetchedValues[attributeKeyLabel] = definition.TypedValue{
-			Value: attributeValue,
-			Type:  sdkMetric.ATTRIBUTE,
-		}
-
-		// 2. Loop to create the individual metrics.
+		// Loop through the slice to create the individual numeric metrics.
 		for _, m := range metrics {
 			metricKey, ok := m.Labels[metricKeyLabel]
 			if !ok {
+				// Skip any metric in the slice that doesn't have the key label.
 				continue
 			}
-			// Assign the value AND its type.
-			fetchedValues[metricKey] = definition.TypedValue{
-				Value: m.Value,
-				Type:  sdkMetric.GAUGE,
-			}
-		}
-
-		return fetchedValues, nil
-	}
-}
-
-// FromSliceMetricAggregation creates a FetchFunc that processes a slice of metrics,
-// aggregates them by a "resource" and "type" label, and returns a map of
-// JSON strings. It is a generic version of FromResourceQuotasAggregation.
-func FromSliceMetricAggregation(metricName string) definition.FetchFunc {
-	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
-		rawMetrics, err := definition.FromRaw(metricName)(groupLabel, entityID, groups)
-		if err != nil {
-			return nil, fmt.Errorf("could not fetch data for metric %q: %w", metricName, err)
-		}
-
-		metrics, ok := rawMetrics.([]Metric)
-		if !ok {
-			return nil, fmt.Errorf("expected metric type for %q to be []Metric, but it was not", metricName)
-		}
-
-		aggregatedValues := make(map[string]map[string]interface{})
-
-		for _, m := range metrics {
-			resource, okResource := m.Labels["resource"]
-			quotaType, okType := m.Labels["type"]
-
-			if !okResource || !okType {
-				continue
-			}
-
-			if _, ok := aggregatedValues[resource]; !ok {
-				aggregatedValues[resource] = make(map[string]interface{})
-			}
-
-			aggregatedValues[resource][quotaType] = m.Value
-		}
-
-		fetchedValues := make(definition.FetchedValues)
-		for resource, values := range aggregatedValues {
-			jsonValue, err := json.Marshal(values)
-			if err != nil {
-				return nil, fmt.Errorf("could not marshal data for resource '%s' to JSON: %w", resource, err)
-			}
-			fetchedValues[resource] = string(jsonValue)
+			fetchedValues[metricKey] = m.Value
 		}
 
 		return fetchedValues, nil
@@ -977,12 +920,6 @@ func labelsFromMetric(
 func InheritAllLabelsFrom(parentGroupLabel, relatedMetricKey string) definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 		return labelsFromMetric(parentGroupLabel, relatedMetricKey, groupLabel, entityID, groups, "label")
-	}
-}
-
-func InheritAllAnnotationsFrom(parentGroupLabel, relatedMetricKey string) definition.FetchFunc {
-	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
-		return labelsFromMetric(parentGroupLabel, relatedMetricKey, groupLabel, entityID, groups, "annotation")
 	}
 }
 

@@ -971,13 +971,20 @@ var KSMSpecs = definition.SpecGroups{
 				Type: sdkMetric.ATTRIBUTE,
 			},
 			{
+				Name: "resource", // This will be the name of your new column.
+				ValueFunc: prometheus.FromLabelValue(
+					"kube_resourcequota", // The stable source metric.
+					"resource",           // The label to extract the value from.
+				),
+				Type: sdkMetric.ATTRIBUTE,
+			},
+			{
 				Name: "resource.*",
 				// This single entry uses our new generic function to create the 'resource' attribute
 				// and the 'hard' and 'used' metrics for each sub-entity.
-				ValueFunc: prometheus.FromSliceMetricUnpackerTyped(
-					"kube_resourcequota", // The metric name holding the slice.
-					"resource",           // The label to use for the main attribute's value.
-					"type",               // The label to use for the metric keys ('hard'/'used').
+				ValueFunc: prometheus.FromFlattenedMetrics(
+					"kube_resourcequota",
+					"type",
 				),
 				Type: sdkMetric.GAUGE,
 			},

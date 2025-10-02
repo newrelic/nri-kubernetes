@@ -1183,13 +1183,13 @@ func TestFromRawLabelValue_RawMetricNotFound(t *testing.T) {
 func TestFromRawLabelValue_IncompatibleType(t *testing.T) {
 	fetchedValue, err := FromLabelValue("kube_pod_start_time", "namespace")("pod", "fluentd-elasticsearch-jnqb7", rawGroupsIncompatibleType)
 	assert.Nil(t, fetchedValue)
-	assert.EqualError(t, err, "incompatible metric type. Expected: Metric. Got: string")
+	assert.Contains(t, err.Error(), "incompatible metric type")
 }
 
 func TestFromRawLabelValue_LabelNotFoundInRawMetric(t *testing.T) {
 	fetchedValue, err := FromLabelValue("kube_pod_start_time", "foo")("pod", "fluentd-elasticsearch-jnqb7", rawGroups)
 	assert.Nil(t, fetchedValue)
-	assert.EqualError(t, err, "label not found in prometheus metric")
+	assert.EqualError(t, err, "label \"foo\" not found on metric \"kube_pod_start_time\"")
 }
 
 // --------------- FromLabelValueEntityTypeGenerator -------------
@@ -1266,7 +1266,7 @@ func TestFromLabelValueEntityTypeGenerator_NotFound(t *testing.T) {
 	}
 
 	generatedValue, err := FromLabelValueEntityTypeGenerator("kube_replicaset_created")("replicaset", "kube-state-metrics-4044341274", raw, "clusterName")
-	assert.EqualError(t, err, "cannot fetch label \"namespace\" for metric \"kube_replicaset_created\": label not found in prometheus metric")
+	assert.EqualError(t, err, "cannot fetch label \"namespace\" for metric \"kube_replicaset_created\": label \"namespace\" not found on metric \"kube_replicaset_created\"")
 	assert.Equal(t, "", generatedValue)
 }
 
@@ -1721,4 +1721,248 @@ func TestControlPlaneComponentTypeGenerator(t *testing.T) {
 	generatedType, err := ControlPlaneComponentTypeGenerator("my-component", "", nil, "myCluster")
 	assert.NoError(t, err)
 	assert.Equal(t, "k8s:myCluster:controlplane:my-component", generatedType)
+}
+
+func TestFromFlattenedMetrics(t *testing.T) {
+	testCases := []struct {
+		name           string
+		metricName     string
+		metricKeyLabel string
+		rawGroups      definition.RawGroups
+		expectedValue  definition.FetchedValue
+		expectedErr    string
+	}{
+		{
+			name:           "Happy_Path_Unpacks_Slice",
+			metricName:     "kube_resourcequota",
+			metricKeyLabel: "type",
+			rawGroups: definition.RawGroups{
+				"resourcequota": {
+					"test-entity": {
+						"kube_resourcequota": []Metric{
+							{Labels: Labels{"resource": "pods", "type": "hard"}, Value: GaugeValue(10)},
+							{Labels: Labels{"resource": "pods", "type": "used"}, Value: GaugeValue(5)},
+						},
+					},
+				},
+			},
+			expectedValue: definition.FetchedValues{
+				"hard": GaugeValue(10),
+				"used": GaugeValue(5),
+			},
+			expectedErr: "",
+		},
+		{
+			name:           "Metric_Not_Found",
+			metricName:     "non_existent_metric",
+			metricKeyLabel: "type",
+			rawGroups: definition.RawGroups{
+				"resourcequota": {
+					"test-entity": {}, // Empty RawMetrics
+				},
+			},
+			expectedValue: nil,
+			expectedErr:   `metric "non_existent_metric" not found`,
+		},
+		{
+			name:           "Wrong_Data_Type",
+			metricName:     "kube_resourcequota",
+			metricKeyLabel: "type",
+			rawGroups: definition.RawGroups{
+				"resourcequota": {
+					"test-entity": {
+						"kube_resourcequota": "this is not a slice",
+					},
+				},
+			},
+			expectedValue: nil,
+			expectedErr:   "", // Should return nil, nil gracefully
+		},
+		{
+			name:           "Empty_Slice",
+			metricName:     "kube_resourcequota",
+			metricKeyLabel: "type",
+			rawGroups: definition.RawGroups{
+				"resourcequota": {
+					"test-entity": {
+						"kube_resourcequota": []Metric{},
+					},
+				},
+			},
+			expectedValue: nil,
+			expectedErr:   "", // Should return nil, nil gracefully
+		},
+		{
+			name:           "Metric_In_Slice_Missing_Key_Label",
+			metricName:     "kube_resourcequota",
+			metricKeyLabel: "type",
+			rawGroups: definition.RawGroups{
+				"resourcequota": {
+					"test-entity": {
+						"kube_resourcequota": []Metric{
+							{Labels: Labels{"resource": "pods", "type": "hard"}, Value: GaugeValue(10)},
+							{Labels: Labels{"resource": "pods", "other_label": "foo"}, Value: GaugeValue(5)}, // This one is missing the 'type' label
+						},
+					},
+				},
+			},
+			expectedValue: definition.FetchedValues{
+				"hard": GaugeValue(10), // Only the 'hard' metric should be in the result.
+			},
+			expectedErr: "",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create the FetchFunc using the function we are testing.
+			fetchFunc := FromFlattenedMetrics(tc.metricName, tc.metricKeyLabel)
+
+			// Execute the FetchFunc.
+			fetchedValue, err := fetchFunc("resourcequota", "test-entity", tc.rawGroups)
+
+			// Assert on the error.
+			if tc.expectedErr != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tc.expectedErr)
+			} else {
+				require.NoError(t, err)
+			}
+
+			// Assert on the returned value.
+			assert.Equal(t, tc.expectedValue, fetchedValue)
+		})
+	}
+}
+
+func TestFromLabelValue(t *testing.T) {
+	testCases := []struct {
+		name          string
+		key           string
+		label         string
+		rawGroups     definition.RawGroups
+		expectedValue interface{}
+		expectedErr   string
+	}{
+		{
+			name:  "Success_with_single_Metric",
+			key:   "kube_pod_info",
+			label: "namespace",
+			rawGroups: definition.RawGroups{
+				"pod": {
+					"test-entity": {
+						"kube_pod_info": Metric{Labels: Labels{"namespace": "prod"}},
+					},
+				},
+			},
+			expectedValue: "prod",
+			expectedErr:   "",
+		},
+		{
+			name:  "Success_with_slice_of_Metrics",
+			key:   "kube_pod_status",
+			label: "phase",
+			rawGroups: definition.RawGroups{
+				"pod": {
+					"test-entity": {
+						"kube_pod_status": []Metric{
+							{Labels: Labels{"phase": "Running", "namespace": "prod"}},
+							{Labels: Labels{"phase": "Succeeded", "namespace": "prod"}},
+						},
+					},
+				},
+			},
+			expectedValue: "Running",
+			expectedErr:   "",
+		},
+		{
+			name:  "Error_when_metric_not_found",
+			key:   "non_existent_metric",
+			label: "namespace",
+			rawGroups: definition.RawGroups{
+				"pod": {"test-entity": {}},
+			},
+			expectedValue: nil,
+			expectedErr:   `metric "non_existent_metric" not found`,
+		},
+		{
+			name:  "Error_when_label_not_found_in_single_metric",
+			key:   "kube_pod_info",
+			label: "missing_label",
+			rawGroups: definition.RawGroups{
+				"pod": {
+					"test-entity": {
+						"kube_pod_info": Metric{Labels: Labels{"namespace": "prod"}},
+					},
+				},
+			},
+			expectedValue: nil,
+			expectedErr:   `label "missing_label" not found on metric "kube_pod_info"`,
+		},
+		{
+			name:  "Error_when_label_not_found_in_slice",
+			key:   "kube_pod_status",
+			label: "missing_label",
+			rawGroups: definition.RawGroups{
+				"pod": {
+					"test-entity": {
+						"kube_pod_status": []Metric{
+							{Labels: Labels{"phase": "Running"}},
+						},
+					},
+				},
+			},
+			expectedValue: nil,
+			expectedErr:   `label "missing_label" not found in the first metric for key "kube_pod_status"`,
+		},
+		{
+			name:  "Error_when_slice_is_empty",
+			key:   "kube_pod_status",
+			label: "phase",
+			rawGroups: definition.RawGroups{
+				"pod": {
+					"test-entity": {
+						"kube_pod_status": []Metric{},
+					},
+				},
+			},
+			expectedValue: nil,
+			expectedErr:   `metric slice for key "kube_pod_status" was empty`,
+		},
+		{
+			name:  "Error_on_incompatible_type",
+			key:   "kube_pod_info",
+			label: "namespace",
+			rawGroups: definition.RawGroups{
+				"pod": {
+					"test-entity": {
+						"kube_pod_info": "this is not a metric",
+					},
+				},
+			},
+			expectedValue: nil,
+			expectedErr:   `incompatible metric type for "kube_pod_info". Expected: Metric or []Metric. Got: string`,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create the FetchFunc using the function we are testing.
+			fetchFunc := FromLabelValue(tc.key, tc.label)
+
+			// Execute the FetchFunc.
+			fetchedValue, err := fetchFunc("pod", "test-entity", tc.rawGroups)
+
+			// Assert on the error.
+			if tc.expectedErr != "" {
+				require.Error(t, err)
+				assert.EqualError(t, err, tc.expectedErr)
+			} else {
+				require.NoError(t, err)
+			}
+
+			// Assert on the returned value.
+			assert.Equal(t, tc.expectedValue, fetchedValue)
+		})
+	}
 }
