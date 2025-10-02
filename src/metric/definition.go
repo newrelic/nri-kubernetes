@@ -946,6 +946,8 @@ var KSMSpecs = definition.SpecGroups{
 		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_resourcequota_created", "resourcequota"),
 		TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_resourcequota_created"),
 		NamespaceGetter: prometheus.FromLabelGetNamespace,
+		SplitByLabel:    "resource",
+		SliceMetricName: "kube_resourcequota",
 		Specs: []definition.Spec{
 			{
 				Name:      "createdAt",
@@ -961,18 +963,38 @@ var KSMSpecs = definition.SpecGroups{
 				Type: sdkMetric.ATTRIBUTE,
 			},
 			{
-				Name:      "resource.*",
-				ValueFunc: prometheus.FromResourceQuotasAggregation,
-				Type:      sdkMetric.ATTRIBUTE, // This type will be applied to all generated metrics.
+				Name: "resourcequotaName", // This will be the name of your new column.
+				ValueFunc: prometheus.FromLabelValue(
+					"kube_resourcequota_created", // The stable source metric.
+					"resourcequota",              // The label to extract the value from.
+				),
+				Type: sdkMetric.ATTRIBUTE,
 			},
 			{
-				Name:      "resourceQuotaName",
-				ValueFunc: prometheus.FromLabelValue("kube_resourcequota_created", "resourcequota"),
-				Type:      sdkMetric.ATTRIBUTE,
+				Name: "resource.*",
+				// This single entry uses our new generic function to create the 'resource' attribute
+				// and the 'hard' and 'used' metrics for each sub-entity.
+				ValueFunc: prometheus.FromSliceMetricUnpackerTyped(
+					"kube_resourcequota", // The metric name holding the slice.
+					"resource",           // The label to use for the main attribute's value.
+					"type",               // The label to use for the metric keys ('hard'/'used').
+				),
+				Type: sdkMetric.GAUGE,
 			},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("resourcequota", "kube_resourcequota_labels"), Type: sdkMetric.ATTRIBUTE, Optional: true},
-			{Name: "annotation.*", ValueFunc: prometheus.InheritAllAnnotationsFrom("resourcequota", "kube_resourcequota_annotations"), Type: sdkMetric.ATTRIBUTE, Optional: true},
-		},
+			{
+				Name: "label.*",
+				// This uses a generic function to fetch all Kubernetes labels.
+				ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_resourcequota_labels", "label"),
+				Type:      sdkMetric.ATTRIBUTE,
+				Optional:  true,
+			},
+			{
+				Name: "annotation.*",
+				// This uses a generic function to fetch all Kubernetes annotations.
+				ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_resourcequota_annotations", "annotation"),
+				Type:      sdkMetric.ATTRIBUTE,
+				Optional:  true,
+			}},
 	},
 }
 

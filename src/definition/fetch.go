@@ -2,6 +2,8 @@ package definition
 
 import (
 	"fmt"
+
+	"github.com/newrelic/infra-integrations-sdk/data/metric"
 )
 
 // RawValue is just any value from a raw metric.
@@ -33,6 +35,16 @@ type RawGroups map[string]map[string]RawMetrics
 
 // TransformFunc transforms a FetchedValue.
 type TransformFunc func(FetchedValue) (FetchedValue, error)
+
+// TypedValue holds a value and its specific metric source type.
+type TypedValue struct {
+	Value interface{}
+	Type  metric.SourceType
+}
+
+// FetchedTypedValues is a map of metric names to their TypedValue.
+// This is the new return type for our smart ValueFunc.
+type FetchedTypedValues map[string]TypedValue
 
 // FromRaw fetches metrics from raw metrics. Is the most simple use case.
 func FromRaw(metricKey string) FetchFunc {

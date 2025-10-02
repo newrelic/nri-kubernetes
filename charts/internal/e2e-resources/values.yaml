@@ -68,3 +68,10 @@ windows:
   is2019: false
 # -- Deploy resources on Windows Server 2022 nodes
   is2022: false
+
+# This key corresponds to the kube-state-metrics sub-chart
+kube-state-metrics:
+  extraArgs:
+    # Notice the hyphen (-) which makes this a list item in YAML
+    - --metric-labels-allowlist=resourcequotas=[team,environment,app.kubernetes.io/name]
+    - --metric-annotations-allowlist=resourcequotas=[owner,description]
