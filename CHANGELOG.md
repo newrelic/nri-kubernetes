@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### Added
+### enhancement
 - Add metrics for ResourceQuota
 
 ## v3.45.3 - 2025-09-29
