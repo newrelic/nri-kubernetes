@@ -814,6 +814,14 @@ func TestPrepareProcessingUnits(t *testing.T) {
 		SliceMetricName: "kube_resourcequota",
 	}
 
+	// Mock Spec with a failing IDGenerator.
+	idGeneratorFailsSpec := definition.SpecGroup{
+		IDGenerator: func(groupLabel, rawEntityID string, g definition.RawGroups) (string, error) {
+			return "", fmt.Errorf("id generator failed")
+		},
+		TypeGenerator: fromGroupEntityTypeGuessFunc,
+	}
+
 	// Mock RawMetrics for the split group.
 	splitRawMetrics := definition.RawMetrics{
 		"kube_resourcequota_created": prometheus.Metric{Value: prometheus.GaugeValue(123)},
@@ -833,6 +841,7 @@ func TestPrepareProcessingUnits(t *testing.T) {
 		rawMetrics    definition.RawMetrics
 		specGroup     definition.SpecGroup
 		expectedUnits int
+		expectedErr   string // Defines expected errors.
 		assertFunc    func(t *testing.T, units []processingUnit)
 	}{
 		{
@@ -854,9 +863,9 @@ func TestPrepareProcessingUnits(t *testing.T) {
 			entityID:      "parent_entity_id",
 			rawMetrics:    splitRawMetrics,
 			specGroup:     splitEntitySpec,
-			expectedUnits: 2, // Should split into "pods" and "secrets"
+			expectedUnits: 2, // Should split into "pods" and "secrets".
 			assertFunc: func(t *testing.T, units []processingUnit) {
-				// Find the "pods" sub-unit
+				// Find the "pods" sub-unit for detailed inspection.
 				var podsUnit processingUnit
 				for _, u := range units {
 					if strings.HasSuffix(u.entityID, "_pods") {
@@ -868,10 +877,10 @@ func TestPrepareProcessingUnits(t *testing.T) {
 				assert.Equal(t, "parent_entity_id_pods", podsUnit.entityID)
 				assert.Equal(t, "k8s:test:resourcequota", podsUnit.entityType)
 
-				// Check that shared metrics were copied
+				// Check that shared metrics were copied.
 				assert.Contains(t, podsUnit.rawMetrics, "kube_resourcequota_created")
 
-				// Check that the slice was correctly filtered (should only have 2 pod metrics)
+				// Check that the slice was correctly filtered (should only have 2 pod metrics).
 				podMetrics, ok := podsUnit.rawMetrics["kube_resourcequota"].([]prometheus.Metric)
 				require.True(t, ok)
 				assert.Len(t, podMetrics, 2)
@@ -879,12 +888,31 @@ func TestPrepareProcessingUnits(t *testing.T) {
 				assert.Equal(t, "pods", podMetrics[1].Labels["resource"])
 			},
 		},
+		{
+			name:       "Error_when_split_metric_is_not_a_slice",
+			groupLabel: "resourcequota",
+			entityID:   "parent_entity_id",
+			rawMetrics: definition.RawMetrics{
+				"kube_resourcequota": "this is a string, not a slice",
+			},
+			specGroup:     splitEntitySpec,
+			expectedUnits: 0,
+			expectedErr:   "requires a slice of metrics",
+		},
+		{
+			name:          "Error_on_IDGenerator_failure",
+			groupLabel:    "test",
+			entityID:      "single-entity-01",
+			rawMetrics:    definition.RawMetrics{"metric1": 1},
+			specGroup:     idGeneratorFailsSpec,
+			expectedUnits: 0,
+			expectedErr:   "id generator failed",
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			config := &definition.IntegrationPopulateConfig{
-				// We only need Groups and Specs for this test.
 				Groups: definition.RawGroups{
 					tc.groupLabel: {
 						tc.entityID: tc.rawMetrics,
@@ -899,7 +927,14 @@ func TestPrepareProcessingUnits(t *testing.T) {
 			units, err := prepareProcessingUnits(config, tc.groupLabel, tc.entityID, tc.rawMetrics)
 
 			// --- Assertions ---
-			require.NoError(t, err)
+			if tc.expectedErr != "" {
+				require.Error(t, err, "Expected an error but got none")
+				assert.Contains(t, err.Error(), tc.expectedErr, "Error message did not contain expected text")
+				return // Stop this test case.
+			}
+
+			// If no error was expected.
+			require.NoError(t, err, "Did not expect an error")
 			require.Len(t, units, tc.expectedUnits)
 			if tc.assertFunc != nil {
 				tc.assertFunc(t, units)
@@ -955,6 +990,51 @@ func TestPopulateCluster(t *testing.T) {
 	assert.Equal(t, "K8sClusterSample", metricSet.Metrics["event_type"])
 	assert.Equal(t, clusterName, metricSet.Metrics["clusterName"])
 	assert.Equal(t, k8sVersionStr, metricSet.Metrics["clusterK8sVersion"])
+}
+
+func TestMetricSetPopulate_SkipsNilValues(t *testing.T) {
+	// 1. Setup
+	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
+	require.NoError(t, err)
+
+	// Create a spec with one metric that is required, and one that will return nil.
+	specs := definition.SpecGroups{
+		"test": {
+			Specs: []definition.Spec{
+				{
+					Name: "good_metric",
+					ValueFunc: func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
+						return "good_value", nil
+					},
+					Type: metric.ATTRIBUTE,
+				},
+				{
+					Name: "nil_metric",
+					ValueFunc: func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
+						return nil, nil // Return a nil value and no error.
+					},
+					Type:     metric.ATTRIBUTE,
+					Optional: false, // Mark as not optional to ensure no error is generated.
+				},
+			},
+		},
+	}
+
+	// Create an entity and a metric set to populate.
+	e, _ := intgr.Entity("test-entity", "k8s:test")
+	ms := e.NewMetricSet("TestSample")
+	groups := definition.RawGroups{"test": {"test-entity": {}}}
+
+	// 2. Execute
+	populated, errs := metricSetPopulate(ms, "test", "test-entity", groups, specs)
+
+	// 3. Assert
+	assert.True(t, populated, "Expected populated to be true because one metric was set")
+	assert.Empty(t, errs, "Expected no errors because nil value should be skipped")
+
+	// Verify that only the non-nil metric was added to the metric set.
+	assert.Equal(t, "good_value", ms.Metrics["good_metric"])
+	assert.NotContains(t, ms.Metrics, "nil_metric")
 }
 
 type NamespaceFilterMock struct{}
