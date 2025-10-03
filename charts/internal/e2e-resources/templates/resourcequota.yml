@@ -22,6 +22,15 @@ kind: ResourceQuota
 metadata:
   name: nri-test-namespace-quota
   namespace: nri-test-namespace
+  labels:
+    # Labels are for identifying and selecting objects.
+    team: "k8-team"
+  annotations:
+    # Annotations are for non-identifying metadata, perfect for soft limits.
+    # These are NOT enforced by Kubernetes.
+    "newrelic.com/soft-limit.pods": "8" # A warning threshold at 80% of the hard limit.
+    "newrelic.com/soft-limit.requests.cpu": "800m" # A warning at 80% of the 1-core request limit.
+    "description": "Hard and soft resource limits for the nri-test-namespace."
 spec:
   hard:
     pods: "10"
