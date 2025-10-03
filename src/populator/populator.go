@@ -1,6 +1,7 @@
 package populator
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -9,6 +10,13 @@ import (
 	"github.com/newrelic/infra-integrations-sdk/integration"
 	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
+)
+
+var (
+	ErrGroupNotASlice = errors.New("group requires a slice of metrics")
+	ErrGenerateID     = errors.New("could not generate entity ID")
+	ErrGenerateType   = errors.New("could not generate entity type")
+	ErrSetMetric      = errors.New("could not set metric")
 )
 
 // processingUnit holds all the pre-calculated information needed to create and populate a single entity.
@@ -89,7 +97,7 @@ func IntegrationPopulator(config *definition.IntegrationPopulateConfig) (bool, [
 				wasPopulated, populateErrs := metricSetPopulate(ms, groupLabel, unit.entityID, groupsForThisEntity, config.Specs)
 				if len(populateErrs) > 0 {
 					for _, err := range populateErrs {
-						errs = append(errs, fmt.Errorf("error populating metric for entity ID %s: %s", entityID, err))
+						errs = append(errs, fmt.Errorf("error populating metric for entity ID %s: %w", entityID, err))
 					}
 				}
 				if wasPopulated {
@@ -138,7 +146,7 @@ func prepareProcessingUnits(config *definition.IntegrationPopulateConfig, groupL
 		// The IDGenerator uses the raw entityID for its lookup.
 		generatedID, err := generator(groupLabel, entityID, config.Groups)
 		if err != nil {
-			return nil, fmt.Errorf("error generating entity ID for %s: %s", entityID, err)
+			return nil, fmt.Errorf("%w for %s: %w", ErrGenerateID, entityID, err)
 		}
 		finalEntityID = generatedID // Store the new ID for final use.
 	}
@@ -147,7 +155,7 @@ func prepareProcessingUnits(config *definition.IntegrationPopulateConfig, groupL
 	if generatorType := specGroup.TypeGenerator; generatorType != nil {
 		generatedType, err := generatorType(groupLabel, entityID, config.Groups, config.ClusterName)
 		if err != nil {
-			return nil, fmt.Errorf("error generating entity type for %s: %s", entityID, err)
+			return nil, fmt.Errorf("%w for %s: %w", ErrGenerateType, entityID, err)
 		}
 		entityType = generatedType
 	}
@@ -155,14 +163,6 @@ func prepareProcessingUnits(config *definition.IntegrationPopulateConfig, groupL
 	return []processingUnit{
 		{
 			entityID:   finalEntityID,
-			entityType: entityType,
-			rawMetrics: rawMetrics,
-		},
-	}, nil
-
-	return []processingUnit{
-		{
-			entityID:   entityID,
 			entityType: entityType,
 			rawMetrics: rawMetrics,
 		},
@@ -178,7 +178,7 @@ func splitGroup(rawMetrics definition.RawMetrics, sliceMetricName, groupLabel, s
 
 	mainMetricSlice, ok := rawMetrics[sliceMetricName].([]prometheus.Metric)
 	if !ok {
-		return nil, fmt.Errorf("group %q with SplitByLabel requires a slice of metrics for key %q, but found %T", groupLabel, sliceMetricName, rawMetrics[sliceMetricName])
+		return nil, fmt.Errorf("group %q key %q: %w", groupLabel, sliceMetricName, ErrGroupNotASlice)
 	}
 
 	subGroups := make(map[string]definition.RawMetrics)
@@ -233,7 +233,7 @@ func metricSetPopulate(ms *metric.Set, groupLabel, entityID string, groups defin
 				err := ms.SetMetric(k, v, ex.Type)
 				if err != nil {
 					if !ex.Optional {
-						errs = append(errs, fmt.Errorf("cannot set metric %s with value %v in metric set, %s", k, v, err))
+						errs = append(errs, fmt.Errorf("%w %q on entity %q: %w", ErrSetMetric, k, entityID, err))
 					}
 					continue
 				}
@@ -243,21 +243,20 @@ func metricSetPopulate(ms *metric.Set, groupLabel, entityID string, groups defin
 			err := ms.SetMetric(ex.Name, val, ex.Type)
 			if err != nil {
 				if !ex.Optional {
-					errs = append(errs, fmt.Errorf("cannot set metric %s with value %v in metric set, %s", ex.Name, val, err))
+					errs = append(errs, fmt.Errorf("%w %q on entity %q: %w", ErrSetMetric, ex.Name, entityID, err))
 				}
 				continue
 			}
 			populated = true
 		}
 	}
-
 	return
 }
 
 func populateCluster(i *integration.Integration, clusterName string, k8sVersion fmt.Stringer) error {
 	e, err := i.Entity(clusterName, "k8s:cluster")
 	if err != nil {
-		return err
+		return fmt.Errorf("could not create cluster entity: %w", err)
 	}
 	ms := e.NewMetricSet("K8sClusterSample")
 
