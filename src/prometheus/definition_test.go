@@ -1966,3 +1966,99 @@ func TestFromLabelValue(t *testing.T) {
 		})
 	}
 }
+
+func TestFromMetricWithPrefixedLabels(t *testing.T) {
+	testCases := []struct {
+		name          string
+		metricName    string
+		prefix        string
+		rawGroups     definition.RawGroups
+		expectedValue definition.FetchedValue
+		expectedErr   string
+	}{
+		{
+			name:       "Happy_Path_Extracts_And_Formats_Labels",
+			metricName: "kube_pod_labels",
+			prefix:     "label",
+			rawGroups: definition.RawGroups{
+				"pod": {
+					"test-entity": {
+						"kube_pod_labels": Metric{
+							Labels: Labels{
+								"label_app":  "my-app",
+								"label_team": "sre",
+								"namespace":  "prod", // This label should be ignored.
+							},
+						},
+					},
+				},
+			},
+			expectedValue: definition.FetchedValues{
+				"label.app":  "my-app",
+				"label.team": "sre",
+			},
+			expectedErr: "",
+		},
+		{
+			name:       "No_Matching_Prefixed_Labels",
+			metricName: "kube_pod_labels",
+			prefix:     "label",
+			rawGroups: definition.RawGroups{
+				"pod": {
+					"test-entity": {
+						"kube_pod_labels": Metric{
+							Labels: Labels{"namespace": "prod"}, // No labels with "label_" prefix.
+						},
+					},
+				},
+			},
+			expectedValue: definition.FetchedValues{}, // Expect an empty map, not an error.
+			expectedErr:   "",
+		},
+		{
+			name:       "Metric_Not_Found_Is_Handled_Gracefully",
+			metricName: "non_existent_metric",
+			prefix:     "label",
+			rawGroups: definition.RawGroups{
+				"pod": {"test-entity": {}},
+			},
+			expectedValue: nil, // Expect nil for both value and error.
+			expectedErr:   "",
+		},
+		{
+			name:       "Error_On_Incompatible_Data_Type",
+			metricName: "kube_pod_labels",
+			prefix:     "label",
+			rawGroups: definition.RawGroups{
+				"pod": {
+					"test-entity": {
+						"kube_pod_labels": "this is not a Metric object",
+					},
+				},
+			},
+			expectedValue: nil,
+			expectedErr:   `expected metric type for "kube_pod_labels" to be Metric, but got string`,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create the FetchFunc using the function we are testing.
+			fetchFunc := FromMetricWithPrefixedLabels(tc.metricName, tc.prefix)
+
+			// Execute the FetchFunc.
+			fetchedValue, err := fetchFunc("pod", "test-entity", tc.rawGroups)
+
+			// Assert on the error.
+			if tc.expectedErr != "" {
+				require.Error(t, err)
+				assert.EqualError(t, err, tc.expectedErr)
+			} else {
+				require.NoError(t, err)
+			}
+
+			// Assert on the returned value.
+			assert.Equal(t, tc.expectedValue, fetchedValue)
+		})
+	}
+}

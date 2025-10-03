@@ -908,8 +908,65 @@ func TestPrepareProcessingUnits(t *testing.T) {
 	}
 }
 
+func TestPopulateCluster(t *testing.T) {
+	// --- 1. Setup ---
+	const (
+		clusterName        = "test-cluster"
+		k8sVersionStr      = "v1.25.0"
+		integrationName    = "com.newrelic.kubernetes"
+		integrationVersion = "3.0.0"
+	)
+
+	// Create an in-memory integration object for the test.
+	intgr, err := integration.New(integrationName, integrationVersion, integration.InMemoryStore())
+	require.NoError(t, err, "Unexpected error while creating integration object")
+
+	k8sVersion := mockVersion{version: k8sVersionStr}
+
+	// --- 2. Execute the function under test ---
+	err = populateCluster(intgr, clusterName, k8sVersion)
+
+	// --- 3. Assertions ---
+
+	// The function should execute without error.
+	require.NoError(t, err, "populateCluster returned an unexpected error")
+
+	// Verify that exactly one entity was created in the integration payload.
+	require.Len(t, intgr.Entities, 1, "Expected exactly one entity to be created")
+	clusterEntity := intgr.Entities[0]
+
+	// Verify the entity's core metadata.
+	assert.Equal(t, clusterName, clusterEntity.Metadata.Name, "Entity name is incorrect")
+	assert.Equal(t, "k8s:cluster", clusterEntity.Metadata.Namespace, "Entity type (namespace) is incorrect")
+
+	// Verify the inventory data.
+	require.NotNil(t, clusterEntity.Inventory, "Entity inventory should not be nil")
+	clusterInventory := clusterEntity.Inventory.Items()
+	require.Contains(t, clusterInventory, "cluster", "Inventory is missing 'cluster' category")
+
+	assert.Equal(t, clusterName, clusterInventory["cluster"]["name"])
+	assert.Equal(t, k8sVersionStr, clusterInventory["cluster"]["k8sVersion"])
+	assert.Equal(t, integrationName, clusterInventory["cluster"]["newrelic.integrationName"])
+	assert.Equal(t, integrationVersion, clusterInventory["cluster"]["newrelic.integrationVersion"])
+
+	// Verify the metric set data.
+	require.Len(t, clusterEntity.Metrics, 1, "Expected exactly one metric set on the entity")
+	metricSet := clusterEntity.Metrics[0]
+	assert.Equal(t, "K8sClusterSample", metricSet.Metrics["event_type"])
+	assert.Equal(t, clusterName, metricSet.Metrics["clusterName"])
+	assert.Equal(t, k8sVersionStr, metricSet.Metrics["clusterK8sVersion"])
+}
+
 type NamespaceFilterMock struct{}
 
 func (nf NamespaceFilterMock) IsAllowed(namespace string) bool {
 	return namespace != "nsA"
+}
+
+type mockVersion struct {
+	version string
+}
+
+func (m mockVersion) String() string {
+	return m.version
 }
