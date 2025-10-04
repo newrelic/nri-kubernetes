@@ -14,8 +14,13 @@ import (
 )
 
 var (
-	ErrExpectedLabelsNotFound = errors.New("expected labels not found")
-	ErrUnexpectedEmptyLabels  = errors.New("unexpected empty labels")
+	ErrExpectedLabelsNotFound     = errors.New("expected labels not found")
+	ErrUnexpectedEmptyLabels      = errors.New("unexpected empty labels")
+	ErrLabelNotFound              = errors.New("label not found on metric")
+	ErrMetricSliceEmpty           = errors.New("metric slice for key was empty")
+	ErrLabelNotFoundInFirstMetric = errors.New("label not found in the first metric for key")
+	ErrIncompatibleMetricType     = errors.New("incompatible metric type for key")
+	ErrExpectedMetricType         = errors.New("expected metric type for key to be Metric")
 )
 
 // ControlPlaneComponentTypeGenerator generates the entity type of a
@@ -488,19 +493,19 @@ func FromLabelValue(key, label string) definition.FetchFunc {
 		case Metric:
 			l, ok = v.Labels[label]
 			if !ok {
-				return nil, fmt.Errorf("label %q not found on metric %q", label, key)
+				return nil, fmt.Errorf("label %q not found on metric %q: %w", label, key, ErrLabelNotFound)
 			}
 		case []Metric:
 			if len(v) == 0 {
-				return nil, fmt.Errorf("metric slice for key %q was empty", key)
+				return nil, fmt.Errorf("metric slice for key %q was empty: %w", key, ErrMetricSliceEmpty)
 			}
 			// Assume the label is consistent across all metrics in the slice.
 			l, ok = v[0].Labels[label]
 			if !ok {
-				return nil, fmt.Errorf("label %q not found in the first metric for key %q", label, key)
+				return nil, fmt.Errorf("label %q not found in the first metric for key %q: %w", label, key, ErrLabelNotFoundInFirstMetric)
 			}
 		default:
-			return nil, fmt.Errorf("incompatible metric type for %q. Expected: Metric or []Metric. Got: %T", key, value)
+			return nil, fmt.Errorf("incompatible metric type for %q. Expected: Metric or []Metric. Got: %T: %w", key, value, ErrIncompatibleMetricType)
 		}
 
 		return l, nil
@@ -566,12 +571,12 @@ func FromMetricWithPrefixedLabels(metricName, prefix string) definition.FetchFun
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 		rawMetric, err := definition.FromRaw(metricName)(groupLabel, entityID, groups)
 		if err != nil {
-			return nil, nil // Gracefully handle if the metric is not present.
+			return nil, nil //nolint:nilerr // Gracefully handle if the metric is not present.
 		}
 
 		metric, ok := rawMetric.(Metric)
 		if !ok {
-			return nil, fmt.Errorf("expected metric type for %q to be Metric, but got %T", metricName, rawMetric)
+			return nil, fmt.Errorf("expected metric type for %q to be Metric, but got %T: %w", metricName, rawMetric, ErrExpectedMetricType)
 		}
 
 		fetchedValues := make(definition.FetchedValues)

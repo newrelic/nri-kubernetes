@@ -1,3 +1,4 @@
+//nolint:paralleltest // Some tests intentionally do not use t.Parallel or use it in subtests only.
 package prometheus
 
 import (
@@ -1189,7 +1190,7 @@ func TestFromRawLabelValue_IncompatibleType(t *testing.T) {
 func TestFromRawLabelValue_LabelNotFoundInRawMetric(t *testing.T) {
 	fetchedValue, err := FromLabelValue("kube_pod_start_time", "foo")("pod", "fluentd-elasticsearch-jnqb7", rawGroups)
 	assert.Nil(t, fetchedValue)
-	assert.EqualError(t, err, "label \"foo\" not found on metric \"kube_pod_start_time\"")
+	assert.EqualError(t, err, "label \"foo\" not found on metric \"kube_pod_start_time\": label not found on metric")
 }
 
 // --------------- FromLabelValueEntityTypeGenerator -------------.
@@ -1266,7 +1267,7 @@ func TestFromLabelValueEntityTypeGenerator_NotFound(t *testing.T) {
 	}
 
 	generatedValue, err := FromLabelValueEntityTypeGenerator("kube_replicaset_created")("replicaset", "kube-state-metrics-4044341274", raw, "clusterName")
-	assert.EqualError(t, err, "cannot fetch label \"namespace\" for metric \"kube_replicaset_created\": label \"namespace\" not found on metric \"kube_replicaset_created\"")
+	assert.EqualError(t, err, "cannot fetch label \"namespace\" for metric \"kube_replicaset_created\": label \"namespace\" not found on metric \"kube_replicaset_created\": label not found on metric")
 	assert.Equal(t, "", generatedValue)
 }
 
@@ -1835,6 +1836,7 @@ func TestFromFlattenedMetrics(t *testing.T) {
 	}
 }
 
+//nolint:funlen // TestFromLabelValue is long due to comprehensive test cases.
 func TestFromLabelValue(t *testing.T) {
 	testCases := []struct {
 		name          string
@@ -1897,7 +1899,7 @@ func TestFromLabelValue(t *testing.T) {
 				},
 			},
 			expectedValue: nil,
-			expectedErr:   `label "missing_label" not found on metric "kube_pod_info"`,
+			expectedErr:   `label "missing_label" not found on metric "kube_pod_info": label not found on metric`,
 		},
 		{
 			name:  "Error_when_label_not_found_in_slice",
@@ -1913,7 +1915,7 @@ func TestFromLabelValue(t *testing.T) {
 				},
 			},
 			expectedValue: nil,
-			expectedErr:   `label "missing_label" not found in the first metric for key "kube_pod_status"`,
+			expectedErr:   `label "missing_label" not found in the first metric for key "kube_pod_status": label not found in the first metric for key`,
 		},
 		{
 			name:  "Error_when_slice_is_empty",
@@ -1927,7 +1929,7 @@ func TestFromLabelValue(t *testing.T) {
 				},
 			},
 			expectedValue: nil,
-			expectedErr:   `metric slice for key "kube_pod_status" was empty`,
+			expectedErr:   `metric slice for key "kube_pod_status" was empty: metric slice for key was empty`,
 		},
 		{
 			name:  "Error_on_incompatible_type",
@@ -1941,7 +1943,7 @@ func TestFromLabelValue(t *testing.T) {
 				},
 			},
 			expectedValue: nil,
-			expectedErr:   `incompatible metric type for "kube_pod_info". Expected: Metric or []Metric. Got: string`,
+			expectedErr:   `incompatible metric type for "kube_pod_info". Expected: Metric or []Metric. Got: string: incompatible metric type for key`,
 		},
 	}
 
@@ -2037,7 +2039,7 @@ func TestFromMetricWithPrefixedLabels(t *testing.T) {
 				},
 			},
 			expectedValue: nil,
-			expectedErr:   `expected metric type for "kube_pod_labels" to be Metric, but got string`,
+			expectedErr:   `expected metric type for "kube_pod_labels" to be Metric, but got string: expected metric type for key to be Metric`,
 		},
 	}
 
