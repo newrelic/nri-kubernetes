@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/nri-kubernetes/v3/src/populator"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/version"
 
@@ -72,7 +73,7 @@ func (s *Job) Populate(
 		Groups:        groups,
 		Filterer:      s.Filterer,
 	}
-	ok, populateErrs := definition.IntegrationPopulator(config)
+	ok, populateErrs := populator.IntegrationPopulator(config)
 
 	if len(populateErrs) > 0 {
 		return data.PopulateResult{Errors: populateErrs, Populated: ok}

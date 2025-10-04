@@ -28,7 +28,7 @@ type FilteredValue interface{}
 type FilterFunc func(value FetchedValue, groupLabel, entityID string, groups RawGroups) (FilteredValue, error)
 
 // RawGroups are grouped raw metrics.
-// map[entityType][entityName][metricName]metricValue as interface{}
+// map[entityType][entityName][metricName]metricValue as interface{}.
 type RawGroups map[string]map[string]RawMetrics
 
 // TransformFunc transforms a FetchedValue.
@@ -56,7 +56,7 @@ func FromRaw(metricKey string) FetchFunc {
 	}
 }
 
-// Transform return a new FetchFunc that applies the transformFunc to the result of the fetchFunc passed as argument
+// Transform return a new FetchFunc that applies the transformFunc to the result of the fetchFunc passed as argument.
 func Transform(fetchFunc FetchFunc, transformFunc TransformFunc) FetchFunc {
 	return func(groupLabel, entityID string, groups RawGroups) (FetchedValue, error) {
 		fetchedVal, err := fetchFunc(groupLabel, entityID, groups)
