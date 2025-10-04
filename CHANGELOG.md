@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### bugfix
+- fix e2e-tests to use the "constant" key again @TmNguyen12 [#1307](https://github.com/newrelic/nri-kubernetes/pull/1307)
+
 ### enhancement
 - Add metrics for ResourceQuota
 
