@@ -365,7 +365,7 @@ var summaryMetricFamily = []MetricFamily{
 	},
 }
 
-// --------------- GroupMetricsBySpec ---------------
+// --------------- GroupMetricsBySpec ---------------.
 func TestGroupMetricsBySpec_CorrectValue(t *testing.T) {
 	expectedMetricGroup := definition.RawGroups{
 		"pod": {
@@ -1137,7 +1137,7 @@ func TestFetchFunc_IncompatibleType(t *testing.T) {
 	}
 }
 
-// --------------- FromValue ---------------
+// --------------- FromValue ---------------.
 func TestFromRawValue_CorrectValue(t *testing.T) {
 	expectedFetchedValue := GaugeValue(1507117436)
 
@@ -1165,7 +1165,7 @@ func TestFromRawValue_IncompatibleType(t *testing.T) {
 	)
 }
 
-// --------------- FromLabelValue ---------------
+// --------------- FromLabelValue ---------------.
 func TestFromRawLabelValue_CorrectValue(t *testing.T) {
 	expectedFetchedValue := "kube-system"
 
@@ -1192,7 +1192,7 @@ func TestFromRawLabelValue_LabelNotFoundInRawMetric(t *testing.T) {
 	assert.EqualError(t, err, "label \"foo\" not found on metric \"kube_pod_start_time\"")
 }
 
-// --------------- FromLabelValueEntityTypeGenerator -------------
+// --------------- FromLabelValueEntityTypeGenerator -------------.
 func TestFromLabelValueEntityTypeGenerator_CorrectValueNamespace(t *testing.T) {
 	raw := definition.RawGroups{
 		"namespace": {
@@ -1311,7 +1311,7 @@ func TestFromLabelValueEntityTypeGenerator_EmptyNamespace(t *testing.T) {
 	assert.Equal(t, "", generatedValue)
 }
 
-// --------------- FromLabelValueEntityIDGenerator ---------------
+// --------------- FromLabelValueEntityIDGenerator ---------------.
 func TestFromLabelValueEntityIDGenerator(t *testing.T) {
 	expectedFetchedValue := "fluentd-elasticsearch-jnqb7"
 
@@ -1326,7 +1326,7 @@ func TestFromLabelValueEntityIDGenerator_NotFound(t *testing.T) {
 	assert.EqualError(t, err, "cannot fetch label \"pod\" for metric \"non-existent-metric-key\": metric \"non-existent-metric-key\" not found")
 }
 
-// --------------- FromLabelsValueEntityIDGeneratorForPendingPods ---------------
+// --------------- FromLabelsValueEntityIDGeneratorForPendingPods ---------------.
 func TestFromLabelsValueEntityIDGeneratorForPendingPods(t *testing.T) {
 	expectedFetchedValue := "fluentd-elasticsearch-jnqb7"
 
@@ -1503,7 +1503,7 @@ func TestInheritSpecificLabelValuesFrom_GroupNotFound(t *testing.T) {
 	assert.Empty(t, fetchedValue)
 }
 
-// --------------- InheritAllSelectorsFrom ---------------
+// --------------- InheritAllSelectorsFrom ---------------.
 func TestInheritAllSelectorsFrom(t *testing.T) {
 	serviceRawEntityID := "kube-system_tiller-deploy"
 	raw := definition.RawGroups{
@@ -1558,7 +1558,7 @@ func TestInheritAllSelectorsFrom_ErrorOnOnlyOneMetricWithoutNamespaceAndServiceL
 	assert.EqualError(t, err, errorMsg)
 }
 
-// --------------- InheritAllLabelsFrom ---------------
+// --------------- InheritAllLabelsFrom ---------------.
 func TestInheritAllLabelsFrom(t *testing.T) {
 	containerRawEntityID := "kube-system_kube-addon-manager-minikube_kube-addon-manager"
 	raw := definition.RawGroups{

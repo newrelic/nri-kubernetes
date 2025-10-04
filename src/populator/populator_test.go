@@ -16,6 +16,8 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"k8s.io/apimachinery/pkg/version"
 )
 
@@ -184,30 +186,30 @@ func getSpecsKSM() definition.SpecGroups {
 			TypeGenerator:   fromGroupEntityTypeGuessFunc,
 			NamespaceGetter: prometheus.FromLabelGetNamespace,
 			Specs: []definition.Spec{
-				{"metric_1", prometheus.FromValue("raw_metric_name_1"), metric.GAUGE, false},
-				{"metric_2", prometheus.FromValue("raw_metric_name_2"), metric.GAUGE, false},
+				{Name: "metric_1", ValueFunc: prometheus.FromValue("raw_metric_name_1"), Type: metric.GAUGE, Optional: false},
+				{Name: "metric_2", ValueFunc: prometheus.FromValue("raw_metric_name_2"), Type: metric.GAUGE, Optional: false},
 			},
 		},
 		definition.NamespaceGroup: definition.SpecGroup{
 			TypeGenerator:   fromGroupEntityTypeGuessFunc,
 			NamespaceGetter: prometheus.FromLabelGetNamespace,
 			Specs: []definition.Spec{
-				{"metric_1", prometheus.FromValue("raw_metric_name_1"), metric.GAUGE, false},
-				{"metric_2", prometheus.FromValue("raw_metric_name_2"), metric.GAUGE, false},
+				{Name: "metric_1", ValueFunc: prometheus.FromValue("raw_metric_name_1"), Type: metric.GAUGE, Optional: false},
+				{Name: "metric_2", ValueFunc: prometheus.FromValue("raw_metric_name_2"), Type: metric.GAUGE, Optional: false},
 			},
 		},
 	}
 }
 
 func fromMultiple(values definition.FetchedValues) definition.FetchFunc {
-	return func(groupLabel string, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
+	return func(_ string, _ string, _ definition.RawGroups) (definition.FetchedValue, error) {
 		return values, nil
 	}
 }
 
 // fromGroupMetricSetTypeGuessFunc uses the groupLabel for creating the metric set type sample.
 func fromGroupMetricSetTypeGuessFunc(groupLabel string) (string, error) {
-	return fmt.Sprintf("%vSample", strings.Title(groupLabel)), nil
+	return fmt.Sprintf("%vSample", cases.Title(language.Und).String(groupLabel)), nil
 }
 
 func fromGroupEntityTypeGuessFunc(groupLabel string, _ string, _ definition.RawGroups, prefix string) (string, error) {
@@ -289,8 +291,8 @@ func TestIntegrationPopulator_PartialResult(t *testing.T) {
 		"test": definition.SpecGroup{
 			TypeGenerator: fromGroupEntityTypeGuessFunc,
 			Specs: []definition.Spec{
-				{"metric_1", definition.FromRaw("raw_metric_name_1"), metric.GAUGE, false},
-				{"metric_2", definition.FromRaw("raw_metric_name_2"), metric.GAUGE, false}, // Source type not correct
+				{Name: "metric_1", ValueFunc: definition.FromRaw("raw_metric_name_1"), Type: metric.GAUGE, Optional: false},
+				{Name: "metric_2", ValueFunc: definition.FromRaw("raw_metric_name_2"), Type: metric.GAUGE, Optional: false}, // Source type not correct
 			},
 		},
 	}
@@ -387,7 +389,7 @@ func TestIntegrationPopulator_MetricsSetsNotPopulated_OnlyEntity(t *testing.T) {
 		"test": definition.SpecGroup{
 			TypeGenerator: fromGroupEntityTypeGuessFunc,
 			Specs: []definition.Spec{
-				{"useless", definition.FromRaw("nonExistentMetric"), metric.GAUGE, false},
+				{Name: "useless", ValueFunc: definition.FromRaw("nonExistentMetric"), Type: metric.GAUGE, Optional: false},
 			},
 		},
 	}
@@ -446,7 +448,7 @@ func TestIntegrationPopulator_MetricsSetsNotPopulated_OnlyEntity(t *testing.T) {
 
 func TestIntegrationPopulator_EntityIDGenerator(t *testing.T) {
 	t.Parallel()
-	generator := func(_, rawEntityID string, g definition.RawGroups) (string, error) {
+	generator := func(_, rawEntityID string, _ definition.RawGroups) (string, error) {
 		return fmt.Sprintf("%v-generated", rawEntityID), nil
 	}
 
@@ -455,8 +457,8 @@ func TestIntegrationPopulator_EntityIDGenerator(t *testing.T) {
 			IDGenerator:   generator,
 			TypeGenerator: fromGroupEntityTypeGuessFunc,
 			Specs: []definition.Spec{
-				{"metric_1", definition.FromRaw("raw_metric_name_1"), metric.GAUGE, false},
-				{"metric_2", definition.FromRaw("raw_metric_name_2"), metric.GAUGE, false},
+				{Name: "metric_1", ValueFunc: definition.FromRaw("raw_metric_name_1"), Type: metric.GAUGE, Optional: false},
+				{Name: "metric_2", ValueFunc: definition.FromRaw("raw_metric_name_2"), Type: metric.GAUGE, Optional: false},
 			},
 		},
 	}
@@ -520,7 +522,7 @@ func TestIntegrationPopulator_EntityIDGenerator(t *testing.T) {
 
 func TestIntegrationPopulator_EntityIDGeneratorFuncWithError(t *testing.T) {
 	t.Parallel()
-	generator := func(_, rawEntityID string, g definition.RawGroups) (string, error) {
+	generator := func(_, _ string, _ definition.RawGroups) (string, error) {
 		return "", errTestGenerateID
 	}
 
@@ -529,8 +531,8 @@ func TestIntegrationPopulator_EntityIDGeneratorFuncWithError(t *testing.T) {
 			IDGenerator:   generator,
 			TypeGenerator: fromGroupEntityTypeGuessFunc,
 			Specs: []definition.Spec{
-				{"metric_1", definition.FromRaw("raw_metric_name_1"), metric.GAUGE, false},
-				{"metric_2", definition.FromRaw("raw_metric_name_2"), metric.ATTRIBUTE, false},
+				{Name: "metric_1", ValueFunc: definition.FromRaw("raw_metric_name_1"), Type: metric.GAUGE, Optional: false},
+				{Name: "metric_2", ValueFunc: definition.FromRaw("raw_metric_name_2"), Type: metric.ATTRIBUTE, Optional: false},
 			},
 		},
 	}
@@ -545,9 +547,9 @@ func TestIntegrationPopulator_EntityIDGeneratorFuncWithError(t *testing.T) {
 	expectedErr1 := "could not generate entity ID for entity_id_1: error generating entity ID"
 	expectedErr2 := "could not generate entity ID for entity_id_2: error generating entity ID"
 
-	var errStrings []string
-	for _, err := range errs {
-		errStrings = append(errStrings, err.Error())
+	errStrings := make([]string, len(errs))
+	for i, err := range errs {
+		errStrings[i] = err.Error()
 	}
 
 	assert.False(t, populated)
@@ -560,7 +562,7 @@ func TestIntegrationPopulator_EntityIDGeneratorFuncWithError(t *testing.T) {
 //nolint:funlen
 func TestIntegrationPopulator_PopulateOnlySpecifiedGroups(t *testing.T) {
 	t.Parallel()
-	generator := func(groupLabel, rawEntityID string, g definition.RawGroups) (string, error) {
+	generator := func(_, rawEntityID string, _ definition.RawGroups) (string, error) {
 		return fmt.Sprintf("%v-generated", rawEntityID), nil
 	}
 
@@ -569,8 +571,8 @@ func TestIntegrationPopulator_PopulateOnlySpecifiedGroups(t *testing.T) {
 			TypeGenerator: fromGroupEntityTypeGuessFunc,
 			IDGenerator:   generator,
 			Specs: []definition.Spec{
-				{"metric_1", definition.FromRaw("raw_metric_name_1"), metric.GAUGE, false},
-				{"metric_2", definition.FromRaw("raw_metric_name_2"), metric.GAUGE, false},
+				{Name: "metric_1", ValueFunc: definition.FromRaw("raw_metric_name_1"), Type: metric.GAUGE, Optional: false},
+				{Name: "metric_2", ValueFunc: definition.FromRaw("raw_metric_name_2"), Type: metric.GAUGE, Optional: false},
 			},
 		},
 	}
@@ -701,8 +703,8 @@ func TestIntegrationPopulator_EntityTypeGeneratorFuncWithError(t *testing.T) {
 		"test": definition.SpecGroup{
 			TypeGenerator: generatorWithError,
 			Specs: []definition.Spec{
-				{"metric_1", definition.FromRaw("raw_metric_name_1"), metric.GAUGE, false},
-				{"metric_2", definition.FromRaw("raw_metric_name_2"), metric.ATTRIBUTE, false},
+				{Name: "metric_1", ValueFunc: definition.FromRaw("raw_metric_name_1"), Type: metric.GAUGE, Optional: false},
+				{Name: "metric_2", ValueFunc: definition.FromRaw("raw_metric_name_2"), Type: metric.ATTRIBUTE, Optional: false},
 			},
 		},
 	}
@@ -725,7 +727,7 @@ func TestIntegrationPopulator_EntityTypeGeneratorFuncWithError(t *testing.T) {
 
 func TestIntegrationPopulator_msTypeGuesserFuncWithError(t *testing.T) {
 	t.Parallel()
-	msTypeGuesserFuncWithError := func(groupLabel string) (string, error) {
+	msTypeGuesserFuncWithError := func(_ string) (string, error) {
 		return "", errTestSettingEventType
 	}
 
@@ -809,7 +811,7 @@ func TestIntegrationPopulator_CustomMsTypeGuesser(t *testing.T) {
 			NamespaceGetter: kubeletMetric.FromLabelGetNamespace,
 			MsTypeGuesser:   customMsTypeGuesser,
 			Specs: []definition.Spec{
-				{"metric_1", definition.FromRaw("raw_metric_name_1"), metric.GAUGE, false},
+				{Name: "metric_1", ValueFunc: definition.FromRaw("raw_metric_name_1"), Type: metric.GAUGE, Optional: false},
 			},
 		},
 	}
@@ -857,17 +859,17 @@ func TestPrepareProcessingUnits(t *testing.T) {
 
 	// Mock Spec for a simple, single-entity group.
 	singleEntitySpec := definition.SpecGroup{
-		IDGenerator: func(groupLabel, rawEntityID string, g definition.RawGroups) (string, error) {
+		IDGenerator: func(_, rawEntityID string, _ definition.RawGroups) (string, error) {
 			return fmt.Sprintf("%s-generated", rawEntityID), nil
 		},
-		TypeGenerator: func(groupLabel string, rawEntityID string, g definition.RawGroups, clusterName string) (string, error) {
+		TypeGenerator: func(_ string, _ string, _ definition.RawGroups, _ string) (string, error) {
 			return "k8s:test:single", nil
 		},
 	}
 
 	// Mock Spec for a group that needs to be split.
 	splitEntitySpec := definition.SpecGroup{
-		TypeGenerator: func(groupLabel string, rawEntityID string, g definition.RawGroups, clusterName string) (string, error) {
+		TypeGenerator: func(_ string, _ string, _ definition.RawGroups, _ string) (string, error) {
 			return "k8s:test:resourcequota", nil
 		},
 		SplitByLabel:    "resource",
@@ -876,7 +878,7 @@ func TestPrepareProcessingUnits(t *testing.T) {
 
 	// Mock Spec with a failing IDGenerator.
 	idGeneratorFailsSpec := definition.SpecGroup{
-		IDGenerator: func(groupLabel, rawEntityID string, g definition.RawGroups) (string, error) {
+		IDGenerator: func(_, _ string, _ definition.RawGroups) (string, error) {
 			return "", errTestIDGeneratorFailed
 		},
 		TypeGenerator: fromGroupEntityTypeGuessFunc,
@@ -974,6 +976,7 @@ func TestPrepareProcessingUnits(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			config := &definition.IntegrationPopulateConfig{
 				Groups: definition.RawGroups{
 					tc.groupLabel: {
@@ -1067,15 +1070,16 @@ func TestMetricSetPopulate_SkipsNilValues(t *testing.T) {
 			Specs: []definition.Spec{
 				{
 					Name: "good_metric",
-					ValueFunc: func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
+					ValueFunc: func(_, _ string, _ definition.RawGroups) (definition.FetchedValue, error) {
 						return "good_value", nil
 					},
 					Type: metric.ATTRIBUTE,
 				},
 				{
 					Name: "nil_metric",
-					ValueFunc: func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
-						return nil, nil // Return a nil value and no error.
+					ValueFunc: func(_, _ string, _ definition.RawGroups) (definition.FetchedValue, error) {
+						//nolint:nilnil
+						return nil, nil
 					},
 					Type:     metric.ATTRIBUTE,
 					Optional: false, // Mark as not optional to ensure no error is generated.

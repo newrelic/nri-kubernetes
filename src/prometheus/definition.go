@@ -613,9 +613,9 @@ func suffixLabelsInOrder(metricName string, labels Labels) string {
 //
 // - <metric_name>_<label_1>_<label_1_value>_..._<label_n>_<label_n_value>_sum
 // - <metric_name>_<label_1>_<label_1_value>_..._<label_n>_<label_n_value>_count
-// - <metric_name>_<label_1>_<label_1_value>_..._<label_n>_<label_n_value>_quantile_<quantile_dimention_1>
+// - <metric_name>_<label_1>_<label_1_value>_..._<label_n>_<label_n_value>_quantile_<quantile_dimension_1>
 // - ...
-// - <metric_name>_<label_1>_<label_1_value>_..._<label_n>_<label_n_value>_quantile_<quantile_dimention_n>
+// - <metric_name>_<label_1>_<label_1_value>_..._<label_n>_<label_n_value>_quantile_<quantile_dimension_n>
 //
 // Since it expects the RawValue to be of type []Metric it should be
 // used when grouping with GroupEntityMetricsBySpec.
@@ -797,7 +797,7 @@ func getRandomMetric(metrics definition.RawMetrics) (metricKey string, value def
 		break
 	}
 
-	return
+	return metricKey, value
 }
 
 // metricContainsLabels returns true is the metric contains the given labels,
@@ -829,7 +829,7 @@ func getRandomMetricWithLabels(metrics definition.RawMetrics, labels ...string) 
 	if !found {
 		err = fmt.Errorf("metric with the labels %v not found", labels)
 	}
-	return
+	return metricKey, value, err
 }
 
 func fetchMetric(metricKey string) definition.FetchFunc {
@@ -854,7 +854,7 @@ func InheritSpecificLabelValuesFrom(parentGroupLabel, relatedMetricKey string, l
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 		rawEntityID, err := getRawEntityID(parentGroupLabel, groupLabel, entityID, groups)
 		if err != nil {
-			return nil, fmt.Errorf("cannot retrieve the entity ID of metrics to inherit value from, got error: %v", err)
+			return nil, fmt.Errorf("cannot retrieve the entity ID of metrics to inherit value from, got error: %w", err)
 		}
 		parent, err := definition.FromRaw(relatedMetricKey)(parentGroupLabel, rawEntityID, groups)
 		if err != nil {
@@ -875,7 +875,7 @@ func InheritSpecificLabelValuesFrom(parentGroupLabel, relatedMetricKey string, l
 }
 
 // labelsFromMetric returns the labels of the metric. The labels keys
-// are formatted from "<prefix>_" to "<prefix>."
+// are formatted from "<prefix>_" to "<prefix>.".
 func labelsFromMetric(
 	parentGroupLabel string,
 	relatedMetricKey string,
@@ -887,7 +887,7 @@ func labelsFromMetric(
 	rawEntityID, err := getRawEntityID(parentGroupLabel, groupLabel, entityID, groups)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"cannot retrieve the entity ID of metrics to inherit labels from, got error: %v",
+			"cannot retrieve the entity ID of metrics to inherit labels from, got error: %w",
 			err,
 		)
 	}

@@ -39,19 +39,9 @@ func IntegrationPopulator(config *definition.IntegrationPopulateConfig) (bool, [
 				continue
 			}
 
-			var extraAttributes []attribute.Attribute
-			if config.Filterer != nil {
-				if nsGetter := specGroup.NamespaceGetter; nsGetter != nil {
-					ns := nsGetter(rawMetrics)
-					if groupLabel != definition.NamespaceGroup {
-						if !config.Filterer.IsAllowed(ns) {
-							continue // This is the filter for non-namespace groups.
-						}
-					} else {
-						isFiltered := strconv.FormatBool(!config.Filterer.IsAllowed(ns))
-						extraAttributes = []attribute.Attribute{attribute.Attr(definition.NamespaceFilteredLabel, isFiltered)}
-					}
-				}
+			extraAttributes, skip := getExtraAttributesAndSkip(config, specGroup, groupLabel, rawMetrics)
+			if skip {
+				continue
 			}
 
 			unitsToProcess, err := prepareProcessingUnits(config, groupLabel, entityID, rawMetrics)
@@ -60,49 +50,12 @@ func IntegrationPopulator(config *definition.IntegrationPopulateConfig) (bool, [
 				continue
 			}
 
-			for _, unit := range unitsToProcess {
-				e, err := config.Integration.Entity(unit.entityID, unit.entityType)
-				if err != nil {
-					errs = append(errs, err)
-					continue
-				}
-
-				extraAttributes = append(
-					extraAttributes,
-					attribute.Attr("clusterName", config.ClusterName),
-					attribute.Attr("displayName", e.Metadata.Name),
-				)
-
-				// Add entity attributes, which will propagate to all metric.Sets.
-				// This was previously (on sdk v2) done by msManipulators.
-				e.AddAttributes(
-					extraAttributes...,
-				)
-
-				msTypeGuesser := config.MsTypeGuesser
-				if customGuesser := specGroup.MsTypeGuesser; customGuesser != nil {
-					msTypeGuesser = customGuesser
-				}
-				msType, err := msTypeGuesser(groupLabel)
-				if err != nil {
-					errs = append(errs, err)
-					continue
-				}
-				ms := e.NewMetricSet(msType)
-
-				groupsForThisEntity := definition.RawGroups{
-					groupLabel: {unit.entityID: unit.rawMetrics},
-				}
-
-				wasPopulated, populateErrs := metricSetPopulate(ms, groupLabel, unit.entityID, groupsForThisEntity, config.Specs)
-				if len(populateErrs) > 0 {
-					for _, err := range populateErrs {
-						errs = append(errs, fmt.Errorf("error populating metric for entity ID %s: %w", entityID, err))
-					}
-				}
-				if wasPopulated {
-					populated = true
-				}
+			pop, perr := processEntities(unitsToProcess, config, specGroup, groupLabel, entityID, extraAttributes)
+			if len(perr) > 0 {
+				errs = append(errs, perr...)
+			}
+			if pop {
+				populated = true
 			}
 		}
 	}
@@ -113,6 +66,79 @@ func IntegrationPopulator(config *definition.IntegrationPopulateConfig) (bool, [
 		}
 	}
 
+	return populated, errs
+}
+
+func getExtraAttributesAndSkip(
+	config *definition.IntegrationPopulateConfig,
+	specGroup definition.SpecGroup,
+	groupLabel string,
+	rawMetrics definition.RawMetrics,
+) ([]attribute.Attribute, bool) {
+	if config.Filterer == nil || specGroup.NamespaceGetter == nil {
+		return nil, false
+	}
+	ns := specGroup.NamespaceGetter(rawMetrics)
+	if groupLabel != definition.NamespaceGroup {
+		if !config.Filterer.IsAllowed(ns) {
+			return nil, true // skip
+		}
+		return nil, false
+	}
+	isFiltered := strconv.FormatBool(!config.Filterer.IsAllowed(ns))
+	extraAttributes := []attribute.Attribute{attribute.Attr(definition.NamespaceFilteredLabel, isFiltered)}
+	return extraAttributes, false
+}
+
+func processEntities(
+	unitsToProcess []processingUnit,
+	config *definition.IntegrationPopulateConfig,
+	specGroup definition.SpecGroup,
+	groupLabel, entityID string,
+	extraAttributes []attribute.Attribute,
+) (bool, []error) {
+	var populated bool
+	var errs []error
+
+	for _, unit := range unitsToProcess {
+		e, err := config.Integration.Entity(unit.entityID, unit.entityType)
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+
+		attrs := extraAttributes
+		attrs = append(attrs,
+			attribute.Attr("clusterName", config.ClusterName),
+			attribute.Attr("displayName", e.Metadata.Name),
+		)
+		e.AddAttributes(attrs...)
+
+		msTypeGuesser := config.MsTypeGuesser
+		if customGuesser := specGroup.MsTypeGuesser; customGuesser != nil {
+			msTypeGuesser = customGuesser
+		}
+		msType, err := msTypeGuesser(groupLabel)
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		ms := e.NewMetricSet(msType)
+
+		groupsForThisEntity := definition.RawGroups{
+			groupLabel: {unit.entityID: unit.rawMetrics},
+		}
+
+		wasPopulated, populateErrs := metricSetPopulate(ms, groupLabel, unit.entityID, groupsForThisEntity, config.Specs)
+		if len(populateErrs) > 0 {
+			for _, err := range populateErrs {
+				errs = append(errs, fmt.Errorf("error populating metric for entity ID %s: %w", entityID, err))
+			}
+		}
+		if wasPopulated {
+			populated = true
+		}
+	}
 	return populated, errs
 }
 
@@ -214,77 +240,110 @@ func splitGroup(rawMetrics definition.RawMetrics, sliceMetricName, groupLabel, s
 	return subGroups, nil
 }
 
-func metricSetPopulate(ms *metric.Set, groupLabel, entityID string, groups definition.RawGroups, specs definition.SpecGroups) (populated bool, errs []error) {
-	for _, ex := range specs[groupLabel].Specs {
-		val, err := ex.ValueFunc(groupLabel, entityID, groups)
+// metricSetPopulate acts as a dispatcher, populating a metric set based on the spec definitions.
+func metricSetPopulate(ms *metric.Set, groupLabel, entityID string, groups definition.RawGroups, specs definition.SpecGroups) (bool, []error) {
+	var populated bool
+	var errs []error
+
+	// 1. Look up the specific SpecGroup from the map using the groupLabel.
+	specGroup, ok := specs[groupLabel]
+	if !ok {
+		// If no spec is defined for this group, there's nothing to do.
+		return false, nil
+	}
+
+	// 2. The rest of the logic remains the same, using 'specGroup' which we just found.
+	for _, spec := range specGroup.Specs {
+		val, err := spec.ValueFunc(groupLabel, entityID, groups)
 		if err != nil {
-			if !ex.Optional {
-				errs = append(errs, fmt.Errorf("cannot fetch value for metric %q: %w", ex.Name, err))
+			if !spec.Optional {
+				errs = append(errs, fmt.Errorf("cannot fetch value for metric %q: %w", spec.Name, err))
 			}
 			continue
 		}
-
 		if val == nil {
-			continue // Skip nil values
+			continue
 		}
 
-		if multiple, ok := val.(definition.FetchedValues); ok {
-			for k, v := range multiple {
-				err := ms.SetMetric(k, v, ex.Type)
-				if err != nil {
-					if !ex.Optional {
-						errs = append(errs, fmt.Errorf("%w %q on entity %q: %w", ErrSetMetric, k, entityID, err))
-					}
-					continue
-				}
-				populated = true
-			}
-		} else {
-			err := ms.SetMetric(ex.Name, val, ex.Type)
-			if err != nil {
-				if !ex.Optional {
-					errs = append(errs, fmt.Errorf("%w %q on entity %q: %w", ErrSetMetric, ex.Name, entityID, err))
-				}
-				continue
-			}
+		p, e := populateValue(ms, &spec, val)
+		if e != nil && !spec.Optional {
+			errs = append(errs, fmt.Errorf("populating entity %q: %w", entityID, e))
+		}
+		if p {
 			populated = true
 		}
 	}
-	return
+	return populated, errs
+}
+
+// populateValue is a helper that adds a fetched value to a metric set by determining its type.
+func populateValue(ms *metric.Set, spec *definition.Spec, val definition.FetchedValue) (bool, error) {
+	switch v := val.(type) {
+	case definition.FetchedValues:
+		return populateMetricsFromMap(ms, v, spec.Type)
+	default:
+		return populateSingleMetric(ms, spec.Name, v, spec.Type)
+	}
+}
+
+// populateMetricsFromMap adds multiple metrics that all share a single type from the spec.
+func populateMetricsFromMap(ms *metric.Set, metrics definition.FetchedValues, sourceType metric.SourceType) (bool, error) {
+	if len(metrics) == 0 {
+		return false, nil
+	}
+	for k, v := range metrics {
+		if err := ms.SetMetric(k, v, sourceType); err != nil {
+			return false, fmt.Errorf("%w %q: %w", ErrSetMetric, k, err)
+		}
+	}
+	return true, nil
+}
+
+// populateSingleMetric adds a single metric to the metric set.
+func populateSingleMetric(ms *metric.Set, name string, value interface{}, sourceType metric.SourceType) (bool, error) {
+	if err := ms.SetMetric(name, value, sourceType); err != nil {
+		return false, fmt.Errorf("%w %q: %w", ErrSetMetric, name, err)
+	}
+	return true, nil
 }
 
 func populateCluster(i *integration.Integration, clusterName string, k8sVersion fmt.Stringer) error {
 	e, err := i.Entity(clusterName, "k8s:cluster")
 	if err != nil {
+		// Add context to the error from the SDK.
 		return fmt.Errorf("could not create cluster entity: %w", err)
 	}
 	ms := e.NewMetricSet("K8sClusterSample")
 
 	err = e.Inventory.SetItem("cluster", "name", clusterName)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not set cluster name in inventory: %w", err)
 	}
 
 	err = ms.SetMetric("clusterName", clusterName, metric.ATTRIBUTE)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not set clusterName metric: %w", err)
 	}
 
 	k8sVersionStr := k8sVersion.String()
 	err = e.Inventory.SetItem("cluster", "k8sVersion", k8sVersionStr)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not set k8sVersion in inventory: %w", err)
 	}
 
 	err = e.Inventory.SetItem("cluster", "newrelic.integrationVersion", i.IntegrationVersion)
 	if err != nil {
-		return err //nolint: wrapcheck
+		return fmt.Errorf("could not set integration version in inventory: %w", err)
 	}
 
 	err = e.Inventory.SetItem("cluster", "newrelic.integrationName", i.Name)
 	if err != nil {
-		return err //nolint: wrapcheck
+		return fmt.Errorf("could not set integration name in inventory: %w", err)
 	}
 
-	return ms.SetMetric("clusterK8sVersion", k8sVersionStr, metric.ATTRIBUTE)
+	if err = ms.SetMetric("clusterK8sVersion", k8sVersionStr, metric.ATTRIBUTE); err != nil {
+		return fmt.Errorf("could not set clusterK8sVersion metric: %w", err)
+	}
+
+	return nil
 }

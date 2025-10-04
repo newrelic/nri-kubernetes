@@ -7,8 +7,10 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
 )
 
-const NamespaceGroup = "namespace"
-const NamespaceFilteredLabel = "nrFiltered"
+const (
+	NamespaceGroup         = "namespace"
+	NamespaceFilteredLabel = "nrFiltered"
+)
 
 // GuessFunc guesses from data.
 type GuessFunc func(groupLabel string) (string, error)
