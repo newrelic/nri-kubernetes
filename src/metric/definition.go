@@ -1001,7 +1001,8 @@ var KSMSpecs = definition.SpecGroups{
 				ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_resourcequota_annotations", "annotation"),
 				Type:      sdkMetric.ATTRIBUTE,
 				Optional:  true,
-			}},
+			},
+		},
 	},
 }
 
