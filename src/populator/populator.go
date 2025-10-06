@@ -154,19 +154,14 @@ func processEntities(
 func prepareProcessingUnits(config *definition.IntegrationPopulateConfig, groupLabel, entityID string, rawMetrics definition.RawMetrics) ([]processingUnit, error) {
 	specGroup := config.Specs[groupLabel]
 
-	var entityType string
-	if generatorType := specGroup.TypeGenerator; generatorType != nil {
-		generatedType, err := generatorType(groupLabel, entityID, config.Groups, config.ClusterName)
-		if err != nil {
-			return nil, fmt.Errorf("%w for %s: %w", ErrGenerateType, entityID, err)
-		}
-		entityType = generatedType
-	}
-
 	if specGroup.SplitByLabel != "" {
 		subGroups, err := splitGroup(rawMetrics, specGroup.SliceMetricName, groupLabel, specGroup.SplitByLabel)
 		if err != nil {
 			return nil, err
+		}
+		entityType, err := specGroup.TypeGenerator(groupLabel, entityID, config.Groups, config.ClusterName)
+		if err != nil {
+			return nil, fmt.Errorf("error generating entity type for parent %s: %w", entityID, err)
 		}
 		units := make([]processingUnit, 0, len(subGroups))
 		for subGroupKey, subGroupMetrics := range subGroups {
@@ -179,7 +174,7 @@ func prepareProcessingUnits(config *definition.IntegrationPopulateConfig, groupL
 		return units, nil
 	}
 
-	finalEntityID := entityID
+	finalEntityID := entityID // Start with the raw ID from the grouper.
 
 	if generator := specGroup.IDGenerator; generator != nil {
 		// The IDGenerator uses the raw entityID for its lookup.
@@ -188,6 +183,15 @@ func prepareProcessingUnits(config *definition.IntegrationPopulateConfig, groupL
 			return nil, fmt.Errorf("%w for %s: %w", ErrGenerateID, entityID, err)
 		}
 		finalEntityID = generatedID // Store the new ID for final use.
+	}
+
+	var entityType string
+	if generatorType := specGroup.TypeGenerator; generatorType != nil {
+		generatedType, err := generatorType(groupLabel, entityID, config.Groups, config.ClusterName)
+		if err != nil {
+			return nil, fmt.Errorf("%w for %s: %w", ErrGenerateType, entityID, err)
+		}
+		entityType = generatedType
 	}
 
 	return []processingUnit{
