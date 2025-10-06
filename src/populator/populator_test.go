@@ -242,7 +242,6 @@ func testConfigPrometheusFormatWithFilterer(i *integration.Integration) *definit
 }
 
 func TestIntegrationPopulator_CorrectValue(t *testing.T) {
-	t.Parallel()
 	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
 	require.NoError(t, err)
 
