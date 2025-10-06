@@ -112,7 +112,8 @@ func processEntities(
 			continue
 		}
 
-		attrs := extraAttributes
+		attrs := make([]attribute.Attribute, len(extraAttributes), len(extraAttributes)+2)
+		copy(attrs, extraAttributes)
 		attrs = append(attrs,
 			attribute.Attr("clusterName", config.ClusterName),
 			attribute.Attr("displayName", e.Metadata.Name),
@@ -137,7 +138,7 @@ func processEntities(
 		wasPopulated, populateErrs := metricSetPopulate(ms, groupLabel, unit.entityID, groupsForThisEntity, config.Specs)
 		if len(populateErrs) > 0 {
 			for _, err := range populateErrs {
-				errs = append(errs, fmt.Errorf("error populating metric for entity ID %s: %w", entityID, err))
+				errs = append(errs, fmt.Errorf("error populating metric for entity ID %s: %w", unit.entityID, err))
 			}
 		}
 		if wasPopulated {

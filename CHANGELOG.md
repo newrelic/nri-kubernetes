@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### enhancement
-- Add metrics for ResourceQuota
+- Add metrics for ResourceQuota @NRhzhao [#1302](https://github.com/newrelic/nri-kubernetes/pull/1302)
 
 ## v3.45.4 - 2025-10-06
 
