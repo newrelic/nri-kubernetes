@@ -7,11 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### bugfix
-- fix e2e-tests to use the "constant" key again @TmNguyen12 [#1307](https://github.com/newrelic/nri-kubernetes/pull/1307)
-
 ### enhancement
 - Add metrics for ResourceQuota
+
+## v3.45.4 - 2025-10-06
+
+### 🐞 Bug fixes
+- fix e2e-tests to use the "constant" key again @TmNguyen12 [#1307](https://github.com/newrelic/nri-kubernetes/pull/1307)
+
+### ⛓️ Dependencies
+- Updated google.golang.org/protobuf to v1.36.10
 
 ## v3.45.3 - 2025-09-29
 
