@@ -3,7 +3,7 @@ FROM alpine:3.22.1
 ARG TARGETOS
 ARG TARGETARCH
 
-RUN apk add --no-cache --upgrade && apk add --no-cache tini curl bind-tools
+RUN apk update && apk upgrade --no-cache && apk add --no-cache tini curl bind-tools
 
 COPY bin/nri-kubernetes-${TARGETOS}-${TARGETARCH} /bin/
 
