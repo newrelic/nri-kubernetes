@@ -27,7 +27,8 @@ type processingUnit struct {
 }
 
 // IntegrationPopulator is the main orchestrator that populates an integration.Integration
-// object from the grouped metric data.
+// object from the grouped metric data. It prepares "processing units" for each entity
+// or sub-entity and then populates them.
 func IntegrationPopulator(config *definition.IntegrationPopulateConfig) (bool, []error) {
 	var populated bool
 	var errs []error
@@ -39,7 +40,7 @@ func IntegrationPopulator(config *definition.IntegrationPopulateConfig) (bool, [
 				continue
 			}
 
-			extraAttributes, skip := getExtraAttributesAndSkip(config, specGroup, groupLabel, rawMetrics)
+			extraAttributes, skip := filterGroup(config, specGroup, groupLabel, rawMetrics)
 			if skip {
 				continue
 			}
@@ -69,7 +70,10 @@ func IntegrationPopulator(config *definition.IntegrationPopulateConfig) (bool, [
 	return populated, errs
 }
 
-func getExtraAttributesAndSkip(
+// filterGroup checks if an entity group should be filtered by namespace.
+// It returns true if the group should be filtered. For namespace-group entities,
+// it returns extra attributes to be added.
+func filterGroup(
 	config *definition.IntegrationPopulateConfig,
 	specGroup definition.SpecGroup,
 	groupLabel string,
@@ -86,10 +90,11 @@ func getExtraAttributesAndSkip(
 		return nil, false
 	}
 	isFiltered := strconv.FormatBool(!config.Filterer.IsAllowed(ns))
-	extraAttributes := []attribute.Attribute{attribute.Attr(definition.NamespaceFilteredLabel, isFiltered)}
-	return extraAttributes, false
+	attributes := []attribute.Attribute{attribute.Attr(definition.NamespaceFilteredLabel, isFiltered)}
+	return attributes, false
 }
 
+// processEntities handles the creation and population of a single entity (or sub-entity).
 func processEntities(
 	unitsToProcess []processingUnit,
 	config *definition.IntegrationPopulateConfig,
@@ -142,18 +147,26 @@ func processEntities(
 	return populated, errs
 }
 
-// prepareProcessingUnits prepares a slice of one or more processingUnits.
+// prepareProcessingUnits takes a raw entity group and, based on its SpecGroup rules,
+// returns a slice of one or more processingUnits. This is the core of the sub-grouping
+// logic: it either prepares a single unit for a standard entity or multiple units if
+// the group is configured to be split by a label.
 func prepareProcessingUnits(config *definition.IntegrationPopulateConfig, groupLabel, entityID string, rawMetrics definition.RawMetrics) ([]processingUnit, error) {
 	specGroup := config.Specs[groupLabel]
+
+	var entityType string
+	if generatorType := specGroup.TypeGenerator; generatorType != nil {
+		generatedType, err := generatorType(groupLabel, entityID, config.Groups, config.ClusterName)
+		if err != nil {
+			return nil, fmt.Errorf("%w for %s: %w", ErrGenerateType, entityID, err)
+		}
+		entityType = generatedType
+	}
 
 	if specGroup.SplitByLabel != "" {
 		subGroups, err := splitGroup(rawMetrics, specGroup.SliceMetricName, groupLabel, specGroup.SplitByLabel)
 		if err != nil {
 			return nil, err
-		}
-		entityType, err := specGroup.TypeGenerator(groupLabel, entityID, config.Groups, config.ClusterName)
-		if err != nil {
-			return nil, fmt.Errorf("error generating entity type for parent %s: %w", entityID, err)
 		}
 		units := make([]processingUnit, 0, len(subGroups))
 		for subGroupKey, subGroupMetrics := range subGroups {
@@ -166,7 +179,7 @@ func prepareProcessingUnits(config *definition.IntegrationPopulateConfig, groupL
 		return units, nil
 	}
 
-	finalEntityID := entityID // Start with the raw ID from the grouper.
+	finalEntityID := entityID
 
 	if generator := specGroup.IDGenerator; generator != nil {
 		// The IDGenerator uses the raw entityID for its lookup.
@@ -175,15 +188,6 @@ func prepareProcessingUnits(config *definition.IntegrationPopulateConfig, groupL
 			return nil, fmt.Errorf("%w for %s: %w", ErrGenerateID, entityID, err)
 		}
 		finalEntityID = generatedID // Store the new ID for final use.
-	}
-
-	var entityType string
-	if generatorType := specGroup.TypeGenerator; generatorType != nil {
-		generatedType, err := generatorType(groupLabel, entityID, config.Groups, config.ClusterName)
-		if err != nil {
-			return nil, fmt.Errorf("%w for %s: %w", ErrGenerateType, entityID, err)
-		}
-		entityType = generatedType
 	}
 
 	return []processingUnit{
@@ -195,8 +199,41 @@ func prepareProcessingUnits(config *definition.IntegrationPopulateConfig, groupL
 	}, nil
 }
 
-// splitGroup takes a RawMetrics map that contains a slice of metrics and splits
-// it into a map of smaller RawMetrics, partitioned by the unique values of the splitByLabel.
+// splitGroup takes a RawMetrics map that contains a slice of metrics and partitions it
+// into a map of smaller RawMetrics based on the unique values of the 'splitByLabel'.
+// Shared metrics from the original RawMetrics (like _created, _labels) are copied
+// to each new sub-group to provide context.
+// This allows creating multiple metrics from a single parent
+// Example:
+//
+// Given a RawMetrics map for a ResourceQuota:
+//
+//	{
+//	  "kube_resourcequota_created": Metric{...},
+//	  "kube_resourcequota": []Metric{
+//	    {Labels: {"resource": "pods", "type": "hard"}},
+//	    {Labels: {"resource": "secrets", "type": "hard"}},
+//	    {Labels: {"resource": "pods", "type": "used"}},
+//	  },
+//	}
+//
+// Calling splitGroup(..., "kube_resourcequota", ..., "resource") will return:
+//
+//	{
+//	  "pods": {
+//	    "kube_resourcequota_created": Metric{...}, // Copied
+//	    "kube_resourcequota": []Metric{
+//	      {Labels: {"resource": "pods", "type": "hard"}},
+//	      {Labels: {"resource": "pods", "type": "used"}},
+//	    },
+//	  },
+//	  "secrets": {
+//	    "kube_resourcequota_created": Metric{...}, // Copied
+//	    "kube_resourcequota": []Metric{
+//	      {Labels: {"resource": "secrets", "type": "hard"}},
+//	    },
+//	  },
+//	}
 func splitGroup(rawMetrics definition.RawMetrics, sliceMetricName, groupLabel, splitByLabel string) (map[string]definition.RawMetrics, error) {
 	if sliceMetricName == "" {
 		sliceMetricName = groupLabel
@@ -208,8 +245,8 @@ func splitGroup(rawMetrics definition.RawMetrics, sliceMetricName, groupLabel, s
 	}
 
 	subGroups := make(map[string]definition.RawMetrics)
-	for _, metric := range mainMetricSlice {
-		splitValue, ok := metric.Labels[splitByLabel]
+	for _, m := range mainMetricSlice {
+		splitValue, ok := m.Labels[splitByLabel]
 		if !ok {
 			continue // Skip metrics that don't have the label to split by.
 		}
@@ -227,14 +264,14 @@ func splitGroup(rawMetrics definition.RawMetrics, sliceMetricName, groupLabel, s
 			subGroups[splitValue] = subGroupMetrics
 		}
 
-		// Get or create the metric slice within the sub-group's map.
+		// Get or create the m slice within the sub-group's map.
 		slice, ok := subGroupMetrics[sliceMetricName].([]prometheus.Metric)
 		if !ok {
 			slice = make([]prometheus.Metric, 0)
 		}
 
-		// Append the current metric to the slice for this sub-group.
-		subGroupMetrics[sliceMetricName] = append(slice, metric)
+		// Append the current m to the slice for this sub-group.
+		subGroupMetrics[sliceMetricName] = append(slice, m)
 	}
 
 	return subGroups, nil
@@ -307,6 +344,7 @@ func populateSingleMetric(ms *metric.Set, name string, value interface{}, source
 	return true, nil
 }
 
+// populateCluster fills cluster-level data.
 func populateCluster(i *integration.Integration, clusterName string, k8sVersion fmt.Stringer) error {
 	e, err := i.Entity(clusterName, "k8s:cluster")
 	if err != nil {
