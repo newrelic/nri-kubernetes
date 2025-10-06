@@ -69,6 +69,13 @@ and review the description of all
 
 ## Development
 
+### Build local docker image
+
+```bash
+make compile-multiarch
+docker build -t nri-kubernetes:local .
+```
+
 ### Run e2e Tests
 
 * See [e2e/README.md](./e2e/README.md) for more details regarding running e2e tests.
