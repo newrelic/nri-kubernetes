@@ -1,3 +1,4 @@
+//nolint:paralleltest // Some tests intentionally do not use t.Parallel or use it in subtests only.
 package populator
 
 import (
@@ -285,7 +286,6 @@ func TestIntegrationPopulator_CorrectValue(t *testing.T) {
 }
 
 func TestIntegrationPopulator_PartialResult(t *testing.T) {
-	t.Parallel()
 	metricSpecsWithIncompatibleType := definition.SpecGroups{
 		"test": definition.SpecGroup{
 			TypeGenerator: fromGroupEntityTypeGuessFunc,
@@ -337,7 +337,6 @@ func TestIntegrationPopulator_PartialResult(t *testing.T) {
 }
 
 func TestIntegrationPopulator_EntitiesDataNotPopulated_EmptyMetricGroups(t *testing.T) {
-	t.Parallel()
 	metricGroupEmpty := definition.RawGroups{}
 
 	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
@@ -355,7 +354,6 @@ func TestIntegrationPopulator_EntitiesDataNotPopulated_EmptyMetricGroups(t *test
 }
 
 func TestIntegrationPopulator_EntitiesDataNotPopulated_ErrorSettingEntities(t *testing.T) {
-	t.Parallel()
 	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
 	require.NoError(t, err)
 
@@ -383,7 +381,6 @@ func TestIntegrationPopulator_EntitiesDataNotPopulated_ErrorSettingEntities(t *t
 }
 
 func TestIntegrationPopulator_MetricsSetsNotPopulated_OnlyEntity(t *testing.T) {
-	t.Parallel()
 	metricSpecsIncorrect := definition.SpecGroups{
 		"test": definition.SpecGroup{
 			TypeGenerator: fromGroupEntityTypeGuessFunc,
@@ -446,7 +443,6 @@ func TestIntegrationPopulator_MetricsSetsNotPopulated_OnlyEntity(t *testing.T) {
 }
 
 func TestIntegrationPopulator_EntityIDGenerator(t *testing.T) {
-	t.Parallel()
 	generator := func(_, rawEntityID string, _ definition.RawGroups) (string, error) {
 		return fmt.Sprintf("%v-generated", rawEntityID), nil
 	}
@@ -520,7 +516,6 @@ func TestIntegrationPopulator_EntityIDGenerator(t *testing.T) {
 }
 
 func TestIntegrationPopulator_EntityIDGeneratorFuncWithError(t *testing.T) {
-	t.Parallel()
 	generator := func(_, _ string, _ definition.RawGroups) (string, error) {
 		return "", errTestGenerateID
 	}
@@ -560,7 +555,6 @@ func TestIntegrationPopulator_EntityIDGeneratorFuncWithError(t *testing.T) {
 
 //nolint:funlen
 func TestIntegrationPopulator_PopulateOnlySpecifiedGroups(t *testing.T) {
-	t.Parallel()
 	generator := func(_, rawEntityID string, _ definition.RawGroups) (string, error) {
 		return fmt.Sprintf("%v-generated", rawEntityID), nil
 	}
@@ -693,7 +687,6 @@ func TestIntegrationPopulator_PopulateOnlySpecifiedGroups(t *testing.T) {
 }
 
 func TestIntegrationPopulator_EntityTypeGeneratorFuncWithError(t *testing.T) {
-	t.Parallel()
 	generatorWithError := func(_ string, _ string, _ definition.RawGroups, _ string) (string, error) {
 		return "", errTestGenerateType
 	}
@@ -725,7 +718,6 @@ func TestIntegrationPopulator_EntityTypeGeneratorFuncWithError(t *testing.T) {
 }
 
 func TestIntegrationPopulator_msTypeGuesserFuncWithError(t *testing.T) {
-	t.Parallel()
 	msTypeGuesserFuncWithError := func(_ string) (string, error) {
 		return "", errTestSettingEventType
 	}
@@ -753,7 +745,6 @@ func TestIntegrationPopulator_msTypeGuesserFuncWithError(t *testing.T) {
 }
 
 func TestIntegrationPopulator_MetricFormatFilterNamespace(t *testing.T) {
-	t.Parallel()
 	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
 	require.NoError(t, err)
 
@@ -766,7 +757,6 @@ func TestIntegrationPopulator_MetricFormatFilterNamespace(t *testing.T) {
 }
 
 func TestIntegrationPopulator_PrometheusFormatFilterNamespace(t *testing.T) {
-	t.Parallel()
 	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
 	require.NoError(t, err)
 
@@ -795,7 +785,6 @@ func TestIntegrationPopulator_PrometheusFormatFilterNamespace(t *testing.T) {
 }
 
 func TestIntegrationPopulator_CustomMsTypeGuesser(t *testing.T) {
-	t.Parallel()
 	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
 	require.NoError(t, err)
 
@@ -829,7 +818,6 @@ func TestIntegrationPopulator_CustomMsTypeGuesser(t *testing.T) {
 }
 
 func TestIntegrationPopulator_IntegrationVersionInInventory(t *testing.T) {
-	t.Parallel()
 	integrationVersion := "2.3.1"
 	intgr, err := integration.New("com.newrelic.kubernetes", integrationVersion, integration.InMemoryStore())
 	require.NoError(t, err)
@@ -853,7 +841,6 @@ func TestIntegrationPopulator_IntegrationVersionInInventory(t *testing.T) {
 
 //nolint:funlen
 func TestPrepareProcessingUnits(t *testing.T) {
-	t.Parallel()
 	// --- Mock Data and Specs for the test ---
 
 	// Mock Spec for a simple, single-entity group.
@@ -975,7 +962,6 @@ func TestPrepareProcessingUnits(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
 			config := &definition.IntegrationPopulateConfig{
 				Groups: definition.RawGroups{
 					tc.groupLabel: {
@@ -1008,7 +994,6 @@ func TestPrepareProcessingUnits(t *testing.T) {
 }
 
 func TestPopulateCluster(t *testing.T) {
-	t.Parallel()
 	// --- 1. Setup ---
 	const (
 		clusterName        = "test-cluster"
@@ -1058,7 +1043,6 @@ func TestPopulateCluster(t *testing.T) {
 }
 
 func TestMetricSetPopulate_SkipsNilValues(t *testing.T) {
-	t.Parallel()
 	// 1. Setup
 	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
 	require.NoError(t, err)
