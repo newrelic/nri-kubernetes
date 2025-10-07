@@ -303,6 +303,7 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 
 	v.SetDefault("ksm|timeout", DefaultTimeout)
 	v.SetDefault("ksm|retries", DefaultRetries)
+	v.SetDefault("ksm|enableResourceQuotaSamples", false) // NRI_KUBERNETES_KSM_ENABLE_RESOURCE_QUOTA_SAMPLES
 
 	v.SetDefault("ksm|discovery|backoffDelay", 7*time.Second)
 	v.SetDefault("ksm|discovery|timeout", 60*time.Second)
