@@ -77,7 +77,6 @@ func (g *grouper) Group(specGroups definition.SpecGroups) (definition.RawGroups,
 	}
 
 	if !g.EnableResourceQuotaSamples {
-		fmt.Println("resouce quota enabled", g.EnableResourceQuotaSamples)
 		if _, ok := groups["resourcequota"]; ok {
 			delete(groups, "resourcequota")
 		}
