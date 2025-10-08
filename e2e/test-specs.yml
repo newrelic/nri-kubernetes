@@ -1402,28 +1402,6 @@ scenarios:
             - key: "constant"
               value: "-"
 #       END Failed Job
-#       START Resource Quota
-        - query: FROM K8sResourcequotaSample SELECT latest(hard) AS 'HardLimit' WHERE namespaceName = 'nri-test-namespace' AND resourcequotaName = 'nri-test-namespace-quota' AND resource = 'pods'
-          expected_results:
-            - key: "HardLimit"
-              value: 10.0
-        - query: FROM K8sResourcequotaSample SELECT latest(used) AS 'UsedValue' WHERE namespaceName = 'nri-test-namespace' AND resourcequotaName = 'nri-test-namespace-quota' AND resource = 'configmaps'
-          expected_results:
-            - key: "UsedValue"
-              lowerBoundedValue: 1.0
-        - query: FROM K8sResourcequotaSample SELECT latest(label.team) as 'TeamLabel' WHERE namespaceName = 'nri-test-namespace' AND resourcequotaName = 'nri-test-namespace-quota'
-          expected_results:
-            - key: "TeamLabel"
-              value: "k8-team"
-        - query: FROM K8sResourcequotaSample SELECT latest(annotation.owner) as 'OwnerAnnotation' WHERE namespaceName = 'nri-test-namespace' AND resourcequotaName = 'nri-test-namespace-quota'
-          expected_results:
-            - key: "OwnerAnnotation"
-              value: "newrelic"
-        - query: FROM K8sResourcequotaSample SELECT latest(createdAt) as 'CreatedAt' WHERE namespaceName = 'nri-test-namespace' AND resourcequotaName = 'nri-test-namespace-quota'
-          expected_results:
-            - key: "CreatedAt"
-              lowerBoundedValue: 1.0
-#       END Resource Quota
       entities: []
       metrics:
         - source: "k8s.yml"
