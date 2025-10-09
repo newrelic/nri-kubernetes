@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+### enhancement
+- Add v1.34 support and drop support for v1.29 @TmNguyen12 [#1300](https://github.com/newrelic/nri-kubernetes/pull/1300)
 
 ## v3.45.4 - 2025-10-06
 
