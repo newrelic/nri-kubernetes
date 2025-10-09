@@ -70,7 +70,7 @@ windows:
   is2022: false
 
 kube-state-metrics:
-  extraArgs:
-    # Notice the hyphen (-) which makes this a list item in YAML
-    - --metric-labels-allowlist=resourcequotas=[team,environment,app.kubernetes.io/name]
-    - --metric-annotations-allowlist=resourcequotas=[owner,description,newrelic.com/soft-limit.pods,newrelic.com/soft-limit.cpu]
+  metricLabelsAllowlist:
+    - resourcequotas=[team,environment,app.kubernetes.io/name]
+  metricAnnotationsAllowList:
+    - resourcequotas=[owner,description,newrelic.com/soft-limit.pods,newrelic.com/soft-limit.cpu]

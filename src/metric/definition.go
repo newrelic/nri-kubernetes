@@ -943,7 +943,6 @@ var KSMSpecs = definition.SpecGroups{
 		},
 	},
 	"resourcequota": {
-		IDGenerator:     prometheus.FromLabelValueEntityIDGenerator("kube_resourcequota_created", "resourcequota"),
 		TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_resourcequota_created"),
 		NamespaceGetter: prometheus.FromLabelGetNamespace,
 		SplitByLabel:    "resource",
