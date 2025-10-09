@@ -19,9 +19,10 @@ type grouper struct {
 }
 
 type Config struct {
-	Queries              []prometheus.Query
-	MetricFamiliesGetter prometheus.FetchAndFilterMetricsFamilies
-	ServicesLister       listersv1.ServiceLister
+	Queries                    []prometheus.Query
+	MetricFamiliesGetter       prometheus.FetchAndFilterMetricsFamilies
+	ServicesLister             listersv1.ServiceLister
+	EnableResourceQuotaSamples bool
 }
 
 type OptionFunc func(kc *grouper) error
@@ -72,6 +73,12 @@ func (g *grouper) Group(specGroups definition.SpecGroups) (definition.RawGroups,
 	if servicesGroup, ok := groups["service"]; ok {
 		if err := g.addServiceSpecSelectorToGroup(servicesGroup); err != nil {
 			errs = append(errs, fmt.Errorf("adding service spec selector to group: %w", err))
+		}
+	}
+
+	if !g.EnableResourceQuotaSamples {
+		if _, ok := groups["resourcequota"]; ok {
+			delete(groups, "resourcequota")
 		}
 	}
 

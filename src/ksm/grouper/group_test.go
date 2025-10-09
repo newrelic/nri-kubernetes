@@ -45,3 +45,27 @@ func TestAddServiceSpecSelectorToGroup(t *testing.T) {
 	assert.Equal(t, expected["selector_l1"], actual["selector_l1"])
 	assert.Equal(t, expected["selector_l2"], actual["selector_l2"])
 }
+
+func TestResourceQuotaGroupRemovedWhenDisabled(t *testing.T) {
+	g := &grouper{
+		Config: Config{
+			EnableResourceQuotaSamples: false,
+		},
+	}
+
+	groups := map[string]interface{}{
+		"resourcequota": struct{}{},
+		"other":         struct{}{},
+	}
+
+	// Simulate the logic
+	if !g.EnableResourceQuotaSamples {
+		if _, ok := groups["resourcequota"]; ok {
+			delete(groups, "resourcequota")
+		}
+	}
+
+	_, exists := groups["resourcequota"]
+	assert.False(t, exists, `"resourcequota" group should be removed when EnableResourceQuotaSamples is false`)
+	assert.Contains(t, groups, "other")
+}

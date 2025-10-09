@@ -3,14 +3,14 @@ items:
 - apiVersion: v1
   kind: Service
   metadata:
-    creationTimestamp: "2025-03-11T21:20:54Z"
+    creationTimestamp: "2025-10-01T20:24:00Z"
     labels:
       component: apiserver
       provider: kubernetes
     name: kubernetes
     namespace: default
-    resourceVersion: "233"
-    uid: 92e78354-92e6-4145-8710-fea2321be0d7
+    resourceVersion: "198"
+    uid: 8607d4fd-492a-4d5c-8092-5d923ffc4801
   spec:
     clusterIP: 10.96.0.1
     clusterIPs:
@@ -34,15 +34,15 @@ items:
     annotations:
       prometheus.io/port: "9153"
       prometheus.io/scrape: "true"
-    creationTimestamp: "2025-03-11T21:20:55Z"
+    creationTimestamp: "2025-10-01T20:24:01Z"
     labels:
       k8s-app: kube-dns
       kubernetes.io/cluster-service: "true"
       kubernetes.io/name: CoreDNS
     name: kube-dns
     namespace: kube-system
-    resourceVersion: "282"
-    uid: a9aa080c-87cb-40f7-8a6e-b00f79bc525f
+    resourceVersion: "243"
+    uid: 299e416f-a386-4e25-9156-bb81f91303a0
   spec:
     clusterIP: 10.96.0.10
     clusterIPs:
@@ -76,7 +76,7 @@ items:
     annotations:
       kubectl.kubernetes.io/last-applied-configuration: |
         {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"addonmanager.kubernetes.io/mode":"Reconcile","k8s-app":"metrics-server","kubernetes.io/minikube-addons":"metrics-server","kubernetes.io/minikube-addons-endpoint":"metrics-server","kubernetes.io/name":"Metrics-server"},"name":"metrics-server","namespace":"kube-system"},"spec":{"ports":[{"name":"https","port":443,"protocol":"TCP","targetPort":"https"}],"selector":{"k8s-app":"metrics-server"}}}
-    creationTimestamp: "2025-03-11T21:21:17Z"
+    creationTimestamp: "2025-10-01T20:24:35Z"
     labels:
       addonmanager.kubernetes.io/mode: Reconcile
       k8s-app: metrics-server
@@ -85,12 +85,12 @@ items:
       kubernetes.io/name: Metrics-server
     name: metrics-server
     namespace: kube-system
-    resourceVersion: "466"
-    uid: a64d2eed-dd68-42e2-9c45-c3d09f353bc7
+    resourceVersion: "441"
+    uid: 3618415a-2b84-4227-b4dd-5ebb9a37bbe5
   spec:
-    clusterIP: 10.96.172.181
+    clusterIP: 10.97.75.86
     clusterIPs:
-    - 10.96.172.181
+    - 10.97.75.86
     internalTrafficPolicy: Cluster
     ipFamilies:
     - IPv4
@@ -112,18 +112,18 @@ items:
     annotations:
       meta.helm.sh/release-name: e2e
       meta.helm.sh/release-namespace: scraper
-    creationTimestamp: "2025-03-11T21:21:24Z"
+    creationTimestamp: "2025-10-01T20:24:55Z"
     labels:
       app.kubernetes.io/managed-by: Helm
       run: php-apache
     name: e2e-hpa
     namespace: scraper
-    resourceVersion: "515"
-    uid: d5bdf785-62bd-4731-8e64-92aa0e20f045
+    resourceVersion: "509"
+    uid: 1e7d96b9-31df-4429-a3f7-2d4b4a3ad871
   spec:
-    clusterIP: 10.103.45.113
+    clusterIP: 10.106.237.251
     clusterIPs:
-    - 10.103.45.113
+    - 10.106.237.251
     internalTrafficPolicy: Cluster
     ipFamilies:
     - IPv4
@@ -145,23 +145,23 @@ items:
       meta.helm.sh/release-name: e2e
       meta.helm.sh/release-namespace: scraper
       prometheus.io/scrape: "true"
-    creationTimestamp: "2025-03-11T21:21:24Z"
+    creationTimestamp: "2025-10-01T20:24:55Z"
     labels:
       app.kubernetes.io/component: metrics
       app.kubernetes.io/instance: e2e
       app.kubernetes.io/managed-by: Helm
       app.kubernetes.io/name: kube-state-metrics
       app.kubernetes.io/part-of: kube-state-metrics
-      app.kubernetes.io/version: 2.10.0
+      app.kubernetes.io/version: 2.15.0
       helm.sh/chart: kube-state-metrics-5.30.1
     name: e2e-kube-state-metrics
     namespace: scraper
-    resourceVersion: "511"
-    uid: 0d10e303-7885-438c-a87a-8ed9ee9eaff6
+    resourceVersion: "505"
+    uid: 600cd0c8-a8c2-421d-be5a-420c3f55ca15
   spec:
-    clusterIP: 10.108.116.10
+    clusterIP: 10.96.232.244
     clusterIPs:
-    - 10.108.116.10
+    - 10.96.232.244
     internalTrafficPolicy: Cluster
     ipFamilies:
     - IPv4
@@ -184,19 +184,18 @@ items:
     annotations:
       meta.helm.sh/release-name: e2e
       meta.helm.sh/release-namespace: scraper
-    creationTimestamp: "2025-03-11T21:21:24Z"
+    creationTimestamp: "2025-10-01T20:24:55Z"
     labels:
       app.kubernetes.io/managed-by: Helm
     name: e2e-lb
     namespace: scraper
-    resourceVersion: "520"
-    uid: fcdc44bb-e10e-48b4-89a1-c7d085d2ca4c
+    resourceVersion: "514"
+    uid: 2b685883-4a0a-42b7-a142-44b4bdec53b3
   spec:
     allocateLoadBalancerNodePorts: true
-    clusterIP: 10.111.100.65
+    clusterIP: 10.109.137.211
     clusterIPs:
-    - 10.111.100.65
-    externalName: newrelic.com
+    - 10.109.137.211
     externalTrafficPolicy: Cluster
     internalTrafficPolicy: Cluster
     ipFamilies:
@@ -204,7 +203,7 @@ items:
     ipFamilyPolicy: SingleStack
     loadBalancerIP: 127.1.2.3
     ports:
-    - nodePort: 32111
+    - nodePort: 30086
       port: 80
       protocol: TCP
       targetPort: 80
@@ -218,18 +217,18 @@ items:
     annotations:
       meta.helm.sh/release-name: e2e
       meta.helm.sh/release-namespace: scraper
-    creationTimestamp: "2025-03-11T21:21:24Z"
+    creationTimestamp: "2025-10-01T20:24:55Z"
     labels:
       app: statefulset
       app.kubernetes.io/managed-by: Helm
     name: e2e-statefulset
     namespace: scraper
-    resourceVersion: "507"
-    uid: af622521-5837-429b-8e8e-b58aa0166f82
+    resourceVersion: "501"
+    uid: 2bf26bb1-b78b-498c-a81c-ead0bff58fd6
   spec:
-    clusterIP: 10.104.1.121
+    clusterIP: 10.103.157.94
     clusterIPs:
-    - 10.104.1.121
+    - 10.103.157.94
     internalTrafficPolicy: Cluster
     ipFamilies:
     - IPv4

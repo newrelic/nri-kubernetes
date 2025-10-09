@@ -942,6 +942,67 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "isLimited", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_status_condition_limited")},
 		},
 	},
+	"resourcequota": {
+		TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_resourcequota_created"),
+		NamespaceGetter: prometheus.FromLabelGetNamespace,
+		SplitByLabel:    "resource",
+		SliceMetricName: "kube_resourcequota",
+		Specs: []definition.Spec{
+			{
+				Name:      "createdAt",
+				ValueFunc: prometheus.FromValue("kube_resourcequota_created"),
+				Type:      sdkMetric.GAUGE,
+			},
+			{
+				Name: "namespaceName",
+				ValueFunc: prometheus.FromLabelValue(
+					"kube_resourcequota_created",
+					"namespace",
+				),
+				Type: sdkMetric.ATTRIBUTE,
+			},
+			{
+				Name: "resourcequotaName", // This will be the name of your new column.
+				ValueFunc: prometheus.FromLabelValue(
+					"kube_resourcequota_created", // The stable source metric.
+					"resourcequota",              // The label to extract the value from.
+				),
+				Type: sdkMetric.ATTRIBUTE,
+			},
+			{
+				Name: "resource", // This will be the name of your new column.
+				ValueFunc: prometheus.FromLabelValue(
+					"kube_resourcequota", // The stable source metric.
+					"resource",           // The label to extract the value from.
+				),
+				Type: sdkMetric.ATTRIBUTE,
+			},
+			{
+				Name: "resource.*",
+				// This single entry uses our new generic function to create the 'resource' attribute
+				// and the 'hard' and 'used' metrics for each sub-entity.
+				ValueFunc: prometheus.FromFlattenedMetrics(
+					"kube_resourcequota",
+					"type",
+				),
+				Type: sdkMetric.GAUGE,
+			},
+			{
+				Name: "label.*",
+				// This uses a generic function to fetch all Kubernetes labels.
+				ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_resourcequota_labels", "label"),
+				Type:      sdkMetric.ATTRIBUTE,
+				Optional:  true,
+			},
+			{
+				Name: "annotation.*",
+				// This uses a generic function to fetch all Kubernetes annotations.
+				ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_resourcequota_annotations", "annotation"),
+				Type:      sdkMetric.ATTRIBUTE,
+				Optional:  true,
+			},
+		},
+	},
 }
 
 // KSMQueries are the queries we will do to KSM in order to fetch all the raw metrics.
@@ -1200,6 +1261,10 @@ var KSMQueries = []prometheus.Query{
 		Value: prometheus.GaugeValue(1),
 	}},
 	{MetricName: "kube_node_spec_unschedulable"},
+	{MetricName: "kube_resourcequota"},
+	{MetricName: "kube_resourcequota_created"},
+	{MetricName: "kube_resourcequota_labels"},
+	{MetricName: "kube_resourcequota_annotations"},
 }
 
 // CadvisorQueries are the queries we will do to the kubelet metrics cadvisor endpoint in order to fetch all the raw metrics.
