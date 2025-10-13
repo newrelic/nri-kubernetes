@@ -25,7 +25,7 @@ case $K8S_VERSION in
         KSM_VERSION="v2.14.0"
         ;;
     "1.32")
-        KSM_VERSION="v2.16.0"
+        KSM_VERSION="v2.15.0"
         ;;
     "1.33"|1.3[4-9]|1.[4-9][0-9]|[2-9].[0-9]*)
         KSM_VERSION="v2.17.0"
