@@ -51,7 +51,7 @@ func IntegrationPopulator(config *definition.IntegrationPopulateConfig) (bool, [
 				continue
 			}
 
-			pop, perr := processEntities(unitsToProcess, config, specGroup, groupLabel, entityID, extraAttributes)
+			pop, perr := processEntities(unitsToProcess, config, specGroup, groupLabel, extraAttributes)
 			if len(perr) > 0 {
 				errs = append(errs, perr...)
 			}
@@ -95,13 +95,7 @@ func filterGroup(
 }
 
 // processEntities handles the creation and population of a single entity (or sub-entity).
-func processEntities(
-	unitsToProcess []processingUnit,
-	config *definition.IntegrationPopulateConfig,
-	specGroup definition.SpecGroup,
-	groupLabel, entityID string,
-	extraAttributes []attribute.Attribute,
-) (bool, []error) {
+func processEntities(unitsToProcess []processingUnit, config *definition.IntegrationPopulateConfig, specGroup definition.SpecGroup, groupLabel string, extraAttributes []attribute.Attribute) (bool, []error) {
 	var populated bool
 	var errs []error
 
