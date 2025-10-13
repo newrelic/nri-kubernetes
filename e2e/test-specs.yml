@@ -9,7 +9,7 @@ scenarios:
     before:
       - helm dependency update ../charts/internal/e2e-resources
       - helm dependency update ../charts/newrelic-infrastructure
-      - function ver { printf $((10#$(printf "%03d%03d" $(echo "$1" | tr '.' ' ')))); } && K8S_VERSION=$(kubectl version 2>&1 | grep 'Server Version' | awk -F' v' '{ print $2; }' | awk -F. '{ print $1"."$2; }') && if [[ $(ver $K8S_VERSION) -gt $(ver "1.22") ]]; then KSM_IMAGE_VERSION="v2.10.0"; else KSM_IMAGE_VERSION="v2.6.0"; fi && echo "Will use KSM image version ${KSM_IMAGE_VERSION}" && helm upgrade --install ${SCENARIO_TAG}-resources --namespace nr-${SCENARIO_TAG} --create-namespace ../charts/internal/e2e-resources --set persistentVolume.enabled=true --set kube-state-metrics.image.tag=${KSM_IMAGE_VERSION}
+      - KSM_VERSION=$(bash ksm-check.sh) && echo "Will use KSM image version ${KSM_VERSION}" && helm upgrade --install ${SCENARIO_TAG}-resources --namespace nr-${SCENARIO_TAG} --create-namespace ../charts/internal/e2e-resources --set persistentVolume.enabled=true --set kube-state-metrics.image.tag=${KSM_VERSION}
       - helm upgrade --install ${SCENARIO_TAG} --namespace nr-${SCENARIO_TAG} --create-namespace ../charts/newrelic-infrastructure --values e2e-values.yml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG} --set kubelet.fetchPodsFromKubeService=${FETCH_PODS_FROM_KUBE_SERVICE}
       # Allow for resources to settle before starting checks
       - sleep 60
