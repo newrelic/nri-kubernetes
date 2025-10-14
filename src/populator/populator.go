@@ -125,9 +125,11 @@ func processEntities(unitsToProcess []processingUnit, config *definition.Integra
 		}
 		ms := e.NewMetricSet(msType)
 
-		groupsForThisEntity := definition.RawGroups{
-			groupLabel: {unit.entityID: unit.rawMetrics},
+		groupsForThisEntity := definition.RawGroups{}
+		for groupName, groupValue := range config.Groups {
+			groupsForThisEntity[groupName] = groupValue
 		}
+		groupsForThisEntity[groupLabel] = map[string]definition.RawMetrics{unit.entityID: unit.rawMetrics}
 
 		wasPopulated, populateErrs := metricSetPopulate(ms, groupLabel, unit.entityID, groupsForThisEntity, config.Specs)
 		if len(populateErrs) > 0 {

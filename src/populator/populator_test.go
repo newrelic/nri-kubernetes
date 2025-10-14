@@ -1088,6 +1088,86 @@ func TestMetricSetPopulate_SkipsNilValues(t *testing.T) {
 	assert.NotContains(t, ms.Metrics, "nil_metric")
 }
 
+func TestIntegrationPopulator_WithCrossGroupDependency2(t *testing.T) {
+	// Spec for a "pod" that needs to look up its "service" to generate a full entity ID.
+	podSpecWithDependency := definition.SpecGroup{
+		TypeGenerator: fromGroupEntityTypeGuessFunc, // Generates "playground:pod"
+		IDGenerator: func(groupLabel, entityID string, groups definition.RawGroups) (string, error) {
+			// This generator requires access to the "service" group.
+			serviceGroup, ok := groups["service"]
+			if !ok {
+				return "", errors.New("service group not found")
+			}
+
+			// Find the service and append its name.
+			for serviceID, metrics := range serviceGroup {
+				if name, ok := metrics["name"]; ok && name == "my-service" {
+					// Generate the ID using info from another group.
+					return fmt.Sprintf("%s_service-is-%s", entityID, serviceID), nil
+				}
+			}
+
+			return "", errors.New("could not find related service")
+		},
+		Specs: []definition.Spec{
+			{Name: "podName", ValueFunc: definition.FromRaw("name"), Type: metric.ATTRIBUTE},
+		},
+	}
+
+	serviceSpec := definition.SpecGroup{
+		TypeGenerator: fromGroupEntityTypeGuessFunc,
+		Specs: []definition.Spec{
+			{Name: "serviceName", ValueFunc: definition.FromRaw("name"), Type: metric.ATTRIBUTE},
+		},
+	}
+
+	// Mock data
+	crossGroupData := definition.RawGroups{
+		"pod": {
+			"my-pod-123": {
+				"name": "my-pod-123",
+			},
+		},
+		"service": {
+			"my-service-abc": {
+				"name": "my-service",
+			},
+		},
+	}
+
+	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
+	require.NoError(t, err)
+
+	config := &definition.IntegrationPopulateConfig{
+		Integration:   intgr,
+		ClusterName:   defaultNS,
+		K8sVersion:    &version.Info{GitVersion: "v1.15.42"},
+		MsTypeGuesser: fromGroupMetricSetTypeGuessFunc,
+		Groups:        crossGroupData,
+		Specs: definition.SpecGroups{
+			"pod":     podSpecWithDependency,
+			"service": serviceSpec,
+		},
+	}
+
+	populated, errs := IntegrationPopulator(config)
+
+	assert.True(t, populated, "Expected the integration to be populated")
+	assert.Empty(t, errs, "Expected no errors during population")
+	require.Len(t, intgr.Entities, 3, "Expected three entities (pod, service, and cluster)")
+
+	var podEntity *integration.Entity
+	for _, e := range intgr.Entities {
+		if strings.HasPrefix(e.Metadata.Name, "my-pod-123") {
+			podEntity = e
+			break
+		}
+	}
+
+	require.NotNil(t, podEntity, "Pod entity was not found in the integration payload")
+	assert.Equal(t, "my-pod-123_service-is-my-service-abc", podEntity.Metadata.Name)
+}
+
 type NamespaceFilterMock struct{}
 
 func (nf NamespaceFilterMock) IsAllowed(namespace string) bool {
