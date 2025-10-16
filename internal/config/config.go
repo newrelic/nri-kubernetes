@@ -54,6 +54,7 @@ type Config struct {
 		HTTP HTTPSink `mapstructure:"http"`
 	} `mapstructure:"sink"`
 
+	Operator `mapstructure:"operator"`
 	// ControlPlane defines config options for the control plane scraper.
 	ControlPlane `mapstructure:"controlPlane"`
 	// Kubelet defines config options for the kubelet scraper.
@@ -91,6 +92,10 @@ type TLSConfig struct {
 	KeyPath string `mapstructure:"keyPath"`
 	// CAPath is the path to the PEM-encoded CA certificate that will be used to validate the server certificate.
 	CAPath string `mapstructure:"caPath"`
+}
+
+type Operator struct {
+	Enabled bool `mapstructure:"enabled"`
 }
 
 // KSM contains configuration options for the KSM scraper.
