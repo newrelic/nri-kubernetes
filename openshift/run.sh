@@ -150,12 +150,12 @@ build_push_image() {
 create_e2e_values() {
     local scenario_tag="$1"
     local image_repository="image-registry.openshift-image-registry.svc:5000/nr-${scenario_tag}/e2e-nri-kubernetes"
-
+    local namespace=nr-${scenario_tag}
     cat > e2e/e2e-values-dynamic.yml <<EOF
 provider: OPEN_SHIFT
 ksm:
   config:
-    timeout: 10s
+    timeout: 60s
     retries: 3
     selector: "app.kubernetes.io/name=kube-state-metrics"
     scheme: "http"
@@ -165,6 +165,22 @@ images:
     pullPolicy: Always
     tag: e2e
     repository: ${image_repository}
+controlPlane:
+  config:
+    etcd:
+      enabled: true
+      autodiscover:
+      - selector: "app=etcd,etcd=true,k8s-app=etcd"
+        namespace: openshift-etcd
+        matchNode: true
+        endpoints:
+          - url: https://localhost:2379
+            insecureSkipVerify: true
+            auth:
+              type: mTLS
+              mtls:
+                secretName: my-etcd-secret
+                secretNamespace: ${namespace}
 EOF
 
     echo "Created e2e-values-dynamic.yml with repository: ${image_repository}"
@@ -265,7 +281,7 @@ deploy_e2e_resources() {
     helm upgrade --install "${scenario_tag}-resources" \
         --namespace "nr-${scenario_tag}" \
         --create-namespace \
-        ../charts/internal/e2e-resources \
+        ./charts/internal/e2e-resources \
         --set persistentVolume.enabled=true \
         --set kube-state-metrics.image.tag="${KSM_IMAGE_VERSION}" \
         -f "${values_file}"
@@ -355,7 +371,7 @@ dev_configure_e2e() {
 provider: OPEN_SHIFT
 ksm:
   config:
-    timeout: 10s
+    timeout: 60s
     retries: 3
     selector: "app.kubernetes.io/name=kube-state-metrics"
     scheme: "http"
@@ -365,15 +381,6 @@ images:
     pullPolicy: Always
     tag: e2e
     repository: ${image_repository}
-common:
-  config:
-    interval:
-    namespaceSelector:
-      matchExpressions:
-        - key: "kubernetes.io/metadata.name"
-          operator: In
-          values:
-            - "${namespace}"
 controlPlane:
   config:
     etcd:
@@ -476,6 +483,45 @@ dev_deploy_nri_kubernetes() {
     echo "nri-kubernetes deployed successfully!"
 }
 
+# Function: Deploy E2E resources (dev version)
+dev_deploy_e2e_resources() {
+    local namespace="$1"
+    local release_name="$2"
+    local values_file="${3:-$HOME/ConfigFiles/e2e-resources/9-26-oshift-values.yaml}"
+
+    echo ""
+    echo "=== Deploying E2E Resources (Development) ==="
+
+    # Function to convert version string to comparable number
+    ver() {
+        printf $((10#$(printf "%03d%03d" $(echo "$1" | tr '.' ' '))))
+    }
+
+    # Get Kubernetes server version
+    K8S_VERSION=$(kubectl version 2>&1 | grep 'Server Version' | awk -F' v' '{ print $2; }' | awk -F. '{ print $1"."$2; }')
+    echo "Detected Kubernetes version: ${K8S_VERSION}"
+
+    # Select appropriate kube-state-metrics version
+    if [[ $(ver "$K8S_VERSION") -gt $(ver "1.22") ]]; then
+        KSM_IMAGE_VERSION="v2.15.0"
+    else
+        KSM_IMAGE_VERSION="v2.10.0"
+    fi
+
+    echo "Will use KSM image version ${KSM_IMAGE_VERSION}"
+
+    # Deploy with Helm
+    helm upgrade --install "${release_name}-resources" \
+        --namespace "${namespace}" \
+        --create-namespace \
+        ./charts/internal/e2e-resources \
+        --set persistentVolume.enabled=true \
+        --set kube-state-metrics.image.tag="${KSM_IMAGE_VERSION}" \
+        -f "${values_file}"
+
+    echo "E2E resources deployed successfully."
+}
+
 # Workflow: Setup only (no scenario tag needed)
 run_setup() {
     echo ""
@@ -494,7 +540,13 @@ run_scenario_workflow() {
     echo ""
     echo "=== Running Scenario Workflow ==="
 
+    # Option 4: Build and push image
     build_push_image "$scenario_tag"
+
+    # Option 5: Setup mTLS for etcd
+    setup_mtls_for_etcd "$scenario_tag"
+
+    # Option 7: Configure and run E2E tests
     create_e2e_values "$scenario_tag"
     add_sccs "$scenario_tag"
     run_e2e_tests "$scenario_tag"
@@ -539,13 +591,14 @@ show_menu() {
     echo "  5) Setup mTLS for etcd"
     echo "  6) Deploy E2E resources"
     echo "  7) Configure and run E2E tests"
-    echo "  8) Run scenario workflow (4+7)"
+    echo "  8) Run scenario workflow (4+5+7)"
     echo ""
     echo "Development Functions (namespace/release_name required):"
     echo " 11) Setup mTLS for etcd (dev)"
     echo " 12) Configure E2E (dev)"
     echo " 13) Run E2E tests (dev)"
     echo " 14) Deploy nri-kubernetes (dev)"
+    echo " 15) Deploy E2E resources (dev)"
     echo ""
     echo "Combined:"
     echo "  9) Run all functions"
@@ -603,7 +656,7 @@ main() {
 
     while true; do
         show_menu
-        read -rp "Select an option (1-14): " choice
+        read -rp "Select an option (1-15): " choice
 
         case $choice in
             1)
@@ -683,8 +736,19 @@ main() {
                 read -rp "Enter values file path (or press Enter to skip): " values_file
                 dev_deploy_nri_kubernetes "$dev_namespace" "$dev_release_name" "$values_file"
                 ;;
+            15)
+                # Setup namespace and release name if not already set
+                if [ -z "$dev_namespace" ]; then
+                    read -rp "Enter namespace: " dev_namespace
+                fi
+                if [ -z "$dev_release_name" ]; then
+                    read -rp "Enter release name: " dev_release_name
+                fi
+                read -rp "Enter values file path (default: ~/ConfigFiles/e2e-resources/9-26-oshift-values.yaml): " values_file
+                dev_deploy_e2e_resources "$dev_namespace" "$dev_release_name" "${values_file}"
+                ;;
             *)
-                echo "Invalid option. Please select 1-14."
+                echo "Invalid option. Please select 1-15."
                 ;;
         esac
 
