@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+### enhancement
+- Add metrics for ResourceQuota @NRhzhao [#1302](https://github.com/newrelic/nri-kubernetes/pull/1302)
 
 ## v3.46.0 - 2025-10-13
 
