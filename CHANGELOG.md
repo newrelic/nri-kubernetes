@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### Security
+- Docker file to update apk packages on build @philip-r-beckwith [#1309](https://github.com/newrelic/nri-kubernetes/pull/1309)
+
 ## v3.47.0 - 2025-10-20
 
 ### 🚀 Enhancements
