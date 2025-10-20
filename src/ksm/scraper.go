@@ -120,9 +120,10 @@ func (s *Scraper) Run(i *integration.Integration) error {
 	for _, endpoint := range endpoints {
 		s.logger.Debugf("Fetching KSM data from %q", endpoint)
 		grouper, err := ksmGrouper.New(ksmGrouper.Config{
-			MetricFamiliesGetter: s.KSM.MetricFamiliesGetFunc(endpoint),
-			Queries:              metric.KSMQueries,
-			ServicesLister:       s.servicesLister,
+			MetricFamiliesGetter:       s.KSM.MetricFamiliesGetFunc(endpoint),
+			Queries:                    metric.KSMQueries,
+			ServicesLister:             s.servicesLister,
+			EnableResourceQuotaSamples: s.config.EnableResourceQuotaSamples,
 		}, ksmGrouper.WithLogger(s.logger))
 		if err != nil {
 			return fmt.Errorf("creating KSM grouper: %w", err)

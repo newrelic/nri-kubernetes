@@ -117,6 +117,8 @@ type KSM struct {
 	Timeout time.Duration `mapstructure:"timeout"`
 	// Retries controls how many times the integration will attempt to connect to the KSM endpoint before giving up.
 	Retries int `mapstructure:"retries"`
+	// Enable collection of ResourceQuota metrics as samples.
+	EnableResourceQuotaSamples bool `mapstructure:"enableResourceQuotaSamples"`
 	// Discovery allows to configure timing aspects of KSM discovery.
 	Discovery struct {
 		// BackoffDelay controls how much time to wait between attempts to find the KSM service in the cluster.
@@ -306,6 +308,7 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 
 	v.SetDefault("ksm|discovery|backoffDelay", 7*time.Second)
 	v.SetDefault("ksm|discovery|timeout", 60*time.Second)
+	v.SetDefault("ksm|enableResourceQuotaSamples", false)
 
 	v.SetEnvPrefix("NRI_KUBERNETES")
 	v.AutomaticEnv()
