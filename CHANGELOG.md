@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### Security
+### bugfix
+- fix issue when the scrape duration exceeds the scrape interval, it will sleep for a negative time (meaning, do it immediately), which breaks the interval in which data is reported @danielstokes [#1215](https://github.com/newrelic/nri-kubernetes/pull/1215)
+
+### security
 - Docker file to update apk packages on build @philip-r-beckwith [#1309](https://github.com/newrelic/nri-kubernetes/pull/1309)
 
 ## v3.47.0 - 2025-10-20
