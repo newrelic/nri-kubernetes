@@ -130,6 +130,7 @@ func TestGroup(t *testing.T) {
 }
 
 func TestCountRunningPods(t *testing.T) {
+	t.Parallel()
 	g := &grouper{}
 
 	rawGroups := definition.RawGroups{
