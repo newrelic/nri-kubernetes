@@ -888,9 +888,31 @@ var KSMSpecs = definition.SpecGroups{
 				Type:      sdkMetric.GAUGE,
 			},
 			{
+				Name: "addressNotReady",
+				ValueFunc: prometheus.FromValueWithLabelsFilter(
+					"kube_endpoint_address",
+					"addressNotReady",
+					prometheus.IncludeOnlyWhenLabelMatchFilter(map[string]string{
+						"ready": "false",
+					}),
+				),
+				Type: sdkMetric.GAUGE,
+			},
+			{
 				Name:      "addressAvailable",
 				ValueFunc: prometheus.FromValue("kube_endpoint_address_available"),
 				Type:      sdkMetric.GAUGE,
+			},
+			{
+				Name: "addressAvailable",
+				ValueFunc: prometheus.FromValueWithLabelsFilter(
+					"kube_endpoint_address",
+					"addressAvailable",
+					prometheus.IncludeOnlyWhenLabelMatchFilter(map[string]string{
+						"ready": "true",
+					}),
+				),
+				Type: sdkMetric.GAUGE,
 			},
 		},
 	},
