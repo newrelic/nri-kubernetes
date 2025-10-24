@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+### 🚀 Enhancements
+- Add `runningPod` attribute to the K8sNodeSample @NRhzhao [#1316](https://github.com/newrelic/nri-kubernetes/pull/1316)
 
 ### bugfix
 - fix issue when the scrape duration exceeds the scrape interval, it will sleep for a negative time (meaning, do it immediately), which breaks the interval in which data is reported @danielstokes [#1215](https://github.com/newrelic/nri-kubernetes/pull/1215)

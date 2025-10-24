@@ -335,6 +335,7 @@ var ExpectedGroupData = definition.RawGroups{
 				"DuplicatedCondition": -1,
 			},
 			"unschedulable": false,
+			"runningPods":   3,
 		},
 	},
 	"volume": {
