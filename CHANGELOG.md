@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### 🚀 Enhancements
+- Export KSM labels and annotations for pods, deployments, and namespaces @NRhzhao [#1317](https://github.com/newrelic/nri-kubernetes/pull/1317)
+
 ### Security
 - Docker file to update apk packages on build @philip-r-beckwith [#1309](https://github.com/newrelic/nri-kubernetes/pull/1309)
 

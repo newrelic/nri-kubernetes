@@ -56,9 +56,15 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: nri-k8s-dev
+  labels:
+    environment: dev
+    team: k8-team
+  annotations:
+    owner: "namespace@example.com"
+    description: "Namespace for e2e workloads"
 """
 k8s_yaml([blob(ns_yaml_str)])
 
 k8s_yaml(helm('./charts/newrelic-infrastructure', name='nr', namespace='nri-k8s-dev', values=['values-dev.yaml', 'values-local.yaml']))
 
-k8s_yaml(helm('./charts/internal/e2e-resources', name='e2e-resources', namespace='nri-k8s-dev', values=['values-dev.yaml', 'values-local.yaml']))
+k8s_yaml(helm('./charts/internal/e2e-resources', name='e2e-resources', namespace='nri-k8s-dev'))

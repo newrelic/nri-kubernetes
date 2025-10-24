@@ -4,10 +4,11 @@ kind: Deployment
 metadata:
   name: {{ .Release.Name }}-deployment
   labels:
-    app: deployment
+    environment: dev
     team: k8-team
   annotations:
-    "owner": "newrelic"
+    owner: "deployment@example.com"
+    description: "Deployment for e2e workloads"
 spec:
   paused: false
   minReadySeconds: 6
