@@ -1168,7 +1168,7 @@ func TestIntegrationPopulator_WithCrossGroupDependency2(t *testing.T) {
 	assert.Equal(t, "my-pod-123_service-is-my-service-abc", podEntity.Metadata.Name)
 }
 
-func TestIntegrationPopulator_KSMAnnotationLabel_Exported(t *testing.T) {
+func TestIntegrationPopulator_KSMAnnotationLabel_Exported(t *testing.T) { //nolint: funlen
 	rawGroups := definition.RawGroups{
 		"deployment": {
 			"my-deployment": {
@@ -1216,10 +1216,10 @@ func TestIntegrationPopulator_KSMAnnotationLabel_Exported(t *testing.T) {
 
 	specGroups := definition.SpecGroups{
 		"deployment": {
-			IDGenerator: func(groupLabel, entityID string, groups definition.RawGroups) (string, error) {
+			IDGenerator: func(_, _ string, _ definition.RawGroups) (string, error) {
 				return "my-deployment", nil
 			},
-			TypeGenerator: func(groupLabel, entityID string, groups definition.RawGroups, clusterName string) (string, error) {
+			TypeGenerator: func(_, _ string, _ definition.RawGroups, _ string) (string, error) {
 				return "K8sDeployment", nil
 			},
 			Specs: []definition.Spec{
@@ -1228,10 +1228,10 @@ func TestIntegrationPopulator_KSMAnnotationLabel_Exported(t *testing.T) {
 			},
 		},
 		"namespace": {
-			IDGenerator: func(groupLabel, entityID string, groups definition.RawGroups) (string, error) {
+			IDGenerator: func(_, _ string, _ definition.RawGroups) (string, error) {
 				return "my-namespace", nil
 			},
-			TypeGenerator: func(groupLabel, entityID string, groups definition.RawGroups, clusterName string) (string, error) {
+			TypeGenerator: func(_, _ string, _ definition.RawGroups, _ string) (string, error) {
 				return "K8sNamespace", nil
 			},
 			Specs: []definition.Spec{
@@ -1240,8 +1240,8 @@ func TestIntegrationPopulator_KSMAnnotationLabel_Exported(t *testing.T) {
 			},
 		},
 		"pod": {
-			IDGenerator: func(groupLabel, entityID string, groups definition.RawGroups) (string, error) { return "my-pod", nil },
-			TypeGenerator: func(groupLabel, entityID string, groups definition.RawGroups, clusterName string) (string, error) {
+			IDGenerator: func(_, _ string, _ definition.RawGroups) (string, error) { return "my-pod", nil },
+			TypeGenerator: func(_, _ string, _ definition.RawGroups, _ string) (string, error) {
 				return "K8sPod", nil
 			},
 			Specs: []definition.Spec{
@@ -1301,7 +1301,6 @@ func TestIntegrationPopulator_KSMAnnotationLabel_Exported(t *testing.T) {
 		// Ensure there's at least one metric set.
 		require.NotEmpty(t, entity.Metrics, "entity %s has no metric sets", entity.Metadata.Name)
 		metricSet := entity.Metrics[0]
-		//assert.Equal(t, len(expectedMetrics), len(metricSet.Metrics), "metric count mismatch for entity %s", entity.Metadata.Name)
 
 		for k, v := range expectedMetrics {
 			metricValue, ok := metricSet.Metrics[k]
