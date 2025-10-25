@@ -70,5 +70,13 @@ windows:
   is2022: false
 
 kube-state-metrics:
-  metricLabelsAllowlist: "resourcequotas=[team,environment,app.kubernetes.io/name]"
-  metricAnnotationsAllowList: "resourcequotas=[owner,description,newrelic.com/soft-limit.pods,newrelic.com/soft-limit.cpu]"
+  metricLabelsAllowlist:
+    - resourcequotas=[environment,team]
+    - namespaces=[environment,team]
+    - deployments=[environment,team]
+    - pods=[environment,team]
+  metricAnnotationsAllowList:
+    - resourcequotas=[owner,description]
+    - namespaces=[owner,description]
+    - deployments=[owner,description]
+    - pods=[owner,description]

@@ -3,6 +3,12 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Release.Name }}-deployment
+  labels:
+    environment: dev
+    team: k8-team
+  annotations:
+    owner: "deployment@example.com"
+    description: "Deployment for e2e workloads"
 spec:
   paused: false
   minReadySeconds: 6

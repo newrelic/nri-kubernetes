@@ -55,16 +55,13 @@ spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       containers:
-        - image: alpine
+        - image: buildpack-deps:stable-curl
           imagePullPolicy: IfNotPresent
           name: {{ .Release.Name }}-scraper
           command:
-            - sh
+            - sleep
           args:
-            - -c
-            - |
-              apk add curl bash
-              sleep 24h
+            - 24h
           readinessProbe:
             exec:
               command:
