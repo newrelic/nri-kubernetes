@@ -6,7 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
-### 🚀 Enhancements
+
+### enhancement
 - Add `runningPod` attribute to the K8sNodeSample @NRhzhao [#1316](https://github.com/newrelic/nri-kubernetes/pull/1316)
 
 ## v3.48.0 - 2025-10-27
