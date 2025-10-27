@@ -7,14 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### bugfix
-- fix issue when the scrape duration exceeds the scrape interval, it will sleep for a negative time (meaning, do it immediately), which breaks the interval in which data is reported @danielstokes [#1215](https://github.com/newrelic/nri-kubernetes/pull/1215)
-
 ### 🚀 Enhancements
 - Export KSM labels and annotations for pods, deployments, and namespaces @NRhzhao [#1317](https://github.com/newrelic/nri-kubernetes/pull/1317)
 
-### Security
+## v3.48.0 - 2025-10-27
+
+### 🛡️ Security notices
 - Docker file to update apk packages on build @philip-r-beckwith [#1309](https://github.com/newrelic/nri-kubernetes/pull/1309)
+
+### 🐞 Bug fixes
+- fix issue when the scrape duration exceeds the scrape interval, it will sleep for a negative time (meaning, do it immediately), which breaks the interval in which data is reported @danielstokes [#1215](https://github.com/newrelic/nri-kubernetes/pull/1215)
 
 ## v3.47.0 - 2025-10-20
 
