@@ -393,6 +393,7 @@ func Test_filterCpuUsedCores(t *testing.T) { //nolint: funlen
 }
 
 func Test_KSM_LabelAndAnnotationExtraction_WithKSMSpecs(t *testing.T) {
+	t.Parallel()
 	raw := definition.RawGroups{
 		"namespace": {
 			"my-namespace": {
