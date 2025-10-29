@@ -24,7 +24,7 @@ spec:
           mountPath: /app
         resources:
           requests:
-            cpu: "100m"
+            cpu: {{ if .Values.openShift.enabled }}"400m"{{ else }}"100m"{{ end }}
           limits:
             cpu: "500m"
         imagePullPolicy: IfNotPresent
@@ -63,6 +63,7 @@ metadata:
 data:
   calculate_pi.py: |
     from decimal import Decimal, getcontext
+    import time
 
     def calculate_pi(n):
         getcontext().prec = n
@@ -80,7 +81,8 @@ data:
 
     if __name__ == "__main__":
         while True:
-            calculate_pi(1000)
+            calculate_pi(500)
+            time.sleep(0.5)
 {{ end }}
 ---
 {{ if not .Values.openShift.enabled }}
@@ -107,7 +109,7 @@ spec:
     kind: Deployment
     name: {{ .Release.Name }}-hpa
   minReplicas: 1
-  maxReplicas: 10
+  maxReplicas: {{ if .Values.openShift.enabled }}4{{ else }}3{{ end }}
   metrics:
     - type: Resource
       resource:

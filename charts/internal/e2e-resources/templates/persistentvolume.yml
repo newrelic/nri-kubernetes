@@ -1,4 +1,5 @@
 {{- if .Values.persistentVolume.enabled }}
+---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -21,7 +22,7 @@ spec:
               operator: Exists
   {{- else }}
   hostPath:
-    path: /mnt/
+    path: {{ .Values.persistentVolume.hostPath | default "/mnt/" }}
     type: DirectoryOrCreate
   {{- end }}
 {{- end }}

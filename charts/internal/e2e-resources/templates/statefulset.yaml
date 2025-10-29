@@ -33,6 +33,11 @@ spec:
         - name: compute-pi-digits
           image: perl:5.34.0
           imagePullPolicy: IfNotPresent
+          {{- if .Values.openShift.enabled }}
+          securityContext:
+            runAsUser: 0
+            privileged: true
+          {{- end }}
           resources:
             requests:
               cpu: 40m

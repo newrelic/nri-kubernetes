@@ -21,7 +21,7 @@ log_env_var() {
     echo "$1=$2" >> "$ENV_FILE"
 }
 
-# Function to run sudo commands with user confirmation
+# Function to run sudo commands with user confirmation, only needed for exposing default registry and handling certs
 run_sudo() {
     local cmd="$*"
     echo ""
@@ -104,12 +104,27 @@ expose_default_registry() {
     echo "Registry exposed and configured successfully."
 }
 
-# Function 3: Build and push image
-build_push_image() {
+# Function 3: Build image
+build_image() {
+    echo ""
+    echo "=== Building image ==="
+
+    # Build
+    echo "Compiling multiarch..."
+    make compile-multiarch
+
+    echo "Building Docker image..."
+    docker build -t e2e-nri-kubernetes:e2e .
+
+    echo "Image built successfully."
+}
+
+# Function 4: Push image
+push_image_to_open_shift() {
     local scenario_tag="$1"
 
     echo ""
-    echo "=== Building and pushing image ==="
+    echo "=== Pushing image ==="
 
     # Get registry host (in case this function is run standalone)
     HOST=$(oc get route default-route -n openshift-image-registry --template='{{ .spec.host }}' 2>/dev/null || echo "")
@@ -130,28 +145,20 @@ build_push_image() {
     echo "Creating namespace: ${TARGET_NAMESPACE}"
     kubectl create namespace "${TARGET_NAMESPACE}" --dry-run=client -o yaml | kubectl apply -f -
 
-    # Build
-    echo "Compiling multiarch..."
-    make compile-multiarch
-
-    echo "Building Docker image..."
-    docker build -t e2e-nri-kubernetes:e2e .
-
     echo "Tagging image for registry..."
     docker tag e2e-nri-kubernetes:e2e "${HOST}/${TARGET_NAMESPACE}/e2e-nri-kubernetes:e2e"
 
     echo "Pushing image to registry..."
     docker push "${HOST}/${TARGET_NAMESPACE}/e2e-nri-kubernetes:e2e"
 
-    echo "Image built and pushed to ${TARGET_NAMESPACE} successfully."
+    echo "Image pushed to ${TARGET_NAMESPACE} successfully."
 }
 
-# Function 4: Create e2e values file
-create_e2e_values() {
-    local scenario_tag="$1"
-    local image_repository="image-registry.openshift-image-registry.svc:5000/nr-${scenario_tag}/e2e-nri-kubernetes"
-    local namespace=nr-${scenario_tag}
-    cat > e2e/e2e-values-dynamic.yml <<EOF
+# Function 5: Create e2e values file
+create_e2e_test_values_image_registry() {
+    local namespace="$1"
+    local image_repository="image-registry.openshift-image-registry.svc:5000/${namespace}/e2e-nri-kubernetes"
+    cat > e2e/e2e-values-openshift.yml <<EOF
 provider: OPEN_SHIFT
 ksm:
   config:
@@ -159,7 +166,7 @@ ksm:
     retries: 3
     selector: "app.kubernetes.io/name=kube-state-metrics"
     scheme: "http"
-    namespace: "nr-${scenario_tag}"
+    namespace: ${namespace}
 images:
   integration:
     pullPolicy: Always
@@ -181,14 +188,23 @@ controlPlane:
               mtls:
                 secretName: my-etcd-secret
                 secretNamespace: ${namespace}
+  extraVolumeMounts:
+    - name: etcd-tls-secret
+      mountPath: /etc/etcd-secrets
+      readOnly: true
+  extraVolumes:
+    - name: etcd-tls-secret
+      secret:
+        secretName: my-etcd-secret
 EOF
 
-    echo "Created e2e-values-dynamic.yml with repository: ${image_repository}"
+    echo "Created e2e-values-openshift.yml with repository: ${image_repository}"
 }
 
-# Function 5: Add Security Context Constraints
+# Function 6: Add Security Context Constraints
 add_sccs() {
     local scenario_tag="$1"
+    local namespace="$2"
 
     echo ""
     echo "=== Adding Security Context Constraints ==="
@@ -203,24 +219,24 @@ add_sccs() {
         "default"
         "${scenario_tag}-nrk8s-controlplane"
         "newrelic-bundle-newrelic-logging"
+        "nri-bundle-sa"
     )
 
     for sa in "${service_accounts[@]}"; do
         echo "  Adding privileged SCC to: $sa"
-        oc adm policy add-scc-to-user privileged "system:serviceaccount:nr-${scenario_tag}:${sa}"
+        oc adm policy add-scc-to-user privileged "system:serviceaccount:${namespace}:${sa}"
     done
 
     echo "SCCs added successfully."
 }
 
-# Function 6: Setup mTLS for etcd
+# Function 7: Setup mTLS for etcd
 setup_mtls_for_etcd() {
-    local scenario_tag="$1"
-    local target_namespace="nr-${scenario_tag}"
+    local target_namespace="$1"
     local temp_file="etcd-secret.yaml"
 
     echo ""
-    echo "=== Setting up mTLS for etcd ==="
+    echo "=== Setting up mTLS for etcd for namespace ${target_namespace} ==="
 
     # Get the etcd-client secret
     echo "Fetching etcd-client secret from openshift-etcd namespace..."
@@ -243,7 +259,7 @@ setup_mtls_for_etcd() {
     kubectl apply -n "${target_namespace}" -f "$temp_file"
 
     # Clean up backup files
-    rm -f "${temp_file}.bak"
+    # rm -f "${temp_file}.bak"
 
     echo ""
     echo "mTLS secret configured successfully!"
@@ -251,45 +267,7 @@ setup_mtls_for_etcd() {
     echo "Secret name: my-etcd-secret"
 }
 
-# Function 7: Deploy E2E resources
-deploy_e2e_resources() {
-    local scenario_tag="$1"
-    local values_file="${2:-$HOME/ConfigFiles/e2e-resources/9-26-oshift-values.yaml}"
-
-    echo ""
-    echo "=== Deploying E2E Resources ==="
-
-    # Function to convert version string to comparable number
-    ver() {
-        printf $((10#$(printf "%03d%03d" $(echo "$1" | tr '.' ' '))))
-    }
-
-    # Get Kubernetes server version
-    K8S_VERSION=$(kubectl version 2>&1 | grep 'Server Version' | awk -F' v' '{ print $2; }' | awk -F. '{ print $1"."$2; }')
-    echo "Detected Kubernetes version: ${K8S_VERSION}"
-
-    # Select appropriate kube-state-metrics version
-    if [[ $(ver "$K8S_VERSION") -gt $(ver "1.22") ]]; then
-        KSM_IMAGE_VERSION="v2.15.0"
-    else
-        KSM_IMAGE_VERSION="v2.10.0"
-    fi
-
-    echo "Will use KSM image version ${KSM_IMAGE_VERSION}"
-
-    # Deploy with Helm
-    helm upgrade --install "${scenario_tag}-resources" \
-        --namespace "nr-${scenario_tag}" \
-        --create-namespace \
-        ./charts/internal/e2e-resources \
-        --set persistentVolume.enabled=true \
-        --set kube-state-metrics.image.tag="${KSM_IMAGE_VERSION}" \
-        -f "${values_file}"
-
-    echo "E2E resources deployed successfully."
-}
-
-# Function 8: Run E2E tests
+# Function 9: Run E2E tests
 run_e2e_tests() {
     local scenario_tag="$1"
 
@@ -312,62 +290,16 @@ run_e2e_tests() {
     LICENSE_KEY=${LICENSE_KEY} EXCEPTIONS_SOURCE_FILE=${EXCEPTIONS_SOURCE_FILE:-} go run github.com/newrelic/newrelic-integration-e2e-action@latest \
         --commit_sha=test-string --retry_attempts=5 --retry_seconds=60 \
         --account_id=${ACCOUNT_ID} --api_key=${API_KEY} --license_key=${LICENSE_KEY} \
-        --spec_path=./e2e/test-specs.yml --verbose_mode=true --agent_enabled="false" --scenario_tag="$scenario_tag"
+        --spec_path=./e2e/test-specs-openshift.yml --verbose_mode=true --agent_enabled="false" --scenario_tag="$scenario_tag"
 
     echo "E2E tests completed."
 }
-
-# ===== Development Functions (namespace/release_name based) =====
-
-# Function: Setup mTLS for etcd (dev version)
-dev_setup_mtls_for_etcd() {
+create_e2e_test_values_online_registry() {
     local namespace="$1"
 
-    echo ""
-    echo "=== Setting up mTLS for etcd (Development) ==="
-
-    local temp_file="etcd-secret.yaml"
-
-    # Get the etcd-client secret
-    echo "Fetching etcd-client secret from openshift-etcd namespace..."
-    kubectl get secret etcd-client -n openshift-etcd -o yaml > "$temp_file"
-
-    # Remove creationTimestamp, resourceVersion, and uid
-    echo "Cleaning up secret metadata..."
-    sed -i.bak '/creationTimestamp:/d; /resourceVersion:/d; /uid:/d' "$temp_file"
-
-    # Change the name from etcd-client to my-etcd-secret
-    echo "Updating secret name to my-etcd-secret..."
-    sed -i.bak 's/name: etcd-client/name: my-etcd-secret/' "$temp_file"
-
-    # Change the namespace
-    echo "Updating namespace to ${namespace}..."
-    sed -i.bak "s/namespace: openshift-etcd/namespace: ${namespace}/" "$temp_file"
-
-    # Apply the secret
-    echo "Applying secret to ${namespace}..."
-    kubectl apply -n "${namespace}" -f "$temp_file"
-
-    # Clean up backup files
-    rm -f "${temp_file}.bak"
-
-    echo ""
-    echo "mTLS secret configured successfully!"
-    echo "Namespace: ${namespace}"
-    echo "Secret name: my-etcd-secret"
-}
-
-# Function: Configure E2E (dev version)
-dev_configure_e2e() {
-    local namespace="$1"
-    local release_name="$2"
-    local image_repository="image-registry.openshift-image-registry.svc:5000/${namespace}/e2e-nri-kubernetes"
-
-    echo ""
-    echo "=== Configuring E2E (Development) ==="
-
-    # Create e2e values file
-    cat > e2e/e2e-values-dynamic.yml <<EOF
+    # Online charts - exclude images section
+    echo "Configuring for online charts (without image configuration)..."
+    cat > e2e/e2e-values-openshift.yml <<EOF
 provider: OPEN_SHIFT
 ksm:
   config:
@@ -376,11 +308,6 @@ ksm:
     selector: "app.kubernetes.io/name=kube-state-metrics"
     scheme: "http"
     namespace: "${namespace}"
-images:
-  integration:
-    pullPolicy: Always
-    tag: e2e
-    repository: ${image_repository}
 controlPlane:
   config:
     etcd:
@@ -397,35 +324,17 @@ controlPlane:
               mtls:
                 secretName: my-etcd-secret
                 secretNamespace: ${namespace}
+  extraVolumeMounts:
+    - name: etcd-tls-secret
+      mountPath: /etc/etcd-secrets
+      readOnly: true
+  extraVolumes:
+    - name: etcd-tls-secret
+      secret:
+        secretName: my-etcd-secret
 EOF
 
-    echo "Created e2e-values-dynamic.yml with repository: ${image_repository}"
-
-    # Add SCCs
-    echo ""
-    echo "Adding Security Context Constraints..."
-
-    local service_accounts=(
-        "${release_name}-newrelic-infrastructure"
-        "${release_name}-newrelic-infrastructure-controlplane"
-        "${release_name}-kube-state-metrics"
-        "${release_name}-newrelic-logging"
-        "${release_name}-nri-kube-events"
-        "${release_name}-nri-metadata-injection-admission"
-        "default"
-        "${release_name}-nrk8s-controlplane"
-        "newrelic-bundle-newrelic-logging"
-    )
-
-    for sa in "${service_accounts[@]}"; do
-        echo "  Adding privileged SCC to: $sa"
-        oc adm policy add-scc-to-user privileged "system:serviceaccount:${namespace}:${sa}"
-    done
-
-    echo ""
-    echo "E2E configuration completed!"
-    echo "Namespace: ${namespace}"
-    echo "Release name: ${release_name}"
+    echo "Created e2e-values-openshift.yml for namespace: ${namespace}"
 }
 
 # Function: Run E2E tests (dev version)
@@ -451,7 +360,7 @@ dev_run_e2e_tests() {
     LICENSE_KEY=${LICENSE_KEY} EXCEPTIONS_SOURCE_FILE=${EXCEPTIONS_SOURCE_FILE:-} go run github.com/newrelic/newrelic-integration-e2e-action@latest \
         --commit_sha=test-string --retry_attempts=5 --retry_seconds=60 \
         --account_id=${ACCOUNT_ID} --api_key=${API_KEY} --license_key=${LICENSE_KEY} \
-        --spec_path=./e2e/test-specs.yml --verbose_mode=true --agent_enabled="false" --scenario_tag="$release_name"
+        --spec_path=./e2e/test-specs-openshift.yml --verbose_mode=true --agent_enabled="false" --scenario_tag="$release_name"
 
     echo "E2E tests completed."
 }
@@ -467,9 +376,18 @@ dev_deploy_nri_kubernetes() {
     echo "Namespace: ${namespace}"
     echo "Release name: ${release_name}"
 
+    # Check if LICENSE_KEY is set
+    if [ -z "${LICENSE_KEY:-}" ]; then
+        echo "Error: LICENSE_KEY environment variable is not set"
+        echo "Please export LICENSE_KEY before deploying"
+        return 1
+    fi
+
     local cmd="helm upgrade --install \"${release_name}\" \
         --namespace \"${namespace}\" \
         --create-namespace \
+        --set global.licenseKey=${LICENSE_KEY} \
+        --set global.cluster=${release_name} \
         charts/newrelic-infrastructure"
 
     if [ -n "$values_file" ]; then
@@ -487,7 +405,6 @@ dev_deploy_nri_kubernetes() {
 dev_deploy_e2e_resources() {
     local namespace="$1"
     local release_name="$2"
-    local values_file="${3:-$HOME/ConfigFiles/e2e-resources/9-26-oshift-values.yaml}"
 
     echo ""
     echo "=== Deploying E2E Resources (Development) ==="
@@ -502,22 +419,28 @@ dev_deploy_e2e_resources() {
     echo "Detected Kubernetes version: ${K8S_VERSION}"
 
     # Select appropriate kube-state-metrics version
-    if [[ $(ver "$K8S_VERSION") -gt $(ver "1.22") ]]; then
-        KSM_IMAGE_VERSION="v2.15.0"
+    if [[ $(ver "$K8S_VERSION") -gt $(ver "1.29") ]]; then
+        KSM_IMAGE_VERSION="v2.13.0"
     else
         KSM_IMAGE_VERSION="v2.10.0"
     fi
 
     echo "Will use KSM image version ${KSM_IMAGE_VERSION}"
 
-    # Deploy with Helm
+    echo ""
+    echo "Adding SCCs for OpenShift (before deployment)..."
+    add_sccs "${release_name}" "${namespace}"
+
+    echo ""
+    # Deploy with Helm using default values.yaml from chart with OpenShift enabled
     helm upgrade --install "${release_name}-resources" \
         --namespace "${namespace}" \
         --create-namespace \
         ./charts/internal/e2e-resources \
         --set persistentVolume.enabled=true \
+        --set persistentVolume.hostPath="/var/tmp/e2e-storage" \
         --set kube-state-metrics.image.tag="${KSM_IMAGE_VERSION}" \
-        -f "${values_file}"
+        --set openShift.enabled=true
 
     echo "E2E resources deployed successfully."
 }
@@ -533,43 +456,62 @@ run_setup() {
     echo "=== Setup workflow completed! ==="
 }
 
-# Workflow: Scenario workflow (build, configure, test)
+# Workflow: Scenario workflow (build, push, configure, test)
 run_scenario_workflow() {
     local scenario_tag="$1"
+    local namespace="nr-$scenario_tag"
 
     echo ""
     echo "=== Running Scenario Workflow ==="
 
-    # Option 4: Build and push image
-    build_push_image "$scenario_tag"
+    # Option 4: Build image
+    build_image
 
-    # Option 5: Setup mTLS for etcd
-    setup_mtls_for_etcd "$scenario_tag"
+    # Option 5: Push image
+    push_image_to_open_shift "$scenario_tag"
 
-    # Option 7: Configure and run E2E tests
-    create_e2e_values "$scenario_tag"
-    add_sccs "$scenario_tag"
-    run_e2e_tests "$scenario_tag"
+    # Option 6: Setup mTLS for etcd
+    setup_mtls_for_etcd "$namespace"
+
+    # Option 8: Configure and run E2E tests
+    create_e2e_test_values_image_registry "$namespace"
+    add_sccs "$scenario_tag" "$namespace"
+    run_e2e_tests "$scenario_tag" "$namespace"
 
     echo ""
     echo "=== Scenario workflow completed! ==="
 }
 
-# Workflow: Run all
-run_all() {
-    echo ""
-    echo "=== Running All Functions ==="
-
-    initialize_env_file
-    add_registry_role
-    expose_default_registry
-
-    read -rp "Enter scenario tag for build/test workflow: " scenario_tag
-
-    run_scenario_workflow "$scenario_tag"
+# this runs e2e tests with online images, not testing code changes
+run_online_based_scenario_workflow() {
+    local scenario_tag="$1"
+    local namespace="nr-$scenario_tag"
 
     echo ""
-    echo "=== All functions completed! ==="
+    echo "=== Running Scenario Workflow (Online) ==="
+
+    # Create namespace if it doesn't exist
+    echo "Creating namespace: ${namespace}"
+    if ! kubectl create namespace "${namespace}" --dry-run=client -o yaml | kubectl apply -f -; then
+        echo "Error: Failed to create namespace ${namespace}"
+        return 1
+    fi
+
+    # Verify namespace was created
+    if ! kubectl get namespace "${namespace}" &>/dev/null; then
+        echo "Error: Namespace ${namespace} was not created successfully"
+        return 1
+    fi
+
+    echo "Namespace ${namespace} is ready"
+
+    setup_mtls_for_etcd "$namespace"
+    create_e2e_test_values_online_registry "$namespace"
+    add_sccs "$scenario_tag" "$namespace"
+    run_e2e_tests "$scenario_tag" "$namespace"
+
+    echo ""
+    echo "=== Scenario workflow (Online) completed! ==="
 }
 
 # Interactive menu
@@ -581,122 +523,90 @@ show_menu() {
     echo "Platform: ${PLATFORM}"
     echo "Container Runtime: ${CONTAINER_RUNTIME}"
     echo ""
-    echo "Setup Functions (no scenario tag needed):"
-    echo "  1) Add registry roles"
-    echo "  2) Expose default registry"
-    echo "  3) Run setup workflow (1-2)"
+    echo "Quick Test (Online Images):"
+    echo "  1) Run online-based scenario workflow (tests with online images only)"
+    echo ""
+    echo "Setup Functions (no scenario tag needed, only need to run once per openshift local cluster):"
+    echo "  2) Add registry roles"
+    echo "  3) Expose default registry"
+    echo "  4) Run setup workflow (2-3)"
     echo ""
     echo "Scenario Functions (scenario tag required):"
-    echo "  4) Build and push image"
-    echo "  5) Setup mTLS for etcd"
-    echo "  6) Deploy E2E resources"
-    echo "  7) Configure and run E2E tests"
-    echo "  8) Run scenario workflow (4+5+7)"
+    echo "  5) Build image"
+    echo "  6) Push image"
+    echo "  7) Setup mTLS for etcd"
+    echo "  8) Configure and run E2E tests"
+    echo "  9) Run scenario workflow (5+6+7+8)"
     echo ""
     echo "Development Functions (namespace/release_name required):"
-    echo " 11) Setup mTLS for etcd (dev)"
-    echo " 12) Configure E2E (dev)"
-    echo " 13) Run E2E tests (dev)"
+    echo " 10) Setup mTLS for etcd (dev)"
+    echo " 11) Create e2e-values file (dev)"
+    echo " 12) Deploy E2E resources (dev)"
+    echo " 13) Uninstall E2E resources (dev)"
     echo " 14) Deploy nri-kubernetes (dev)"
-    echo " 15) Deploy E2E resources (dev)"
+    echo " 15) Run E2E tests (dev)"
     echo ""
-    echo "Combined:"
-    echo "  9) Run all functions"
-    echo ""
-    echo " 10) Exit"
+    echo "  0) Exit"
     echo ""
 }
 
 # Main execution
 main() {
-    # Non-interactive mode with command-line arguments
-    if [ $# -gt 0 ]; then
-        local command="$1"
-        local scenario_tag="${2:-}"
-
-        case "$command" in
-            all)
-                run_all
-                ;;
-            setup)
-                run_setup
-                ;;
-            scenario)
-                if [ -z "$scenario_tag" ]; then
-                    read -rp "Enter scenario tag: " scenario_tag
-                fi
-                run_scenario_workflow "$scenario_tag"
-                ;;
-            resources)
-                if [ -z "$scenario_tag" ]; then
-                    read -rp "Enter scenario tag: " scenario_tag
-                fi
-                local values_file="${3:-$HOME/ConfigFiles/e2e-resources/9-26-oshift-values.yaml}"
-                deploy_e2e_resources "$scenario_tag" "$values_file"
-                ;;
-            etcd)
-                if [ -z "$scenario_tag" ]; then
-                    read -rp "Enter scenario tag: " scenario_tag
-                fi
-                setup_mtls_for_etcd "$scenario_tag"
-                ;;
-            *)
-                echo "Unknown command: $command"
-                echo "Usage: $0 [all|setup|scenario|resources|etcd] [scenario_tag] [values_file]"
-                exit 1
-                ;;
-        esac
-        exit 0
-    fi
-
-    # Interactive mode
     # Store namespace and release_name for dev functions
     local dev_namespace=""
     local dev_release_name=""
 
     while true; do
         show_menu
-        read -rp "Select an option (1-15): " choice
+        read -rp "Select an option (0-15): " choice
 
         case $choice in
+            0)
+                echo "Exiting..."
+                exit 0
+                ;;
             1)
-                add_registry_role
+                local scenario_tag=""
+                read -rp "Enter scenario tag: " scenario_tag
+                echo "Using scenario tag: ${scenario_tag}"
+                run_online_based_scenario_workflow "$scenario_tag"
                 ;;
             2)
-                expose_default_registry
+                add_registry_role
                 ;;
             3)
-                run_setup
+                expose_default_registry
                 ;;
             4)
-                read -rp "Enter scenario tag: " scenario_tag
-                build_push_image "$scenario_tag"
+                run_setup
                 ;;
             5)
-                read -rp "Enter scenario tag: " scenario_tag
-                setup_mtls_for_etcd "$scenario_tag"
+                build_image
                 ;;
             6)
                 read -rp "Enter scenario tag: " scenario_tag
-                read -rp "Enter values file path (default: ~/ConfigFiles/e2e-resources/9-26-oshift-values.yaml): " values_file
-                deploy_e2e_resources "$scenario_tag" "${values_file}"
+                push_image_to_open_shift "$scenario_tag"
                 ;;
             7)
                 read -rp "Enter scenario tag: " scenario_tag
-                create_e2e_values "$scenario_tag"
-                add_sccs "$scenario_tag"
-                run_e2e_tests "$scenario_tag"
+                setup_mtls_for_etcd "nr-$scenario_tag"
                 ;;
             8)
                 read -rp "Enter scenario tag: " scenario_tag
-                run_scenario_workflow "$scenario_tag"
+                create_e2e_test_values_image_registry "nr-$scenario_tag"
+                add_sccs "$scenario_tag" "nr-$scenario_tag"
+                run_e2e_tests "$scenario_tag"
                 ;;
             9)
-                run_all
+                read -rp "Enter scenario tag: " scenario_tag
+                run_scenario_workflow "$scenario_tag"
                 ;;
             10)
-                echo "Exiting..."
-                exit 0
+                # Setup namespace and release name if not alreae set
+                if [ -z "$dev_namespace" ]; then
+                    read -rp "Enter namespace: " dev_namespace
+                fi
+                setup_mtls_for_etcd "$dev_namespace"
                 ;;
             11)
                 # Setup namespace and release name if not already set
@@ -706,7 +616,7 @@ main() {
                 if [ -z "$dev_release_name" ]; then
                     read -rp "Enter release name: " dev_release_name
                 fi
-                dev_setup_mtls_for_etcd "$dev_namespace"
+                create_e2e_test_values_image_registry "$dev_namespace"
                 ;;
             12)
                 # Setup namespace and release name if not already set
@@ -716,14 +626,24 @@ main() {
                 if [ -z "$dev_release_name" ]; then
                     read -rp "Enter release name: " dev_release_name
                 fi
-                dev_configure_e2e "$dev_namespace" "$dev_release_name"
+                dev_deploy_e2e_resources "$dev_namespace" "$dev_release_name"
                 ;;
             13)
-                # Setup release name if not already set
+                # Uninstall E2E resources
+                if [ -z "$dev_namespace" ]; then
+                    read -rp "Enter namespace: " dev_namespace
+                fi
                 if [ -z "$dev_release_name" ]; then
                     read -rp "Enter release name: " dev_release_name
                 fi
-                dev_run_e2e_tests "$dev_release_name"
+                echo ""
+                echo "=== Uninstalling E2E resources ==="
+                helm uninstall "${dev_release_name}-resources" -n "${dev_namespace}"
+                echo "E2E resources uninstalled."
+
+                sleep 5
+                kubectl delete ns "${dev_namespace}"
+                echo "Namespace ${dev_namespace} and its resources deleted."
                 ;;
             14)
                 # Setup namespace and release name if not already set
@@ -733,22 +653,18 @@ main() {
                 if [ -z "$dev_release_name" ]; then
                     read -rp "Enter release name: " dev_release_name
                 fi
-                read -rp "Enter values file path (or press Enter to skip): " values_file
+                read -rp "Enter values file path relative to repo root (e.g., e2e/e2e-values-openshift.yml) or press Enter to skip: " values_file
                 dev_deploy_nri_kubernetes "$dev_namespace" "$dev_release_name" "$values_file"
                 ;;
             15)
-                # Setup namespace and release name if not already set
-                if [ -z "$dev_namespace" ]; then
-                    read -rp "Enter namespace: " dev_namespace
-                fi
+                # Setup release name if not already set
                 if [ -z "$dev_release_name" ]; then
                     read -rp "Enter release name: " dev_release_name
                 fi
-                read -rp "Enter values file path (default: ~/ConfigFiles/e2e-resources/9-26-oshift-values.yaml): " values_file
-                dev_deploy_e2e_resources "$dev_namespace" "$dev_release_name" "${values_file}"
+                dev_run_e2e_tests "$dev_release_name"
                 ;;
             *)
-                echo "Invalid option. Please select 1-15."
+                echo "Invalid option. Please select 0-15."
                 ;;
         esac
 
