@@ -619,7 +619,7 @@ main() {
                 rerun_scenario_workflow "$scenario_tag"
                 ;;
             11)
-                # Setup namespace if not alredy set
+                # Setup namespace if not already set
                 if [ -z "$dev_namespace" ]; then
                     read -rp "Enter namespace: " dev_namespace
                 fi
