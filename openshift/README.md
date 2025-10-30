@@ -114,11 +114,11 @@ Interactive menu-driven script for managing OpenShift E2E test workflows.
 - **Option 10**: Setup mTLS for etcd (dev)
 - **Option 11**: Create e2e-values file (dev)
 - **Option 12**: Deploy E2E resources (dev) - deploys KSM and test pods
-- **Option 13**: Deploy nri-kubernetes (dev) - deploys integration with custom values
-- **Option 14**: Run E2E tests (dev)
-
-**Combined:**
-- **Option 15**: Run all functions (complete setup + scenario workflow)
+- **Option 13**: Uninstall E2E resources (dev) - removes resources and namespace
+- **Option 14**: Build image (dev) - compile and build Docker image locally
+- **Option 15**: Push image (dev) - push to OpenShift internal registry
+- **Option 16**: Deploy nri-kubernetes (dev) - deploys integration with custom values
+- **Option 17**: Run E2E tests (dev)
 
 ---
 
@@ -145,6 +145,37 @@ Interactive menu-driven script for managing OpenShift E2E test workflows.
 ```
 
 ### Development/Iterative Testing
+
+**Workflow 1: Testing with Custom Images**
+```bash
+./openshift/run.sh
+
+# 1. First time: Setup cluster (option 4)
+
+# 2. Build and push your changes
+# Select option 14 (Build image)
+# Select option 15 (Push image)
+# Enter namespace: my-dev-ns
+
+# 3. Deploy E2E resources
+# Select option 12 (Deploy E2E resources)
+# Uses remembered namespace from step 2
+# Enter release name: my-release
+
+# 4. Deploy your code
+# Select option 16 (Deploy nri-kubernetes)
+# Uses remembered namespace/release
+# Enter values file: e2e/e2e-values-openshift.yml
+
+# 5. Configure for testing
+# Select option 10 (Setup mTLS for etcd)
+# Select option 11 (Create e2e-values file)
+
+# 6. Run tests
+# Select option 17 (Run E2E tests)
+```
+
+**Workflow 2: Testing with Online Images**
 ```bash
 ./openshift/run.sh
 
@@ -155,8 +186,8 @@ Interactive menu-driven script for managing OpenShift E2E test workflows.
 # Enter namespace: my-dev-ns
 # Enter release name: my-release
 
-# 3. Deploy your code
-# Select option 13 (Deploy nri-kubernetes)
+# 3. Deploy nri-kubernetes with online images
+# Select option 16 (Deploy nri-kubernetes)
 # Uses remembered namespace/release from step 2
 # Enter values file: /path/to/custom-values.yaml
 
@@ -165,7 +196,7 @@ Interactive menu-driven script for managing OpenShift E2E test workflows.
 # Select option 11 (Create e2e-values file)
 
 # 5. Run tests
-# Select option 14 (Run E2E tests)
+# Select option 17 (Run E2E tests)
 ```
 
 ---
@@ -216,7 +247,10 @@ echo $API_KEY
 
 ## Notes
 
-- The development workflow (options 10-14) remembers your namespace and release name during the same session
+- The development workflow (options 10-17) remembers your namespace and release name during the same session
 - Scenario workflows use the naming convention `nr-${scenario_tag}` for namespaces
+- Development workflows support custom namespaces (without `nr-` prefix requirement)
 - All service accounts automatically receive `privileged` SCC when using these scripts
 - Registry setup (options 2-3) only needs to be run once per cluster
+- Options 14-15 (Build/Push image) allow you to test code changes in dev workflow
+- Option 13 (Uninstall E2E resources) cleans up resources and deletes the namespace

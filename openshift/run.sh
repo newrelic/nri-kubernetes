@@ -121,8 +121,7 @@ build_image() {
 
 # Function 4: Push image
 push_image_to_open_shift() {
-    local scenario_tag="$1"
-
+    local target_namespace="$1"
     echo ""
     echo "=== Pushing image ==="
 
@@ -134,24 +133,20 @@ push_image_to_open_shift() {
         return 1
     fi
 
-    TARGET_NAMESPACE="nr-${scenario_tag}"
-
-    log_env_var "SCENARIO_TAG" "$scenario_tag"
-    log_env_var "TARGET_NAMESPACE" "$TARGET_NAMESPACE"
+    log_env_var "TARGET_NAMESPACE" "$target_namespace"
     log_env_var "IMAGE_NAME" "e2e-nri-kubernetes:e2e"
-    log_env_var "FULL_IMAGE_PATH" "${HOST}/${TARGET_NAMESPACE}/e2e-nri-kubernetes:e2e"
+    log_env_var "FULL_IMAGE_PATH" "${HOST}/${target_namespace}/e2e-nri-kubernetes:e2e"
 
     # Create namespace if it doesn't exist
-    echo "Creating namespace: ${TARGET_NAMESPACE}"
-    kubectl create namespace "${TARGET_NAMESPACE}" --dry-run=client -o yaml | kubectl apply -f -
-
+    echo "Creating namespace: ${target_namespace}"
+    kubectl create namespace "${target_namespace}" --dry-run=client -o yaml | kubectl apply -f -
     echo "Tagging image for registry..."
-    docker tag e2e-nri-kubernetes:e2e "${HOST}/${TARGET_NAMESPACE}/e2e-nri-kubernetes:e2e"
+    docker tag e2e-nri-kubernetes:e2e "${HOST}/${target_namespace}/e2e-nri-kubernetes:e2e"
 
     echo "Pushing image to registry..."
-    docker push "${HOST}/${TARGET_NAMESPACE}/e2e-nri-kubernetes:e2e"
+    docker push "${HOST}/${target_namespace}/e2e-nri-kubernetes:e2e"
 
-    echo "Image pushed to ${TARGET_NAMESPACE} successfully."
+    echo "Image pushed to ${target_namespace} successfully."
 }
 
 # Function 5: Create e2e values file
@@ -188,14 +183,6 @@ controlPlane:
               mtls:
                 secretName: my-etcd-secret
                 secretNamespace: ${namespace}
-  extraVolumeMounts:
-    - name: etcd-tls-secret
-      mountPath: /etc/etcd-secrets
-      readOnly: true
-  extraVolumes:
-    - name: etcd-tls-secret
-      secret:
-        secretName: my-etcd-secret
 EOF
 
     echo "Created e2e-values-openshift.yml with repository: ${image_repository}"
@@ -468,7 +455,30 @@ run_scenario_workflow() {
     build_image
 
     # Option 5: Push image
-    push_image_to_open_shift "$scenario_tag"
+    push_image_to_open_shift "$namespace"
+
+    # Option 6: Setup mTLS for etcd
+    setup_mtls_for_etcd "$namespace"
+
+    # Option 8: Configure and run E2E tests
+    create_e2e_test_values_image_registry "$namespace"
+    add_sccs "$scenario_tag" "$namespace"
+    run_e2e_tests "$scenario_tag" "$namespace"
+
+    echo ""
+    echo "=== Scenario workflow completed! ==="
+}
+
+# Workflow: Rerun scenario workflow (no build, just push, configure, test)
+rerun_scenario_workflow() {
+    local scenario_tag="$1"
+    local namespace="nr-$scenario_tag"
+
+    echo ""
+    echo "=== Rerunning Scenario Workflow (No Build) ==="
+
+    # Option 5: Push image
+    push_image_to_open_shift "$namespace"
 
     # Option 6: Setup mTLS for etcd
     setup_mtls_for_etcd "$namespace"
@@ -537,14 +547,17 @@ show_menu() {
     echo "  7) Setup mTLS for etcd"
     echo "  8) Configure and run E2E tests"
     echo "  9) Run scenario workflow (5+6+7+8)"
+    echo " 10) Rerun scenario workflow (no build, 6+7+8)"
     echo ""
     echo "Development Functions (namespace/release_name required):"
-    echo " 10) Setup mTLS for etcd (dev)"
-    echo " 11) Create e2e-values file (dev)"
-    echo " 12) Deploy E2E resources (dev)"
-    echo " 13) Uninstall E2E resources (dev)"
-    echo " 14) Deploy nri-kubernetes (dev)"
-    echo " 15) Run E2E tests (dev)"
+    echo " 11) Setup mTLS for etcd (dev)"
+    echo " 12) Create e2e-values file (dev)"
+    echo " 13) Deploy E2E resources (dev)"
+    echo " 14) Uninstall E2E resources (dev)"
+    echo " 15) Build image (dev)"
+    echo " 16) Push image (dev)"
+    echo " 17) Deploy nri-kubernetes (dev)"
+    echo " 18) Run E2E tests (dev)"
     echo ""
     echo "  0) Exit"
     echo ""
@@ -558,7 +571,7 @@ main() {
 
     while true; do
         show_menu
-        read -rp "Select an option (0-15): " choice
+        read -rp "Select an option (0-18): " choice
 
         case $choice in
             0)
@@ -585,7 +598,7 @@ main() {
                 ;;
             6)
                 read -rp "Enter scenario tag: " scenario_tag
-                push_image_to_open_shift "$scenario_tag"
+                push_image_to_open_shift "nr-$scenario_tag"
                 ;;
             7)
                 read -rp "Enter scenario tag: " scenario_tag
@@ -602,13 +615,17 @@ main() {
                 run_scenario_workflow "$scenario_tag"
                 ;;
             10)
-                # Setup namespace and release name if not alreae set
+                read -rp "Enter scenario tag: " scenario_tag
+                rerun_scenario_workflow "$scenario_tag"
+                ;;
+            11)
+                # Setup namespace if not alredy set
                 if [ -z "$dev_namespace" ]; then
                     read -rp "Enter namespace: " dev_namespace
                 fi
                 setup_mtls_for_etcd "$dev_namespace"
                 ;;
-            11)
+            12)
                 # Setup namespace and release name if not already set
                 if [ -z "$dev_namespace" ]; then
                     read -rp "Enter namespace: " dev_namespace
@@ -626,9 +643,19 @@ main() {
                 if [ -z "$dev_release_name" ]; then
                     read -rp "Enter release name: " dev_release_name
                 fi
-                dev_deploy_e2e_resources "$dev_namespace" "$dev_release_name"
+                create_e2e_test_values_image_registry "$dev_namespace"
                 ;;
             13)
+                # Setup namespace and release name if not already set
+                if [ -z "$dev_namespace" ]; then
+                    read -rp "Enter namespace: " dev_namespace
+                fi
+                if [ -z "$dev_release_name" ]; then
+                    read -rp "Enter release name: " dev_release_name
+                fi
+                dev_deploy_e2e_resources "$dev_namespace" "$dev_release_name"
+                ;;
+            14)
                 # Uninstall E2E resources
                 if [ -z "$dev_namespace" ]; then
                     read -rp "Enter namespace: " dev_namespace
@@ -645,7 +672,19 @@ main() {
                 kubectl delete ns "${dev_namespace}"
                 echo "Namespace ${dev_namespace} and its resources deleted."
                 ;;
-            14)
+            15)
+                # Build image (dev)
+                build_image
+                ;;
+            16)
+                # Push image (dev)
+                if [ -z "$dev_namespace" ]; then
+                    read -rp "Enter namespace: " dev_namespace
+                fi
+
+                push_image_to_open_shift "$dev_namespace"
+                ;;
+            17)
                 # Setup namespace and release name if not already set
                 if [ -z "$dev_namespace" ]; then
                     read -rp "Enter namespace: " dev_namespace
@@ -656,7 +695,7 @@ main() {
                 read -rp "Enter values file path relative to repo root (e.g., e2e/e2e-values-openshift.yml) or press Enter to skip: " values_file
                 dev_deploy_nri_kubernetes "$dev_namespace" "$dev_release_name" "$values_file"
                 ;;
-            15)
+            18)
                 # Setup release name if not already set
                 if [ -z "$dev_release_name" ]; then
                     read -rp "Enter release name: " dev_release_name
@@ -664,7 +703,7 @@ main() {
                 dev_run_e2e_tests "$dev_release_name"
                 ;;
             *)
-                echo "Invalid option. Please select 0-15."
+                echo "Invalid option. Please select 0-18."
                 ;;
         esac
 
