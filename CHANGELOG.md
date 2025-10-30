@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### enhancement
 - Export KSM labels and annotations for pods, deployments, and namespaces @NRhzhao [#1317](https://github.com/newrelic/nri-kubernetes/pull/1317)
+- Update E2e-resource charts and add test-spec for OpenShift testing @TmNguyen12 [#1325](https://github.com/newrelic/nri-kubernetes/pull/1325)
 
 ## v3.48.0 - 2025-10-27
 
