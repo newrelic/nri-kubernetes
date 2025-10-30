@@ -24,7 +24,7 @@ spec:
           mountPath: /app
         resources:
           requests:
-            cpu: {{ if .Values.openShift.enabled }}"400m"{{ else }}"100m"{{ end }}
+            cpu: 400
           limits:
             cpu: "500m"
         imagePullPolicy: IfNotPresent
@@ -109,7 +109,7 @@ spec:
     kind: Deployment
     name: {{ .Release.Name }}-hpa
   minReplicas: 1
-  maxReplicas: {{ if .Values.openShift.enabled }}4{{ else }}3{{ end }}
+  maxReplicas: {{ if .Values.openShift.enabled }} 3 {{ else }}10{{ end }}
   metrics:
     - type: Resource
       resource:
