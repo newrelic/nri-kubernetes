@@ -90,3 +90,23 @@ func TestLoadConfig(t *testing.T) {
 		require.Error(t, err)
 	})
 }
+
+func TestEnableResourceQuotaSamples(t *testing.T) {
+	const envKey = "NRI_KUBERNETES_KSM_ENABLERESOURCEQUOTASAMPLES"
+	originalValue, wasSet := os.LookupEnv(envKey)
+	defer func() {
+		if wasSet {
+			os.Setenv(envKey, originalValue)
+		} else {
+			os.Unsetenv(envKey)
+		}
+	}()
+
+	// Set the desired value for this specific test.
+	os.Setenv(envKey, "true")
+
+	// Run the test logic.
+	cfg, err := config.LoadConfig(fakeDataDir, workingData)
+	require.NoError(t, err)
+	require.True(t, cfg.EnableResourceQuotaSamples)
+}

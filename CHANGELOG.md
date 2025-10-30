@@ -7,9 +7,42 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### bugfix
+### enhancement
+- Export KSM labels and annotations for pods, deployments, and namespaces @NRhzhao [#1317](https://github.com/newrelic/nri-kubernetes/pull/1317)
+
+## v3.48.0 - 2025-10-27
+
+### 🛡️ Security notices
+- Docker file to update apk packages on build @philip-r-beckwith [#1309](https://github.com/newrelic/nri-kubernetes/pull/1309)
+
+### 🐞 Bug fixes
+- fix issue when the scrape duration exceeds the scrape interval, it will sleep for a negative time (meaning, do it immediately), which breaks the interval in which data is reported @danielstokes [#1215](https://github.com/newrelic/nri-kubernetes/pull/1215)
+
+## v3.47.0 - 2025-10-20
+
+### 🚀 Enhancements
+- Add metrics for ResourceQuota @NRhzhao [#1302](https://github.com/newrelic/nri-kubernetes/pull/1302)
+
+### ⛓️ Dependencies
+- Updated go to v1.25.3
+
+## v3.46.0 - 2025-10-13
+
+### 🚀 Enhancements
+- Add v1.34 support and drop support for v1.29 @TmNguyen12 [#1300](https://github.com/newrelic/nri-kubernetes/pull/1300)
+
+### ⛓️ Dependencies
+- Updated golang.org/x/crypto to v0.42.0
+- Updated alpine to v3.22.2
+- Updated kubernetes packages to v0.34.1
+
+## v3.45.4 - 2025-10-06
+
+### 🐞 Bug fixes
 - fix e2e-tests to use the "constant" key again @TmNguyen12 [#1307](https://github.com/newrelic/nri-kubernetes/pull/1307)
 
+### ⛓️ Dependencies
+- Updated google.golang.org/protobuf to v1.36.10
 
 ## v3.45.3 - 2025-09-29
 

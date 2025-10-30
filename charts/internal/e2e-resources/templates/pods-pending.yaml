@@ -31,6 +31,11 @@ metadata:
   name: {{ .Release.Name }}-container-pending
   labels:
     app: pending
+    environment: dev
+    team: k8-team
+  annotations:
+    owner: "pod@example.com"
+    description: "pod for e2e workloads"
 spec:
   containers:
     - name: alpine

@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: nri-test-namespace-quota
+  namespace: nri-test-namespace
+  labels:
+    environment: dev
+    team: k8-team
+  annotations:
+    owner: "resourcequota@example.com"
+    description: "Resource quota for e2e workloads"
+spec:
+  hard:
+    pods: "10"
+    secrets: "20"
+    requests.cpu: "1"
+    requests.memory: "1Gi"
+    limits.cpu: "2"
+    limits.memory: "2Gi"
+    persistentvolumeclaims: "5"                     # Limit total number of PVCs
+    services: "10"                                  # Limit total number of services
+    replicationcontrollers: "5"                     # Limit total number of replication controllers
+    configmaps: "10"                                # Limit total number of config maps
+    resourcequotas: "1"                             # Limit total number of resource quotas
+    services.loadbalancers: "2"                     # Limit number of external load balancer services
+    services.nodeports: "5"                         # Limit number of nodeport servic

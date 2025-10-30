@@ -99,7 +99,8 @@ func TestScraper(t *testing.T) {
 			fakeK8s := fake.NewSimpleClientset(k8sData.Everything()...)
 			scraper, err := ksm.NewScraper(&config.Config{
 				KSM: config.KSM{
-					StaticURL: testServer.KSMEndpoint(),
+					StaticURL:                  testServer.KSMEndpoint(),
+					EnableResourceQuotaSamples: true,
 				},
 				ClusterName: t.Name(),
 			}, ksm.Providers{
@@ -123,7 +124,7 @@ func TestScraper(t *testing.T) {
 
 func TestScraper_FilterNamespace(t *testing.T) {
 	// We test with a specific version to not modify number of entities
-	version := testutil.Version(testutil.Testdata133)
+	version := testutil.Version(testutil.Testdata134)
 	t.Run(fmt.Sprintf("for_version_%s", version), func(t *testing.T) {
 		testServer, err := version.Server()
 		require.NoError(t, err)
@@ -138,7 +139,8 @@ func TestScraper_FilterNamespace(t *testing.T) {
 		scraper, err := ksm.NewScraper(
 			&config.Config{
 				KSM: config.KSM{
-					StaticURL: testServer.KSMEndpoint(),
+					StaticURL:                  testServer.KSMEndpoint(),
+					EnableResourceQuotaSamples: true,
 				},
 				ClusterName: t.Name(),
 			}, ksm.Providers{
@@ -154,7 +156,6 @@ func TestScraper_FilterNamespace(t *testing.T) {
 
 		err = scraper.Run(i)
 		require.NoError(t, err)
-
-		assert.Equal(t, 20, len(i.Entities))
+		assert.Equal(t, 34, len(i.Entities))
 	})
 }

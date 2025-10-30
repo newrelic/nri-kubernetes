@@ -81,3 +81,13 @@ kube-state-metrics:
   podSecurityContext: {}
   securityContext: 
     enabled: false
+  metricLabelsAllowlist:
+    - resourcequotas=[environment,team]
+    - namespaces=[environment,team]
+    - deployments=[environment,team]
+    - pods=[environment,team]
+  metricAnnotationsAllowList:
+    - resourcequotas=[owner,description]
+    - namespaces=[owner,description]
+    - deployments=[owner,description]
+    - pods=[owner,description]

@@ -56,3 +56,29 @@ func TestSetupKSM(t *testing.T) {
 	assert.NotEmpty(t, scraper)
 	assert.NotEmpty(t, scraper.Filterer)
 }
+
+//nolint:paralleltest // timing test should not run in parallel
+func TestMeasureTime(t *testing.T) {
+	// Test that measureTime accurately measures function execution time
+	expectedDuration := 100 * time.Millisecond
+
+	duration := measureTime(func() {
+		time.Sleep(expectedDuration)
+	})
+
+	// Allow for some tolerance in timing (10ms)
+	tolerance := 10 * time.Millisecond
+	assert.True(t, duration >= expectedDuration, "measured duration should be at least the expected duration")
+	assert.True(t, duration < expectedDuration+tolerance, "measured duration should be close to expected duration")
+}
+
+//nolint:paralleltest // timing test should not run in parallel
+func TestMeasureTimeWithZeroDuration(t *testing.T) {
+	// Test that measureTime works with instant functions
+	duration := measureTime(func() {
+		// Do nothing
+	})
+
+	assert.True(t, duration >= 0, "duration should be non-negative")
+	assert.True(t, duration < 10*time.Millisecond, "duration should be very small for empty function")
+}
