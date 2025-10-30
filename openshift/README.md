@@ -30,7 +30,7 @@ Export these before running E2E tests:
 export LICENSE_KEY=your-new-relic-license-key
 export ACCOUNT_ID=your-new-relic-account-id
 export API_KEY=your-new-relic-api-key
-export EXCEPTIONS_SOURCE_FILE=e2e/1_34-exceptions.yml  # optional
+export EXCEPTIONS_SOURCE_FILE=e2e/1_32-exceptions-openshift.yml
 ```
 
 ### Prerequisites
@@ -67,7 +67,7 @@ Automates OpenShift Local cluster setup with optimized configuration.
 ```
 
 **Output:**
-- `crc-credentials.txt`: Contains admin and developer credentials
+- `crc-credentials.txt`: Contains admin and developer credentials for reference if needed
 - `crc-output.txt`: Full CRC startup log
 - Environment variables: `OC_ADMIN_USER`, `OC_ADMIN_PASS`, `OC_DEV_USER`, `OC_DEV_PASS`
 
@@ -86,7 +86,7 @@ Interactive menu-driven script for managing OpenShift E2E test workflows.
 - macOS (uses `docker`)
 
 **Usage:**
-- select the context the openshift local cluster you just created
+- select the kubernetes context that you just installed the openshift local cluster in
 ```bash
 ./openshift/run.sh
 ```
@@ -134,8 +134,8 @@ Interactive menu-driven script for managing OpenShift E2E test workflows.
 
 ### Full E2E Test with Code Changes
 ```bash
-# 1. First time only: Setup cluster
 ./openshift/run.sh
+# 1. First time only: Setup cluster
 # Select option 4 (Run setup workflow)
 
 # 2. Run complete scenario workflow
@@ -206,7 +206,7 @@ Interactive menu-driven script for managing OpenShift E2E test workflows.
 - `openshift-env-vars.txt`: Registry and scenario configuration
 - `crc-credentials.txt`: Cluster credentials
 - `crc-output.txt`: CRC startup logs
-- `../e2e/e2e-values-openshift.yml`: E2E test configuration
+- `../e2e/e2e-values-openshift.yml`: nri-kubernetes values file used for openshift during e2e-tests
 - `../etcd-secret.yaml`: mTLS secret for etcd (temporary)
 
 ---
@@ -235,15 +235,7 @@ oc adm policy add-scc-to-user privileged system:serviceaccount:<namespace>:<serv
 oc adm policy add-scc-to-user privileged -z nri-bundle-sa -n <namespace>
 ```
 
-### Environment Variables
-```bash
-# Verify environment variables are set
-echo $LICENSE_KEY
-echo $ACCOUNT_ID
-echo $API_KEY
-```
 
----
 
 ## Notes
 
@@ -252,5 +244,3 @@ echo $API_KEY
 - Development workflows support custom namespaces (without `nr-` prefix requirement)
 - All service accounts automatically receive `privileged` SCC when using these scripts
 - Registry setup (options 2-3) only needs to be run once per cluster
-- Options 14-15 (Build/Push image) allow you to test code changes in dev workflow
-- Option 13 (Uninstall E2E resources) cleans up resources and deletes the namespace
