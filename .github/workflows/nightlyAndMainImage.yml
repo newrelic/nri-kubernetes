@@ -34,7 +34,7 @@ jobs:
         run: |
           make compile TAG=nightly-$(git rev-parse --short HEAD)
       - name: Upload artifact for docker build step
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           retention-days: 1
           name: nri-kubernetes-${{ matrix.goos }}-${{ matrix.goarch }}
@@ -59,7 +59,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Download all artifacts from build job
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           path: bin
 
