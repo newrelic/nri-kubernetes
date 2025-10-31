@@ -181,8 +181,16 @@ func (podsFetcher *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]defi
 	fillContainerStatuses(pod, statuses)
 
 	metrics := make(map[string]definition.RawMetrics)
+	containers := pod.Spec.Containers
 
-	for _, c := range pod.Spec.Containers {
+	// Add sidecar containers
+	for _, initContainer := range pod.Spec.InitContainers {
+		if initContainer.RestartPolicy != nil && *initContainer.RestartPolicy == v1.ContainerRestartPolicyAlways {
+			containers = append(containers, initContainer)
+		}
+	}
+
+	for _, c := range containers {
 		id := containerID(pod, c.Name)
 		metrics[id] = definition.RawMetrics{
 			"containerName":  c.Name,
@@ -233,7 +241,16 @@ func (podsFetcher *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]defi
 }
 
 func fillContainerStatuses(pod *v1.Pod, dest map[string]definition.RawMetrics) {
-	for _, c := range pod.Status.ContainerStatuses {
+	containerStatuses := pod.Status.ContainerStatuses
+
+	// Add sidecar containers
+	for idx, initContainer := range pod.Spec.InitContainers {
+		if initContainer.RestartPolicy != nil && *initContainer.RestartPolicy == v1.ContainerRestartPolicyAlways {
+			containerStatuses = append(containerStatuses, pod.Status.InitContainerStatuses[idx])
+		}
+	}
+
+	for _, c := range containerStatuses {
 		name := c.Name
 		id := containerID(pod, name)
 
