@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancement
+## v3.49.0 - 2025-11-03
+
+### 🚀 Enhancements
 - Export KSM labels and annotations for pods, deployments, and namespaces @NRhzhao [#1317](https://github.com/newrelic/nri-kubernetes/pull/1317)
 - Add `runningPod` attribute to the K8sNodeSample @NRhzhao [#1316](https://github.com/newrelic/nri-kubernetes/pull/1316)
 - Enable exporting of `ResourceQuotaSamples` by default @NRhzhao [#1326](https://github.com/newrelic/nri-kubernetes/pull/1326)
