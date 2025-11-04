@@ -2064,3 +2064,437 @@ func TestFromMetricWithPrefixedLabels(t *testing.T) {
 		})
 	}
 }
+func TestFromValue_EndpointAddressAvailableAndNotReady(t *testing.T) {
+	// Test data for kube_endpoint_address_available and kube_endpoint_address_not_ready metrics
+	// These metrics were introduced in KSM < 2.14 and provide aggregate counts per endpoint
+	// Unlike kube_endpoint_address, these only have namespace and endpoint labels (no ip, port details)
+	rawGroups := definition.RawGroups{
+		"endpoint": {
+			"kube-system_kube-dns": {
+				"kube_endpoint_address_available": []Metric{
+					{
+						Labels: Labels{
+							"namespace": "kube-system",
+							"endpoint":  "kube-dns",
+						},
+						Value: GaugeValue(2),
+					},
+				},
+				"kube_endpoint_address_not_ready": []Metric{
+					{
+						Labels: Labels{
+							"namespace": "kube-system",
+							"endpoint":  "kube-dns",
+						},
+						Value: GaugeValue(1),
+					},
+				},
+			},
+			"nr-test11_test11-resources-hpa": {
+				"kube_endpoint_address_available": []Metric{
+					{
+						Labels: Labels{
+							"namespace": "nr-test11",
+							"endpoint":  "test11-resources-hpa",
+						},
+						Value: GaugeValue(1),
+					},
+				},
+				"kube_endpoint_address_not_ready": []Metric{
+					{
+						Labels: Labels{
+							"namespace": "nr-test11",
+							"endpoint":  "test11-resources-hpa",
+						},
+						Value: GaugeValue(0),
+					},
+				},
+			},
+			"nr-test11_test11-resources-statefulset": {
+				"kube_endpoint_address_available": []Metric{
+					{
+						Labels: Labels{
+							"namespace": "nr-test11",
+							"endpoint":  "test11-resources-statefulset",
+						},
+						Value: GaugeValue(2),
+					},
+				},
+				"kube_endpoint_address_not_ready": []Metric{
+					{
+						Labels: Labels{
+							"namespace": "nr-test11",
+							"endpoint":  "test11-resources-statefulset",
+						},
+						Value: GaugeValue(0),
+					},
+				},
+			},
+			"default_kubernetes": {
+				"kube_endpoint_address_available": []Metric{
+					{
+						Labels: Labels{
+							"namespace": "default",
+							"endpoint":  "kubernetes",
+						},
+						Value: GaugeValue(1),
+					},
+				},
+				"kube_endpoint_address_not_ready": []Metric{
+					{
+						Labels: Labels{
+							"namespace": "default",
+							"endpoint":  "kubernetes",
+						},
+						Value: GaugeValue(0),
+					},
+				},
+			},
+			"kube-system_k8s.io-minikube-hostpath": {
+				"kube_endpoint_address_available": []Metric{
+					{
+						Labels: Labels{
+							"namespace": "kube-system",
+							"endpoint":  "k8s.io-minikube-hostpath",
+						},
+						Value: GaugeValue(0),
+					},
+				},
+				"kube_endpoint_address_not_ready": []Metric{
+					{
+						Labels: Labels{
+							"namespace": "kube-system",
+							"endpoint":  "k8s.io-minikube-hostpath",
+						},
+						Value: GaugeValue(0),
+					},
+				},
+			},
+		},
+	}
+
+	testCases := []struct {
+		name          string
+		fetchFunc     definition.FetchFunc
+		entityID      string
+		expectedValue GaugeValue
+		description   string
+	}{
+		{
+			name:          "FromValue kube_endpoint_address_available - multiple addresses",
+			fetchFunc:     FromValue("kube_endpoint_address_available"),
+			entityID:      "kube-system_kube-dns",
+			expectedValue: GaugeValue(2),
+			description:   "Should fetch addressAvailable with count of 2 for kube-dns endpoint",
+		},
+		{
+			name:          "FromValue kube_endpoint_address_not_ready - zero value",
+			fetchFunc:     FromValue("kube_endpoint_address_not_ready"),
+			entityID:      "kube-system_kube-dns",
+			expectedValue: GaugeValue(1),
+			description:   "Should fetch addressNotReady with count of 1 for kube-dns endpoint",
+		},
+		{
+			name:          "FromValue kube_endpoint_address_available - single address",
+			fetchFunc:     FromValue("kube_endpoint_address_available"),
+			entityID:      "default_kubernetes",
+			expectedValue: GaugeValue(1),
+			description:   "Should fetch addressAvailable with count of 1 for kubernetes endpoint",
+		},
+		{
+			name:          "FromValue kube_endpoint_address_not_ready - kubernetes",
+			fetchFunc:     FromValue("kube_endpoint_address_not_ready"),
+			entityID:      "default_kubernetes",
+			expectedValue: GaugeValue(0),
+			description:   "Should fetch addressNotReady with count of 0 for kubernetes endpoint",
+		},
+		{
+			name:          "FromValue kube_endpoint_address_available - statefulset with 2 addresses",
+			fetchFunc:     FromValue("kube_endpoint_address_available"),
+			entityID:      "nr-test11_test11-resources-statefulset",
+			expectedValue: GaugeValue(2),
+			description:   "Should fetch addressAvailable with count of 2 for statefulset endpoint",
+		},
+		{
+			name:          "FromValue kube_endpoint_address_available - zero available addresses",
+			fetchFunc:     FromValue("kube_endpoint_address_available"),
+			entityID:      "kube-system_k8s.io-minikube-hostpath",
+			expectedValue: GaugeValue(0),
+			description:   "Should fetch addressAvailable with count of 0 when no addresses available",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := tc.fetchFunc("endpoint", tc.entityID, rawGroups)
+			require.NoError(t, err, tc.description)
+
+			// FromValue with []Metric returns FetchedValues (map)
+			fetchedValues, ok := result.(definition.FetchedValues)
+			require.True(t, ok, "Expected result to be of type FetchedValues, got %T", result)
+
+			// Should have exactly one entry in the map
+			require.Equal(t, 1, len(fetchedValues), "Expected exactly one metric in FetchedValues")
+
+			// Get the single value from the map and verify it matches expected
+			for _, val := range fetchedValues {
+				gaugeValue, ok := val.(GaugeValue)
+				require.True(t, ok, "Expected value to be of type GaugeValue")
+				assert.Equal(t, tc.expectedValue, gaugeValue, tc.description)
+			}
+		})
+	}
+}
+
+func TestFromValueWithLabelsFilter_EndpointAddressReadyCount(t *testing.T) {
+	// Test that FromValueWithLabelsFilter on kube_endpoint_address produces the same
+	// addressAvailable and addressNotReady counts as the dedicated metrics
+	// This demonstrates KSM >= 2.14 compatibility
+	rawGroups := definition.RawGroups{
+		"endpoint": {
+			"kube-system_kube-dns": {
+				"kube_endpoint_address": []Metric{
+					{
+						Labels: Labels{
+							"namespace":     "kube-system",
+							"endpoint":      "kube-dns",
+							"port_protocol": "TCP",
+							"port_number":   "53",
+							"port_name":     "dns-tcp",
+							"ip":            "10.244.0.2",
+							"ready":         "true",
+						},
+						Value: GaugeValue(1),
+					},
+					{
+						Labels: Labels{
+							"namespace":     "kube-system",
+							"endpoint":      "kube-dns",
+							"port_protocol": "UDP",
+							"port_number":   "53",
+							"port_name":     "dns",
+							"ip":            "10.244.0.2",
+							"ready":         "true",
+						},
+						Value: GaugeValue(1),
+					},
+					{
+						Labels: Labels{
+							"namespace":     "kube-system",
+							"endpoint":      "kube-dns",
+							"port_protocol": "TCP",
+							"port_number":   "9153",
+							"port_name":     "metrics",
+							"ip":            "10.244.0.2",
+							"ready":         "true",
+						},
+						Value: GaugeValue(1),
+					},
+					{
+						Labels: Labels{
+							"namespace":     "kube-system",
+							"endpoint":      "kube-dns",
+							"port_protocol": "TCP",
+							"port_number":   "53",
+							"port_name":     "dns-tcp",
+							"ip":            "10.244.0.3",
+							"ready":         "false",
+						},
+						Value: GaugeValue(1),
+					},
+				},
+			},
+			"nr-test11_test11-resources-statefulset": {
+				"kube_endpoint_address": []Metric{
+					{
+						Labels: Labels{
+							"namespace":     "nr-test11",
+							"endpoint":      "test11-resources-statefulset",
+							"port_protocol": "TCP",
+							"port_number":   "8089",
+							"port_name":     "",
+							"ip":            "10.244.0.14",
+							"ready":         "true",
+						},
+						Value: GaugeValue(1),
+					},
+					{
+						Labels: Labels{
+							"namespace":     "nr-test11",
+							"endpoint":      "test11-resources-statefulset",
+							"port_protocol": "TCP",
+							"port_number":   "8089",
+							"port_name":     "",
+							"ip":            "10.244.0.15",
+							"ready":         "true",
+						},
+						Value: GaugeValue(1),
+					},
+				},
+			},
+			"default_kubernetes": {
+				"kube_endpoint_address": []Metric{
+					{
+						Labels: Labels{
+							"namespace":     "default",
+							"endpoint":      "kubernetes",
+							"port_protocol": "TCP",
+							"port_number":   "8443",
+							"port_name":     "https",
+							"ip":            "192.168.49.2",
+							"ready":         "true",
+						},
+						Value: GaugeValue(1),
+					},
+				},
+			},
+			"nr-test11_test11-resources-hpa": {
+				"kube_endpoint_address": []Metric{
+					{
+						Labels: Labels{
+							"namespace":     "nr-test11",
+							"endpoint":      "test11-resources-hpa",
+							"port_protocol": "TCP",
+							"port_number":   "80",
+							"port_name":     "",
+							"ip":            "10.244.0.5",
+							"ready":         "true",
+						},
+						Value: GaugeValue(1),
+					},
+				},
+			},
+			"kube-system_k8s.io-minikube-hostpath": {
+				"kube_endpoint_address": []Metric{
+					{
+						Labels: Labels{
+							"namespace":     "kube-system",
+							"endpoint":      "k8s.io-minikube-hostpath",
+							"port_protocol": "TCP",
+							"port_number":   "80",
+							"port_name":     "",
+							"ip":            "10.244.0.20",
+							"ready":         "false",
+						},
+						Value: GaugeValue(1),
+					},
+				},
+			},
+		},
+	}
+
+	testCases := []struct {
+		name          string
+		fetchFunc     definition.FetchFunc
+		entityID      string
+		expectedValue GaugeValue
+		description   string
+	}{
+		{
+			name: "FromValueWithLabelsFilter addressAvailable - kube-dns with 3 ready addresses",
+			fetchFunc: FromValueWithLabelsFilter(
+				"kube_endpoint_address",
+				"addressAvailable",
+				IncludeOnlyWhenLabelMatchFilter(map[string]string{"ready": "true"}),
+			),
+			entityID:      "kube-system_kube-dns",
+			expectedValue: GaugeValue(3),
+			description:   "Should count 3 addresses with ready=true for kube-dns",
+		},
+		{
+			name: "FromValueWithLabelsFilter addressNotReady - kube-dns with 1 not ready address",
+			fetchFunc: FromValueWithLabelsFilter(
+				"kube_endpoint_address",
+				"addressNotReady",
+				IncludeOnlyWhenLabelMatchFilter(map[string]string{"ready": "false"}),
+			),
+			entityID:      "kube-system_kube-dns",
+			expectedValue: GaugeValue(1),
+			description:   "Should count 1 address with ready=false for kube-dns",
+		},
+		{
+			name: "FromValueWithLabelsFilter addressAvailable - statefulset with 2 ready addresses",
+			fetchFunc: FromValueWithLabelsFilter(
+				"kube_endpoint_address",
+				"addressAvailable",
+				IncludeOnlyWhenLabelMatchFilter(map[string]string{"ready": "true"}),
+			),
+			entityID:      "nr-test11_test11-resources-statefulset",
+			expectedValue: GaugeValue(2),
+			description:   "Should count 2 addresses with ready=true for statefulset",
+		},
+		{
+			name: "FromValueWithLabelsFilter addressAvailable - kubernetes with 1 ready address",
+			fetchFunc: FromValueWithLabelsFilter(
+				"kube_endpoint_address",
+				"addressAvailable",
+				IncludeOnlyWhenLabelMatchFilter(map[string]string{"ready": "true"}),
+			),
+			entityID:      "default_kubernetes",
+			expectedValue: GaugeValue(1),
+			description:   "Should count 1 address with ready=true for kubernetes",
+		},
+		{
+			name: "FromValueWithLabelsFilter addressNotReady - kubernetes with 0 not ready addresses",
+			fetchFunc: FromValueWithLabelsFilter(
+				"kube_endpoint_address",
+				"addressNotReady",
+				IncludeOnlyWhenLabelMatchFilter(map[string]string{"ready": "false"}),
+			),
+			entityID:      "default_kubernetes",
+			expectedValue: GaugeValue(0),
+			description:   "Should return 0 when no addresses have ready=false",
+		},
+		{
+			name: "FromValueWithLabelsFilter addressAvailable - endpoint with 0 ready addresses",
+			fetchFunc: FromValueWithLabelsFilter(
+				"kube_endpoint_address",
+				"addressAvailable",
+				IncludeOnlyWhenLabelMatchFilter(map[string]string{"ready": "true"}),
+			),
+			entityID:      "kube-system_k8s.io-minikube-hostpath",
+			expectedValue: GaugeValue(0),
+			description:   "Should return 0 when no addresses have ready=true",
+		},
+		{
+			name: "FromValueWithLabelsFilter addressNotReady - endpoint with 1 not ready address",
+			fetchFunc: FromValueWithLabelsFilter(
+				"kube_endpoint_address",
+				"addressNotReady",
+				IncludeOnlyWhenLabelMatchFilter(map[string]string{"ready": "false"}),
+			),
+			entityID:      "kube-system_k8s.io-minikube-hostpath",
+			expectedValue: GaugeValue(1),
+			description:   "Should count 1 address with ready=false",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := tc.fetchFunc("endpoint", tc.entityID, rawGroups)
+			require.NoError(t, err, tc.description)
+
+			fetchedValues, ok := result.(definition.FetchedValues)
+			require.True(t, ok, "Expected result to be of type FetchedValues, got %T", result)
+
+			// When the filter matches nothing, we get an empty map
+			if tc.expectedValue == 0 {
+				// Either empty map or a map with a single entry of value 0
+				if len(fetchedValues) == 0 {
+					// This is valid - no matching metrics
+					return
+				}
+			}
+
+			// Should have exactly one entry in the map
+			require.Equal(t, 1, len(fetchedValues), "Expected exactly one metric in FetchedValues")
+
+			// Get the single value from the map and verify it matches expected
+			for _, val := range fetchedValues {
+				gaugeValue, ok := val.(GaugeValue)
+				require.True(t, ok, "Expected value to be of type GaugeValue")
+				assert.Equal(t, tc.expectedValue, gaugeValue, tc.description)
+			}
+		})
+	}
+}
