@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- update KSM e2e chart version and in test-spec versions to 2.16, add support for kube_endpoint_address and backward compatibilty for kube_endpoint_address_available & kube_endpoint_address_not_ready @TmNguyen12 [#1330](https://github.com/newrelic/nri-kubernetes/pull/1330)
+
 ## v3.49.0 - 2025-11-03
 
 ### 🚀 Enhancements
