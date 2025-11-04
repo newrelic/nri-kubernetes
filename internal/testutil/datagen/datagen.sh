@@ -56,11 +56,11 @@ K8S_PATCH_VERSIONS=(
 )
 # KSM version to use for the K8S_PATCH_VERSIONS, matched by index.
 KSM_IMAGE_VERSIONS=(
-  "v2.10.0"
-  "v2.10.0"
-  "v2.10.0"
-  "v2.10.0"
-  "v2.10.0"
+  "v2.16.0"
+  "v2.16.0"
+  "v2.16.0"
+  "v2.13.0"
+  "v2.13.0"
 )
 # K8S_MINOR_VERSIONS are formatted like "1.28".
 # An RC version like "v1.28.0-rc.1" translates to "1.28", using "data/1_28" and "1_28-exceptions.yml".
