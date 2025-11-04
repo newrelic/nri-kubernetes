@@ -887,13 +887,13 @@ var KSMSpecs = definition.SpecGroups{
 				Name:      "addressAvailable",
 				ValueFunc: prometheus.FromValue("kube_endpoint_address_available"),
 				Type:      sdkMetric.GAUGE,
-				Optional:  true, // Optional: may not exist in KSM >= 2.14
+				Optional:  true, // Optional: does not exist in KSM >= 2.14
 			},
 			{
 				Name:      "addressNotReady",
 				ValueFunc: prometheus.FromValue("kube_endpoint_address_not_ready"),
 				Type:      sdkMetric.GAUGE,
-				Optional:  true, // Optional: may not exist in KSM >= 2.14
+				Optional:  true, // Optional: does not exist in KSM >= 2.14
 			},
 			// KSM >= v2.14 - Detailed metrics (we aggregate by filtering on ready label)
 			{
@@ -919,27 +919,6 @@ var KSMSpecs = definition.SpecGroups{
 				),
 				Type:     sdkMetric.GAUGE,
 				Optional: true, // Optional: may not exist in KSM < 2.14
-			},
-			// Endpoint address attributes (KSM >= v2.14)
-			{
-				Name:      "portProtocol",
-				ValueFunc: prometheus.FromLabelValue("kube_endpoint_address", "port_protocol"),
-				Type:      sdkMetric.ATTRIBUTE,
-			},
-			{
-				Name:      "portNumber",
-				ValueFunc: prometheus.FromLabelValue("kube_endpoint_address", "port_number"),
-				Type:      sdkMetric.ATTRIBUTE,
-			},
-			{
-				Name:      "portName",
-				ValueFunc: prometheus.FromLabelValue("kube_endpoint_address", "port_name"),
-				Type:      sdkMetric.ATTRIBUTE,
-			},
-			{
-				Name:      "ip",
-				ValueFunc: prometheus.FromLabelValue("kube_endpoint_address", "ip"),
-				Type:      sdkMetric.ATTRIBUTE,
 			},
 		},
 	},
