@@ -2644,29 +2644,35 @@ func TestCountFromValueWithLabelsFilter_BackwardCompatibility_Scenario1(t *testi
 	}
 
 	t.Run("Scenario_1a_v2.13_explicit_zero", func(t *testing.T) {
+		t.Parallel()
 		oldSpec := FromValue("kube_endpoint_address_available")
 		result, err := oldSpec("endpoint", entityID, ksmV213Data)
 		require.NoError(t, err)
-		
-		gaugeValue := result.(GaugeValue)
+
+		gaugeValue, ok := result.(GaugeValue)
+		require.True(t, ok, "result should be GaugeValue")
 		assert.Equal(t, GaugeValue(0), gaugeValue, "v2.13: OLD spec returns explicit 0")
 	})
 
 	t.Run("Scenario_1b_v2.16_metric_missing", func(t *testing.T) {
-		newSpec := CountFromValueWithLabelsFilter("kube_endpoint_address", "addressAvailable", 
+		t.Parallel()
+		newSpec := CountFromValueWithLabelsFilter("kube_endpoint_address", "addressAvailable",
 			IncludeOnlyWhenLabelMatchFilter(map[string]string{"ready": "true"}))
 		result, err := newSpec("endpoint", entityID, ksmV216Data)
 		require.NoError(t, err)
-		
-		fetchedValues := result.(definition.FetchedValues)
+
+		fetchedValues, ok := result.(definition.FetchedValues)
+		require.True(t, ok, "result should be FetchedValues")
 		assert.Equal(t, GaugeValue(0), fetchedValues["addressAvailable"], "v2.16: NEW spec returns 0 when metric missing")
 	})
 
 	t.Run("Both_produce_same_output", func(t *testing.T) {
+		t.Parallel()
 		// v2.13
 		oldSpec := FromValue("kube_endpoint_address_available")
 		resultV213, _ := oldSpec("endpoint", entityID, ksmV213Data)
-		v213Value := resultV213.(GaugeValue)
+		v213Value, ok := resultV213.(GaugeValue)
+		require.True(t, ok, "v2.13 result should be GaugeValue")
 
 		// v2.16
 		newSpec := CountFromValueWithLabelsFilter("kube_endpoint_address", "addressAvailable",
@@ -2710,6 +2716,7 @@ func TestCountFromValueWithLabelsFilter_BackwardCompatibility_Scenario2(t *testi
 	}
 
 	t.Run("Scenario_2a_v2.13_explicit_zero", func(t *testing.T) {
+		t.Parallel()
 		oldSpec := FromValue("kube_endpoint_address_not_ready")
 		result, err := oldSpec("endpoint", entityID, ksmV213Data)
 		require.NoError(t, err)
@@ -2719,6 +2726,7 @@ func TestCountFromValueWithLabelsFilter_BackwardCompatibility_Scenario2(t *testi
 	})
 
 	t.Run("Scenario_2b_v2.16_no_matching_labels", func(t *testing.T) {
+		t.Parallel()
 		newSpec := CountFromValueWithLabelsFilter("kube_endpoint_address", "addressNotReady",
 			IncludeOnlyWhenLabelMatchFilter(map[string]string{"ready": "false"}))
 		result, err := newSpec("endpoint", entityID, ksmV216Data)
@@ -2729,6 +2737,7 @@ func TestCountFromValueWithLabelsFilter_BackwardCompatibility_Scenario2(t *testi
 	})
 
 	t.Run("Both_produce_same_output", func(t *testing.T) {
+		t.Parallel()
 		// v2.13
 		oldSpec := FromValue("kube_endpoint_address_not_ready")
 		resultV213, _ := oldSpec("endpoint", entityID, ksmV213Data)
@@ -2741,5 +2750,212 @@ func TestCountFromValueWithLabelsFilter_BackwardCompatibility_Scenario2(t *testi
 		v216Value := resultV216.(definition.FetchedValues)["addressNotReady"]
 
 		assert.Equal(t, v213Value, v216Value, "Both KSM versions produce same output: 0")
+	})
+}
+
+// TestFromValueWithLabelsFilter_SingleMetric tests that FromValueWithLabelsFilter correctly handles
+// a single Metric value (not an array). This covers lines 687-688 in definition.go.
+func TestFromValueWithLabelsFilter_SingleMetric(t *testing.T) {
+	t.Parallel()
+
+	// Test data with a single Metric (not []Metric)
+	rawGroups := definition.RawGroups{
+		"pod": {
+			"default_my-pod": {
+				"kube_pod_status_phase": Metric{
+					Labels: Labels{
+						"namespace": "default",
+						"pod":       "my-pod",
+						"phase":     "Running",
+					},
+					Value: GaugeValue(1),
+				},
+			},
+		},
+	}
+
+	t.Run("Single_Metric_without_labels_filter", func(t *testing.T) {
+		// FromValueWithLabelsFilter with no label filters on a single Metric
+		fetchFunc := FromValueWithLabelsFilter("kube_pod_status_phase", "")
+		result, err := fetchFunc("pod", "default_my-pod", rawGroups)
+
+		require.NoError(t, err)
+
+		// When the value is a single Metric (not []Metric), it returns the Value directly
+		gaugeValue, ok := result.(GaugeValue)
+		require.True(t, ok, "Expected result to be GaugeValue, got %T", result)
+		assert.Equal(t, GaugeValue(1), gaugeValue)
+	})
+
+	t.Run("Single_Metric_with_labels_filter", func(t *testing.T) {
+		// FromValueWithLabelsFilter with label filter on a single Metric
+		// Note: Label filters only apply to []Metric, not single Metric
+		fetchFunc := FromValueWithLabelsFilter("kube_pod_status_phase", "",
+			IncludeOnlyWhenLabelMatchFilter(map[string]string{"phase": "Running"}))
+		result, err := fetchFunc("pod", "default_my-pod", rawGroups)
+
+		require.NoError(t, err)
+
+		// Single Metric returns the value directly, ignoring label filters
+		gaugeValue, ok := result.(GaugeValue)
+		require.True(t, ok, "Expected result to be GaugeValue, got %T", result)
+		assert.Equal(t, GaugeValue(1), gaugeValue)
+	})
+}
+
+// TestFromValueWithLabelsFilter_IncompatibleType tests that FromValueWithLabelsFilter returns
+// an error when the value is neither Metric nor []Metric. This covers lines 692-693 in definition.go.
+func TestFromValueWithLabelsFilter_IncompatibleType(t *testing.T) {
+	t.Parallel()
+
+	// Test data with an incompatible type (string instead of Metric or []Metric)
+	rawGroups := definition.RawGroups{
+		"pod": {
+			"default_my-pod": {
+				"some_string_metric": "not a metric",
+			},
+		},
+	}
+
+	fetchFunc := FromValueWithLabelsFilter("some_string_metric", "")
+	result, err := fetchFunc("pod", "default_my-pod", rawGroups)
+
+	// Should return an error about incompatible type
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "incompatible metric type for some_string_metric")
+	assert.Contains(t, err.Error(), "Expected: Metric or []Metric")
+	assert.Nil(t, result)
+}
+
+// TestCountFromValueWithLabelsFilter_SingleMetric tests that CountFromValueWithLabelsFilter correctly handles
+// a single Metric value (not an array). This covers lines 786-787 in definition.go.
+func TestCountFromValueWithLabelsFilter_SingleMetric(t *testing.T) {
+	t.Parallel()
+
+	// Test data with a single Metric (not []Metric)
+	rawGroups := definition.RawGroups{
+		"pod": {
+			"default_my-pod": {
+				"kube_pod_status_phase": Metric{
+					Labels: Labels{
+						"namespace": "default",
+						"pod":       "my-pod",
+						"phase":     "Running",
+					},
+					Value: GaugeValue(1),
+				},
+			},
+		},
+	}
+
+	t.Run("Single_Metric_without_labels_filter", func(t *testing.T) {
+		// CountFromValueWithLabelsFilter with no label filters on a single Metric
+		fetchFunc := CountFromValueWithLabelsFilter("kube_pod_status_phase", "")
+		result, err := fetchFunc("pod", "default_my-pod", rawGroups)
+
+		require.NoError(t, err)
+
+		// When the value is a single Metric (not []Metric), it returns the Value directly
+		gaugeValue, ok := result.(GaugeValue)
+		require.True(t, ok, "Expected result to be GaugeValue, got %T", result)
+		assert.Equal(t, GaugeValue(1), gaugeValue)
+	})
+
+	t.Run("Single_Metric_with_labels_filter", func(t *testing.T) {
+		// CountFromValueWithLabelsFilter with label filter on a single Metric
+		// Note: Label filters only apply to []Metric, not single Metric
+		fetchFunc := CountFromValueWithLabelsFilter("kube_pod_status_phase", "",
+			IncludeOnlyWhenLabelMatchFilter(map[string]string{"phase": "Running"}))
+		result, err := fetchFunc("pod", "default_my-pod", rawGroups)
+
+		require.NoError(t, err)
+
+		// Single Metric returns the value directly, ignoring label filters
+		gaugeValue, ok := result.(GaugeValue)
+		require.True(t, ok, "Expected result to be GaugeValue, got %T", result)
+		assert.Equal(t, GaugeValue(1), gaugeValue)
+	})
+}
+
+// TestCountFromValueWithLabelsFilter_IncompatibleType tests that CountFromValueWithLabelsFilter returns
+// an error when the value is neither Metric nor []Metric. This covers lines 791-795 in definition.go.
+func TestCountFromValueWithLabelsFilter_IncompatibleType(t *testing.T) {
+	t.Parallel()
+
+	// Test data with an incompatible type (string instead of Metric or []Metric)
+	rawGroups := definition.RawGroups{
+		"pod": {
+			"default_my-pod": {
+				"some_string_metric": "not a metric",
+			},
+		},
+	}
+
+	fetchFunc := CountFromValueWithLabelsFilter("some_string_metric", "")
+	result, err := fetchFunc("pod", "default_my-pod", rawGroups)
+
+	// Should return an error about incompatible type
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "incompatible metric type for some_string_metric")
+	assert.Contains(t, err.Error(), "Expected: Metric or []Metric")
+	assert.Nil(t, result)
+}
+
+// TestCountFromValueWithLabelsFilter_PropagatesNonMetricErrors tests that CountFromValueWithLabelsFilter
+// correctly propagates errors that are NOT "metric not found" errors. This covers line 782 in definition.go.
+func TestCountFromValueWithLabelsFilter_PropagatesNonMetricErrors(t *testing.T) {
+	t.Parallel()
+
+	t.Run("Entity_not_found_error", func(t *testing.T) {
+		// Test data without the entity we're looking for
+		rawGroups := definition.RawGroups{
+			"endpoint": {
+				"kube-system_kube-dns": {
+					"kube_endpoint_address": []Metric{
+						{
+							Labels: Labels{"namespace": "kube-system", "endpoint": "kube-dns"},
+							Value:  GaugeValue(1),
+						},
+					},
+				},
+			},
+		}
+
+		fetchFunc := CountFromValueWithLabelsFilter("kube_endpoint_address", "addressAvailable",
+			IncludeOnlyWhenLabelMatchFilter(map[string]string{"ready": "true"}))
+
+		// Try to fetch from a non-existent entity
+		result, err := fetchFunc("endpoint", "default_nonexistent", rawGroups)
+
+		// Should return an error (not return 0)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "default_nonexistent")
+		assert.Nil(t, result)
+	})
+
+	t.Run("Group_not_found_error", func(t *testing.T) {
+		// Test data without the group we're looking for
+		rawGroups := definition.RawGroups{
+			"endpoint": {
+				"kube-system_kube-dns": {
+					"kube_endpoint_address": []Metric{
+						{
+							Labels: Labels{"namespace": "kube-system", "endpoint": "kube-dns"},
+							Value:  GaugeValue(1),
+						},
+					},
+				},
+			},
+		}
+
+		fetchFunc := CountFromValueWithLabelsFilter("kube_endpoint_address", "addressAvailable",
+			IncludeOnlyWhenLabelMatchFilter(map[string]string{"ready": "true"}))
+
+		// Try to fetch from a non-existent group
+		result, err := fetchFunc("pod", "default_my-pod", rawGroups)
+
+		// Should return an error (not return 0)
+		require.Error(t, err)
+		assert.Nil(t, result)
 	})
 }

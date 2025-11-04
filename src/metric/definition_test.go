@@ -604,7 +604,7 @@ func TestEndpointSpecs_KSM_v2_13_Data(t *testing.T) {
 
 // TestEndpointSpecs_KSM_v2_16_Data tests that the current EndpointSpecs in definition.go
 // work correctly with KSM v2.16 data format.
-// KSM v2.16 provides: kube_endpoint_address with detailed labels including "ready"
+// KSM v2.16 provides: kube_endpoint_address with detailed labels including "ready".
 func TestEndpointSpecs_KSM_v2_16_Data(t *testing.T) {
 	// Simulated KSM v2.16 output - has kube_endpoint_address with "ready" label
 	ksmV216RawData := definition.RawGroups{
