@@ -2391,8 +2391,8 @@ func TestFromValueWithLabelsFilter_EndpointAddressReadyCount(t *testing.T) {
 		description   string
 	}{
 		{
-			name: "FromValueWithLabelsFilter addressAvailable - kube-dns with 3 ready addresses",
-			fetchFunc: FromValueWithLabelsFilter(
+			name: "CountFromValueWithLabelsFilter addressAvailable - kube-dns with 3 ready addresses",
+			fetchFunc: CountFromValueWithLabelsFilter(
 				"kube_endpoint_address",
 				"addressAvailable",
 				IncludeOnlyWhenLabelMatchFilter(map[string]string{"ready": "true"}),
@@ -2402,8 +2402,8 @@ func TestFromValueWithLabelsFilter_EndpointAddressReadyCount(t *testing.T) {
 			description:   "Should count 3 addresses with ready=true for kube-dns",
 		},
 		{
-			name: "FromValueWithLabelsFilter addressNotReady - kube-dns with 1 not ready address",
-			fetchFunc: FromValueWithLabelsFilter(
+			name: "CountFromValueWithLabelsFilter addressNotReady - kube-dns with 1 not ready address",
+			fetchFunc: CountFromValueWithLabelsFilter(
 				"kube_endpoint_address",
 				"addressNotReady",
 				IncludeOnlyWhenLabelMatchFilter(map[string]string{"ready": "false"}),
@@ -2413,8 +2413,8 @@ func TestFromValueWithLabelsFilter_EndpointAddressReadyCount(t *testing.T) {
 			description:   "Should count 1 address with ready=false for kube-dns",
 		},
 		{
-			name: "FromValueWithLabelsFilter addressAvailable - statefulset with 2 ready addresses",
-			fetchFunc: FromValueWithLabelsFilter(
+			name: "CountFromValueWithLabelsFilter addressAvailable - statefulset with 2 ready addresses",
+			fetchFunc: CountFromValueWithLabelsFilter(
 				"kube_endpoint_address",
 				"addressAvailable",
 				IncludeOnlyWhenLabelMatchFilter(map[string]string{"ready": "true"}),
@@ -2424,8 +2424,8 @@ func TestFromValueWithLabelsFilter_EndpointAddressReadyCount(t *testing.T) {
 			description:   "Should count 2 addresses with ready=true for statefulset",
 		},
 		{
-			name: "FromValueWithLabelsFilter addressAvailable - kubernetes with 1 ready address",
-			fetchFunc: FromValueWithLabelsFilter(
+			name: "CountFromValueWithLabelsFilter addressAvailable - kubernetes with 1 ready address",
+			fetchFunc: CountFromValueWithLabelsFilter(
 				"kube_endpoint_address",
 				"addressAvailable",
 				IncludeOnlyWhenLabelMatchFilter(map[string]string{"ready": "true"}),
@@ -2435,8 +2435,8 @@ func TestFromValueWithLabelsFilter_EndpointAddressReadyCount(t *testing.T) {
 			description:   "Should count 1 address with ready=true for kubernetes",
 		},
 		{
-			name: "FromValueWithLabelsFilter addressNotReady - kubernetes with 0 not ready addresses",
-			fetchFunc: FromValueWithLabelsFilter(
+			name: "CountFromValueWithLabelsFilter addressNotReady - kubernetes with 0 not ready addresses",
+			fetchFunc: CountFromValueWithLabelsFilter(
 				"kube_endpoint_address",
 				"addressNotReady",
 				IncludeOnlyWhenLabelMatchFilter(map[string]string{"ready": "false"}),
@@ -2446,8 +2446,8 @@ func TestFromValueWithLabelsFilter_EndpointAddressReadyCount(t *testing.T) {
 			description:   "Should return 0 when no addresses have ready=false",
 		},
 		{
-			name: "FromValueWithLabelsFilter addressAvailable - endpoint with 0 ready addresses",
-			fetchFunc: FromValueWithLabelsFilter(
+			name: "CountFromValueWithLabelsFilter addressAvailable - endpoint with 0 ready addresses",
+			fetchFunc: CountFromValueWithLabelsFilter(
 				"kube_endpoint_address",
 				"addressAvailable",
 				IncludeOnlyWhenLabelMatchFilter(map[string]string{"ready": "true"}),
@@ -2457,8 +2457,8 @@ func TestFromValueWithLabelsFilter_EndpointAddressReadyCount(t *testing.T) {
 			description:   "Should return 0 when no addresses have ready=true",
 		},
 		{
-			name: "FromValueWithLabelsFilter addressNotReady - endpoint with 1 not ready address",
-			fetchFunc: FromValueWithLabelsFilter(
+			name: "CountFromValueWithLabelsFilter addressNotReady - endpoint with 1 not ready address",
+			fetchFunc: CountFromValueWithLabelsFilter(
 				"kube_endpoint_address",
 				"addressNotReady",
 				IncludeOnlyWhenLabelMatchFilter(map[string]string{"ready": "false"}),
@@ -2497,4 +2497,249 @@ func TestFromValueWithLabelsFilter_EndpointAddressReadyCount(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestCountFromValueWithLabelsFilter_MetricDoesNotExist tests that CountFromValueWithLabelsFilter
+// returns 0 when the underlying metric doesn't exist at all.
+// Real-world scenario: k8s.io-minikube-hostpath service exists but has no backing pods,
+// so no kube_endpoint_address metric exists in KSM v2.16+ data.
+func TestCountFromValueWithLabelsFilter_MetricDoesNotExist(t *testing.T) {
+	t.Parallel()
+
+	// Test data with endpoint entity but NO kube_endpoint_address metric
+	rawGroups := definition.RawGroups{
+		"endpoint": {
+			"kube-system_k8s.io-minikube-hostpath": {
+				"kube_endpoint_info": Metric{
+					Labels: Labels{
+						"namespace": "kube-system",
+						"endpoint":  "k8s.io-minikube-hostpath",
+					},
+					Value: GaugeValue(1),
+				},
+				// NOTE: No kube_endpoint_address metric at all - endpoint has 0 addresses
+			},
+		},
+	}
+
+	// Create the count function - expects kube_endpoint_address with ready="true"
+	countFunc := CountFromValueWithLabelsFilter(
+		"kube_endpoint_address",
+		"addressAvailable",
+		IncludeOnlyWhenLabelMatchFilter(map[string]string{
+			"ready": "true",
+		}),
+	)
+
+	// Execute the function
+	result, err := countFunc("endpoint", "kube-system_k8s.io-minikube-hostpath", rawGroups)
+
+	// Should NOT return an error - should return 0
+	require.NoError(t, err, "CountFromValueWithLabelsFilter should return 0 (not error) when metric doesn't exist")
+
+	// Verify the result is FetchedValues with 0
+	fetchedValues, ok := result.(definition.FetchedValues)
+	require.True(t, ok, "Result should be FetchedValues")
+	require.Len(t, fetchedValues, 1, "Should have exactly one entry")
+
+	val, exists := fetchedValues["addressAvailable"]
+	require.True(t, exists, "Should have addressAvailable key")
+
+	gaugeValue, ok := val.(GaugeValue)
+	require.True(t, ok, "Value should be GaugeValue")
+	assert.Equal(t, GaugeValue(0), gaugeValue, "Should return 0 when metric doesn't exist")
+}
+
+// TestCountFromValueWithLabelsFilter_NoMatchingLabels tests that CountFromValueWithLabelsFilter
+// returns 0 when the metric exists but no entries match the label filter.
+// Real-world scenario: Endpoint has addresses, but all are ready=true, so filtering for ready=false returns 0.
+func TestCountFromValueWithLabelsFilter_NoMatchingLabels(t *testing.T) {
+	t.Parallel()
+
+	// Test data with endpoint that has addresses, but ALL are ready=true
+	rawGroups := definition.RawGroups{
+		"endpoint": {
+			"default_kubernetes": {
+				"kube_endpoint_address": []Metric{
+					{
+						Labels: Labels{
+							"namespace": "default",
+							"endpoint":  "kubernetes",
+							"ip":        "192.168.1.1",
+							"ready":     "true", // All addresses are ready
+						},
+						Value: GaugeValue(1),
+					},
+					{
+						Labels: Labels{
+							"namespace": "default",
+							"endpoint":  "kubernetes",
+							"ip":        "192.168.1.2",
+							"ready":     "true", // All addresses are ready
+						},
+						Value: GaugeValue(1),
+					},
+				},
+			},
+		},
+	}
+
+	// Create the count function - looking for ready="false" addresses
+	countFunc := CountFromValueWithLabelsFilter(
+		"kube_endpoint_address",
+		"addressNotReady",
+		IncludeOnlyWhenLabelMatchFilter(map[string]string{
+			"ready": "false", // Looking for NOT ready addresses
+		}),
+	)
+
+	// Execute the function
+	result, err := countFunc("endpoint", "default_kubernetes", rawGroups)
+
+	// Should NOT return an error - should return 0
+	require.NoError(t, err, "CountFromValueWithLabelsFilter should return 0 (not error) when no labels match")
+
+	// Verify the result is FetchedValues with 0
+	fetchedValues, ok := result.(definition.FetchedValues)
+	require.True(t, ok, "Result should be FetchedValues")
+	require.Len(t, fetchedValues, 1, "Should have exactly one entry")
+
+	val, exists := fetchedValues["addressNotReady"]
+	require.True(t, exists, "Should have addressNotReady key")
+
+	gaugeValue, ok := val.(GaugeValue)
+	require.True(t, ok, "Value should be GaugeValue")
+	assert.Equal(t, GaugeValue(0), gaugeValue, "Should return 0 when no addresses match ready=false")
+}
+
+// TestCountFromValueWithLabelsFilter_BackwardCompatibility_Scenario1 tests that both KSM v2.13 and v2.16
+// data formats produce the same output (0) for Scenario 1: endpoint with no addresses.
+func TestCountFromValueWithLabelsFilter_BackwardCompatibility_Scenario1(t *testing.T) {
+	t.Parallel()
+
+	entityID := "kube-system_k8s.io-minikube-hostpath"
+
+	// Scenario 1a: KSM v2.13 - explicit 0 value
+	ksmV213Data := definition.RawGroups{
+		"endpoint": {
+			entityID: {
+				"kube_endpoint_address_available": Metric{
+					Labels: Labels{"namespace": "kube-system", "endpoint": "k8s.io-minikube-hostpath"},
+					Value:  GaugeValue(0),
+				},
+			},
+		},
+	}
+
+	// Scenario 1b: KSM v2.16 - metric doesn't exist at all
+	ksmV216Data := definition.RawGroups{
+		"endpoint": {
+			entityID: {
+				"kube_endpoint_info": Metric{
+					Labels: Labels{"namespace": "kube-system", "endpoint": "k8s.io-minikube-hostpath"},
+					Value:  GaugeValue(1),
+				},
+			},
+		},
+	}
+
+	t.Run("Scenario_1a_v2.13_explicit_zero", func(t *testing.T) {
+		oldSpec := FromValue("kube_endpoint_address_available")
+		result, err := oldSpec("endpoint", entityID, ksmV213Data)
+		require.NoError(t, err)
+		
+		gaugeValue := result.(GaugeValue)
+		assert.Equal(t, GaugeValue(0), gaugeValue, "v2.13: OLD spec returns explicit 0")
+	})
+
+	t.Run("Scenario_1b_v2.16_metric_missing", func(t *testing.T) {
+		newSpec := CountFromValueWithLabelsFilter("kube_endpoint_address", "addressAvailable", 
+			IncludeOnlyWhenLabelMatchFilter(map[string]string{"ready": "true"}))
+		result, err := newSpec("endpoint", entityID, ksmV216Data)
+		require.NoError(t, err)
+		
+		fetchedValues := result.(definition.FetchedValues)
+		assert.Equal(t, GaugeValue(0), fetchedValues["addressAvailable"], "v2.16: NEW spec returns 0 when metric missing")
+	})
+
+	t.Run("Both_produce_same_output", func(t *testing.T) {
+		// v2.13
+		oldSpec := FromValue("kube_endpoint_address_available")
+		resultV213, _ := oldSpec("endpoint", entityID, ksmV213Data)
+		v213Value := resultV213.(GaugeValue)
+
+		// v2.16
+		newSpec := CountFromValueWithLabelsFilter("kube_endpoint_address", "addressAvailable",
+			IncludeOnlyWhenLabelMatchFilter(map[string]string{"ready": "true"}))
+		resultV216, _ := newSpec("endpoint", entityID, ksmV216Data)
+		v216Value := resultV216.(definition.FetchedValues)["addressAvailable"]
+
+		assert.Equal(t, v213Value, v216Value, "Both KSM versions produce same output: 0")
+	})
+}
+
+// TestCountFromValueWithLabelsFilter_BackwardCompatibility_Scenario2 tests that both KSM v2.13 and v2.16
+// data formats produce the same output (0) for Scenario 2: all addresses are ready (none are not-ready).
+func TestCountFromValueWithLabelsFilter_BackwardCompatibility_Scenario2(t *testing.T) {
+	t.Parallel()
+
+	entityID := "default_kubernetes"
+
+	// Scenario 2a: KSM v2.13 - explicit 0 for not-ready
+	ksmV213Data := definition.RawGroups{
+		"endpoint": {
+			entityID: {
+				"kube_endpoint_address_not_ready": Metric{
+					Labels: Labels{"namespace": "default", "endpoint": "kubernetes"},
+					Value:  GaugeValue(0),
+				},
+			},
+		},
+	}
+
+	// Scenario 2b: KSM v2.16 - all addresses have ready="true"
+	ksmV216Data := definition.RawGroups{
+		"endpoint": {
+			entityID: {
+				"kube_endpoint_address": []Metric{
+					{Labels: Labels{"namespace": "default", "endpoint": "kubernetes", "ip": "192.168.1.1", "ready": "true"}, Value: GaugeValue(1)},
+					{Labels: Labels{"namespace": "default", "endpoint": "kubernetes", "ip": "192.168.1.2", "ready": "true"}, Value: GaugeValue(1)},
+				},
+			},
+		},
+	}
+
+	t.Run("Scenario_2a_v2.13_explicit_zero", func(t *testing.T) {
+		oldSpec := FromValue("kube_endpoint_address_not_ready")
+		result, err := oldSpec("endpoint", entityID, ksmV213Data)
+		require.NoError(t, err)
+		
+		gaugeValue := result.(GaugeValue)
+		assert.Equal(t, GaugeValue(0), gaugeValue, "v2.13: OLD spec returns explicit 0 for not-ready")
+	})
+
+	t.Run("Scenario_2b_v2.16_no_matching_labels", func(t *testing.T) {
+		newSpec := CountFromValueWithLabelsFilter("kube_endpoint_address", "addressNotReady",
+			IncludeOnlyWhenLabelMatchFilter(map[string]string{"ready": "false"}))
+		result, err := newSpec("endpoint", entityID, ksmV216Data)
+		require.NoError(t, err)
+		
+		fetchedValues := result.(definition.FetchedValues)
+		assert.Equal(t, GaugeValue(0), fetchedValues["addressNotReady"], "v2.16: NEW spec returns 0 when no labels match ready=false")
+	})
+
+	t.Run("Both_produce_same_output", func(t *testing.T) {
+		// v2.13
+		oldSpec := FromValue("kube_endpoint_address_not_ready")
+		resultV213, _ := oldSpec("endpoint", entityID, ksmV213Data)
+		v213Value := resultV213.(GaugeValue)
+
+		// v2.16
+		newSpec := CountFromValueWithLabelsFilter("kube_endpoint_address", "addressNotReady",
+			IncludeOnlyWhenLabelMatchFilter(map[string]string{"ready": "false"}))
+		resultV216, _ := newSpec("endpoint", entityID, ksmV216Data)
+		v216Value := resultV216.(definition.FetchedValues)["addressNotReady"]
+
+		assert.Equal(t, v213Value, v216Value, "Both KSM versions produce same output: 0")
+	})
 }

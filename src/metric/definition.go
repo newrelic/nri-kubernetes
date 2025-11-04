@@ -900,7 +900,7 @@ var KSMSpecs = definition.SpecGroups{
 			// KSM >= v2.14 - Detailed metrics (we aggregate by filtering on ready label)
 			{
 				Name: "addressAvailable",
-				ValueFunc: prometheus.FromValueWithLabelsFilter(
+				ValueFunc: prometheus.CountFromValueWithLabelsFilter(
 					"kube_endpoint_address",
 					"addressAvailable",
 					prometheus.IncludeOnlyWhenLabelMatchFilter(map[string]string{
@@ -912,7 +912,7 @@ var KSMSpecs = definition.SpecGroups{
 			},
 			{
 				Name: "addressNotReady",
-				ValueFunc: prometheus.FromValueWithLabelsFilter(
+				ValueFunc: prometheus.CountFromValueWithLabelsFilter(
 					"kube_endpoint_address",
 					"addressNotReady",
 					prometheus.IncludeOnlyWhenLabelMatchFilter(map[string]string{

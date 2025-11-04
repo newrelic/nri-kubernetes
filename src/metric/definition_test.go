@@ -827,6 +827,8 @@ func TestEndpointSpecs_KSM_v2_16_Data(t *testing.T) {
 			})
 		})
 	}
+}
+
 func Test_KSM_LabelAndAnnotationExtraction_WithKSMSpecs(t *testing.T) {
 	t.Parallel()
 	raw := definition.RawGroups{
