@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### bugfix
+- Fix priorityClassName templating when enableWindows=true @kondracek-nr [#1329](https://github.com/newrelic/nri-kubernetes/pull/1329)
+
 ## v3.49.0 - 2025-11-03
 
 ### 🚀 Enhancements
