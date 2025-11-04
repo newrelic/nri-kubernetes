@@ -7,11 +7,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### bugfix
-- fix issue when the scrape duration exceeds the scrape interval, it will sleep for a negative time (meaning, do it immediately), which breaks the interval in which data is reported @danielstokes [#1215](https://github.com/newrelic/nri-kubernetes/pull/1215)
+## v3.49.0 - 2025-11-03
 
-### security
+### 🚀 Enhancements
+- Export KSM labels and annotations for pods, deployments, and namespaces @NRhzhao [#1317](https://github.com/newrelic/nri-kubernetes/pull/1317)
+- Update E2e-resource charts and add test-spec for OpenShift testing @TmNguyen12 [#1325](https://github.com/newrelic/nri-kubernetes/pull/1325)
+- Add `runningPod` attribute to the K8sNodeSample @NRhzhao [#1316](https://github.com/newrelic/nri-kubernetes/pull/1316)
+- Enable exporting of `ResourceQuotaSamples` by default @NRhzhao [#1326](https://github.com/newrelic/nri-kubernetes/pull/1326)
+
+## v3.48.0 - 2025-10-27
+
+### 🛡️ Security notices
 - Docker file to update apk packages on build @philip-r-beckwith [#1309](https://github.com/newrelic/nri-kubernetes/pull/1309)
+
+### 🐞 Bug fixes
+- fix issue when the scrape duration exceeds the scrape interval, it will sleep for a negative time (meaning, do it immediately), which breaks the interval in which data is reported @danielstokes [#1215](https://github.com/newrelic/nri-kubernetes/pull/1215)
 
 ## v3.47.0 - 2025-10-20
 

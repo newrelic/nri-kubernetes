@@ -10,6 +10,7 @@ import (
 
 	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v3/src/data"
+	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 	"github.com/newrelic/nri-kubernetes/v3/src/kubelet/client"
 	"github.com/newrelic/nri-kubernetes/v3/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/v3/src/kubelet/metric/testdata"
@@ -126,6 +127,24 @@ func TestGroup(t *testing.T) {
 	if diff := cmp.Diff(testdata.ExpectedGroupData, r); diff != "" {
 		t.Errorf("unexpected difference: %s", diff)
 	}
+}
+
+func TestCountRunningPods(t *testing.T) {
+	t.Parallel()
+	g := &grouper{}
+
+	rawGroups := definition.RawGroups{
+		"pod": {
+			"pod1": definition.RawMetrics{"status": "Running"},
+			"pod2": definition.RawMetrics{"status": "Pending"},
+			"pod3": definition.RawMetrics{"status": "Running"},
+			"pod4": definition.RawMetrics{"status": "Failed"},
+			"pod5": definition.RawMetrics{"status": "Running"},
+		},
+	}
+
+	count := g.countRunningPods(rawGroups)
+	require.Equal(t, 3, count, "Should count only pods with status 'Running'")
 }
 
 func getNode() *v1.Node {

@@ -763,7 +763,8 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_namespace_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_namespace_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "status", ValueFunc: prometheus.FromLabelValue("kube_namespace_status_phase", "phase"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("namespace", "kube_namespace_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_namespace_labels", "label"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "annotation.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_namespace_annotations", "annotation"), Type: sdkMetric.ATTRIBUTE},
 		},
 	},
 	"deployment": {
@@ -791,7 +792,8 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "deploymentName", ValueFunc: prometheus.FromLabelValue("kube_deployment_created", "deployment"), Type: sdkMetric.ATTRIBUTE},
 			// Important: The order of these lines is important: we could have the same label in different entities, and we would like to keep the value closer to deployment
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("namespace", "kube_namespace_labels"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("deployment", "kube_deployment_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_deployment_labels", "label"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "annotation.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_deployment_annotations", "annotation"), Type: sdkMetric.ATTRIBUTE},
 			// computed
 			{
 				Name: "podsMissing", ValueFunc: Subtract(
@@ -944,7 +946,8 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "status", ValueFunc: prometheus.FromLabelValue("kube_pod_status_phase", "phase"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "isScheduled", ValueFunc: definition.Transform(prometheus.FromLabelValue("kube_pod_status_scheduled", "condition"), toNumericBoolean), Type: sdkMetric.GAUGE},
 			{Name: "deploymentName", ValueFunc: ksmMetric.GetDeploymentNameForPod(), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("pod", "kube_pod_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_pod_labels", "label"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "annotation.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_pod_annotations", "annotation"), Type: sdkMetric.ATTRIBUTE},
 		},
 	},
 	"horizontalpodautoscaler": {
@@ -1168,6 +1171,7 @@ var KSMQueries = []prometheus.Query{
 	{MetricName: "kube_namespace_labels", Value: prometheus.QueryValue{
 		Value: prometheus.GaugeValue(1),
 	}},
+	{MetricName: "kube_namespace_annotations"},
 	{MetricName: "kube_namespace_created"},
 	{MetricName: "kube_namespace_status_phase", Value: prometheus.QueryValue{
 		Value: prometheus.GaugeValue(1),
@@ -1175,6 +1179,7 @@ var KSMQueries = []prometheus.Query{
 	{MetricName: "kube_deployment_labels", Value: prometheus.QueryValue{
 		Value: prometheus.GaugeValue(1),
 	}},
+	{MetricName: "kube_deployment_annotations"},
 	{MetricName: "kube_deployment_created"},
 	{MetricName: "kube_deployment_spec_replicas"},
 	{MetricName: "kube_deployment_status_replicas"},
@@ -1225,6 +1230,7 @@ var KSMQueries = []prometheus.Query{
 	{MetricName: "kube_pod_info"},
 	{MetricName: "kube_pod_created"},
 	{MetricName: "kube_pod_labels"},
+	{MetricName: "kube_pod_annotations"},
 	{MetricName: "kube_pod_status_scheduled", Value: prometheus.QueryValue{
 		Value: prometheus.GaugeValue(1),
 	}},
@@ -1455,6 +1461,7 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "memoryRequestedBytes", ValueFunc: definition.FromRaw("memoryRequestedBytes"), Type: sdkMetric.GAUGE},
 			{Name: "cpuRequestedCores", ValueFunc: cpuRequestedCores, Type: sdkMetric.GAUGE},
 			{Name: "kubeletVersion", ValueFunc: definition.FromRaw("kubeletVersion"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "runningPods", ValueFunc: definition.FromRaw("runningPods"), Type: sdkMetric.GAUGE},
 			// computed
 			{Name: "fsCapacityUtilization", ValueFunc: toUtilization(definition.FromRaw("fsUsedBytes"), definition.FromRaw("fsCapacityBytes")), Type: sdkMetric.GAUGE},
 			{Name: "allocatableCpuCoresUtilization", ValueFunc: toUtilization(_cpuUsedCores, definition.FromRaw("allocatableCpuCores")), Type: sdkMetric.GAUGE},

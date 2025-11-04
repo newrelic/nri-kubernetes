@@ -21,7 +21,7 @@ spec:
               operator: Exists
   {{- else }}
   hostPath:
-    path: /mnt/
+    path: {{ .Values.persistentVolume.hostPath | default "/mnt/" }}
     type: DirectoryOrCreate
   {{- end }}
 {{- end }}

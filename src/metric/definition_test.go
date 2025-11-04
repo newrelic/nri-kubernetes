@@ -4,11 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
 	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFromNano(t *testing.T) {
@@ -828,4 +827,64 @@ func TestEndpointSpecs_KSM_v2_16_Data(t *testing.T) {
 			})
 		})
 	}
+func Test_KSM_LabelAndAnnotationExtraction_WithKSMSpecs(t *testing.T) {
+	t.Parallel()
+	raw := definition.RawGroups{
+		"namespace": {
+			"my-namespace": {
+				"kube_namespace_labels": prometheus.Metric{
+					Labels: prometheus.Labels{
+						"label_team": "devops",
+						"label_env":  "staging",
+					},
+				},
+				"kube_namespace_annotations": prometheus.Metric{
+					Labels: prometheus.Labels{
+						"annotation_owner": "alice",
+					},
+				},
+			},
+		},
+		"pod": {
+			"my-pod": {
+				"kube_pod_labels": prometheus.Metric{
+					Labels: prometheus.Labels{
+						"label_app": "nginx",
+						"label_env": "prod",
+					},
+				},
+				"kube_pod_annotations": prometheus.Metric{
+					Labels: prometheus.Labels{
+						"annotation_owner": "bob",
+					},
+				},
+			},
+		},
+	}
+
+	getSpec := func(group, name string) definition.Spec {
+		for _, spec := range KSMSpecs[group].Specs {
+			if spec.Name == name {
+				return spec
+			}
+		}
+		t.Fatalf("spec %s not found for group %s", name, group)
+		return definition.Spec{}
+	}
+
+	labels, err := getSpec("namespace", "label.*").ValueFunc("namespace", "my-namespace", raw)
+	require.NoError(t, err)
+	assert.Equal(t, definition.FetchedValues{"label.team": "devops", "label.env": "staging"}, labels)
+
+	annotations, err := getSpec("namespace", "annotation.*").ValueFunc("namespace", "my-namespace", raw)
+	require.NoError(t, err)
+	assert.Equal(t, definition.FetchedValues{"annotation.owner": "alice"}, annotations)
+
+	labels, err = getSpec("pod", "label.*").ValueFunc("pod", "my-pod", raw)
+	require.NoError(t, err)
+	assert.Equal(t, definition.FetchedValues{"label.app": "nginx", "label.env": "prod"}, labels)
+
+	annotations, err = getSpec("pod", "annotation.*").ValueFunc("pod", "my-pod", raw)
+	require.NoError(t, err)
+	assert.Equal(t, definition.FetchedValues{"annotation.owner": "bob"}, annotations)
 }
