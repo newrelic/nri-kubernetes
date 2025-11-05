@@ -2246,7 +2246,7 @@ func TestFromValue_EndpointAddressAvailableAndNotReady(t *testing.T) {
 	}
 }
 
-func TestFromValueWithLabelsFilter_EndpointAddressReadyCount(t *testing.T) {
+func TestCountFromValueWithLabelsFilter_kubepointAddress(t *testing.T) {
 	// Test that FromValueWithLabelsFilter on kube_endpoint_address produces the same
 	// addressAvailable and addressNotReady counts as the dedicated metrics
 	// This demonstrates KSM >= 2.14 compatibility
@@ -2720,7 +2720,7 @@ func TestCountFromValueWithLabelsFilter_BackwardCompatibility_Scenario2(t *testi
 		oldSpec := FromValue("kube_endpoint_address_not_ready")
 		result, err := oldSpec("endpoint", entityID, ksmV213Data)
 		require.NoError(t, err)
-		
+
 		gaugeValue := result.(GaugeValue)
 		assert.Equal(t, GaugeValue(0), gaugeValue, "v2.13: OLD spec returns explicit 0 for not-ready")
 	})
@@ -2731,7 +2731,7 @@ func TestCountFromValueWithLabelsFilter_BackwardCompatibility_Scenario2(t *testi
 			IncludeOnlyWhenLabelMatchFilter(map[string]string{"ready": "false"}))
 		result, err := newSpec("endpoint", entityID, ksmV216Data)
 		require.NoError(t, err)
-		
+
 		fetchedValues := result.(definition.FetchedValues)
 		assert.Equal(t, GaugeValue(0), fetchedValues["addressNotReady"], "v2.16: NEW spec returns 0 when no labels match ready=false")
 	})
