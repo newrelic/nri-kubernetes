@@ -884,15 +884,43 @@ var KSMSpecs = definition.SpecGroups{
 				ValueFunc: prometheus.InheritAllLabelsFrom("endpoint", "kube_endpoint_labels"),
 				Type:      sdkMetric.ATTRIBUTE,
 			},
-			{
-				Name:      "addressNotReady",
-				ValueFunc: prometheus.FromValue("kube_endpoint_address_not_ready"),
-				Type:      sdkMetric.GAUGE,
-			},
+			// KSM < 2.14 - Legacy metrics (pre-aggregated by KSM)
 			{
 				Name:      "addressAvailable",
 				ValueFunc: prometheus.FromValue("kube_endpoint_address_available"),
 				Type:      sdkMetric.GAUGE,
+				Optional:  true, // Optional: does not exist in KSM >= 2.14
+			},
+			{
+				Name:      "addressNotReady",
+				ValueFunc: prometheus.FromValue("kube_endpoint_address_not_ready"),
+				Type:      sdkMetric.GAUGE,
+				Optional:  true, // Optional: does not exist in KSM >= 2.14
+			},
+			// KSM >= v2.14 - Detailed metrics (we aggregate by filtering on ready label)
+			{
+				Name: "addressAvailable",
+				ValueFunc: prometheus.CountFromValueWithLabelsFilter(
+					"kube_endpoint_address",
+					"addressAvailable",
+					prometheus.IncludeOnlyWhenLabelMatchFilter(map[string]string{
+						"ready": "true",
+					}),
+				),
+				Type:     sdkMetric.GAUGE,
+				Optional: true, // Optional: may not exist in KSM < 2.14
+			},
+			{
+				Name: "addressNotReady",
+				ValueFunc: prometheus.CountFromValueWithLabelsFilter(
+					"kube_endpoint_address",
+					"addressNotReady",
+					prometheus.IncludeOnlyWhenLabelMatchFilter(map[string]string{
+						"ready": "false",
+					}),
+				),
+				Type:     sdkMetric.GAUGE,
+				Optional: true, // Optional: may not exist in KSM < 2.14
 			},
 		},
 	},
@@ -1221,6 +1249,7 @@ var KSMQueries = []prometheus.Query{
 	{MetricName: "kube_endpoint_labels"},
 	{MetricName: "kube_endpoint_address_not_ready"},
 	{MetricName: "kube_endpoint_address_available"},
+	{MetricName: "kube_endpoint_address"},
 	// hpa
 	{MetricName: "kube_horizontalpodautoscaler_info"},
 	{MetricName: "kube_horizontalpodautoscaler_labels"},

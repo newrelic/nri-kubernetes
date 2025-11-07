@@ -687,7 +687,7 @@ func FromValueWithLabelsFilter(metricName string, nameOverride string, labelsFil
 		case Metric:
 			return m.Value, nil
 		case []Metric:
-			return fetchedValuesFromRawMetricsWithLabels(metricName, nameOverride, m, labelsFilter...)
+			return fetchedValuesFromRawMetricsWithLabels(metricName, nameOverride, m, false, labelsFilter...)
 		}
 		return nil, fmt.Errorf(
 			"incompatible metric type for %s. Expected: Metric or []Metric. Got: %T",
@@ -699,7 +699,7 @@ func FromValueWithLabelsFilter(metricName string, nameOverride string, labelsFil
 
 // fetchedValuesFromRawMetricsWithLabels generates a mapping of metrics to `FetchedValue` by metricName or nameOverride
 // if provided and skips the metrics aggregation if there are no matching labels for that metric.
-// In case there aren't any matching filters, the function won't return any value.
+// In case there aren't any matching filters, the function won't return any value unless returnZeroWhenEmpty is true.
 //
 // Given a `metricName=my_metric`, a label filter function returning `l3:d` and the following `metrics`:
 //
@@ -719,6 +719,7 @@ func fetchedValuesFromRawMetricsWithLabels(
 	metricName string,
 	nameOverride string,
 	metrics []Metric,
+	returnZeroWhenEmpty bool,
 	labelsFilter ...LabelsFilter,
 ) (definition.FetchedValues, error) {
 	val := make(definition.FetchedValues)
@@ -745,7 +746,54 @@ func fetchedValuesFromRawMetricsWithLabels(
 		val[metricName] = value
 	}
 
+	// If no metrics matched the filter and returnZeroWhenEmpty is true, return 0 instead of empty map
+	if returnZeroWhenEmpty && len(val) == 0 {
+		if nameOverride != "" {
+			metricName = nameOverride
+		}
+		val[metricName] = GaugeValue(0)
+	}
+
 	return val, nil
+}
+
+// CountFromValueWithLabelsFilter works like FromValueWithLabelsFilter but returns 0 instead of empty
+// when no metrics match the label filter. This is useful for count/gauge metrics where absence means 0.
+//
+// For example, counting addresses with ready="true" should return 0 if there are no ready addresses,
+// rather than returning an empty result (which would be treated as "metric not found").
+func CountFromValueWithLabelsFilter(metricName string, nameOverride string, labelsFilter ...LabelsFilter) definition.FetchFunc {
+	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
+		value, err := definition.FromRaw(metricName)(groupLabel, entityID, groups)
+		if err != nil {
+			// Only handle "metric not found" errors by returning 0
+			// Other errors (group not found, entity not found, parsing errors) should be propagated
+			if strings.Contains(err.Error(), "metric") && strings.Contains(err.Error(), "not found") {
+				// For count metrics, when the underlying metric doesn't exist at all, treat it as an empty array
+				// and let fetchedValuesFromRawMetricsWithLabels handle it (will return 0).
+				// This handles cases where KSM >= v2.14 doesn't report individual address metrics when
+				// an endpoint has 0 addresses. For example, k8s.io-minikube-hostpath exists as a Service
+				// but has no backing pods, so no kube_endpoint_address metrics exist for it.
+				// In KSM < v2.14, this was reported as kube_endpoint_address_available=0, but in v2.14+
+				// the metric is simply absent. By treating it as an empty array, we get consistent behavior.
+				return fetchedValuesFromRawMetricsWithLabels(metricName, nameOverride, []Metric{}, true, labelsFilter...)
+			}
+			// For other errors (group/entity not found, parsing errors, etc.), propagate them
+			return nil, err
+		}
+
+		switch m := value.(type) {
+		case Metric:
+			return m.Value, nil
+		case []Metric:
+			return fetchedValuesFromRawMetricsWithLabels(metricName, nameOverride, m, true, labelsFilter...)
+		}
+		return nil, fmt.Errorf(
+			"incompatible metric type for %s. Expected: Metric or []Metric. Got: %T",
+			metricName,
+			value,
+		)
+	}
 }
 
 // hasMatchingLabels checks if a metric has any matching label given a list of labels filter funcs.
