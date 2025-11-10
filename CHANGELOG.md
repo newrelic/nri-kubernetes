@@ -7,10 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancement
+## v3.50.0 - 2025-11-10
+
+### 🚀 Enhancements
 - update KSM e2e chart version and in test-spec versions to 2.16, add support for kube_endpoint_address and backward compatibility for kube_endpoint_address_available & kube_endpoint_address_not_ready @TmNguyen12 [#1330](https://github.com/newrelic/nri-kubernetes/pull/1330)
 
-### bugfix
+### 🐞 Bug fixes
 - Fix priorityClassName templating when enableWindows=true @kondracek-nr [#1329](https://github.com/newrelic/nri-kubernetes/pull/1329)
 
 ## v3.49.0 - 2025-11-03
