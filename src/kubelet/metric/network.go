@@ -3,13 +3,23 @@ package metric
 import (
 	"errors"
 	"fmt"
+	"regexp"
+	"sort"
 
 	"github.com/newrelic/nri-kubernetes/v3/src/definition"
+	log "github.com/sirupsen/logrus"
+)
+
+var (
+	physicalInterfacePattern = regexp.MustCompile(`^(eth|ens|eno|enp)\d+`)
+	cniInterfacePattern      = regexp.MustCompile(`^(eni|oci|azv|veth|cali|cni|pod-|lxc|docker|br-)`)
 )
 
 // FromRawWithFallbackToDefaultInterface fetches network metrics from the raw
-// groups, if the metric is not present it tries to find the default interface
-// network metrics and gets the required metric from there.
+// groups, with multiple fallback strategies:
+// 1. Try top-level metric (e.g., n.Network.RxBytes)
+// 2. Try default interface from routing table (default /host/proc/1/net/route)
+// 3. Use heuristic to select primary interface (lowest-numbered physical interface)
 func FromRawWithFallbackToDefaultInterface(metricKey string) definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 		g, ok := groups[groupLabel]
@@ -22,21 +32,44 @@ func FromRawWithFallbackToDefaultInterface(metricKey string) definition.FetchFun
 			return nil, errors.New("entity not found")
 		}
 
+		// Step 1: Try top-level metric (e.g., n.Network.RxBytes directly)
 		value, ok := e[metricKey]
 		if ok {
 			return value, nil
 		}
 
+		// Step 2: Try default interface from routing table
 		defaultInterface, err := getDefaultInterface(groups)
-		if err != nil {
-			return nil, fmt.Errorf(
-				"metric not found and default interface fallback failed: %w", err)
+		if err == nil && defaultInterface != "" {
+			metric, err := getMetricFromInterface(defaultInterface, metricKey, e)
+			if err == nil {
+				return metric, nil
+			}
+			// If we got a default interface name but couldn't find metrics for it,
+			// fall through to heuristic
+			log.Debugf("Default interface '%s' found in routing table but not in stats. Trying heuristic.", defaultInterface)
 		}
 
-		metric, err := getMetricFromDefaultInterface(defaultInterface, metricKey, e)
+		// Step 3: Fallback to heuristic interface selection
+		interfacesI, ok := e["interfaces"]
+		if !ok {
+			return nil, errors.New("interfaces metrics not found")
+		}
+		interfaces, ok := interfacesI.(map[string]definition.RawMetrics)
+		if !ok {
+			return nil, errors.New("wrong format for interfaces metrics")
+		}
+
+		primaryInterface, err := selectPrimaryInterface(interfaces)
 		if err != nil {
-			return nil, fmt.Errorf(
-				"metric not found and default interface fallback failed: %w", err)
+			return nil, fmt.Errorf("could not determine primary interface: %w", err)
+		}
+
+		log.Debugf("Using heuristic-selected primary interface '%s' for %s metric", primaryInterface, metricKey)
+
+		metric, err := getMetricFromInterface(primaryInterface, metricKey, e)
+		if err != nil {
+			return nil, fmt.Errorf("metric not found for primary interface %s: %w", primaryInterface, err)
 		}
 		return metric, nil
 	}
@@ -90,4 +123,54 @@ func getMetricFromDefaultInterface(defaultInterface, metricKey string, m definit
 		return value, nil
 	}
 	return nil, errors.New("default interface metrics not found")
+}
+
+// selectPrimaryInterface identifies the primary network interface using heuristics
+// when routing table access is unavailable. It selects the lowest-numbered physical
+// interface while excluding known CNI interface patterns.
+func selectPrimaryInterface(interfaces map[string]definition.RawMetrics) (string, error) {
+	var candidates []string
+
+	for name := range interfaces {
+		// Must match physical interface pattern
+		if !physicalInterfacePattern.MatchString(name) {
+			continue
+		}
+		// Must not match CNI pattern
+		if cniInterfacePattern.MatchString(name) {
+			continue
+		}
+		candidates = append(candidates, name)
+	}
+
+	if len(candidates) == 0 {
+		return "", errors.New("no physical network interfaces found")
+	}
+
+	// Sort alphabetically and return lowest-numbered
+	sort.Strings(candidates)
+	return candidates[0], nil
+}
+
+// getMetricFromInterface extracts a metric from a specific interface
+func getMetricFromInterface(interfaceName, metricKey string, m definition.RawMetrics) (definition.FetchedValue, error) {
+	interfacesI, ok := m["interfaces"]
+	if !ok {
+		return nil, errors.New("interfaces metrics not found")
+	}
+	interfaces, ok := interfacesI.(map[string]definition.RawMetrics)
+	if !ok {
+		return nil, errors.New("wrong format for interfaces metrics")
+	}
+
+	interfaceMetrics, ok := interfaces[interfaceName]
+	if !ok {
+		return nil, fmt.Errorf("interface %s not found", interfaceName)
+	}
+
+	value, ok := interfaceMetrics[metricKey]
+	if !ok {
+		return nil, fmt.Errorf("metric %s not found for interface %s", metricKey, interfaceName)
+	}
+	return value, nil
 }
