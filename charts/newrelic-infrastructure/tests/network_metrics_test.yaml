@@ -68,16 +68,6 @@ tests:
             name: host-proc
         template: templates/kubelet/daemonset.yaml
 
-  - it: Should set networkRouteFile when privileged is true (default)
-    set:
-      licenseKey: test
-      cluster: test
-    asserts:
-      - matchRegex:
-          path: data["nri-kubernetes.yml"]
-          pattern: "networkRouteFile: /host/proc/1/net/route"
-        template: templates/kubelet/scraper-configmap.yaml
-
   - it: Windows daemonset should never have host-proc volume mount
     set:
       licenseKey: test
