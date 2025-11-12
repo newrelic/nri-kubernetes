@@ -12,9 +12,6 @@ data:
     {{- (merge .Values.common.config (include "newrelic.integrationConfigDefaults" . | fromYaml)) | toYaml | nindent 4 }}
     kubelet:
       enabled: true
-      {{- if include "nriKubernetes.privileged" . }}
-      networkRouteFile: /host/proc/1/net/route
-      {{- end }}
       {{- if .Values.kubelet.config }}
       {{- toYaml .Values.kubelet.config | nindent 6 }}
       {{- end }}

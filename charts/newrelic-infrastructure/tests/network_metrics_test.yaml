@@ -1,0 +1,166 @@
+suite: Network Metrics Configuration
+templates:
+  - templates/kubelet/daemonset.yaml
+  - templates/kubelet/daemonset-windows.yaml
+  - templates/kubelet/scraper-configmap.yaml
+  - templates/kubelet/agent-configmap.yaml
+  - templates/kubelet/integrations-configmap.yaml
+  - templates/secret.yaml
+release:
+  name: my-release
+  namespace: my-namespace
+tests:
+  - it: Should mount host-proc volume when privileged is true (default)
+    set:
+      licenseKey: test
+      cluster: test
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: host-proc
+            mountPath: /host/proc
+            readOnly: true
+        template: templates/kubelet/daemonset.yaml
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: host-proc
+            hostPath:
+              path: /proc
+        template: templates/kubelet/daemonset.yaml
+
+  - it: Should mount host-proc volume when privileged is explicitly true
+    set:
+      licenseKey: test
+      cluster: test
+      privileged: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: host-proc
+            mountPath: /host/proc
+            readOnly: true
+        template: templates/kubelet/daemonset.yaml
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: host-proc
+            hostPath:
+              path: /proc
+        template: templates/kubelet/daemonset.yaml
+
+  - it: Should NOT mount host-proc volume when privileged is false
+    set:
+      licenseKey: test
+      cluster: test
+      privileged: false
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: host-proc
+        template: templates/kubelet/daemonset.yaml
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: host-proc
+        template: templates/kubelet/daemonset.yaml
+
+  - it: Should set networkRouteFile when privileged is true (default)
+    set:
+      licenseKey: test
+      cluster: test
+    asserts:
+      - matchRegex:
+          path: data["nri-kubernetes.yml"]
+          pattern: "networkRouteFile: /host/proc/1/net/route"
+        template: templates/kubelet/scraper-configmap.yaml
+
+  - it: Windows daemonset should never have host-proc volume mount
+    set:
+      licenseKey: test
+      cluster: test
+      privileged: true
+      enableWindows: true
+      windowsOsList:
+        - version: 2019
+          imageTag: 2-windows-ltsc2019-alpha
+          buildNumber: 10.0.17763
+        - version: 2022
+          imageTag: 2-windows-ltsc2022-alpha
+          buildNumber: 10.0.20348
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: host-proc
+        template: templates/kubelet/daemonset-windows.yaml
+        documentIndex: 0
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: host-proc
+        template: templates/kubelet/daemonset-windows.yaml
+        documentIndex: 0
+      - notContains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: host-proc
+        template: templates/kubelet/daemonset-windows.yaml
+        documentIndex: 1
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: host-proc
+        template: templates/kubelet/daemonset-windows.yaml
+        documentIndex: 1
+
+  - it: Should work with custom kubelet extraVolumeMounts
+    set:
+      licenseKey: test
+      cluster: test
+      privileged: true
+      kubelet:
+        extraVolumeMounts:
+          - name: custom-mount
+            mountPath: /custom
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: host-proc
+            mountPath: /host/proc
+            readOnly: true
+        template: templates/kubelet/daemonset.yaml
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: custom-mount
+            mountPath: /custom
+        template: templates/kubelet/daemonset.yaml
+
+  - it: Should work with custom kubelet extraVolumes
+    set:
+      licenseKey: test
+      cluster: test
+      privileged: true
+      kubelet:
+        extraVolumes:
+          - name: custom-volume
+            emptyDir: {}
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: host-proc
+            hostPath:
+              path: /proc
+        template: templates/kubelet/daemonset.yaml
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: custom-volume
+            emptyDir: {}
+        template: templates/kubelet/daemonset.yaml
