@@ -15,21 +15,39 @@ var (
 	cniInterfacePattern      = regexp.MustCompile(`^(eni|oci|azv|veth|cali|cni|pod-|lxc|docker|br-)`)
 )
 
+// Static errors for network metric operations.
+var (
+	ErrGroupNotFound                      = errors.New("group not found")
+	ErrEntityNotFound                     = errors.New("entity not found")
+	ErrInterfacesMetricsNotFound          = errors.New("interfaces metrics not found")
+	ErrInterfacesWrongFormat              = errors.New("wrong format for interfaces metrics")
+	ErrNetworkGroupNotFound               = errors.New("network group not found")
+	ErrNetworkInterfacesAttributeNotFound = errors.New("network interfaces attribute not found")
+	ErrDefaultInterfaceNotFound           = errors.New("default interface not found")
+	ErrDefaultInterfaceInvalidType        = errors.New("default interface is not a valid interface name")
+	ErrDefaultInterfaceNotSet             = errors.New("default interface not set")
+	ErrMetricNotFoundForDefaultInterface  = errors.New("metric not found for default interface")
+	ErrDefaultInterfaceMetricsNotFound    = errors.New("default interface metrics not found")
+	ErrNoPhysicalNetworkInterfaces        = errors.New("no physical network interfaces found")
+)
+
 // FromRawWithFallbackToDefaultInterface fetches network metrics from the raw
 // groups, with multiple fallback strategies:
-// 1. Try top-level metric (e.g., n.Network.RxBytes)
-// 2. Try default interface from routing table (default /host/proc/1/net/route)
-// 3. Use heuristic to select primary interface (lowest-numbered physical interface)
+// 1. Try top-level metric (e.g., n.Network.RxBytes).
+// 2. Try default interface from routing table (default /host/proc/1/net/route).
+// 3. Use heuristic to select primary interface (lowest-numbered physical interface).
+//
+//nolint:gocyclo,cyclop
 func FromRawWithFallbackToDefaultInterface(metricKey string) definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 		g, ok := groups[groupLabel]
 		if !ok {
-			return nil, errors.New("group not found")
+			return nil, ErrGroupNotFound
 		}
 
 		e, ok := g[entityID]
 		if !ok {
-			return nil, errors.New("entity not found")
+			return nil, ErrEntityNotFound
 		}
 
 		// Step 1: Try top-level metric (e.g., n.Network.RxBytes directly)
@@ -53,11 +71,11 @@ func FromRawWithFallbackToDefaultInterface(metricKey string) definition.FetchFun
 		// Step 3: Fallback to heuristic interface selection
 		interfacesI, ok := e["interfaces"]
 		if !ok {
-			return nil, errors.New("interfaces metrics not found")
+			return nil, ErrInterfacesMetricsNotFound
 		}
 		interfaces, ok := interfacesI.(map[string]definition.RawMetrics)
 		if !ok {
-			return nil, errors.New("wrong format for interfaces metrics")
+			return nil, ErrInterfacesWrongFormat
 		}
 
 		primaryInterface, err := selectPrimaryInterface(interfaces)
@@ -75,41 +93,43 @@ func FromRawWithFallbackToDefaultInterface(metricKey string) definition.FetchFun
 	}
 }
 
-// getDefaultInterface from group["network"]["interfaces"]["default"]
+// getDefaultInterface from group["network"]["interfaces"]["default"].
 func getDefaultInterface(groups definition.RawGroups) (string, error) {
 	network, ok := groups["network"]
 	if !ok {
-		return "", errors.New("network group not found")
+		return "", ErrNetworkGroupNotFound
 	}
 	networkInterfaces, ok := network["interfaces"]
 	if !ok {
-		return "", errors.New("network interfaces attribute not found")
+		return "", ErrNetworkInterfacesAttributeNotFound
 	}
 	defaultInterfaceI, ok := networkInterfaces["default"]
 	if !ok {
-		return "", errors.New("default interface not found")
+		return "", ErrDefaultInterfaceNotFound
 	}
 	defaultInterface, ok := defaultInterfaceI.(string)
 	if !ok {
-		return "", errors.New("default interface is not a valid interface name")
+		return "", ErrDefaultInterfaceInvalidType
 	}
 	if defaultInterface == "" {
-		return "", errors.New("default interface not set")
+		return "", ErrDefaultInterfaceNotSet
 	}
 
 	return defaultInterface, nil
 }
 
 // getMetricFromDefaultInterface returns the value of metricKey related to
-// the defaultInterface in the given raw metrics
+// the defaultInterface in the given raw metrics.
+//
+//nolint:ireturn,unused
 func getMetricFromDefaultInterface(defaultInterface, metricKey string, m definition.RawMetrics) (definition.FetchedValue, error) {
 	interfacesI, ok := m["interfaces"]
 	if !ok {
-		return nil, errors.New("interfaces metrics not found")
+		return nil, ErrInterfacesMetricsNotFound
 	}
 	interfaces, ok := interfacesI.(map[string]definition.RawMetrics)
 	if !ok {
-		return nil, errors.New("wrong format for interfaces metrics")
+		return nil, ErrInterfacesWrongFormat
 	}
 
 	for interfaceName, i := range interfaces {
@@ -118,18 +138,18 @@ func getMetricFromDefaultInterface(defaultInterface, metricKey string, m definit
 		}
 		value, ok := i[metricKey]
 		if !ok {
-			return nil, errors.New("metric not found for default interface")
+			return nil, ErrMetricNotFoundForDefaultInterface
 		}
 		return value, nil
 	}
-	return nil, errors.New("default interface metrics not found")
+	return nil, ErrDefaultInterfaceMetricsNotFound
 }
 
 // selectPrimaryInterface identifies the primary network interface using heuristics
 // when routing table access is unavailable. It selects the lowest-numbered physical
 // interface while excluding known CNI interface patterns.
 func selectPrimaryInterface(interfaces map[string]definition.RawMetrics) (string, error) {
-	var candidates []string
+	candidates := make([]string, 0, len(interfaces))
 
 	for name := range interfaces {
 		// Must match physical interface pattern
@@ -144,7 +164,7 @@ func selectPrimaryInterface(interfaces map[string]definition.RawMetrics) (string
 	}
 
 	if len(candidates) == 0 {
-		return "", errors.New("no physical network interfaces found")
+		return "", ErrNoPhysicalNetworkInterfaces
 	}
 
 	// Sort alphabetically and return lowest-numbered
@@ -152,25 +172,27 @@ func selectPrimaryInterface(interfaces map[string]definition.RawMetrics) (string
 	return candidates[0], nil
 }
 
-// getMetricFromInterface extracts a metric from a specific interface
+// getMetricFromInterface extracts a metric from a specific interface.
+//
+//nolint:ireturn
 func getMetricFromInterface(interfaceName, metricKey string, m definition.RawMetrics) (definition.FetchedValue, error) {
 	interfacesI, ok := m["interfaces"]
 	if !ok {
-		return nil, errors.New("interfaces metrics not found")
+		return nil, ErrInterfacesMetricsNotFound
 	}
 	interfaces, ok := interfacesI.(map[string]definition.RawMetrics)
 	if !ok {
-		return nil, errors.New("wrong format for interfaces metrics")
+		return nil, ErrInterfacesWrongFormat
 	}
 
 	interfaceMetrics, ok := interfaces[interfaceName]
 	if !ok {
-		return nil, fmt.Errorf("interface %s not found", interfaceName)
+		return nil, fmt.Errorf("interface %s not found", interfaceName) //nolint:err113
 	}
 
 	value, ok := interfaceMetrics[metricKey]
 	if !ok {
-		return nil, fmt.Errorf("metric %s not found for interface %s", metricKey, interfaceName)
+		return nil, fmt.Errorf("metric %s not found for interface %s", metricKey, interfaceName) //nolint:err113
 	}
 	return value, nil
 }
