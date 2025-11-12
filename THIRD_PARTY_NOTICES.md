@@ -94,6 +94,14 @@ Distributed under the following license(s):
 
 
 
+## [golang.org/x/text](https://golang.org/x/text)
+
+Distributed under the following license(s):
+
+* BSD-3-Clause
+
+
+
 ## [google.golang.org/protobuf](https://google.golang.org/protobuf)
 
 Distributed under the following license(s):
@@ -196,22 +204,6 @@ Distributed under the following license(s):
 
 
 
-## [github.com/envoyproxy/protoc-gen-validate](https://github.com/envoyproxy/protoc-gen-validate)
-
-Distributed under the following license(s):
-
-* Apache-2.0
-
-
-
-## [github.com/felixge/httpsnoop](https://github.com/felixge/httpsnoop)
-
-Distributed under the following license(s):
-
-* MIT
-
-
-
 ## [github.com/frankban/quicktest](https://github.com/frankban/quicktest)
 
 Distributed under the following license(s):
@@ -237,14 +229,6 @@ Distributed under the following license(s):
 
 
 ## [github.com/go-logr/logr](https://github.com/go-logr/logr)
-
-Distributed under the following license(s):
-
-* Apache-2.0
-
-
-
-## [github.com/go-logr/stdr](https://github.com/go-logr/stdr)
 
 Distributed under the following license(s):
 
@@ -300,14 +284,6 @@ Distributed under the following license(s):
 
 
 
-## [github.com/golang/groupcache](https://github.com/golang/groupcache)
-
-Distributed under the following license(s):
-
-* Apache-2.0
-
-
-
 ## [github.com/google/btree](https://github.com/google/btree)
 
 Distributed under the following license(s):
@@ -332,14 +308,6 @@ Distributed under the following license(s):
 
 
 
-## [github.com/google/s2a-go](https://github.com/google/s2a-go)
-
-Distributed under the following license(s):
-
-* Apache-2.0
-
-
-
 ## [github.com/google/uuid](https://github.com/google/uuid)
 
 Distributed under the following license(s):
@@ -348,11 +316,11 @@ Distributed under the following license(s):
 
 
 
-## [github.com/googleapis/enterprise-certificate-proxy](https://github.com/googleapis/enterprise-certificate-proxy)
+## [github.com/gorilla/websocket](https://github.com/gorilla/websocket)
 
 Distributed under the following license(s):
 
-* Apache-2.0
+* BSD-2-Clause
 
 
 
@@ -413,6 +381,14 @@ Distributed under the following license(s):
 
 
 ## [github.com/kr/pretty](https://github.com/kr/pretty)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
+## [github.com/kr/pty](https://github.com/kr/pty)
 
 Distributed under the following license(s):
 
@@ -513,14 +489,6 @@ Distributed under the following license(s):
 Distributed under the following license(s):
 
 * MIT
-
-
-
-## [github.com/planetscale/vtprotobuf](https://github.com/planetscale/vtprotobuf)
-
-Distributed under the following license(s):
-
-* BSD-3-Clause
 
 
 
@@ -628,7 +596,7 @@ Distributed under the following license(s):
 
 
 
-## [go.opencensus.io](https://go.opencensus.io)
+## [go.opentelemetry.io/otel](https://go.opentelemetry.io/otel)
 
 Distributed under the following license(s):
 
@@ -636,19 +604,11 @@ Distributed under the following license(s):
 
 
 
-## [go.opentelemetry.io/otel/metric](https://go.opentelemetry.io/otel/metric)
+## [go.opentelemetry.io/otel/trace](https://go.opentelemetry.io/otel/trace)
 
 Distributed under the following license(s):
 
 * Apache-2.0
-
-
-
-## [go.uber.org/atomic](https://go.uber.org/atomic)
-
-Distributed under the following license(s):
-
-* MIT
 
 
 
@@ -660,7 +620,15 @@ Distributed under the following license(s):
 
 
 
-## [go.uber.org/multierr](https://go.uber.org/multierr)
+## [go.yaml.in/yaml/v2](https://go.yaml.in/yaml/v2)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [go.yaml.in/yaml/v3](https://go.yaml.in/yaml/v3)
 
 Distributed under the following license(s):
 
@@ -724,14 +692,6 @@ Distributed under the following license(s):
 
 
 
-## [golang.org/x/text](https://golang.org/x/text)
-
-Distributed under the following license(s):
-
-* BSD-3-Clause
-
-
-
 ## [golang.org/x/time](https://golang.org/x/time)
 
 Distributed under the following license(s):
@@ -745,6 +705,22 @@ Distributed under the following license(s):
 Distributed under the following license(s):
 
 * BSD-3-Clause
+
+
+
+## [google.golang.org/genproto/googleapis/rpc](https://google.golang.org/genproto/googleapis/rpc)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [google.golang.org/grpc](https://google.golang.org/grpc)
+
+Distributed under the following license(s):
+
+* Apache-2.0
 
 
 
@@ -785,6 +761,22 @@ Distributed under the following license(s):
 Distributed under the following license(s):
 
 * MIT
+
+
+
+## [k8s.io/apiserver](https://github.com/kubernetes/apiserver)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [k8s.io/component-base](https://github.com/kubernetes/component-base)
+
+Distributed under the following license(s):
+
+* Apache-2.0
 
 
 
@@ -836,7 +828,7 @@ Distributed under the following license(s):
 
 
 
-## [sigs.k8s.io/structured-merge-diff/v4](https://sigs.k8s.io/structured-merge-diff/v4)
+## [sigs.k8s.io/structured-merge-diff/v6](https://sigs.k8s.io/structured-merge-diff/v6)
 
 Distributed under the following license(s):
 
