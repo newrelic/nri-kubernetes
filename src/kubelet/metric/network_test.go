@@ -1,3 +1,4 @@
+//nolint:funlen
 package metric
 
 import (
@@ -10,6 +11,8 @@ import (
 )
 
 func TestFromRawWithFallbackToDefaultInterface_UsesRaw(t *testing.T) {
+	t.Parallel()
+
 	expectedRawData := definition.RawGroups{
 		"node": {
 			"fooNode": definition.RawMetrics{
@@ -34,6 +37,8 @@ func TestFromRawWithFallbackToDefaultInterface_UsesRaw(t *testing.T) {
 }
 
 func TestFromRawWithFallbackToDefaultInterface_UsesFallback(t *testing.T) {
+	t.Parallel()
+
 	expectedRawData := definition.RawGroups{
 		"node": {
 			"fooNode": definition.RawMetrics{
@@ -63,7 +68,7 @@ func TestFromRawWithFallbackToDefaultInterface_UsesFallback(t *testing.T) {
 	assert.Equal(t, uint64(51419684038), value)
 }
 
-// TestSelectPrimaryInterface tests the heuristic interface selection logic
+// TestSelectPrimaryInterface tests the heuristic interface selection logic.
 func TestSelectPrimaryInterface(t *testing.T) {
 	t.Parallel()
 
@@ -232,7 +237,7 @@ func TestSelectPrimaryInterface(t *testing.T) {
 	}
 }
 
-// TestGetMetricFromInterface tests extracting metrics from a specific interface
+// TestGetMetricFromInterface tests extracting metrics from a specific interface.
 func TestGetMetricFromInterface(t *testing.T) {
 	t.Parallel()
 
@@ -347,7 +352,7 @@ func TestGetMetricFromInterface(t *testing.T) {
 	}
 }
 
-// TestFromRawWithFallbackToDefaultInterface_ComprehensiveFallback tests the complete 3-tier fallback logic
+// TestFromRawWithFallbackToDefaultInterface_ComprehensiveFallback tests the complete 3-tier fallback logic.
 func TestFromRawWithFallbackToDefaultInterface_ComprehensiveFallback(t *testing.T) {
 	t.Parallel()
 
@@ -590,7 +595,7 @@ func TestFromRawWithFallbackToDefaultInterface_ComprehensiveFallback(t *testing.
 	}
 }
 
-// TestGetDefaultInterface tests reading the default interface from network group
+// TestGetDefaultInterface tests reading the default interface from network group.
 func TestGetDefaultInterface(t *testing.T) {
 	t.Parallel()
 
