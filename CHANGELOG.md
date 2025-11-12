@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- Mount /host/proc in privileged mode & introduce network metrics heuristic to improve network metrics collection @kondracek-nr [#1355](https://github.com/newrelic/nri-kubernetes/pull/1335)
+
 ## v3.50.0 - 2025-11-10
 
 ### 🚀 Enhancements
