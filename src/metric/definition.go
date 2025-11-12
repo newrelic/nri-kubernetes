@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	log "github.com/sirupsen/logrus"
-
 	sdkMetric "github.com/newrelic/infra-integrations-sdk/data/metric"
 
 	"github.com/newrelic/nri-kubernetes/v3/src/definition"
@@ -1716,9 +1714,6 @@ var (
 
 // filterCPUUsedCores checks for the correctness of the container metric cpuUsedCores returned by kubelet.
 // cpuUsedCores a.k.a `usageNanoCores` value is set by cAdvisor and is returned by kubelet stats summary endpoint.
-// There is an active bug where the metric value is sometimes impossibly high https://github.com/kubernetes/kubernetes/issues/114057.
-// The cpuUsedCores along with cpuLimitCores is typically used to plot `cpuCoresUtilization` on the UI where cpuCoresUtilization = (cpuUsedCores/cpuLimitCores) * 100.
-// cpuUsedCores has been observed to be absurd even when cpuUsedCores >  cpuLimitCores * 100.
 //
 //nolint:nolintlint,ireturn
 func filterCPUUsedCores(fetchedValue definition.FetchedValue, groupLabel, entityID string, groups definition.RawGroups) (definition.FilteredValue, error) {
@@ -1744,7 +1739,6 @@ func filterCPUUsedCores(fetchedValue definition.FetchedValue, groupLabel, entity
 		// there is likely no CPU limit set for the container which means we have to assume a reasonable value
 		// since there is no way to know the max cpu cores for the current node, use default max of 96 cores supported by most cloud providers
 		// a higher value wouldn't hurt our calculation as the cpuUsedCores value will be a super high number
-		log.StandardLogger().Debug("cpuLimitCores metric not available. using default max 96 cores")
 		value = 96000 // 96 * 1000m k8s cpu unit
 	}
 
@@ -1760,7 +1754,7 @@ func filterCPUUsedCores(fetchedValue definition.FetchedValue, groupLabel, entity
 		return nil, errCPULimitTypeCheck
 	}
 
-	// check for impossibly high cpuUsedCoresVal
+	// check for impossibly high cpuUsedCoresVal - workaround for https://github.com/kubernetes/kubernetes/issues/114057 (resolved)
 	if val > cpuLimit*100 {
 		return nil, errHighCPUUsedCores
 	}
