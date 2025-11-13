@@ -37,8 +37,8 @@ var (
 // 2. Try default interface from routing table (default /host/proc/1/net/route).
 // 3. Use heuristic to select primary interface (lowest-numbered physical interface).
 //
-//nolint:gocyclo,cyclop
-func FromRawWithFallbackToDefaultInterface(metricKey string) definition.FetchFunc {
+//nolint:gocyclo,cyclop,gocognit
+func FromRawWithFallbackToDefaultInterface(metricKey string, cache *InterfaceCache) definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 		g, ok := groups[groupLabel]
 		if !ok {
@@ -56,11 +56,30 @@ func FromRawWithFallbackToDefaultInterface(metricKey string) definition.FetchFun
 			return value, nil
 		}
 
+		// Step 1.5: Check cache for previously resolved interface
+		if cache != nil {
+			if cachedInterface, found := cache.Get(entityID); found {
+				log.Debugf("Using cached interface '%s' for entity '%s'", cachedInterface, entityID)
+				metric, err := getMetricFromInterface(cachedInterface, metricKey, e)
+				if err == nil {
+					return metric, nil
+				}
+				// If cached interface no longer exists in stats, fall through to resolve again
+				log.Debugf("Cached interface '%s' not found in current stats for entity '%s', re-resolving", cachedInterface, entityID)
+			}
+		}
+
 		// Step 2: Try default interface from routing table
+		var resolvedInterface string
 		defaultInterface, err := getDefaultInterface(groups)
 		if err == nil && defaultInterface != "" {
 			metric, err := getMetricFromInterface(defaultInterface, metricKey, e)
 			if err == nil {
+				resolvedInterface = defaultInterface
+				// Cache the resolved interface
+				if cache != nil {
+					cache.Put(entityID, resolvedInterface)
+				}
 				return metric, nil
 			}
 			// If we got a default interface name but couldn't find metrics for it,
@@ -83,7 +102,13 @@ func FromRawWithFallbackToDefaultInterface(metricKey string) definition.FetchFun
 			return nil, fmt.Errorf("could not determine primary interface: %w", err)
 		}
 
+		resolvedInterface = primaryInterface
 		log.Debugf("Using heuristic-selected primary interface '%s' for %s metric", primaryInterface, metricKey)
+
+		// Cache the resolved interface
+		if cache != nil {
+			cache.Put(entityID, resolvedInterface)
+		}
 
 		metric, err := getMetricFromInterface(primaryInterface, metricKey, e)
 		if err != nil {

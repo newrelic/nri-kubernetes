@@ -27,7 +27,7 @@ func TestFromRawWithFallbackToDefaultInterface_UsesRaw(t *testing.T) {
 		},
 	}
 
-	f := FromRawWithFallbackToDefaultInterface("rxBytes")
+	f := FromRawWithFallbackToDefaultInterface("rxBytes", nil)
 	valueI, err := f("node", "fooNode", expectedRawData)
 	require.NoError(t, err)
 
@@ -59,7 +59,7 @@ func TestFromRawWithFallbackToDefaultInterface_UsesFallback(t *testing.T) {
 		},
 	}
 
-	f := FromRawWithFallbackToDefaultInterface("rxBytes")
+	f := FromRawWithFallbackToDefaultInterface("rxBytes", nil)
 	valueI, err := f("node", "fooNode", expectedRawData)
 	require.NoError(t, err)
 
@@ -220,7 +220,6 @@ func TestSelectPrimaryInterface(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -335,7 +334,6 @@ func TestGetMetricFromInterface(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -577,11 +575,10 @@ func TestFromRawWithFallbackToDefaultInterface_ComprehensiveFallback(t *testing.
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			fetchFunc := FromRawWithFallbackToDefaultInterface(tt.metricKey)
+			fetchFunc := FromRawWithFallbackToDefaultInterface(tt.metricKey, nil)
 			result, err := fetchFunc(tt.groupLabel, tt.entityID, tt.groups)
 
 			if tt.expectError {
@@ -685,7 +682,6 @@ func TestGetDefaultInterface(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -700,4 +696,163 @@ func TestGetDefaultInterface(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestFromRawWithFallbackToDefaultInterface_WithCache tests cache hit/miss scenarios.
+//
+//nolint:tparallel
+func TestFromRawWithFallbackToDefaultInterface_WithCache(t *testing.T) {
+	t.Parallel()
+
+	// Create cache for these tests
+	cache := NewInterfaceCache()
+
+	t.Run("Cache miss - resolves via heuristic and caches result", func(t *testing.T) { //nolint:paralleltest // caching test should not run in parallel
+		// Clear cache before test
+		cache.Vacuum()
+
+		groups := definition.RawGroups{
+			"node": {
+				"node1": {
+					"interfaces": map[string]definition.RawMetrics{
+						"eth0": {"rxBytes": uint64(111111)},
+						"eth1": {"rxBytes": uint64(222222)},
+					},
+				},
+			},
+		}
+
+		// First call - cache miss, should use heuristic (eth0)
+		fetchFunc := FromRawWithFallbackToDefaultInterface("rxBytes", cache)
+		result1, err1 := fetchFunc("node", "node1", groups)
+		require.NoError(t, err1)
+		assert.Equal(t, uint64(111111), result1)
+
+		// Verify it was cached
+		cachedIface, found := cache.Get("node1")
+		assert.True(t, found)
+		assert.Equal(t, "eth0", cachedIface)
+	})
+
+	t.Run("Cache hit - uses cached interface directly", func(t *testing.T) { //nolint:paralleltest // caching test should not run in parallel
+		// Clear cache and pre-populate
+		cache.Vacuum()
+		cache.Put("node2", "eth1")
+
+		groups := definition.RawGroups{
+			"node": {
+				"node2": {
+					"interfaces": map[string]definition.RawMetrics{
+						"eth0": {"txBytes": uint64(111111)},
+						"eth1": {"txBytes": uint64(222222)},
+					},
+				},
+			},
+		}
+
+		// Should use cached eth1, not heuristic eth0
+		fetchFunc := FromRawWithFallbackToDefaultInterface("txBytes", cache)
+		result, err := fetchFunc("node", "node2", groups)
+		require.NoError(t, err)
+		assert.Equal(t, uint64(222222), result) // eth1's value
+	})
+
+	t.Run("Stale cache entry - re-resolves when cached interface missing", func(t *testing.T) { //nolint:paralleltest // caching test should not run in parallel
+		// Clear cache and add stale entry
+		cache.Vacuum()
+		cache.Put("node3", "eth999") // Interface that doesn't exist
+
+		groups := definition.RawGroups{
+			"node": {
+				"node3": {
+					"interfaces": map[string]definition.RawMetrics{
+						"eth0": {"rxBytes": uint64(333333)},
+					},
+				},
+			},
+		}
+
+		// Cached interface (eth999) doesn't exist, should fall back to heuristic (eth0)
+		fetchFunc := FromRawWithFallbackToDefaultInterface("rxBytes", cache)
+		result, err := fetchFunc("node", "node3", groups)
+		require.NoError(t, err)
+		assert.Equal(t, uint64(333333), result)
+
+		// Cache should be updated to eth0
+		cachedIface, found := cache.Get("node3")
+		assert.True(t, found)
+		assert.Equal(t, "eth0", cachedIface)
+	})
+
+	t.Run("Cache persists across multiple metric fetches for same entity", func(t *testing.T) { //nolint:paralleltest // caching test should not run in parallel
+		// Clear cache
+		cache.Vacuum()
+
+		groups := definition.RawGroups{
+			"pod": {
+				"default_nginx_abc123": {
+					"interfaces": map[string]definition.RawMetrics{
+						"ens3": {
+							"rxBytes":  uint64(111111),
+							"txBytes":  uint64(222222),
+							"rxErrors": uint64(0),
+						},
+						"ens5": {
+							"rxBytes":  uint64(333333),
+							"txBytes":  uint64(444444),
+							"rxErrors": uint64(1),
+						},
+					},
+				},
+			},
+		}
+
+		entityID := "default_nginx_abc123"
+
+		// First metric - cache miss, resolves to ens3 (heuristic)
+		fetchFunc1 := FromRawWithFallbackToDefaultInterface("rxBytes", cache)
+		result1, err1 := fetchFunc1("pod", entityID, groups)
+		require.NoError(t, err1)
+		assert.Equal(t, uint64(111111), result1)
+
+		// Second metric - cache hit, uses ens3
+		fetchFunc2 := FromRawWithFallbackToDefaultInterface("txBytes", cache)
+		result2, err2 := fetchFunc2("pod", entityID, groups)
+		require.NoError(t, err2)
+		assert.Equal(t, uint64(222222), result2)
+
+		// Third metric - cache hit, uses ens3
+		fetchFunc3 := FromRawWithFallbackToDefaultInterface("rxErrors", cache)
+		result3, err3 := fetchFunc3("pod", entityID, groups)
+		require.NoError(t, err3)
+		assert.Equal(t, uint64(0), result3)
+
+		// Verify cache still has ens3
+		cachedIface, found := cache.Get(entityID)
+		assert.True(t, found)
+		assert.Equal(t, "ens3", cachedIface)
+	})
+
+	t.Run("Top-level metric bypasses cache entirely", func(t *testing.T) { //nolint:paralleltest // caching test should not run in parallel
+		// Clear cache and add entry
+		cache.Vacuum()
+		cache.Put("node4", "eth0")
+
+		groups := definition.RawGroups{
+			"node": {
+				"node4": {
+					"rxBytes": uint64(999999), // Top-level metric
+					"interfaces": map[string]definition.RawMetrics{
+						"eth0": {"rxBytes": uint64(111111)},
+					},
+				},
+			},
+		}
+
+		// Should use top-level value, not cache or interface
+		fetchFunc := FromRawWithFallbackToDefaultInterface("rxBytes", cache)
+		result, err := fetchFunc("node", "node4", groups)
+		require.NoError(t, err)
+		assert.Equal(t, uint64(999999), result) // Top-level value
+	})
 }
