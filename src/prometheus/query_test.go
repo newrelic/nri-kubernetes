@@ -261,6 +261,26 @@ func TestParseResponse(t *testing.T) {
 	assert.Nil(t, errTwo, "Should not error when stateset is filtered out")
 }
 
+// verifyReplicaSetMetrics is a helper function that verifies metric families contain
+// the expected ReplicaSet metrics with correct names, values, and no info metrics.
+func verifyReplicaSetMetrics(t *testing.T, metricFamilies []*model.MetricFamily, expectedMetricNames map[string]bool) {
+	t.Helper()
+
+	for _, mf := range metricFamilies {
+		assert.True(t, expectedMetricNames[mf.GetName()], "Unexpected metric family: %s", mf.GetName())
+		assert.NotEqual(t, "kube_gitrepository_resource_info", mf.GetName(), "Info metric should have been filtered out")
+
+		// Verify metrics have the expected labels and values
+		if mf.GetName() == "kube_replicaset_created" {
+			assert.Len(t, mf.GetMetric(), 1, "Should have 1 metric")
+			assert.Equal(t, float64(1620000000), mf.GetMetric()[0].GetGauge().GetValue())
+		} else if mf.GetName() == "kube_replicaset_status_replicas" {
+			assert.Len(t, mf.GetMetric(), 1, "Should have 1 metric")
+			assert.Equal(t, float64(3), mf.GetMetric()[0].GetGauge().GetValue())
+		}
+	}
+}
+
 // TestParseResponseWithInfoMetric tests that "info" type metrics (OpenMetrics 1.0)
 // are filtered out gracefully without losing subsequent metrics.
 // This test reproduces and validates the fix for issue #1293 where FluxCD info metrics
@@ -325,8 +345,9 @@ func TestParseResponseWithInfoMetric(t *testing.T) {
 		errTwo = parseResponse(responseTwo, chTwo, logger)
 	}()
 
-	var metricFamiliesOne []*model.MetricFamily
-	var metricFamiliesTwo []*model.MetricFamily
+	// Pre-allocate slices with expected capacity
+	metricFamiliesOne := make([]*model.MetricFamily, 0, 2)
+	metricFamiliesTwo := make([]*model.MetricFamily, 0, 2)
 
 	for mf := range chOne {
 		metricFamiliesOne = append(metricFamiliesOne, mf)
@@ -351,31 +372,6 @@ func TestParseResponseWithInfoMetric(t *testing.T) {
 		"kube_replicaset_status_replicas": true,
 	}
 
-	for _, mf := range metricFamiliesOne {
-		assert.True(t, expectedMetricNames[mf.GetName()], "Unexpected metric family: %s", mf.GetName())
-		assert.NotEqual(t, "kube_gitrepository_resource_info", mf.GetName(), "Info metric should have been filtered out")
-
-		// Verify metrics have the expected labels and values
-		if mf.GetName() == "kube_replicaset_created" {
-			assert.Len(t, mf.GetMetric(), 1, "Should have 1 metric")
-			assert.Equal(t, float64(1620000000), mf.GetMetric()[0].GetGauge().GetValue())
-		} else if mf.GetName() == "kube_replicaset_status_replicas" {
-			assert.Len(t, mf.GetMetric(), 1, "Should have 1 metric")
-			assert.Equal(t, float64(3), mf.GetMetric()[0].GetGauge().GetValue())
-		}
-	}
-
-	for _, mf := range metricFamiliesTwo {
-		assert.True(t, expectedMetricNames[mf.GetName()], "Unexpected metric family: %s", mf.GetName())
-		assert.NotEqual(t, "kube_gitrepository_resource_info", mf.GetName(), "Info metric should have been filtered out")
-
-		// Verify metrics have the expected labels and values
-		if mf.GetName() == "kube_replicaset_created" {
-			assert.Len(t, mf.GetMetric(), 1, "Should have 1 metric")
-			assert.Equal(t, float64(1620000000), mf.GetMetric()[0].GetGauge().GetValue())
-		} else if mf.GetName() == "kube_replicaset_status_replicas" {
-			assert.Len(t, mf.GetMetric(), 1, "Should have 1 metric")
-			assert.Equal(t, float64(3), mf.GetMetric()[0].GetGauge().GetValue())
-		}
-	}
+	verifyReplicaSetMetrics(t, metricFamiliesOne, expectedMetricNames)
+	verifyReplicaSetMetrics(t, metricFamiliesTwo, expectedMetricNames)
 }

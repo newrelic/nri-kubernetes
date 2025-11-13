@@ -132,10 +132,67 @@ func valueFromPrometheus(metricType model.MetricType, metric *model.Metric) Valu
 	}
 }
 
-// unsupportedMetricTypes lists OpenMetrics 1.0 types not supported by prometheus/client_model.
-var unsupportedMetricTypes = map[string]bool{
-	"info":     true, // OpenMetrics 1.0: static metadata
-	"stateset": true, // OpenMetrics 1.0: enum-like state sets
+const (
+	// Minimum number of fields in a TYPE declaration: "# TYPE metric_name metric_type".
+	minTypeFields = 4
+	// Minimum number of fields in a HELP declaration: "# HELP metric_name description".
+	minHelpFields = 3
+)
+
+// isUnsupportedMetricType checks if a metric type is unsupported by prometheus/client_model.
+// OpenMetrics 1.0 types "info" and "stateset" are not supported.
+func isUnsupportedMetricType(metricType string) bool {
+	return metricType == "info" || metricType == "stateset"
+}
+
+// handleTypeDeclaration processes a TYPE declaration line and determines if the metric family
+// should be skipped. Returns (shouldSkip, metricName).
+func handleTypeDeclaration(line string, skippedMetrics *[]string, logger *log.Logger) (bool, string) {
+	parts := strings.Fields(line)
+	if len(parts) < minTypeFields {
+		return false, ""
+	}
+
+	metricName := parts[2]
+	metricType := parts[3]
+
+	if isUnsupportedMetricType(metricType) {
+		*skippedMetrics = append(*skippedMetrics, metricName)
+		logger.Debugf("Skipping unsupported metric type '%s' for metric '%s'", metricType, metricName)
+		return true, metricName
+	}
+
+	return false, ""
+}
+
+// handleHelpDeclaration processes a HELP declaration line and updates skip state if we
+// encounter a different metric family. Returns (shouldSkip, currentMetricName).
+func handleHelpDeclaration(line string, currentlySkipping bool, currentMetricName string) (bool, string) {
+	parts := strings.Fields(line)
+	if len(parts) < minHelpFields {
+		return currentlySkipping, currentMetricName
+	}
+
+	metricName := parts[2]
+	// If we were skipping and now see a different metric, stop skipping
+	if currentlySkipping && currentMetricName != "" && metricName != currentMetricName {
+		return false, ""
+	}
+
+	return currentlySkipping, currentMetricName
+}
+
+// shouldSkipLine determines if a line should be skipped when filtering an unsupported metric family.
+func shouldSkipLine(line string, currentMetricName string) bool {
+	// Skip HELP line for the current unsupported metric
+	if strings.HasPrefix(line, "# HELP ") {
+		parts := strings.Fields(line)
+		if len(parts) >= minHelpFields && parts[2] == currentMetricName {
+			return true
+		}
+	}
+	// Skip metric data lines (non-comment lines)
+	return !strings.HasPrefix(line, "#")
 }
 
 // filterUnsupportedMetrics preprocesses Prometheus exposition format text to remove
@@ -168,51 +225,24 @@ func filterUnsupportedMetrics(body io.Reader, logger *log.Logger) (io.Reader, []
 
 		// Check if this is a TYPE declaration
 		if strings.HasPrefix(trimmedLine, "# TYPE ") {
-			parts := strings.Fields(trimmedLine)
-			if len(parts) >= 4 {
-				metricName := parts[2]
-				metricType := parts[3]
-
-				if unsupportedMetricTypes[metricType] {
-					// Skip this entire metric family
-					skipUntilNextFamily = true
-					currentMetricName = metricName
-					skippedMetrics = append(skippedMetrics, metricName)
-					logger.Debugf("Skipping unsupported metric type '%s' for metric '%s'", metricType, metricName)
-					continue
-				}
+			skipUntilNextFamily, currentMetricName = handleTypeDeclaration(
+				trimmedLine, &skippedMetrics, logger,
+			)
+			if skipUntilNextFamily {
+				continue
 			}
-			// This is a supported type, stop skipping
-			skipUntilNextFamily = false
-			currentMetricName = ""
 		}
 
 		// Check if this is a HELP declaration for a new metric family
 		if strings.HasPrefix(trimmedLine, "# HELP ") {
-			parts := strings.Fields(trimmedLine)
-			if len(parts) >= 3 {
-				metricName := parts[2]
-				// If we were skipping and now see a different metric, stop skipping
-				if skipUntilNextFamily && currentMetricName != "" && metricName != currentMetricName {
-					skipUntilNextFamily = false
-					currentMetricName = ""
-				}
-			}
+			skipUntilNextFamily, currentMetricName = handleHelpDeclaration(
+				trimmedLine, skipUntilNextFamily, currentMetricName,
+			)
 		}
 
 		// Skip metric data lines if we're in an unsupported family
-		if skipUntilNextFamily {
-			// Skip HELP line for unsupported metric
-			if strings.HasPrefix(trimmedLine, "# HELP ") {
-				parts := strings.Fields(trimmedLine)
-				if len(parts) >= 3 && parts[2] == currentMetricName {
-					continue
-				}
-			}
-			// Skip lines that are metric data (not comments)
-			if !strings.HasPrefix(trimmedLine, "#") {
-				continue
-			}
+		if skipUntilNextFamily && shouldSkipLine(trimmedLine, currentMetricName) {
+			continue
 		}
 
 		// Keep this line
