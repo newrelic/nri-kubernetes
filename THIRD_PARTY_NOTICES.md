@@ -156,6 +156,14 @@ Distributed under the following license(s):
 
 
 
+## [github.com/alecthomas/units](https://github.com/alecthomas/units)
+
+Distributed under the following license(s):
+
+* MIT
+
+
+
 ## [github.com/armon/go-socks5](https://github.com/armon/go-socks5)
 
 Distributed under the following license(s):
@@ -636,22 +644,6 @@ Distributed under the following license(s):
 
 
 
-## [golang.org/x/crypto](https://golang.org/x/crypto)
-
-Distributed under the following license(s):
-
-* BSD-3-Clause
-
-
-
-## [golang.org/x/mod](https://golang.org/x/mod)
-
-Distributed under the following license(s):
-
-* BSD-3-Clause
-
-
-
 ## [golang.org/x/net](https://golang.org/x/net)
 
 Distributed under the following license(s):
@@ -745,14 +737,6 @@ Distributed under the following license(s):
 Distributed under the following license(s):
 
 * BSD-3-Clause
-
-
-
-## [gopkg.in/yaml.v2](https://gopkg.in/yaml.v2)
-
-Distributed under the following license(s):
-
-* Apache-2.0
 
 
 

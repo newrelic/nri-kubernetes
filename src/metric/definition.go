@@ -1318,17 +1318,21 @@ var CadvisorQueries = []prometheus.Query{
 	{MetricName: "container_oom_events_total"},
 }
 
-// KubeletSpecs are the metric specifications we want to collect from Kubelet.
-var KubeletSpecs = definition.SpecGroups{
+// NewKubeletSpecs creates the metric specifications we want to collect from Kubelet.
+// It accepts an optional interface cache for network metric optimization.
+//
+//nolint:funlen // Large spec definition is acceptable - it's configuration, not logic
+func NewKubeletSpecs(interfaceCache *kubeletMetric.InterfaceCache) definition.SpecGroups {
+	return definition.SpecGroups{
 	"pod": {
 		IDGenerator:     kubeletMetric.FromRawEntityIDGroupEntityIDGenerator("namespace"),
 		TypeGenerator:   kubeletMetric.FromRawGroupsEntityTypeGenerator,
 		NamespaceGetter: kubeletMetric.FromLabelGetNamespace,
 		Specs: []definition.Spec{
 			// /stats/summary endpoint
-			{Name: "net.rxBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("rxBytes"), Type: sdkMetric.RATE},
-			{Name: "net.txBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("txBytes"), Type: sdkMetric.RATE},
-			{Name: "net.errorsPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("errors"), Type: sdkMetric.RATE},
+			{Name: "net.rxBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("rxBytes", interfaceCache), Type: sdkMetric.RATE},
+			{Name: "net.txBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("txBytes", interfaceCache), Type: sdkMetric.RATE},
+			{Name: "net.errorsPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("errors", interfaceCache), Type: sdkMetric.RATE},
 
 			// /pods endpoint
 			{Name: "createdAt", ValueFunc: definition.Transform(definition.FromRaw("createdAt"), toTimestamp), Type: sdkMetric.GAUGE, Optional: true},
@@ -1436,9 +1440,9 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "memoryRssBytes", ValueFunc: definition.FromRaw("memoryRssBytes"), Type: sdkMetric.GAUGE},
 			{Name: "memoryPageFaults", ValueFunc: definition.FromRaw("memoryPageFaults"), Type: sdkMetric.GAUGE},
 			{Name: "memoryMajorPageFaultsPerSecond", ValueFunc: definition.FromRaw("memoryMajorPageFaults"), Type: sdkMetric.RATE},
-			{Name: "net.rxBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("rxBytes"), Type: sdkMetric.RATE},
-			{Name: "net.txBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("txBytes"), Type: sdkMetric.RATE},
-			{Name: "net.errorsPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("errors"), Type: sdkMetric.RATE},
+			{Name: "net.rxBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("rxBytes", interfaceCache), Type: sdkMetric.RATE},
+			{Name: "net.txBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("txBytes", interfaceCache), Type: sdkMetric.RATE},
+			{Name: "net.errorsPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("errors", interfaceCache), Type: sdkMetric.RATE},
 			{Name: "fsAvailableBytes", ValueFunc: definition.FromRaw("fsAvailableBytes"), Type: sdkMetric.GAUGE},
 			{Name: "fsCapacityBytes", ValueFunc: definition.FromRaw("fsCapacityBytes"), Type: sdkMetric.GAUGE},
 			{Name: "fsUsedBytes", ValueFunc: definition.FromRaw("fsUsedBytes"), Type: sdkMetric.GAUGE},
@@ -1487,7 +1491,13 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "fsInodesUsed", ValueFunc: definition.FromRaw("fsInodesUsed"), Type: sdkMetric.GAUGE},
 		},
 	},
+	}
 }
+
+// KubeletSpecs is the default metric specifications for Kubelet with no interface cache.
+//
+//nolint:gochecknoglobals // Backward compatibility - used by tests and static tooling
+var KubeletSpecs = NewKubeletSpecs(nil)
 
 func isPersistentVolume() definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
