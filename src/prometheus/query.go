@@ -147,7 +147,7 @@ func isUnsupportedMetricType(metricType string) bool {
 
 // handleTypeDeclaration processes a TYPE declaration line and determines if the metric family
 // should be skipped. Returns (shouldSkip, metricName).
-func handleTypeDeclaration(line string, skippedMetrics *[]string, logger *log.Logger) (bool, string) {
+func handleTypeDeclaration(line string, logger *log.Logger) (bool, string) {
 	parts := strings.Fields(line)
 	if len(parts) < minTypeFields {
 		return false, ""
@@ -157,7 +157,6 @@ func handleTypeDeclaration(line string, skippedMetrics *[]string, logger *log.Lo
 	metricType := parts[3]
 
 	if isUnsupportedMetricType(metricType) {
-		*skippedMetrics = append(*skippedMetrics, metricName)
 		logger.Debugf("Skipping unsupported metric type '%s' for metric '%s'", metricType, metricName)
 		return true, metricName
 	}
@@ -225,10 +224,9 @@ func filterUnsupportedMetrics(body io.Reader, logger *log.Logger) (io.Reader, []
 
 		// Check if this is a TYPE declaration
 		if strings.HasPrefix(trimmedLine, "# TYPE ") {
-			skipUntilNextFamily, currentMetricName = handleTypeDeclaration(
-				trimmedLine, &skippedMetrics, logger,
-			)
+			skipUntilNextFamily, currentMetricName = handleTypeDeclaration(trimmedLine, logger)
 			if skipUntilNextFamily {
+				skippedMetrics = append(skippedMetrics, currentMetricName)
 				continue
 			}
 		}
