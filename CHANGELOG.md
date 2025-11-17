@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### bugfix
+## v3.50.1 - 2025-11-17
+
+### 🐞 Bug fixes
 - Fix unsupported metric type by pre-filtering @NRhzhao [#1337](https://github.com/newrelic/nri-kubernetes/pull/1337)
 
 ## v3.50.0 - 2025-11-10
