@@ -255,7 +255,7 @@ func GroupMetricsBySpec(specs definition.SpecGroups, families []MetricFamily) (g
 				}
 
 				switch groupLabel {
-				case "namespace", "node":
+				case "namespace", "node", "persistentvolume":
 					rawEntityID = m.Labels[groupLabel]
 				case "container":
 					rawEntityID = fmt.Sprintf("%v_%v_%v", m.Labels["namespace"], m.Labels["pod"], m.Labels[groupLabel])
@@ -995,7 +995,7 @@ func getRawEntityID(parentGroupLabel, groupLabel, entityID string, groups defini
 
 	var rawEntityID string
 	switch parentGroupLabel {
-	case "node", "namespace":
+	case "node", "namespace", "persistentvolume":
 		metricKey, r := getRandomMetric(group)
 		m, ok := r.(Metric)
 

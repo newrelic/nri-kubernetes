@@ -21,9 +21,10 @@ var (
 
 // processingUnit holds all the pre-calculated information needed to create and populate a single entity.
 type processingUnit struct {
-	entityID   string
-	entityType string
-	rawMetrics definition.RawMetrics
+	originalEntityID string // The original entity ID from the grouper, used for metric lookups
+	entityID         string // The final entity ID (after IDGenerator), used for entity creation
+	entityType       string
+	rawMetrics       definition.RawMetrics
 }
 
 // IntegrationPopulator is the main orchestrator that populates an integration.Integration
@@ -129,9 +130,11 @@ func processEntities(unitsToProcess []processingUnit, config *definition.Integra
 		for groupName, groupValue := range config.Groups {
 			groupsForThisEntity[groupName] = groupValue
 		}
-		groupsForThisEntity[groupLabel] = map[string]definition.RawMetrics{unit.entityID: unit.rawMetrics}
+		// Use originalEntityID for RawGroups key to match grouper's format
+		groupsForThisEntity[groupLabel] = map[string]definition.RawMetrics{unit.originalEntityID: unit.rawMetrics}
 
-		wasPopulated, populateErrs := metricSetPopulate(ms, groupLabel, unit.entityID, groupsForThisEntity, config.Specs)
+		// Use originalEntityID for metric lookups (InheritAllLabelsFrom needs this)
+		wasPopulated, populateErrs := metricSetPopulate(ms, groupLabel, unit.originalEntityID, groupsForThisEntity, config.Specs)
 		if len(populateErrs) > 0 {
 			for _, err := range populateErrs {
 				errs = append(errs, fmt.Errorf("error populating metric for entity ID %s: %w", unit.entityID, err))
@@ -162,10 +165,12 @@ func prepareProcessingUnits(config *definition.IntegrationPopulateConfig, groupL
 		}
 		units := make([]processingUnit, 0, len(subGroups))
 		for subGroupKey, subGroupMetrics := range subGroups {
+			subEntityID := fmt.Sprintf("%s_%s", entityID, subGroupKey)
 			units = append(units, processingUnit{
-				entityID:   fmt.Sprintf("%s_%s", entityID, subGroupKey),
-				entityType: entityType,
-				rawMetrics: subGroupMetrics,
+				originalEntityID: entityID,    // Use parent's original ID for metric lookups
+				entityID:         subEntityID, // Use sub-entity ID for entity creation
+				entityType:       entityType,
+				rawMetrics:       subGroupMetrics,
 			})
 		}
 		return units, nil
@@ -193,9 +198,10 @@ func prepareProcessingUnits(config *definition.IntegrationPopulateConfig, groupL
 
 	return []processingUnit{
 		{
-			entityID:   finalEntityID,
-			entityType: entityType,
-			rawMetrics: rawMetrics,
+			originalEntityID: entityID,      // Store original for metric lookups
+			entityID:         finalEntityID, // Use final for entity creation
+			entityType:       entityType,
+			rawMetrics:       rawMetrics,
 		},
 	}, nil
 }

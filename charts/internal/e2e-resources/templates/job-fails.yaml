@@ -3,6 +3,9 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ .Release.Name }}-failjob
+  labels:
+    environment: testing
+    team: qa-team
 spec:
   activeDeadlineSeconds: 200
   completions: 4

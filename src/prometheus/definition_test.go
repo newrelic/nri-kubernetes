@@ -1718,6 +1718,90 @@ func TestInheritAllLabelsFrom_RelatedMetricNotFound(t *testing.T) {
 	assert.Empty(t, fetchedValue)
 }
 
+func TestInheritAllLabelsFrom_PersistentVolume(t *testing.T) {
+	// PVC is cluster-scoped, so entity id is not prefixed with namespace
+	pvRawEntityID := "e2e-pv-storage"
+	raw := definition.RawGroups{
+		"persistentvolume": {
+			pvRawEntityID: definition.RawMetrics{
+				"kube_persistentvolume_labels": Metric{
+					Value: GaugeValue(1),
+					Labels: map[string]string{
+						"persistentvolume":              "e2e-pv-storage",
+						"label_app_alayacare_com_owner": "platform",
+						"label_app_alayacare_com_tier":  "critical",
+						"label_environment":             "dev",
+						"label_team":                    "k8-team",
+					},
+				},
+				"kube_persistentvolume_info": Metric{
+					Value: GaugeValue(1),
+					Labels: map[string]string{
+						"persistentvolume": "e2e-pv-storage",
+						"storageclass":     "e2e-pv-class",
+					},
+				},
+			},
+		},
+	}
+
+	fetchedValue, err := InheritAllLabelsFrom("persistentvolume", "kube_persistentvolume_labels")("persistentvolume", pvRawEntityID, raw)
+	assert.NoError(t, err)
+
+	expectedValue := definition.FetchedValues{
+		"label.persistentvolume":        "e2e-pv-storage",
+		"label.app_alayacare_com_owner": "platform",
+		"label.app_alayacare_com_tier":  "critical",
+		"label.environment":             "dev",
+		"label.team":                    "k8-team",
+	}
+	assert.Equal(t, expectedValue, fetchedValue)
+}
+
+func TestInheritAllLabelsFrom_PersistentVolumeClaim(t *testing.T) {
+	// PVC is namespace-scoped, so grouper creates entity ID as: namespace_pvcname
+	pvcRawEntityID := "scraper_e2e-pv-claim"
+	raw := definition.RawGroups{
+		"persistentvolumeclaim": {
+			pvcRawEntityID: definition.RawMetrics{
+				"kube_persistentvolumeclaim_labels": Metric{
+					Value: GaugeValue(1),
+					Labels: map[string]string{
+						"namespace":                     "scraper",
+						"persistentvolumeclaim":         "e2e-pv-claim",
+						"label_app_alayacare_com_owner": "infrastructure",
+						"label_app_alayacare_com_tier":  "high",
+						"label_environment":             "staging",
+						"label_team":                    "storage-team",
+					},
+				},
+				"kube_persistentvolumeclaim_info": Metric{
+					Value: GaugeValue(1),
+					Labels: map[string]string{
+						"namespace":             "scraper",
+						"persistentvolumeclaim": "e2e-pv-claim",
+						"storageclass":          "e2e-pv-class",
+						"volumename":            "e2e-pv-storage",
+					},
+				},
+			},
+		},
+	}
+
+	fetchedValue, err := InheritAllLabelsFrom("persistentvolumeclaim", "kube_persistentvolumeclaim_labels")("persistentvolumeclaim", pvcRawEntityID, raw)
+	assert.NoError(t, err)
+
+	expectedValue := definition.FetchedValues{
+		"label.namespace":               "scraper",
+		"label.persistentvolumeclaim":   "e2e-pv-claim",
+		"label.app_alayacare_com_owner": "infrastructure",
+		"label.app_alayacare_com_tier":  "high",
+		"label.environment":             "staging",
+		"label.team":                    "storage-team",
+	}
+	assert.Equal(t, expectedValue, fetchedValue)
+}
+
 func TestControlPlaneComponentTypeGenerator(t *testing.T) {
 	generatedType, err := ControlPlaneComponentTypeGenerator("my-component", "", nil, "myCluster")
 	assert.NoError(t, err)

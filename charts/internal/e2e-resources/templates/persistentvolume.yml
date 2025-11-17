@@ -3,6 +3,9 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: {{ .Release.Name }}-pv-storage
+  labels:
+    environment: dev
+    team: k8-team
 spec:
   storageClassName: {{ .Release.Name }}-pv-class
   accessModes:
