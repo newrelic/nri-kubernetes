@@ -10,6 +10,7 @@ import (
 
 	model "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
+	prometheusmodel "github.com/prometheus/common/model"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/newrelic/nri-kubernetes/v3/src/client"
@@ -276,7 +277,9 @@ func parseResponse(resp *http.Response, ch chan<- *model.MetricFamily, logger *l
 		logger.Infof("Skipped %d metric families with unsupported OpenMetrics types: %v", len(skippedMetrics), skippedMetrics)
 	}
 
-	var parser expfmt.TextParser
+	// Use NewTextParser with UTF8 validation scheme instead of zero-value TextParser.
+	// The zero-value TextParser has an unset validation scheme which causes a panic.
+	parser := expfmt.NewTextParser(prometheusmodel.UTF8Validation)
 	metricFamilies, err := parser.TextToMetricFamilies(filtered)
 	if err != nil {
 		err = fmt.Errorf("reading text format failed: %w", err)
