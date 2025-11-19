@@ -1805,8 +1805,15 @@ func TestInheritAllLabelsFrom_PersistentVolumeClaim(t *testing.T) {
 // TestFromMetricWithPrefixedLabels_EquivalenceWithInheritAllLabelsFrom verifies that
 // FromMetricWithPrefixedLabels produces the same results as InheritAllLabelsFrom
 // for same-entity label inheritance (where groupLabel == parentGroupLabel).
-func TestFromMetricWithPrefixedLabels_EquivalenceWithInheritAllLabelsFrom(t *testing.T) {
-	tests := []struct {
+func getEquivalenceTestCases() []struct {
+	name         string
+	groupLabel   string
+	entityID     string
+	metricName   string
+	rawGroups    definition.RawGroups
+	expectedVals definition.FetchedValues
+} {
+	return []struct {
 		name         string
 		groupLabel   string
 		entityID     string
@@ -1898,6 +1905,10 @@ func TestFromMetricWithPrefixedLabels_EquivalenceWithInheritAllLabelsFrom(t *tes
 			},
 		},
 	}
+}
+
+func TestFromMetricWithPrefixedLabels_EquivalenceWithInheritAllLabelsFrom(t *testing.T) {
+	tests := getEquivalenceTestCases()
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
