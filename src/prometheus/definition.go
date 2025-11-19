@@ -564,9 +564,24 @@ func FromFlattenedMetrics(metricName, metricKeyLabel string) definition.FetchFun
 	}
 }
 
-// FromMetricWithPrefixedLabels creates a FetchFunc that gets a single metric
-// and extracts all of its Prometheus labels that have a given prefix (e.g., "label_").
-// It returns them as attributes, renaming the keys (e.g., "label_foo" -> "label.foo").
+// FromMetricWithPrefixedLabels creates a FetchFunc that extracts ALL labels from a metric
+// in the SAME entity group, converting them to attributes with the specified prefix.
+//
+// This function should be used when:
+// - The metric you're fetching from belongs to the same entity (same groupLabel)
+// - You want to extract all labels and prefix them consistently (e.g., "label." or "annotation.")
+//
+// Label transformation logic:
+// - Labels with "prefix_" (e.g., "label_app") → "prefix.app" (strips underscore)
+// - Labels without "prefix_" (e.g., "namespace") → "prefix.namespace" (adds prefix)
+//
+// Example: A Deployment entity extracting from "kube_deployment_labels" metric
+//
+//	FromMetricWithPrefixedLabels("kube_deployment_labels", "label")
+//	Input labels: {deployment: "nginx", namespace: "default", label_app: "myapp", label_env: "prod"}
+//	Output attributes: {label.deployment: "nginx", label.namespace: "default", label.app: "myapp", label.env: "prod"}
+//
+// For cross-entity inheritance (e.g., deployment inheriting from namespace), use InheritAllLabelsFrom instead.
 func FromMetricWithPrefixedLabels(metricName, prefix string) definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 		rawMetric, err := definition.FromRaw(metricName)(groupLabel, entityID, groups)
@@ -582,10 +597,15 @@ func FromMetricWithPrefixedLabels(metricName, prefix string) definition.FetchFun
 		fetchedValues := make(definition.FetchedValues)
 		prefixWithUnderscore := prefix + "_"
 		for key, value := range metric.Labels {
-			if strings.HasPrefix(key, prefixWithUnderscore) {
-				attributeName := strings.Replace(key, "_", ".", 1)
-				fetchedValues[attributeName] = value
-			}
+			// Transform label key to attribute name with prefix
+			// - If key has prefix_ (e.g., "label_app"), strip the underscore: "label.app"
+			// - If key doesn't have prefix_ (e.g., "namespace"), add prefix: "label.namespace"
+			attributeName := fmt.Sprintf(
+				"%s.%s",
+				prefix,
+				strings.TrimPrefix(key, prefixWithUnderscore),
+			)
+			fetchedValues[attributeName] = value
 		}
 
 		return fetchedValues, nil
@@ -968,8 +988,27 @@ func labelsFromMetric(
 	return multiple, nil
 }
 
-// InheritAllLabelsFrom gets all the label values from from a related metric.
-// Related metric means any metric you can get with the info that you have in your own metric.
+// InheritAllLabelsFrom inherits ALL labels from a related metric, supporting both same-entity
+// and cross-entity inheritance.
+//
+// This function should be used when:
+// - You need CROSS-ENTITY inheritance (e.g., deployment inheriting namespace labels)
+// - The parent entity is in a DIFFERENT entity group (parentGroupLabel != current groupLabel)
+//
+// How it works:
+// - Uses the current entity's labels to construct the parent entity ID
+// - Looks up the parent metric in the parent entity group
+// - Extracts all labels with the "label_" prefix from that parent metric
+//
+// Example: Deployment inheriting namespace labels (CROSS-ENTITY)
+//
+//	InheritAllLabelsFrom("namespace", "kube_namespace_labels")
+//	- Current entity: deployment in "deployment" group
+//	- Parent entity: namespace in "namespace" group
+//	- Result: deployment gets all namespace's labels
+//
+// For same-entity label extraction with a known prefix, use FromMetricWithPrefixedLabels instead
+// as it's simpler and more efficient.
 func InheritAllLabelsFrom(parentGroupLabel, relatedMetricKey string) definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 		return labelsFromMetric(parentGroupLabel, relatedMetricKey, groupLabel, entityID, groups, "label")

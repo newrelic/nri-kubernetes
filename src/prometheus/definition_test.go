@@ -1802,6 +1802,123 @@ func TestInheritAllLabelsFrom_PersistentVolumeClaim(t *testing.T) {
 	assert.Equal(t, expectedValue, fetchedValue)
 }
 
+// TestFromMetricWithPrefixedLabels_EquivalenceWithInheritAllLabelsFrom verifies that
+// FromMetricWithPrefixedLabels produces the same results as InheritAllLabelsFrom
+// for same-entity label inheritance (where groupLabel == parentGroupLabel).
+func TestFromMetricWithPrefixedLabels_EquivalenceWithInheritAllLabelsFrom(t *testing.T) {
+	tests := []struct {
+		name         string
+		groupLabel   string
+		entityID     string
+		metricName   string
+		rawGroups    definition.RawGroups
+		expectedVals definition.FetchedValues
+	}{
+		{
+			name:       "Deployment same-entity labels",
+			groupLabel: "deployment",
+			entityID:   "kube-public_newrelic-infra-monitoring",
+			metricName: "kube_deployment_labels",
+			rawGroups: definition.RawGroups{
+				"deployment": {
+					"kube-public_newrelic-infra-monitoring": definition.RawMetrics{
+						"kube_deployment_labels": Metric{
+							Value: GaugeValue(1),
+							Labels: map[string]string{
+								"deployment":    "newrelic-infra-monitoring",
+								"namespace":     "kube-public",
+								"label_app":     "newrelic-infra-monitoring",
+								"label_version": "1.2.3",
+								"label_team":    "observability",
+							},
+						},
+					},
+				},
+			},
+			expectedVals: definition.FetchedValues{
+				"label.deployment": "newrelic-infra-monitoring",
+				"label.namespace":  "kube-public",
+				"label.app":        "newrelic-infra-monitoring",
+				"label.version":    "1.2.3",
+				"label.team":       "observability",
+			},
+		},
+		{
+			name:       "PersistentVolume same-entity labels",
+			groupLabel: "persistentvolume",
+			entityID:   "e2e-pv-storage",
+			metricName: "kube_persistentvolume_labels",
+			rawGroups: definition.RawGroups{
+				"persistentvolume": {
+					"e2e-pv-storage": definition.RawMetrics{
+						"kube_persistentvolume_labels": Metric{
+							Value: GaugeValue(1),
+							Labels: map[string]string{
+								"persistentvolume":              "e2e-pv-storage",
+								"label_app_alayacare_com_owner": "platform",
+								"label_environment":             "dev",
+								"label_team":                    "k8-team",
+							},
+						},
+					},
+				},
+			},
+			expectedVals: definition.FetchedValues{
+				"label.persistentvolume":        "e2e-pv-storage",
+				"label.app_alayacare_com_owner": "platform",
+				"label.environment":             "dev",
+				"label.team":                    "k8-team",
+			},
+		},
+		{
+			name:       "StatefulSet same-entity labels",
+			groupLabel: "statefulset",
+			entityID:   "default_web",
+			metricName: "kube_statefulset_labels",
+			rawGroups: definition.RawGroups{
+				"statefulset": {
+					"default_web": definition.RawMetrics{
+						"kube_statefulset_labels": Metric{
+							Value: GaugeValue(1),
+							Labels: map[string]string{
+								"statefulset": "web",
+								"namespace":   "default",
+								"label_app":   "nginx",
+								"label_tier":  "frontend",
+							},
+						},
+					},
+				},
+			},
+			expectedVals: definition.FetchedValues{
+				"label.statefulset": "web",
+				"label.namespace":   "default",
+				"label.app":         "nginx",
+				"label.tier":        "frontend",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Test InheritAllLabelsFrom (old method)
+			inheritFunc := InheritAllLabelsFrom(tt.groupLabel, tt.metricName)
+			inheritedValue, err := inheritFunc(tt.groupLabel, tt.entityID, tt.rawGroups)
+			require.NoError(t, err, "InheritAllLabelsFrom should not error")
+
+			// Test FromMetricWithPrefixedLabels (new method)
+			prefixedFunc := FromMetricWithPrefixedLabels(tt.metricName, "label")
+			prefixedValue, err := prefixedFunc(tt.groupLabel, tt.entityID, tt.rawGroups)
+			require.NoError(t, err, "FromMetricWithPrefixedLabels should not error")
+
+			// Both methods should produce identical results
+			assert.Equal(t, tt.expectedVals, inheritedValue, "InheritAllLabelsFrom result")
+			assert.Equal(t, tt.expectedVals, prefixedValue, "FromMetricWithPrefixedLabels result")
+			assert.Equal(t, inheritedValue, prefixedValue, "Both methods should produce identical results")
+		})
+	}
+}
+
 func TestControlPlaneComponentTypeGenerator(t *testing.T) {
 	generatedType, err := ControlPlaneComponentTypeGenerator("my-component", "", nil, "myCluster")
 	assert.NoError(t, err)
@@ -2073,15 +2190,16 @@ func TestFromMetricWithPrefixedLabels(t *testing.T) {
 							Labels: Labels{
 								"label_app":  "my-app",
 								"label_team": "sre",
-								"namespace":  "prod", // This label should be ignored.
+								"namespace":  "prod", // This label is now included too.
 							},
 						},
 					},
 				},
 			},
 			expectedValue: definition.FetchedValues{
-				"label.app":  "my-app",
-				"label.team": "sre",
+				"label.app":       "my-app",
+				"label.team":      "sre",
+				"label.namespace": "prod", // Now includes all labels.
 			},
 			expectedErr: "",
 		},
@@ -2093,12 +2211,12 @@ func TestFromMetricWithPrefixedLabels(t *testing.T) {
 				"pod": {
 					"test-entity": {
 						"kube_pod_labels": Metric{
-							Labels: Labels{"namespace": "prod"}, // No labels with "label_" prefix.
+							Labels: Labels{"namespace": "prod"}, // No labels with "label_" prefix, but still included.
 						},
 					},
 				},
 			},
-			expectedValue: definition.FetchedValues{}, // Expect an empty map, not an error.
+			expectedValue: definition.FetchedValues{"label.namespace": "prod"}, // Now includes all labels.
 			expectedErr:   "",
 		},
 		{
