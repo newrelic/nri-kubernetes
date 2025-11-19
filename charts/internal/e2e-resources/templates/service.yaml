@@ -3,6 +3,9 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ .Release.Name }}-lb
+  labels:
+    environment: production
+    team: networking-team
   {{- with .Values.loadBalancerService.annotations }}
   annotations:
     {{- . | toYaml | nindent 4 }}

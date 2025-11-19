@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### bugfix
+- fixes a bug where PersistentVolume and PersistentVolumeClaim labels not exporting
+
 ## v3.50.1 - 2025-11-17
 
 ### 🐞 Bug fixes

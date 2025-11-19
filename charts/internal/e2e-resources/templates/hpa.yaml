@@ -92,6 +92,8 @@ metadata:
   name: {{ .Release.Name }}-hpa
   labels:
     run: php-apache
+    environment: production
+    team: scaling-team
 spec:
   ports:
     - port: 80
@@ -103,6 +105,9 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ .Release.Name }}-hpa
+  labels:
+    environment: production
+    team: scaling-team
 spec:
   scaleTargetRef:
     apiVersion: apps/v1

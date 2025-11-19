@@ -1718,6 +1718,218 @@ func TestInheritAllLabelsFrom_RelatedMetricNotFound(t *testing.T) {
 	assert.Empty(t, fetchedValue)
 }
 
+func TestInheritAllLabelsFrom_PersistentVolume(t *testing.T) {
+	// PVC is cluster-scoped, so entity id is not prefixed with namespace
+	pvRawEntityID := "e2e-pv-storage"
+	raw := definition.RawGroups{
+		"persistentvolume": {
+			pvRawEntityID: definition.RawMetrics{
+				"kube_persistentvolume_labels": Metric{
+					Value: GaugeValue(1),
+					Labels: map[string]string{
+						"persistentvolume":              "e2e-pv-storage",
+						"label_app_alayacare_com_owner": "platform",
+						"label_app_alayacare_com_tier":  "critical",
+						"label_environment":             "dev",
+						"label_team":                    "k8-team",
+					},
+				},
+				"kube_persistentvolume_info": Metric{
+					Value: GaugeValue(1),
+					Labels: map[string]string{
+						"persistentvolume": "e2e-pv-storage",
+						"storageclass":     "e2e-pv-class",
+					},
+				},
+			},
+		},
+	}
+
+	fetchedValue, err := InheritAllLabelsFrom("persistentvolume", "kube_persistentvolume_labels")("persistentvolume", pvRawEntityID, raw)
+	assert.NoError(t, err)
+
+	expectedValue := definition.FetchedValues{
+		"label.persistentvolume":        "e2e-pv-storage",
+		"label.app_alayacare_com_owner": "platform",
+		"label.app_alayacare_com_tier":  "critical",
+		"label.environment":             "dev",
+		"label.team":                    "k8-team",
+	}
+	assert.Equal(t, expectedValue, fetchedValue)
+}
+
+func TestInheritAllLabelsFrom_PersistentVolumeClaim(t *testing.T) {
+	// PVC is namespace-scoped, so grouper creates entity ID as: namespace_pvcname
+	pvcRawEntityID := "scraper_e2e-pv-claim"
+	raw := definition.RawGroups{
+		"persistentvolumeclaim": {
+			pvcRawEntityID: definition.RawMetrics{
+				"kube_persistentvolumeclaim_labels": Metric{
+					Value: GaugeValue(1),
+					Labels: map[string]string{
+						"namespace":                     "scraper",
+						"persistentvolumeclaim":         "e2e-pv-claim",
+						"label_app_alayacare_com_owner": "infrastructure",
+						"label_app_alayacare_com_tier":  "high",
+						"label_environment":             "staging",
+						"label_team":                    "storage-team",
+					},
+				},
+				"kube_persistentvolumeclaim_info": Metric{
+					Value: GaugeValue(1),
+					Labels: map[string]string{
+						"namespace":             "scraper",
+						"persistentvolumeclaim": "e2e-pv-claim",
+						"storageclass":          "e2e-pv-class",
+						"volumename":            "e2e-pv-storage",
+					},
+				},
+			},
+		},
+	}
+
+	fetchedValue, err := InheritAllLabelsFrom("persistentvolumeclaim", "kube_persistentvolumeclaim_labels")("persistentvolumeclaim", pvcRawEntityID, raw)
+	assert.NoError(t, err)
+
+	expectedValue := definition.FetchedValues{
+		"label.namespace":               "scraper",
+		"label.persistentvolumeclaim":   "e2e-pv-claim",
+		"label.app_alayacare_com_owner": "infrastructure",
+		"label.app_alayacare_com_tier":  "high",
+		"label.environment":             "staging",
+		"label.team":                    "storage-team",
+	}
+	assert.Equal(t, expectedValue, fetchedValue)
+}
+
+// TestFromMetricWithPrefixedLabels_EquivalenceWithInheritAllLabelsFrom verifies that
+// FromMetricWithPrefixedLabels produces the same results as InheritAllLabelsFrom
+// for same-entity label inheritance (where groupLabel == parentGroupLabel).
+func getEquivalenceTestCases() []struct {
+	name         string
+	groupLabel   string
+	entityID     string
+	metricName   string
+	rawGroups    definition.RawGroups
+	expectedVals definition.FetchedValues
+} {
+	return []struct {
+		name         string
+		groupLabel   string
+		entityID     string
+		metricName   string
+		rawGroups    definition.RawGroups
+		expectedVals definition.FetchedValues
+	}{
+		{
+			name:       "Deployment same-entity labels",
+			groupLabel: "deployment",
+			entityID:   "kube-public_newrelic-infra-monitoring",
+			metricName: "kube_deployment_labels",
+			rawGroups: definition.RawGroups{
+				"deployment": {
+					"kube-public_newrelic-infra-monitoring": definition.RawMetrics{
+						"kube_deployment_labels": Metric{
+							Value: GaugeValue(1),
+							Labels: map[string]string{
+								"deployment":    "newrelic-infra-monitoring",
+								"namespace":     "kube-public",
+								"label_app":     "newrelic-infra-monitoring",
+								"label_version": "1.2.3",
+								"label_team":    "observability",
+							},
+						},
+					},
+				},
+			},
+			expectedVals: definition.FetchedValues{
+				"label.deployment": "newrelic-infra-monitoring",
+				"label.namespace":  "kube-public",
+				"label.app":        "newrelic-infra-monitoring",
+				"label.version":    "1.2.3",
+				"label.team":       "observability",
+			},
+		},
+		{
+			name:       "PersistentVolume same-entity labels",
+			groupLabel: "persistentvolume",
+			entityID:   "e2e-pv-storage",
+			metricName: "kube_persistentvolume_labels",
+			rawGroups: definition.RawGroups{
+				"persistentvolume": {
+					"e2e-pv-storage": definition.RawMetrics{
+						"kube_persistentvolume_labels": Metric{
+							Value: GaugeValue(1),
+							Labels: map[string]string{
+								"persistentvolume":              "e2e-pv-storage",
+								"label_app_alayacare_com_owner": "platform",
+								"label_environment":             "dev",
+								"label_team":                    "k8-team",
+							},
+						},
+					},
+				},
+			},
+			expectedVals: definition.FetchedValues{
+				"label.persistentvolume":        "e2e-pv-storage",
+				"label.app_alayacare_com_owner": "platform",
+				"label.environment":             "dev",
+				"label.team":                    "k8-team",
+			},
+		},
+		{
+			name:       "StatefulSet same-entity labels",
+			groupLabel: "statefulset",
+			entityID:   "default_web",
+			metricName: "kube_statefulset_labels",
+			rawGroups: definition.RawGroups{
+				"statefulset": {
+					"default_web": definition.RawMetrics{
+						"kube_statefulset_labels": Metric{
+							Value: GaugeValue(1),
+							Labels: map[string]string{
+								"statefulset": "web",
+								"namespace":   "default",
+								"label_app":   "nginx",
+								"label_tier":  "frontend",
+							},
+						},
+					},
+				},
+			},
+			expectedVals: definition.FetchedValues{
+				"label.statefulset": "web",
+				"label.namespace":   "default",
+				"label.app":         "nginx",
+				"label.tier":        "frontend",
+			},
+		},
+	}
+}
+
+func TestFromMetricWithPrefixedLabels_EquivalenceWithInheritAllLabelsFrom(t *testing.T) {
+	tests := getEquivalenceTestCases()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Test InheritAllLabelsFrom (old method)
+			inheritFunc := InheritAllLabelsFrom(tt.groupLabel, tt.metricName)
+			inheritedValue, err := inheritFunc(tt.groupLabel, tt.entityID, tt.rawGroups)
+			require.NoError(t, err, "InheritAllLabelsFrom should not error")
+
+			// Test FromMetricWithPrefixedLabels (new method)
+			prefixedFunc := FromMetricWithPrefixedLabels(tt.metricName, "label")
+			prefixedValue, err := prefixedFunc(tt.groupLabel, tt.entityID, tt.rawGroups)
+			require.NoError(t, err, "FromMetricWithPrefixedLabels should not error")
+
+			// Both methods should produce identical results
+			assert.Equal(t, tt.expectedVals, inheritedValue, "InheritAllLabelsFrom result")
+			assert.Equal(t, tt.expectedVals, prefixedValue, "FromMetricWithPrefixedLabels result")
+			assert.Equal(t, inheritedValue, prefixedValue, "Both methods should produce identical results")
+		})
+	}
+}
+
 func TestControlPlaneComponentTypeGenerator(t *testing.T) {
 	generatedType, err := ControlPlaneComponentTypeGenerator("my-component", "", nil, "myCluster")
 	assert.NoError(t, err)
@@ -1989,15 +2201,16 @@ func TestFromMetricWithPrefixedLabels(t *testing.T) {
 							Labels: Labels{
 								"label_app":  "my-app",
 								"label_team": "sre",
-								"namespace":  "prod", // This label should be ignored.
+								"namespace":  "prod", // This label is now included too.
 							},
 						},
 					},
 				},
 			},
 			expectedValue: definition.FetchedValues{
-				"label.app":  "my-app",
-				"label.team": "sre",
+				"label.app":       "my-app",
+				"label.team":      "sre",
+				"label.namespace": "prod", // Now includes all labels.
 			},
 			expectedErr: "",
 		},
@@ -2009,12 +2222,12 @@ func TestFromMetricWithPrefixedLabels(t *testing.T) {
 				"pod": {
 					"test-entity": {
 						"kube_pod_labels": Metric{
-							Labels: Labels{"namespace": "prod"}, // No labels with "label_" prefix.
+							Labels: Labels{"namespace": "prod"}, // No labels with "label_" prefix, but still included.
 						},
 					},
 				},
 			},
-			expectedValue: definition.FetchedValues{}, // Expect an empty map, not an error.
+			expectedValue: definition.FetchedValues{"label.namespace": "prod"}, // Now includes all labels.
 			expectedErr:   "",
 		},
 		{

@@ -15,6 +15,9 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ .Release.Name }}-statefulset
+  labels:
+    environment: staging
+    team: database-team
 spec:
   serviceName: statefulset
   replicas: 2
