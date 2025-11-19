@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### bugfix
 - fixes a bug where PersistentVolume and PersistentVolumeClaim labels not exporting
+- change image for e2e-resources/hpa to multiarch image @TmNguyen12[#1298](https://github.com/newrelic/nri-kubernetes/pull/1298)
 
 ## v3.50.1 - 2025-11-17
 
@@ -69,7 +70,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### 🐞 Bug fixes
 - fix e2e-tests no longer use the "constant" key @TmNguyen12 [#1299](https://github.com/newrelic/nri-kubernetes/pull/1299)
-- change image for e2e-resources/hpa to multiarch image @TmNguyen12[#1298](https://github.com/newrelic/nri-kubernetes/pull/1298)
 
 ## v3.45.2 - 2025-09-15
 
