@@ -24,7 +24,7 @@ spec:
           mountPath: /app
         resources:
           requests:
-            cpu: "100m"
+            cpu: "400m"
           limits:
             cpu: "500m"
         imagePullPolicy: IfNotPresent
@@ -63,6 +63,7 @@ metadata:
 data:
   calculate_pi.py: |
     from decimal import Decimal, getcontext
+    import time
 
     def calculate_pi(n):
         getcontext().prec = n
@@ -80,7 +81,8 @@ data:
 
     if __name__ == "__main__":
         while True:
-            calculate_pi(1000)
+            calculate_pi(500)
+            time.sleep(0.5)
 {{ end }}
 ---
 {{ if not .Values.openShift.enabled }}
@@ -90,6 +92,8 @@ metadata:
   name: {{ .Release.Name }}-hpa
   labels:
     run: php-apache
+    environment: production
+    team: scaling-team
 spec:
   ports:
     - port: 80
@@ -101,13 +105,16 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ .Release.Name }}-hpa
+  labels:
+    environment: production
+    team: scaling-team
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: {{ .Release.Name }}-hpa
   minReplicas: 1
-  maxReplicas: 10
+  maxReplicas: {{ if .Values.openShift.enabled }} 3 {{ else }}10{{ end }}
   metrics:
     - type: Resource
       resource:

@@ -72,7 +72,10 @@ spec:
               value: {{ include "newrelic.common.cluster" . }}
             - name: "NRI_KUBERNETES_VERBOSE"
               value: {{ include "newrelic.common.verboseLog.valueAsBoolean" . | quote }}
-
+            {{- if .Values.ksm.enableResourceQuotaSamples }}
+            - name: "NRI_KUBERNETES_KSM_ENABLERESOURCEQUOTASAMPLES"
+              value: "true"
+            {{- end }}
             - name: "NRI_KUBERNETES_NODENAME"
               valueFrom:
                 fieldRef:

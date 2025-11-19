@@ -146,6 +146,8 @@ func (r *grouper) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 		nodeConditions[string(condition.Type)] = conditionValue
 	}
 
+	runningPodsCount := r.countRunningPods(rawGroups)
+
 	g := definition.RawGroups{
 		"node": {
 			response.Node.NodeName: definition.RawMetrics{
@@ -157,12 +159,28 @@ func (r *grouper) Group(definition.SpecGroups) (definition.RawGroups, *data.Erro
 				"conditions":           nodeConditions,
 				"unschedulable":        node.Spec.Unschedulable,
 				"kubeletVersion":       node.Status.NodeInfo.KubeletVersion,
+				"runningPods":          runningPodsCount,
 			},
 		},
 	}
 	fillGroupsAndMergeNonExistent(rawGroups, g)
 
 	return rawGroups, nil
+}
+
+// Count the number of pods in a 'Running' state for the current node.
+func (r *grouper) countRunningPods(rawGroups definition.RawGroups) int {
+	runningPodsCount := 0
+	if pods, ok := rawGroups["pod"]; ok {
+		for _, podMetrics := range pods {
+			// The pod data is already scoped to the current node by the fetcher,
+			// so we only need to check the status.
+			if status, ok := podMetrics["status"].(string); ok && status == "Running" {
+				runningPodsCount++
+			}
+		}
+	}
+	return runningPodsCount
 }
 
 func fillGroupsAndMergeNonExistent(destination definition.RawGroups, from definition.RawGroups) {

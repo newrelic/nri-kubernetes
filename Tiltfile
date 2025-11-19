@@ -56,6 +56,12 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: nri-k8s-dev
+  labels:
+    environment: dev
+    team: k8-team
+  annotations:
+    owner: "namespace@example.com"
+    description: "Namespace for e2e workloads"
 """
 k8s_yaml([blob(ns_yaml_str)])
 

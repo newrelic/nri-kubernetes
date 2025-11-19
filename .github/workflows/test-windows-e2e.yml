@@ -45,14 +45,14 @@ jobs:
       fail-fast: false
       matrix:
         runner:
-          - kubernetes_version: 'v1.29.0'
-            exceptions_file: '1_29-exceptions-windows.yml'
-            eks_cluster_name: 'test-win-1-29'
-            iam_role: 'gha-role-test-win-1-29'
-          - kubernetes_version: 'v1.33.0'
-            exceptions_file: '1_33-exceptions-windows.yml'
-            eks_cluster_name: 'test-win-1-33'
-            iam_role: 'gha-role-test-win-1-33'
+          - kubernetes_version: 'v1.30.0'
+            exceptions_file: '1_30-exceptions-windows.yml'
+            eks_cluster_name: 'test-win-1-30'
+            iam_role: 'gha-role-test-win-1-30'
+          - kubernetes_version: 'v1.34.0'
+            exceptions_file: '1_34-exceptions-windows.yml'
+            eks_cluster_name: 'test-win-1-34'
+            iam_role: 'gha-role-test-win-1-34'
     name: E2E Test on EKS
     runs-on: ubuntu-latest
     steps:
@@ -68,7 +68,7 @@ jobs:
           new_namespace="nr-$scenario_tag"
           echo "new_namespace=$new_namespace" >> "$GITHUB_OUTPUT"
       - name: Configure AWS Credentials via OIDC
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: arn:aws:iam::${{ secrets.K8S_AWS_ACCOUNT_ID }}:role/${{ matrix.runner.iam_role }}
           aws-region: us-west-1

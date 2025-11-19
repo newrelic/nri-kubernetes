@@ -28,6 +28,12 @@ type SpecGroup struct {
 	NamespaceGetter NamespaceGetterFunc
 	MsTypeGuesser   GuessFunc
 	Specs           []Spec
+	// If set, creates a new event for each unique value of this label in the metrics.
+	// Useful for subgroups, e.g., ResourceQuota per resource.
+	SplitByLabel string
+	// It tells the populator which metric name holds the slice to be split.
+	// Used with subgroups
+	SliceMetricName string
 }
 
 // SpecGroups is a map of groups indexed by group name.

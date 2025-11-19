@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
 	model "github.com/prometheus/client_model/go"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/proto"
@@ -230,13 +231,15 @@ func TestParseResponse(t *testing.T) {
 	defer responseOne.Body.Close()
 	defer responseTwo.Body.Close()
 
+	logger := logutil.Discard
+
 	var errOne error
 	var errTwo error
 	go func() {
-		errOne = parseResponse(responseOne, chOne)
+		errOne = parseResponse(responseOne, chOne, logger)
 	}()
 	go func() {
-		errTwo = parseResponse(responseTwo, chTwo)
+		errTwo = parseResponse(responseTwo, chTwo, logger)
 	}()
 
 	var oneFamilies int
@@ -250,10 +253,125 @@ func TestParseResponse(t *testing.T) {
 		twoFamilies++
 	}
 
-	// Parse response will keep filling the channel until
-	// it encounters some sort of error.
-	assert.Equal(t, 1, oneFamilies)
-	assert.Equal(t, 0, twoFamilies)
-	assert.NotNil(t, errOne)
-	assert.NotNil(t, errTwo)
+	// With the new filtering logic, unsupported metric types are filtered out,
+	// so parsing should succeed and we should get all supported metrics regardless of position.
+	assert.Equal(t, 1, oneFamilies, "Should parse gauge metric before stateset")
+	assert.Equal(t, 1, twoFamilies, "Should filter out stateset and parse gauge metric that comes after")
+	assert.Nil(t, errOne, "Should not error when stateset comes after supported types")
+	assert.Nil(t, errTwo, "Should not error when stateset is filtered out")
+}
+
+// verifyReplicaSetMetrics is a helper function that verifies metric families contain
+// the expected ReplicaSet metrics with correct names, values, and no info metrics.
+func verifyReplicaSetMetrics(t *testing.T, metricFamilies []*model.MetricFamily, expectedMetricNames map[string]bool) {
+	t.Helper()
+
+	for _, mf := range metricFamilies {
+		assert.True(t, expectedMetricNames[mf.GetName()], "Unexpected metric family: %s", mf.GetName())
+		assert.NotEqual(t, "kube_gitrepository_resource_info", mf.GetName(), "Info metric should have been filtered out")
+
+		// Verify metrics have the expected labels and values
+		if mf.GetName() == "kube_replicaset_created" {
+			assert.Len(t, mf.GetMetric(), 1, "Should have 1 metric")
+			assert.Equal(t, float64(1620000000), mf.GetMetric()[0].GetGauge().GetValue())
+		} else if mf.GetName() == "kube_replicaset_status_replicas" {
+			assert.Len(t, mf.GetMetric(), 1, "Should have 1 metric")
+			assert.Equal(t, float64(3), mf.GetMetric()[0].GetGauge().GetValue())
+		}
+	}
+}
+
+// TestParseResponseWithInfoMetric tests that "info" type metrics (OpenMetrics 1.0)
+// are filtered out gracefully without losing subsequent metrics.
+// This test reproduces and validates the fix for issue #1293 where FluxCD info metrics
+// appear before ReplicaSet metrics, causing complete data loss.
+func TestParseResponseWithInfoMetric(t *testing.T) {
+	t.Parallel()
+
+	chOne := make(chan *model.MetricFamily)
+	chTwo := make(chan *model.MetricFamily)
+
+	// Scenario 1: info metric BEFORE replicaset metrics (reproduces issue #1293)
+	handlerInfoFirst := func(w http.ResponseWriter) {
+		_, err := io.WriteString(w,
+			`# HELP kube_gitrepository_resource_info The current state of a GitOps Toolkit resource
+			 # TYPE kube_gitrepository_resource_info info
+			 kube_gitrepository_resource_info{name="podinfo",exported_namespace="flux-system",ready="True",suspended="false"} 1
+			 # HELP kube_replicaset_created ReplicaSet creation timestamp
+			 # TYPE kube_replicaset_created gauge
+			 kube_replicaset_created{namespace="default",replicaset="nginx-123"} 1620000000
+			 # HELP kube_replicaset_status_replicas Number of replicas
+			 # TYPE kube_replicaset_status_replicas gauge
+			 kube_replicaset_status_replicas{namespace="default",replicaset="nginx-123"} 3
+			`)
+		assert.Nil(t, err)
+	}
+
+	// Scenario 2: info metric AFTER replicaset metrics
+	handlerInfoLast := func(w http.ResponseWriter) {
+		_, err := io.WriteString(w,
+			`# HELP kube_replicaset_created ReplicaSet creation timestamp
+			 # TYPE kube_replicaset_created gauge
+			 kube_replicaset_created{namespace="default",replicaset="nginx-123"} 1620000000
+			 # HELP kube_replicaset_status_replicas Number of replicas
+			 # TYPE kube_replicaset_status_replicas gauge
+			 kube_replicaset_status_replicas{namespace="default",replicaset="nginx-123"} 3
+			 # HELP kube_gitrepository_resource_info The current state of a GitOps Toolkit resource
+			 # TYPE kube_gitrepository_resource_info info
+			 kube_gitrepository_resource_info{name="podinfo",exported_namespace="flux-system",ready="True",suspended="false"} 1
+			`)
+		assert.Nil(t, err)
+	}
+
+	wOne := httptest.NewRecorder()
+	wTwo := httptest.NewRecorder()
+
+	handlerInfoFirst(wOne)
+	handlerInfoLast(wTwo)
+	responseOne := wOne.Result()
+	responseTwo := wTwo.Result()
+
+	defer responseOne.Body.Close()
+	defer responseTwo.Body.Close()
+
+	logger := logutil.Discard
+
+	var errOne error
+	var errTwo error
+	go func() {
+		errOne = parseResponse(responseOne, chOne, logger)
+	}()
+	go func() {
+		errTwo = parseResponse(responseTwo, chTwo, logger)
+	}()
+
+	// Pre-allocate slices with expected capacity
+	metricFamiliesOne := make([]*model.MetricFamily, 0, 2)
+	metricFamiliesTwo := make([]*model.MetricFamily, 0, 2)
+
+	for mf := range chOne {
+		metricFamiliesOne = append(metricFamiliesOne, mf)
+	}
+	for mf := range chTwo {
+		metricFamiliesTwo = append(metricFamiliesTwo, mf)
+	}
+
+	// Both scenarios should succeed and return ReplicaSet metrics.
+	// The info metrics should be filtered out transparently before parsing.
+	// This validates the fix for issue #1293.
+	assert.Nil(t, errOne, "Should not error when info type is filtered out")
+	assert.Nil(t, errTwo, "Should not error when info type is filtered out")
+
+	// Verify we got exactly 2 metric families (ReplicaSet metrics only, info filtered out)
+	assert.Len(t, metricFamiliesOne, 2, "Should parse both ReplicaSet metrics even when info comes first (issue #1293)")
+	assert.Len(t, metricFamiliesTwo, 2, "Should parse both ReplicaSet metrics when info comes last")
+
+	// Verify the metric families are the expected ReplicaSet metrics
+	expectedMetricNames := map[string]bool{
+		"kube_replicaset_created":         true,
+		"kube_replicaset_status_replicas": true,
+	}
+
+	verifyReplicaSetMetrics(t, metricFamiliesOne, expectedMetricNames)
+	verifyReplicaSetMetrics(t, metricFamiliesTwo, expectedMetricNames)
 }

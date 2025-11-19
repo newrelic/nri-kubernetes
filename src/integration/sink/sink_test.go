@@ -1,6 +1,7 @@
 package sink_test
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -136,7 +137,8 @@ func Test_http_sink_fails_writing_data_when(t *testing.T) {
 func runTestServer(t *testing.T, testHandler func(w http.ResponseWriter, req *http.Request)) string {
 	t.Helper()
 
-	listener, err := net.Listen("tcp", ":0")
+	lc := net.ListenConfig{}
+	listener, err := lc.Listen(context.Background(), "tcp", "127.0.0.1:0")
 	require.NoError(t, err, "no error expected")
 
 	port := listener.Addr().(*net.TCPAddr).Port

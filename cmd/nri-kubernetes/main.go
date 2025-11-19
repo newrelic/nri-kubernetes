@@ -127,9 +127,10 @@ func main() {
 	if c.Kubelet.Enabled {
 		kubeletScraper, err = setupKubelet(c, clients, namespaceCache)
 		if err != nil {
-			logger.Errorf("setting up ksm scraper: %v", err)
+			logger.Errorf("setting up kubelet scraper: %v", err)
 			os.Exit(exitSetup)
 		}
+		defer kubeletScraper.Close()
 	}
 
 	var ksmScraper *ksm.Scraper
@@ -159,14 +160,18 @@ func main() {
 			c.KSM.Enabled, c.Kubelet.Enabled, c.ControlPlane.Enabled)
 
 		// TODO think carefully to the signature of this function
-		err := runScrapers(c, ksmScraper, kubeletScraper, controlplaneScraper, i)
+		runScaperTime := measureTime(func() {
+			err = runScrapers(c, ksmScraper, kubeletScraper, controlplaneScraper, i)
+		})
 		if err != nil {
 			logger.Errorf("retrieving scraper data: %v", err)
 			os.Exit(exitLoop)
 		}
 
 		logger.Debugf("publishing data")
-		err = i.Publish()
+		publishTime := measureTime(func() {
+			err = i.Publish()
+		})
 		if err != nil {
 			logger.Errorf("publishing integration: %v", err)
 			os.Exit(exitLoop)
@@ -174,11 +179,25 @@ func main() {
 
 		namespaceCache.Vacuum()
 
-		logger.Debugf("waiting %f seconds for next interval", c.Interval.Seconds())
+		totalTime := time.Since(start)
+		nextTick := c.Interval - (totalTime % c.Interval)
+		if totalTime > c.Interval*2 {
+			logger.Errorf("very high latency during scrape/publish, scrape duration exceeded configured interval during scrape/publish, scrape took: %dms, publish took: %dms, total duration: %dms, next scrape in %dms",
+				runScaperTime.Milliseconds(), publishTime.Milliseconds(), totalTime.Milliseconds(), nextTick.Milliseconds())
+		} else if totalTime > c.Interval {
+			logger.Warnf("scrape duration exceeded configured interval during scrape/publish, scrape took: %dms, publish took: %dms, total duration: %dms, next scrape in %dms",
+				runScaperTime.Milliseconds(), publishTime.Milliseconds(), totalTime.Milliseconds(), nextTick.Milliseconds())
+		}
 
-		// Sleep interval minus the time that took to scrape.
-		time.Sleep(c.Interval - time.Since(start))
+		logger.Debugf("total duration: %dms, next scrape in %dms", totalTime.Milliseconds(), nextTick.Milliseconds())
+		time.Sleep(nextTick)
 	}
+}
+
+func measureTime(fn func()) time.Duration {
+	start := time.Now()
+	fn()
+	return time.Since(start)
 }
 
 func runScrapers(c *config.Config, ksmScraper *ksm.Scraper, kubeletScraper *kubelet.Scraper, controlplaneScraper *controlplane.Scraper, i *sdk.Integration) error {

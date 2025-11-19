@@ -3,6 +3,9 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: {{ .Release.Name }}-cronjob
+  labels:
+    environment: production
+    team: batch-team
 spec:
   concurrencyPolicy: Allow
   {{- if .Values.demo.enabled }}

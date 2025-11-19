@@ -581,7 +581,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "volumeName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "persistentvolume"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "pvcName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_claim_ref", "name"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "pvcNamespace", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_claim_ref", "claim_namespace"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("persistentvolume", "kube_persistentvolume_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_persistentvolume_labels", "label"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "storageClass", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "storageclass"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "hostPath", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "host_path"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "hostPathType", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "host_path_type"), Type: sdkMetric.ATTRIBUTE},
@@ -618,7 +618,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "cronjobName", ValueFunc: prometheus.FromLabelValue("kube_cronjob_created", "cronjob"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_cronjob_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_cronjob_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("cronjob", "kube_cronjob_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_cronjob_labels", "label"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "schedule", ValueFunc: prometheus.FromLabelValue("kube_cronjob_info", "schedule"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "concurrencyPolicy", ValueFunc: prometheus.FromLabelValue("kube_cronjob_info", "concurrency_policy"), Type: sdkMetric.ATTRIBUTE},
 		},
@@ -647,7 +647,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "jobName", ValueFunc: prometheus.FromLabelValue("kube_job_created", "job_name"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_job_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_job_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("job_name", "kube_job_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_job_labels", "label"), Type: sdkMetric.ATTRIBUTE},
 		},
 	},
 	"persistentvolumeclaim": {
@@ -668,7 +668,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "volumeName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_info", "volumename"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_info", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_info", "namespace"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("persistentvolumeclaim", "kube_persistentvolumeclaim_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_persistentvolumeclaim_labels", "label"), Type: sdkMetric.ATTRIBUTE},
 		},
 	},
 	"replicaset": {
@@ -688,7 +688,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_replicaset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_replicaset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "deploymentName", ValueFunc: ksmMetric.GetDeploymentNameForReplicaSet(), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("replicaset", "kube_replicaset_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_replicaset_labels", "label"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "ownerName", ValueFunc: prometheus.FromLabelValue("kube_replicaset_owner", "owner_name"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "ownerKind", ValueFunc: prometheus.FromLabelValue("kube_replicaset_owner", "owner_kind"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "ownerIsController", ValueFunc: prometheus.FromLabelValue("kube_replicaset_owner", "owner_is_controller"), Type: sdkMetric.ATTRIBUTE},
@@ -718,7 +718,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "updateRevision", ValueFunc: prometheus.FromValue("kube_statefulset_status_update_revision"), Type: sdkMetric.GAUGE},
 			{Name: "statefulsetName", ValueFunc: prometheus.FromLabelValue("kube_statefulset_created", "statefulset"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_statefulset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("statefulset", "kube_statefulset_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_statefulset_labels", "label"), Type: sdkMetric.ATTRIBUTE},
 			// computed
 			{
 				Name: "podsMissing", ValueFunc: Subtract(
@@ -745,7 +745,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "metadataGeneration", ValueFunc: prometheus.FromValue("kube_daemonset_metadata_generation"), Type: sdkMetric.GAUGE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_daemonset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "daemonsetName", ValueFunc: prometheus.FromLabelValue("kube_daemonset_created", "daemonset"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("daemonset", "kube_daemonset_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_daemonset_labels", "label"), Type: sdkMetric.ATTRIBUTE},
 			// computed
 			{
 				Name: "podsMissing", ValueFunc: Subtract(
@@ -763,7 +763,8 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_namespace_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_namespace_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "status", ValueFunc: prometheus.FromLabelValue("kube_namespace_status_phase", "phase"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("namespace", "kube_namespace_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_namespace_labels", "label"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "annotation.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_namespace_annotations", "annotation"), Type: sdkMetric.ATTRIBUTE},
 		},
 	},
 	"deployment": {
@@ -791,7 +792,8 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "deploymentName", ValueFunc: prometheus.FromLabelValue("kube_deployment_created", "deployment"), Type: sdkMetric.ATTRIBUTE},
 			// Important: The order of these lines is important: we could have the same label in different entities, and we would like to keep the value closer to deployment
 			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("namespace", "kube_namespace_labels"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("deployment", "kube_deployment_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_deployment_labels", "label"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "annotation.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_deployment_annotations", "annotation"), Type: sdkMetric.ATTRIBUTE},
 			// computed
 			{
 				Name: "podsMissing", ValueFunc: Subtract(
@@ -841,7 +843,7 @@ var KSMSpecs = definition.SpecGroups{
 			},
 			{
 				Name:      "label.*",
-				ValueFunc: prometheus.InheritAllLabelsFrom("service", "kube_service_labels"),
+				ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_service_labels", "label"),
 				Type:      sdkMetric.ATTRIBUTE,
 			},
 			{
@@ -879,18 +881,46 @@ var KSMSpecs = definition.SpecGroups{
 			},
 			{
 				Name:      "label.*",
-				ValueFunc: prometheus.InheritAllLabelsFrom("endpoint", "kube_endpoint_labels"),
+				ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_endpoint_labels", "label"),
 				Type:      sdkMetric.ATTRIBUTE,
+			},
+			// KSM < 2.14 - Legacy metrics (pre-aggregated by KSM)
+			{
+				Name:      "addressAvailable",
+				ValueFunc: prometheus.FromValue("kube_endpoint_address_available"),
+				Type:      sdkMetric.GAUGE,
+				Optional:  true, // Optional: does not exist in KSM >= 2.14
 			},
 			{
 				Name:      "addressNotReady",
 				ValueFunc: prometheus.FromValue("kube_endpoint_address_not_ready"),
 				Type:      sdkMetric.GAUGE,
+				Optional:  true, // Optional: does not exist in KSM >= 2.14
+			},
+			// KSM >= v2.14 - Detailed metrics (we aggregate by filtering on ready label)
+			{
+				Name: "addressAvailable",
+				ValueFunc: prometheus.CountFromValueWithLabelsFilter(
+					"kube_endpoint_address",
+					"addressAvailable",
+					prometheus.IncludeOnlyWhenLabelMatchFilter(map[string]string{
+						"ready": "true",
+					}),
+				),
+				Type:     sdkMetric.GAUGE,
+				Optional: true, // Optional: may not exist in KSM < 2.14
 			},
 			{
-				Name:      "addressAvailable",
-				ValueFunc: prometheus.FromValue("kube_endpoint_address_available"),
-				Type:      sdkMetric.GAUGE,
+				Name: "addressNotReady",
+				ValueFunc: prometheus.CountFromValueWithLabelsFilter(
+					"kube_endpoint_address",
+					"addressNotReady",
+					prometheus.IncludeOnlyWhenLabelMatchFilter(map[string]string{
+						"ready": "false",
+					}),
+				),
+				Type:     sdkMetric.GAUGE,
+				Optional: true, // Optional: may not exist in KSM < 2.14
 			},
 		},
 	},
@@ -916,7 +946,8 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "status", ValueFunc: prometheus.FromLabelValue("kube_pod_status_phase", "phase"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "isScheduled", ValueFunc: definition.Transform(prometheus.FromLabelValue("kube_pod_status_scheduled", "condition"), toNumericBoolean), Type: sdkMetric.GAUGE},
 			{Name: "deploymentName", ValueFunc: ksmMetric.GetDeploymentNameForPod(), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("pod", "kube_pod_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_pod_labels", "label"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "annotation.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_pod_annotations", "annotation"), Type: sdkMetric.ATTRIBUTE},
 		},
 	},
 	"horizontalpodautoscaler": {
@@ -935,11 +966,72 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "currentReplicas", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_status_current_replicas"), Type: sdkMetric.GAUGE},
 			{Name: "desiredReplicas", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_status_desired_replicas"), Type: sdkMetric.GAUGE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_horizontalpodautoscaler_metadata_generation", "namespace"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("horizontalpodautoscaler", "kube_horizontalpodautoscaler_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_horizontalpodautoscaler_labels", "label"), Type: sdkMetric.ATTRIBUTE},
 			// TODO: is* metrics will be either true or `NULL`, but never false if the condition is not reported. This is not ideal.
 			{Name: "isActive", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_status_condition_active")},
 			{Name: "isAble", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_status_condition_able")},
 			{Name: "isLimited", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_status_condition_limited")},
+		},
+	},
+	"resourcequota": {
+		TypeGenerator:   prometheus.FromLabelValueEntityTypeGenerator("kube_resourcequota_created"),
+		NamespaceGetter: prometheus.FromLabelGetNamespace,
+		SplitByLabel:    "resource",
+		SliceMetricName: "kube_resourcequota",
+		Specs: []definition.Spec{
+			{
+				Name:      "createdAt",
+				ValueFunc: prometheus.FromValue("kube_resourcequota_created"),
+				Type:      sdkMetric.GAUGE,
+			},
+			{
+				Name: "namespaceName",
+				ValueFunc: prometheus.FromLabelValue(
+					"kube_resourcequota_created",
+					"namespace",
+				),
+				Type: sdkMetric.ATTRIBUTE,
+			},
+			{
+				Name: "resourcequotaName", // This will be the name of your new column.
+				ValueFunc: prometheus.FromLabelValue(
+					"kube_resourcequota_created", // The stable source metric.
+					"resourcequota",              // The label to extract the value from.
+				),
+				Type: sdkMetric.ATTRIBUTE,
+			},
+			{
+				Name: "resource", // This will be the name of your new column.
+				ValueFunc: prometheus.FromLabelValue(
+					"kube_resourcequota", // The stable source metric.
+					"resource",           // The label to extract the value from.
+				),
+				Type: sdkMetric.ATTRIBUTE,
+			},
+			{
+				Name: "resource.*",
+				// This single entry uses our new generic function to create the 'resource' attribute
+				// and the 'hard' and 'used' metrics for each sub-entity.
+				ValueFunc: prometheus.FromFlattenedMetrics(
+					"kube_resourcequota",
+					"type",
+				),
+				Type: sdkMetric.GAUGE,
+			},
+			{
+				Name: "label.*",
+				// This uses a generic function to fetch all Kubernetes labels.
+				ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_resourcequota_labels", "label"),
+				Type:      sdkMetric.ATTRIBUTE,
+				Optional:  true,
+			},
+			{
+				Name: "annotation.*",
+				// This uses a generic function to fetch all Kubernetes annotations.
+				ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_resourcequota_annotations", "annotation"),
+				Type:      sdkMetric.ATTRIBUTE,
+				Optional:  true,
+			},
 		},
 	},
 }
@@ -1079,6 +1171,7 @@ var KSMQueries = []prometheus.Query{
 	{MetricName: "kube_namespace_labels", Value: prometheus.QueryValue{
 		Value: prometheus.GaugeValue(1),
 	}},
+	{MetricName: "kube_namespace_annotations"},
 	{MetricName: "kube_namespace_created"},
 	{MetricName: "kube_namespace_status_phase", Value: prometheus.QueryValue{
 		Value: prometheus.GaugeValue(1),
@@ -1086,6 +1179,7 @@ var KSMQueries = []prometheus.Query{
 	{MetricName: "kube_deployment_labels", Value: prometheus.QueryValue{
 		Value: prometheus.GaugeValue(1),
 	}},
+	{MetricName: "kube_deployment_annotations"},
 	{MetricName: "kube_deployment_created"},
 	{MetricName: "kube_deployment_spec_replicas"},
 	{MetricName: "kube_deployment_status_replicas"},
@@ -1136,6 +1230,7 @@ var KSMQueries = []prometheus.Query{
 	{MetricName: "kube_pod_info"},
 	{MetricName: "kube_pod_created"},
 	{MetricName: "kube_pod_labels"},
+	{MetricName: "kube_pod_annotations"},
 	{MetricName: "kube_pod_status_scheduled", Value: prometheus.QueryValue{
 		Value: prometheus.GaugeValue(1),
 	}},
@@ -1154,6 +1249,7 @@ var KSMQueries = []prometheus.Query{
 	{MetricName: "kube_endpoint_labels"},
 	{MetricName: "kube_endpoint_address_not_ready"},
 	{MetricName: "kube_endpoint_address_available"},
+	{MetricName: "kube_endpoint_address"},
 	// hpa
 	{MetricName: "kube_horizontalpodautoscaler_info"},
 	{MetricName: "kube_horizontalpodautoscaler_labels"},
@@ -1200,6 +1296,10 @@ var KSMQueries = []prometheus.Query{
 		Value: prometheus.GaugeValue(1),
 	}},
 	{MetricName: "kube_node_spec_unschedulable"},
+	{MetricName: "kube_resourcequota"},
+	{MetricName: "kube_resourcequota_created"},
+	{MetricName: "kube_resourcequota_labels"},
+	{MetricName: "kube_resourcequota_annotations"},
 }
 
 // CadvisorQueries are the queries we will do to the kubelet metrics cadvisor endpoint in order to fetch all the raw metrics.
@@ -1361,6 +1461,7 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "memoryRequestedBytes", ValueFunc: definition.FromRaw("memoryRequestedBytes"), Type: sdkMetric.GAUGE},
 			{Name: "cpuRequestedCores", ValueFunc: cpuRequestedCores, Type: sdkMetric.GAUGE},
 			{Name: "kubeletVersion", ValueFunc: definition.FromRaw("kubeletVersion"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "runningPods", ValueFunc: definition.FromRaw("runningPods"), Type: sdkMetric.GAUGE},
 			// computed
 			{Name: "fsCapacityUtilization", ValueFunc: toUtilization(definition.FromRaw("fsUsedBytes"), definition.FromRaw("fsCapacityBytes")), Type: sdkMetric.GAUGE},
 			{Name: "allocatableCpuCoresUtilization", ValueFunc: toUtilization(_cpuUsedCores, definition.FromRaw("allocatableCpuCores")), Type: sdkMetric.GAUGE},

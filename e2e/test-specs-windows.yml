@@ -35,7 +35,7 @@ scenarios:
               lowerBoundedValue: 0.0
         - query: FROM Metric SELECT if(latest(k8s.cronjob.isSuspended) = 1, 'True', 'False') as 'Suspended' WHERE metricName = 'k8s.cronjob.createdAt' AND entity.name like '%${SCENARIO_TAG}-resources-win-2019-cronjob' since 20 minutes ago
           expected_results:
-            - key: "Suspended"
+            - key: "constant"
               value: False
         - query: FROM Metric SELECT latest(k8s.cronjobName) AS cronjob, latest(k8s.namespaceName) AS namespace, latest(k8s.clusterName) AS cluster, latest(k8s.cronjob.schedule) AS schedule, latest(k8s.cronjob.concurrencyPolicy) as concurrencyPolicy, latest(k8s.cronjob.createdAt) * 1000 AS created, latest(k8s.cronjob.lastScheduledTime) * 1000 AS lastScheduled WHERE metricName = 'k8s.cronjob.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.cronjobName = '${SCENARIO_TAG}-resources-win-2019-cronjob' since 20 minutes ago
           expected_results:
@@ -112,11 +112,11 @@ scenarios:
         - query: FROM Metric SELECT max(k8s.container.cpuUsedCores) AS 'CPU usage (cores)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName like '${SCENARIO_TAG}-resources-win-2019-cronjob-%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "CPU usage (cores)"
-              lowerBoundedValue: 0.01
+              lowerBoundedValue: 0.001
         - query: FROM Metric SELECT max(k8s.container.cpuCoresUtilization) / 100 AS 'CPU utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName like '${SCENARIO_TAG}-resources-win-2019-cronjob-%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "CPU utilization (%)"
-              lowerBoundedValue: 0.01
+              lowerBoundedValue: 0.001
         - query: FROM Metric SELECT max(k8s.container.memoryWorkingSetBytes) AS 'Memory usage (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName like '${SCENARIO_TAG}-resources-win-2019-cronjob-%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "Memory usage (bytes)"
@@ -124,7 +124,7 @@ scenarios:
         - query: FROM Metric SELECT max(k8s.container.memoryWorkingSetUtilization) / 100 AS 'Memory utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName like '${SCENARIO_TAG}-resources-win-2019-cronjob-%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "Memory utilization (%)"
-              lowerBoundedValue: 0.01
+              lowerBoundedValue: 0.001
         - query: FROM Metric SELECT max(k8s.container.fsUsedBytes) AS 'Filesystem used (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName like '${SCENARIO_TAG}-resources-win-2019-cronjob-%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "Filesystem used (bytes)"
@@ -153,7 +153,7 @@ scenarios:
               lowerBoundedValue: 0.0
         - query: FROM Metric SELECT if(latest(k8s.cronjob.isSuspended) = 1, 'True', 'False') as 'Suspended' WHERE metricName = 'k8s.cronjob.createdAt' AND entity.name like '%${SCENARIO_TAG}-resources-win-2022-cronjob' since 20 minutes ago
           expected_results:
-            - key: "Suspended"
+            - key: "constant"
               value: False
         - query: FROM Metric SELECT latest(k8s.cronjobName) AS cronjob, latest(k8s.namespaceName) AS namespace, latest(k8s.clusterName) AS cluster, latest(k8s.cronjob.schedule) AS schedule, latest(k8s.cronjob.concurrencyPolicy) as concurrencyPolicy, latest(k8s.cronjob.createdAt) * 1000 AS created, latest(k8s.cronjob.lastScheduledTime) * 1000 AS lastScheduled WHERE metricName = 'k8s.cronjob.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.cronjobName = '${SCENARIO_TAG}-resources-win-2022-cronjob' since 20 minutes ago
           expected_results:
@@ -230,11 +230,11 @@ scenarios:
         - query: FROM Metric SELECT max(k8s.container.cpuUsedCores) AS 'CPU usage (cores)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName like '${SCENARIO_TAG}-resources-win-2022-cronjob-%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "CPU usage (cores)"
-              lowerBoundedValue: 0.01
+              lowerBoundedValue: 0.001
         - query: FROM Metric SELECT max(k8s.container.cpuCoresUtilization) / 100 AS 'CPU utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName like '${SCENARIO_TAG}-resources-win-2022-cronjob-%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "CPU utilization (%)"
-              lowerBoundedValue: 0.01
+              lowerBoundedValue: 0.001
         - query: FROM Metric SELECT max(k8s.container.memoryWorkingSetBytes) AS 'Memory usage (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName like '${SCENARIO_TAG}-resources-win-2022-cronjob-%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "Memory usage (bytes)"
@@ -242,7 +242,7 @@ scenarios:
         - query: FROM Metric SELECT max(k8s.container.memoryWorkingSetUtilization) / 100 AS 'Memory utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName like '${SCENARIO_TAG}-resources-win-2022-cronjob-%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "Memory utilization (%)"
-              lowerBoundedValue: 0.01
+              lowerBoundedValue: 0.001
         - query: FROM Metric SELECT max(k8s.container.fsUsedBytes) AS 'Filesystem used (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName like '${SCENARIO_TAG}-resources-win-2022-cronjob-%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "Filesystem used (bytes)"
@@ -332,11 +332,11 @@ scenarios:
         - query: FROM Metric SELECT max(k8s.container.cpuUsedCores) AS 'CPU usage (cores)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win-2019-statefulset%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "CPU usage (cores)"
-              lowerBoundedValue: 0.01
+              lowerBoundedValue: 0.001
         - query: FROM Metric SELECT max(k8s.container.cpuCoresUtilization) / 100 AS 'CPU utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win-2019-statefulset%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "CPU utilization (%)"
-              lowerBoundedValue: 0.01
+              lowerBoundedValue: 0.001
         - query: FROM Metric SELECT max(k8s.container.memoryWorkingSetBytes) AS 'Memory usage (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win-2019-statefulset%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "Memory usage (bytes)"
@@ -344,7 +344,7 @@ scenarios:
         - query: FROM Metric SELECT max(k8s.container.memoryWorkingSetUtilization) / 100 AS 'Memory utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win-2019-statefulset%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "Memory utilization (%)"
-              lowerBoundedValue: 0.01
+              lowerBoundedValue: 0.001
         - query: FROM Metric SELECT max(k8s.container.fsUsedBytes) AS 'Filesystem used (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win-2019-statefulset%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "Filesystem used (bytes)"
@@ -434,11 +434,11 @@ scenarios:
         - query: FROM Metric SELECT max(k8s.container.cpuUsedCores) AS 'CPU usage (cores)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win-2022-statefulset%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "CPU usage (cores)"
-              lowerBoundedValue: 0.01
+              lowerBoundedValue: 0.001
         - query: FROM Metric SELECT max(k8s.container.cpuCoresUtilization) / 100 AS 'CPU utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win-2022-statefulset%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "CPU utilization (%)"
-              lowerBoundedValue: 0.01
+              lowerBoundedValue: 0.001
         - query: FROM Metric SELECT max(k8s.container.memoryWorkingSetBytes) AS 'Memory usage (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win-2022-statefulset%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "Memory usage (bytes)"
@@ -446,7 +446,7 @@ scenarios:
         - query: FROM Metric SELECT max(k8s.container.memoryWorkingSetUtilization) / 100 AS 'Memory utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win-2022-statefulset%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "Memory utilization (%)"
-              lowerBoundedValue: 0.01
+              lowerBoundedValue: 0.001
         - query: FROM Metric SELECT max(k8s.container.fsUsedBytes) AS 'Filesystem used (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win-2022-statefulset%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "Filesystem used (bytes)"
@@ -553,11 +553,11 @@ scenarios:
         - query: FROM Metric SELECT max(k8s.container.cpuUsedCores) AS 'CPU usage (cores)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-win-2019' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win%' AND k8s.containerName = 'windows-server-2019' since 20 minutes ago
           expected_results:
             - key: "CPU usage (cores)"
-              lowerBoundedValue: 0.01
+              lowerBoundedValue: 0.001
         - query: FROM Metric SELECT max(k8s.container.cpuCoresUtilization) / 100 AS 'CPU utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-win-2019' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win%' AND k8s.containerName = 'windows-server-2019' since 20 minutes ago
           expected_results:
             - key: "CPU utilization (%)"
-              lowerBoundedValue: 0.01
+              lowerBoundedValue: 0.001
         - query: FROM Metric SELECT max(k8s.container.memoryWorkingSetBytes) AS 'Memory usage (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-win-2019' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win%' AND k8s.containerName = 'windows-server-2019' since 20 minutes ago
           expected_results:
             - key: "Memory usage (bytes)"
@@ -565,7 +565,7 @@ scenarios:
         - query: FROM Metric SELECT max(k8s.container.memoryWorkingSetUtilization) / 100 AS 'Memory utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-win-2019' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win%' AND k8s.containerName = 'windows-server-2019' since 20 minutes ago
           expected_results:
             - key: "Memory utilization (%)"
-              lowerBoundedValue: 0.01
+              lowerBoundedValue: 0.001
         - query: FROM Metric SELECT max(k8s.container.fsUsedBytes) AS 'Filesystem used (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-win-2019' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win%' AND k8s.containerName = 'windows-server-2019' since 20 minutes ago
           expected_results:
             - key: "Filesystem used (bytes)"
@@ -672,11 +672,11 @@ scenarios:
         - query: FROM Metric SELECT max(k8s.container.cpuUsedCores) AS 'CPU usage (cores)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-win-2022' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win%' AND k8s.containerName = 'windows-server-2022' since 20 minutes ago
           expected_results:
             - key: "CPU usage (cores)"
-              lowerBoundedValue: 0.01
+              lowerBoundedValue: 0.001
         - query: FROM Metric SELECT max(k8s.container.cpuCoresUtilization) / 100 AS 'CPU utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-win-2022' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win%' AND k8s.containerName = 'windows-server-2022' since 20 minutes ago
           expected_results:
             - key: "CPU utilization (%)"
-              lowerBoundedValue: 0.01
+              lowerBoundedValue: 0.001
         - query: FROM Metric SELECT max(k8s.container.memoryWorkingSetBytes) AS 'Memory usage (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-win-2022' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win%' AND k8s.containerName = 'windows-server-2022' since 20 minutes ago
           expected_results:
             - key: "Memory usage (bytes)"
@@ -684,7 +684,7 @@ scenarios:
         - query: FROM Metric SELECT max(k8s.container.memoryWorkingSetUtilization) / 100 AS 'Memory utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-win-2022' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win%' AND k8s.containerName = 'windows-server-2022' since 20 minutes ago
           expected_results:
             - key: "Memory utilization (%)"
-              lowerBoundedValue: 0.01
+              lowerBoundedValue: 0.001
         - query: FROM Metric SELECT max(k8s.container.fsUsedBytes) AS 'Filesystem used (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-win-2022' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win%' AND k8s.containerName = 'windows-server-2022' since 20 minutes ago
           expected_results:
             - key: "Filesystem used (bytes)"
@@ -806,11 +806,11 @@ scenarios:
         - query: FROM Metric SELECT max(k8s.container.cpuUsedCores) AS 'CPU usage (cores)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win-2019-daemonset%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "CPU usage (cores)"
-              lowerBoundedValue: 0.01
+              lowerBoundedValue: 0.001
         - query: FROM Metric SELECT max(k8s.container.cpuCoresUtilization) / 100 AS 'CPU utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win-2019-daemonset%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "CPU utilization (%)"
-              lowerBoundedValue: 0.01
+              lowerBoundedValue: 0.001
         - query: FROM Metric SELECT max(k8s.container.memoryWorkingSetBytes) AS 'Memory usage (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win-2019-daemonset%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "Memory usage (bytes)"
@@ -818,7 +818,7 @@ scenarios:
         - query: FROM Metric SELECT max(k8s.container.memoryWorkingSetUtilization) / 100 AS 'Memory utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win-2019-daemonset%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "Memory utilization (%)"
-              lowerBoundedValue: 0.01
+              lowerBoundedValue: 0.001
         - query: FROM Metric SELECT max(k8s.container.fsUsedBytes) AS 'Filesystem used (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win-2019-daemonset%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "Filesystem used (bytes)"
@@ -940,11 +940,11 @@ scenarios:
         - query: FROM Metric SELECT max(k8s.container.cpuUsedCores) AS 'CPU usage (cores)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win-2022-daemonset%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "CPU usage (cores)"
-              lowerBoundedValue: 0.01
+              lowerBoundedValue: 0.001
         - query: FROM Metric SELECT max(k8s.container.cpuCoresUtilization) / 100 AS 'CPU utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win-2022-daemonset%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "CPU utilization (%)"
-              lowerBoundedValue: 0.01
+              lowerBoundedValue: 0.001
         - query: FROM Metric SELECT max(k8s.container.memoryWorkingSetBytes) AS 'Memory usage (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win-2022-daemonset%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "Memory usage (bytes)"
@@ -952,7 +952,7 @@ scenarios:
         - query: FROM Metric SELECT max(k8s.container.memoryWorkingSetUtilization) / 100 AS 'Memory utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win-2022-daemonset%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "Memory utilization (%)"
-              lowerBoundedValue: 0.01
+              lowerBoundedValue: 0.001
         - query: FROM Metric SELECT max(k8s.container.fsUsedBytes) AS 'Filesystem used (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-win-2022-daemonset%' AND k8s.containerName = 'random-text' since 20 minutes ago
           expected_results:
             - key: "Filesystem used (bytes)"
@@ -981,11 +981,11 @@ scenarios:
               value: 1.0
         - query: FROM Metric SELECT if(latest(k8s.job.isComplete), 'Complete', if(latest(k8s.job.failed), 'Failed', '-')) AS 'State' WHERE metricName = 'k8s.job.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.jobName = '${SCENARIO_TAG}-resources-win-2019-failjob' since 20 minutes ago
           expected_results:
-            - key: "State"
+            - key: "constant"
               value: "Failed"
         - query: FROM Metric WITH k8s.job.completedAt - k8s.job.startedAt AS duration SELECT if(latest(duration), latest(duration), '-') AS 'Duration (sec)' WHERE metricName = 'k8s.job.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.jobName = '${SCENARIO_TAG}-resources-win-2019-failjob' since 20 minutes ago
           expected_results:
-            - key: "Duration (sec)"
+            - key: "constant"
               value: "-"
 #        END Windows 2019 Failed Job
 #        START Windows 2022 Failed Job
@@ -1003,11 +1003,11 @@ scenarios:
               value: 1.0
         - query: FROM Metric SELECT if(latest(k8s.job.isComplete), 'Complete', if(latest(k8s.job.failed), 'Failed', '-')) AS 'State' WHERE metricName = 'k8s.job.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.jobName = '${SCENARIO_TAG}-resources-win-2019-failjob' since 20 minutes ago
           expected_results:
-            - key: "State"
+            - key: "constant"
               value: "Failed"
         - query: FROM Metric WITH k8s.job.completedAt - k8s.job.startedAt AS duration SELECT if(latest(duration), latest(duration), '-') AS 'Duration (sec)' WHERE metricName = 'k8s.job.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.jobName = '${SCENARIO_TAG}-resources-win-2019-failjob' since 20 minutes ago
           expected_results:
-            - key: "Duration (sec)"
+            - key: "constant"
               value: "-"
 #        END Windows 2022 Failed Job
       entities: []

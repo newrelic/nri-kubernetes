@@ -8,7 +8,13 @@ metadata:
 spec:
   containers:
     - name: alpine
-      image: alpine:latest
+      image: alpine:3.22.1
+      imagePullPolicy: IfNotPresent
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
       resources:
         limits:
           # Force a 'CreateContainerError':
@@ -25,10 +31,21 @@ metadata:
   name: {{ .Release.Name }}-container-pending
   labels:
     app: pending
+    environment: dev
+    team: k8-team
+  annotations:
+    owner: "pod@example.com"
+    description: "pod for e2e workloads"
 spec:
   containers:
     - name: alpine
-      image: alpine:latest
+      image: alpine:3.22.1
+      imagePullPolicy: IfNotPresent
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
   nodeSelector:
     not-existing: not-existing
 {{- end }}

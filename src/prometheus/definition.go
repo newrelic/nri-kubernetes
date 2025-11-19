@@ -14,8 +14,13 @@ import (
 )
 
 var (
-	ErrExpectedLabelsNotFound = errors.New("expected labels not found")
-	ErrUnexpectedEmptyLabels  = errors.New("unexpected empty labels")
+	ErrExpectedLabelsNotFound     = errors.New("expected labels not found")
+	ErrUnexpectedEmptyLabels      = errors.New("unexpected empty labels")
+	ErrLabelNotFound              = errors.New("label not found on metric")
+	ErrMetricSliceEmpty           = errors.New("metric slice for key was empty")
+	ErrLabelNotFoundInFirstMetric = errors.New("label not found in the first metric for key")
+	ErrIncompatibleMetricType     = errors.New("incompatible metric type for key")
+	ErrExpectedMetricType         = errors.New("expected metric type for key to be Metric")
 )
 
 // ControlPlaneComponentTypeGenerator generates the entity type of a
@@ -250,7 +255,7 @@ func GroupMetricsBySpec(specs definition.SpecGroups, families []MetricFamily) (g
 				}
 
 				switch groupLabel {
-				case "namespace", "node":
+				case "namespace", "node", "persistentvolume":
 					rawEntityID = m.Labels[groupLabel]
 				case "container":
 					rawEntityID = fmt.Sprintf("%v_%v_%v", m.Labels["namespace"], m.Labels["pod"], m.Labels[groupLabel])
@@ -462,25 +467,148 @@ func FromValueWithOverriddenName(metricName string, nameOverride string, labelsF
 	}
 }
 
-// FromLabelValue creates a FetchFunc that fetches values from prometheus metrics labels.
+// FromLabelValue creates a FetchFunc that fetches a value from a Prometheus metric's label.
+//
+// It is a higher-order function that takes the source metric name (`key`) and the desired
+// label name (`label`) and returns a FetchFunc.
+//
+// The returned function is robust and can handle two types of raw metric data:
+//   - A single Metric: It will look for the label on that metric.
+//   - A slice of Metrics ([]Metric): It will look for the label on the *first* metric
+//     in the slice, assuming the label is consistent across all metrics in the group.
+//
+// It returns an error if the source metric is not found, if the data is of an
+// unexpected type, or if the specified label does not exist on the metric.
 func FromLabelValue(key, label string) definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 		value, err := definition.FromRaw(key)(groupLabel, entityID, groups)
 		if err != nil {
-			return nil, err
+			return nil, err // Propagate errors from the underlying fetcher.
 		}
 
-		v, ok := value.(Metric)
-		if !ok {
-			return nil, fmt.Errorf("incompatible metric type. Expected: Metric. Got: %T", value)
-		}
+		var l string
+		var ok bool
 
-		l, ok := v.Labels[label]
-		if !ok {
-			return nil, errors.New("label not found in prometheus metric")
+		switch v := value.(type) {
+		case Metric:
+			l, ok = v.Labels[label]
+			if !ok {
+				return nil, fmt.Errorf("label %q not found on metric %q: %w", label, key, ErrLabelNotFound)
+			}
+		case []Metric:
+			if len(v) == 0 {
+				return nil, fmt.Errorf("metric slice for key %q was empty: %w", key, ErrMetricSliceEmpty)
+			}
+			// Assume the label is consistent across all metrics in the slice.
+			l, ok = v[0].Labels[label]
+			if !ok {
+				return nil, fmt.Errorf("label %q not found in the first metric for key %q: %w", label, key, ErrLabelNotFoundInFirstMetric)
+			}
+		default:
+			return nil, fmt.Errorf("incompatible metric type for %q. Expected: Metric or []Metric. Got: %T: %w", key, value, ErrIncompatibleMetricType)
 		}
 
 		return l, nil
+	}
+}
+
+// FromFlattenedMetrics creates a FetchFunc that processes a slice of metrics
+// and "unpacks" it into a flat map of metrics.
+//
+// It is designed for Prometheus metrics where multiple time series represent different
+// aspects of a single logical entity, like kube_resourcequota.
+//
+// Parameters:
+//   - metricName: The name of the metric in the RawMetrics map that holds the slice (e.g., "kube_resourcequota").
+//   - metricKeyLabel: The label on the source metrics whose value will become the key for the unpacked numeric metrics (e.g., "type", which has values "hard" and "used").
+//
+// Example:
+//
+// Given a slice of metrics like:
+//
+//	Metric{Labels: {"resource": "pods", "type": "hard"}, Value: 10}
+//	Metric{Labels: {"resource": "pods", "type": "used"}, Value: 8}
+//
+// Calling FromFlattenedMetrics("...", "type") will produce:
+//
+//	{
+//	  "hard": 10,
+//	  "used": 8,
+//	}
+func FromFlattenedMetrics(metricName, metricKeyLabel string) definition.FetchFunc {
+	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
+		rawMetrics, err := definition.FromRaw(metricName)(groupLabel, entityID, groups)
+		if err != nil {
+			return nil, err
+		}
+
+		metrics, ok := rawMetrics.([]Metric)
+		if !ok || len(metrics) == 0 {
+			// No data to process is not an error.
+			return nil, nil
+		}
+
+		fetchedValues := make(definition.FetchedValues)
+
+		// Loop through the slice to create the individual numeric metrics.
+		for _, m := range metrics {
+			metricKey, ok := m.Labels[metricKeyLabel]
+			if !ok {
+				// Skip any metric in the slice that doesn't have the key label.
+				continue
+			}
+			fetchedValues[metricKey] = m.Value
+		}
+
+		return fetchedValues, nil
+	}
+}
+
+// FromMetricWithPrefixedLabels creates a FetchFunc that extracts ALL labels from a metric
+// in the SAME entity group, converting them to attributes with the specified prefix.
+//
+// This function should be used when:
+// - The metric you're fetching from belongs to the same entity (same groupLabel)
+// - You want to extract all labels and prefix them consistently (e.g., "label." or "annotation.")
+//
+// Label transformation logic:
+// - Labels with "prefix_" (e.g., "label_app") → "prefix.app" (strips underscore)
+// - Labels without "prefix_" (e.g., "namespace") → "prefix.namespace" (adds prefix)
+//
+// Example: A Deployment entity extracting from "kube_deployment_labels" metric
+//
+//	FromMetricWithPrefixedLabels("kube_deployment_labels", "label")
+//	Input labels: {deployment: "nginx", namespace: "default", label_app: "myapp", label_env: "prod"}
+//	Output attributes: {label.deployment: "nginx", label.namespace: "default", label.app: "myapp", label.env: "prod"}
+//
+// For cross-entity inheritance (e.g., deployment inheriting from namespace), use InheritAllLabelsFrom instead.
+func FromMetricWithPrefixedLabels(metricName, prefix string) definition.FetchFunc {
+	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
+		rawMetric, err := definition.FromRaw(metricName)(groupLabel, entityID, groups)
+		if err != nil {
+			return nil, nil //nolint:nilerr // Gracefully handle if the metric is not present.
+		}
+
+		metric, ok := rawMetric.(Metric)
+		if !ok {
+			return nil, fmt.Errorf("expected metric type for %q to be Metric, but got %T: %w", metricName, rawMetric, ErrExpectedMetricType)
+		}
+
+		fetchedValues := make(definition.FetchedValues)
+		prefixWithUnderscore := prefix + "_"
+		for key, value := range metric.Labels {
+			// Transform label key to attribute name with prefix
+			// - If key has prefix_ (e.g., "label_app"), strip the underscore: "label.app"
+			// - If key doesn't have prefix_ (e.g., "namespace"), add prefix: "label.namespace"
+			attributeName := fmt.Sprintf(
+				"%s.%s",
+				prefix,
+				strings.TrimPrefix(key, prefixWithUnderscore),
+			)
+			fetchedValues[attributeName] = value
+		}
+
+		return fetchedValues, nil
 	}
 }
 
@@ -510,9 +638,9 @@ func suffixLabelsInOrder(metricName string, labels Labels) string {
 //
 // - <metric_name>_<label_1>_<label_1_value>_..._<label_n>_<label_n_value>_sum
 // - <metric_name>_<label_1>_<label_1_value>_..._<label_n>_<label_n_value>_count
-// - <metric_name>_<label_1>_<label_1_value>_..._<label_n>_<label_n_value>_quantile_<quantile_dimention_1>
+// - <metric_name>_<label_1>_<label_1_value>_..._<label_n>_<label_n_value>_quantile_<quantile_dimension_1>
 // - ...
-// - <metric_name>_<label_1>_<label_1_value>_..._<label_n>_<label_n_value>_quantile_<quantile_dimention_n>
+// - <metric_name>_<label_1>_<label_1_value>_..._<label_n>_<label_n_value>_quantile_<quantile_dimension_n>
 //
 // Since it expects the RawValue to be of type []Metric it should be
 // used when grouping with GroupEntityMetricsBySpec.
@@ -579,7 +707,7 @@ func FromValueWithLabelsFilter(metricName string, nameOverride string, labelsFil
 		case Metric:
 			return m.Value, nil
 		case []Metric:
-			return fetchedValuesFromRawMetricsWithLabels(metricName, nameOverride, m, labelsFilter...)
+			return fetchedValuesFromRawMetricsWithLabels(metricName, nameOverride, m, false, labelsFilter...)
 		}
 		return nil, fmt.Errorf(
 			"incompatible metric type for %s. Expected: Metric or []Metric. Got: %T",
@@ -591,7 +719,7 @@ func FromValueWithLabelsFilter(metricName string, nameOverride string, labelsFil
 
 // fetchedValuesFromRawMetricsWithLabels generates a mapping of metrics to `FetchedValue` by metricName or nameOverride
 // if provided and skips the metrics aggregation if there are no matching labels for that metric.
-// In case there aren't any matching filters, the function won't return any value.
+// In case there aren't any matching filters, the function won't return any value unless returnZeroWhenEmpty is true.
 //
 // Given a `metricName=my_metric`, a label filter function returning `l3:d` and the following `metrics`:
 //
@@ -611,6 +739,7 @@ func fetchedValuesFromRawMetricsWithLabels(
 	metricName string,
 	nameOverride string,
 	metrics []Metric,
+	returnZeroWhenEmpty bool,
 	labelsFilter ...LabelsFilter,
 ) (definition.FetchedValues, error) {
 	val := make(definition.FetchedValues)
@@ -637,7 +766,54 @@ func fetchedValuesFromRawMetricsWithLabels(
 		val[metricName] = value
 	}
 
+	// If no metrics matched the filter and returnZeroWhenEmpty is true, return 0 instead of empty map
+	if returnZeroWhenEmpty && len(val) == 0 {
+		if nameOverride != "" {
+			metricName = nameOverride
+		}
+		val[metricName] = GaugeValue(0)
+	}
+
 	return val, nil
+}
+
+// CountFromValueWithLabelsFilter works like FromValueWithLabelsFilter but returns 0 instead of empty
+// when no metrics match the label filter. This is useful for count/gauge metrics where absence means 0.
+//
+// For example, counting addresses with ready="true" should return 0 if there are no ready addresses,
+// rather than returning an empty result (which would be treated as "metric not found").
+func CountFromValueWithLabelsFilter(metricName string, nameOverride string, labelsFilter ...LabelsFilter) definition.FetchFunc {
+	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
+		value, err := definition.FromRaw(metricName)(groupLabel, entityID, groups)
+		if err != nil {
+			// Only handle "metric not found" errors by returning 0
+			// Other errors (group not found, entity not found, parsing errors) should be propagated
+			if strings.Contains(err.Error(), "metric") && strings.Contains(err.Error(), "not found") {
+				// For count metrics, when the underlying metric doesn't exist at all, treat it as an empty array
+				// and let fetchedValuesFromRawMetricsWithLabels handle it (will return 0).
+				// This handles cases where KSM >= v2.14 doesn't report individual address metrics when
+				// an endpoint has 0 addresses. For example, k8s.io-minikube-hostpath exists as a Service
+				// but has no backing pods, so no kube_endpoint_address metrics exist for it.
+				// In KSM < v2.14, this was reported as kube_endpoint_address_available=0, but in v2.14+
+				// the metric is simply absent. By treating it as an empty array, we get consistent behavior.
+				return fetchedValuesFromRawMetricsWithLabels(metricName, nameOverride, []Metric{}, true, labelsFilter...)
+			}
+			// For other errors (group/entity not found, parsing errors, etc.), propagate them
+			return nil, err
+		}
+
+		switch m := value.(type) {
+		case Metric:
+			return m.Value, nil
+		case []Metric:
+			return fetchedValuesFromRawMetricsWithLabels(metricName, nameOverride, m, true, labelsFilter...)
+		}
+		return nil, fmt.Errorf(
+			"incompatible metric type for %s. Expected: Metric or []Metric. Got: %T",
+			metricName,
+			value,
+		)
+	}
 }
 
 // hasMatchingLabels checks if a metric has any matching label given a list of labels filter funcs.
@@ -694,7 +870,7 @@ func getRandomMetric(metrics definition.RawMetrics) (metricKey string, value def
 		break
 	}
 
-	return
+	return metricKey, value
 }
 
 // metricContainsLabels returns true is the metric contains the given labels,
@@ -726,7 +902,7 @@ func getRandomMetricWithLabels(metrics definition.RawMetrics, labels ...string) 
 	if !found {
 		err = fmt.Errorf("metric with the labels %v not found", labels)
 	}
-	return
+	return metricKey, value, err
 }
 
 func fetchMetric(metricKey string) definition.FetchFunc {
@@ -751,7 +927,7 @@ func InheritSpecificLabelValuesFrom(parentGroupLabel, relatedMetricKey string, l
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 		rawEntityID, err := getRawEntityID(parentGroupLabel, groupLabel, entityID, groups)
 		if err != nil {
-			return nil, fmt.Errorf("cannot retrieve the entity ID of metrics to inherit value from, got error: %v", err)
+			return nil, fmt.Errorf("cannot retrieve the entity ID of metrics to inherit value from, got error: %w", err)
 		}
 		parent, err := definition.FromRaw(relatedMetricKey)(parentGroupLabel, rawEntityID, groups)
 		if err != nil {
@@ -772,7 +948,7 @@ func InheritSpecificLabelValuesFrom(parentGroupLabel, relatedMetricKey string, l
 }
 
 // labelsFromMetric returns the labels of the metric. The labels keys
-// are formatted from "<prefix>_" to "<prefix>."
+// are formatted from "<prefix>_" to "<prefix>.".
 func labelsFromMetric(
 	parentGroupLabel string,
 	relatedMetricKey string,
@@ -784,7 +960,7 @@ func labelsFromMetric(
 	rawEntityID, err := getRawEntityID(parentGroupLabel, groupLabel, entityID, groups)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"cannot retrieve the entity ID of metrics to inherit labels from, got error: %v",
+			"cannot retrieve the entity ID of metrics to inherit labels from, got error: %w",
 			err,
 		)
 	}
@@ -812,8 +988,27 @@ func labelsFromMetric(
 	return multiple, nil
 }
 
-// InheritAllLabelsFrom gets all the label values from from a related metric.
-// Related metric means any metric you can get with the info that you have in your own metric.
+// InheritAllLabelsFrom inherits ALL labels from a related metric, supporting both same-entity
+// and cross-entity inheritance.
+//
+// This function should be used when:
+// - You need CROSS-ENTITY inheritance (e.g., deployment inheriting namespace labels)
+// - The parent entity is in a DIFFERENT entity group (parentGroupLabel != current groupLabel)
+//
+// How it works:
+// - Uses the current entity's labels to construct the parent entity ID
+// - Looks up the parent metric in the parent entity group
+// - Extracts all labels with the "label_" prefix from that parent metric
+//
+// Example: Deployment inheriting namespace labels (CROSS-ENTITY)
+//
+//	InheritAllLabelsFrom("namespace", "kube_namespace_labels")
+//	- Current entity: deployment in "deployment" group
+//	- Parent entity: namespace in "namespace" group
+//	- Result: deployment gets all namespace's labels
+//
+// For same-entity label extraction with a known prefix, use FromMetricWithPrefixedLabels instead
+// as it's simpler and more efficient.
 func InheritAllLabelsFrom(parentGroupLabel, relatedMetricKey string) definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 		return labelsFromMetric(parentGroupLabel, relatedMetricKey, groupLabel, entityID, groups, "label")
@@ -839,7 +1034,7 @@ func getRawEntityID(parentGroupLabel, groupLabel, entityID string, groups defini
 
 	var rawEntityID string
 	switch parentGroupLabel {
-	case "node", "namespace":
+	case "node", "namespace", "persistentvolume":
 		metricKey, r := getRandomMetric(group)
 		m, ok := r.(Metric)
 

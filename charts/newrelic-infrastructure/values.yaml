@@ -26,14 +26,14 @@ images:
   forwarder:
     registry: ""
     repository: newrelic/k8s-events-forwarder
-    tag: 1.68.0
+    tag: 1.71.1
     pullPolicy: IfNotPresent
   # -- Image for the New Relic Infrastructure Agent plus integrations.
   # @default -- See `values.yaml`
   agent:
     registry: ""
     repository: newrelic/infrastructure-bundle
-    tag: 3.3.2
+    tag: 3.3.6
     pullPolicy: IfNotPresent
   # -- Image for the New Relic Kubernetes integration.
   # @default -- See `values.yaml`
@@ -54,7 +54,7 @@ images:
   windowsAgent:
     registry: ""
     repository: newrelic/infrastructure
-    tag: 1.68.0
+    tag: 1.71.1
     pullPolicy: IfNotPresent
 
 # -- Enable Windows node monitoring.
@@ -223,6 +223,8 @@ ksm:
   extraVolumes: []
   extraVolumeMounts: []
   initContainers: []
+  # -- Enable to collect metrics for resource quota.
+  enableResourceQuotaSamples: true
   # -- Resources for the KSM scraper pod.
   # Keep in mind that sharding is not supported at the moment, so memory usage for this component ramps up quickly on
   # large clusters.

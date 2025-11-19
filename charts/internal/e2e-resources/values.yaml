@@ -17,6 +17,10 @@ daemonSet:
 statefulSet:
   # -- Deploy a dummy statefulSet
   enabled: true
+  podSecurityContext:
+    runAsUser: 0
+    fsGroup: 0
+  containerSecurityContext: {}
 
 deployment:
   # -- Deploy a dummy deployment
@@ -29,6 +33,8 @@ hpa:
 persistentVolume:
   # -- Create PVs
   enabled: true
+  # -- hostPath for the PersistentVolume (default: /mnt/, for OpenShift use: /var/tmp/e2e-storage)
+  hostPath: "/var/tmp/e2e-storage"
   # -- Changes PV type to run on multi-node clusters (e.g. GKE, OpenShift on GCP)
   multiNode: false
 persistentVolumeClaim:
@@ -68,3 +74,18 @@ windows:
   is2019: false
 # -- Deploy resources on Windows Server 2022 nodes
   is2022: false
+
+kube-state-metrics:
+  podSecurityContext: {}
+  securityContext: 
+    enabled: false
+  metricLabelsAllowlist:
+    - resourcequotas=[environment,team]
+    - namespaces=[environment,team]
+    - deployments=[environment,team]
+    - pods=[environment,team]
+  metricAnnotationsAllowList:
+    - resourcequotas=[owner,description]
+    - namespaces=[owner,description]
+    - deployments=[owner,description]
+    - pods=[owner,description]

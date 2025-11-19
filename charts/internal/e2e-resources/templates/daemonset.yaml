@@ -3,6 +3,9 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: {{ .Release.Name }}-daemonset
+  labels:
+    environment: production
+    team: infrastructure-team
 spec:
   selector:
     matchLabels:

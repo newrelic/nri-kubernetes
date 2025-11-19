@@ -3,12 +3,12 @@ items:
 - apiVersion: v1
   kind: Namespace
   metadata:
-    creationTimestamp: "2025-03-11T21:20:53Z"
+    creationTimestamp: "2025-11-04T19:10:37Z"
     labels:
       kubernetes.io/metadata.name: default
     name: default
-    resourceVersion: "65"
-    uid: 010ec5cc-e603-4f3b-b1b7-8c68c1d479e3
+    resourceVersion: "68"
+    uid: 65b969b9-16c6-4d0f-8e24-ebae43960a95
   spec:
     finalizers:
     - kubernetes
@@ -17,12 +17,12 @@ items:
 - apiVersion: v1
   kind: Namespace
   metadata:
-    creationTimestamp: "2025-03-11T21:20:53Z"
+    creationTimestamp: "2025-11-04T19:10:37Z"
     labels:
       kubernetes.io/metadata.name: kube-node-lease
     name: kube-node-lease
-    resourceVersion: "67"
-    uid: b98e9c8f-b94b-4bb5-bc5a-f989115ad98f
+    resourceVersion: "69"
+    uid: c9e4ed2c-be7a-48bf-969c-26a7b02ef575
   spec:
     finalizers:
     - kubernetes
@@ -31,12 +31,12 @@ items:
 - apiVersion: v1
   kind: Namespace
   metadata:
-    creationTimestamp: "2025-03-11T21:20:53Z"
+    creationTimestamp: "2025-11-04T19:10:37Z"
     labels:
       kubernetes.io/metadata.name: kube-public
     name: kube-public
-    resourceVersion: "64"
-    uid: 9f30d71a-55c6-40b4-9b2a-b7f741a90d8a
+    resourceVersion: "65"
+    uid: 2d2f058a-3367-40c1-9a20-921ac786d61b
   spec:
     finalizers:
     - kubernetes
@@ -45,12 +45,12 @@ items:
 - apiVersion: v1
   kind: Namespace
   metadata:
-    creationTimestamp: "2025-03-11T21:20:53Z"
+    creationTimestamp: "2025-11-04T19:10:37Z"
     labels:
       kubernetes.io/metadata.name: kube-system
     name: kube-system
-    resourceVersion: "12"
-    uid: ba27937a-e0d3-4b9e-b5ad-287b06f29ce3
+    resourceVersion: "17"
+    uid: c538b228-db8b-4eb7-84f7-dc9690d89a76
   spec:
     finalizers:
     - kubernetes
@@ -59,13 +59,35 @@ items:
 - apiVersion: v1
   kind: Namespace
   metadata:
-    creationTimestamp: "2025-03-11T21:21:24Z"
+    annotations:
+      description: Namespace for e2e workloads
+      meta.helm.sh/release-name: e2e
+      meta.helm.sh/release-namespace: scraper
+      owner: namespace@example.com
+    creationTimestamp: "2025-11-04T19:11:10Z"
+    labels:
+      app.kubernetes.io/managed-by: Helm
+      environment: dev
+      kubernetes.io/metadata.name: nri-test-namespace
+      team: k8-team
+    name: nri-test-namespace
+    resourceVersion: "465"
+    uid: 70c0dd92-511d-4707-b069-d793a40f557b
+  spec:
+    finalizers:
+    - kubernetes
+  status:
+    phase: Active
+- apiVersion: v1
+  kind: Namespace
+  metadata:
+    creationTimestamp: "2025-11-04T19:11:10Z"
     labels:
       kubernetes.io/metadata.name: scraper
       name: scraper
     name: scraper
-    resourceVersion: "491"
-    uid: 83eaba75-761d-4a6a-8d5a-480e0b1b4026
+    resourceVersion: "461"
+    uid: 225c05d9-6ec1-4c1c-acb2-c2f504b22afd
   spec:
     finalizers:
     - kubernetes

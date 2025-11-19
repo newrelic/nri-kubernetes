@@ -208,6 +208,7 @@ Infrastructure Agent integrations (Kafka, Cassandra, Redis, etc.) are not suppor
 | ksm.config.scheme | string | `"http"` | Scheme to use to connect to kube-state-metrics. Supported values are `http` and `https`. |
 | ksm.config.selector | string | `"app.kubernetes.io/name=kube-state-metrics"` | Label selector that will be used to automatically discover an instance of kube-state-metrics running in the cluster. |
 | ksm.config.timeout | string | `"10s"` | Timeout for the ksm API contacted by the integration |
+| ksm.enableResourceQuotaSamples | bool | `true` | Enable to collect metrics for resource quota. |
 | ksm.enabled | bool | `true` | Enable cluster state monitoring. Advanced users only. Setting this to `false` is not supported and will break the New Relic experience. |
 | ksm.forwarder | object | 100m/150M -/850M | Resources for the Frowarder pod. large clusters. |
 | ksm.hostNetwork | bool | Not set | Sets pod's hostNetwork. When set bypasses global/common variable |

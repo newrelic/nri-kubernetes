@@ -8,6 +8,66 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### bugfix
+- fixes a bug where PersistentVolume and PersistentVolumeClaim labels not exporting
+
+## v3.50.1 - 2025-11-17
+
+### 🐞 Bug fixes
+- Fix unsupported metric type by pre-filtering @NRhzhao [#1337](https://github.com/newrelic/nri-kubernetes/pull/1337)
+
+## v3.50.0 - 2025-11-10
+
+### 🚀 Enhancements
+- update KSM e2e chart version and in test-spec versions to 2.16, add support for kube_endpoint_address and backward compatibility for kube_endpoint_address_available & kube_endpoint_address_not_ready @TmNguyen12 [#1330](https://github.com/newrelic/nri-kubernetes/pull/1330)
+
+### 🐞 Bug fixes
+- Fix priorityClassName templating when enableWindows=true @kondracek-nr [#1329](https://github.com/newrelic/nri-kubernetes/pull/1329)
+
+## v3.49.0 - 2025-11-03
+
+### 🚀 Enhancements
+- Export KSM labels and annotations for pods, deployments, and namespaces @NRhzhao [#1317](https://github.com/newrelic/nri-kubernetes/pull/1317)
+- Update E2e-resource charts and add test-spec for OpenShift testing @TmNguyen12 [#1325](https://github.com/newrelic/nri-kubernetes/pull/1325)
+- Add `runningPod` attribute to the K8sNodeSample @NRhzhao [#1316](https://github.com/newrelic/nri-kubernetes/pull/1316)
+- Enable exporting of `ResourceQuotaSamples` by default @NRhzhao [#1326](https://github.com/newrelic/nri-kubernetes/pull/1326)
+
+## v3.48.0 - 2025-10-27
+
+### 🛡️ Security notices
+- Docker file to update apk packages on build @philip-r-beckwith [#1309](https://github.com/newrelic/nri-kubernetes/pull/1309)
+
+### 🐞 Bug fixes
+- fix issue when the scrape duration exceeds the scrape interval, it will sleep for a negative time (meaning, do it immediately), which breaks the interval in which data is reported @danielstokes [#1215](https://github.com/newrelic/nri-kubernetes/pull/1215)
+
+## v3.47.0 - 2025-10-20
+
+### 🚀 Enhancements
+- Add metrics for ResourceQuota @NRhzhao [#1302](https://github.com/newrelic/nri-kubernetes/pull/1302)
+
+### ⛓️ Dependencies
+- Updated go to v1.25.3
+
+## v3.46.0 - 2025-10-13
+
+### 🚀 Enhancements
+- Add v1.34 support and drop support for v1.29 @TmNguyen12 [#1300](https://github.com/newrelic/nri-kubernetes/pull/1300)
+
+### ⛓️ Dependencies
+- Updated golang.org/x/crypto to v0.42.0
+- Updated alpine to v3.22.2
+- Updated kubernetes packages to v0.34.1
+
+## v3.45.4 - 2025-10-06
+
+### 🐞 Bug fixes
+- fix e2e-tests to use the "constant" key again @TmNguyen12 [#1307](https://github.com/newrelic/nri-kubernetes/pull/1307)
+
+### ⛓️ Dependencies
+- Updated google.golang.org/protobuf to v1.36.10
+
+## v3.45.3 - 2025-09-29
+
+### 🐞 Bug fixes
 - fix e2e-tests no longer use the "constant" key @TmNguyen12 [#1299](https://github.com/newrelic/nri-kubernetes/pull/1299)
 - change image for e2e-resources/hpa to multiarch image @TmNguyen12[#1298](https://github.com/newrelic/nri-kubernetes/pull/1298)
 
