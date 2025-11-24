@@ -7,9 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### bugfix
+## v3.50.2 - 2025-11-24
+
+### 🐞 Bug fixes
 - fixes a bug where PersistentVolume and PersistentVolumeClaim labels not exporting
 - change image for e2e-resources/hpa to multiarch image @TmNguyen12[#1298](https://github.com/newrelic/nri-kubernetes/pull/1298)
+
+### ⛓️ Dependencies
+- Updated golang.org/x/crypto to v0.44.0
+- Updated go to v1.25.4
+- Updated github.com/prometheus/common to v0.67.2 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.67.2)
+- Updated kubernetes packages to v0.34.2
 
 ## v3.50.1 - 2025-11-17
 
