@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- Reduce tolerations for KSM pods to improve behavior during node cordon/draining @kondracek-nr [#1350](https://github.com/newrelic/nri-kubernetes/pull/1350)
+
 ## v3.50.2 - 2025-11-24
 
 ### 🐞 Bug fixes
