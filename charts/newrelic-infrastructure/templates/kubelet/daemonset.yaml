@@ -108,6 +108,11 @@ spec:
             - name: nri-kubernetes-config
               mountPath: /etc/newrelic-infra/nri-kubernetes.yml
               subPath: nri-kubernetes.yml
+            {{- if include "nriKubernetes.privileged" . }}
+            - name: host-proc
+              mountPath: /host/proc
+              readOnly: true
+            {{- end }}
             {{- with .Values.kubelet.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -236,6 +241,9 @@ spec:
         - name: host-volume
           hostPath:
             path: /
+        - name: host-proc
+          hostPath:
+            path: /proc
         {{- end }}
         - name: agent-tmpfs-data
           emptyDir: {}

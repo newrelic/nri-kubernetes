@@ -41,6 +41,7 @@ type Scraper struct {
 	informerClosers         []chan<- struct{}
 	currentReruns           int
 	Filterer                discovery.NamespaceFilterer
+	interfaceCache          *kubeletMetric.InterfaceCache
 }
 
 // ScraperOpt are options that can be used to configure the Scraper
@@ -104,7 +105,8 @@ func (s *Scraper) Run(i *integration.Integration) error {
 		return fmt.Errorf("creating Kubelet grouper: %w", err)
 	}
 
-	job := scrape.NewScrapeJob("kubelet", kubeletGrouper, metric.KubeletSpecs, scrape.JobWithFilterer(s.Filterer))
+	specs := metric.NewKubeletSpecs(s.interfaceCache)
+	job := scrape.NewScrapeJob("kubelet", kubeletGrouper, specs, scrape.JobWithFilterer(s.Filterer))
 
 	r := job.Populate(i, s.config.ClusterName, s.logger, s.k8sVersion)
 	if r.Errors != nil {
@@ -130,6 +132,14 @@ func WithLogger(logger *log.Logger) ScraperOpt {
 func WithFilterer(filterer discovery.NamespaceFilterer) ScraperOpt {
 	return func(s *Scraper) error {
 		s.Filterer = filterer
+		return nil
+	}
+}
+
+// WithInterfaceCache sets the interface cache for network metric optimization.
+func WithInterfaceCache(cache *kubeletMetric.InterfaceCache) ScraperOpt {
+	return func(s *Scraper) error {
+		s.interfaceCache = cache
 		return nil
 	}
 }
