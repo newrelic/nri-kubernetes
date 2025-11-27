@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.55.3 - 2025-11-27
+
+### 🚀 Enhancements
+- Upgrade helm-unittest from 0.3.1 to 1.0.3 for improved test framework compatibility and template validation testing
+
+### 🐞 Bug fixes
+- Fixed invalid test assertions in gke_autopilot_test.yaml (replaced unsupported `exists:` and `notExists:` assertions)
+- Enhanced interval validation with comprehensive test coverage for both valid and invalid intervals
+
+### 🧪 Testing
+- Added 3 new tests for invalid interval validation (>40s, <10s, non-seconds)
+- All 182 tests now pass (31 test suites) with 100% pass rate
+- Proper failedTemplate assertions enable testing of template validation failures
+
 ## v3.50.2 - 2025-11-24
 
 ### 🐞 Bug fixes
