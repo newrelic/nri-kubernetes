@@ -111,7 +111,7 @@ scenarios:
               lowerBoundedValue: 0.0
         - query: FROM Metric SELECT if(latest(k8s.cronjob.isSuspended) = 1, 'True', 'False') as 'Suspended' WHERE metricName = 'k8s.cronjob.createdAt'
           expected_results:
-            - key: "constant"
+            - key: "Suspended"
               value: False
         # - query: FROM Metric SELECT latest(k8s.cronjobName) AS cronjob, latest(k8s.namespaceName) AS namespace, latest(k8s.clusterName) AS cluster, latest(k8s.cronjob.schedule) AS schedule, latest(k8s.cronjob.concurrencyPolicy) as concurrencyPolicy, latest(k8s.cronjob.createdAt) * 1000 AS created, latest(k8s.cronjob.lastScheduledTime) * 1000 AS lastScheduled WHERE metricName = 'k8s.cronjob.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.clusterName = '${SCENARIO_TAG}'
         #   expected_results:
@@ -683,11 +683,11 @@ scenarios:
               value: 1.0
         - query: FROM Metric SELECT if(latest(k8s.job.isComplete), 'Complete', if(latest(k8s.job.failed), 'Failed', '-')) AS 'State' WHERE metricName = 'k8s.job.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.jobName = '${SCENARIO_TAG}-resources-failjob'
           expected_results:
-            - key: "constant"
+            - key: "State"
               value: "Failed"
         - query: FROM Metric WITH k8s.job.completedAt - k8s.job.startedAt AS duration SELECT if(latest(duration), latest(duration), '-') AS 'Duration (sec)' WHERE metricName = 'k8s.job.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.jobName = '${SCENARIO_TAG}-resources-failjob'
           expected_results:
-            - key: "constant"
+            - key: "Duration (sec)"
               value: "-"
 #        END Failed Job
       entities: []
@@ -829,7 +829,7 @@ scenarios:
               lowerBoundedValue: 0.0
         - query: FROM Metric SELECT if(latest(k8s.cronjob.isSuspended) = 1, 'True', 'False') as 'Suspended' WHERE metricName = 'k8s.cronjob.createdAt'
           expected_results:
-            - key: "constant"
+            - key: "Suspended"
               value: False
         # - query: FROM Metric SELECT latest(k8s.cronjobName) AS cronjob, latest(k8s.namespaceName) AS namespace, latest(k8s.clusterName) AS cluster, latest(k8s.cronjob.schedule) AS schedule, latest(k8s.cronjob.concurrencyPolicy) as concurrencyPolicy, latest(k8s.cronjob.createdAt) * 1000 AS created, latest(k8s.cronjob.lastScheduledTime) * 1000 AS lastScheduled WHERE metricName = 'k8s.cronjob.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.clusterName = '${SCENARIO_TAG}'
         #   expected_results:
@@ -1401,11 +1401,11 @@ scenarios:
               value: 1.0
         - query: FROM Metric SELECT if(latest(k8s.job.isComplete), 'Complete', if(latest(k8s.job.failed), 'Failed', '-')) AS 'State' WHERE metricName = 'k8s.job.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.jobName = '${SCENARIO_TAG}-resources-failjob'
           expected_results:
-            - key: "constant"
+            - key: "State"
               value: "Failed"
         - query: FROM Metric WITH k8s.job.completedAt - k8s.job.startedAt AS duration SELECT if(latest(duration), latest(duration), '-') AS 'Duration (sec)' WHERE metricName = 'k8s.job.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.jobName = '${SCENARIO_TAG}-resources-failjob'
           expected_results:
-            - key: "constant"
+            - key: "Duration (sec)"
               value: "-"
 #        END Failed Job
       entities: []
