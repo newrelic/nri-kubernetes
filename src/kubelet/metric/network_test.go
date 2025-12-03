@@ -467,7 +467,7 @@ func TestFromRawWithFallbackToDefaultInterface_ComprehensiveFallback(t *testing.
 					},
 				},
 			},
-			expectedValue: uint64(777777), // Uses routing table (ens3)
+			expectedValue: uint64(777777), // Uses heuristic (ens3 is lowest-numbered, routing table skipped for pods)
 			expectError:   false,
 		},
 		{

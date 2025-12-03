@@ -34,7 +34,7 @@ var (
 // FromRawWithFallbackToDefaultInterface fetches network metrics from the raw
 // groups, with multiple fallback strategies:
 // 1. Try top-level metric (e.g., n.Network.RxBytes).
-// 2. Try default interface from routing table (default /host/proc/1/net/route).
+// 2. Try default interface from routing table (only for node entities, from /host/proc/1/net/route).
 // 3. Use heuristic to select primary interface (lowest-numbered physical interface).
 //
 //nolint:gocyclo,cyclop,gocognit
@@ -59,7 +59,7 @@ func FromRawWithFallbackToDefaultInterface(metricKey string, cache *InterfaceCac
 		// Step 1.5: Check cache for previously resolved interface
 		if cache != nil {
 			if cachedInterface, found := cache.Get(entityID); found {
-				log.Debugf("Using cached interface '%s' for entity '%s'", cachedInterface, entityID)
+				log.Debugf("Using cached interface '%s' for entity '%s' metric %s", cachedInterface, entityID, metricKey)
 				metric, err := getMetricFromInterface(cachedInterface, metricKey, e)
 				if err == nil {
 					return metric, nil
@@ -69,22 +69,26 @@ func FromRawWithFallbackToDefaultInterface(metricKey string, cache *InterfaceCac
 			}
 		}
 
-		// Step 2: Try default interface from routing table
+		// Step 2: Try default interface from routing table (only for nodes)
+		// For pods/containers, skip routing table check as they have their own network namespaces
+		// and the host's routing table doesn't apply to them.
 		var resolvedInterface string
-		defaultInterface, err := getDefaultInterface(groups)
-		if err == nil && defaultInterface != "" {
-			metric, err := getMetricFromInterface(defaultInterface, metricKey, e)
-			if err == nil {
-				resolvedInterface = defaultInterface
-				// Cache the resolved interface
-				if cache != nil {
-					cache.Put(entityID, resolvedInterface)
+		if groupLabel == "node" {
+			defaultInterface, err := getDefaultInterface(groups)
+			if err == nil && defaultInterface != "" {
+				metric, err := getMetricFromInterface(defaultInterface, metricKey, e)
+				if err == nil {
+					resolvedInterface = defaultInterface
+					// Cache the resolved interface
+					if cache != nil {
+						cache.Put(entityID, resolvedInterface)
+					}
+					return metric, nil
 				}
-				return metric, nil
+				// If we got a default interface name but couldn't find metrics for it,
+				// fall through to heuristic
+				log.Debugf("Default interface '%s' found in routing table but not in stats for entity '%s' (group: %s, metric: %s). Trying heuristic.", defaultInterface, entityID, groupLabel, metricKey)
 			}
-			// If we got a default interface name but couldn't find metrics for it,
-			// fall through to heuristic
-			log.Debugf("Default interface '%s' found in routing table but not in stats. Trying heuristic.", defaultInterface)
 		}
 
 		// Step 3: Fallback to heuristic interface selection
@@ -103,7 +107,7 @@ func FromRawWithFallbackToDefaultInterface(metricKey string, cache *InterfaceCac
 		}
 
 		resolvedInterface = primaryInterface
-		log.Debugf("Using heuristic-selected primary interface '%s' for %s metric", primaryInterface, metricKey)
+		log.Debugf("Using heuristic-selected primary interface '%s' for entity '%s' metric %s", primaryInterface, entityID, metricKey)
 
 		// Cache the resolved interface
 		if cache != nil {
