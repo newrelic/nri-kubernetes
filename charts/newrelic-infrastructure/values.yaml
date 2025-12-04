@@ -194,10 +194,22 @@ ksm:
   enabled: true
   annotations: {}
   # -- Tolerations for the KSM Deployment.
-  # @default -- Schedules in all tainted nodes
+  # @default -- Tolerates common node pressure taints but not unschedulable nodes
   tolerations:
-    - operator: "Exists"
+    # Tolerate common node pressure conditions
+    - key: "node.kubernetes.io/disk-pressure"
+      operator: "Exists"
       effect: "NoSchedule"
+    - key: "node.kubernetes.io/memory-pressure"
+      operator: "Exists"
+      effect: "NoSchedule"
+    - key: "node.kubernetes.io/pid-pressure"
+      operator: "Exists"
+      effect: "NoSchedule"
+    - key: "node.kubernetes.io/network-unavailable"
+      operator: "Exists"
+      effect: "NoSchedule"
+    # Allow eviction during node maintenance
     - operator: "Exists"
       effect: "NoExecute"
   nodeSelector: {}
