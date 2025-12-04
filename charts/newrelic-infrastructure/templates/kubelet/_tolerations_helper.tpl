@@ -7,5 +7,11 @@ This means that this chart has 3 tolerations so a helper should be done per scra
     {{- toYaml .Values.kubelet.tolerations -}}
 {{- else if include "newrelic.common.tolerations" . -}}
     {{- include "newrelic.common.tolerations" . -}}
+{{- else -}}
+    {{- /* Default permissive tolerations for infrastructure monitoring (must run on all nodes) */ -}}
+- operator: "Exists"
+  effect: "NoSchedule"
+- operator: "Exists"
+  effect: "NoExecute"
 {{- end -}}
 {{- end -}}

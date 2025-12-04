@@ -1,0 +1,668 @@
+suite: test explicit global value inheritance
+templates:
+  - templates/controlplane/daemonset.yaml
+  - templates/controlplane/scraper-configmap.yaml
+  - templates/controlplane/agent-configmap.yaml
+  - templates/kubelet/daemonset.yaml
+  - templates/kubelet/daemonset-windows.yaml
+  - templates/kubelet/scraper-configmap.yaml
+  - templates/kubelet/agent-configmap.yaml
+  - templates/kubelet/integrations-configmap.yaml
+  - templates/ksm/deployment.yaml
+  - templates/ksm/scraper-configmap.yaml
+  - templates/ksm/agent-configmap.yaml
+  - templates/agent-configmap.yaml
+  - templates/secret.yaml
+  - templates/serviceaccount.yaml
+
+release:
+  name: my-release
+  namespace: my-namespace
+
+tests:
+  # =============================================================================
+  # CLUSTER - Explicit Global Value Tests
+  # =============================================================================
+  - it: cluster - should inherit global.cluster when no local cluster is set
+    set:
+      licenseKey: test-key
+      global:
+        cluster: my-global-cluster
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: NRI_KUBERNETES_CLUSTERNAME
+            value: my-global-cluster
+        template: templates/kubelet/daemonset.yaml
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: NRI_KUBERNETES_CLUSTERNAME
+            value: my-global-cluster
+        template: templates/ksm/deployment.yaml
+
+  - it: cluster - should use local cluster over global.cluster when both are set
+    set:
+      licenseKey: test-key
+      cluster: my-local-cluster
+      global:
+        cluster: my-global-cluster
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: NRI_KUBERNETES_CLUSTERNAME
+            value: my-local-cluster
+        template: templates/kubelet/daemonset.yaml
+
+  # NOTE: Removed "should use default when neither global nor local cluster is set" test
+  # because the chart requires a cluster name and will fail template rendering without one.
+  # This is correct validation behavior, not a precedence issue.
+
+  # =============================================================================
+  # LABELS - Explicit Global Value Tests
+  # =============================================================================
+  - it: labels - should inherit global.labels when no local labels are set
+    set:
+      licenseKey: test-key
+      cluster: test
+      global:
+        labels:
+          environment: production
+          team: platform
+    asserts:
+      - equal:
+          path: metadata.labels.environment
+          value: production
+        template: templates/serviceaccount.yaml
+      - equal:
+          path: metadata.labels.team
+          value: platform
+        template: templates/serviceaccount.yaml
+
+  - it: labels - should use local labels over global.labels when both are set
+    set:
+      licenseKey: test-key
+      cluster: test
+      labels:
+        environment: staging
+      global:
+        labels:
+          environment: production
+          team: platform
+    asserts:
+      - equal:
+          path: metadata.labels.environment
+          value: staging
+        template: templates/serviceaccount.yaml
+      - equal:
+          path: metadata.labels.team
+          value: platform
+        template: templates/serviceaccount.yaml
+
+  # =============================================================================
+  # POD LABELS - Explicit Global Value Tests
+  # =============================================================================
+  - it: podLabels - should inherit global.podLabels when no local podLabels are set
+    set:
+      licenseKey: test-key
+      cluster: test
+      global:
+        podLabels:
+          workload-type: monitoring
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels.workload-type
+          value: monitoring
+        template: templates/kubelet/daemonset.yaml
+
+  - it: podLabels - should use local podLabels over global.podLabels when both are set
+    set:
+      licenseKey: test-key
+      cluster: test
+      podLabels:
+        workload-type: observability
+      global:
+        podLabels:
+          workload-type: monitoring
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels.workload-type
+          value: observability
+        template: templates/kubelet/daemonset.yaml
+
+  # =============================================================================
+  # IMAGES REGISTRY - Explicit Global Value Tests
+  # =============================================================================
+  - it: images.registry - should inherit global.images.registry when no local registry is set
+    set:
+      licenseKey: test-key
+      cluster: test
+      global:
+        images:
+          registry: gcr.io/my-project
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: '^gcr\.io/my-project/'
+        template: templates/kubelet/daemonset.yaml
+
+  - it: images.registry - should use local registry over global when both are set
+    set:
+      licenseKey: test-key
+      cluster: test
+      images:
+        integration:
+          registry: docker.io
+      global:
+        images:
+          registry: gcr.io/my-project
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: '^docker\.io/'
+        template: templates/kubelet/daemonset.yaml
+
+  # =============================================================================
+  # IMAGES PULL SECRETS - Explicit Global Value Tests
+  # =============================================================================
+  - it: images.pullSecrets - should inherit global.images.pullSecrets when no local pullSecrets are set
+    set:
+      licenseKey: test-key
+      cluster: test
+      global:
+        images:
+          pullSecrets:
+            - name: my-registry-secret
+    asserts:
+      - contains:
+          path: spec.template.spec.imagePullSecrets
+          content:
+            name: my-registry-secret
+        template: templates/kubelet/daemonset.yaml
+
+  - it: images.pullSecrets - should use local pullSecrets over global when both are set
+    set:
+      licenseKey: test-key
+      cluster: test
+      images:
+        pullSecrets:
+          - name: local-registry-secret
+      global:
+        images:
+          pullSecrets:
+            - name: global-registry-secret
+    asserts:
+      - contains:
+          path: spec.template.spec.imagePullSecrets
+          content:
+            name: local-registry-secret
+        template: templates/kubelet/daemonset.yaml
+
+  # =============================================================================
+  # SERVICE ACCOUNT - Explicit Global Value Tests
+  # =============================================================================
+  - it: serviceAccount.create - should inherit global.serviceAccount.create when no local create is set
+    set:
+      licenseKey: test-key
+      cluster: test
+      global:
+        serviceAccount:
+          create: false
+    asserts:
+      - isNull:
+          path: kind
+        template: templates/serviceaccount.yaml
+
+  - it: serviceAccount.create - should use local create over global when both are set
+    set:
+      licenseKey: test-key
+      cluster: test
+      serviceAccount:
+        create: true
+      global:
+        serviceAccount:
+          create: false
+    asserts:
+      - equal:
+          path: kind
+          value: ServiceAccount
+        template: templates/serviceaccount.yaml
+
+  - it: serviceAccount.name - should inherit global.serviceAccount.name when no local name is set
+    set:
+      licenseKey: test-key
+      cluster: test
+      global:
+        serviceAccount:
+          name: my-global-sa
+    asserts:
+      - equal:
+          path: metadata.name
+          value: my-global-sa
+        template: templates/serviceaccount.yaml
+
+  - it: serviceAccount.name - should use local name over global when both are set
+    set:
+      licenseKey: test-key
+      cluster: test
+      serviceAccount:
+        create: true
+        name: my-local-sa
+      global:
+        serviceAccount:
+          name: my-global-sa
+    asserts:
+      - equal:
+          path: metadata.name
+          value: my-local-sa
+        template: templates/serviceaccount.yaml
+
+  # =============================================================================
+  # PRIORITY CLASS NAME - Explicit Global Value Tests
+  # =============================================================================
+  - it: priorityClassName - should inherit global.priorityClassName when no local priorityClassName is set
+    set:
+      licenseKey: test-key
+      cluster: test
+      global:
+        priorityClassName: system-cluster-critical
+    asserts:
+      - equal:
+          path: spec.template.spec.priorityClassName
+          value: system-cluster-critical
+        template: templates/kubelet/daemonset.yaml
+
+  - it: priorityClassName - should use local priorityClassName over global when both are set
+    set:
+      licenseKey: test-key
+      cluster: test
+      priorityClassName: my-priority-class
+      global:
+        priorityClassName: system-cluster-critical
+    asserts:
+      - equal:
+          path: spec.template.spec.priorityClassName
+          value: my-priority-class
+        template: templates/kubelet/daemonset.yaml
+
+  # =============================================================================
+  # DNS CONFIG - Explicit Global Value Tests
+  # =============================================================================
+  - it: dnsConfig - should inherit global.dnsConfig when no local dnsConfig is set
+    set:
+      licenseKey: test-key
+      cluster: test
+      global:
+        dnsConfig:
+          options:
+            - name: ndots
+              value: "2"
+    asserts:
+      - contains:
+          path: spec.template.spec.dnsConfig.options
+          content:
+            name: ndots
+            value: "2"
+        template: templates/kubelet/daemonset.yaml
+
+  - it: dnsConfig - should use local dnsConfig over global when both are set
+    set:
+      licenseKey: test-key
+      cluster: test
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
+      global:
+        dnsConfig:
+          options:
+            - name: ndots
+              value: "2"
+    asserts:
+      - contains:
+          path: spec.template.spec.dnsConfig.options
+          content:
+            name: ndots
+            value: "1"
+        template: templates/kubelet/daemonset.yaml
+
+  # =============================================================================
+  # HOST NETWORK - Explicit Global Value Tests
+  # =============================================================================
+  - it: hostNetwork - should inherit global.hostNetwork when no local hostNetwork is set
+    set:
+      licenseKey: test-key
+      cluster: test
+      global:
+        hostNetwork: true
+    asserts:
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: true
+        template: templates/kubelet/daemonset.yaml
+
+  - it: hostNetwork - should use local hostNetwork over global when both are set
+    set:
+      licenseKey: test-key
+      cluster: test
+      hostNetwork: false
+      global:
+        hostNetwork: true
+    asserts:
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: false
+        template: templates/kubelet/daemonset.yaml
+
+  - it: hostNetwork - should default to false when neither global nor local is set
+    set:
+      licenseKey: test-key
+      cluster: test
+    asserts:
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: false
+        template: templates/kubelet/daemonset.yaml
+
+  # =============================================================================
+  # POD SECURITY CONTEXT - Explicit Global Value Tests
+  # =============================================================================
+  - it: podSecurityContext - should inherit global.podSecurityContext when no local is set
+    set:
+      licenseKey: test-key
+      cluster: test
+      global:
+        podSecurityContext:
+          fsGroup: 1000
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 1000
+        template: templates/kubelet/daemonset.yaml
+
+  - it: podSecurityContext - should use local over global when both are set
+    set:
+      licenseKey: test-key
+      cluster: test
+      podSecurityContext:
+        fsGroup: 2000
+      global:
+        podSecurityContext:
+          fsGroup: 1000
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 2000
+        template: templates/kubelet/daemonset.yaml
+
+  # =============================================================================
+  # CONTAINER SECURITY CONTEXT - Explicit Global Value Tests
+  # =============================================================================
+  - it: containerSecurityContext - should inherit global.containerSecurityContext when no local is set
+    set:
+      licenseKey: test-key
+      cluster: test
+      global:
+        containerSecurityContext:
+          runAsUser: 1000
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsUser
+          value: 1000
+        template: templates/kubelet/daemonset.yaml
+
+  - it: containerSecurityContext - should use local over global when both are set
+    set:
+      licenseKey: test-key
+      cluster: test
+      containerSecurityContext:
+        runAsUser: 2000
+      global:
+        containerSecurityContext:
+          runAsUser: 1000
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsUser
+          value: 2000
+        template: templates/kubelet/daemonset.yaml
+
+  # =============================================================================
+  # AFFINITY - Explicit Global Value Tests
+  # =============================================================================
+  - it: affinity - should inherit global.affinity when no local affinity is set
+    set:
+      licenseKey: test-key
+      cluster: test
+      global:
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: node-role.kubernetes.io/master
+                      operator: DoesNotExist
+    asserts:
+      - isNotNull:
+          path: spec.template.spec.affinity.nodeAffinity
+        template: templates/kubelet/daemonset.yaml
+
+  - it: affinity - should use local affinity over global when both are set
+    set:
+      licenseKey: test-key
+      cluster: test
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: disktype
+                    operator: In
+                    values:
+                      - ssd
+      global:
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: node-role.kubernetes.io/master
+                      operator: DoesNotExist
+    asserts:
+      - isNotNull:
+          path: spec.template.spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution
+        template: templates/kubelet/daemonset.yaml
+
+  # =============================================================================
+  # TOLERATIONS - Explicit Global Value Tests (comprehensive)
+  # =============================================================================
+  - it: tolerations - should inherit global.tolerations when local is empty
+    set:
+      licenseKey: test-key
+      cluster: test
+      global:
+        tolerations:
+          - key: monitoring
+            operator: Equal
+            value: "true"
+            effect: NoSchedule
+    asserts:
+      - contains:
+          path: spec.template.spec.tolerations
+          content:
+            key: monitoring
+            operator: Equal
+            value: "true"
+            effect: NoSchedule
+        template: templates/kubelet/daemonset.yaml
+
+  - it: tolerations - should use kubelet.tolerations over global when both are set
+    set:
+      licenseKey: test-key
+      cluster: test
+      kubelet:
+        tolerations:
+          - key: local-taint
+            operator: Equal
+            value: "true"
+            effect: NoSchedule
+      global:
+        tolerations:
+          - key: monitoring
+            operator: Equal
+            value: "true"
+            effect: NoSchedule
+    asserts:
+      - contains:
+          path: spec.template.spec.tolerations
+          content:
+            key: local-taint
+            operator: Equal
+            value: "true"
+            effect: NoSchedule
+        template: templates/kubelet/daemonset.yaml
+      - notContains:
+          path: spec.template.spec.tolerations
+          content:
+            key: monitoring
+        template: templates/kubelet/daemonset.yaml
+
+  # =============================================================================
+  # LOW DATA MODE - Explicit Global Value Tests
+  # =============================================================================
+  - it: lowDataMode - should inherit global.lowDataMode when no local is set
+    set:
+      licenseKey: test-key
+      cluster: test
+      global:
+        lowDataMode: true
+    asserts:
+      - matchRegex:
+          path: data["nri-kubernetes.yml"]
+          pattern: 'interval.*30s'
+        template: templates/kubelet/scraper-configmap.yaml
+
+  - it: lowDataMode - should use local lowDataMode over global when both are set
+    set:
+      licenseKey: test-key
+      cluster: test
+      common:
+        config:
+          interval: 20s
+      global:
+        lowDataMode: true
+    asserts:
+      - matchRegex:
+          path: data["nri-kubernetes.yml"]
+          pattern: 'interval.*20s'
+        template: templates/kubelet/scraper-configmap.yaml
+
+  # =============================================================================
+  # NR STAGING - Explicit Global Value Tests
+  # =============================================================================
+  - it: nrStaging - should inherit global.nrStaging when no local is set
+    set:
+      licenseKey: test-key
+      cluster: test
+      global:
+        nrStaging: true
+    asserts:
+      - matchRegex:
+          path: data["newrelic-infra.yml"]
+          pattern: 'staging.*true'
+        template: templates/kubelet/agent-configmap.yaml
+
+  # =============================================================================
+  # FEDRAMP - Explicit Global Value Tests
+  # =============================================================================
+
+  - it: fedramp - should inherit global.fedramp.enabled when local fedramp is null
+    set:
+      licenseKey: test-license
+      cluster: test-cluster
+      fedramp: null
+      global:
+        fedramp:
+          enabled: true
+    templates:
+      - ../templates/kubelet/daemonset.yaml
+      - ../templates/kubelet/agent-configmap.yaml
+      - ../templates/kubelet/scraper-configmaps.yaml
+    asserts:
+      - matchRegex:
+          path: data["newrelic-infra.yml"]
+          pattern: ".*fedramp: true.*"
+        template: templates/kubelet/agent-configmap.yaml
+
+  - it: fedramp - should use local fedramp.enabled when set (overrides global)
+    set:
+      licenseKey: test-license
+      cluster: test-cluster
+      fedramp:
+        enabled: true
+      global:
+        fedramp:
+          enabled: false
+    templates:
+      - ../templates/kubelet/daemonset.yaml
+      - ../templates/kubelet/agent-configmap.yaml
+      - ../templates/kubelet/scraper-configmaps.yaml
+    asserts:
+      - matchRegex:
+          path: data["newrelic-infra.yml"]
+          pattern: ".*fedramp: true.*"
+        template: templates/kubelet/agent-configmap.yaml
+
+  # =============================================================================
+  # CUSTOM SECRET LICENSE KEY - Explicit Global Value Tests
+  # =============================================================================
+
+  - it: customSecretLicenseKey - should inherit global.customSecretName and global.customSecretLicenseKey
+    set:
+      cluster: test-cluster
+      global:
+        customSecretName: my-global-secret
+        customSecretLicenseKey: my-global-key
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].env[0].valueFrom.secretKeyRef.name
+          value: my-global-secret
+        template: templates/kubelet/daemonset.yaml
+      - equal:
+          path: spec.template.spec.containers[1].env[0].valueFrom.secretKeyRef.key
+          value: my-global-key
+        template: templates/kubelet/daemonset.yaml
+
+  - it: customSecretLicenseKey - should use local customSecretName over global
+    set:
+      cluster: test-cluster
+      customSecretName: my-local-secret
+      customSecretLicenseKey: my-local-key
+      global:
+        customSecretName: my-global-secret
+        customSecretLicenseKey: my-global-key
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].env[0].valueFrom.secretKeyRef.name
+          value: my-local-secret
+        template: templates/kubelet/daemonset.yaml
+      - equal:
+          path: spec.template.spec.containers[1].env[0].valueFrom.secretKeyRef.key
+          value: my-local-key
+        template: templates/kubelet/daemonset.yaml
+
+  - it: customSecretLicenseKey - should default to generated secret name when neither global nor local is set
+    set:
+      licenseKey: test-license
+      cluster: test-cluster
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[1].env[0].valueFrom.secretKeyRef.name
+          pattern: "^my-release-.*-license$"
+        template: templates/kubelet/daemonset.yaml
+      - equal:
+          path: spec.template.spec.containers[1].env[0].valueFrom.secretKeyRef.key
+          value: licenseKey
+        template: templates/kubelet/daemonset.yaml

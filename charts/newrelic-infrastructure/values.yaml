@@ -132,13 +132,14 @@ kubelet:
   # Overrides the endpoint on the local kubelet that is used to check the pod can connect to the local node's service.
   testConnectionEndpoint: "/healthz"
   annotations: {}
-  # -- Tolerations for the control plane DaemonSet.
+  # -- Tolerations for the kubelet DaemonSet.
   # @default -- Schedules in all tainted nodes
-  tolerations:
-    - operator: "Exists"
-      effect: "NoSchedule"
-    - operator: "Exists"
-      effect: "NoExecute"
+  # tolerations:
+  #   - operator: "Exists"
+  #     effect: "NoSchedule"
+  #   - operator: "Exists"
+  #     effect: "NoExecute"
+  tolerations: []
   nodeSelector: {}
 
   # Note that the Windows DaemonSet already contains a node selector label based on their OS (kubernetes.io/os: windows).
@@ -195,11 +196,12 @@ ksm:
   annotations: {}
   # -- Tolerations for the KSM Deployment.
   # @default -- Schedules in all tainted nodes
-  tolerations:
-    - operator: "Exists"
-      effect: "NoSchedule"
-    - operator: "Exists"
-      effect: "NoExecute"
+  # tolerations:
+  #   - operator: "Exists"
+  #     effect: "NoSchedule"
+  #   - operator: "Exists"
+  #     effect: "NoExecute"
+  tolerations: []
   nodeSelector: {}
   # -- (bool) Sets pod's hostNetwork. When set bypasses global/common variable
   # @default -- Not set
@@ -271,11 +273,12 @@ controlPlane:
   annotations: {}
   # -- Tolerations for the control plane DaemonSet.
   # @default -- Schedules in all tainted nodes
-  tolerations:
-    - operator: "Exists"
-      effect: "NoSchedule"
-    - operator: "Exists"
-      effect: "NoExecute"
+  # tolerations:
+  #   - operator: "Exists"
+  #     effect: "NoSchedule"
+  #   - operator: "Exists"
+  #     effect: "NoExecute"
+  tolerations: []
   nodeSelector: {}
   # -- Affinity for the control plane DaemonSet.
   # @default -- Deployed only in control plane nodes.
