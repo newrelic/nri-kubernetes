@@ -24,11 +24,17 @@ import (
 	ksmClient "github.com/newrelic/nri-kubernetes/v3/src/ksm/client"
 	"github.com/newrelic/nri-kubernetes/v3/src/kubelet"
 	kubeletClient "github.com/newrelic/nri-kubernetes/v3/src/kubelet/client"
+	kubeletMetric "github.com/newrelic/nri-kubernetes/v3/src/kubelet/metric"
 	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
 )
 
 const (
 	integrationName = "com.newrelic.kubernetes"
+
+	// interfaceCacheVacuumInterval controls how often the interface cache is vacuumed.
+	// Network interfaces rarely change, so we vacuum less frequently than every scrape.
+	// At default 15s interval, this means vacuuming every ~150 seconds.
+	interfaceCacheVacuumInterval = 10
 
 	_ = iota
 	exitClients
@@ -123,9 +129,12 @@ func main() {
 
 	namespaceCache := discovery.NewNamespaceInMemoryStore(logger)
 
+	// Create the interface cache for network metric optimization
+	interfaceCache := kubeletMetric.NewInterfaceCache()
+
 	var kubeletScraper *kubelet.Scraper
 	if c.Kubelet.Enabled {
-		kubeletScraper, err = setupKubelet(c, clients, namespaceCache)
+		kubeletScraper, err = setupKubelet(c, clients, namespaceCache, interfaceCache)
 		if err != nil {
 			logger.Errorf("setting up kubelet scraper: %v", err)
 			os.Exit(exitSetup)
@@ -153,7 +162,9 @@ func main() {
 		defer controlplaneScraper.Close()
 	}
 
+	var scrapeCount uint64
 	for {
+		scrapeCount++
 		start := time.Now()
 
 		logger.Debugf("scraping data from all the scrapers defined: KSM: %t, Kubelet: %t, ControlPlane: %t",
@@ -178,6 +189,11 @@ func main() {
 		}
 
 		namespaceCache.Vacuum()
+
+		// Vacuum interface cache periodically (not every scrape) since network interfaces rarely change
+		if scrapeCount%interfaceCacheVacuumInterval == 0 {
+			interfaceCache.Vacuum()
+		}
 
 		totalTime := time.Since(start)
 		nextTick := c.Interval - (totalTime % c.Interval)
@@ -276,14 +292,17 @@ func setupControlPlane(c *config.Config, clients *clusterClients) (*controlplane
 	return controlplaneScraper, nil
 }
 
-func setupKubelet(c *config.Config, clients *clusterClients, namespaceCache *discovery.NamespaceInMemoryStore) (*kubelet.Scraper, error) {
+func setupKubelet(c *config.Config, clients *clusterClients, namespaceCache *discovery.NamespaceInMemoryStore, interfaceCache *kubeletMetric.InterfaceCache) (*kubelet.Scraper, error) {
 	providers := kubelet.Providers{
 		K8s:      clients.k8s,
 		Kubelet:  clients.kubelet,
 		CAdvisor: clients.cAdvisor,
 	}
 
-	scraperOpts := []kubelet.ScraperOpt{kubelet.WithLogger(logger)}
+	scraperOpts := []kubelet.ScraperOpt{
+		kubelet.WithLogger(logger),
+		kubelet.WithInterfaceCache(interfaceCache),
+	}
 
 	if c.NamespaceSelector != nil {
 		nsFilter := discovery.NewNamespaceFilter(c.NamespaceSelector, clients.k8s, logger)

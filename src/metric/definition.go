@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	log "github.com/sirupsen/logrus"
-
 	sdkMetric "github.com/newrelic/infra-integrations-sdk/data/metric"
 
 	"github.com/newrelic/nri-kubernetes/v3/src/definition"
@@ -1320,17 +1318,21 @@ var CadvisorQueries = []prometheus.Query{
 	{MetricName: "container_oom_events_total"},
 }
 
-// KubeletSpecs are the metric specifications we want to collect from Kubelet.
-var KubeletSpecs = definition.SpecGroups{
+// NewKubeletSpecs creates the metric specifications we want to collect from Kubelet.
+// It accepts an optional interface cache for network metric optimization.
+//
+//nolint:funlen // Large spec definition is acceptable - it's configuration, not logic
+func NewKubeletSpecs(interfaceCache *kubeletMetric.InterfaceCache) definition.SpecGroups {
+	return definition.SpecGroups{
 	"pod": {
 		IDGenerator:     kubeletMetric.FromRawEntityIDGroupEntityIDGenerator("namespace"),
 		TypeGenerator:   kubeletMetric.FromRawGroupsEntityTypeGenerator,
 		NamespaceGetter: kubeletMetric.FromLabelGetNamespace,
 		Specs: []definition.Spec{
 			// /stats/summary endpoint
-			{Name: "net.rxBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("rxBytes"), Type: sdkMetric.RATE},
-			{Name: "net.txBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("txBytes"), Type: sdkMetric.RATE},
-			{Name: "net.errorsPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("errors"), Type: sdkMetric.RATE},
+			{Name: "net.rxBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("rxBytes", interfaceCache), Type: sdkMetric.RATE},
+			{Name: "net.txBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("txBytes", interfaceCache), Type: sdkMetric.RATE},
+			{Name: "net.errorsPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("errors", interfaceCache), Type: sdkMetric.RATE},
 
 			// /pods endpoint
 			{Name: "createdAt", ValueFunc: definition.Transform(definition.FromRaw("createdAt"), toTimestamp), Type: sdkMetric.GAUGE, Optional: true},
@@ -1438,9 +1440,9 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "memoryRssBytes", ValueFunc: definition.FromRaw("memoryRssBytes"), Type: sdkMetric.GAUGE},
 			{Name: "memoryPageFaults", ValueFunc: definition.FromRaw("memoryPageFaults"), Type: sdkMetric.GAUGE},
 			{Name: "memoryMajorPageFaultsPerSecond", ValueFunc: definition.FromRaw("memoryMajorPageFaults"), Type: sdkMetric.RATE},
-			{Name: "net.rxBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("rxBytes"), Type: sdkMetric.RATE},
-			{Name: "net.txBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("txBytes"), Type: sdkMetric.RATE},
-			{Name: "net.errorsPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("errors"), Type: sdkMetric.RATE},
+			{Name: "net.rxBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("rxBytes", interfaceCache), Type: sdkMetric.RATE},
+			{Name: "net.txBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("txBytes", interfaceCache), Type: sdkMetric.RATE},
+			{Name: "net.errorsPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("errors", interfaceCache), Type: sdkMetric.RATE},
 			{Name: "fsAvailableBytes", ValueFunc: definition.FromRaw("fsAvailableBytes"), Type: sdkMetric.GAUGE},
 			{Name: "fsCapacityBytes", ValueFunc: definition.FromRaw("fsCapacityBytes"), Type: sdkMetric.GAUGE},
 			{Name: "fsUsedBytes", ValueFunc: definition.FromRaw("fsUsedBytes"), Type: sdkMetric.GAUGE},
@@ -1489,7 +1491,13 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "fsInodesUsed", ValueFunc: definition.FromRaw("fsInodesUsed"), Type: sdkMetric.GAUGE},
 		},
 	},
+	}
 }
+
+// KubeletSpecs is the default metric specifications for Kubelet with no interface cache.
+//
+//nolint:gochecknoglobals // Backward compatibility - used by tests and static tooling
+var KubeletSpecs = NewKubeletSpecs(nil)
 
 func isPersistentVolume() definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
@@ -1716,9 +1724,6 @@ var (
 
 // filterCPUUsedCores checks for the correctness of the container metric cpuUsedCores returned by kubelet.
 // cpuUsedCores a.k.a `usageNanoCores` value is set by cAdvisor and is returned by kubelet stats summary endpoint.
-// There is an active bug where the metric value is sometimes impossibly high https://github.com/kubernetes/kubernetes/issues/114057.
-// The cpuUsedCores along with cpuLimitCores is typically used to plot `cpuCoresUtilization` on the UI where cpuCoresUtilization = (cpuUsedCores/cpuLimitCores) * 100.
-// cpuUsedCores has been observed to be absurd even when cpuUsedCores >  cpuLimitCores * 100.
 //
 //nolint:nolintlint,ireturn
 func filterCPUUsedCores(fetchedValue definition.FetchedValue, groupLabel, entityID string, groups definition.RawGroups) (definition.FilteredValue, error) {
@@ -1744,7 +1749,6 @@ func filterCPUUsedCores(fetchedValue definition.FetchedValue, groupLabel, entity
 		// there is likely no CPU limit set for the container which means we have to assume a reasonable value
 		// since there is no way to know the max cpu cores for the current node, use default max of 96 cores supported by most cloud providers
 		// a higher value wouldn't hurt our calculation as the cpuUsedCores value will be a super high number
-		log.StandardLogger().Debug("cpuLimitCores metric not available. using default max 96 cores")
 		value = 96000 // 96 * 1000m k8s cpu unit
 	}
 
@@ -1760,7 +1764,7 @@ func filterCPUUsedCores(fetchedValue definition.FetchedValue, groupLabel, entity
 		return nil, errCPULimitTypeCheck
 	}
 
-	// check for impossibly high cpuUsedCoresVal
+	// check for impossibly high cpuUsedCoresVal - workaround for https://github.com/kubernetes/kubernetes/issues/114057 (resolved)
 	if val > cpuLimit*100 {
 		return nil, errHighCPUUsedCores
 	}
