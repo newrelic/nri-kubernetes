@@ -23,7 +23,7 @@ jobs:
         goos: [ linux ]
         goarch: [ amd64, arm64, arm ]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
@@ -49,7 +49,7 @@ jobs:
       DOCKER_IMAGE_TAG: main
       DOCKER_PLATFORMS: "linux/amd64,linux/arm64,linux/arm" # Must be consistent with the matrix from the job above
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Setting nightly tag if schedule
         if: ${{ github.event.schedule }}
         run: echo "DOCKER_IMAGE_TAG=nightly" >> $GITHUB_ENV
