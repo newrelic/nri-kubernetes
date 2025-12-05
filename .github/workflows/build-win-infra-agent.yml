@@ -17,7 +17,7 @@ jobs:
       version_changed: ${{ steps.version-check.outputs.version_changed }}
       new_agent_version: ${{ steps.version-check.outputs.new_agent_version }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 2 # Fetch the latest commit and its parent
       - name: Check if latest commit modifies images.windowsAgent.tag (version)
@@ -62,7 +62,7 @@ jobs:
     env:
       AGENT_VERSION: ${{ needs.check-version-change.outputs.new_agent_version }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
