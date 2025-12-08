@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancement
+## v3.51.0 - 2025-12-08
+
+### 🚀 Enhancements
 - Reduce tolerations for KSM pods to improve behavior during node cordon/draining @kondracek-nr [#1350](https://github.com/newrelic/nri-kubernetes/pull/1350)
 - Mount /host/proc in privileged mode & introduce network metrics heuristic to improve network metrics collection @kondracek-nr [#1355](https://github.com/newrelic/nri-kubernetes/pull/1335)
+
+### ⛓️ Dependencies
+- Updated alpine to v3.23.0
 
 ## v3.50.2 - 2025-11-24
 
