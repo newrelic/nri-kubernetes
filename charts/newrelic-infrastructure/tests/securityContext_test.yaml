@@ -202,11 +202,13 @@ tests:
       licenseKey: test
       cluster: test
       enableWindows: true
+      privileged: false  # Test unprivileged mode
     asserts:
       - equal:
           path: spec.template.spec.containers[0].securityContext
           value:
             windowsOptions:
+              hostProcess: false
               runAsUserName: 'ContainerUser'
         documentIndex: 0
         template: templates/kubelet/daemonset-windows.yaml
@@ -214,6 +216,7 @@ tests:
           path: spec.template.spec.containers[1].securityContext
           value:
             windowsOptions:
+              hostProcess: false
               runAsUserName: 'ContainerUser'
         documentIndex: 0
         template: templates/kubelet/daemonset-windows.yaml
@@ -221,6 +224,7 @@ tests:
           path: spec.template.spec.containers[0].securityContext
           value:
             windowsOptions:
+              hostProcess: false
               runAsUserName: 'ContainerUser'
         documentIndex: 1
         template: templates/kubelet/daemonset-windows.yaml
@@ -228,6 +232,7 @@ tests:
           path: spec.template.spec.containers[1].securityContext
           value:
             windowsOptions:
+              hostProcess: false
               runAsUserName: 'ContainerUser'
         documentIndex: 1
         template: templates/kubelet/daemonset-windows.yaml
@@ -237,6 +242,7 @@ tests:
       licenseKey: test
       cluster: test
       enableWindows: true
+      privileged: false  # Test unprivileged mode
       global.containerSecurityContext:
         runAsUser: 1000
         runAsGroup: 2000
@@ -245,6 +251,7 @@ tests:
           path: spec.template.spec.containers[0].securityContext
           value:
             windowsOptions:
+              hostProcess: false
               runAsUserName: 'ContainerUser'
         documentIndex: 0
         template: templates/kubelet/daemonset-windows.yaml
@@ -252,6 +259,7 @@ tests:
           path: spec.template.spec.containers[1].securityContext
           value:
             windowsOptions:
+              hostProcess: false
               runAsUserName: 'ContainerUser'
         documentIndex: 0
         template: templates/kubelet/daemonset-windows.yaml
