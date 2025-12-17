@@ -76,6 +76,12 @@ spec:
           image: {{ default (include "nriKubernetes.windowsIntegrationImage" $) .integrationImage }}
           {{- end }}
           imagePullPolicy: {{ $.Values.images.windowsIntegration.pullPolicy }}
+          {{- if include "nriKubernetes.privileged" $ }}
+          command:
+            - "powershell.exe"
+            - "-Command"
+            - "& $env:CONTAINER_SANDBOX_MOUNT_POINT\\app\\nri-kubernetes.exe"
+          {{- end }}
           securityContext:
             windowsOptions:
               {{- if include "nriKubernetes.privileged" $ }}
@@ -128,6 +134,12 @@ spec:
           image: {{ default (include "nriKubernetes.windowsAgentImage" $) .integrationImage }}
           {{- end }}
           imagePullPolicy: {{ $.Values.images.windowsAgent.pullPolicy }}
+          {{- if include "nriKubernetes.privileged" $ }}
+          command:
+            - "powershell.exe"
+            - "-Command"
+            - "$env:CONTAINER_SANDBOX_MOUNT_POINT\\start.ps1"
+          {{- end }}
           securityContext:
             windowsOptions:
               {{- if include "nriKubernetes.privileged" $ }}
