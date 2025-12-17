@@ -236,6 +236,141 @@ func TestSelectPrimaryInterface(t *testing.T) {
 	}
 }
 
+// TestSelectPrimaryInterface_Windows tests the heuristic interface selection logic
+// for Windows-specific interface naming patterns.
+//
+//nolint:funlen
+func TestSelectPrimaryInterface_Windows(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name          string
+		interfaces    map[string]definition.RawMetrics
+		expectedIface string
+		expectError   bool
+		errorContains string
+	}{
+		{
+			name: "Windows - single Ethernet interface",
+			interfaces: map[string]definition.RawMetrics{
+				"Ethernet": {"rxBytes": uint64(1000)},
+			},
+			expectedIface: "Ethernet",
+			expectError:   false,
+		},
+		{
+			name: "Windows - multiple Ethernet interfaces - selects first alphabetically",
+			interfaces: map[string]definition.RawMetrics{
+				"Ethernet 3": {"rxBytes": uint64(3000)},
+				"Ethernet":   {"rxBytes": uint64(1000)},
+				"Ethernet 2": {"rxBytes": uint64(2000)},
+			},
+			expectedIface: "Ethernet",
+			expectError:   false,
+		},
+		{
+			name: "Windows - Ethernet 2 and Ethernet 3 only",
+			interfaces: map[string]definition.RawMetrics{
+				"Ethernet 3": {"rxBytes": uint64(3000)},
+				"Ethernet 2": {"rxBytes": uint64(2000)},
+			},
+			expectedIface: "Ethernet 2",
+			expectError:   false,
+		},
+		{
+			name: "Windows - Ethernet with vEthernet (Hyper-V) filtered",
+			interfaces: map[string]definition.RawMetrics{
+				"Ethernet":                    {"rxBytes": uint64(1000)},
+				"vEthernet (Kubernetes)":      {"rxBytes": uint64(2000)},
+				"vEthernet (nat)":             {"rxBytes": uint64(3000)},
+				"vEthernet (Default Switch)": {"rxBytes": uint64(4000)},
+			},
+			expectedIface: "Ethernet",
+			expectError:   false,
+		},
+		{
+			name: "Windows AKS - Ethernet with azv CNI interfaces",
+			interfaces: map[string]definition.RawMetrics{
+				"Ethernet": {"rxBytes": uint64(1000)},
+				"azv123":   {"rxBytes": uint64(2000)},
+				"azv456":   {"rxBytes": uint64(3000)},
+			},
+			expectedIface: "Ethernet",
+			expectError:   false,
+		},
+		{
+			name: "Windows - only vEthernet interfaces (no physical)",
+			interfaces: map[string]definition.RawMetrics{
+				"vEthernet (Default Switch)": {"rxBytes": uint64(1000)},
+				"vEthernet (nat)":             {"rxBytes": uint64(2000)},
+				"vEthernet (Kubernetes)":      {"rxBytes": uint64(3000)},
+			},
+			expectError:   true,
+			errorContains: "no physical network interfaces found",
+		},
+		{
+			name: "Windows and Linux mixed - alphabetical sorting",
+			interfaces: map[string]definition.RawMetrics{
+				"eth0":       {"rxBytes": uint64(1000)},
+				"Ethernet":   {"rxBytes": uint64(2000)},
+				"Ethernet 2": {"rxBytes": uint64(3000)},
+			},
+			expectedIface: "Ethernet",
+			expectError:   false,
+		},
+		{
+			name: "Windows - Ethernet with Docker bridge and veth",
+			interfaces: map[string]definition.RawMetrics{
+				"Ethernet":  {"rxBytes": uint64(1000)},
+				"docker0":   {"rxBytes": uint64(2000)},
+				"veth1234":  {"rxBytes": uint64(3000)},
+				"vEthernet": {"rxBytes": uint64(4000)},
+			},
+			expectedIface: "Ethernet",
+			expectError:   false,
+		},
+		{
+			name: "Windows - multiple Ethernet with multiple vEthernet",
+			interfaces: map[string]definition.RawMetrics{
+				"Ethernet":               {"rxBytes": uint64(1000)},
+				"Ethernet 2":             {"rxBytes": uint64(2000)},
+				"vEthernet (nat)":        {"rxBytes": uint64(3000)},
+				"vEthernet (Kubernetes)": {"rxBytes": uint64(4000)},
+			},
+			expectedIface: "Ethernet",
+			expectError:   false,
+		},
+		{
+			name: "Windows - Ethernet with all CNI types",
+			interfaces: map[string]definition.RawMetrics{
+				"Ethernet":           {"rxBytes": uint64(1000)},
+				"azv123":             {"rxBytes": uint64(2000)},
+				"vEthernet (switch)": {"rxBytes": uint64(3000)},
+				"cali456":            {"rxBytes": uint64(4000)},
+				"veth789":            {"rxBytes": uint64(5000)},
+			},
+			expectedIface: "Ethernet",
+			expectError:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := selectPrimaryInterface(tt.interfaces)
+
+			if tt.expectError {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.errorContains)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.expectedIface, result)
+			}
+		})
+	}
+}
+
 // TestGetMetricFromInterface tests extracting metrics from a specific interface.
 func TestGetMetricFromInterface(t *testing.T) {
 	t.Parallel()

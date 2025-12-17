@@ -11,8 +11,12 @@ import (
 )
 
 var (
-	physicalInterfacePattern = regexp.MustCompile(`^(eth|ens|eno|enp)\d+`)
-	cniInterfacePattern      = regexp.MustCompile(`^(eni|oci|azv|veth|cali|cni|pod-|lxc|docker|br-)`)
+	// Linux physical interface patterns: eth0, ens5, eno1, enp0s3
+	// Windows physical interface patterns: Ethernet, Ethernet 2, Ethernet 3
+	physicalInterfacePattern = regexp.MustCompile(`^(eth|ens|eno|enp)\d+|^Ethernet( \d+)?$`)
+	// CNI patterns include both Linux and Windows virtual interfaces
+	// Windows: vEthernet is used by Hyper-V, exclude it from physical
+	cniInterfacePattern = regexp.MustCompile(`^(eni|oci|azv|veth|cali|cni|pod-|lxc|docker|br-|vEthernet)`)
 )
 
 // Static errors for network metric operations.
