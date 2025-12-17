@@ -6,7 +6,7 @@ metadata:
   namespace: {{ $.Release.Namespace }}
   labels:
     kubernetes.io/os: windows
-    {{- if include "nriKubernetes.privileged" $ }}
+    {{- if include "nriKubernetes.windows.privileged" $ }}
     mode: privileged
     {{- else }}
     mode: unprivileged
@@ -39,7 +39,7 @@ spec:
         {{- end }}
       labels:
         app.kubernetes.io/component: kubelet
-        {{- if include "nriKubernetes.privileged" $ }}
+        {{- if include "nriKubernetes.windows.privileged" $ }}
         mode: privileged
         {{- else }}
         mode: unprivileged
@@ -61,7 +61,7 @@ spec:
       priorityClassName: {{ . }}
       {{- end }}
       serviceAccountName: {{ include "newrelic.common.serviceAccount.name" $ }}
-      {{- if include "nriKubernetes.privileged" $ }}
+      {{- if include "nriKubernetes.windows.privileged" $ }}
       hostNetwork: true
       {{- end }}
 
@@ -76,7 +76,7 @@ spec:
           image: {{ default (include "nriKubernetes.windowsIntegrationImage" $) .integrationImage }}
           {{- end }}
           imagePullPolicy: {{ $.Values.images.windowsIntegration.pullPolicy }}
-          {{- if include "nriKubernetes.privileged" $ }}
+          {{- if include "nriKubernetes.windows.privileged" $ }}
           command:
             - "powershell.exe"
             - "-Command"
@@ -84,7 +84,7 @@ spec:
           {{- end }}
           securityContext:
             windowsOptions:
-              {{- if include "nriKubernetes.privileged" $ }}
+              {{- if include "nriKubernetes.windows.privileged" $ }}
               hostProcess: true
               runAsUserName: "NT AUTHORITY\\Local service"
               {{- else }}
@@ -134,7 +134,7 @@ spec:
           image: {{ default (include "nriKubernetes.windowsAgentImage" $) .integrationImage }}
           {{- end }}
           imagePullPolicy: {{ $.Values.images.windowsAgent.pullPolicy }}
-          {{- if include "nriKubernetes.privileged" $ }}
+          {{- if include "nriKubernetes.windows.privileged" $ }}
           command:
             - "powershell.exe"
             - "-Command"
@@ -142,7 +142,7 @@ spec:
           {{- end }}
           securityContext:
             windowsOptions:
-              {{- if include "nriKubernetes.privileged" $ }}
+              {{- if include "nriKubernetes.windows.privileged" $ }}
               hostProcess: true
               runAsUserName: "NT AUTHORITY\\SYSTEM"
               {{- else }}
@@ -173,7 +173,7 @@ spec:
             # Override NRIA_OVERRIDE_HOST_ROOT to empty if unprivileged. This must be done as an env var as the
             # `k8s-events-forwarder` and `infrastructure-bundle` images ship this very same env var set to /host.
             # Windows runs in unprivileged mode when privileged is set to false.
-            {{- if not (include "nriKubernetes.privileged" $) }}
+            {{- if not (include "nriKubernetes.windows.privileged" $) }}
             - name: "NRIA_OVERRIDE_HOST_ROOT"
               value: ""
             {{- end }}
@@ -203,7 +203,7 @@ spec:
               value: "CLUSTER_NAME"
 
             {{- /* Needed for autodiscovery when hostNetwork=false (unprivileged mode) */}}
-            {{- if not (include "nriKubernetes.privileged" $) }}
+            {{- if not (include "nriKubernetes.windows.privileged" $) }}
             - name: "NRIA_HOST"
               valueFrom:
                 fieldRef:

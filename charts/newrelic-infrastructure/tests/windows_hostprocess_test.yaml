@@ -265,6 +265,62 @@ tests:
                 fieldPath: "status.hostIP"
         template: templates/kubelet/daemonset-windows.yaml
 
+  # Windows-specific privileged override tests
+  - it: should respect windows.privileged=false override when global privileged=true
+    set:
+      licenseKey: test
+      cluster: test
+      kubelet.enabled: true
+      enableWindows: true
+      privileged: true
+      windows:
+        privileged: false
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.windowsOptions.hostProcess
+          value: false
+        template: templates/kubelet/daemonset-windows.yaml
+      - equal:
+          path: spec.template.spec.containers[1].securityContext.windowsOptions.hostProcess
+          value: false
+        template: templates/kubelet/daemonset-windows.yaml
+      - isNull:
+          path: spec.template.spec.hostNetwork
+        template: templates/kubelet/daemonset-windows.yaml
+      - equal:
+          path: metadata.labels.mode
+          value: unprivileged
+        template: templates/kubelet/daemonset-windows.yaml
+
+  - it: should respect windows.privileged=true override when global privileged=false
+    set:
+      licenseKey: test
+      cluster: test
+      kubelet.enabled: true
+      enableWindows: true
+      privileged: false
+      windows:
+        privileged: true
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.windowsOptions.hostProcess
+          value: true
+        template: templates/kubelet/daemonset-windows.yaml
+      - equal:
+          path: spec.template.spec.containers[1].securityContext.windowsOptions.hostProcess
+          value: true
+        template: templates/kubelet/daemonset-windows.yaml
+      - equal:
+          path: spec.template.spec.hostNetwork
+          value: true
+        template: templates/kubelet/daemonset-windows.yaml
+      - equal:
+          path: metadata.labels.mode
+          value: privileged
+        template: templates/kubelet/daemonset-windows.yaml
+
   # Common tests
   - it: should set Windows OS spec
     set:
