@@ -9,9 +9,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### enhancement
 - Add kubelet initialization retry logic to handle certificate provisioning delays in managed Kubernetes environments (EKS/GKE). New config parameters `kubelet.config.initTimeout` (default: 180s) and `kubelet.config.initBackoff` (default: 5s) control retry behavior. Set `initTimeout: 0s` to disable retries and preserve legacy behavior.  @NRhzhao [#1372](https://github.com/newrelic/nri-kubernetes/pull/1372)
+- Introduce HostProcess Windows containers and "privileged" mode support to collect host metrics on Windows nodes. @kondracek-nr [#1361](https://github.com/newrelic/nri-kubernetes/pull/1361)
 - Add pod priority and priorityClassName telemetry
 
 ## v3.52.0 - 2025-12-29
+
+### enhancement
 
 ### 🚀 Enhancements
 - Get `K8sContainerSample` data from [K8s sidecars](https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/) @michaelprice232 [#1368](https://github.com/newrelic/nri-kubernetes/pull/1368)
