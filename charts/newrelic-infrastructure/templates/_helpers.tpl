@@ -132,6 +132,22 @@ readOnlyRootFilesystem: true
 {{- end -}}
 {{- end -}}
 
+{{/*
+Windows-specific privileged mode check.
+Returns the privileged mode for Windows nodes, checking windows.privileged first,
+then falling back to the global privileged setting.
+Outputs "true" when privileged, outputs nothing (empty string) when unprivileged.
+*/}}
+{{- define "nriKubernetes.windows.privileged" -}}
+{{- if kindIs "bool" .Values.windows.privileged -}}
+    {{- if .Values.windows.privileged -}}
+        {{- .Values.windows.privileged -}}
+    {{- end -}}
+{{- else -}}
+    {{- include "nriKubernetes.privileged" . -}}
+{{- end -}}
+{{- end -}}
+
 {{- /* Windows image string processing */ -}}
 {{- /* Windows Agent is more complicated because of how we've set up agent build automation. */ -}}
 {{- /* This may be simplified once infrastructure-bundle accommodates Windows. */ -}}
