@@ -1,0 +1,141 @@
+# Helm unittest tests for agent config with elevated process privilege
+# Run with: helm unittest charts/newrelic-infrastructure
+
+suite: test Agent Config with Elevated Process Privilege
+templates:
+  - templates/kubelet/agent-configmap.yaml
+tests:
+  - it: should enable elevated process privilege when both enableProcessMetrics and enableWindows are true
+    set:
+      cluster: test-cluster
+      licenseKey: test-key
+      kubelet.enabled: true
+      enableWindows: true
+      enableProcessMetrics: true
+    asserts:
+      - matchRegex:
+          path: data["newrelic-infra.yml"]
+          pattern: "enable_elevated_process_priv: true"
+
+  - it: should not enable elevated process privilege when enableProcessMetrics is false
+    set:
+      cluster: test-cluster
+      licenseKey: test-key
+      kubelet.enabled: true
+      enableWindows: true
+      enableProcessMetrics: false
+    asserts:
+      - notMatchRegex:
+          path: data["newrelic-infra.yml"]
+          pattern: "enable_elevated_process_priv: true"
+
+  - it: should not enable elevated process privilege when enableWindows is false
+    set:
+      cluster: test-cluster
+      licenseKey: test-key
+      kubelet.enabled: true
+      enableWindows: false
+      enableProcessMetrics: true
+    asserts:
+      - notMatchRegex:
+          path: data["newrelic-infra.yml"]
+          pattern: "enable_elevated_process_priv: true"
+
+  - it: should respect explicit enableElevatedProcessPrivilege true setting
+    set:
+      cluster: test-cluster
+      licenseKey: test-key
+      kubelet.enabled: true
+      enableWindows: true
+      enableProcessMetrics: false
+      enableElevatedProcessPrivilege: true
+    asserts:
+      - matchRegex:
+          path: data["newrelic-infra.yml"]
+          pattern: "enable_elevated_process_priv: true"
+
+  - it: should respect explicit enableElevatedProcessPrivilege false setting
+    set:
+      cluster: test-cluster
+      licenseKey: test-key
+      kubelet.enabled: true
+      enableWindows: true
+      enableProcessMetrics: true
+      enableElevatedProcessPrivilege: false
+    asserts:
+      - matchRegex:
+          path: data["newrelic-infra.yml"]
+          pattern: "enable_elevated_process_priv: false"
+
+  - it: should handle enableProcessMetrics as boolean true
+    set:
+      cluster: test-cluster
+      licenseKey: test-key
+      kubelet.enabled: true
+      enableWindows: true
+      enableProcessMetrics: true
+    asserts:
+      - matchRegex:
+          path: data["newrelic-infra.yml"]
+          pattern: "enable_process_metrics: true"
+      - matchRegex:
+          path: data["newrelic-infra.yml"]
+          pattern: "enable_elevated_process_priv: true"
+
+  - it: should handle enableProcessMetrics as boolean false
+    set:
+      cluster: test-cluster
+      licenseKey: test-key
+      kubelet.enabled: true
+      enableWindows: true
+      enableProcessMetrics: false
+    asserts:
+      - matchRegex:
+          path: data["newrelic-infra.yml"]
+          pattern: "enable_process_metrics: false"
+      - notMatchRegex:
+          path: data["newrelic-infra.yml"]
+          pattern: "enable_elevated_process_priv"
+
+  - it: should not add elevated privilege when enableProcessMetrics is not boolean
+    set:
+      cluster: test-cluster
+      licenseKey: test-key
+      kubelet.enabled: true
+      enableWindows: true
+      # Not setting enableProcessMetrics (undefined)
+    asserts:
+      - notMatchRegex:
+          path: data["newrelic-infra.yml"]
+          pattern: "enable_elevated_process_priv"
+
+  - it: should allow override via kubelet.agentConfig
+    set:
+      cluster: test-cluster
+      licenseKey: test-key
+      kubelet.enabled: true
+      enableWindows: true
+      enableProcessMetrics: true
+      kubelet:
+        agentConfig:
+          enable_elevated_process_priv: false
+    asserts:
+      - matchRegex:
+          path: data["newrelic-infra.yml"]
+          pattern: "enable_elevated_process_priv: false"
+
+  - it: should handle Linux-only deployment (no elevated privilege)
+    set:
+      cluster: test-cluster
+      licenseKey: test-key
+      kubelet.enabled: true
+      enableWindows: false
+      enableProcessMetrics: true
+    asserts:
+      - matchRegex:
+          path: data["newrelic-infra.yml"]
+          pattern: "enable_process_metrics: true"
+      # Should not auto-enable elevated priv for Linux
+      - notMatchRegex:
+          path: data["newrelic-infra.yml"]
+          pattern: "enable_elevated_process_priv: true"

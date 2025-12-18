@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- Introduce HostProcess Windows containers and "privileged" mode support to collect host metrics on Windows nodes. Inherits global or chart-specific "privileged" setting by default, but also allows users to override this for their Windows nodes - see values.yaml. @kondracek-nr [#1361](https://github.com/newrelic/nri-kubernetes/pull/1361)
+
 ## v3.51.1 - 2025-12-15
 
 ### ⛓️ Dependencies
