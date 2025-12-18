@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### ⛓️ Dependencies
+- Update helm to v3.19.4 for chart linting
+
 ## v3.51.1 - 2025-12-15
 
 ### ⛓️ Dependencies
