@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### ⛓️ Dependencies
-- Update helm to v3.19.4 for chart linting
+- Update helm to v3.19.4 for chart linting @jamescripter [#1365](https://github.com/newrelic/nri-kubernetes/pull/1365)
 
 ## v3.51.1 - 2025-12-15
 
