@@ -7,8 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v3.51.2 - 2025-12-22
+
 ### dependency
 - Update helm to v3.19.4 for chart linting @jamescripter [#1365](https://github.com/newrelic/nri-kubernetes/pull/1365)
+
+### ⛓️ Dependencies
+- Updated github.com/prometheus/common to v0.67.4 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.67.4)
+- Updated golang.org/x/crypto to v0.46.0
+- Updated go to v1.25.5
+- Updated alpine to v3.23.2
 
 ## v3.51.1 - 2025-12-15
 
