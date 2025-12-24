@@ -18,7 +18,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "newrelic/nri-kubernetes:1.0.0"
+          value: "docker.io/newrelic/nri-kubernetes:1.0.0"
         template: templates/kubelet/daemonset.yaml
 
   - it: Should set the image tag correctly for linux-based infra agent image - default
@@ -29,7 +29,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[1].image
-          value: "newrelic/infrastructure-bundle:2.0.0"
+          value: "docker.io/newrelic/infrastructure-bundle:2.0.0"
         template: templates/kubelet/daemonset.yaml
 
   - it: Should set the image tag correctly for Windows-based integration image - default
@@ -41,7 +41,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "newrelic/nri-kubernetes:1.0.0"
+          value: "docker.io/newrelic/nri-kubernetes:1.0.0"
         template: templates/kubelet/daemonset-windows.yaml
 
   - it: Should set the image tag correctly for Windows-based agent image - default
@@ -53,12 +53,12 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[1].image
-          value: "newrelic/infrastructure-windows:2.0.0-ltsc2019"
+          value: "docker.io/newrelic/infrastructure-windows:2.0.0-ltsc2019"
         template: templates/kubelet/daemonset-windows.yaml
         documentIndex: 0
       - equal:
           path: spec.template.spec.containers[1].image
-          value: "newrelic/infrastructure-windows:2.0.0-ltsc2022"
+          value: "docker.io/newrelic/infrastructure-windows:2.0.0-ltsc2022"
         template: templates/kubelet/daemonset-windows.yaml
         documentIndex: 1
 

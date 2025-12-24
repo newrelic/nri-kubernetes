@@ -3,6 +3,9 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: {{ .Release.Name }}-pv-claim
+  labels:
+    environment: staging
+    team: storage-team
 spec:
   accessModes:
     - ReadWriteOnce

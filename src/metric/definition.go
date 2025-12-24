@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	log "github.com/sirupsen/logrus"
-
 	sdkMetric "github.com/newrelic/infra-integrations-sdk/data/metric"
 
 	"github.com/newrelic/nri-kubernetes/v3/src/definition"
@@ -581,7 +579,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "volumeName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "persistentvolume"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "pvcName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_claim_ref", "name"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "pvcNamespace", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_claim_ref", "claim_namespace"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("persistentvolume", "kube_persistentvolume_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_persistentvolume_labels", "label"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "storageClass", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "storageclass"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "hostPath", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "host_path"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "hostPathType", ValueFunc: prometheus.FromLabelValue("kube_persistentvolume_info", "host_path_type"), Type: sdkMetric.ATTRIBUTE},
@@ -618,7 +616,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "cronjobName", ValueFunc: prometheus.FromLabelValue("kube_cronjob_created", "cronjob"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_cronjob_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_cronjob_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("cronjob", "kube_cronjob_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_cronjob_labels", "label"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "schedule", ValueFunc: prometheus.FromLabelValue("kube_cronjob_info", "schedule"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "concurrencyPolicy", ValueFunc: prometheus.FromLabelValue("kube_cronjob_info", "concurrency_policy"), Type: sdkMetric.ATTRIBUTE},
 		},
@@ -647,7 +645,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "jobName", ValueFunc: prometheus.FromLabelValue("kube_job_created", "job_name"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_job_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_job_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("job_name", "kube_job_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_job_labels", "label"), Type: sdkMetric.ATTRIBUTE},
 		},
 	},
 	"persistentvolumeclaim": {
@@ -668,7 +666,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "volumeName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_info", "volumename"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_info", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_persistentvolumeclaim_info", "namespace"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("persistentvolumeclaim", "kube_persistentvolumeclaim_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_persistentvolumeclaim_labels", "label"), Type: sdkMetric.ATTRIBUTE},
 		},
 	},
 	"replicaset": {
@@ -688,7 +686,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_replicaset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_replicaset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "deploymentName", ValueFunc: ksmMetric.GetDeploymentNameForReplicaSet(), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("replicaset", "kube_replicaset_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_replicaset_labels", "label"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "ownerName", ValueFunc: prometheus.FromLabelValue("kube_replicaset_owner", "owner_name"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "ownerKind", ValueFunc: prometheus.FromLabelValue("kube_replicaset_owner", "owner_kind"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "ownerIsController", ValueFunc: prometheus.FromLabelValue("kube_replicaset_owner", "owner_is_controller"), Type: sdkMetric.ATTRIBUTE},
@@ -718,7 +716,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "updateRevision", ValueFunc: prometheus.FromValue("kube_statefulset_status_update_revision"), Type: sdkMetric.GAUGE},
 			{Name: "statefulsetName", ValueFunc: prometheus.FromLabelValue("kube_statefulset_created", "statefulset"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_statefulset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("statefulset", "kube_statefulset_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_statefulset_labels", "label"), Type: sdkMetric.ATTRIBUTE},
 			// computed
 			{
 				Name: "podsMissing", ValueFunc: Subtract(
@@ -745,7 +743,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "metadataGeneration", ValueFunc: prometheus.FromValue("kube_daemonset_metadata_generation"), Type: sdkMetric.GAUGE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_daemonset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "daemonsetName", ValueFunc: prometheus.FromLabelValue("kube_daemonset_created", "daemonset"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("daemonset", "kube_daemonset_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_daemonset_labels", "label"), Type: sdkMetric.ATTRIBUTE},
 			// computed
 			{
 				Name: "podsMissing", ValueFunc: Subtract(
@@ -843,7 +841,7 @@ var KSMSpecs = definition.SpecGroups{
 			},
 			{
 				Name:      "label.*",
-				ValueFunc: prometheus.InheritAllLabelsFrom("service", "kube_service_labels"),
+				ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_service_labels", "label"),
 				Type:      sdkMetric.ATTRIBUTE,
 			},
 			{
@@ -881,18 +879,46 @@ var KSMSpecs = definition.SpecGroups{
 			},
 			{
 				Name:      "label.*",
-				ValueFunc: prometheus.InheritAllLabelsFrom("endpoint", "kube_endpoint_labels"),
+				ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_endpoint_labels", "label"),
 				Type:      sdkMetric.ATTRIBUTE,
+			},
+			// KSM < 2.14 - Legacy metrics (pre-aggregated by KSM)
+			{
+				Name:      "addressAvailable",
+				ValueFunc: prometheus.FromValue("kube_endpoint_address_available"),
+				Type:      sdkMetric.GAUGE,
+				Optional:  true, // Optional: does not exist in KSM >= 2.14
 			},
 			{
 				Name:      "addressNotReady",
 				ValueFunc: prometheus.FromValue("kube_endpoint_address_not_ready"),
 				Type:      sdkMetric.GAUGE,
+				Optional:  true, // Optional: does not exist in KSM >= 2.14
+			},
+			// KSM >= v2.14 - Detailed metrics (we aggregate by filtering on ready label)
+			{
+				Name: "addressAvailable",
+				ValueFunc: prometheus.CountFromValueWithLabelsFilter(
+					"kube_endpoint_address",
+					"addressAvailable",
+					prometheus.IncludeOnlyWhenLabelMatchFilter(map[string]string{
+						"ready": "true",
+					}),
+				),
+				Type:     sdkMetric.GAUGE,
+				Optional: true, // Optional: may not exist in KSM < 2.14
 			},
 			{
-				Name:      "addressAvailable",
-				ValueFunc: prometheus.FromValue("kube_endpoint_address_available"),
-				Type:      sdkMetric.GAUGE,
+				Name: "addressNotReady",
+				ValueFunc: prometheus.CountFromValueWithLabelsFilter(
+					"kube_endpoint_address",
+					"addressNotReady",
+					prometheus.IncludeOnlyWhenLabelMatchFilter(map[string]string{
+						"ready": "false",
+					}),
+				),
+				Type:     sdkMetric.GAUGE,
+				Optional: true, // Optional: may not exist in KSM < 2.14
 			},
 		},
 	},
@@ -938,7 +964,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "currentReplicas", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_status_current_replicas"), Type: sdkMetric.GAUGE},
 			{Name: "desiredReplicas", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_status_desired_replicas"), Type: sdkMetric.GAUGE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_horizontalpodautoscaler_metadata_generation", "namespace"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "label.*", ValueFunc: prometheus.InheritAllLabelsFrom("horizontalpodautoscaler", "kube_horizontalpodautoscaler_labels"), Type: sdkMetric.ATTRIBUTE},
+			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_horizontalpodautoscaler_labels", "label"), Type: sdkMetric.ATTRIBUTE},
 			// TODO: is* metrics will be either true or `NULL`, but never false if the condition is not reported. This is not ideal.
 			{Name: "isActive", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_status_condition_active")},
 			{Name: "isAble", ValueFunc: prometheus.FromValue("kube_horizontalpodautoscaler_status_condition_able")},
@@ -1221,6 +1247,7 @@ var KSMQueries = []prometheus.Query{
 	{MetricName: "kube_endpoint_labels"},
 	{MetricName: "kube_endpoint_address_not_ready"},
 	{MetricName: "kube_endpoint_address_available"},
+	{MetricName: "kube_endpoint_address"},
 	// hpa
 	{MetricName: "kube_horizontalpodautoscaler_info"},
 	{MetricName: "kube_horizontalpodautoscaler_labels"},
@@ -1291,17 +1318,21 @@ var CadvisorQueries = []prometheus.Query{
 	{MetricName: "container_oom_events_total"},
 }
 
-// KubeletSpecs are the metric specifications we want to collect from Kubelet.
-var KubeletSpecs = definition.SpecGroups{
+// NewKubeletSpecs creates the metric specifications we want to collect from Kubelet.
+// It accepts an optional interface cache for network metric optimization.
+//
+//nolint:funlen // Large spec definition is acceptable - it's configuration, not logic
+func NewKubeletSpecs(interfaceCache *kubeletMetric.InterfaceCache) definition.SpecGroups {
+	return definition.SpecGroups{
 	"pod": {
 		IDGenerator:     kubeletMetric.FromRawEntityIDGroupEntityIDGenerator("namespace"),
 		TypeGenerator:   kubeletMetric.FromRawGroupsEntityTypeGenerator,
 		NamespaceGetter: kubeletMetric.FromLabelGetNamespace,
 		Specs: []definition.Spec{
 			// /stats/summary endpoint
-			{Name: "net.rxBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("rxBytes"), Type: sdkMetric.RATE},
-			{Name: "net.txBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("txBytes"), Type: sdkMetric.RATE},
-			{Name: "net.errorsPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("errors"), Type: sdkMetric.RATE},
+			{Name: "net.rxBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("rxBytes", interfaceCache), Type: sdkMetric.RATE},
+			{Name: "net.txBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("txBytes", interfaceCache), Type: sdkMetric.RATE},
+			{Name: "net.errorsPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("errors", interfaceCache), Type: sdkMetric.RATE},
 
 			// /pods endpoint
 			{Name: "createdAt", ValueFunc: definition.Transform(definition.FromRaw("createdAt"), toTimestamp), Type: sdkMetric.GAUGE, Optional: true},
@@ -1409,9 +1440,9 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "memoryRssBytes", ValueFunc: definition.FromRaw("memoryRssBytes"), Type: sdkMetric.GAUGE},
 			{Name: "memoryPageFaults", ValueFunc: definition.FromRaw("memoryPageFaults"), Type: sdkMetric.GAUGE},
 			{Name: "memoryMajorPageFaultsPerSecond", ValueFunc: definition.FromRaw("memoryMajorPageFaults"), Type: sdkMetric.RATE},
-			{Name: "net.rxBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("rxBytes"), Type: sdkMetric.RATE},
-			{Name: "net.txBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("txBytes"), Type: sdkMetric.RATE},
-			{Name: "net.errorsPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("errors"), Type: sdkMetric.RATE},
+			{Name: "net.rxBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("rxBytes", interfaceCache), Type: sdkMetric.RATE},
+			{Name: "net.txBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("txBytes", interfaceCache), Type: sdkMetric.RATE},
+			{Name: "net.errorsPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("errors", interfaceCache), Type: sdkMetric.RATE},
 			{Name: "fsAvailableBytes", ValueFunc: definition.FromRaw("fsAvailableBytes"), Type: sdkMetric.GAUGE},
 			{Name: "fsCapacityBytes", ValueFunc: definition.FromRaw("fsCapacityBytes"), Type: sdkMetric.GAUGE},
 			{Name: "fsUsedBytes", ValueFunc: definition.FromRaw("fsUsedBytes"), Type: sdkMetric.GAUGE},
@@ -1460,7 +1491,13 @@ var KubeletSpecs = definition.SpecGroups{
 			{Name: "fsInodesUsed", ValueFunc: definition.FromRaw("fsInodesUsed"), Type: sdkMetric.GAUGE},
 		},
 	},
+	}
 }
+
+// KubeletSpecs is the default metric specifications for Kubelet with no interface cache.
+//
+//nolint:gochecknoglobals // Backward compatibility - used by tests and static tooling
+var KubeletSpecs = NewKubeletSpecs(nil)
 
 func isPersistentVolume() definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
@@ -1687,9 +1724,6 @@ var (
 
 // filterCPUUsedCores checks for the correctness of the container metric cpuUsedCores returned by kubelet.
 // cpuUsedCores a.k.a `usageNanoCores` value is set by cAdvisor and is returned by kubelet stats summary endpoint.
-// There is an active bug where the metric value is sometimes impossibly high https://github.com/kubernetes/kubernetes/issues/114057.
-// The cpuUsedCores along with cpuLimitCores is typically used to plot `cpuCoresUtilization` on the UI where cpuCoresUtilization = (cpuUsedCores/cpuLimitCores) * 100.
-// cpuUsedCores has been observed to be absurd even when cpuUsedCores >  cpuLimitCores * 100.
 //
 //nolint:nolintlint,ireturn
 func filterCPUUsedCores(fetchedValue definition.FetchedValue, groupLabel, entityID string, groups definition.RawGroups) (definition.FilteredValue, error) {
@@ -1715,7 +1749,6 @@ func filterCPUUsedCores(fetchedValue definition.FetchedValue, groupLabel, entity
 		// there is likely no CPU limit set for the container which means we have to assume a reasonable value
 		// since there is no way to know the max cpu cores for the current node, use default max of 96 cores supported by most cloud providers
 		// a higher value wouldn't hurt our calculation as the cpuUsedCores value will be a super high number
-		log.StandardLogger().Debug("cpuLimitCores metric not available. using default max 96 cores")
 		value = 96000 // 96 * 1000m k8s cpu unit
 	}
 
@@ -1731,7 +1764,7 @@ func filterCPUUsedCores(fetchedValue definition.FetchedValue, groupLabel, entity
 		return nil, errCPULimitTypeCheck
 	}
 
-	// check for impossibly high cpuUsedCoresVal
+	// check for impossibly high cpuUsedCoresVal - workaround for https://github.com/kubernetes/kubernetes/issues/114057 (resolved)
 	if val > cpuLimit*100 {
 		return nil, errHighCPUUsedCores
 	}

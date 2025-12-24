@@ -7,8 +7,61 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancement
+## v3.51.2 - 2025-12-22
+
+### dependency
+- Update helm to v3.19.4 for chart linting @jamescripter [#1365](https://github.com/newrelic/nri-kubernetes/pull/1365)
+
+### ⛓️ Dependencies
+- Updated github.com/prometheus/common to v0.67.4 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.67.4)
+- Updated golang.org/x/crypto to v0.46.0
+- Updated go to v1.25.5
+- Updated alpine to v3.23.2
+
+## v3.51.1 - 2025-12-15
+
+### ⛓️ Dependencies
+- Updated google.golang.org/protobuf to v1.36.11
+
+## v3.51.0 - 2025-12-08
+
+### 🚀 Enhancements
+- Reduce tolerations for KSM pods to improve behavior during node cordon/draining @kondracek-nr [#1350](https://github.com/newrelic/nri-kubernetes/pull/1350)
+- Mount /host/proc in privileged mode & introduce network metrics heuristic to improve network metrics collection @kondracek-nr [#1355](https://github.com/newrelic/nri-kubernetes/pull/1335)
+
+### ⛓️ Dependencies
+- Updated alpine to v3.23.0
+
+## v3.50.2 - 2025-11-24
+
+### 🐞 Bug fixes
+- fixes a bug where PersistentVolume and PersistentVolumeClaim labels not exporting
+- change image for e2e-resources/hpa to multiarch image @TmNguyen12[#1298](https://github.com/newrelic/nri-kubernetes/pull/1298)
+
+### ⛓️ Dependencies
+- Updated golang.org/x/crypto to v0.44.0
+- Updated go to v1.25.4
+- Updated github.com/prometheus/common to v0.67.2 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.67.2)
+- Updated kubernetes packages to v0.34.2
+
+## v3.50.1 - 2025-11-17
+
+### 🐞 Bug fixes
+- Fix unsupported metric type by pre-filtering @NRhzhao [#1337](https://github.com/newrelic/nri-kubernetes/pull/1337)
+
+## v3.50.0 - 2025-11-10
+
+### 🚀 Enhancements
+- update KSM e2e chart version and in test-spec versions to 2.16, add support for kube_endpoint_address and backward compatibility for kube_endpoint_address_available & kube_endpoint_address_not_ready @TmNguyen12 [#1330](https://github.com/newrelic/nri-kubernetes/pull/1330)
+
+### 🐞 Bug fixes
+- Fix priorityClassName templating when enableWindows=true @kondracek-nr [#1329](https://github.com/newrelic/nri-kubernetes/pull/1329)
+
+## v3.49.0 - 2025-11-03
+
+### 🚀 Enhancements
 - Export KSM labels and annotations for pods, deployments, and namespaces @NRhzhao [#1317](https://github.com/newrelic/nri-kubernetes/pull/1317)
+- Update E2e-resource charts and add test-spec for OpenShift testing @TmNguyen12 [#1325](https://github.com/newrelic/nri-kubernetes/pull/1325)
 - Add `runningPod` attribute to the K8sNodeSample @NRhzhao [#1316](https://github.com/newrelic/nri-kubernetes/pull/1316)
 - Get `K8sContainerSample` data from [K8s sidecars](https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/) @michaelprice232 [#1327](https://github.com/newrelic/nri-kubernetes/pull/1327)
 - Enable exporting of `ResourceQuotaSamples` by default @NRhzhao [#1326](https://github.com/newrelic/nri-kubernetes/pull/1326)

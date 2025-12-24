@@ -20,7 +20,7 @@ const (
 	DefaultProbeTimeout     = 90 * time.Second
 	DefaultProbeBackoff     = 5 * time.Second
 
-	DefaultNetworkRouteFile = "/proc/net/route"
+	DefaultNetworkRouteFile = "/host/proc/1/net/route"
 
 	SinkTypeHTTP   = "http"
 	SinkTypeStdout = "stdout"
