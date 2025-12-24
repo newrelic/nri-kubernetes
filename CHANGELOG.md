@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### enhancement
-- Get `K8sContainerSample` data from [K8s sidecars](https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/) @michaelprice232 [#1327](https://github.com/newrelic/nri-kubernetes/pull/1327)
+- Get `K8sContainerSample` data from [K8s sidecars](https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/) @michaelprice232 [#1368](https://github.com/newrelic/nri-kubernetes/pull/1368)
 
 ## v3.51.2 - 2025-12-22
 
