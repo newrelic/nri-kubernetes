@@ -1,4 +1,4 @@
-name: Deploy nri-kubernetes
+name: Deploy agents to A2Q test clusters
 
 on:
   push:
@@ -46,7 +46,7 @@ jobs:
             region: "us-west-1"  # AWS region
             iam_role: "gha-role-a2q-eks-stg-curr"  # IAM role for GitHub Actions OIDC
             staging: true
-            release_candidate: false
+            release_candidate: true
             gke_autopilot: false  # Not applicable for EKS, but needed for env var
             ksm_image_version: "v2.15.0"
             nr_license_key: "NR_LICENSE_KEY_A2Q_EKS_STG_CURRENT"
