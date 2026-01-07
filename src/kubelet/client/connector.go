@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -55,14 +56,74 @@ func DefaultConnector(kc kubernetes.Interface, config *config.Config, inClusterC
 // on the other hand passing through api-proxy, authentication is managed by the kubernetes client itself.
 // Notice that we cannot use the as well rest.TransportFor to connect locally since the certificate sent by kubelet,
 // cannot be verified in the same way we do for the apiServer.
+//
+// If InitTimeout is configured, Connect will retry connection attempts until successful or timeout is reached.
+// This is useful in environments like EKS where kubelet certificates may take 1-2 minutes to provision after node startup.
 func (dp *defaultConnector) Connect() (*connParams, error) {
-
+	// Get kubelet port and scheme once before retry loop
 	kubeletPort, err := dp.getPort()
 	if err != nil {
 		return nil, fmt.Errorf("getting kubelet port: %w", err)
 	}
 
 	kubeletScheme := dp.schemeFor(kubeletPort)
+
+	// If InitTimeout is 0, use legacy behavior (no retries)
+	if dp.config.Kubelet.InitTimeout == 0 {
+		return dp.tryConnect(kubeletPort, kubeletScheme)
+	}
+
+	// Retry logic with timeout
+	return dp.connectWithRetry(kubeletPort, kubeletScheme)
+}
+
+// connectWithRetry attempts to connect to kubelet with retries until successful or timeout is reached.
+func (dp *defaultConnector) connectWithRetry(kubeletPort int32, kubeletScheme string) (*connParams, error) {
+	start := time.Now()
+	attempt := 0
+	var lastErr error
+
+	dp.logger.Infof("Attempting to connect to kubelet with retry timeout=%s backoff=%s",
+		dp.config.Kubelet.InitTimeout, dp.config.Kubelet.InitBackoff)
+
+	for {
+		attempt++
+		elapsed := time.Since(start)
+
+		// Try to connect
+		conn, err := dp.tryConnect(kubeletPort, kubeletScheme)
+		if err == nil {
+			dp.logger.Infof("Successfully connected to kubelet on attempt %d after %s", attempt, elapsed)
+			return conn, nil
+		}
+
+		lastErr = err
+
+		// Check if we've exceeded timeout
+		if elapsed >= dp.config.Kubelet.InitTimeout {
+			return nil, fmt.Errorf("failed to connect to kubelet after %d attempts over %s (timeout: %s): %w",
+				attempt, elapsed, dp.config.Kubelet.InitTimeout, lastErr)
+		}
+
+		// Calculate remaining time and adjust backoff if needed
+		remainingTime := dp.config.Kubelet.InitTimeout - elapsed
+		backoff := dp.config.Kubelet.InitBackoff
+		if backoff > remainingTime {
+			backoff = remainingTime
+		}
+
+		// Log retry information
+		dp.logger.Infof("Kubelet connection attempt %d failed: %v. Retrying in %s (elapsed: %s/%s)",
+			attempt, err, backoff, elapsed, dp.config.Kubelet.InitTimeout)
+
+		// Wait before next attempt
+		time.Sleep(backoff)
+	}
+}
+
+// tryConnect performs a single connection attempt to kubelet (local and API proxy fallback).
+// This is the existing Connect() logic extracted into a separate method.
+func (dp *defaultConnector) tryConnect(kubeletPort int32, kubeletScheme string) (*connParams, error) {
 	hostURL := net.JoinHostPort(dp.config.NodeIP, fmt.Sprint(kubeletPort))
 
 	dp.logger.Infof("Trying to connect to kubelet locally with scheme=%q hostURL=%q", kubeletScheme, hostURL)
