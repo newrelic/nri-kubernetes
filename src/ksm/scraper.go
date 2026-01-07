@@ -33,13 +33,14 @@ type Providers struct {
 // Scraper takes care of getting metrics from an autodiscovered KSM instance.
 type Scraper struct {
 	Providers
-	logger              *log.Logger
-	config              *config.Config
-	k8sVersion          *version.Info
-	endpointsDiscoverer discovery.EndpointsDiscoverer
-	servicesLister      listersv1.ServiceLister
-	informerClosers     []chan<- struct{}
-	Filterer            discovery.NamespaceFilterer
+	logger                   *log.Logger
+	config                   *config.Config
+	k8sVersion               *version.Info
+	endpointsDiscoverer      discovery.EndpointsDiscoverer
+	endpointSlicesDiscoverer discovery.EndpointSlicesDiscoverer
+	servicesLister           listersv1.ServiceLister
+	informerClosers          []chan<- struct{}
+	Filterer                 discovery.NamespaceFilterer
 }
 
 // ScraperOpt are options that can be used to configure the Scraper
@@ -97,6 +98,13 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 	}
 
 	s.endpointsDiscoverer = endpointsDiscoverer
+
+	s.logger.Debugf("Building KSM endpoint slices discoverer")
+	endpointSlicesDiscoverer, err := s.buildEndpointSlicesDiscoverer()
+	if err != nil {
+		return nil, fmt.Errorf("building endpoint slices disoverer: %w", err)
+	}
+	s.endpointSlicesDiscoverer = endpointSlicesDiscoverer
 
 	servicesLister, servicesCloser := discovery.NewServicesLister(providers.K8s)
 	s.servicesLister = servicesLister
@@ -204,15 +212,61 @@ func (s *Scraper) buildDiscoverer() (discovery.EndpointsDiscoverer, error) {
 	}, nil
 }
 
+// buildEndpointSlicesDiscoverer returns a discovery.EndpointSlicesDiscoverer, configured to discover KSM endpoints in the cluster,
+// or to return the static endpoint defined by the user in the config.
+func (s *Scraper) buildEndpointSlicesDiscoverer() (discovery.EndpointSlicesDiscoverer, error) {
+	dc := discovery.EndpointSlicesDiscoveryConfig{
+		LabelSelector: defaultLabelSelector,
+		Client:        s.K8s,
+	}
+
+	if s.config.KSM.Namespace != "" {
+		s.logger.Debugf("Restricting KSM discovery to namespace %q", s.config.KSM.Namespace)
+		dc.Namespace = s.config.KSM.Namespace
+	}
+
+	if s.config.KSM.Selector != "" {
+		s.logger.Debugf("Overriding default KSM labelSelector (%q) to %q", defaultLabelSelector, s.config.KSM.Selector)
+		dc.LabelSelector = s.config.KSM.Selector
+	}
+
+	if s.config.KSM.Port != 0 {
+		s.logger.Debugf("Overriding default KSM port to %d", s.config.KSM.Port)
+		dc.Port = s.config.KSM.Port
+	}
+
+	discoverer, err := discovery.NewEndpointSlicesDiscoverer(dc)
+	if err != nil {
+		return nil, err
+	}
+
+	return &discovery.EndpointSlicesDiscovererWithTimeout{
+		EndpointsDiscoverer: discoverer,
+
+		BackoffDelay: s.config.KSM.Discovery.BackoffDelay,
+		Timeout:      s.config.KSM.Discovery.Timeout,
+	}, nil
+}
+
 func (s *Scraper) ksmURLs() ([]string, error) {
 	if u := s.config.KSM.StaticURL; u != "" {
 		s.logger.Debugf("Using overridden endpoint for ksm %q", u)
 		return []string{u}, nil
 	}
 
-	endpoints, err := s.endpointsDiscoverer.Discover()
+	var endpoints []string
+	var err error
+	endpoints, err = s.endpointSlicesDiscoverer.Discover()
 	if err != nil {
 		return nil, fmt.Errorf("discovering KSM endpoints: %w", err)
+	}
+
+	//@todo: decide if we need this
+	if false {
+		endpoints, err = s.endpointsDiscoverer.Discover()
+		if err != nil {
+			return nil, fmt.Errorf("discovering KSM endpoints: %w", err)
+		}
 	}
 
 	scheme := s.config.KSM.Scheme
