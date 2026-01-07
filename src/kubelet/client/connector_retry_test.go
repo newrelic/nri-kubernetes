@@ -31,7 +31,7 @@ func TestConnectorRetry_ImmediateSuccess(t *testing.T) {
 	}))
 	defer server.Close()
 
-	node := createTestNodeWithPort(10250)
+	node := createTestNodeWithPort()
 	k8sClient := fake.NewSimpleClientset(node)
 
 	// Configure with retry enabled but connection should succeed immediately
@@ -87,7 +87,7 @@ func TestConnectorRetry_SuccessAfterFailures(t *testing.T) {
 	}))
 	defer server.Close()
 
-	node := createTestNodeWithPort(10250)
+	node := createTestNodeWithPort()
 	k8sClient := fake.NewSimpleClientset(node)
 
 	cfg := &config.Config{
@@ -144,7 +144,7 @@ func TestConnectorRetry_TimeoutExceeded(t *testing.T) {
 	}))
 	defer server.Close()
 
-	node := createTestNodeWithPort(10250)
+	node := createTestNodeWithPort()
 	k8sClient := fake.NewSimpleClientset(node)
 
 	cfg := &config.Config{
@@ -198,7 +198,7 @@ func TestConnectorRetry_BackoffAdjustment(t *testing.T) {
 	var lastAttemptTime time.Time
 	var attemptTimes []time.Time
 
-	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		atomic.AddInt32(&attemptCount, 1)
 		lastAttemptTime = time.Now()
 		attemptTimes = append(attemptTimes, lastAttemptTime)
@@ -206,7 +206,7 @@ func TestConnectorRetry_BackoffAdjustment(t *testing.T) {
 	}))
 	defer server.Close()
 
-	node := createTestNodeWithPort(10250)
+	node := createTestNodeWithPort()
 	k8sClient := fake.NewSimpleClientset(node)
 
 	// Configure so that last backoff should be adjusted
@@ -264,7 +264,7 @@ func TestConnectorRetry_LegacyMode(t *testing.T) {
 	}))
 	defer server.Close()
 
-	node := createTestNodeWithPort(10250)
+	node := createTestNodeWithPort()
 	k8sClient := fake.NewSimpleClientset(node)
 
 	// Legacy mode: InitTimeout = 0
@@ -351,7 +351,7 @@ func TestConnectorRetry_AttemptCounting(t *testing.T) {
 			}))
 			defer server.Close()
 
-			node := createTestNodeWithPort(10250)
+			node := createTestNodeWithPort()
 			k8sClient := fake.NewSimpleClientset(node)
 
 			cfg := &config.Config{
@@ -392,8 +392,8 @@ func TestConnectorRetry_AttemptCounting(t *testing.T) {
 	}
 }
 
-// Helper function to create test node with specific port.
-func createTestNodeWithPort(port int32) *corev1.Node {
+// Helper function to create test node with standard kubelet port.
+func createTestNodeWithPort() *corev1.Node {
 	return &corev1.Node{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "test-node",
@@ -401,21 +401,21 @@ func createTestNodeWithPort(port int32) *corev1.Node {
 		Status: corev1.NodeStatus{
 			DaemonEndpoints: corev1.NodeDaemonEndpoints{
 				KubeletEndpoint: corev1.DaemonEndpoint{
-					Port: port,
+					Port: 10250,
 				},
 			},
 		},
 	}
 }
 
-// BenchmarkConnectorRetry_ImmediateSuccess benchmarks the overhead of retry logic when connection succeeds immediately
+// BenchmarkConnectorRetry_ImmediateSuccess benchmarks the overhead of retry logic when connection succeeds immediately.
 func BenchmarkConnectorRetry_ImmediateSuccess(b *testing.B) {
-	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer server.Close()
 
-	node := createTestNodeWithPort(10250)
+	node := createTestNodeWithPort()
 	k8sClient := fake.NewSimpleClientset(node)
 
 	cfg := &config.Config{
@@ -461,7 +461,7 @@ func TestConnectorRetry_ErrorMessaging(t *testing.T) {
 	}))
 	defer server.Close()
 
-	node := createTestNodeWithPort(10250)
+	node := createTestNodeWithPort()
 	k8sClient := fake.NewSimpleClientset(node)
 
 	cfg := &config.Config{
@@ -525,7 +525,7 @@ func TestConnectorRetry_DifferentBackoffValues(t *testing.T) {
 			}))
 			defer server.Close()
 
-			node := createTestNodeWithPort(10250)
+			node := createTestNodeWithPort()
 			k8sClient := fake.NewSimpleClientset(node)
 
 			cfg := &config.Config{
