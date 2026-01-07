@@ -20,7 +20,7 @@ const (
 	DefaultProbeTimeout     = 90 * time.Second
 	DefaultProbeBackoff     = 5 * time.Second
 
-	// Defaults for kubelet initialization retry
+	// Defaults for kubelet initialization retry.
 	DefaultInitTimeout = 180 * time.Second // 3 minutes to cover EKS certificate provisioning
 	DefaultInitBackoff = 5 * time.Second   // 5 seconds between retry attempts
 

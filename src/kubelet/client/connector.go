@@ -69,7 +69,7 @@ func (dp *defaultConnector) Connect() (*connParams, error) {
 	kubeletScheme := dp.schemeFor(kubeletPort)
 
 	// If InitTimeout is 0, use legacy behavior (no retries)
-	if dp.config.Kubelet.InitTimeout == 0 {
+	if dp.config.InitTimeout == 0 {
 		return dp.tryConnect(kubeletPort, kubeletScheme)
 	}
 
@@ -84,7 +84,7 @@ func (dp *defaultConnector) connectWithRetry(kubeletPort int32, kubeletScheme st
 	var lastErr error
 
 	dp.logger.Infof("Attempting to connect to kubelet with retry timeout=%s backoff=%s",
-		dp.config.Kubelet.InitTimeout, dp.config.Kubelet.InitBackoff)
+		dp.config.InitTimeout, dp.config.InitBackoff)
 
 	for {
 		attempt++
@@ -100,21 +100,21 @@ func (dp *defaultConnector) connectWithRetry(kubeletPort int32, kubeletScheme st
 		lastErr = err
 
 		// Check if we've exceeded timeout
-		if elapsed >= dp.config.Kubelet.InitTimeout {
+		if elapsed >= dp.config.InitTimeout {
 			return nil, fmt.Errorf("failed to connect to kubelet after %d attempts over %s (timeout: %s): %w",
-				attempt, elapsed, dp.config.Kubelet.InitTimeout, lastErr)
+				attempt, elapsed, dp.config.InitTimeout, lastErr)
 		}
 
 		// Calculate remaining time and adjust backoff if needed
-		remainingTime := dp.config.Kubelet.InitTimeout - elapsed
-		backoff := dp.config.Kubelet.InitBackoff
+		remainingTime := dp.config.InitTimeout - elapsed
+		backoff := dp.config.InitBackoff
 		if backoff > remainingTime {
 			backoff = remainingTime
 		}
 
 		// Log retry information
 		dp.logger.Infof("Kubelet connection attempt %d failed: %v. Retrying in %s (elapsed: %s/%s)",
-			attempt, err, backoff, elapsed, dp.config.Kubelet.InitTimeout)
+			attempt, err, backoff, elapsed, dp.config.InitTimeout)
 
 		// Wait before next attempt
 		time.Sleep(backoff)

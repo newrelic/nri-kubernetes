@@ -8,13 +8,15 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/internal/config"
 )
 
-// TestConnector_LegacyBehavior_NoRetries tests that initTimeout=0 disables retries
+// TestConnector_LegacyBehavior_NoRetries tests that initTimeout=0 disables retries.
 func TestConnector_LegacyBehavior_NoRetries(t *testing.T) {
+	t.Parallel()
 	t.Skip("Integration test - requires full environment setup")
 }
 
-// TestConnector_RetryLogic tests that retry logic activates when initTimeout > 0
+// TestConnector_RetryLogic tests that retry logic activates when initTimeout > 0.
 func TestConnector_RetryLogic(t *testing.T) {
+	t.Parallel()
 	// Test that configuration is properly loaded
 	cfg := config.Kubelet{
 		Enabled:     true,
@@ -46,8 +48,9 @@ func TestConnector_RetryLogic(t *testing.T) {
 	}
 }
 
-// TestConnector_ConfigValidation tests configuration validation
+// TestConnector_ConfigValidation tests configuration validation.
 func TestConnector_ConfigValidation(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		initTimeout time.Duration
@@ -82,6 +85,7 @@ func TestConnector_ConfigValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			cfg := config.Kubelet{
 				Enabled:     true,
 				Port:        10250,
