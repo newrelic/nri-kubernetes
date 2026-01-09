@@ -184,7 +184,7 @@ kubelet:
     # -- Max number of scraper rerun when scraper runtime error happens
     scraperMaxReruns: 4
     # -- Total timeout for kubelet connection retries during pod initialization. Useful for environments like EKS/GKE where kubelet certificates may take 1-2 minutes to provision after node startup. Set to 0s to disable retries and use legacy behavior (fail immediately).
-    initTimeout: 0s
+    initTimeout: 180s
     # -- Delay between retry attempts during kubelet client initialization. Only used if initTimeout > 0.
     initBackoff: 5s
   # port:
