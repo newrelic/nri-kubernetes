@@ -15,7 +15,7 @@ Kubernetes objects like namespace, replicaset, deployments and pods (when they a
 * `/metrics` from control plane components: `ETCD`,`controllerManager`, `apiServer` and `scheduler`
 
 Check out our [documentation](https://docs.newrelic.com/docs/kubernetes-integration-new-relic-infrastructure)
-in order to find out more how to install and configure the integration, learn what metrics are captured
+to learn how to install and configure the integration, understand what metrics are captured,
 and how to query them.
 
 ## Table of contents
