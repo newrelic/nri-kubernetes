@@ -1385,9 +1385,9 @@ func NewKubeletSpecs(interfaceCache *kubeletMetric.InterfaceCache) definition.Sp
 			{Name: "containerMemoryMappedFileBytes", ValueFunc: definition.FromRaw("container_memory_mapped_file"), Type: sdkMetric.GAUGE, Optional: true},
 			{Name: "containerOOMEventsDelta", ValueFunc: definition.FromRaw("container_oom_events_total"), Type: sdkMetric.PDELTA, Optional: true},
 			// In openshift (and possibly in other environments) these metrics were missing at first for pods that were not throttled.
-			{Name: "containerCpuCfsPeriodsDelta", ValueFunc: definition.FromRaw("container_cpu_cfs_periods_total"), Type: sdkMetric.DELTA, Optional: true},
-			{Name: "containerCpuCfsThrottledPeriodsDelta", ValueFunc: definition.FromRaw("container_cpu_cfs_throttled_periods_total"), Type: sdkMetric.DELTA, Optional: true},
-			{Name: "containerCpuCfsThrottledSecondsDelta", ValueFunc: definition.FromRaw("container_cpu_cfs_throttled_seconds_total"), Type: sdkMetric.DELTA, Optional: true},
+			{Name: "containerCpuCfsPeriodsDelta", ValueFunc: definition.FromRaw("container_cpu_cfs_periods_total"), Type: sdkMetric.PDELTA, Optional: true},
+			{Name: "containerCpuCfsThrottledPeriodsDelta", ValueFunc: definition.FromRaw("container_cpu_cfs_throttled_periods_total"), Type: sdkMetric.PDELTA, Optional: true},
+			{Name: "containerCpuCfsThrottledSecondsDelta", ValueFunc: definition.FromRaw("container_cpu_cfs_throttled_seconds_total"), Type: sdkMetric.PDELTA, Optional: true},
 			{Name: "containerCpuCfsPeriodsTotal", ValueFunc: definition.FromRaw("container_cpu_cfs_periods_total"), Type: sdkMetric.GAUGE, Optional: true},
 			{Name: "containerCpuCfsThrottledPeriodsTotal", ValueFunc: definition.FromRaw("container_cpu_cfs_throttled_periods_total"), Type: sdkMetric.GAUGE, Optional: true},
 			{Name: "containerCpuCfsThrottledSecondsTotal", ValueFunc: definition.FromRaw("container_cpu_cfs_throttled_seconds_total"), Type: sdkMetric.GAUGE, Optional: true},
