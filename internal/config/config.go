@@ -19,11 +19,6 @@ const (
 	DefaultAgentTimeout     = 3 * time.Second
 	DefaultProbeTimeout     = 90 * time.Second
 	DefaultProbeBackoff     = 5 * time.Second
-
-	// Defaults for kubelet initialization retry.
-	DefaultInitTimeout = 180 * time.Second // 3 minutes to cover EKS certificate provisioning
-	DefaultInitBackoff = 5 * time.Second   // 5 seconds between retry attempts
-
 	DefaultNetworkRouteFile = "/host/proc/1/net/route"
 
 	SinkTypeHTTP   = "http"
@@ -313,8 +308,9 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	v.SetDefault("kubelet|retries", DefaultRetries)
 	v.SetDefault("kubelet|scraperMaxReruns", DefaultScraperMaxReruns)
 	v.SetDefault("kubelet|fetchPodsFromKubeService", false)
-	v.SetDefault("kubelet|initTimeout", DefaultInitTimeout)
-	v.SetDefault("kubelet|initBackoff", DefaultInitBackoff)
+	// initTimeout and initBackoff intentionally have no defaults
+	// When missing from config, they default to 0s (legacy behavior: no retry)
+	// When present in config, their values are used (e.g., 180s enables retry)
 
 	v.SetDefault("controlPlane|timeout", DefaultTimeout)
 	v.SetDefault("controlPlane|retries", DefaultRetries)
