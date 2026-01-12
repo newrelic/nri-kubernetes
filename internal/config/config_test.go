@@ -123,9 +123,9 @@ func TestKubeletInitRetryFieldsOptional(t *testing.T) {
 		require.NoError(t, err)
 
 		// When fields are missing, they should default to 0s (legacy behavior: no retry)
-		require.Equal(t, 0, int(cfg.Kubelet.InitTimeout.Seconds()),
+		require.Equal(t, 0, int(cfg.InitTimeout.Seconds()),
 			"initTimeout should be 0s when missing from config (legacy behavior)")
-		require.Equal(t, 0, int(cfg.Kubelet.InitBackoff.Seconds()),
+		require.Equal(t, 0, int(cfg.InitBackoff.Seconds()),
 			"initBackoff should be 0s when missing from config (legacy behavior)")
 	})
 
@@ -137,9 +137,9 @@ func TestKubeletInitRetryFieldsOptional(t *testing.T) {
 		require.NoError(t, err)
 
 		// When fields are present, they should use the configured values
-		require.Equal(t, 180, int(cfg.Kubelet.InitTimeout.Seconds()),
+		require.Equal(t, 180, int(cfg.InitTimeout.Seconds()),
 			"initTimeout should be 180s when explicitly set in config")
-		require.Equal(t, 5, int(cfg.Kubelet.InitBackoff.Seconds()),
+		require.Equal(t, 5, int(cfg.InitBackoff.Seconds()),
 			"initBackoff should be 5s when explicitly set in config")
 	})
 }
