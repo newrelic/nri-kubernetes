@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### bugfix
+- Account for counter resets when computing deltas for CPU CFS periods @jamescripter [#1375](https://github.com/newrelic/nri-kubernetes/pull/1375)
+
 ## v3.52.0 - 2025-12-29
 
 ### 🚀 Enhancements
