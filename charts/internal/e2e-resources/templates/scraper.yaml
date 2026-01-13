@@ -52,6 +52,7 @@ spec:
         app: scraper
     spec:
       serviceAccountName: {{ .Release.Name }}-scraper
+      priorityClassName: system-cluster-critical
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       containers:

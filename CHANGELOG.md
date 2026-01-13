@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- Add pod priority and priorityClassName telemetry
+
 ## v3.52.0 - 2025-12-29
 
 ### 🚀 Enhancements
