@@ -349,6 +349,15 @@ func (podsFetcher *PodsFetcher) fetchPodData(pod *v1.Pod) definition.RawMetrics 
 		metrics["message"] = pod.Status.Message
 	}
 
+	// Priority for eviction analysis
+	if pod.Spec.Priority != nil {
+		metrics["priority"] = *pod.Spec.Priority
+	}
+
+	if pod.Spec.PriorityClassName != "" {
+		metrics["priorityClassName"] = pod.Spec.PriorityClassName
+	}
+
 	labels := podLabels(pod)
 	if len(labels) > 0 {
 		metrics["labels"] = labels
