@@ -280,5 +280,22 @@ func kubeletExclusions() []exclude.Func {
 				return e.Metadata.Name != "pv" && strings.HasPrefix(spec.Name, "pvc")
 			},
 		),
+
+		// Kubernetes pod priority and priorityClassName are optional fields - only exclude when not present
+		exclude.Exclude(
+			exclude.Groups("pod"),
+			func(_ string, spec *definition.Spec, ent *integration.Entity) bool {
+				// Only exclude priority/priorityClassName if they're not present in the entity metrics
+				if spec.Name == "priority" || spec.Name == "priorityClassName" {
+					for _, metricSet := range ent.Metrics {
+						if _, exists := metricSet.Metrics[spec.Name]; exists {
+							return false // Metric exists, don't exclude
+						}
+					}
+					return true // Metric doesn't exist, exclude
+				}
+				return false
+			},
+		),
 	}
 }
