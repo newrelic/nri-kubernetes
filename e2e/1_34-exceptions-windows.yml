@@ -1,5 +1,24 @@
 # These metrics are not present when testing Windows
 except_metrics: [
+  # Linux-specific container metrics (not available on Windows)
+  "k8s.container.fsInodes",
+  "k8s.container.fsInodesFree",
+  "k8s.container.memoryMappedFileBytes",
+  "k8s.container.oomEventsDelta",
+  "k8s.container.cpuCfsPeriodsDelta",
+  "k8s.container.cpuCfsThrottledPeriodsDelta",
+  "k8s.container.cpuCfsThrottledSecondsDelta",
+  "k8s.container.cpuCfsPeriodsTotal",
+  "k8s.container.cpuCfsThrottledPeriodsTotal",
+  "k8s.container.cpuCfsThrottledSecondsTotal",
+  # Linux-specific node metrics (not available on Windows)
+  "k8s.node.capacityHugepages*",
+  "k8s.node.fsInodes",
+  "k8s.node.fsInodesFree",
+  "k8s.node.fsInodesUsed",
+  "k8s.node.runtimeInodes",
+  "k8s.node.runtimeInodesFree",
+  # Control plane metrics (not available in managed Windows EKS clusters)
   "k8s.controllermanager.goGoroutines",
   "k8s.controllermanager.goThreads",
   "k8s.controllermanager.nodeCollectorEvictionsDelta",
