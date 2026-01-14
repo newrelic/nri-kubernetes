@@ -28,6 +28,59 @@ jobs:
         id: random-string
         run: |
           echo "random_string=$(head -c20 /dev/urandom | base64 | tr -dc 'a-z' | head -c5)" >> $GITHUB_OUTPUT
+  build-linux-binary:
+    name: Build Linux binary for
+    needs: generate-key
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [ linux ]
+        goarch: [ amd64, arm64, arm ]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
+      - name: Build integration
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          make compile TAG=e2e-testing-${{ github.sha }}
+      - name: Upload artifact for docker build step
+        uses: actions/upload-artifact@v6
+        with:
+          retention-days: 1
+          name: nri-kubernetes-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: bin/nri-kubernetes-${{ matrix.goos }}-${{ matrix.goarch }}
+
+  create-linux-image:
+    name: Build and push Linux E2E image
+    needs: [ build-linux-binary, generate-key ]
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_IMAGE_NAME: newrelic/nri-kubernetes-internal
+      DOCKER_PLATFORMS: "linux/amd64,linux/arm64,linux/arm"
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Download all artifacts from build job
+        uses: actions/download-artifact@v7
+        with:
+          path: bin
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
+      - name: Build and push Linux image
+        run: |
+          docker buildx build --push --platform=$DOCKER_PLATFORMS \
+            -t $DOCKER_IMAGE_NAME:linux-e2e-testing-${{ needs.generate-key.outputs.run_key }} \
+            .
+
   create-windows-image:
     name: Create Windows Image for E2E Test
     needs: generate-key
@@ -40,7 +93,7 @@ jobs:
       K8S_AGENTS_DOCKERHUB_USERNAME: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
       K8S_AGENTS_DOCKERHUB_TOKEN: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
   e2e:
-    needs: [ create-windows-image, generate-key ]
+    needs: [ create-windows-image, create-linux-image, generate-key ]
     strategy:
       fail-fast: false
       matrix:
@@ -109,6 +162,7 @@ jobs:
           helm repo update
       - name: Add PullSecret to e2e-values.yml
         run: |
+          export IMAGE_LINUX="linux-e2e-testing-${{ needs.generate-key.outputs.run_key }}"
           export IMAGE_2019="newrelic/nri-kubernetes-internal:windows-ltsc2019-e2e-testing-${{ needs.generate-key.outputs.run_key }}"
           export IMAGE_2022="newrelic/nri-kubernetes-internal:windows-ltsc2022-e2e-testing-${{ needs.generate-key.outputs.run_key }}"
 
