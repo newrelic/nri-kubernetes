@@ -17,6 +17,7 @@ const workingDataWithNamespaceFilters = "config_with_namespace_filter"
 const wrongDataWithNamespaceFilterMatchLabels = "config_with_namespace_filter_wrong_match_labels"
 const wrongDataWithNamespaceFiltersMatchExpressions = "config_with_namespace_filter_wrong_match_expressions"
 const unexpectedFields = "config_with_unexpected_fields"
+const configWithNewDefaults = "config_with_new_defaults"
 
 func TestLoadConfig(t *testing.T) {
 
@@ -109,4 +110,36 @@ func TestEnableResourceQuotaSamples(t *testing.T) {
 	cfg, err := config.LoadConfig(fakeDataDir, workingData)
 	require.NoError(t, err)
 	require.True(t, cfg.EnableResourceQuotaSamples)
+}
+
+func TestKubeletInitRetryFieldsOptional(t *testing.T) {
+	t.Parallel()
+
+	t.Run("defaults_to_0s_when_missing", func(t *testing.T) {
+		t.Parallel()
+
+		// Load config without initTimeout and initBackoff fields (backward compatibility test)
+		cfg, err := config.LoadConfig(fakeDataDir, workingData)
+		require.NoError(t, err)
+
+		// When fields are missing, they should default to 0s (legacy behavior: no retry)
+		require.Equal(t, 0, int(cfg.InitTimeout.Seconds()),
+			"initTimeout should be 0s when missing from config (legacy behavior)")
+		require.Equal(t, 0, int(cfg.InitBackoff.Seconds()),
+			"initBackoff should be 0s when missing from config (legacy behavior)")
+	})
+
+	t.Run("uses_configured_values_when_present", func(t *testing.T) {
+		t.Parallel()
+
+		// Load config with initTimeout and initBackoff fields present
+		cfg, err := config.LoadConfig(fakeDataDir, configWithNewDefaults)
+		require.NoError(t, err)
+
+		// When fields are present, they should use the configured values
+		require.Equal(t, 180, int(cfg.InitTimeout.Seconds()),
+			"initTimeout should be 180s when explicitly set in config")
+		require.Equal(t, 5, int(cfg.InitBackoff.Seconds()),
+			"initBackoff should be 5s when explicitly set in config")
+	})
 }

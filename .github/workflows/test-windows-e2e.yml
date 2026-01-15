@@ -111,7 +111,7 @@ jobs:
         run: |
           export IMAGE_2019="newrelic/nri-kubernetes-internal:windows-ltsc2019-e2e-testing-${{ needs.generate-key.outputs.run_key }}"
           export IMAGE_2022="newrelic/nri-kubernetes-internal:windows-ltsc2022-e2e-testing-${{ needs.generate-key.outputs.run_key }}"
-          
+
           envsubst < e2e/e2e-values-windows-template.yml > e2e/e2e-values-windows.yml
 
           cat e2e/e2e-values-windows.yml
