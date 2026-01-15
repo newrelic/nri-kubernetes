@@ -10,7 +10,7 @@ require (
 	github.com/prometheus/common v0.67.4
 	github.com/segmentio/go-camelcase v0.0.0-20160726192923-7085f1e3c734
 	github.com/sethgrid/pester v1.2.0
-	github.com/sirupsen/logrus v1.9.3
+	github.com/sirupsen/logrus v1.9.4
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/text v0.32.0
