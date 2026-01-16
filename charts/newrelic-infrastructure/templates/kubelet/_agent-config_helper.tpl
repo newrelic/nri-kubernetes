@@ -22,9 +22,7 @@ Auto-enable when enableProcessMetrics is true AND enableWindows is true, since W
 containers are inherently privileged and partial process visibility is less useful.
 Users can still override via kubelet.agentConfig.enable_elevated_process_priv if needed.
 */}}
-{{- if (get .Values "enableElevatedProcessPrivilege" | kindIs "bool") }}
-enable_elevated_process_priv: {{ .Values.enableElevatedProcessPrivilege }}
-{{- else if and (get .Values "enableProcessMetrics") (get .Values "enableWindows") }}
+{{- if and (get .Values "enableProcessMetrics") (get .Values "enableWindows") }}
 enable_elevated_process_priv: true
 {{- end }}
 {{- end -}}

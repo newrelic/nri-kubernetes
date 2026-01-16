@@ -90,8 +90,8 @@ windows:
   # When null, inherits from global 'privileged' setting.
   # Set to false to disable HostProcess mode on Windows while keeping Linux privileged.
   # HostProcess containers run directly on the Windows host (not in a container) and require hostNetwork: true.
-  # @default -- Inherits from `privileged` setting
-  privileged:
+  # @default -- `false`
+  privileged: false
 
 # -- Config that applies to all instances of the solution: kubelet, ksm, control plane and sidecars.
 # @default -- See `values.yaml`
@@ -664,16 +664,6 @@ integrations: {}
 # ref: https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/new-relic-infrastructure-agent-1120
 # @default -- `false`
 enableProcessMetrics:
-
-# -- (bool) Enable elevated process privileges on Windows for enhanced process visibility.
-# When enabled on Windows, the agent requests SeDebugPrivilege which allows querying all system processes.
-# Only applies to Windows nodes. On Linux, this setting is ignored.
-# Automatically enabled when both enableProcessMetrics and enableWindows are true, since Windows HostProcess
-# containers are inherently privileged and complete process visibility is desired for monitoring.
-# Can be explicitly set to false via this setting or kubelet.agentConfig.enable_elevated_process_priv to override.
-# ref: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/#enable-elevated-process-priv
-# @default -- Auto-enabled when `enableProcessMetrics: true` and `enableWindows: true`
-enableElevatedProcessPrivilege:
 
 # Prefix nodes display name with cluster to reduce chances of collisions
 # prefixDisplayNameWithCluster: false

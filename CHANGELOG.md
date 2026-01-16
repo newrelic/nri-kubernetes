@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### enhancement
 - Add handling for fine-grained kubectl permissions @kondracek-nr [#1389](https://github.com/newrelic/nri-kubernetes/pull/1389)
+- Introduce HostProcess Windows containers and "privileged" mode support to collect host metrics on Windows nodes. Inherits global or chart-specific "privileged" setting by default, but also allows users to override this for their Windows nodes - see values.yaml. @kondracek-nr [#1361](https://github.com/newrelic/nri-kubernetes/pull/1361)
 
 ## v3.53.2 - 2026-02-09
 
@@ -29,7 +30,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### 🚀 Enhancements
 - Add kubelet initialization retry logic to handle certificate provisioning delays in managed Kubernetes environments (EKS/GKE). New config parameters `kubelet.config.initTimeout` (default: 180s) and `kubelet.config.initBackoff` (default: 5s) control retry behavior. Set `initTimeout: 0s` to disable retries and preserve legacy behavior. @NRhzhao [#1372](https://github.com/newrelic/nri-kubernetes/pull/1372)
 - Add pod priority and priorityClassName telemetry
-- Introduce HostProcess Windows containers and "privileged" mode support to collect host metrics on Windows nodes. Inherits global or chart-specific "privileged" setting by default, but also allows users to override this for their Windows nodes - see values.yaml. @kondracek-nr [#1361](https://github.com/newrelic/nri-kubernetes/pull/1361)
 
 ### ⛓️ Dependencies
 - Updated github.com/sirupsen/logrus to v1.9.4 - [Changelog 🔗](https://github.com/sirupsen/logrus/releases/tag/v1.9.4)

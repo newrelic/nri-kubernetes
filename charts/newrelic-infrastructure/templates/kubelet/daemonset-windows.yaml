@@ -144,7 +144,11 @@ spec:
             windowsOptions:
               {{- if include "nriKubernetes.windows.privileged" $ }}
               hostProcess: true
+              {{- if $.Values.enableProcessMetrics }}
               runAsUserName: "NT AUTHORITY\\SYSTEM"
+              {{- else }}
+              runAsUserName: "NT AUTHORITY\\Local service"
+              {{- end }}
               {{- else }}
               hostProcess: false
               runAsUserName: "ContainerUser"

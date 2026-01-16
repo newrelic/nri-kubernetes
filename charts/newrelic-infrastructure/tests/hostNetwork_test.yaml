@@ -32,10 +32,9 @@ tests:
           path: spec.template.spec.hostNetwork
           value: false
         template: templates/kubelet/daemonset.yaml
-      - equal:
+      - isNull:
           path: spec.template.spec.hostNetwork
-          value: true  # Windows uses hostNetwork when privileged: true (default)
-        template: templates/kubelet/daemonset-windows.yaml
+        template: templates/kubelet/daemonset-windows.yaml  # Windows defaults to unprivileged mode (windows.privileged: false)
 
 
   - it: hostNetwork is false if nothing is set

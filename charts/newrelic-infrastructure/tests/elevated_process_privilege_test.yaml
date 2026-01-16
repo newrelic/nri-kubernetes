@@ -41,32 +41,6 @@ tests:
           path: data["newrelic-infra.yml"]
           pattern: "enable_elevated_process_priv: true"
 
-  - it: should respect explicit enableElevatedProcessPrivilege true setting
-    set:
-      cluster: test-cluster
-      licenseKey: test-key
-      kubelet.enabled: true
-      enableWindows: true
-      enableProcessMetrics: false
-      enableElevatedProcessPrivilege: true
-    asserts:
-      - matchRegex:
-          path: data["newrelic-infra.yml"]
-          pattern: "enable_elevated_process_priv: true"
-
-  - it: should respect explicit enableElevatedProcessPrivilege false setting
-    set:
-      cluster: test-cluster
-      licenseKey: test-key
-      kubelet.enabled: true
-      enableWindows: true
-      enableProcessMetrics: true
-      enableElevatedProcessPrivilege: false
-    asserts:
-      - matchRegex:
-          path: data["newrelic-infra.yml"]
-          pattern: "enable_elevated_process_priv: false"
-
   - it: should handle enableProcessMetrics as boolean true
     set:
       cluster: test-cluster

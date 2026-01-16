@@ -17,6 +17,8 @@ tests:
       kubelet.enabled: true
       enableWindows: true
       privileged: true
+      windows:
+        privileged: true
     asserts:
       - equal:
           path: spec.template.spec.containers[0].securityContext.windowsOptions.hostProcess
@@ -27,13 +29,16 @@ tests:
           value: true
         template: templates/kubelet/daemonset-windows.yaml
 
-  - it: should set correct user accounts in privileged mode
+  - it: should set correct user accounts in privileged mode with enableProcessMetrics
     set:
       licenseKey: test
       cluster: test
       kubelet.enabled: true
       enableWindows: true
       privileged: true
+      enableProcessMetrics: true
+      windows:
+        privileged: true
     asserts:
       - equal:
           path: spec.template.spec.containers[0].securityContext.windowsOptions.runAsUserName
@@ -44,6 +49,25 @@ tests:
           value: "NT AUTHORITY\\SYSTEM"
         template: templates/kubelet/daemonset-windows.yaml
 
+  - it: should use Local service for agent when privileged without enableProcessMetrics
+    set:
+      licenseKey: test
+      cluster: test
+      kubelet.enabled: true
+      enableWindows: true
+      privileged: true
+      windows:
+        privileged: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.windowsOptions.runAsUserName
+          value: "NT AUTHORITY\\Local service"
+        template: templates/kubelet/daemonset-windows.yaml
+      - equal:
+          path: spec.template.spec.containers[1].securityContext.windowsOptions.runAsUserName
+          value: "NT AUTHORITY\\Local service"
+        template: templates/kubelet/daemonset-windows.yaml
+
   - it: should add PowerShell command with CONTAINER_SANDBOX_MOUNT_POINT for kubelet in privileged mode
     set:
       licenseKey: test
@@ -51,6 +75,8 @@ tests:
       kubelet.enabled: true
       enableWindows: true
       privileged: true
+      windows:
+        privileged: true
     asserts:
       - equal:
           path: spec.template.spec.containers[0].command[0]
@@ -72,6 +98,8 @@ tests:
       kubelet.enabled: true
       enableWindows: true
       privileged: true
+      windows:
+        privileged: true
     asserts:
       - equal:
           path: spec.template.spec.containers[1].command[0]
@@ -93,6 +121,8 @@ tests:
       kubelet.enabled: true
       enableWindows: true
       privileged: true
+      windows:
+        privileged: true
     asserts:
       - equal:
           path: spec.template.spec.hostNetwork
@@ -106,6 +136,8 @@ tests:
       kubelet.enabled: true
       enableWindows: true
       privileged: true
+      windows:
+        privileged: true
     asserts:
       - equal:
           path: metadata.labels.mode
@@ -123,6 +155,8 @@ tests:
       kubelet.enabled: true
       enableWindows: true
       privileged: true
+      windows:
+        privileged: true
     asserts:
       - notContains:
           path: spec.template.spec.containers[1].env
@@ -137,6 +171,8 @@ tests:
       kubelet.enabled: true
       enableWindows: true
       privileged: true
+      windows:
+        privileged: true
     asserts:
       - notContains:
           path: spec.template.spec.containers[1].env
@@ -263,6 +299,67 @@ tests:
               fieldRef:
                 apiVersion: "v1"
                 fieldPath: "status.hostIP"
+        template: templates/kubelet/daemonset-windows.yaml
+
+  # Default behavior tests
+  - it: should use unprivileged mode for Windows by default (windows.privileged=false)
+    set:
+      licenseKey: test
+      cluster: test
+      kubelet.enabled: true
+      enableWindows: true
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.windowsOptions.hostProcess
+          value: false
+        template: templates/kubelet/daemonset-windows.yaml
+      - equal:
+          path: spec.template.spec.containers[1].securityContext.windowsOptions.hostProcess
+          value: false
+        template: templates/kubelet/daemonset-windows.yaml
+      - isNull:
+          path: spec.template.spec.hostNetwork
+        template: templates/kubelet/daemonset-windows.yaml
+      - equal:
+          path: metadata.labels.mode
+          value: unprivileged
+        template: templates/kubelet/daemonset-windows.yaml
+      - equal:
+          path: spec.template.metadata.labels.mode
+          value: unprivileged
+        template: templates/kubelet/daemonset-windows.yaml
+
+  - it: should use ContainerUser for both containers by default
+    set:
+      licenseKey: test
+      cluster: test
+      kubelet.enabled: true
+      enableWindows: true
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.windowsOptions.runAsUserName
+          value: ContainerUser
+        template: templates/kubelet/daemonset-windows.yaml
+      - equal:
+          path: spec.template.spec.containers[1].securityContext.windowsOptions.runAsUserName
+          value: ContainerUser
+        template: templates/kubelet/daemonset-windows.yaml
+
+  - it: should set NRIA_OVERRIDE_HOST_ROOT to empty by default for Windows
+    set:
+      licenseKey: test
+      cluster: test
+      kubelet.enabled: true
+      enableWindows: true
+    documentIndex: 0
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: NRIA_OVERRIDE_HOST_ROOT
+            value: ""
         template: templates/kubelet/daemonset-windows.yaml
 
   # Windows-specific privileged override tests
