@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancement
-- Add kubelet initialization retry logic to handle certificate provisioning delays in managed Kubernetes environments (EKS/GKE). New config parameters `kubelet.config.initTimeout` (default: 180s) and `kubelet.config.initBackoff` (default: 5s) control retry behavior. Set `initTimeout: 0s` to disable retries and preserve legacy behavior.  @NRhzhao [#1372](https://github.com/newrelic/nri-kubernetes/pull/1372)
+## v3.53.0 - 2026-01-19
+
+### 🚀 Enhancements
+- Add kubelet initialization retry logic to handle certificate provisioning delays in managed Kubernetes environments (EKS/GKE). New config parameters `kubelet.config.initTimeout` (default: 180s) and `kubelet.config.initBackoff` (default: 5s) control retry behavior. Set `initTimeout: 0s` to disable retries and preserve legacy behavior. @NRhzhao [#1372](https://github.com/newrelic/nri-kubernetes/pull/1372)
 - Add pod priority and priorityClassName telemetry
+
+### ⛓️ Dependencies
+- Updated github.com/sirupsen/logrus to v1.9.4 - [Changelog 🔗](https://github.com/sirupsen/logrus/releases/tag/v1.9.4)
 
 ## v3.52.0 - 2025-12-29
 
