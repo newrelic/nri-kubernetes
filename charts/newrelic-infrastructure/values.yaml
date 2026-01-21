@@ -84,6 +84,15 @@ windowsOsList:
     # @ignored
     integrationImage: ""
 
+# Windows-specific configuration
+windows:
+  # -- (bool) Override privileged mode for Windows nodes.
+  # When null, inherits from global 'privileged' setting.
+  # Set to false to disable HostProcess mode on Windows while keeping Linux privileged.
+  # HostProcess containers run directly on the Windows host (not in a container) and require hostNetwork: true.
+  # @default -- `false`
+  privileged: false
+
 # -- Config that applies to all instances of the solution: kubelet, ksm, control plane and sidecars.
 # @default -- See `values.yaml`
 common:
