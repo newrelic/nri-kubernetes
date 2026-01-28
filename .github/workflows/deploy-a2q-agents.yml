@@ -32,19 +32,29 @@ jobs:
 
           echo "Executing NRQL query against account: $ACCOUNT_ID"
 
-          # Construct GraphQL query safely using jq
-          GRAPHQL_PAYLOAD=$(jq -n \
-            --arg accountId "$ACCOUNT_ID" \
-            --arg nrqlQuery "$NRQL_QUERY" \
-            '{query: "{ actor { account(id: \($accountId)) { nrql(query: \"\($nrqlQuery)\") { results } } } }"}')
+          # Construct GraphQL query
+          GRAPHQL_QUERY="
+          {
+            actor {
+              account(id: $ACCOUNT_ID) {
+                nrql(query: \"$NRQL_QUERY\") {
+                  results
+                }
+              }
+            }
+          }
+          "
 
-          # Execute query with proper error handling (redirect stderr to prevent key exposure)
+          # Create JSON payload file to avoid shell escaping issues
+          echo "{\"query\": $(echo "$GRAPHQL_QUERY" | jq -Rs .)}" > payload.json
+
+          # Execute query with proper error handling
           HTTP_CODE=$(curl -s -w "%{http_code}" -o response.json \
-            -X POST https://api.newrelic.com/graphql \
-            -H "Content-Type: application/json" \
+            -X POST https://staging-api.newrelic.com/graphql \
             -H "API-Key: $NR_API_KEY" \
+            -H "Content-Type: application/json" \
             -H "User-Agent: GitHub-Actions-NRQL/1.0" \
-            -d "$GRAPHQL_PAYLOAD" 2>&1 | tee curl_error.log | tail -n 1)
+            --data @payload.json)
 
           # Check HTTP response
           if [ "$HTTP_CODE" -ne 200 ]; then
