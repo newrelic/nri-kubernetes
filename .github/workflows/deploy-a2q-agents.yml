@@ -1,6 +1,9 @@
 name: Execute NRQL Query
 
 on:
+  push:
+    branches:
+      - test-a2q-gha
   workflow_dispatch:
 
 permissions:
@@ -11,40 +14,111 @@ jobs:
     name: Execute NRQL Query
     runs-on: ubuntu-22.04
 
-    env:
-      NR_API_KEY: ${{ secrets.A2Q_NR1_API_KEY }}
-      ACCOUNT_ID: ${{ secrets.A2Q_NR1_ACCOUNT_ID }}
-      NRQL_QUERY: "SELECT sum(if(WHERE totalEvaluations > 0 AND `successfulAssertions` > 0, 1, 0)) AS 'Failed tests' FROM A2QTestResult WHERE a2q.environment = 'production' AND apiVersion IN ('v1') AND `a2q.executor.name` = 'nri-k8s' AND `x-ghBranch` = 'master' FACET testName"
-
     steps:
-      - name: Execute NRQL Query
+      - name: Set query parameters
+        id: params
         run: |
-          echo "Executing NRQL query against account: $ACCOUNT_ID"
-          echo ""
-          echo "Query:"
-          echo "$NRQL_QUERY"
-          echo ""
-          echo "Results:"
+          # Always use account_id and nrql_query from hardcoded values
+          echo "account_id=${{ secrets.A2Q_NR1_ACCOUNT_ID }}" >> $GITHUB_OUTPUT
+          echo "nrql_query=SELECT sum(if(WHERE totalEvaluations > 0 AND \`successfulAssertions\` > 0, 1, 0)) AS 'Failed tests' FROM A2QTestResult WHERE a2q.environment = 'production' AND apiVersion IN ('v1') AND \`a2q.executor.name\` = 'nri-k8s' AND \`x-ghBranch\` = 'master' FACET testName" >> $GITHUB_OUTPUT
 
-          # Execute NRQL query using New Relic GraphQL API
-          RESPONSE=$(curl -s -X POST https://api.newrelic.com/graphql \
+      - name: Validate Inputs
+        env:
+          ACCOUNT_ID: ${{ steps.params.outputs.account_id }}
+          NRQL_QUERY: ${{ steps.params.outputs.nrql_query }}
+        run: |
+          # Validate account ID is numeric
+          if ! [[ "$ACCOUNT_ID" =~ ^[0-9]+$ ]]; then
+            echo "::error::Invalid account ID format"
+            exit 1
+          fi
+
+          # Check query length
+          QUERY_LEN=$(echo -n "$NRQL_QUERY" | wc -c)
+          if [ "$QUERY_LEN" -gt 5000 ]; then
+            echo "::error::Query exceeds maximum length (5000 characters)"
+            exit 1
+          fi
+
+          echo "Validation passed"
+
+      - name: Execute NRQL Query
+        env:
+          NR_API_KEY: ${{ secrets.A2Q_NR1_API_KEY }}
+          ACCOUNT_ID: ${{ steps.params.outputs.account_id }}
+          NRQL_QUERY: ${{ steps.params.outputs.nrql_query }}
+        run: |
+          # Mask API key (defense in depth)
+          echo "::add-mask::$NR_API_KEY"
+
+          # Mask any potential leaked key patterns
+          if [ -n "$NR_API_KEY" ]; then
+            echo "::add-mask::${NR_API_KEY:0:10}"
+          fi
+
+          echo "Executing NRQL query against account: $ACCOUNT_ID"
+
+          # Construct GraphQL query safely using jq
+          GRAPHQL_PAYLOAD=$(jq -n \
+            --arg accountId "$ACCOUNT_ID" \
+            --arg nrqlQuery "$NRQL_QUERY" \
+            '{query: "{ actor { account(id: \($accountId)) { nrql(query: \"\($nrqlQuery)\") { results } } } }"}')
+
+          # Execute query with proper error handling (redirect stderr to prevent key exposure)
+          HTTP_CODE=$(curl -s -w "%{http_code}" -o response.json \
+            -X POST https://api.newrelic.com/graphql \
             -H "Content-Type: application/json" \
             -H "API-Key: $NR_API_KEY" \
-            -d "{
-              \"query\": \"{ actor { account(id: $ACCOUNT_ID) { nrql(query: \\\"$NRQL_QUERY\\\") { results } } } }\"
-            }")
+            -H "User-Agent: GitHub-Actions-NRQL/1.0" \
+            -d "$GRAPHQL_PAYLOAD" 2>&1 | tee curl_error.log | tail -n 1)
 
-          echo "$RESPONSE" | jq '.'
+          # Check HTTP response
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "::error::API request failed with HTTP $HTTP_CODE"
+            # Show response but not curl errors (which might contain headers)
+            if [ -f response.json ]; then
+              jq '.' response.json 2>/dev/null || echo "Unable to parse response"
+            else
+              echo "No response received from API"
+            fi
+            exit 1
+          fi
+
+          # Check for GraphQL errors
+          if jq -e '.errors' response.json > /dev/null 2>&1; then
+            echo "::error::GraphQL query returned errors"
+            jq '.errors' response.json
+            exit 1
+          fi
+
+          # Output sanitized results
+          echo "Query executed successfully"
+          echo ""
+          echo "Results:"
+          jq '.data.actor.account.nrql.results' response.json
 
       - name: Generate Query Summary
         if: always()
+        env:
+          ACCOUNT_ID: ${{ steps.params.outputs.account_id }}
+          NRQL_QUERY: ${{ steps.params.outputs.nrql_query }}
         run: |
           echo "## NRQL Query Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Account ID:** $ACCOUNT_ID" >> $GITHUB_STEP_SUMMARY
           echo "**Workflow Run:** ${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Query" >> $GITHUB_STEP_SUMMARY
           echo '```sql' >> $GITHUB_STEP_SUMMARY
           echo "$NRQL_QUERY" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Add results if successful
+          if [ -f response.json ] && jq -e '.data.actor.account.nrql.results' response.json > /dev/null 2>&1; then
+            echo "### Results" >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            jq '.data.actor.account.nrql.results' response.json >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
