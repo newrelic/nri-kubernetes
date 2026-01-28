@@ -1,168 +1,50 @@
-name: Deploy agents to A2Q test clusters
+name: Execute NRQL Query
 
 on:
-  push:
-    branches:
-      - test-a2q-*
-  # Future: Enable weekly schedule (Fridays at 2 PM UTC / 6 AM PST)
-  # schedule:
-  #   - cron: "0 14 * * 5"
-  workflow_dispatch: 
+  workflow_dispatch:
 
 permissions:
-  id-token: write
   contents: read
 
 jobs:
-  deploy:
-    name: Deploy to ${{ matrix.cluster_name }}
+  execute-query:
+    name: Execute NRQL Query
     runs-on: ubuntu-22.04
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # - cluster_name: "a2q-test-stg"
-          #   provider: "gke"
-          #   region: "us-west2-a"  # GCP zone
-          #   project_id: "k8s-o11y-team"  # GCP project ID
-          #   staging: true
-          #   release_candidate: false
-          #   gke_autopilot: false
-          #   ksm_image_version: "v2.15.0"
-          #   sa_key_secret: "GCP_SA_KEY_A2Q_TEST_STG"
-          #   nr_license_key: "NR_LICENSE_KEY_A2Q_TEST_STG"
-
-          # TODO: Add a2q-test-prod cluster when ready
-          # - cluster_name: "a2q-test-prod"
-          #   provider: "gke"
-          #   region: "us-west2-a"
-          #   project_id: "k8s-o11y-team"
-          #   staging: "false"
-          #   sa_key_secret: "GCP_SA_KEY_A2Q_TEST_PROD"  # Different SA key
-
-          # TODO: Uncomment and update when ready to add EKS
-          - cluster_name: "a2q-eks-stg-curr"
-            provider: "eks"
-            region: "us-west-1"  # AWS region
-            iam_role: "gha-role-a2q-eks-stg-curr"  # IAM role for GitHub Actions OIDC
-            staging: true
-            release_candidate: true
-            gke_autopilot: false  # Not applicable for EKS, but needed for env var
-            ksm_image_version: "v2.15.0"
-            nr_license_key: "NR_LICENSE_KEY_A2Q_EKS_STG_CURRENT"
 
     env:
-      CLUSTER_NAME: ${{ matrix.cluster_name }}
-      STAGING: ${{ matrix.staging }}
-      RELEASE_CANDIDATE: ${{ matrix.release_candidate }}
-      GKE_AUTOPILOT: ${{ matrix.gke_autopilot }}
-      KSM_IMAGE_VERSION: ${{ matrix.ksm_image_version }}
+      NR_API_KEY: ${{ secrets.A2Q_NR1_API_KEY }}
+      ACCOUNT_ID: ${{ secrets.A2Q_NR1_ACCOUNT_ID }}
+      NRQL_QUERY: "SELECT sum(if(WHERE totalEvaluations > 0 AND `successfulAssertions` > 0, 1, 0)) AS 'Failed tests' FROM A2QTestResult WHERE a2q.environment = 'production' AND apiVersion IN ('v1') AND `a2q.executor.name` = 'nri-k8s' AND `x-ghBranch` = 'master' FACET testName"
 
     steps:
-      - name: Checkout a2q-nri-kubernetes repo
-        uses: actions/checkout@v4
-
-      # - name: Authenticate to GCP
-      #   if: matrix.provider == 'gke'
-      #   uses: google-github-actions/auth@v2
-      #   with:
-      #     credentials_json: ${{ secrets[matrix.sa_key_secret] }}
-      # - name: Set up gcloud CLI
-      #   if: matrix.provider == 'gke'
-      #   uses: google-github-actions/setup-gcloud@v2
-      #   with:
-      #     install_components: 'gke-gcloud-auth-plugin'
-      # - name: Set kubectl context (GKE)
-      #   if: matrix.provider == 'gke'
-      #   run: |
-      #     gcloud container clusters get-credentials "${{ matrix.cluster_name }}" \
-      #       --zone "${{ matrix.region }}" \
-      #       --project "${{ matrix.project_id }}"
-
-      - name: Configure AWS Credentials via OIDC
-        if: matrix.provider == 'eks'
-        uses: aws-actions/configure-aws-credentials@v5
-        with:
-          role-to-assume: arn:aws:iam::${{ secrets.K8S_AWS_ACCOUNT_ID }}:role/${{ matrix.iam_role }}
-          aws-region: ${{ matrix.region }}
-          role-session-name: ${{ matrix.iam_role }}-deploy-session
-      - name: Set kubectl context (EKS)
-        if: matrix.provider == 'eks'
+      - name: Execute NRQL Query
         run: |
-          aws eks update-kubeconfig --region "${{ matrix.region }}" --name "${{ matrix.cluster_name }}"
-      - name: Verify tools are available
-        run: |
-          echo "kubectl version:"
-          kubectl version --client --output=yaml
+          echo "Executing NRQL query against account: $ACCOUNT_ID"
           echo ""
-          echo "helm version:"
-          helm version
-      - name: Verify cluster connection
-        run: |
-          echo "Connected to cluster: $CLUSTER_NAME"
-          kubectl cluster-info
+          echo "Query:"
+          echo "$NRQL_QUERY"
           echo ""
-          echo "Cluster nodes:"
-          kubectl get nodes
-          echo ""
-          echo "Existing pods in newrelic namespace:"
-          kubectl get pods -n newrelic 2>/dev/null || echo "newrelic namespace does not exist yet"
-      - name: Deploy agents
-        env:
-          LICENSE_KEY: ${{ secrets[matrix.nr_license_key] }}
-        run: |
-          chmod +x .github/scripts/deploy-agents.sh
+          echo "Results:"
 
-          ./.github/scripts/deploy-agents.sh \
-            --cluster "$CLUSTER_NAME" \
-            --license "$LICENSE_KEY" \
-            --ksm-image-version "$KSM_IMAGE_VERSION" \
-            --staging "$STAGING" \
-            --release_candidate "$RELEASE_CANDIDATE" \
-            --gke-autopilot "$GKE_AUTOPILOT"
-      - name: Verify deployment status
-        run: |
-          echo "Waiting for KSM pods to be ready..."
-          kubectl wait --for=condition=ready pod \
-            -l app.kubernetes.io/name=kube-state-metrics \
-            -n newrelic \
-            --timeout=300s || echo "KSM pods not ready within 5 minutes"
+          # Execute NRQL query using New Relic GraphQL API
+          RESPONSE=$(curl -s -X POST https://api.newrelic.com/graphql \
+            -H "Content-Type: application/json" \
+            -H "API-Key: $NR_API_KEY" \
+            -d "{
+              \"query\": \"{ actor { account(id: $ACCOUNT_ID) { nrql(query: \\\"$NRQL_QUERY\\\") { results } } } }\"
+            }")
 
-          echo ""
-          echo "Waiting for nri-kubernetes pods to be ready..."
-          kubectl wait --for=condition=ready pod \
-            -l app.kubernetes.io/name=newrelic-infrastructure \
-            -n newrelic \
-            --timeout=300s || echo "nri-kubernetes pods not ready within 5 minutes"
+          echo "$RESPONSE" | jq '.'
 
-          echo ""
-          echo "Current pod status in newrelic namespace:"
-          kubectl get pods -n newrelic
-
-          echo ""
-          echo "Deployment complete for cluster: $CLUSTER_NAME"
-          echo "Separate validation process will verify metrics."
-      - name: Generate deployment summary
+      - name: Generate Query Summary
         if: always()
         run: |
-          echo "## Deployment Summary: ${{ matrix.cluster_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "## NRQL Query Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Provider:** ${{ matrix.provider }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Region:** ${{ matrix.region }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Account ID:** $ACCOUNT_ID" >> $GITHUB_STEP_SUMMARY
           echo "**Workflow Run:** ${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Configuration" >> $GITHUB_STEP_SUMMARY
-          echo "- **KSM Image Version:** ${{ matrix.ksm_image_version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Release Candidate:** ${{ matrix.release_candidate }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Staging:** ${{ matrix.staging }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **GKE Autopilot:** ${{ matrix.gke_autopilot }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Pod Status" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          kubectl get pods -n newrelic 2>/dev/null || echo "Unable to retrieve pod status" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Deployed Image Versions" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          kubectl get pods -n newrelic -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.containers[*].image}{"\n"}{end}' 2>/dev/null || echo "Unable to retrieve image versions" >> $GITHUB_STEP_SUMMARY
+          echo "### Query" >> $GITHUB_STEP_SUMMARY
+          echo '```sql' >> $GITHUB_STEP_SUMMARY
+          echo "$NRQL_QUERY" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
