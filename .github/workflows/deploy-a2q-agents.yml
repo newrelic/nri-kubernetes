@@ -14,39 +14,13 @@ jobs:
     name: Execute NRQL Query
     runs-on: ubuntu-22.04
 
+    env:
+      NR_API_KEY: ${{ secrets.A2Q_NR1_API_KEY }}
+      ACCOUNT_ID: ${{ secrets.A2Q_NR1_ACCOUNT_ID }}
+      NRQL_QUERY: "SELECT sum(if(WHERE totalEvaluations > 0 AND `successfulAssertions` > 0, 1, 0)) AS 'Failed tests' FROM A2QTestResult WHERE a2q.environment = 'production' AND apiVersion IN ('v1') AND `a2q.executor.name` = 'nri-k8s' AND `x-ghBranch` = 'master' FACET testName"
+
     steps:
-      - name: Set query parameters
-        id: params
-        run: |
-          # Always use account_id and nrql_query from hardcoded values
-          echo "account_id=${{ secrets.A2Q_NR1_ACCOUNT_ID }}" >> $GITHUB_OUTPUT
-          echo "nrql_query=SELECT sum(if(WHERE totalEvaluations > 0 AND \`successfulAssertions\` > 0, 1, 0)) AS 'Failed tests' FROM A2QTestResult WHERE a2q.environment = 'production' AND apiVersion IN ('v1') AND \`a2q.executor.name\` = 'nri-k8s' AND \`x-ghBranch\` = 'master' FACET testName" >> $GITHUB_OUTPUT
-
-      - name: Validate Inputs
-        env:
-          ACCOUNT_ID: ${{ steps.params.outputs.account_id }}
-          NRQL_QUERY: ${{ steps.params.outputs.nrql_query }}
-        run: |
-          # Validate account ID is numeric
-          if ! [[ "$ACCOUNT_ID" =~ ^[0-9]+$ ]]; then
-            echo "::error::Invalid account ID format"
-            exit 1
-          fi
-
-          # Check query length
-          QUERY_LEN=$(echo -n "$NRQL_QUERY" | wc -c)
-          if [ "$QUERY_LEN" -gt 5000 ]; then
-            echo "::error::Query exceeds maximum length (5000 characters)"
-            exit 1
-          fi
-
-          echo "Validation passed"
-
       - name: Execute NRQL Query
-        env:
-          NR_API_KEY: ${{ secrets.A2Q_NR1_API_KEY }}
-          ACCOUNT_ID: ${{ steps.params.outputs.account_id }}
-          NRQL_QUERY: ${{ steps.params.outputs.nrql_query }}
         run: |
           # Mask API key (defense in depth)
           echo "::add-mask::$NR_API_KEY"
@@ -99,9 +73,6 @@ jobs:
 
       - name: Generate Query Summary
         if: always()
-        env:
-          ACCOUNT_ID: ${{ steps.params.outputs.account_id }}
-          NRQL_QUERY: ${{ steps.params.outputs.nrql_query }}
         run: |
           echo "## NRQL Query Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
