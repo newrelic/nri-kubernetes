@@ -11,6 +11,10 @@ except_metrics: [
   "k8s.container.cpuCfsPeriodsTotal",
   "k8s.container.cpuCfsThrottledPeriodsTotal",
   "k8s.container.cpuCfsThrottledSecondsTotal",
+  # Known metrics not reliably sent for Windows nodes
+  "k8s.container.memoryUsedBytes",
+  "k8s.container.memoryUtilization",
+  "k8s.container.requestedMemoryUtilization",
   # Linux-specific node metrics (not available on Windows)
   "k8s.node.capacityHugepages*",
   "k8s.node.fsInodes",
