@@ -185,7 +185,7 @@ spec:
             - name: nri-integrations-cfg-volume
               mountPath: "C:\\Program Files\\New Relic\\newrelic-infra\\integrations.d"
             {{- with $.Values.kubelet.extraVolumeMounts }}
-            {{- toYaml $ | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- with $.Values.kubelet.resources }}
           resources: {{ toYaml . | nindent 12 }}

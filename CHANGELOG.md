@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### bugfix
+
+- Fix newrelic-infrastructure' kubelet daemonset-windows when `extraVolumeMounts` is provided @zhangyuan [#1380](https://github.com/newrelic/nri-kubernetes/pull/1380)
+
 ## v3.53.0 - 2026-01-19
 
 ### 🚀 Enhancements
