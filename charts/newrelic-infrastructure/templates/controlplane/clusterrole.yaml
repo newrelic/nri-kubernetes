@@ -6,12 +6,26 @@ metadata:
     {{- include "newrelic.common.labels" . | nindent 4 }}
   name: {{ include "nriKubernetes.controlplane.fullname" . }}
 rules:
+{{- if eq (include "nriKubernetes.rbac.kubeletAuthMode" .) "fineGrained" }}
+  # Fine-grained kubelet authorization (KEP-2862)
+  # Requires Kubernetes 1.29+ with --feature-gates=KubeletFineGrainedAuthz=true
+  # Grants access to specific read-only kubelet endpoints, blocking write endpoints like /exec, /run, /attach
   - apiGroups: [""]
     resources:
-      - "nodes/metrics"
-      - "nodes/stats"
-      - "nodes/proxy"
+      - "nodes/metrics"  # Allows /metrics and /metrics/cadvisor
+      - "nodes/stats"    # Allows /stats/summary
+      - "nodes/pods"     # Allows /pods
+      - "nodes/healthz"  # Allows /healthz (used for connection testing)
     verbs: ["get", "list"]
+{{- else }}
+  # Legacy kubelet authorization (nodes/proxy)
+  # Works on all Kubernetes versions but grants broad kubelet access including write endpoints
+  # Consider using rbac.kubeletAuthMode: "fineGrained" when KEP-2862 is available
+  - apiGroups: [""]
+    resources:
+      - "nodes/proxy"    # Grants access to all kubelet endpoints
+    verbs: ["get", "list"]
+{{- end }}
   - apiGroups: [ "" ]
     resources:
       - "pods"

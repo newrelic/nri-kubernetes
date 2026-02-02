@@ -158,3 +158,31 @@ repository: newrelic/infrastructure-windows
 {{- define "nriKubernetes.windowsIntegrationImage" -}}
   {{ include "newrelic.common.images.image" ( dict "imageRoot" $.Values.images.windowsIntegration "context" $ ) }}
 {{- end}}
+
+{{/*
+Determine the kubelet authorization mode to use.
+Returns "legacy" or "fineGrained".
+
+- "auto": Detects KEP-2862 based on Kubernetes version (enabled by default in 1.33+)
+- "legacy": Uses nodes/proxy permission (broad kubelet access)
+- "fineGrained": Uses nodes/metrics, nodes/stats, nodes/pods, nodes/healthz (KEP-2862)
+*/}}
+{{- define "nriKubernetes.rbac.kubeletAuthMode" -}}
+{{- $mode := .Values.rbac.kubeletAuthMode | default "auto" -}}
+{{- if eq $mode "fineGrained" -}}
+fineGrained
+{{- else if eq $mode "legacy" -}}
+legacy
+{{- else if eq $mode "auto" -}}
+{{- /* Auto-detect based on Kubernetes version */ -}}
+{{- /* KEP-2862 is Beta and enabled by default in K8s 1.33+ */ -}}
+{{- /* See: https://kubernetes.io/docs/reference/access-authn-authz/kubelet-authn-authz/#fine-grained-authorization */ -}}
+{{- if semverCompare ">=1.33-0" .Capabilities.KubeVersion.Version -}}
+fineGrained
+{{- else -}}
+legacy
+{{- end -}}
+{{- else -}}
+{{- fail (printf "Invalid rbac.kubeletAuthMode: %s. Must be 'auto', 'legacy', or 'fineGrained'." $mode) -}}
+{{- end -}}
+{{- end -}}
