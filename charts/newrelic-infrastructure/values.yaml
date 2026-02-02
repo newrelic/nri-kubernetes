@@ -609,6 +609,12 @@ rbac:
   create: true
   # rbac.pspEnabled -- Whether the chart should create Pod Security Policy objects.
   pspEnabled: false
+  # rbac.kubeletFineGrainedAuth -- Whether to use fine-grained kubelet authorization (KEP-2862).
+  # When true, uses nodes/metrics, nodes/stats, nodes/pods, nodes/healthz (requires K8s 1.33+ or feature gate on 1.32).
+  # Fine-grained mode limits RBAC to read-only kubelet endpoints, eliminating privilege escalation risks.
+  # When false (default), uses nodes/proxy which could be exploited to access kubelet write endpoints.
+  # See: https://kubernetes.io/docs/reference/access-authn-authz/kubelet-authn-authz/#fine-grained-authorization
+  kubeletFineGrainedAuth: false
 
 # -- Sets pod/node affinities set almost globally. (See [Affinities and tolerations](README.md#affinities-and-tolerations))
 affinity: {}
