@@ -271,6 +271,10 @@ scenarios:
           expected_results:
             - key: "Pods Ready"
               value: 2.0
+        - query: FROM Metric SELECT latest(k8s.statefulset.podsAvailable) AS 'Pods Available' WHERE metricName = 'k8s.statefulset.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.statefulsetName = '${SCENARIO_TAG}-resources-statefulset'
+          expected_results:
+            - key: "Pods Available"
+              value: 0.0
         - query: FROM Metric SELECT latest(k8s.statefulset.podsCurrent) AS 'Pods Current' WHERE metricName = 'k8s.statefulset.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.statefulsetName = '${SCENARIO_TAG}-resources-statefulset'
           expected_results:
             - key: "Pods Current"
@@ -283,6 +287,10 @@ scenarios:
           expected_results:
             - key: "Pods Updated"
               value: 2.0
+        - query: FROM Metric SELECT latest(k8s.statefulset.podsUnavailable) AS 'Pods Unavailable' WHERE metricName = 'k8s.statefulset.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.statefulsetName = '${SCENARIO_TAG}-resources-statefulset'
+          expected_results:
+            - key: "Pods Unavailable"
+              value: 0.0
         - query: FROM Metric SELECT latest(k8s.statefulset.createdAt) AS 'Created At' WHERE metricName = 'k8s.statefulset.createdAt' AND k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.statefulsetName = '${SCENARIO_TAG}-resources-statefulset'
           expected_results:
             - key: "Created At"
