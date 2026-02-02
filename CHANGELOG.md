@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- Add handling for fine-grained kubectl permissions @kondracek-nr [#1389](https://github.com/newrelic/nri-kubernetes/pull/1389)
+
 ## v3.53.1 - 2026-02-02
 
 ### ⛓️ Dependencies

@@ -609,13 +609,12 @@ rbac:
   create: true
   # rbac.pspEnabled -- Whether the chart should create Pod Security Policy objects.
   pspEnabled: false
-  # rbac.kubeletAuthMode -- Kubelet authorization mode. Options: "auto", "legacy", "fineGrained".
-  # - "auto" (default): Attempts to detect KEP-2862 support and falls back to legacy if unavailable
-  # - "legacy": Uses nodes/proxy permission (grants broad kubelet access, works on all K8s versions)
-  # - "fineGrained": Uses nodes/metrics, nodes/stats, nodes/pods, nodes/healthz (KEP-2862, enabled by default in K8s 1.33+, or requires --feature-gates=KubeletFineGrainedAuthz=true on K8s 1.29-1.32)
-  # Fine-grained mode blocks write endpoints (/exec, /run, /attach, /portforward) to mitigate privilege escalation risks.
+  # rbac.kubeletFineGrainedAuth -- Enable kubelet fine-grained authorization (KEP-2862). Options: "enabled", "disabled".
+  # - "enabled": Uses nodes/metrics, nodes/stats, nodes/pods, nodes/healthz (KEP-2862, requires K8s 1.33+ or --feature-gates=KubeletFineGrainedAuthz=true on K8s 1.29-1.32)
+  #   Fine-grained mode blocks write endpoints (/exec, /run, /attach, /portforward) for enhanced security.
+  # - "disabled" (default): Uses nodes/proxy permission (grants broad kubelet access, works on all K8s versions)
   # See: https://kubernetes.io/docs/reference/access-authn-authz/kubelet-authn-authz/#fine-grained-authorization
-  kubeletAuthMode: "auto"
+  kubeletFineGrainedAuth: "disabled"
 
 # -- Sets pod/node affinities set almost globally. (See [Affinities and tolerations](README.md#affinities-and-tolerations))
 affinity: {}

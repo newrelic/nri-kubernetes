@@ -124,6 +124,44 @@ integrations that you have configured.
 Please be aware that `privileged` is not supported on Windows nodes at this time. If `enableWindows` is set to `true`, the chart will automatically set `privileged`
 to `false` for the Windows kubelet DaemonSet. `privileged` may be set to true for components that are not deployed to Windows nodes, however.
 
+### Kubelet Authorization Mode (KEP-2862)
+
+This chart supports fine-grained kubelet authorization for enhanced security:
+
+```yaml
+rbac:
+  kubeletFineGrainedAuth: "disabled"  # Options: "enabled", "disabled"
+```
+
+#### Modes
+
+**`disabled` (default)**: Uses the broad `nodes/proxy` permission for kubelet access:
+- ✅ Works on all Kubernetes versions
+- ⚠️  Grants access to all kubelet endpoints including write operations (`/exec`, `/run`, `/attach`, `/portforward`)
+- Use this for maximum compatibility or if you're on Kubernetes < 1.33 without the KEP-2862 feature gate enabled
+
+**`enabled`**: Uses fine-grained permissions for enhanced security ([KEP-2862](https://kubernetes.io/docs/reference/access-authn-authz/kubelet-authn-authz/#fine-grained-authorization)):
+- ✅ Grants access only to monitoring endpoints: `nodes/metrics`, `nodes/stats`, `nodes/pods`, `nodes/healthz`
+- ✅ Blocks write endpoints: `/exec`, `/run`, `/attach`, `/portforward`
+- ✅ Mitigates privilege escalation risks
+- ⚠️  Requires Kubernetes 1.33+ (or 1.29-1.32 with `--feature-gates=KubeletFineGrainedAuthz=true`)
+
+#### Security Considerations
+
+The `nodes/proxy` permission can be exploited for privilege escalation via WebSocket connections to kubelet write endpoints. Fine-grained mode eliminates this risk by granting access only to the specific read-only endpoints needed for monitoring.
+
+For Kubernetes 1.33+, we recommend enabling fine-grained permissions for enhanced security:
+```yaml
+rbac:
+  kubeletFineGrainedAuth: "enabled"
+```
+
+If you experience connection errors with fine-grained mode, verify the feature gate is enabled or switch back to disabled mode:
+```yaml
+rbac:
+  kubeletFineGrainedAuth: "disabled"
+```
+
 ### More on Windows
 
 #### DaemonSet creation

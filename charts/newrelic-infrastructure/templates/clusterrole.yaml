@@ -6,7 +6,7 @@ metadata:
     {{- include "newrelic.common.labels" . | nindent 4 }}
   name: {{ include "newrelic.common.naming.fullname" . }}
 rules:
-{{- if eq (include "nriKubernetes.rbac.kubeletAuthMode" .) "fineGrained" }}
+{{- if eq (include "nriKubernetes.rbac.kubeletFineGrainedAuthMode" .) "fineGrained" }}
   # Fine-grained kubelet authorization (KEP-2862)
   # Requires Kubernetes 1.29+ with --feature-gates=KubeletFineGrainedAuthz=true
   # Grants access to specific read-only kubelet endpoints, blocking write endpoints like /exec, /run, /attach
@@ -20,9 +20,11 @@ rules:
 {{- else }}
   # Legacy kubelet authorization (nodes/proxy)
   # Works on all Kubernetes versions but grants broad kubelet access including write endpoints
-  # Consider using rbac.kubeletAuthMode: "fineGrained" when KEP-2862 is available
+  # Consider using rbac.kubeletFineGrainedAuth: "enabled" when KEP-2862 is available
   - apiGroups: [""]
     resources:
+      - "nodes/metrics"  # Required for kubelet metrics endpoints
+      - "nodes/stats"    # Required for kubelet stats endpoint
       - "nodes/proxy"    # Grants access to all kubelet endpoints
     verbs: ["get", "list"]
 {{- end }}

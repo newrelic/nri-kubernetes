@@ -161,28 +161,18 @@ repository: newrelic/infrastructure-windows
 
 {{/*
 Determine the kubelet authorization mode to use.
-Returns "legacy" or "fineGrained".
+Returns "fineGrained" or "legacy".
 
-- "auto": Detects KEP-2862 based on Kubernetes version (enabled by default in 1.33+)
-- "legacy": Uses nodes/proxy permission (broad kubelet access)
-- "fineGrained": Uses nodes/metrics, nodes/stats, nodes/pods, nodes/healthz (KEP-2862)
+- "enabled": Uses nodes/metrics, nodes/stats, nodes/pods, nodes/healthz (KEP-2862)
+- "disabled": Uses nodes/proxy permission (broad kubelet access)
 */}}
-{{- define "nriKubernetes.rbac.kubeletAuthMode" -}}
-{{- $mode := .Values.rbac.kubeletAuthMode | default "auto" -}}
-{{- if eq $mode "fineGrained" -}}
+{{- define "nriKubernetes.rbac.kubeletFineGrainedAuthMode" -}}
+{{- $mode := .Values.rbac.kubeletFineGrainedAuth | default "disabled" -}}
+{{- if eq $mode "enabled" -}}
 fineGrained
-{{- else if eq $mode "legacy" -}}
+{{- else if eq $mode "disabled" -}}
 legacy
-{{- else if eq $mode "auto" -}}
-{{- /* Auto-detect based on Kubernetes version */ -}}
-{{- /* KEP-2862 is Beta and enabled by default in K8s 1.33+ */ -}}
-{{- /* See: https://kubernetes.io/docs/reference/access-authn-authz/kubelet-authn-authz/#fine-grained-authorization */ -}}
-{{- if semverCompare ">=1.33-0" .Capabilities.KubeVersion.Version -}}
-fineGrained
 {{- else -}}
-legacy
-{{- end -}}
-{{- else -}}
-{{- fail (printf "Invalid rbac.kubeletAuthMode: %s. Must be 'auto', 'legacy', or 'fineGrained'." $mode) -}}
+{{- fail (printf "Invalid rbac.kubeletFineGrainedAuth: %s. Must be 'enabled' or 'disabled'." $mode) -}}
 {{- end -}}
 {{- end -}}

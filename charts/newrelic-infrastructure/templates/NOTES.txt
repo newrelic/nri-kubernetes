@@ -125,8 +125,8 @@ future. Please migrate your agent config to the new format in the `common.agentC
 {{- fail (printf "\n\n%s\n%s" (include "newrelic.compatibility.message.common" . ) $errors )  }}
 {{- end }}
 
-{{- $kubeletAuthMode := include "nriKubernetes.rbac.kubeletAuthMode" . -}}
-{{- if eq $kubeletAuthMode "fineGrained" }}
+{{- $kubeletFineGrainedAuthMode := include "nriKubernetes.rbac.kubeletFineGrainedAuthMode" . -}}
+{{- if eq $kubeletFineGrainedAuthMode "fineGrained" }}
 
 Kubelet Authorization: Fine-Grained Mode (KEP-2862)
 ====================================================
@@ -142,7 +142,7 @@ This mitigates privilege escalation risks while maintaining full monitoring func
 Fine-grained mode requires --feature-gates=KubeletFineGrainedAuthz=true on kubelets.
 If you experience connection errors, either:
   1. Enable the feature gate on your kubelets, or
-  2. Set rbac.kubeletAuthMode: "legacy" in your values
+  2. Set rbac.kubeletFineGrainedAuth: "disabled" in your values
 {{- end }}
 {{- else }}
 
@@ -154,5 +154,5 @@ Using legacy nodes/proxy permission for kubelet access.
 - Grants broad kubelet access including write endpoints
 
 For enhanced security on Kubernetes 1.33+, consider setting:
-  rbac.kubeletAuthMode: "fineGrained"
+  rbac.kubeletFineGrainedAuth: "enabled"
 {{- end }}
