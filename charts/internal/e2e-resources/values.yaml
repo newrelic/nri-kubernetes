@@ -75,9 +75,13 @@ windows:
 # -- Deploy resources on Windows Server 2022 nodes
   is2022: false
 
+karpenterNodePool:
+  # -- Deploy a Karpenter NodePool CRD for testing CRD monitoring
+  enabled: true
+
 kube-state-metrics:
   podSecurityContext: {}
-  securityContext: 
+  securityContext:
     enabled: false
   metricLabelsAllowlist:
     - resourcequotas=[environment,team]
@@ -89,3 +93,61 @@ kube-state-metrics:
     - namespaces=[owner,description]
     - deployments=[owner,description]
     - pods=[owner,description]
+  customResourceState:
+    enabled: true
+    config:
+      kind: CustomResourceStateMetrics
+      spec:
+        resources:
+          - groupVersionKind:
+              group: karpenter.sh
+              version: v1beta1
+              kind: NodePool
+            labelsFromPath:
+              name: [metadata, name]
+              # Inherit all labels from metadata
+              "*": [metadata, labels]
+            metrics:
+              - name: "nodepool_consolidation_policy"
+                help: "Consolidation policy setting"
+                each:
+                  type: StateSet
+                  stateSet:
+                    labelName: policy
+                    path: [spec, disruption, consolidationPolicy]
+                    list:
+                      - "WhenEmpty"
+                      - "WhenUnderutilized"
+              - name: "nodepool_limit_cpu"
+                help: "CPU limit for the NodePool"
+                each:
+                  type: Gauge
+                  gauge:
+                    path: [spec, limits, cpu]
+              - name: "nodepool_limit_memory"
+                help: "Memory limit for the NodePool"
+                each:
+                  type: Gauge
+                  gauge:
+                    path: [spec, limits, memory]
+              - name: "nodepool_nodes_count"
+                help: "Number of nodes managed by this NodePool"
+                each:
+                  type: Gauge
+                  gauge:
+                    path: [status, resources, nodes]
+              - name: "nodepool_pods_count"
+                help: "Number of pods on nodes from this NodePool"
+                each:
+                  type: Gauge
+                  gauge:
+                    path: [status, resources, pods]
+              - name: "nodepool_conditions"
+                help: "NodePool conditions"
+                each:
+                  type: Info
+                  info:
+                    labelsFromPath:
+                      type: [type]
+                      status: [status]
+                    path: [status, conditions]
