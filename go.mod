@@ -69,4 +69,4 @@ require (
 )
 
 // To avoid CVE-2022-27191 triggering a security scan
-replace golang.org/x/crypto => golang.org/x/crypto v0.46.0
+replace golang.org/x/crypto => golang.org/x/crypto v0.47.0
