@@ -85,8 +85,8 @@ jobs:
         if: steps.list-changed.outputs.changed == 'true'
         run: |
           GOOS=linux GOARCH=amd64 make compile
+          eval $(minikube docker-env)
           DOCKER_BUILDKIT=1 docker build -t e2e/nri-kubernetes:test  .
-          minikube image load e2e/nri-kubernetes:test
           kubectl create ns ct
       - name: Test install charts
         if: steps.list-changed.outputs.changed == 'true'

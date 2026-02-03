@@ -46,8 +46,8 @@ jobs:
       - name: Compile, Build and load Images
         run: |
           GOOS=linux GOARCH=amd64 make compile # Set GOOS and GOARCH explicitly since Dockerfile expects them in the binary name
+          eval $(minikube docker-env)
           docker build -t e2e/nri-kubernetes:e2e  .
-          minikube image load e2e/nri-kubernetes:e2e
       - name: Setup Helm
         run: |
           chmod go-r /home/runner/.kube/config
