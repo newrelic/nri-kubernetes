@@ -377,6 +377,8 @@ func TestParseResponseWithInfoMetric(t *testing.T) {
 }
 
 func TestQuery_Execute_PrefixMatch(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name             string
 		query            Query
@@ -440,7 +442,10 @@ func TestQuery_Execute_PrefixMatch(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt // capture range variable
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			// Create a mock metric family
 			metricFamily := &model.MetricFamily{
 				Name: proto.String(tt.metricFamilyName),
@@ -469,6 +474,8 @@ func TestQuery_Execute_PrefixMatch(t *testing.T) {
 }
 
 func TestQuery_Execute_PrefixMatchWithLabels(t *testing.T) {
+	t.Parallel()
+
 	// Test that prefix matching works correctly with label filtering
 	query := Query{
 		MetricName: "kube_customresource",
@@ -482,6 +489,8 @@ func TestQuery_Execute_PrefixMatchWithLabels(t *testing.T) {
 	}
 
 	t.Run("prefix match with matching labels", func(t *testing.T) {
+		t.Parallel()
+
 		metricFamily := &model.MetricFamily{
 			Name: proto.String("kube_customresource_nodepool_limit_cpu"),
 			Type: model.MetricType_GAUGE.Enum(),
@@ -510,6 +519,8 @@ func TestQuery_Execute_PrefixMatchWithLabels(t *testing.T) {
 	})
 
 	t.Run("prefix match with non-matching labels", func(t *testing.T) {
+		t.Parallel()
+
 		metricFamily := &model.MetricFamily{
 			Name: proto.String("kube_customresource_nodepool_limit_cpu"),
 			Type: model.MetricType_GAUGE.Enum(),
@@ -534,6 +545,8 @@ func TestQuery_Execute_PrefixMatchWithLabels(t *testing.T) {
 }
 
 func TestQuery_Execute_PrefixMatchWithValue(t *testing.T) {
+	t.Parallel()
+
 	// Test that prefix matching works correctly with value filtering
 	query := Query{
 		MetricName: "kube_customresource",
@@ -545,6 +558,8 @@ func TestQuery_Execute_PrefixMatchWithValue(t *testing.T) {
 	}
 
 	t.Run("prefix match with matching value", func(t *testing.T) {
+		t.Parallel()
+
 		metricFamily := &model.MetricFamily{
 			Name: proto.String("kube_customresource_test"),
 			Type: model.MetricType_GAUGE.Enum(),
@@ -562,6 +577,8 @@ func TestQuery_Execute_PrefixMatchWithValue(t *testing.T) {
 	})
 
 	t.Run("prefix match with non-matching value", func(t *testing.T) {
+		t.Parallel()
+
 		metricFamily := &model.MetricFamily{
 			Name: proto.String("kube_customresource_test"),
 			Type: model.MetricType_GAUGE.Enum(),

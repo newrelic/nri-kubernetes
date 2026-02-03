@@ -25,9 +25,16 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/src/scrape"
 )
 
-const defaultLabelSelector = "app.kubernetes.io/name=kube-state-metrics"
-const defaultScheme = "http"
-const ksmMetricsPath = "metrics"
+const (
+	defaultLabelSelector = "app.kubernetes.io/name=kube-state-metrics"
+	defaultScheme        = "http"
+	ksmMetricsPath       = "metrics"
+
+	// licenseKeyMaskPrefix is the number of characters to show from the beginning of the license key.
+	licenseKeyMaskPrefix = 8
+	// flushTimeoutSeconds is the timeout for flushing CRD metrics on shutdown.
+	flushTimeoutSeconds = 30
+)
 
 // Providers is a struct holding pointers to all the clients Scraper needs to get data from.
 // TODO: Extract this out of the KSM package.
@@ -119,15 +126,15 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 		if licenseKey == "" {
 			s.logger.Warn("NRIA_LICENSE_KEY not set - CRD dimensional metrics will not be sent")
 		} else {
-			// Log first 8 chars of license key for debugging
+			// Log first few chars of license key for debugging
 			maskedKey := licenseKey
-			if len(licenseKey) > 8 {
-				maskedKey = licenseKey[:8] + "..." + licenseKey[len(licenseKey)-4:]
+			if len(licenseKey) > licenseKeyMaskPrefix {
+				maskedKey = licenseKey[:licenseKeyMaskPrefix] + "..." + licenseKey[len(licenseKey)-4:]
 			}
 			s.logger.Infof("Using license key: %s", maskedKey)
 
 			// Determine harvest period: use configured value or derive from scrape interval
-			harvestPeriod := config.KSM.HarvestPeriod
+			harvestPeriod := config.HarvestPeriod
 			if harvestPeriod == 0 {
 				// Default: match scrape interval for consistency with entity-based metrics
 				harvestPeriod = config.Interval
@@ -143,8 +150,8 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 
 			// Use custom metric API URL if configured, otherwise default to production
 			metricsURL := "https://metric-api.newrelic.com/metric/v1" // production default
-			if config.KSM.MetricAPIURL != "" {
-				metricsURL = config.KSM.MetricAPIURL
+			if config.MetricAPIURL != "" {
+				metricsURL = config.MetricAPIURL
 				s.logger.Infof("Using custom Metric API endpoint for CRD metrics: %s", metricsURL)
 				harvestOpts = append(harvestOpts, telemetry.ConfigMetricsURLOverride(metricsURL))
 			} else {
@@ -231,7 +238,7 @@ func (s *Scraper) Run(i *integration.Integration) error {
 
 		// Create a cached metric families getter for the grouper using pre-fetched standard metrics
 		// This avoids fetching from KSM endpoint again
-		cachedGetter := func(queries []prometheus.Query) ([]prometheus.MetricFamily, error) {
+		cachedGetter := func(_ []prometheus.Query) ([]prometheus.MetricFamily, error) {
 			// Return the pre-fetched standard metrics
 			// The grouper will filter them based on its queries
 			return standardMetrics, nil
@@ -292,7 +299,7 @@ func (s *Scraper) Close() {
 		if s.crdHarvester != nil {
 			s.logger.Info("Flushing pending CRD metrics before shutdown...")
 			// Use longer timeout for final flush to avoid losing metrics
-			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), flushTimeoutSeconds*time.Second)
 			defer cancel()
 
 			s.crdHarvester.HarvestNow(ctx)

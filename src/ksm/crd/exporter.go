@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	// CRDMetricPrefix is the prefix used by KSM for all custom resource metrics
+	// CRDMetricPrefix is the prefix used by KSM for all custom resource metrics.
 	CRDMetricPrefix = "kube_customresource_"
 )
 
@@ -32,17 +32,63 @@ func FilterCRDMetrics(metricFamilies []prometheus.MetricFamily) []prometheus.Met
 	return crdMetrics
 }
 
-// ExportConfig holds configuration for CRD metric export
+// ExportConfig holds configuration for CRD metric export.
 type ExportConfig struct {
 	ClusterName string
 	Logger      *log.Logger
 	Harvester   *telemetry.Harvester
 }
 
+// extractMetricValue extracts the numeric value from a Prometheus metric.
+// Returns the value and a boolean indicating success.
+func extractMetricValue(promMetric prometheus.Metric) (float64, bool) {
+	switch v := promMetric.Value.(type) {
+	case prometheus.GaugeValue:
+		return float64(v), true
+	case prometheus.CounterValue:
+		return float64(v), true
+	case prometheus.UntypedValue:
+		return float64(v), true
+	default:
+		return 0, false
+	}
+}
+
+// buildMetricAttributes creates attributes map from Prometheus labels and cluster name.
+func buildMetricAttributes(clusterName string, labels map[string]string) map[string]interface{} {
+	attributes := make(map[string]interface{})
+	attributes["clusterName"] = clusterName
+
+	for labelName, labelValue := range labels {
+		attributes[labelName] = labelValue
+	}
+
+	return attributes
+}
+
+// recordMetrics sends metrics to the harvester and logs debug information.
+func recordMetrics(metrics []telemetry.Metric, metricsCount int, crdMetricsCount int, logger *log.Logger, harvester *telemetry.Harvester) {
+	if len(metrics) == 0 {
+		return
+	}
+
+	logger.Infof("Recording %d dimensional metrics to harvester", metricsCount)
+	for i, m := range metrics {
+		harvester.RecordMetric(m)
+		// Log first few metrics for debugging
+		if i < 5 { //nolint:mnd // Debug logging limit
+			if g, ok := m.(telemetry.Gauge); ok {
+				logger.Debugf("  Metric: %s = %f (attributes: %d)", g.Name, g.Value, len(g.Attributes))
+			}
+		}
+	}
+	logger.Infof("Successfully recorded %d dimensional metrics from %d metric families", metricsCount, crdMetricsCount)
+}
+
 // ExportDimensionalMetrics exports CRD metrics as dimensional metrics to the Metric table.
 // Each Prometheus time series becomes a separate metric data point with all labels as attributes.
 //
-// Example query: FROM Metric SELECT * WHERE metricName = 'kube_customresource_nodepool_limit_cpu'
+// Example query: FROM Metric SELECT * WHERE metricName = 'kube_customresource_nodepool_limit_cpu'.
 func ExportDimensionalMetrics(metricFamilies []prometheus.MetricFamily, config ExportConfig) error {
 	crdMetrics := FilterCRDMetrics(metricFamilies)
 
@@ -59,36 +105,20 @@ func ExportDimensionalMetrics(metricFamilies []prometheus.MetricFamily, config E
 	// Convert each Prometheus metric time series to a New Relic dimensional metric
 	for _, metricFamily := range crdMetrics {
 		metricName := metricFamily.Name
-
 		config.Logger.Tracef("Processing CRD metric family: %s (type: %s)", metricName, metricFamily.Type)
 
 		// Each metric family can have multiple time series (different label combinations)
 		for _, promMetric := range metricFamily.Metrics {
-			// Extract value - type assertion for supported Prometheus value types
-			// Supports GAUGE, COUNTER, and UNTYPED (which includes OpenMetrics StateSet and Info types)
-			var value float64
-			switch v := promMetric.Value.(type) {
-			case prometheus.GaugeValue:
-				value = float64(v)
-			case prometheus.CounterValue:
-				value = float64(v)
-			case prometheus.UntypedValue:
-				value = float64(v)
-			default:
-				// Skip metrics with no value or unsupported types
+			// Extract value - supports GAUGE, COUNTER, and UNTYPED (includes OpenMetrics StateSet and Info types)
+			value, ok := extractMetricValue(promMetric)
+			if !ok {
 				config.Logger.Tracef("Skipping metric %s (type=%s): value type %T not supported",
 					metricName, metricFamily.Type, promMetric.Value)
 				continue
 			}
 
 			// Build attributes from all Prometheus labels plus clusterName
-			attributes := make(map[string]interface{})
-			attributes["clusterName"] = config.ClusterName
-
-			// Copy all Prometheus labels as attributes
-			for labelName, labelValue := range promMetric.Labels {
-				attributes[labelName] = labelValue
-			}
+			attributes := buildMetricAttributes(config.ClusterName, promMetric.Labels)
 
 			// Create gauge metric (both Prometheus gauges and counters become New Relic gauges)
 			metric := telemetry.Gauge{
@@ -103,19 +133,7 @@ func ExportDimensionalMetrics(metricFamilies []prometheus.MetricFamily, config E
 	}
 
 	// Send metrics via harvester
-	if len(metrics) > 0 {
-		config.Logger.Infof("Recording %d dimensional metrics to harvester", metricsCount)
-		for i, m := range metrics {
-			config.Harvester.RecordMetric(m)
-			// Log first few metrics for debugging
-			if i < 5 {
-				if g, ok := m.(telemetry.Gauge); ok {
-					config.Logger.Debugf("  Metric: %s = %f (attributes: %d)", g.Name, g.Value, len(g.Attributes))
-				}
-			}
-		}
-		config.Logger.Infof("Successfully recorded %d dimensional metrics from %d metric families", metricsCount, len(crdMetrics))
-	}
+	recordMetrics(metrics, metricsCount, len(crdMetrics), config.Logger, config.Harvester)
 
 	return nil
 }

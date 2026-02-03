@@ -12,6 +12,8 @@ import (
 )
 
 func TestFilterCRDMetrics(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		input    []prometheus.MetricFamily
@@ -48,7 +50,10 @@ func TestFilterCRDMetrics(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt // capture range variable
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			result := FilterCRDMetrics(tt.input)
 			assert.Len(t, result, tt.expected)
 
@@ -61,7 +66,10 @@ func TestFilterCRDMetrics(t *testing.T) {
 	}
 }
 
+//nolint:funlen // Table-driven test with comprehensive test cases
 func TestExportDimensionalMetrics(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name           string
 		metricFamilies []prometheus.MetricFamily
@@ -210,7 +218,10 @@ func TestExportDimensionalMetrics(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt // capture range variable
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			// Create logger
 			logger := log.New()
 			logger.SetLevel(log.ErrorLevel) // Reduce noise in tests
@@ -245,6 +256,8 @@ func TestExportDimensionalMetrics(t *testing.T) {
 }
 
 func TestExportDimensionalMetrics_AttributesIncludeClusterName(t *testing.T) {
+	t.Parallel()
+
 	metricFamilies := []prometheus.MetricFamily{
 		{
 			Name: "kube_customresource_test",
@@ -284,11 +297,15 @@ func TestExportDimensionalMetrics_AttributesIncludeClusterName(t *testing.T) {
 }
 
 func TestCRDMetricPrefix(t *testing.T) {
+	t.Parallel()
+
 	// Verify the constant is correctly defined
 	assert.Equal(t, "kube_customresource_", CRDMetricPrefix)
 }
 
 func TestIsCRDMetric(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name       string
 		metricName string
@@ -327,7 +344,10 @@ func TestIsCRDMetric(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt // capture range variable
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			result := IsCRDMetric(tt.metricName)
 			assert.Equal(t, tt.expected, result)
 		})
