@@ -17,6 +17,36 @@ FROM Metric SELECT * WHERE metricName LIKE 'kube_customresource_%'
 >
 > Always verify field paths against your specific CRD versions using `kubectl get <resource> <name> -o yaml` before deploying untested configurations.
 
+## nri-kubernetes Configuration
+
+To collect CRD metrics, you must enable the feature in the nri-kubernetes integration. Add these settings to your `values.yaml`:
+
+```yaml
+ksm:
+  enableCustomResourceMetrics: true  # Required: Enable CRD metrics collection (default: false)
+  harvestPeriod: "15s"               # Optional: Metric batching interval (default: matches scrape interval)
+  metricAPIURL: ""                   # Optional: Custom Metric API endpoint (default: production endpoint)
+```
+
+### Configuration Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `ksm.enableCustomResourceMetrics` | boolean | `false` | Enable collection of CRD metrics from KSM. When enabled, metrics with prefix `kube_customresource_*` are sent as dimensional metrics to New Relic's Metric API. |
+| `ksm.harvestPeriod` | string | `"0s"` (matches scrape interval) | How often CRD metrics are batched and sent to New Relic. If not specified or set to `"0s"`, matches the scrape interval (typically 15s). Use values like `"30s"` or `"1m"` for less frequent sends. |
+| `ksm.metricAPIURL` | string | `""` (production endpoint) | Override the New Relic Metric API endpoint. Useful for proxies, staging environments, or alternative endpoints. Example: `"https://staging-metric-api.newrelic.com/metric/v1"` |
+
+### Graceful Shutdown
+
+The integration automatically handles graceful shutdown to prevent data loss:
+- When receiving SIGTERM/SIGINT signals (e.g., during pod termination or rolling updates), pending CRD metrics are flushed before the pod exits
+- A 30-second timeout ensures metrics are delivered even during quick shutdowns
+- No configuration required - this behavior is automatic when CRD metrics are enabled
+
+### Performance Optimization
+
+The integration uses a single KSM scrape per cycle for both standard and CRD metrics, reducing KSM endpoint load by 50% compared to separate scrapes.
+
 ## Prerequisites
 
 - kube-state-metrics v2.0+ (integrated in the newrelic-infrastructure chart)
@@ -90,6 +120,17 @@ labelsFromPath:
 This automatically adds labels like `environment`, `team`, `managed-by` to all metrics.
 
 ## Setup Guide
+
+### Step 0: Enable CRD Metrics Collection
+
+First, enable CRD metrics collection in nri-kubernetes by adding to your `values.yaml`:
+
+```yaml
+ksm:
+  enableCustomResourceMetrics: true
+```
+
+This tells nri-kubernetes to collect and send `kube_customresource_*` metrics to New Relic. See [nri-kubernetes Configuration](#nri-kubernetes-configuration) above for additional options.
 
 ### Step 1: Configure KSM Custom Resource State
 
@@ -537,6 +578,14 @@ Here's a complete `values.yaml` example for monitoring Karpenter NodePool (teste
 
 ```yaml
 # values.yaml
+
+# Enable CRD metrics collection in nri-kubernetes
+ksm:
+  enableCustomResourceMetrics: true  # Required to send CRD metrics to New Relic
+  # harvestPeriod: "30s"             # Optional: custom batching interval
+  # metricAPIURL: ""                 # Optional: custom Metric API endpoint
+
+# Configure KSM to expose CRD metrics
 kube-state-metrics:
   customResourceState:
     enabled: true
