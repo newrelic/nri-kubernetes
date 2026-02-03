@@ -236,7 +236,7 @@ func TestScraper_Close(t *testing.T) {
 	}
 }
 
-//nolint:paralleltest // Cannot use t.Parallel() with t.Setenv() due to Go runtime constraints
+//nolint:funlen //Table-driven test with comprehensive scenarios
 func TestScraper_CRDInitialization(t *testing.T) {
 	tests := []struct {
 		name            string
@@ -341,7 +341,6 @@ func TestScraper_CRDInitialization(t *testing.T) {
 	}
 }
 
-//nolint:paralleltest // Cannot use t.Parallel() with t.Setenv() due to Go runtime constraints
 func TestScraper_LicenseKeyMasking(t *testing.T) {
 	tests := []struct {
 		name       string

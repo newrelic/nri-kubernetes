@@ -39,15 +39,17 @@ type ExportConfig struct {
 	Harvester   *telemetry.Harvester
 }
 
-// extractMetricValue extracts the numeric value from a Prometheus metric.
-// Returns the value and a boolean indicating success.
-func extractMetricValue(promMetric prometheus.Metric) (float64, bool) {
-	switch v := promMetric.Value.(type) {
+// valueToFloat64 converts a prometheus.Value to float64 for dimensional metrics.
+// Supports GaugeValue and CounterValue types. Returns false for unsupported types.
+//
+// Note: Kube-state-metrics only exposes GAUGE and COUNTER metric types for CRD metrics,
+// so SUMMARY, HISTOGRAM, and UNTYPED types should never appear in practice for CRDs.
+// However, we defensively handle unsupported types by returning false to skip them.
+func valueToFloat64(value prometheus.Value) (float64, bool) {
+	switch v := value.(type) {
 	case prometheus.GaugeValue:
 		return float64(v), true
 	case prometheus.CounterValue:
-		return float64(v), true
-	case prometheus.UntypedValue:
 		return float64(v), true
 	default:
 		return 0, false
@@ -88,6 +90,9 @@ func recordMetrics(metrics []telemetry.Metric, metricsCount int, crdMetricsCount
 // ExportDimensionalMetrics exports CRD metrics as dimensional metrics to the Metric table.
 // Each Prometheus time series becomes a separate metric data point with all labels as attributes.
 //
+// Kube-state-metrics exposes CRD metrics as GAUGE or COUNTER types only. Other Prometheus metric
+// types (SUMMARY, HISTOGRAM, UNTYPED) are not used for CRD metrics and will be skipped if encountered.
+//
 // Example query: FROM Metric SELECT * WHERE metricName = 'kube_customresource_nodepool_limit_cpu'.
 func ExportDimensionalMetrics(metricFamilies []prometheus.MetricFamily, config ExportConfig) error {
 	crdMetrics := FilterCRDMetrics(metricFamilies)
@@ -109,10 +114,10 @@ func ExportDimensionalMetrics(metricFamilies []prometheus.MetricFamily, config E
 
 		// Each metric family can have multiple time series (different label combinations)
 		for _, promMetric := range metricFamily.Metrics {
-			// Extract value - supports GAUGE, COUNTER, and UNTYPED (includes OpenMetrics StateSet and Info types)
-			value, ok := extractMetricValue(promMetric)
+			// Convert to float64 - supports GAUGE and COUNTER types
+			value, ok := valueToFloat64(promMetric.Value)
 			if !ok {
-				config.Logger.Tracef("Skipping metric %s (type=%s): value type %T not supported",
+				config.Logger.Tracef("Skipping metric %s (type=%s): value type %T not supported for dimensional metrics",
 					metricName, metricFamily.Type, promMetric.Value)
 				continue
 			}

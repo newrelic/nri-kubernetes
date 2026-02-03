@@ -133,17 +133,14 @@ func valueFromPrometheus(metricType model.MetricType, metric *model.Metric) Valu
 		return CounterValue(metric.Counter.GetValue())
 	case model.MetricType_GAUGE:
 		return GaugeValue(metric.Gauge.GetValue())
-	case model.MetricType_UNTYPED:
-		// UNTYPED metrics (including OpenMetrics StateSet and Info types)
-		if metric.Untyped != nil {
-			return UntypedValue(metric.Untyped.GetValue())
-		}
-		return EmptyValue
 	case model.MetricType_HISTOGRAM:
 		// Not supported yet
 		fallthrough
 	case model.MetricType_SUMMARY:
 		return metric.Summary
+	case model.MetricType_UNTYPED:
+		// Not supported yet
+		fallthrough
 	default:
 		return EmptyValue
 	}

@@ -1,6 +1,7 @@
 package prometheus
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -594,4 +595,62 @@ func TestQuery_Execute_PrefixMatchWithValue(t *testing.T) {
 		result := query.Execute(metricFamily)
 		assert.Empty(t, result.Metrics, "Expected no metrics to match due to value mismatch")
 	})
+}
+
+func TestValueFromPrometheus_AllTypes(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		metricType   model.MetricType
+		metric       *model.Metric
+		expectedType string
+		expectedStr  string
+	}{
+		{
+			name:       "COUNTER type",
+			metricType: model.MetricType_COUNTER,
+			metric: &model.Metric{
+				Counter: &model.Counter{
+					Value: proto.Float64(123.45),
+				},
+			},
+			expectedType: "prometheus.CounterValue",
+			expectedStr:  "123.45",
+		},
+		{
+			name:       "GAUGE type",
+			metricType: model.MetricType_GAUGE,
+			metric: &model.Metric{
+				Gauge: &model.Gauge{
+					Value: proto.Float64(67.89),
+				},
+			},
+			expectedType: "prometheus.GaugeValue",
+			expectedStr:  "67.89",
+		},
+		{
+			name:       "UNTYPED type - not supported, returns EmptyValue",
+			metricType: model.MetricType_UNTYPED,
+			metric: &model.Metric{
+				Untyped: &model.Untyped{
+					Value: proto.Float64(99.99),
+				},
+			},
+			expectedType: "prometheus.noValueType",
+			expectedStr:  "no_value",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			value := valueFromPrometheus(tt.metricType, tt.metric)
+
+			assert.Equal(t, tt.expectedStr, value.String(), "Value string should match")
+			assert.Contains(t, fmt.Sprintf("%T", value), tt.expectedType, "Type should match")
+		})
+	}
 }

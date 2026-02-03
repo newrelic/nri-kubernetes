@@ -125,7 +125,8 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 		licenseKey := os.Getenv("NRIA_LICENSE_KEY")
 		if licenseKey == "" {
 			s.logger.Warn("NRIA_LICENSE_KEY not set - CRD dimensional metrics will not be sent")
-		} else {
+		} else { //nolint:nestif //CRD initialization requires nested configuration logic
+
 			// Log first few chars of license key for debugging
 			maskedKey := licenseKey
 			if len(licenseKey) > licenseKeyMaskPrefix {
@@ -191,7 +192,7 @@ func (s *Scraper) Run(i *integration.Integration) error {
 		queries := make([]prometheus.Query, 0, len(metric.KSMQueries)+1)
 		queries = append(queries, metric.KSMQueries...)
 
-		if s.config.KSM.EnableCustomResourceMetrics && s.crdHarvester != nil {
+		if s.config.KSM.EnableCustomResourceMetrics && s.crdHarvester != nil { //nolint:staticcheck // Explicit KSM field maintains codebase consistency
 			// Add CRD prefix query to fetch all CRD metrics
 			queries = append(queries, prometheus.Query{
 				MetricName: "kube_customresource",
@@ -220,7 +221,7 @@ func (s *Scraper) Run(i *integration.Integration) error {
 		}
 
 		// Process CRD metrics if enabled
-		if s.config.KSM.EnableCustomResourceMetrics && s.crdHarvester != nil && len(crdMetrics) > 0 {
+		if s.config.KSM.EnableCustomResourceMetrics && s.crdHarvester != nil && len(crdMetrics) > 0 { //nolint:staticcheck // Explicit KSM field maintains codebase consistency
 			s.logger.Debugf("Exporting %d CRD metric families as dimensional metrics", len(crdMetrics))
 
 			crdExportConfig := crd.ExportConfig{
@@ -310,6 +311,8 @@ func (s *Scraper) Close() {
 
 // buildDiscoverer returns a discovery.EndpointsDiscoverer, configured to discover KSM endpoints in the cluster,
 // or to return the static endpoint defined by the user in the config.
+//
+//nolint:ireturn //Returns interface by design for discoverer abstraction
 func (s *Scraper) buildDiscoverer() (discovery.EndpointsDiscoverer, error) {
 	dc := discovery.EndpointsDiscoveryConfig{
 		LabelSelector: defaultLabelSelector,

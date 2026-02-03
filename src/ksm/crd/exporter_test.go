@@ -66,7 +66,7 @@ func TestFilterCRDMetrics(t *testing.T) {
 	}
 }
 
-//nolint:funlen // Table-driven test with comprehensive test cases
+//nolint:funlen //Table-driven test with comprehensive test cases
 func TestExportDimensionalMetrics(t *testing.T) {
 	t.Parallel()
 
@@ -214,6 +214,24 @@ func TestExportDimensionalMetrics(t *testing.T) {
 			clusterName:    "test-cluster",
 			expectError:    false,
 			expectMetrics:  0,
+		},
+		{
+			name: "skips unsupported value types (EmptyValue)",
+			metricFamilies: []prometheus.MetricFamily{
+				{
+					Name: "kube_customresource_test",
+					Type: "gauge",
+					Metrics: []prometheus.Metric{
+						{
+							Labels: prometheus.Labels{"name": "test"},
+							Value:  prometheus.EmptyValue, // Unsupported type
+						},
+					},
+				},
+			},
+			clusterName:   "test-cluster",
+			expectError:   false,
+			expectMetrics: 0, // Should be skipped
 		},
 	}
 
