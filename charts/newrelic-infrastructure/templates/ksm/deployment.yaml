@@ -83,6 +83,10 @@ spec:
             - name: "NEWRELIC_METRIC_API_URL"
               value: {{ .Values.ksm.metricAPIURL | quote }}
             {{- end }}
+            {{- if .Values.ksm.harvestPeriod }}
+            - name: "NRI_KUBERNETES_KSM_HARVESTPERIOD"
+              value: {{ .Values.ksm.harvestPeriod | quote }}
+            {{- end }}
             - name: NRIA_LICENSE_KEY
               valueFrom:
                 secretKeyRef:
