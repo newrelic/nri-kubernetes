@@ -208,11 +208,14 @@ Infrastructure Agent integrations (Kafka, Cassandra, Redis, etc.) are not suppor
 | ksm.config.scheme | string | `"http"` | Scheme to use to connect to kube-state-metrics. Supported values are `http` and `https`. |
 | ksm.config.selector | string | `"app.kubernetes.io/name=kube-state-metrics"` | Label selector that will be used to automatically discover an instance of kube-state-metrics running in the cluster. |
 | ksm.config.timeout | string | `"10s"` | Timeout for the ksm API contacted by the integration |
+| ksm.enableCustomResourceMetrics | bool | false | Enable to collect Custom Resource Definition (CRD) metrics from KSM. When enabled, metrics with the prefix kube_customresource_* will be collected. Requires KSM to be configured with customResourceState. See documentation for details. |
 | ksm.enableResourceQuotaSamples | bool | `true` | Enable to collect metrics for resource quota. |
 | ksm.enabled | bool | `true` | Enable cluster state monitoring. Advanced users only. Setting this to `false` is not supported and will break the New Relic experience. |
 | ksm.forwarder | object | 100m/150M -/850M | Resources for the Frowarder pod. large clusters. |
+| ksm.harvestPeriod | string | 0s (matches scrape interval, typically 15s) | How often CRD metrics are sent to New Relic (async batching). If not specified (0s), matches the scrape interval for consistency with entity-based metrics. Example: "30s" to batch for 30 seconds before sending. |
 | ksm.hostNetwork | bool | Not set | Sets pod's hostNetwork. When set bypasses global/common variable |
 | ksm.ksm | object | 100m/150M -/850M | Resources for the KSM scraper pod. Keep in mind that sharding is not supported at the moment, so memory usage for this component ramps up quickly on large clusters. |
+| ksm.metricAPIURL | string | "" | Override the New Relic Metric API endpoint for CRD dimensional metrics. If empty, uses the default production endpoint. Useful for proxies or alternative endpoints. |
 | ksm.tolerations | list | Tolerates common node pressure taints but not unschedulable nodes | Tolerations for the KSM Deployment. |
 | kubelet | object | See `values.yaml` | Configuration for the DaemonSet that collects metrics from the Kubelet. |
 | kubelet.agentConfig | object | `{}` | Config for the Infrastructure agent that will forward the metrics to the backend and will run the integrations in this cluster. It will be merged with the configuration in `.common.agentConfig`. You can see all the agent configurations in [New Relic docs](https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/) e.g. you can set `passthrough_environment` int the [config file](https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/configure-infrastructure-agent/#config-file) so the agent let use that environment variables to the integrations. |
