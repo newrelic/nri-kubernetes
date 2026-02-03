@@ -174,3 +174,86 @@ func TestScraper_FilterNamespace(t *testing.T) {
 		assert.Equal(t, 34, len(i.Entities))
 	})
 }
+
+func TestScraper_Close(t *testing.T) {
+	t.Run("Close_without_CRD_harvester", func(t *testing.T) {
+		// Test that Close() doesn't panic when CRD feature is disabled (no harvester)
+		version := testutil.Version(testutil.Testdata134)
+		testServer, err := version.Server()
+		require.NoError(t, err)
+
+		ksmCli, err := ksmClient.New()
+		require.NoError(t, err)
+
+		k8sData, err := version.K8s()
+		require.NoError(t, err)
+
+		fakeK8s := fake.NewSimpleClientset(k8sData.Everything()...)
+		scraper, err := ksm.NewScraper(
+			&config.Config{
+				KSM: config.KSM{
+					StaticURL:                   testServer.KSMEndpoint(),
+					EnableCustomResourceMetrics: false, // CRD disabled
+				},
+				ClusterName: t.Name(),
+			}, ksm.Providers{
+				K8s: fakeK8s,
+				KSM: ksmCli,
+			},
+		)
+		require.NoError(t, err)
+
+		// Should not panic
+		assert.NotPanics(t, func() {
+			scraper.Close()
+		})
+
+		// Should be safe to call multiple times
+		assert.NotPanics(t, func() {
+			scraper.Close()
+		})
+	})
+
+	t.Run("Close_with_CRD_harvester", func(t *testing.T) {
+		// Test that Close() handles CRD harvester flush properly
+		// Note: We can't easily test the actual flush without a real harvester,
+		// but we verify Close() doesn't panic with CRD feature enabled
+		version := testutil.Version(testutil.Testdata134)
+		testServer, err := version.Server()
+		require.NoError(t, err)
+
+		ksmCli, err := ksmClient.New()
+		require.NoError(t, err)
+
+		k8sData, err := version.K8s()
+		require.NoError(t, err)
+
+		fakeK8s := fake.NewSimpleClientset(k8sData.Everything()...)
+
+		// Enable CRD metrics - this requires NRIA_LICENSE_KEY to be set
+		// If not set, harvester will be nil but Close() should still work
+		scraper, err := ksm.NewScraper(
+			&config.Config{
+				KSM: config.KSM{
+					StaticURL:                   testServer.KSMEndpoint(),
+					EnableCustomResourceMetrics: true, // CRD enabled
+				},
+				ClusterName: t.Name(),
+			}, ksm.Providers{
+				K8s: fakeK8s,
+				KSM: ksmCli,
+			},
+		)
+		require.NoError(t, err)
+
+		// Should not panic regardless of whether harvester was initialized
+		assert.NotPanics(t, func() {
+			scraper.Close()
+		})
+
+		// Should be safe to call multiple times
+		assert.NotPanics(t, func() {
+			scraper.Close()
+		})
+	})
+}

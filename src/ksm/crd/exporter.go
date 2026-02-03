@@ -14,6 +14,11 @@ const (
 	CRDMetricPrefix = "kube_customresource_"
 )
 
+// IsCRDMetric checks if a metric name is a CRD metric (starts with kube_customresource_).
+func IsCRDMetric(metricName string) bool {
+	return strings.HasPrefix(metricName, CRDMetricPrefix)
+}
+
 // FilterCRDMetrics filters metric families to only include CRD metrics (those starting with kube_customresource_).
 func FilterCRDMetrics(metricFamilies []prometheus.MetricFamily) []prometheus.MetricFamily {
 	var crdMetrics []prometheus.MetricFamily
@@ -59,7 +64,7 @@ func ExportDimensionalMetrics(metricFamilies []prometheus.MetricFamily, config E
 
 		// Each metric family can have multiple time series (different label combinations)
 		for _, promMetric := range metricFamily.Metrics {
-			// Extract value - simple type assertion
+			// Extract value - type assertion for supported Prometheus value types
 			// Supports GAUGE, COUNTER, and UNTYPED (which includes OpenMetrics StateSet and Info types)
 			var value float64
 			switch v := promMetric.Value.(type) {
@@ -100,10 +105,10 @@ func ExportDimensionalMetrics(metricFamilies []prometheus.MetricFamily, config E
 	// Send metrics via harvester
 	if len(metrics) > 0 {
 		config.Logger.Infof("Recording %d dimensional metrics to harvester", metricsCount)
-		for _, m := range metrics {
+		for i, m := range metrics {
 			config.Harvester.RecordMetric(m)
 			// Log first few metrics for debugging
-			if metricsCount <= 5 {
+			if i < 5 {
 				if g, ok := m.(telemetry.Gauge); ok {
 					config.Logger.Debugf("  Metric: %s = %f (attributes: %d)", g.Name, g.Value, len(g.Attributes))
 				}

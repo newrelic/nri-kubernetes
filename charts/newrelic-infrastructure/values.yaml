@@ -250,6 +250,11 @@ ksm:
   # If empty, uses the default production endpoint. Useful for proxies or alternative endpoints.
   # @default -- ""
   metricAPIURL: ""
+  # -- How often CRD metrics are sent to New Relic (async batching).
+  # If not specified (0s), matches the scrape interval for consistency with entity-based metrics.
+  # Example: "30s" to batch for 30 seconds before sending.
+  # @default -- 0s (matches scrape interval, typically 15s)
+  harvestPeriod: ""
   # -- Resources for the KSM scraper pod.
   # Keep in mind that sharding is not supported at the moment, so memory usage for this component ramps up quickly on
   # large clusters.

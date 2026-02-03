@@ -287,3 +287,49 @@ func TestCRDMetricPrefix(t *testing.T) {
 	// Verify the constant is correctly defined
 	assert.Equal(t, "kube_customresource_", CRDMetricPrefix)
 }
+
+func TestIsCRDMetric(t *testing.T) {
+	tests := []struct {
+		name       string
+		metricName string
+		expected   bool
+	}{
+		{
+			name:       "valid CRD metric",
+			metricName: "kube_customresource_nodepool_limit_cpu",
+			expected:   true,
+		},
+		{
+			name:       "CRD prefix only",
+			metricName: "kube_customresource_",
+			expected:   true,
+		},
+		{
+			name:       "standard kube metric",
+			metricName: "kube_pod_status_phase",
+			expected:   false,
+		},
+		{
+			name:       "standard node metric",
+			metricName: "kube_node_info",
+			expected:   false,
+		},
+		{
+			name:       "empty string",
+			metricName: "",
+			expected:   false,
+		},
+		{
+			name:       "similar but not matching prefix",
+			metricName: "kube_custom_resource_test",
+			expected:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := IsCRDMetric(tt.metricName)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}

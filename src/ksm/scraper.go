@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
@@ -46,6 +47,7 @@ type Scraper struct {
 	informerClosers     []chan<- struct{}
 	Filterer            discovery.NamespaceFilterer
 	crdHarvester        *telemetry.Harvester
+	closeOnce           sync.Once
 }
 
 // ScraperOpt are options that can be used to configure the Scraper
@@ -124,11 +126,20 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 			}
 			s.logger.Infof("Using license key: %s", maskedKey)
 
+			// Determine harvest period: use configured value or derive from scrape interval
+			harvestPeriod := config.KSM.HarvestPeriod
+			if harvestPeriod == 0 {
+				// Default: match scrape interval for consistency with entity-based metrics
+				harvestPeriod = config.Interval
+				s.logger.Infof("CRD harvest period not configured, using scrape interval: %v", harvestPeriod)
+			}
+
 			// Create harvester to send dimensional metrics to New Relic Metric API
 			harvestOpts := []func(*telemetry.Config){
 				telemetry.ConfigAPIKey(licenseKey),
-				telemetry.ConfigHarvestPeriod(0), // No automatic harvest - we control when to send
+				telemetry.ConfigHarvestPeriod(harvestPeriod), // Automatic batching for better performance
 			}
+			s.logger.Infof("CRD metrics will be sent every %v (async batching)", harvestPeriod)
 
 			// Use custom metric API URL if configured, otherwise default to production
 			metricsURL := "https://metric-api.newrelic.com/metric/v1" // production default
@@ -169,45 +180,66 @@ func (s *Scraper) Run(i *integration.Integration) error {
 	for _, endpoint := range endpoints {
 		s.logger.Debugf("Fetching KSM data from %q", endpoint)
 
-		// If CRD metrics are enabled, export them as dimensional metrics
-		if s.config.KSM.EnableCustomResourceMetrics && s.crdHarvester != nil {
-			s.logger.Debugf("CRD metrics enabled, exporting dimensional CRD metrics")
+		// Build combined query list: standard KSM queries + CRD query if enabled
+		queries := make([]prometheus.Query, 0, len(metric.KSMQueries)+1)
+		queries = append(queries, metric.KSMQueries...)
 
-			// Create a query to fetch all CRD metrics
-			crdQuery := prometheus.Query{
+		if s.config.KSM.EnableCustomResourceMetrics && s.crdHarvester != nil {
+			// Add CRD prefix query to fetch all CRD metrics
+			queries = append(queries, prometheus.Query{
 				MetricName: "kube_customresource",
 				Prefix:     true,
-			}
+			})
+		}
 
-			// Fetch CRD metrics
-			metricFamiliesGetter := s.KSM.MetricFamiliesGetFunc(endpoint)
-			metricFamilies, err := metricFamiliesGetter([]prometheus.Query{crdQuery})
-			if err != nil {
-				s.logger.Warnf("Error fetching CRD metrics: %v", err)
+		// Fetch all metrics once (both standard and CRD)
+		metricFamiliesGetter := s.KSM.MetricFamiliesGetFunc(endpoint)
+		allMetricFamilies, err := metricFamiliesGetter(queries)
+		if err != nil {
+			s.logger.Warnf("Error fetching metrics from KSM: %v", err)
+			continue
+		}
+
+		s.logger.Debugf("Fetched %d metric families from KSM", len(allMetricFamilies))
+
+		// Split metrics into CRD and standard metrics
+		var crdMetrics, standardMetrics []prometheus.MetricFamily
+		for _, mf := range allMetricFamilies {
+			if crd.IsCRDMetric(mf.Name) {
+				crdMetrics = append(crdMetrics, mf)
 			} else {
-				// Export CRD metrics as dimensional metrics
-				crdExportConfig := crd.ExportConfig{
-					ClusterName: s.config.ClusterName,
-					Logger:      s.logger,
-					Harvester:   s.crdHarvester,
-				}
-				err = crd.ExportDimensionalMetrics(metricFamilies, crdExportConfig)
-				if err != nil {
-					s.logger.Warnf("Error exporting CRD metrics: %v", err)
-				} else {
-					// Harvest (send) the metrics immediately with a timeout
-					s.logger.Info("Sending CRD metrics to New Relic Metric API...")
-					ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-					defer cancel()
-					s.crdHarvester.HarvestNow(ctx)
-					s.logger.Info("CRD metrics sent successfully")
-				}
+				standardMetrics = append(standardMetrics, mf)
 			}
 		}
 
-		// Continue with normal entity-based metric processing
+		// Process CRD metrics if enabled
+		if s.config.KSM.EnableCustomResourceMetrics && s.crdHarvester != nil && len(crdMetrics) > 0 {
+			s.logger.Debugf("Exporting %d CRD metric families as dimensional metrics", len(crdMetrics))
+
+			crdExportConfig := crd.ExportConfig{
+				ClusterName: s.config.ClusterName,
+				Logger:      s.logger,
+				Harvester:   s.crdHarvester,
+			}
+			err = crd.ExportDimensionalMetrics(crdMetrics, crdExportConfig)
+			if err != nil {
+				s.logger.Warnf("Error exporting CRD metrics: %v", err)
+			} else {
+				s.logger.Debug("CRD metrics recorded to harvester successfully")
+			}
+		}
+
+		// Create a cached metric families getter for the grouper using pre-fetched standard metrics
+		// This avoids fetching from KSM endpoint again
+		cachedGetter := func(queries []prometheus.Query) ([]prometheus.MetricFamily, error) {
+			// Return the pre-fetched standard metrics
+			// The grouper will filter them based on its queries
+			return standardMetrics, nil
+		}
+
+		// Continue with normal entity-based metric processing using cached metrics
 		grouper, err := ksmGrouper.New(ksmGrouper.Config{
-			MetricFamiliesGetter:       s.KSM.MetricFamiliesGetFunc(endpoint),
+			MetricFamiliesGetter:       cachedGetter,
 			Queries:                    metric.KSMQueries,
 			ServicesLister:             s.servicesLister,
 			EnableResourceQuotaSamples: s.config.KSM.EnableResourceQuotaSamples,
@@ -248,11 +280,25 @@ func (s *Scraper) Run(i *integration.Integration) error {
 	return nil
 }
 
-// Close will signal internal informers to stop running.
+// Close will signal internal informers to stop running and flush any pending metrics.
+// Safe to call multiple times.
 func (s *Scraper) Close() {
-	for _, ch := range s.informerClosers {
-		close(ch)
-	}
+	s.closeOnce.Do(func() {
+		for _, ch := range s.informerClosers {
+			close(ch)
+		}
+
+		// Flush any pending CRD metrics before shutdown
+		if s.crdHarvester != nil {
+			s.logger.Info("Flushing pending CRD metrics before shutdown...")
+			// Use longer timeout for final flush to avoid losing metrics
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+
+			s.crdHarvester.HarvestNow(ctx)
+			s.logger.Info("Final CRD metrics flush completed")
+		}
+	})
 }
 
 // buildDiscoverer returns a discovery.EndpointsDiscoverer, configured to discover KSM endpoints in the cluster,

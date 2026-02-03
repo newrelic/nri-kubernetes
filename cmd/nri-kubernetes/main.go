@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"os/signal"
 	"path"
 	"runtime"
 	"strings"
+	"syscall"
 	"time"
 
 	sdk "github.com/newrelic/infra-integrations-sdk/integration"
@@ -162,8 +165,29 @@ func main() {
 		defer controlplaneScraper.Close()
 	}
 
+	// Setup signal handling for graceful shutdown
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
+	go func() {
+		sig := <-sigChan
+		logger.Infof("Received signal %v, initiating graceful shutdown...", sig)
+		cancel()
+	}()
+
 	var scrapeCount uint64
 	for {
+		// Check if we should exit
+		select {
+		case <-ctx.Done():
+			logger.Info("Graceful shutdown initiated, exiting scrape loop")
+			return
+		default:
+			// Continue with scrape
+		}
+
 		scrapeCount++
 		start := time.Now()
 
@@ -206,7 +230,15 @@ func main() {
 		}
 
 		logger.Debugf("total duration: %dms, next scrape in %dms", totalTime.Milliseconds(), nextTick.Milliseconds())
-		time.Sleep(nextTick)
+
+		// Sleep with ability to be interrupted by signal
+		select {
+		case <-ctx.Done():
+			logger.Info("Graceful shutdown initiated during sleep, exiting scrape loop")
+			return
+		case <-time.After(nextTick):
+			// Continue to next scrape
+		}
 	}
 }
 

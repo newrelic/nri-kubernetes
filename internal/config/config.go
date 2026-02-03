@@ -126,6 +126,10 @@ type KSM struct {
 	// If empty, defaults to production endpoint (https://metric-api.newrelic.com/metric/v1).
 	// Useful for proxies, testing, or alternative endpoints.
 	MetricAPIURL string `mapstructure:"metricAPIURL"`
+	// HarvestPeriod controls how often CRD dimensional metrics are sent to New Relic (async batching).
+	// If 0, derives from the global scrape interval for consistency with entity-based metrics.
+	// Default: 0 (use scrape interval)
+	HarvestPeriod time.Duration `mapstructure:"harvestPeriod"`
 	// Discovery allows to configure timing aspects of KSM discovery.
 	Discovery struct {
 		// BackoffDelay controls how much time to wait between attempts to find the KSM service in the cluster.
@@ -331,6 +335,7 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	v.SetDefault("ksm|enableResourceQuotaSamples", false)
 	v.SetDefault("ksm|enableCustomResourceMetrics", false)
 	v.SetDefault("ksm|metricAPIURL", "")
+	v.SetDefault("ksm|harvestPeriod", 0) // 0 means derive from scrape interval
 
 	v.SetEnvPrefix("NRI_KUBERNETES")
 	v.AutomaticEnv()
