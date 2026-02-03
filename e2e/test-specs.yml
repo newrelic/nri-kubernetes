@@ -686,6 +686,36 @@ scenarios:
             - key: "Duration (sec)"
               value: "-"
 #        END Failed Job
+#        START NodePool CRD
+        - query: FROM Metric SELECT latest(value) AS 'CPU Limit' WHERE metricName = 'kube_customresource_nodepool_limit_cpu' AND name = 'default' AND clusterName = '${SCENARIO_TAG}'
+          expected_results:
+            - key: "CPU Limit"
+              value: 1000.0
+        - query: FROM Metric SELECT latest(value) / 1024 / 1024 / 1024 AS 'Memory Limit (GiB)' WHERE metricName = 'kube_customresource_nodepool_limit_memory' AND name = 'default' AND clusterName = '${SCENARIO_TAG}'
+          expected_results:
+            - key: "Memory Limit (GiB)"
+              value: 1000.0
+        - query: FROM Metric SELECT latest(value) AS 'Nodes Count' WHERE metricName = 'kube_customresource_nodepool_nodes_count' AND name = 'default' AND clusterName = '${SCENARIO_TAG}'
+          expected_results:
+            - key: "Nodes Count"
+              value: 3.0
+        - query: FROM Metric SELECT latest(value) AS 'Pods Count' WHERE metricName = 'kube_customresource_nodepool_pods_count' AND name = 'default' AND clusterName = '${SCENARIO_TAG}'
+          expected_results:
+            - key: "Pods Count"
+              value: 25.0
+        - query: FROM Metric SELECT latest(customresource_group) AS 'Resource Group' WHERE metricName = 'kube_customresource_nodepool_limit_cpu' AND name = 'default' AND clusterName = '${SCENARIO_TAG}'
+          expected_results:
+            - key: "Resource Group"
+              value: "karpenter.sh"
+        - query: FROM Metric SELECT latest(customresource_kind) AS 'Resource Kind' WHERE metricName = 'kube_customresource_nodepool_limit_cpu' AND name = 'default' AND clusterName = '${SCENARIO_TAG}'
+          expected_results:
+            - key: "Resource Kind"
+              value: "NodePool"
+        - query: FROM Metric SELECT latest(customresource_version) AS 'Resource Version' WHERE metricName = 'kube_customresource_nodepool_limit_cpu' AND name = 'default' AND clusterName = '${SCENARIO_TAG}'
+          expected_results:
+            - key: "Resource Version"
+              value: "v1beta1"
+#        END NodePool CRD
       entities: []
       metrics:
         - source: "k8s.yml"
