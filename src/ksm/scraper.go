@@ -1,10 +1,15 @@
 package ksm
 
 import (
+	"context"
 	"fmt"
 	"net/url"
+	"os"
+	"sync"
+	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/newrelic-telemetry-sdk-go/telemetry"
 	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/version"
@@ -13,15 +18,21 @@ import (
 
 	"github.com/newrelic/nri-kubernetes/v3/internal/config"
 	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
+	"github.com/newrelic/nri-kubernetes/v3/src/ksm/crd"
 	ksmGrouper "github.com/newrelic/nri-kubernetes/v3/src/ksm/grouper"
 	"github.com/newrelic/nri-kubernetes/v3/src/metric"
 	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
 	"github.com/newrelic/nri-kubernetes/v3/src/scrape"
 )
 
-const defaultLabelSelector = "app.kubernetes.io/name=kube-state-metrics"
-const defaultScheme = "http"
-const ksmMetricsPath = "metrics"
+const (
+	defaultLabelSelector = "app.kubernetes.io/name=kube-state-metrics"
+	defaultScheme        = "http"
+	ksmMetricsPath       = "metrics"
+
+	// flushTimeoutSeconds is the timeout for flushing CRD metrics on shutdown.
+	flushTimeoutSeconds = 30
+)
 
 // Providers is a struct holding pointers to all the clients Scraper needs to get data from.
 // TODO: Extract this out of the KSM package.
@@ -40,6 +51,8 @@ type Scraper struct {
 	servicesLister      listersv1.ServiceLister
 	informerClosers     []chan<- struct{}
 	Filterer            discovery.NamespaceFilterer
+	crdHarvester        *telemetry.Harvester
+	closeOnce           sync.Once
 }
 
 // ScraperOpt are options that can be used to configure the Scraper
@@ -102,6 +115,46 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 	s.servicesLister = servicesLister
 	s.informerClosers = append(s.informerClosers, servicesCloser)
 
+	// Initialize CRD metrics harvester if enabled
+	//nolint:nestif //CRD initialization requires nested configuration logic
+	if config.EnableCustomResourceMetrics {
+		s.logger.Info("Initializing telemetry harvester for CRD dimensional metrics")
+
+		// Read license key from environment (same as infrastructure agent uses)
+		licenseKey := os.Getenv("NRIA_LICENSE_KEY")
+		if licenseKey == "" {
+			s.logger.Warn("NRIA_LICENSE_KEY not set - CRD dimensional metrics will not be sent")
+		} else {
+			// Determine harvest period: use configured value or derive from scrape interval
+			harvestPeriod := config.HarvestPeriod
+			if harvestPeriod == 0 {
+				// Default: match scrape interval for consistency with entity-based metrics
+				harvestPeriod = config.Interval
+			}
+
+			// Create harvester to send dimensional metrics to New Relic Metric API
+			harvestOpts := []func(*telemetry.Config){
+				telemetry.ConfigAPIKey(licenseKey),
+				telemetry.ConfigHarvestPeriod(harvestPeriod), // Automatic batching for better performance
+			}
+
+			// Use custom metric API URL if configured, otherwise default to production
+			if config.MetricAPIURL != "" {
+				s.logger.Debugf("Using custom Metric API endpoint for CRD metrics: %s", config.MetricAPIURL)
+				harvestOpts = append(harvestOpts, telemetry.ConfigMetricsURLOverride(config.MetricAPIURL))
+			}
+
+			// Add debug logger to see HTTP responses
+			harvestOpts = append(harvestOpts, telemetry.ConfigBasicDebugLogger(s.logger.Writer()))
+
+			harvester, err := telemetry.NewHarvester(harvestOpts...)
+			if err != nil {
+				return nil, fmt.Errorf("creating telemetry harvester for CRD metrics: %w", err)
+			}
+			s.crdHarvester = harvester
+		}
+	}
+
 	return s, nil
 }
 
@@ -119,8 +172,65 @@ func (s *Scraper) Run(i *integration.Integration) error {
 
 	for _, endpoint := range endpoints {
 		s.logger.Debugf("Fetching KSM data from %q", endpoint)
+
+		// Build combined query list: standard KSM queries + CRD query if enabled
+		queries := make([]prometheus.Query, 0, len(metric.KSMQueries)+1)
+		queries = append(queries, metric.KSMQueries...)
+
+		if s.config.EnableCustomResourceMetrics && s.crdHarvester != nil {
+			// Add CRD prefix query to fetch all CRD metrics
+			queries = append(queries, prometheus.Query{
+				MetricName: "kube_customresource",
+				Prefix:     true,
+			})
+		}
+
+		// Fetch all metrics once (both standard and CRD)
+		metricFamiliesGetter := s.KSM.MetricFamiliesGetFunc(endpoint)
+		allMetricFamilies, err := metricFamiliesGetter(queries)
+		if err != nil {
+			s.logger.Warnf("Error fetching metrics from KSM: %v", err)
+			continue
+		}
+
+		s.logger.Debugf("Fetched %d metric families from KSM", len(allMetricFamilies))
+
+		// Split metrics into CRD and standard metrics
+		var crdMetrics, standardMetrics []prometheus.MetricFamily
+		for _, mf := range allMetricFamilies {
+			if crd.IsCRDMetric(mf.Name) {
+				crdMetrics = append(crdMetrics, mf)
+			} else {
+				standardMetrics = append(standardMetrics, mf)
+			}
+		}
+
+		// Process CRD metrics if enabled
+		if s.config.EnableCustomResourceMetrics && s.crdHarvester != nil && len(crdMetrics) > 0 {
+			s.logger.Debugf("Exporting %d CRD metric families as dimensional metrics", len(crdMetrics))
+
+			crdExportConfig := crd.ExportConfig{
+				ClusterName: s.config.ClusterName,
+				Logger:      s.logger,
+				Harvester:   s.crdHarvester,
+			}
+			err = crd.ExportDimensionalMetrics(crdMetrics, crdExportConfig)
+			if err != nil {
+				s.logger.Warnf("Error exporting CRD metrics: %v", err)
+			}
+		}
+
+		// Create a cached metric families getter for the grouper using pre-fetched standard metrics
+		// This avoids fetching from KSM endpoint again
+		cachedGetter := func(_ []prometheus.Query) ([]prometheus.MetricFamily, error) {
+			// Return the pre-fetched standard metrics
+			// The grouper will filter them based on its queries
+			return standardMetrics, nil
+		}
+
+		// Continue with normal entity-based metric processing using cached metrics
 		grouper, err := ksmGrouper.New(ksmGrouper.Config{
-			MetricFamiliesGetter:       s.KSM.MetricFamiliesGetFunc(endpoint),
+			MetricFamiliesGetter:       cachedGetter,
 			Queries:                    metric.KSMQueries,
 			ServicesLister:             s.servicesLister,
 			EnableResourceQuotaSamples: s.config.EnableResourceQuotaSamples,
@@ -161,15 +271,31 @@ func (s *Scraper) Run(i *integration.Integration) error {
 	return nil
 }
 
-// Close will signal internal informers to stop running.
+// Close will signal internal informers to stop running and flush any pending metrics.
+// Safe to call multiple times.
 func (s *Scraper) Close() {
-	for _, ch := range s.informerClosers {
-		close(ch)
-	}
+	s.closeOnce.Do(func() {
+		for _, ch := range s.informerClosers {
+			close(ch)
+		}
+
+		// Flush any pending CRD metrics before shutdown
+		if s.crdHarvester != nil {
+			s.logger.Info("Flushing pending CRD metrics before shutdown...")
+			// Use longer timeout for final flush to avoid losing metrics
+			ctx, cancel := context.WithTimeout(context.Background(), flushTimeoutSeconds*time.Second)
+			defer cancel()
+
+			s.crdHarvester.HarvestNow(ctx)
+			s.logger.Info("Final CRD metrics flush completed")
+		}
+	})
 }
 
 // buildDiscoverer returns a discovery.EndpointsDiscoverer, configured to discover KSM endpoints in the cluster,
 // or to return the static endpoint defined by the user in the config.
+//
+//nolint:ireturn //Returns interface by design for discoverer abstraction
 func (s *Scraper) buildDiscoverer() (discovery.EndpointsDiscoverer, error) {
 	dc := discovery.EndpointsDiscoveryConfig{
 		LabelSelector: defaultLabelSelector,

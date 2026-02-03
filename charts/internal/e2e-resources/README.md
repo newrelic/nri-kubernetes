@@ -30,6 +30,8 @@ This chart creates e2e resources for nri-kubernetes.
 | failingJob.enabled | bool | `true` | Deploy a failing job |
 | fileSystemTest | object | `{"fileName":"pi.txt"}` | Variables for filesystem testing |
 | hpa.enabled | bool | `true` | Enable hpa resources |
+| karpenterNodePool.enabled | bool | `true` | Deploy a Karpenter NodePool CRD for testing CRD monitoring |
+| kube-state-metrics.customResourceState.enabled | bool | `true` | Enable KSM custom resource state metrics for CRD monitoring |
 | loadBalancerService.annotations | object | `{}` |  |
 | loadBalancerService.enabled | bool | `true` | Deploy a loadBalancer service |
 | loadBalancerService.fakeIP | string | `""` | If set, will deploy service with a loadBalancerIP set to this value |

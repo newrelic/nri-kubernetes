@@ -1,0 +1,30 @@
+{{- if .Values.karpenterNodePool.enabled -}}
+---
+# Karpenter NodePool instance (CRD is in crds/ directory)
+apiVersion: karpenter.sh/v1beta1
+kind: NodePool
+metadata:
+  name: default
+  labels:
+    environment: production
+    managed-by: karpenter
+    team: platform
+spec:
+  disruption:
+    consolidationPolicy: WhenUnderutilized
+    consolidateAfter: 30s
+  limits:
+    cpu: "1000"
+    memory: "1073741824000"
+status:
+  resources:
+    nodes: 3
+    pods: 25
+  conditions:
+    - type: Ready
+      status: "True"
+    - type: NodeClassReady
+      status: "True"
+    - type: Initialized
+      status: "True"
+{{- end }}

@@ -80,3 +80,11 @@ type GaugeValue float64
 func (v GaugeValue) String() string {
 	return strconv.FormatFloat(float64(v), 'f', -1, 64)
 }
+
+// UntypedValue type represents untyped metric values.
+type UntypedValue float64
+
+// String implements the Stringer interface method.
+func (v UntypedValue) String() string {
+	return strconv.FormatFloat(float64(v), 'f', -1, 64)
+}

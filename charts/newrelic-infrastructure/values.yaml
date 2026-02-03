@@ -241,6 +241,20 @@ ksm:
   initContainers: []
   # -- Enable to collect metrics for resource quota.
   enableResourceQuotaSamples: true
+  # -- Enable to collect Custom Resource Definition (CRD) metrics from KSM.
+  # When enabled, metrics with the prefix kube_customresource_* will be collected.
+  # Requires KSM to be configured with customResourceState. See documentation for details.
+  # @default -- false
+  enableCustomResourceMetrics: false
+  # -- Override the New Relic Metric API endpoint for CRD dimensional metrics.
+  # If empty, uses the default production endpoint. Useful for proxies or alternative endpoints.
+  # @default -- ""
+  metricAPIURL: ""
+  # -- How often CRD metrics are sent to New Relic (async batching).
+  # If not specified (0s), matches the scrape interval for consistency with entity-based metrics.
+  # Example: "30s" to batch for 30 seconds before sending.
+  # @default -- 0s (matches scrape interval, typically 15s)
+  harvestPeriod: ""
   # -- Resources for the KSM scraper pod.
   # Keep in mind that sharding is not supported at the moment, so memory usage for this component ramps up quickly on
   # large clusters.

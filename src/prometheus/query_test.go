@@ -1,6 +1,7 @@
 package prometheus
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -374,4 +375,282 @@ func TestParseResponseWithInfoMetric(t *testing.T) {
 
 	verifyReplicaSetMetrics(t, metricFamiliesOne, expectedMetricNames)
 	verifyReplicaSetMetrics(t, metricFamiliesTwo, expectedMetricNames)
+}
+
+func TestQuery_Execute_PrefixMatch(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name             string
+		query            Query
+		metricFamilyName string
+		expectMatch      bool
+	}{
+		{
+			name: "prefix match - exact prefix",
+			query: Query{
+				MetricName: "kube_customresource",
+				Prefix:     true,
+			},
+			metricFamilyName: "kube_customresource",
+			expectMatch:      true,
+		},
+		{
+			name: "prefix match - with suffix",
+			query: Query{
+				MetricName: "kube_customresource",
+				Prefix:     true,
+			},
+			metricFamilyName: "kube_customresource_nodepool_limit_cpu",
+			expectMatch:      true,
+		},
+		{
+			name: "prefix match - no match",
+			query: Query{
+				MetricName: "kube_customresource",
+				Prefix:     true,
+			},
+			metricFamilyName: "kube_pod_status_phase",
+			expectMatch:      false,
+		},
+		{
+			name: "exact match - matches",
+			query: Query{
+				MetricName: "kube_pod_status_phase",
+				Prefix:     false,
+			},
+			metricFamilyName: "kube_pod_status_phase",
+			expectMatch:      true,
+		},
+		{
+			name: "exact match - no match with similar name",
+			query: Query{
+				MetricName: "kube_pod_status",
+				Prefix:     false,
+			},
+			metricFamilyName: "kube_pod_status_phase",
+			expectMatch:      false,
+		},
+		{
+			name: "prefix match - empty prefix",
+			query: Query{
+				MetricName: "",
+				Prefix:     true,
+			},
+			metricFamilyName: "any_metric",
+			expectMatch:      true, // Empty string is prefix of everything
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt // capture range variable
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			// Create a mock metric family
+			metricFamily := &model.MetricFamily{
+				Name: proto.String(tt.metricFamilyName),
+				Type: model.MetricType_GAUGE.Enum(),
+				Metric: []*model.Metric{
+					{
+						Gauge: &model.Gauge{
+							Value: proto.Float64(1.0),
+						},
+					},
+				},
+			}
+
+			// Execute the query
+			result := tt.query.Execute(metricFamily)
+
+			// Check if match occurred
+			if tt.expectMatch {
+				assert.NotEmpty(t, result.Metrics, "Expected metrics to match but got none")
+				assert.Equal(t, tt.metricFamilyName, result.Name, "Expected metric family name to match")
+			} else {
+				assert.Empty(t, result.Metrics, "Expected no metrics to match but got some")
+			}
+		})
+	}
+}
+
+func TestQuery_Execute_PrefixMatchWithLabels(t *testing.T) {
+	t.Parallel()
+
+	// Test that prefix matching works correctly with label filtering
+	query := Query{
+		MetricName: "kube_customresource",
+		Prefix:     true,
+		Labels: QueryLabels{
+			Operator: QueryOpAnd,
+			Labels: Labels{
+				"name": "default",
+			},
+		},
+	}
+
+	t.Run("prefix match with matching labels", func(t *testing.T) {
+		t.Parallel()
+
+		metricFamily := &model.MetricFamily{
+			Name: proto.String("kube_customresource_nodepool_limit_cpu"),
+			Type: model.MetricType_GAUGE.Enum(),
+			Metric: []*model.Metric{
+				{
+					Label: []*model.LabelPair{
+						{
+							Name:  proto.String("name"),
+							Value: proto.String("default"),
+						},
+						{
+							Name:  proto.String("customresource_group"),
+							Value: proto.String("karpenter.sh"),
+						},
+					},
+					Gauge: &model.Gauge{
+						Value: proto.Float64(1000.0),
+					},
+				},
+			},
+		}
+
+		result := query.Execute(metricFamily)
+		assert.Len(t, result.Metrics, 1, "Expected one metric to match")
+		assert.Equal(t, "default", result.Metrics[0].Labels["name"])
+	})
+
+	t.Run("prefix match with non-matching labels", func(t *testing.T) {
+		t.Parallel()
+
+		metricFamily := &model.MetricFamily{
+			Name: proto.String("kube_customresource_nodepool_limit_cpu"),
+			Type: model.MetricType_GAUGE.Enum(),
+			Metric: []*model.Metric{
+				{
+					Label: []*model.LabelPair{
+						{
+							Name:  proto.String("name"),
+							Value: proto.String("other"),
+						},
+					},
+					Gauge: &model.Gauge{
+						Value: proto.Float64(1000.0),
+					},
+				},
+			},
+		}
+
+		result := query.Execute(metricFamily)
+		assert.Empty(t, result.Metrics, "Expected no metrics to match due to label mismatch")
+	})
+}
+
+func TestQuery_Execute_PrefixMatchWithValue(t *testing.T) {
+	t.Parallel()
+
+	// Test that prefix matching works correctly with value filtering
+	query := Query{
+		MetricName: "kube_customresource",
+		Prefix:     true,
+		Value: QueryValue{
+			Operator: QueryOpAnd,
+			Value:    GaugeValue(1),
+		},
+	}
+
+	t.Run("prefix match with matching value", func(t *testing.T) {
+		t.Parallel()
+
+		metricFamily := &model.MetricFamily{
+			Name: proto.String("kube_customresource_test"),
+			Type: model.MetricType_GAUGE.Enum(),
+			Metric: []*model.Metric{
+				{
+					Gauge: &model.Gauge{
+						Value: proto.Float64(1.0),
+					},
+				},
+			},
+		}
+
+		result := query.Execute(metricFamily)
+		assert.Len(t, result.Metrics, 1, "Expected one metric to match")
+	})
+
+	t.Run("prefix match with non-matching value", func(t *testing.T) {
+		t.Parallel()
+
+		metricFamily := &model.MetricFamily{
+			Name: proto.String("kube_customresource_test"),
+			Type: model.MetricType_GAUGE.Enum(),
+			Metric: []*model.Metric{
+				{
+					Gauge: &model.Gauge{
+						Value: proto.Float64(2.0),
+					},
+				},
+			},
+		}
+
+		result := query.Execute(metricFamily)
+		assert.Empty(t, result.Metrics, "Expected no metrics to match due to value mismatch")
+	})
+}
+
+func TestValueFromPrometheus_AllTypes(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		metricType   model.MetricType
+		metric       *model.Metric
+		expectedType string
+		expectedStr  string
+	}{
+		{
+			name:       "COUNTER type",
+			metricType: model.MetricType_COUNTER,
+			metric: &model.Metric{
+				Counter: &model.Counter{
+					Value: proto.Float64(123.45),
+				},
+			},
+			expectedType: "prometheus.CounterValue",
+			expectedStr:  "123.45",
+		},
+		{
+			name:       "GAUGE type",
+			metricType: model.MetricType_GAUGE,
+			metric: &model.Metric{
+				Gauge: &model.Gauge{
+					Value: proto.Float64(67.89),
+				},
+			},
+			expectedType: "prometheus.GaugeValue",
+			expectedStr:  "67.89",
+		},
+		{
+			name:       "UNTYPED type - not supported, returns EmptyValue",
+			metricType: model.MetricType_UNTYPED,
+			metric: &model.Metric{
+				Untyped: &model.Untyped{
+					Value: proto.Float64(99.99),
+				},
+			},
+			expectedType: "prometheus.noValueType",
+			expectedStr:  "no_value",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			value := valueFromPrometheus(tt.metricType, tt.metric)
+
+			assert.Equal(t, tt.expectedStr, value.String(), "Value string should match")
+			assert.Contains(t, fmt.Sprintf("%T", value), tt.expectedType, "Type should match")
+		})
+	}
 }

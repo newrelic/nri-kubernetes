@@ -118,6 +118,18 @@ type KSM struct {
 	Retries int `mapstructure:"retries"`
 	// Enable collection of ResourceQuota metrics as samples.
 	EnableResourceQuotaSamples bool `mapstructure:"enableResourceQuotaSamples"`
+	// EnableCustomResourceMetrics enables collection of CRD (Custom Resource Definition) metrics from KSM.
+	// When enabled, metrics with the prefix kube_customresource_* will be collected and exported as dimensional metrics.
+	// Default: false for backward compatibility.
+	EnableCustomResourceMetrics bool `mapstructure:"enableCustomResourceMetrics"`
+	// MetricAPIURL allows overriding the New Relic Metric API endpoint for CRD dimensional metrics.
+	// If empty, defaults to production endpoint (https://metric-api.newrelic.com/metric/v1).
+	// Useful for proxies, testing, or alternative endpoints.
+	MetricAPIURL string `mapstructure:"metricAPIURL"`
+	// HarvestPeriod controls how often CRD dimensional metrics are sent to New Relic (async batching).
+	// If 0, derives from the global scrape interval for consistency with entity-based metrics.
+	// Default: 0 (use scrape interval)
+	HarvestPeriod time.Duration `mapstructure:"harvestPeriod"`
 	// Discovery allows to configure timing aspects of KSM discovery.
 	Discovery struct {
 		// BackoffDelay controls how much time to wait between attempts to find the KSM service in the cluster.
@@ -321,10 +333,16 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	v.SetDefault("ksm|discovery|backoffDelay", 7*time.Second)
 	v.SetDefault("ksm|discovery|timeout", 60*time.Second)
 	v.SetDefault("ksm|enableResourceQuotaSamples", false)
+	v.SetDefault("ksm|enableCustomResourceMetrics", false)
+	v.SetDefault("ksm|metricAPIURL", "")
+	v.SetDefault("ksm|harvestPeriod", 0) // 0 means derive from scrape interval
 
 	v.SetEnvPrefix("NRI_KUBERNETES")
 	v.AutomaticEnv()
 	v.SetEnvKeyReplacer(strings.NewReplacer("|", "_"))
+
+	// Bind the generic NEWRELIC_METRIC_API_URL to ksm.metricAPIURL for better UX
+	_ = v.BindEnv("ksm|metricAPIURL", "NEWRELIC_METRIC_API_URL")
 
 	// Config File
 	v.AddConfigPath(filePath)

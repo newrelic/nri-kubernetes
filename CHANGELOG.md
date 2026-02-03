@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- Add support for Custom Resource Definition (CRD) dimensional metrics collection from kube-state-metrics. New config parameters `ksm.enableCustomResourceMetrics` (default: false), `ksm.metricAPIURL` (optional), and `ksm.harvestPeriod` (default: matches scrape interval) enable collection of `kube_customresource_*` metrics as dimensional metrics sent to the New Relic Metric API. All CRD labels are preserved as metric attributes. @NRhzhao [#1390](https://github.com/newrelic/nri-kubernetes/pull/1390)
+
+### dependency
+- Updated github.com/newrelic/newrelic-telemetry-sdk-go to v0.8.1
+
 ## v3.53.1 - 2026-02-02
 
 ### ⛓️ Dependencies
