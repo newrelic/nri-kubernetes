@@ -33,8 +33,11 @@ const (
 type Query struct {
 	CustomName string
 	MetricName string
-	Labels     QueryLabels
-	Value      QueryValue // TODO Only supported Counter and Gauge
+	// Prefix indicates whether MetricName should be used as a prefix match instead of exact match.
+	// When true, metrics whose names start with MetricName will match (e.g., "kube_customresource" matches "kube_customresource_nodepool_limit_cpu").
+	Prefix bool
+	Labels QueryLabels
+	Value  QueryValue // TODO Only supported Counter and Gauge
 }
 
 // QueryValue represents the query for a value.
@@ -51,8 +54,18 @@ type QueryLabels struct {
 
 // Execute runs the query.
 func (q Query) Execute(promMetricFamily *model.MetricFamily) (metricFamily MetricFamily) {
-	if promMetricFamily.GetName() != q.MetricName {
-		return
+	// Check if metric name matches the query
+	metricName := promMetricFamily.GetName()
+	if q.Prefix {
+		// Prefix match: check if metric name starts with the query metric name
+		if !strings.HasPrefix(metricName, q.MetricName) {
+			return
+		}
+	} else {
+		// Exact match (default behavior)
+		if metricName != q.MetricName {
+			return
+		}
 	}
 
 	if len(promMetricFamily.Metric) <= 0 {
@@ -120,14 +133,17 @@ func valueFromPrometheus(metricType model.MetricType, metric *model.Metric) Valu
 		return CounterValue(metric.Counter.GetValue())
 	case model.MetricType_GAUGE:
 		return GaugeValue(metric.Gauge.GetValue())
+	case model.MetricType_UNTYPED:
+		// UNTYPED metrics (including OpenMetrics StateSet and Info types)
+		if metric.Untyped != nil {
+			return UntypedValue(metric.Untyped.GetValue())
+		}
+		return EmptyValue
 	case model.MetricType_HISTOGRAM:
 		// Not supported yet
 		fallthrough
 	case model.MetricType_SUMMARY:
 		return metric.Summary
-	case model.MetricType_UNTYPED:
-		// Not supported yet
-		fallthrough
 	default:
 		return EmptyValue
 	}

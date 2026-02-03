@@ -1,10 +1,14 @@
 package ksm
 
 import (
+	"context"
 	"fmt"
 	"net/url"
+	"os"
+	"time"
 
 	"github.com/newrelic/infra-integrations-sdk/integration"
+	"github.com/newrelic/newrelic-telemetry-sdk-go/telemetry"
 	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/version"
@@ -13,6 +17,7 @@ import (
 
 	"github.com/newrelic/nri-kubernetes/v3/internal/config"
 	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
+	"github.com/newrelic/nri-kubernetes/v3/src/ksm/crd"
 	ksmGrouper "github.com/newrelic/nri-kubernetes/v3/src/ksm/grouper"
 	"github.com/newrelic/nri-kubernetes/v3/src/metric"
 	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
@@ -40,6 +45,7 @@ type Scraper struct {
 	servicesLister      listersv1.ServiceLister
 	informerClosers     []chan<- struct{}
 	Filterer            discovery.NamespaceFilterer
+	crdHarvester        *telemetry.Harvester
 }
 
 // ScraperOpt are options that can be used to configure the Scraper
@@ -102,6 +108,49 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 	s.servicesLister = servicesLister
 	s.informerClosers = append(s.informerClosers, servicesCloser)
 
+	// Initialize CRD metrics harvester if enabled
+	if config.KSM.EnableCustomResourceMetrics {
+		s.logger.Info("Initializing telemetry harvester for CRD dimensional metrics")
+
+		// Read license key from environment (same as infrastructure agent uses)
+		licenseKey := os.Getenv("NRIA_LICENSE_KEY")
+		if licenseKey == "" {
+			s.logger.Warn("NRIA_LICENSE_KEY not set - CRD dimensional metrics will not be sent")
+		} else {
+			// Log first 8 chars of license key for debugging
+			maskedKey := licenseKey
+			if len(licenseKey) > 8 {
+				maskedKey = licenseKey[:8] + "..." + licenseKey[len(licenseKey)-4:]
+			}
+			s.logger.Infof("Using license key: %s", maskedKey)
+
+			// Create harvester to send dimensional metrics to New Relic Metric API
+			harvestOpts := []func(*telemetry.Config){
+				telemetry.ConfigAPIKey(licenseKey),
+				telemetry.ConfigHarvestPeriod(0), // No automatic harvest - we control when to send
+			}
+
+			// Use custom metric API URL if configured, otherwise default to production
+			metricsURL := "https://metric-api.newrelic.com/metric/v1" // production default
+			if config.KSM.MetricAPIURL != "" {
+				metricsURL = config.KSM.MetricAPIURL
+				s.logger.Infof("Using custom Metric API endpoint for CRD metrics: %s", metricsURL)
+				harvestOpts = append(harvestOpts, telemetry.ConfigMetricsURLOverride(metricsURL))
+			} else {
+				s.logger.Infof("Using default Metric API endpoint for CRD metrics: %s", metricsURL)
+			}
+
+			// Add debug logger to see HTTP responses
+			harvestOpts = append(harvestOpts, telemetry.ConfigBasicDebugLogger(s.logger.Writer()))
+
+			harvester, err := telemetry.NewHarvester(harvestOpts...)
+			if err != nil {
+				return nil, fmt.Errorf("creating telemetry harvester for CRD metrics: %w", err)
+			}
+			s.crdHarvester = harvester
+		}
+	}
+
 	return s, nil
 }
 
@@ -119,11 +168,49 @@ func (s *Scraper) Run(i *integration.Integration) error {
 
 	for _, endpoint := range endpoints {
 		s.logger.Debugf("Fetching KSM data from %q", endpoint)
+
+		// If CRD metrics are enabled, export them as dimensional metrics
+		if s.config.KSM.EnableCustomResourceMetrics && s.crdHarvester != nil {
+			s.logger.Debugf("CRD metrics enabled, exporting dimensional CRD metrics")
+
+			// Create a query to fetch all CRD metrics
+			crdQuery := prometheus.Query{
+				MetricName: "kube_customresource",
+				Prefix:     true,
+			}
+
+			// Fetch CRD metrics
+			metricFamiliesGetter := s.KSM.MetricFamiliesGetFunc(endpoint)
+			metricFamilies, err := metricFamiliesGetter([]prometheus.Query{crdQuery})
+			if err != nil {
+				s.logger.Warnf("Error fetching CRD metrics: %v", err)
+			} else {
+				// Export CRD metrics as dimensional metrics
+				crdExportConfig := crd.ExportConfig{
+					ClusterName: s.config.ClusterName,
+					Logger:      s.logger,
+					Harvester:   s.crdHarvester,
+				}
+				err = crd.ExportDimensionalMetrics(metricFamilies, crdExportConfig)
+				if err != nil {
+					s.logger.Warnf("Error exporting CRD metrics: %v", err)
+				} else {
+					// Harvest (send) the metrics immediately with a timeout
+					s.logger.Info("Sending CRD metrics to New Relic Metric API...")
+					ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+					defer cancel()
+					s.crdHarvester.HarvestNow(ctx)
+					s.logger.Info("CRD metrics sent successfully")
+				}
+			}
+		}
+
+		// Continue with normal entity-based metric processing
 		grouper, err := ksmGrouper.New(ksmGrouper.Config{
 			MetricFamiliesGetter:       s.KSM.MetricFamiliesGetFunc(endpoint),
 			Queries:                    metric.KSMQueries,
 			ServicesLister:             s.servicesLister,
-			EnableResourceQuotaSamples: s.config.EnableResourceQuotaSamples,
+			EnableResourceQuotaSamples: s.config.KSM.EnableResourceQuotaSamples,
 		}, ksmGrouper.WithLogger(s.logger))
 		if err != nil {
 			return fmt.Errorf("creating KSM grouper: %w", err)
