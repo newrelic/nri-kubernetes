@@ -69,12 +69,11 @@ func buildMetricAttributes(clusterName string, labels map[string]string) map[str
 }
 
 // recordMetrics sends metrics to the harvester and logs debug information.
-func recordMetrics(metrics []telemetry.Metric, metricsCount int, crdMetricsCount int, logger *log.Logger, harvester *telemetry.Harvester) {
+func recordMetrics(metrics []telemetry.Metric, logger *log.Logger, harvester *telemetry.Harvester) {
 	if len(metrics) == 0 {
 		return
 	}
 
-	logger.Infof("Recording %d dimensional metrics to harvester", metricsCount)
 	for i, m := range metrics {
 		harvester.RecordMetric(m)
 		// Log first few metrics for debugging
@@ -84,7 +83,6 @@ func recordMetrics(metrics []telemetry.Metric, metricsCount int, crdMetricsCount
 			}
 		}
 	}
-	logger.Infof("Successfully recorded %d dimensional metrics from %d metric families", metricsCount, crdMetricsCount)
 }
 
 // ExportDimensionalMetrics exports CRD metrics as dimensional metrics to the Metric table.
@@ -102,10 +100,7 @@ func ExportDimensionalMetrics(metricFamilies []prometheus.MetricFamily, config E
 		return nil
 	}
 
-	config.Logger.Debugf("Exporting %d CRD metric families as dimensional metrics", len(crdMetrics))
-
 	var metrics []telemetry.Metric
-	metricsCount := 0
 
 	// Convert each Prometheus metric time series to a New Relic dimensional metric
 	for _, metricFamily := range crdMetrics {
@@ -133,12 +128,11 @@ func ExportDimensionalMetrics(metricFamilies []prometheus.MetricFamily, config E
 			}
 
 			metrics = append(metrics, metric)
-			metricsCount++
 		}
 	}
 
 	// Send metrics via harvester
-	recordMetrics(metrics, metricsCount, len(crdMetrics), config.Logger, config.Harvester)
+	recordMetrics(metrics, config.Logger, config.Harvester)
 
 	return nil
 }
