@@ -314,6 +314,35 @@ func TestExportDimensionalMetrics_AttributesIncludeClusterName(t *testing.T) {
 	// Cluster name is added to attributes in the implementation.
 }
 
+func TestBuildMetricAttributes(t *testing.T) {
+	t.Parallel()
+
+	clusterName := "test-cluster"
+	labels := map[string]string{
+		"name":                   "nodepool-1",
+		"customresource_group":   "karpenter.sh",
+		"customresource_kind":    "NodePool",
+		"customresource_version": "v1beta1",
+	}
+
+	attributes := buildMetricAttributes(clusterName, labels)
+
+	// Verify clusterName is included (for user queries)
+	assert.Equal(t, clusterName, attributes["clusterName"])
+
+	// Verify k8s.clusterName is included (for e2e framework compatibility)
+	assert.Equal(t, clusterName, attributes["k8s.clusterName"])
+
+	// Verify all Prometheus labels are included as attributes
+	for key, value := range labels {
+		assert.Equal(t, value, attributes[key])
+	}
+
+	// Verify total attribute count (labels + clusterName + k8s.clusterName)
+	expectedCount := len(labels) + 2
+	assert.Len(t, attributes, expectedCount)
+}
+
 func TestCRDMetricPrefix(t *testing.T) {
 	t.Parallel()
 

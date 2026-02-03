@@ -60,6 +60,9 @@ func valueToFloat64(value prometheus.Value) (float64, bool) {
 func buildMetricAttributes(clusterName string, labels map[string]string) map[string]interface{} {
 	attributes := make(map[string]interface{})
 	attributes["clusterName"] = clusterName
+	// Also add k8s.clusterName for consistency with entity-based metrics
+	// This allows dimensional metrics to work with queries that filter by k8s.clusterName
+	attributes["k8s.clusterName"] = clusterName
 
 	for labelName, labelValue := range labels {
 		attributes[labelName] = labelValue
