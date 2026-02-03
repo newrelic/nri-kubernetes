@@ -118,6 +118,7 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 	s.informerClosers = append(s.informerClosers, servicesCloser)
 
 	// Initialize CRD metrics harvester if enabled
+	//nolint:nestif //CRD initialization requires nested configuration logic
 	if config.KSM.EnableCustomResourceMetrics {
 		s.logger.Info("Initializing telemetry harvester for CRD dimensional metrics")
 
@@ -125,8 +126,7 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 		licenseKey := os.Getenv("NRIA_LICENSE_KEY")
 		if licenseKey == "" {
 			s.logger.Warn("NRIA_LICENSE_KEY not set - CRD dimensional metrics will not be sent")
-		} else { //nolint:nestif //CRD initialization requires nested configuration logic
-
+		} else {
 			// Log first few chars of license key for debugging
 			maskedKey := licenseKey
 			if len(licenseKey) > licenseKeyMaskPrefix {
@@ -250,7 +250,7 @@ func (s *Scraper) Run(i *integration.Integration) error {
 			MetricFamiliesGetter:       cachedGetter,
 			Queries:                    metric.KSMQueries,
 			ServicesLister:             s.servicesLister,
-			EnableResourceQuotaSamples: s.config.KSM.EnableResourceQuotaSamples,
+			EnableResourceQuotaSamples: s.config.KSM.EnableResourceQuotaSamples, //nolint:staticcheck // Explicit KSM field maintains codebase consistency
 		}, ksmGrouper.WithLogger(s.logger))
 		if err != nil {
 			return fmt.Errorf("creating KSM grouper: %w", err)
