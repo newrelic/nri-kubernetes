@@ -158,3 +158,21 @@ repository: newrelic/infrastructure-windows
 {{- define "nriKubernetes.windowsIntegrationImage" -}}
   {{ include "newrelic.common.images.image" ( dict "imageRoot" $.Values.images.windowsIntegration "context" $ ) }}
 {{- end}}
+
+{{/*
+Determine the kubelet authorization mode to use.
+Returns "fineGrained" or "legacy".
+
+- "enabled": Uses nodes/metrics, nodes/stats, nodes/pods, nodes/healthz (KEP-2862)
+- "disabled": Uses nodes/proxy permission (broad kubelet access)
+*/}}
+{{- define "nriKubernetes.rbac.kubeletFineGrainedAuthMode" -}}
+{{- $mode := .Values.rbac.kubeletFineGrainedAuth | default "disabled" -}}
+{{- if eq $mode "enabled" -}}
+fineGrained
+{{- else if eq $mode "disabled" -}}
+legacy
+{{- else -}}
+{{- fail (printf "Invalid rbac.kubeletFineGrainedAuth: %s. Must be 'enabled' or 'disabled'." $mode) -}}
+{{- end -}}
+{{- end -}}
