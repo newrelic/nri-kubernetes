@@ -68,7 +68,7 @@ jobs:
           new_namespace="nr-$scenario_tag"
           echo "new_namespace=$new_namespace" >> "$GITHUB_OUTPUT"
       - name: Configure AWS Credentials via OIDC
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::${{ secrets.K8S_AWS_ACCOUNT_ID }}:role/${{ matrix.runner.iam_role }}
           aws-region: us-west-1
