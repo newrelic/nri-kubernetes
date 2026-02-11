@@ -126,6 +126,30 @@ integrations that you have configured.
 Please be aware that `privileged` is not supported on Windows nodes at this time. If `enableWindows` is set to `true`, the chart will automatically set `privileged`
 to `false` for the Windows kubelet DaemonSet. `privileged` may be set to true for components that are not deployed to Windows nodes, however.
 
+### Kubelet Authorization Mode (KEP-2862)
+
+This chart supports fine-grained kubelet authorization ([KEP-2862](https://kubernetes.io/docs/reference/access-authn-authz/kubelet-authn-authz/#fine-grained-authorization)) for enhanced security:
+
+```yaml
+rbac:
+  kubeletFineGrainedAuth: false  # Set to true to opt in
+```
+
+#### Behavior
+
+- **`kubeletFineGrainedAuth: true`**: Uses fine-grained permissions. Requires the `KubeletFineGrainedAuthz` feature gate (beta and enabled by default in K8s 1.33+, alpha in 1.32). Limits RBAC to read-only kubelet endpoints (`nodes/metrics`, `nodes/stats`, `nodes/pods`, `nodes/healthz`), eliminating privilege escalation risks from `nodes/proxy`.
+- **`kubeletFineGrainedAuth: false`** (default): Uses `nodes/proxy` for kubelet access. Works on all Kubernetes versions, but `nodes/proxy` could be exploited to reach kubelet write endpoints (`/exec`, `/run`, `/attach`, `/portforward`), posing a privilege escalation risk.
+
+#### Security Considerations
+
+The `nodes/proxy` permission can be exploited for privilege escalation via WebSocket connections to kubelet write endpoints. Fine-grained mode eliminates this risk by granting access only to the specific read-only endpoints needed for monitoring.
+
+For Kubernetes 1.33+, we recommend opting in:
+```yaml
+rbac:
+  kubeletFineGrainedAuth: true
+```
+
 ### More on Windows
 
 #### DaemonSet creation
@@ -243,6 +267,7 @@ Infrastructure Agent integrations (Kafka, Cassandra, Redis, etc.) are not suppor
 | provider | string | `nil` | This chart has support for GKE_AUTOPILOT, if booting in an autopilot cluster, set this to "GKE_AUTOPILOT" |
 | proxy | string | `""` | Configures the integration to send all HTTP/HTTPS request through the proxy in that URL. The URL should have a standard format like `https://user:password@hostname:port`. Can be configured also with `global.proxy` |
 | rbac.create | bool | `true` | Whether the chart should automatically create the RBAC objects required to run. |
+| rbac.kubeletFineGrainedAuth | bool | `false` | Whether to use fine-grained kubelet authorization (KEP-2862). When true, uses nodes/metrics, nodes/stats, nodes/pods, nodes/healthz (requires K8s 1.33+ or feature gate on 1.32). Fine-grained mode limits RBAC to read-only kubelet endpoints, eliminating privilege escalation risks. When false (default), uses nodes/proxy which could be exploited to access kubelet write endpoints. See: https://kubernetes.io/docs/reference/access-authn-authz/kubelet-authn-authz/#fine-grained-authorization |
 | rbac.pspEnabled | bool | `false` | Whether the chart should create Pod Security Policy objects. |
 | selfMonitoring.pixie.enabled | bool | `false` | Enables the Pixie Health Check nri-flex config. This Flex config performs periodic checks of the Pixie /healthz and /statusz endpoints exposed by the Pixie Cloud Connector. A status for each endpoint is sent to New Relic in a pixieHealthCheck event. |
 | serviceAccount | object | See `values.yaml` | Settings controlling ServiceAccount creation. |
