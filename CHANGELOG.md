@@ -8,7 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### enhancement
-- Added support for OpenShift 4.20 @jamescripter [#1401](https://github.com/newrelic/nri-kubernetes/pull/1401)
+- Add support for OpenShift 4.20 @jamescripter [#1401](https://github.com/newrelic/nri-kubernetes/pull/1401)
+
+### enhancement
+- Add handling for fine-grained kubectl permissions @kondracek-nr [#1389](https://github.com/newrelic/nri-kubernetes/pull/1389)
 
 ## v3.53.2 - 2026-02-09
 
