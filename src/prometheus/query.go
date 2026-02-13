@@ -205,6 +205,11 @@ func shouldSkipLine(line string, currentMetricName string) bool {
 // Returns a new io.Reader with filtered content and a list of skipped metric names.
 func filterUnsupportedMetrics(body io.Reader, logger *log.Logger) (io.Reader, []string, error) {
 	scanner := bufio.NewScanner(body)
+
+	const maxScanTokenSize = 1024 * 1024
+	buf := make([]byte, maxScanTokenSize)
+	scanner.Buffer(buf, maxScanTokenSize)
+
 	var filteredLines []string
 	var skippedMetrics []string
 	var skipUntilNextFamily bool
