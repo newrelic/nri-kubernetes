@@ -3,7 +3,7 @@ package metric
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -24,6 +24,10 @@ import (
 const KubeletPodsPath = "/pods"
 const KubeServiceKubeletPodsPath = "/api/v1/pods"
 const nodeSelectorQuery = "fieldSelector=spec.nodeName=%s"
+
+// maxPodsResponseBytes caps the kubelet /pods response read at 100MB to prevent OOM.
+// Normal responses are typically 1-10MB even on large nodes.
+const maxPodsResponseBytes = 100 * 1024 * 1024
 
 // PodsFetcher queries the kubelet and fetches the information of pods
 // running on the node. It contains an in-memory cache to store the
@@ -54,7 +58,7 @@ func (podsFetcher *PodsFetcher) DoPodsFetch() (definition.RawGroups, error) {
 		return nil, fmt.Errorf("error calling kubelet %s path. Status code %d", KubeletPodsPath, r.StatusCode)
 	}
 
-	rawPods, err := ioutil.ReadAll(r.Body)
+	rawPods, err := io.ReadAll(io.LimitReader(r.Body, maxPodsResponseBytes))
 	if err != nil {
 		return nil, fmt.Errorf("error reading response from kubelet %s path. %s", KubeletPodsPath, err)
 	}

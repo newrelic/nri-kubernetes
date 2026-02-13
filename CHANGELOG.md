@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### security
+- Add response body size limits to kubelet API reads to prevent OOM from misconfigured endpoints @kondracek-nr
+- Validate `networkRouteFile` config path to prevent path traversal @kondracek-nr
+- Replace deprecated `io/ioutil` with `io` package @kondracek-nr
+
 ### enhancement
 - Add handling for fine-grained kubectl permissions @kondracek-nr [#1389](https://github.com/newrelic/nri-kubernetes/pull/1389)
 
