@@ -3,7 +3,7 @@ package metric
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -54,7 +54,9 @@ func (podsFetcher *PodsFetcher) DoPodsFetch() (definition.RawGroups, error) {
 		return nil, fmt.Errorf("error calling kubelet %s path. Status code %d", KubeletPodsPath, r.StatusCode)
 	}
 
-	rawPods, err := ioutil.ReadAll(r.Body)
+	// Cap at 100MB to prevent OOM from a misconfigured or compromised kubelet.
+	// Normal /pods responses are typically 1-10MB even on large nodes.
+	rawPods, err := io.ReadAll(io.LimitReader(r.Body, 100<<20))
 	if err != nil {
 		return nil, fmt.Errorf("error reading response from kubelet %s path. %s", KubeletPodsPath, err)
 	}

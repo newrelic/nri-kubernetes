@@ -5,8 +5,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -18,9 +19,16 @@ const (
 	interfaceNameField = 0    // routes file field containing interface name
 )
 
+// allowedRouteFilePrefixes defines the directory prefixes that NetworkRouteFile is allowed to reference.
+var allowedRouteFilePrefixes = []string{"/proc/", "/sys/", "/host/proc/", "/host/sys/"}
+
 func getDefaultInterface(routeFile string) (string, error) {
 	if routeFile == "" {
 		routeFile = defaultRouteFile
+	}
+
+	if err := validateRouteFilePath(routeFile); err != nil {
+		return "", err
 	}
 
 	routes, err := routeFileContent(routeFile)
@@ -28,6 +36,18 @@ func getDefaultInterface(routeFile string) (string, error) {
 		return "", fmt.Errorf("getting routes content from file %s: %w", routeFile, err)
 	}
 	return findDefaultInterface(routes)
+}
+
+// validateRouteFilePath checks that the route file path is under an allowed prefix
+// to prevent path traversal via user-controllable config.
+func validateRouteFilePath(path string) error {
+	cleaned := filepath.Clean(path)
+	for _, prefix := range allowedRouteFilePrefixes {
+		if strings.HasPrefix(cleaned, prefix) {
+			return nil
+		}
+	}
+	return fmt.Errorf("networkRouteFile %q is not under an allowed path (%v)", path, allowedRouteFilePrefixes)
 }
 
 func routeFileContent(routeFile string) ([]byte, error) {
@@ -39,7 +59,7 @@ func routeFileContent(routeFile string) ([]byte, error) {
 		_ = f.Close()
 	}()
 
-	return ioutil.ReadAll(f)
+	return io.ReadAll(f)
 }
 
 // findDefaultInterface parses the route file and returns the name

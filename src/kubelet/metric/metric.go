@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -26,7 +26,8 @@ func GetMetricsData(c client.HTTPGetter) (*v1.Summary, error) {
 	defer resp.Body.Close() // nolint: errcheck
 
 	if resp.StatusCode != http.StatusOK {
-		body, err := ioutil.ReadAll(resp.Body)
+		// Cap error body at 1MB — this is only used for logging, so we don't need the full response.
+		body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 
 		bodyErr := fmt.Errorf("response body: %s", string(body))
 
