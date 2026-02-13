@@ -2,7 +2,8 @@ package metric
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"net/http"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -179,7 +180,7 @@ func TestGroupStatsSummary_CorrectValue(t *testing.T) {
 		},
 	}
 
-	responseOkDataSample, err := ioutil.ReadFile("testdata/kubelet_summary_response_ok.json")
+	responseOkDataSample, err := os.ReadFile("testdata/kubelet_summary_response_ok.json")
 	require.NoError(t, err)
 	summary := toSummary(t, string(responseOkDataSample))
 
@@ -674,4 +675,53 @@ func TestFromRawGroupsEntityTypeGenerator_EmptyPodName(t *testing.T) {
 	generatedValue, err := FromRawGroupsEntityTypeGenerator("container", "kube-system_newrelic-infra-monitoring-pjp0v_kube-state-metrics", raw, "clusterName")
 	assert.EqualError(t, err, "empty values for generated entity type for \"container\"")
 	assert.Equal(t, "", generatedValue)
+}
+
+// ------------ GetMetricsData ------------
+
+func TestGetMetricsData_Success(t *testing.T) {
+	t.Parallel()
+
+	payload, err := os.ReadFile("testdata/kubelet_summary_response_ok.json")
+	require.NoError(t, err)
+
+	c := &testClient{
+		handler: func(w http.ResponseWriter, r *http.Request) {
+			w.Write(payload) // nolint: errcheck
+		},
+	}
+
+	summary, err := GetMetricsData(c)
+	require.NoError(t, err)
+	assert.Equal(t, "fooNode", summary.Node.NodeName)
+}
+
+func TestGetMetricsData_NonOKStatus(t *testing.T) {
+	t.Parallel()
+
+	c := &testClient{
+		handler: func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("internal error details")) // nolint: errcheck
+		},
+	}
+
+	summary, err := GetMetricsData(c)
+	assert.Nil(t, summary)
+	assert.ErrorContains(t, err, "received non-OK response code from kubelet: 500")
+	assert.ErrorContains(t, err, "internal error details")
+}
+
+func TestGetMetricsData_MalformedJSON(t *testing.T) {
+	t.Parallel()
+
+	c := &testClient{
+		handler: func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("not json")) // nolint: errcheck
+		},
+	}
+
+	summary, err := GetMetricsData(c)
+	assert.Nil(t, summary)
+	assert.ErrorContains(t, err, "unmarshaling the response body")
 }
