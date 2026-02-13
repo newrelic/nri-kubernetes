@@ -25,6 +25,10 @@ const KubeletPodsPath = "/pods"
 const KubeServiceKubeletPodsPath = "/api/v1/pods"
 const nodeSelectorQuery = "fieldSelector=spec.nodeName=%s"
 
+// maxPodsResponseBytes caps the kubelet /pods response read at 100MB to prevent OOM.
+// Normal responses are typically 1-10MB even on large nodes.
+const maxPodsResponseBytes = 100 * 1024 * 1024
+
 // PodsFetcher queries the kubelet and fetches the information of pods
 // running on the node. It contains an in-memory cache to store the
 // results and avoid querying the kubelet multiple times in the same
@@ -54,9 +58,7 @@ func (podsFetcher *PodsFetcher) DoPodsFetch() (definition.RawGroups, error) {
 		return nil, fmt.Errorf("error calling kubelet %s path. Status code %d", KubeletPodsPath, r.StatusCode)
 	}
 
-	// Cap at 100MB to prevent OOM from a misconfigured or compromised kubelet.
-	// Normal /pods responses are typically 1-10MB even on large nodes.
-	rawPods, err := io.ReadAll(io.LimitReader(r.Body, 100<<20))
+	rawPods, err := io.ReadAll(io.LimitReader(r.Body, maxPodsResponseBytes))
 	if err != nil {
 		return nil, fmt.Errorf("error reading response from kubelet %s path. %s", KubeletPodsPath, err)
 	}

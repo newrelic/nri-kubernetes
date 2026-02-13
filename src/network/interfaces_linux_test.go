@@ -1,6 +1,7 @@
 package network
 
 import (
+	"errors"
 	"path/filepath"
 	"testing"
 
@@ -9,6 +10,8 @@ import (
 )
 
 func TestDefaultInterface(t *testing.T) {
+	t.Parallel()
+
 	f, err := filepath.Abs("./testdata/route")
 	require.NoError(t, err)
 
@@ -22,6 +25,8 @@ func TestDefaultInterface(t *testing.T) {
 }
 
 func TestValidateRouteFilePath(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		path    string
@@ -39,6 +44,8 @@ func TestValidateRouteFilePath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			err := validateRouteFilePath(tt.path)
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -50,7 +57,8 @@ func TestValidateRouteFilePath(t *testing.T) {
 }
 
 func TestDefaultInterfaceRejectsUnsafePath(t *testing.T) {
+	t.Parallel()
+
 	_, err := DefaultInterface("/etc/passwd")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "not under an allowed path")
+	assert.True(t, errors.Is(err, errRouteFilePathNotAllowed))
 }
