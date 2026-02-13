@@ -686,8 +686,8 @@ func TestGetMetricsData_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	c := &testClient{
-		handler: func(w http.ResponseWriter, r *http.Request) {
-			w.Write(payload) // nolint: errcheck
+		handler: func(w http.ResponseWriter, _ *http.Request) {
+			w.Write(payload) //nolint: errcheck
 		},
 	}
 
@@ -700,9 +700,9 @@ func TestGetMetricsData_NonOKStatus(t *testing.T) {
 	t.Parallel()
 
 	c := &testClient{
-		handler: func(w http.ResponseWriter, r *http.Request) {
+		handler: func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("internal error details")) // nolint: errcheck
+			w.Write([]byte("internal error details")) //nolint: errcheck
 		},
 	}
 
@@ -716,8 +716,8 @@ func TestGetMetricsData_MalformedJSON(t *testing.T) {
 	t.Parallel()
 
 	c := &testClient{
-		handler: func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte("not json")) // nolint: errcheck
+		handler: func(w http.ResponseWriter, _ *http.Request) {
+			w.Write([]byte("not json")) //nolint: errcheck
 		},
 	}
 
