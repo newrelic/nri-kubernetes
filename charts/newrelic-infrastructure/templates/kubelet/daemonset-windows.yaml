@@ -6,7 +6,11 @@ metadata:
   namespace: {{ $.Release.Namespace }}
   labels:
     kubernetes.io/os: windows
+    {{- if include "nriKubernetes.windows.privileged" $ }}
+    mode: privileged
+    {{- else }}
     mode: unprivileged
+    {{- end }}
     {{- include "newrelic.common.labels" $ | nindent 4 }}
   name: {{ join "-" (list (include "nriKubernetes.kubelet.fullname" $) "windows" .version) }}
   {{- $legacyAnnotation:= fromYaml (include "newrelic.compatibility.annotations" $) -}}
@@ -35,10 +39,16 @@ spec:
         {{- end }}
       labels:
         app.kubernetes.io/component: kubelet
+        {{- if include "nriKubernetes.windows.privileged" $ }}
+        mode: privileged
+        {{- else }}
         mode: unprivileged
+        {{- end }}
         {{- include "newrelic.common.labels.podLabels" $ | nindent 8 }}
 
     spec:
+      os:
+        name: windows
       {{- with include "newrelic.common.images.renderPullSecrets" ( dict "pullSecrets" (list $.Values.images.pullSecrets) "context" $) }}
       imagePullSecrets:
         {{- . | nindent 8 }}
@@ -51,7 +61,9 @@ spec:
       priorityClassName: {{ . }}
       {{- end }}
       serviceAccountName: {{ include "newrelic.common.serviceAccount.name" $ }}
-      hostNetwork: false
+      {{- if include "nriKubernetes.windows.privileged" $ }}
+      hostNetwork: true
+      {{- end }}
 
       {{- if $.Values.kubelet.initContainers }}
       initContainers: {{- tpl ($.Values.kubelet.initContainers | toYaml) $ | nindent 8 }}
@@ -64,9 +76,21 @@ spec:
           image: {{ default (include "nriKubernetes.windowsIntegrationImage" $) .integrationImage }}
           {{- end }}
           imagePullPolicy: {{ $.Values.images.windowsIntegration.pullPolicy }}
+          {{- if include "nriKubernetes.windows.privileged" $ }}
+          command:
+            - "powershell.exe"
+            - "-Command"
+            - "& $env:CONTAINER_SANDBOX_MOUNT_POINT\\app\\nri-kubernetes.exe"
+          {{- end }}
           securityContext:
             windowsOptions:
+              {{- if include "nriKubernetes.windows.privileged" $ }}
+              hostProcess: true
+              runAsUserName: "NT AUTHORITY\\Local service"
+              {{- else }}
+              hostProcess: false
               runAsUserName: "ContainerUser"
+              {{- end }}
           env:
             - name: "NRI_KUBERNETES_SINK_HTTP_PORT"
               value: {{ get (fromYaml (include "nriKubernetes.kubelet.agentConfig" $)) "http_server_port" | quote }}
@@ -109,11 +133,26 @@ spec:
           {{- else }}
           image: {{ default (include "nriKubernetes.windowsAgentImage" $) .integrationImage }}
           {{- end }}
-          args: [ "newrelic-infra" ]
           imagePullPolicy: {{ $.Values.images.windowsAgent.pullPolicy }}
+          {{- if include "nriKubernetes.windows.privileged" $ }}
+          command:
+            - "powershell.exe"
+            - "-Command"
+            - "$env:CONTAINER_SANDBOX_MOUNT_POINT\\start.ps1"
+          {{- end }}
           securityContext:
             windowsOptions:
+              {{- if include "nriKubernetes.windows.privileged" $ }}
+              hostProcess: true
+              {{- if $.Values.enableProcessMetrics }}
+              runAsUserName: "NT AUTHORITY\\SYSTEM"
+              {{- else }}
+              runAsUserName: "NT AUTHORITY\\Local service"
+              {{- end }}
+              {{- else }}
+              hostProcess: false
               runAsUserName: "ContainerUser"
+              {{- end }}
           ports:
             - containerPort: {{ get (fromYaml (include "nriKubernetes.kubelet.agentConfig" $)) "http_server_port" }}
           env:
@@ -137,9 +176,11 @@ spec:
 
             # Override NRIA_OVERRIDE_HOST_ROOT to empty if unprivileged. This must be done as an env var as the
             # `k8s-events-forwarder` and `infrastructure-bundle` images ship this very same env var set to /host.
-            # Currently windows only runs in unprivileged mode.
+            # Windows runs in unprivileged mode when privileged is set to false.
+            {{- if not (include "nriKubernetes.windows.privileged" $) }}
             - name: "NRIA_OVERRIDE_HOST_ROOT"
               value: ""
+            {{- end }}
 
             - name: "NRI_KUBERNETES_NODE_NAME"
               valueFrom:
@@ -165,12 +206,14 @@ spec:
             - name: "NRIA_PASSTHROUGH_ENVIRONMENT"
               value: "CLUSTER_NAME"
 
-            {{- /* Needed for autodiscovery since hostNetwork=false, windows containers do not support Hostnetwork without a HostProcess container */}}
+            {{- /* Needed for autodiscovery when hostNetwork=false (unprivileged mode) */}}
+            {{- if not (include "nriKubernetes.windows.privileged" $) }}
             - name: "NRIA_HOST"
               valueFrom:
                 fieldRef:
                   apiVersion: "v1"
                   fieldPath: "status.hostIP"
+            {{- end }}
 
             {{- with $.Values.kubelet.extraEnv }}
             {{- toYaml . | nindent 12 }}
@@ -185,7 +228,7 @@ spec:
             - name: nri-integrations-cfg-volume
               mountPath: "C:\\Program Files\\New Relic\\newrelic-infra\\integrations.d"
             {{- with $.Values.kubelet.extraVolumeMounts }}
-            {{- toYaml $ | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- with $.Values.kubelet.resources }}
           resources: {{ toYaml . | nindent 12 }}
@@ -223,7 +266,7 @@ spec:
         {{- else }}
         kubernetes.io/os: windows
         # Windows containers can only be deployed on hosts with the same Windows version
-        node.kubernetes.io/windows-build: {{ .buildNumber }} 
+        node.kubernetes.io/windows-build: {{ .buildNumber }}
         {{- end }}
 ---
 {{- end }}

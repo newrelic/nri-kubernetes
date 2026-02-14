@@ -16,6 +16,15 @@ either `true` or `false`. So we test if the variable is a boolean and in that ca
 {{- if (get .Values "enableProcessMetrics" | kindIs "bool") }}
 enable_process_metrics: {{ .Values.enableProcessMetrics }}
 {{- end }}
+{{- /*
+`enable_elevated_process_priv` enables SeDebugPrivilege on Windows for enhanced process visibility.
+Auto-enable when enableProcessMetrics is true AND enableWindows is true, since Windows HostProcess
+containers are inherently privileged and partial process visibility is less useful.
+Users can still override via kubelet.agentConfig.enable_elevated_process_priv if needed.
+*/}}
+{{- if and (get .Values "enableProcessMetrics") (get .Values "enableWindows") }}
+enable_elevated_process_priv: true
+{{- end }}
 {{- end -}}
 
 
