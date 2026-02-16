@@ -7,11 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### bugfix 
-- fixes "bufio.Scanner: token too long" bug by increasing default buffer size @TmNguyen12 [#1407](https://github.com/newrelic/nri-kubernetes/pull/1407)
+## v3.54.0 - 2026-02-16
 
-### enhancement
+### 🚀 Enhancements
 - Add handling for fine-grained kubectl permissions @kondracek-nr [#1389](https://github.com/newrelic/nri-kubernetes/pull/1389)
+
+### 🐞 Bug fixes
+- fixes "bufio.Scanner: token too long" bug by increasing default buffer size @TmNguyen12 [#1407](https://github.com/newrelic/nri-kubernetes/pull/1407)
 
 ## v3.53.2 - 2026-02-09
 
