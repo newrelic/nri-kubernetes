@@ -72,6 +72,21 @@ func TestScraper(t *testing.T) {
 				exclude.Groups("persistentvolumeclaim"),
 				exclude.Metrics("createdAt"),
 			),
+			// Kubernetes pod priorityClassName is optional - only exclude when not present
+			exclude.Exclude(
+				exclude.Groups("pod"),
+				func(_ string, spec *definition.Spec, ent *integration.Entity) bool {
+					if spec.Name == "priorityClassName" {
+						for _, metricSet := range ent.Metrics {
+							if _, exists := metricSet.Metrics[spec.Name]; exists {
+								return false // Metric exists, don't exclude
+							}
+						}
+						return true // Metric doesn't exist, exclude
+					}
+					return false
+				},
+			),
 		).
 		AliasingGroups(map[string]string{"horizontalpodautoscaler": "hpa", "job_name": "job", "persistentvolumeclaim": "PersistentVolumeClaim", "persistentvolume": "PersistentVolume"})
 

@@ -10,6 +10,37 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### bugfix
 - Account for counter resets when computing deltas for CPU CFS periods @jamescripter [#1375](https://github.com/newrelic/nri-kubernetes/pull/1375)
 
+## v3.54.0 - 2026-02-16
+
+### 🚀 Enhancements
+- Add handling for fine-grained kubectl permissions @kondracek-nr [#1389](https://github.com/newrelic/nri-kubernetes/pull/1389)
+
+### 🐞 Bug fixes
+- fixes "bufio.Scanner: token too long" bug by increasing default buffer size @TmNguyen12 [#1407](https://github.com/newrelic/nri-kubernetes/pull/1407)
+
+## v3.53.2 - 2026-02-09
+
+### ⛓️ Dependencies
+- Updated github.com/prometheus/common to v0.67.5 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.67.5)
+- Updated golang.org/x/text to v0.33.0
+- Updated golang.org/x/crypto to v0.47.0
+- Updated go to v1.25.7
+
+## v3.53.1 - 2026-02-02
+
+### ⛓️ Dependencies
+- Updated kubernetes packages to v0.35.0
+- Updated alpine to v3.23.3
+
+## v3.53.0 - 2026-01-19
+
+### 🚀 Enhancements
+- Add kubelet initialization retry logic to handle certificate provisioning delays in managed Kubernetes environments (EKS/GKE). New config parameters `kubelet.config.initTimeout` (default: 180s) and `kubelet.config.initBackoff` (default: 5s) control retry behavior. Set `initTimeout: 0s` to disable retries and preserve legacy behavior. @NRhzhao [#1372](https://github.com/newrelic/nri-kubernetes/pull/1372)
+- Add pod priority and priorityClassName telemetry
+
+### ⛓️ Dependencies
+- Updated github.com/sirupsen/logrus to v1.9.4 - [Changelog 🔗](https://github.com/sirupsen/logrus/releases/tag/v1.9.4)
+
 ## v3.52.0 - 2025-12-29
 
 ### 🚀 Enhancements

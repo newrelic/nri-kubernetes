@@ -19,7 +19,6 @@ const (
 	DefaultAgentTimeout     = 3 * time.Second
 	DefaultProbeTimeout     = 90 * time.Second
 	DefaultProbeBackoff     = 5 * time.Second
-
 	DefaultNetworkRouteFile = "/host/proc/1/net/route"
 
 	SinkTypeHTTP   = "http"
@@ -153,6 +152,16 @@ type Kubelet struct {
 	// ScraperMaxReruns controls how many times the integration will attempt to
 	// run kubelet scraper when runtime error happens before giving up.
 	ScraperMaxReruns int `mapstructure:"scraperMaxReruns"`
+
+	// InitTimeout is the total time to retry connecting to kubelet during initialization
+	// before giving up and exiting. This is useful in environments like EKS where kubelet
+	// certificates may take 1-2 minutes to provision after node startup.
+	// Set to 0 to disable initialization retries (legacy behavior).
+	InitTimeout time.Duration `mapstructure:"initTimeout"`
+
+	// InitBackoff is the delay between retry attempts during kubelet client initialization.
+	// Only used if InitTimeout > 0.
+	InitBackoff time.Duration `mapstructure:"initBackoff"`
 }
 
 // ControlPlane contains config options for the control plane scraper.
@@ -299,6 +308,9 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	v.SetDefault("kubelet|retries", DefaultRetries)
 	v.SetDefault("kubelet|scraperMaxReruns", DefaultScraperMaxReruns)
 	v.SetDefault("kubelet|fetchPodsFromKubeService", false)
+	// initTimeout and initBackoff intentionally have no defaults
+	// When missing from config, they default to 0s (legacy behavior: no retry)
+	// When present in config, their values are used (e.g., 180s enables retry)
 
 	v.SetDefault("controlPlane|timeout", DefaultTimeout)
 	v.SetDefault("controlPlane|retries", DefaultRetries)

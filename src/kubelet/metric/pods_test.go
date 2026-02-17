@@ -341,3 +341,95 @@ func TestFetchContainersData_WithSidecarContainers(t *testing.T) {
 	assert.Equal(t, "192.168.0.33", result[sidecarAID]["nodeIP"])
 	assert.Equal(t, "192.168.0.33", result[sidecarBID]["nodeIP"])
 }
+
+func TestFetchPodData_WithPriority(t *testing.T) {
+	t.Parallel()
+
+	priority := int32(1000)
+	priorityClassName := "high-priority"
+
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-pod",
+			Namespace: "default",
+		},
+		Spec: corev1.PodSpec{
+			NodeName:          "test-node",
+			Priority:          &priority,
+			PriorityClassName: priorityClassName,
+		},
+		Status: corev1.PodStatus{
+			Phase:  corev1.PodRunning,
+			HostIP: "192.168.0.1",
+		},
+	}
+
+	podFetcher := &PodsFetcher{
+		logger: logutil.Debug,
+	}
+	result := podFetcher.fetchPodData(pod)
+
+	assert.Equal(t, int32(1000), result["priority"])
+	assert.Equal(t, "high-priority", result["priorityClassName"])
+}
+
+func TestFetchPodData_WithoutPriority(t *testing.T) {
+	t.Parallel()
+
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-pod",
+			Namespace: "default",
+		},
+		Spec: corev1.PodSpec{
+			NodeName: "test-node",
+			// Priority is nil, PriorityClassName is empty
+		},
+		Status: corev1.PodStatus{
+			Phase:  corev1.PodRunning,
+			HostIP: "192.168.0.1",
+		},
+	}
+
+	podFetcher := &PodsFetcher{
+		logger: logutil.Debug,
+	}
+	result := podFetcher.fetchPodData(pod)
+
+	_, hasPriority := result["priority"]
+	assert.False(t, hasPriority, "priority should not be present when not set")
+
+	_, hasPriorityClassName := result["priorityClassName"]
+	assert.False(t, hasPriorityClassName, "priorityClassName should not be present when empty")
+}
+
+func TestFetchPodData_WithPriorityClassNameOnly(t *testing.T) {
+	t.Parallel()
+
+	priorityClassName := "system-cluster-critical"
+
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-pod",
+			Namespace: "kube-system",
+		},
+		Spec: corev1.PodSpec{
+			NodeName:          "test-node",
+			PriorityClassName: priorityClassName,
+			// Priority is nil (system will resolve it from priority class)
+		},
+		Status: corev1.PodStatus{
+			Phase:  corev1.PodRunning,
+			HostIP: "192.168.0.1",
+		},
+	}
+
+	podFetcher := &PodsFetcher{
+		logger: logutil.Debug,
+	}
+	result := podFetcher.fetchPodData(pod)
+
+	_, hasPriority := result["priority"]
+	assert.False(t, hasPriority, "priority should not be present when nil")
+	assert.Equal(t, "system-cluster-critical", result["priorityClassName"])
+}

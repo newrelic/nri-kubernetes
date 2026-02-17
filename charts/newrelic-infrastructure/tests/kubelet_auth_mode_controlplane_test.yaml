@@ -1,0 +1,118 @@
+suite: test kubelet authorization modes for control plane (KEP-2862)
+templates:
+  - templates/controlplane/clusterrole.yaml
+release:
+  name: my-release
+  namespace: my-namespace
+tests:
+  # Test controlplane ClusterRole respects kubeletFineGrainedAuth
+  - it: Control plane uses disabled mode by default
+    set:
+      licenseKey: test
+      cluster: test
+      controlPlane:
+        enabled: true
+    asserts:
+      - isKind:
+          of: ClusterRole
+      - equal:
+          path: metadata.name
+          value: my-release-nrk8s-controlplane
+      - contains:
+          path: rules[0].resources
+          content: "nodes/proxy"
+
+  - it: Control plane uses fine-grained mode when enabled
+    set:
+      licenseKey: test
+      cluster: test
+      controlPlane:
+        enabled: true
+      rbac:
+        kubeletFineGrainedAuth: true
+    asserts:
+      - isKind:
+          of: ClusterRole
+      - contains:
+          path: rules[0].resources
+          content: "nodes/metrics"
+      - contains:
+          path: rules[0].resources
+          content: "nodes/stats"
+      - contains:
+          path: rules[0].resources
+          content: "nodes/pods"
+      - contains:
+          path: rules[0].resources
+          content: "nodes/healthz"
+      - notContains:
+          path: rules[0].resources
+          content: "nodes/proxy"
+
+  - it: Control plane uses legacy mode when disabled
+    set:
+      licenseKey: test
+      cluster: test
+      controlPlane:
+        enabled: true
+      rbac:
+        kubeletFineGrainedAuth: false
+    asserts:
+      - contains:
+          path: rules[0].resources
+          content: "nodes/proxy"
+      - contains:
+          path: rules[0].resources
+          content: "nodes/metrics"
+      - contains:
+          path: rules[0].resources
+          content: "nodes/stats"
+
+  # Test that ClusterRole is not created when controlPlane is disabled
+  - it: No ClusterRole when control plane is disabled
+    set:
+      licenseKey: test
+      cluster: test
+      controlPlane:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # Test that permissions include other required resources
+  - it: Control plane ClusterRole includes other required permissions
+    set:
+      licenseKey: test
+      cluster: test
+      controlPlane:
+        enabled: true
+      rbac:
+        kubeletFineGrainedAuth: true
+    asserts:
+      # Check nodes/kubelet permissions exist
+      - contains:
+          path: rules[0].resources
+          content: "nodes/metrics"
+      # Check other resources exist
+      - contains:
+          path: rules[1].resources
+          content: "pods"
+      - contains:
+          path: rules[1].resources
+          content: "nodes"
+
+  # Test verbs
+  - it: Control plane has correct verbs for fine-grained mode
+    set:
+      licenseKey: test
+      cluster: test
+      controlPlane:
+        enabled: true
+      rbac:
+        kubeletFineGrainedAuth: true
+    asserts:
+      - equal:
+          path: rules[0].verbs
+          value:
+            - "get"
+            - "list"

@@ -26,14 +26,14 @@ images:
   forwarder:
     registry: ""
     repository: newrelic/k8s-events-forwarder
-    tag: 1.71.3
+    tag: 1.72.4
     pullPolicy: IfNotPresent
   # -- Image for the New Relic Infrastructure Agent plus integrations.
   # @default -- See `values.yaml`
   agent:
     registry: ""
     repository: newrelic/infrastructure-bundle
-    tag: 3.3.8
+    tag: 3.3.13
     pullPolicy: IfNotPresent
   # -- Image for the New Relic Kubernetes integration.
   # @default -- See `values.yaml`
@@ -54,7 +54,7 @@ images:
   windowsAgent:
     registry: ""
     repository: newrelic/infrastructure
-    tag: 1.71.3
+    tag: 1.72.4
     pullPolicy: IfNotPresent
 
 # -- Enable Windows node monitoring.
@@ -183,6 +183,10 @@ kubelet:
     retries: 3
     # -- Max number of scraper rerun when scraper runtime error happens
     scraperMaxReruns: 4
+    # -- Total timeout for kubelet connection retries during pod initialization. Useful for environments like EKS/GKE where kubelet certificates may take 1-2 minutes to provision after node startup. Set to 0s to disable retries and use legacy behavior (fail immediately).
+    initTimeout: 180s
+    # -- Delay between retry attempts during kubelet client initialization. Only used if initTimeout > 0.
+    initBackoff: 5s
   # port:
   # scheme:
 
@@ -605,6 +609,12 @@ rbac:
   create: true
   # rbac.pspEnabled -- Whether the chart should create Pod Security Policy objects.
   pspEnabled: false
+  # rbac.kubeletFineGrainedAuth -- Whether to use fine-grained kubelet authorization (KEP-2862).
+  # When true, uses nodes/metrics, nodes/stats, nodes/pods, nodes/healthz (requires K8s 1.33+ or feature gate on 1.32).
+  # Fine-grained mode limits RBAC to read-only kubelet endpoints, eliminating privilege escalation risks.
+  # When false (default), uses nodes/proxy which could be exploited to access kubelet write endpoints.
+  # See: https://kubernetes.io/docs/reference/access-authn-authz/kubelet-authn-authz/#fine-grained-authorization
+  kubeletFineGrainedAuth: false
 
 # -- Sets pod/node affinities set almost globally. (See [Affinities and tolerations](README.md#affinities-and-tolerations))
 affinity: {}

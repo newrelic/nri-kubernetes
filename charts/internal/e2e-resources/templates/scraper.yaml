@@ -52,10 +52,11 @@ spec:
         app: scraper
     spec:
       serviceAccountName: {{ .Release.Name }}-scraper
+      priorityClassName: system-cluster-critical
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       containers:
-        - image: alpine
+        - image: docker.io/library/alpine
           imagePullPolicy: IfNotPresent
           name: {{ .Release.Name }}-scraper
           command:

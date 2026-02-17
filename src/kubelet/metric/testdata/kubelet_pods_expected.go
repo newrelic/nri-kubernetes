@@ -18,6 +18,8 @@ var ExpectedRawData = definition.RawGroups{
 			"labels":            map[string]string{"k8s-app": "kube-controller-manager", "component": "kube-controller-manager", "tier": "control-plane"},
 			"namespace":         "kube-system",
 			"podName":           "kube-controller-manager-minikube",
+			"priority":          int32(2000000000),
+			"priorityClassName": "system-cluster-critical",
 			"status":            "Running",
 			"startTime":         parseTime("2019-10-23T17:10:48Z"),
 			"containersReadyAt": parseTime("2019-10-23T17:10:49Z"),

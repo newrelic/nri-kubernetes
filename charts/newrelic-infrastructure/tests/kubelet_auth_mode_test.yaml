@@ -1,0 +1,134 @@
+suite: test kubelet authorization modes (KEP-2862)
+templates:
+  - templates/clusterrole.yaml
+release:
+  name: my-release
+  namespace: my-namespace
+tests:
+  # Test default behavior (disabled mode)
+  - it: Disabled mode uses nodes/proxy (default)
+    set:
+      licenseKey: test
+      cluster: test
+    asserts:
+      - isKind:
+          of: ClusterRole
+      - contains:
+          path: rules[0].resources
+          content: "nodes/proxy"
+
+  # Test explicit disabled mode
+  - it: Disabled mode uses legacy permissions
+    set:
+      licenseKey: test
+      cluster: test
+      rbac:
+        kubeletFineGrainedAuth: false
+    asserts:
+      - contains:
+          path: rules[0].resources
+          content: "nodes/proxy"
+      - contains:
+          path: rules[0].resources
+          content: "nodes/metrics"
+      - contains:
+          path: rules[0].resources
+          content: "nodes/stats"
+
+  # Test explicit enabled mode
+  - it: Enabled mode grants specific permissions
+    set:
+      licenseKey: test
+      cluster: test
+      rbac:
+        kubeletFineGrainedAuth: true
+    asserts:
+      - equal:
+          path: rules[0].resources
+          value:
+            - "nodes/metrics"
+            - "nodes/stats"
+            - "nodes/pods"
+            - "nodes/healthz"
+      - notContains:
+          path: rules[0].resources
+          content: "nodes/proxy"
+
+  - it: Enabled mode includes correct verbs
+    set:
+      licenseKey: test
+      cluster: test
+      rbac:
+        kubeletFineGrainedAuth: true
+    asserts:
+      - equal:
+          path: rules[0].verbs
+          value:
+            - "get"
+            - "list"
+
+  - it: Enabled mode grants all required permissions
+    set:
+      licenseKey: test
+      cluster: test
+      rbac:
+        kubeletFineGrainedAuth: true
+    asserts:
+      - contains:
+          path: rules[0].resources
+          content: "nodes/metrics"
+      - contains:
+          path: rules[0].resources
+          content: "nodes/stats"
+      - contains:
+          path: rules[0].resources
+          content: "nodes/pods"
+      - contains:
+          path: rules[0].resources
+          content: "nodes/healthz"
+
+  # Test apiGroups and verbs
+  - it: Uses correct apiGroups for disabled mode
+    set:
+      licenseKey: test
+      cluster: test
+      rbac:
+        kubeletFineGrainedAuth: false
+    asserts:
+      - equal:
+          path: rules[0].apiGroups
+          value:
+            - ""
+
+  - it: Uses correct apiGroups for enabled mode
+    set:
+      licenseKey: test
+      cluster: test
+      rbac:
+        kubeletFineGrainedAuth: true
+    asserts:
+      - equal:
+          path: rules[0].apiGroups
+          value:
+            - ""
+
+  # Test that RBAC is created
+  - it: RBAC is created when rbac.create is true
+    set:
+      licenseKey: test
+      cluster: test
+      rbac:
+        create: true
+    asserts:
+      - hasDocuments:
+          count: 1
+
+  - it: RBAC is not created when rbac.create is false
+    set:
+      licenseKey: test
+      cluster: test
+      rbac:
+        create: false
+    asserts:
+      - hasDocuments:
+          count: 0

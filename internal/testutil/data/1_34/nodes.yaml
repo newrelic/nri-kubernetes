@@ -6,7 +6,7 @@ items:
     annotations:
       node.alpha.kubernetes.io/ttl: "0"
       volumes.kubernetes.io/controller-managed-attach-detach: "true"
-    creationTimestamp: "2025-11-18T01:02:58Z"
+    creationTimestamp: "2026-01-13T18:38:02Z"
     labels:
       beta.kubernetes.io/arch: arm64
       beta.kubernetes.io/os: linux
@@ -16,13 +16,13 @@ items:
       minikube.k8s.io/commit: 65318f4cfff9c12cc87ec9eb8f4cdd57b25047f3
       minikube.k8s.io/name: datagen-1-34
       minikube.k8s.io/primary: "true"
-      minikube.k8s.io/updated_at: 2025_11_17T17_03_00_0700
+      minikube.k8s.io/updated_at: 2026_01_13T10_38_05_0700
       minikube.k8s.io/version: v1.37.0
       node-role.kubernetes.io/control-plane: ""
       node.kubernetes.io/exclude-from-external-load-balancers: ""
     name: datagen-1-34
-    resourceVersion: "868"
-    uid: a10f1be4-5b72-49bb-a512-339843d5d4b0
+    resourceVersion: "861"
+    uid: 901de952-db1e-43b0-8587-46d239ffc8c8
   spec:
     podCIDR: 10.244.0.0/24
     podCIDRs:
@@ -52,26 +52,26 @@ items:
       memory: 16356452Ki
       pods: "110"
     conditions:
-    - lastHeartbeatTime: "2025-11-18T01:05:33Z"
-      lastTransitionTime: "2025-11-18T01:02:56Z"
+    - lastHeartbeatTime: "2026-01-13T18:40:07Z"
+      lastTransitionTime: "2026-01-13T18:38:00Z"
       message: kubelet has sufficient memory available
       reason: KubeletHasSufficientMemory
       status: "False"
       type: MemoryPressure
-    - lastHeartbeatTime: "2025-11-18T01:05:33Z"
-      lastTransitionTime: "2025-11-18T01:02:56Z"
+    - lastHeartbeatTime: "2026-01-13T18:40:07Z"
+      lastTransitionTime: "2026-01-13T18:38:00Z"
       message: kubelet has no disk pressure
       reason: KubeletHasNoDiskPressure
       status: "False"
       type: DiskPressure
-    - lastHeartbeatTime: "2025-11-18T01:05:33Z"
-      lastTransitionTime: "2025-11-18T01:02:56Z"
+    - lastHeartbeatTime: "2026-01-13T18:40:07Z"
+      lastTransitionTime: "2026-01-13T18:38:00Z"
       message: kubelet has sufficient PID available
       reason: KubeletHasSufficientPID
       status: "False"
       type: PIDPressure
-    - lastHeartbeatTime: "2025-11-18T01:05:33Z"
-      lastTransitionTime: "2025-11-18T01:02:58Z"
+    - lastHeartbeatTime: "2026-01-13T18:40:07Z"
+      lastTransitionTime: "2026-01-13T18:38:02Z"
       message: kubelet is posting ready status
       reason: KubeletReady
       status: "True"
@@ -85,21 +85,17 @@ items:
       - docker.io/library/perl:5.34.0
       sizeBytes: 327591300
     - names:
-      - registry.k8s.io/hpa-example@sha256:581697a37f0e136db86d6b30392f0db40ce99c8248a7044c770012f4e8491544
-      - registry.k8s.io/hpa-example:latest
-      sizeBytes: 164030864
-    - names:
       - registry.k8s.io/etcd@sha256:e36c081683425b5b3bc1425bc508b37e7107bb65dfa9367bf5a80125d431fa19
       - registry.k8s.io/etcd:3.6.4-0
       sizeBytes: 98207481
     - names:
-      - docker.io/library/buildpack-deps@sha256:93aeafbb2145b1a05d13f3c3bb6251e3414ca80f852649a73942a1fdae3c7f06
-      - docker.io/library/buildpack-deps:stable-curl
-      sizeBytes: 74680619
-    - names:
       - docker.io/kindest/kindnetd@sha256:07a4b3fe0077a0ae606cc0a200fc25a28fa64dcc30b8d311b461089969449f9a
       - docker.io/kindest/kindnetd:v20250512-df8de77b
       sizeBytes: 40636774
+    - names:
+      - docker.io/library/nginx@sha256:c083c3799197cfff91fe5c3c558db3d2eea65ccbbfd419fa42a64d2c39a24027
+      - docker.io/library/nginx:alpine
+      sizeBytes: 25753491
     - names:
       - registry.k8s.io/kube-apiserver@sha256:fe86fe2f64021df8efa1a939a290bc21c8c128c66fc00ebbb6b5dea4c7a06812
       - registry.k8s.io/kube-apiserver:v1.34.0
@@ -132,9 +128,13 @@ items:
       - gcr.io/k8s-minikube/storage-provisioner:v5
       sizeBytes: 8034419
     - names:
-      - docker.io/library/bash@sha256:ae4668c2560999e65e89532cd2ad1b6688bb23298189f0bd229ef80fa4bd0831
+      - docker.io/library/bash@sha256:32ca1653c68dd414bbdcdb9d5dc811010022b04e37bfcc886a5d052fc0c56656
       - docker.io/library/bash:5
-      sizeBytes: 7185630
+      sizeBytes: 7226059
+    - names:
+      - docker.io/library/alpine@sha256:865b95f46d98cf867a156fe4a135ad3fe50d2056aa3f25ed31662dff6da4eb62
+      - docker.io/library/alpine:latest
+      sizeBytes: 4206609
     - names:
       - docker.io/library/alpine@sha256:4bcff63911fcb4448bd4fdacec207030997caf25e9bea4045fa6c8c44de311d1
       - docker.io/library/alpine:3.22.1
@@ -145,17 +145,17 @@ items:
       sizeBytes: 267939
     nodeInfo:
       architecture: arm64
-      bootID: 35e97ab0-5ec6-4a6f-8518-8f4e6334926a
+      bootID: a434501d-3938-459e-a163-dbd29bdafa42
       containerRuntimeVersion: containerd://1.7.27
       kernelVersion: 6.10.14-linuxkit
       kubeProxyVersion: ""
       kubeletVersion: v1.34.0
-      machineID: c68a6c4819a94682ad68fbf052319158
+      machineID: 6a0219dee6e948188fa98c4780025afc
       operatingSystem: linux
       osImage: Ubuntu 22.04.5 LTS
       swap:
         capacity: 1073737728
-      systemUUID: c68a6c4819a94682ad68fbf052319158
+      systemUUID: 6a0219dee6e948188fa98c4780025afc
 kind: List
 metadata:
   resourceVersion: ""

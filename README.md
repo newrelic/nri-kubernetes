@@ -16,7 +16,7 @@ Kubernetes objects like namespace, replicaset, deployments and pods (when they a
 
 Check out our [documentation](https://docs.newrelic.com/docs/kubernetes-integration-new-relic-infrastructure)
 in order to find out more how to install and configure the integration, learn what metrics are captured
-and how to query them.
+and how to query them..
 
 ## Table of contents
 

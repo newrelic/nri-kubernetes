@@ -158,3 +158,4 @@ repository: newrelic/infrastructure-windows
 {{- define "nriKubernetes.windowsIntegrationImage" -}}
   {{ include "newrelic.common.images.image" ( dict "imageRoot" $.Values.images.windowsIntegration "context" $ ) }}
 {{- end}}
+
