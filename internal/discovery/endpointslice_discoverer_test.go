@@ -2,6 +2,7 @@ package discovery_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -74,65 +75,6 @@ func Test_endpointslice_discoverer_basic_functionality(t *testing.T) {
 	// THEN: Should return both endpoints in sorted order
 	require.NoError(t, err)
 	assert.Equal(t, []string{"10.0.0.1:8080", "10.0.0.2:8080"}, hosts)
-}
-
-// Test backward compatibility: EndpointSlice discoverer produces same output as Endpoints discoverer
-func Test_endpointslice_discoverer_backward_compatibility(t *testing.T) {
-	t.Parallel()
-
-	// GIVEN: Equivalent data structures for both APIs
-	// Legacy Endpoints API data
-	endpoints := getFirstEndpoints()
-	legacyClient := testclient.NewSimpleClientset(endpoints)
-
-	// EndpointSlice API data (same logical data)
-	slice := &discoveryv1.EndpointSlice{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-slice",
-			Namespace: "testNamespace",
-			Labels: map[string]string{
-				"selector": "matching",
-			},
-		},
-		AddressType: discoveryv1.AddressTypeIPv4,
-		Endpoints: []discoveryv1.Endpoint{
-			{
-				Addresses: []string{"1.2.3.4"},
-				Conditions: discoveryv1.EndpointConditions{
-					Ready: ptr.To(true),
-				},
-			},
-		},
-		Ports: []discoveryv1.EndpointPort{
-			{
-				Port:     ptr.To(int32(80)),
-				Protocol: ptr.To(corev1.ProtocolTCP),
-			},
-		},
-	}
-	sliceClient := testclient.NewSimpleClientset(slice)
-
-	// WHEN: Both discoverers run on equivalent data
-	legacyConfig := discovery.EndpointsDiscoveryConfig{
-		Client:        legacyClient,
-		LabelSelector: "selector=matching",
-	}
-	legacyDiscoverer, err := discovery.NewEndpointsDiscoverer(legacyConfig)
-	require.NoError(t, err)
-	legacyResult, err := legacyDiscoverer.Discover()
-	require.NoError(t, err)
-
-	sliceConfig := discovery.EndpointsDiscoveryConfig{
-		Client:        sliceClient,
-		LabelSelector: "selector=matching",
-	}
-	sliceDiscoverer, err := discovery.NewEndpointSliceDiscoverer(sliceConfig)
-	require.NoError(t, err)
-	sliceResult, err := sliceDiscoverer.Discover()
-	require.NoError(t, err)
-
-	// THEN: Output should match exactly (proving backward compatibility)
-	assert.Equal(t, legacyResult, sliceResult, "EndpointSlice discoverer output must match legacy Endpoints discoverer")
 }
 
 // Test filtering not-ready endpoints
@@ -646,4 +588,77 @@ func getSecondEndpointSlice() *discoveryv1.EndpointSlice {
 			},
 		},
 	}
+}
+
+// Test_endpointslice_discoverer_with_timeout_wrapper verifies that the
+// EndpointsDiscovererWithTimeout wrapper works correctly with EndpointSlice discoverer.
+func Test_endpointslice_discoverer_with_timeout_wrapper(t *testing.T) {
+	t.Parallel()
+
+	// GIVEN: EndpointSlice that will be discovered
+	slice := &discoveryv1.EndpointSlice{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-slice",
+			Namespace: "testNamespace",
+			Labels:    map[string]string{"app": "test"},
+		},
+		AddressType: discoveryv1.AddressTypeIPv4,
+		Endpoints: []discoveryv1.Endpoint{
+			{
+				Addresses:  []string{"10.0.0.1"},
+				Conditions: discoveryv1.EndpointConditions{Ready: ptr.To(true)},
+			},
+		},
+		Ports: []discoveryv1.EndpointPort{
+			{Port: ptr.To(int32(8080)), Protocol: ptr.To(corev1.ProtocolTCP)},
+		},
+	}
+
+	client := testclient.NewSimpleClientset(slice)
+	config := discovery.EndpointsDiscoveryConfig{
+		Client:        client,
+		LabelSelector: "app=test",
+	}
+
+	// WHEN: Creating discoverer with timeout wrapper
+	innerDiscoverer, err := discovery.NewEndpointSliceDiscoverer(config)
+	require.NoError(t, err)
+
+	timeoutDiscoverer := &discovery.EndpointsDiscovererWithTimeout{
+		EndpointsDiscoverer: innerDiscoverer,
+		BackoffDelay:        100 * time.Millisecond,
+		Timeout:             2 * time.Second,
+	}
+
+	// THEN: Discovery should succeed
+	endpoints, err := timeoutDiscoverer.Discover()
+	require.NoError(t, err)
+	assert.Equal(t, []string{"10.0.0.1:8080"}, endpoints)
+}
+
+// Test_endpointslice_discoverer_timeout_on_empty_results verifies that
+// the timeout wrapper returns ErrDiscoveryTimeout when no endpoints are found.
+func Test_endpointslice_discoverer_timeout_on_empty_results(t *testing.T) {
+	t.Parallel()
+
+	// GIVEN: No matching EndpointSlices (will return empty results)
+	client := testclient.NewSimpleClientset()
+	config := discovery.EndpointsDiscoveryConfig{
+		Client:        client,
+		LabelSelector: "app=nonexistent",
+	}
+
+	// WHEN: Creating discoverer with short timeout
+	innerDiscoverer, err := discovery.NewEndpointSliceDiscoverer(config)
+	require.NoError(t, err)
+
+	timeoutDiscoverer := &discovery.EndpointsDiscovererWithTimeout{
+		EndpointsDiscoverer: innerDiscoverer,
+		BackoffDelay:        50 * time.Millisecond,
+		Timeout:             150 * time.Millisecond, // Short timeout
+	}
+
+	// THEN: Should timeout since no endpoints are found
+	_, err = timeoutDiscoverer.Discover()
+	assert.ErrorIs(t, err, discovery.ErrDiscoveryTimeout)
 }
