@@ -342,6 +342,181 @@ func TestFetchContainersData_WithSidecarContainers(t *testing.T) {
 	assert.Equal(t, "192.168.0.33", result[sidecarBID]["nodeIP"])
 }
 
+func TestFetchContainersData_WithoutOrderOfInitContainers(t *testing.T) {
+	t.Parallel()
+
+	startedAt, _ := time.Parse(time.RFC3339, "2025-01-02T15:04:05Z")
+	restartPolicyAlways := corev1.ContainerRestartPolicyAlways
+	podName := "test-pod"
+	namespace := "default"
+	sideCarAContainerName := "sidecar"
+	sideCarBContainerName := "sidecar-b"
+	initContainerName := "normal-init"
+
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      podName,
+			Namespace: namespace,
+		},
+		Spec: corev1.PodSpec{
+			InitContainers: []corev1.Container{
+				{
+					Name:          sideCarAContainerName,
+					RestartPolicy: &restartPolicyAlways,
+				},
+				{
+					Name: initContainerName,
+				},
+				{
+					Name:          sideCarBContainerName,
+					RestartPolicy: &restartPolicyAlways,
+				},
+			},
+		},
+		Status: corev1.PodStatus{
+			HostIP: "192.168.0.33",
+
+			InitContainerStatuses: []corev1.ContainerStatus{
+				// Normal init containers should be skipped
+				{
+					Name: initContainerName,
+					State: corev1.ContainerState{
+						Terminated: &corev1.ContainerStateTerminated{
+							FinishedAt: metav1.NewTime(startedAt),
+							ExitCode:   0,
+							Reason:     "Completed",
+						},
+					},
+					Ready: true,
+				},
+				{
+					Name: sideCarBContainerName,
+					State: corev1.ContainerState{
+						Waiting: &corev1.ContainerStateWaiting{
+							Reason: "ContainerCreating",
+						},
+					},
+					LastTerminationState: corev1.ContainerState{
+						Terminated: &corev1.ContainerStateTerminated{
+							FinishedAt: metav1.NewTime(startedAt),
+							ExitCode:   137,
+							Reason:     "OOMKilled",
+						},
+					},
+					Ready: false,
+				},
+				// statuses are not in the same order as the init containers
+				{
+					Name: sideCarAContainerName,
+					State: corev1.ContainerState{
+						Running: &corev1.ContainerStateRunning{
+							StartedAt: metav1.NewTime(startedAt),
+						},
+					},
+					Ready:        true,
+					RestartCount: 2,
+				},
+			},
+		},
+	}
+
+	podFetcher := &PodsFetcher{}
+	result := podFetcher.fetchContainersData(pod)
+
+	sidecarAID := fmt.Sprintf("%s_%s_%s", namespace, podName, sideCarAContainerName)
+	sidecarBID := fmt.Sprintf("%s_%s_%s", namespace, podName, sideCarBContainerName)
+	assert.Equal(t, 2, len(result), "expected only the sidecar containers to be processed")
+	assert.Contains(t, result, sidecarAID, "expected sidecar to be present as a key")
+	assert.Contains(t, result, sidecarBID, "expected sidecar-b to be present as a key")
+
+	assert.Equal(t, "Running", result[sidecarAID]["status"])
+	assert.Equal(t, "Waiting", result[sidecarBID]["status"])
+	assert.Equal(t, true, result[sidecarAID]["isReady"])
+	assert.Equal(t, int32(2), result[sidecarAID]["restartCount"])
+	assert.Equal(t, startedAt, result[sidecarAID]["startedAt"])
+	assert.Equal(t, "OOMKilled", result[sidecarBID]["lastTerminatedExitReason"])
+	assert.Equal(t, int32(137), result[sidecarBID]["lastTerminatedExitCode"])
+	assert.Equal(t, "192.168.0.33", result[sidecarAID]["nodeIP"])
+	assert.Equal(t, "192.168.0.33", result[sidecarBID]["nodeIP"])
+}
+
+func TestFetchContainersData_WithLessInitContainerStatuses(t *testing.T) {
+	t.Parallel()
+
+	startedAt, _ := time.Parse(time.RFC3339, "2025-01-02T15:04:05Z")
+	restartPolicyAlways := corev1.ContainerRestartPolicyAlways
+	podName := "test-pod"
+	namespace := "default"
+	sideCarAContainerName := "sidecar"
+	sideCarBContainerName := "sidecar-b"
+	initContainerName := "normal-init"
+
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      podName,
+			Namespace: namespace,
+		},
+		Spec: corev1.PodSpec{
+			InitContainers: []corev1.Container{
+				{
+					Name:          sideCarAContainerName,
+					RestartPolicy: &restartPolicyAlways,
+				},
+				{
+					Name: initContainerName,
+				},
+				{
+					Name:          sideCarBContainerName,
+					RestartPolicy: &restartPolicyAlways,
+				},
+			},
+		},
+		Status: corev1.PodStatus{
+			HostIP: "192.168.0.33",
+
+			InitContainerStatuses: []corev1.ContainerStatus{
+				{
+					Name: sideCarAContainerName,
+					State: corev1.ContainerState{
+						Running: &corev1.ContainerStateRunning{
+							StartedAt: metav1.NewTime(startedAt),
+						},
+					},
+					Ready:        true,
+					RestartCount: 2,
+				},
+			},
+		},
+	}
+
+	podFetcher := &PodsFetcher{}
+	result := podFetcher.fetchContainersData(pod)
+
+	sidecarAID := fmt.Sprintf("%s_%s_%s", namespace, podName, sideCarAContainerName)
+	sidecarBID := fmt.Sprintf("%s_%s_%s", namespace, podName, sideCarBContainerName)
+	assert.Equal(t, 2, len(result), "expected only the sidecar containers to be processed")
+	assert.Contains(t, result, sidecarAID, "expected sidecar to be present as a key")
+	assert.Contains(t, result, sidecarBID, "expected sidecar-b to be present as a key")
+
+	assert.Equal(t, "Running", result[sidecarAID]["status"])
+	assert.Equal(t, true, result[sidecarAID]["isReady"])
+	assert.Equal(t, int32(2), result[sidecarAID]["restartCount"])
+	assert.Equal(t, startedAt, result[sidecarAID]["startedAt"])
+
+	// sidecar-b has no corresponding init status in the PodStatus, so status-related fields should be absent
+	_, hasStatus := result[sidecarBID]["status"]
+	assert.False(t, hasStatus, "expected sidecar-b to have no status when init status is missing")
+
+	_, hasLastTermReason := result[sidecarBID]["lastTerminatedExitReason"]
+	assert.False(t, hasLastTermReason)
+
+	_, hasLastTermCode := result[sidecarBID]["lastTerminatedExitCode"]
+	assert.False(t, hasLastTermCode)
+
+	assert.Equal(t, "192.168.0.33", result[sidecarAID]["nodeIP"])
+	assert.Equal(t, "192.168.0.33", result[sidecarBID]["nodeIP"])
+}
+
 func TestFetchPodData_WithPriority(t *testing.T) {
 	t.Parallel()
 
