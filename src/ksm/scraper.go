@@ -191,7 +191,7 @@ func (s *Scraper) buildDiscoverer() (discovery.EndpointsDiscoverer, error) {
 		dc.Port = s.config.KSM.Port
 	}
 
-	discoverer, err := discovery.NewEndpointsDiscoverer(dc)
+	discoverer, err := discovery.NewEndpointSliceDiscoverer(dc)
 	if err != nil {
 		return nil, err
 	}

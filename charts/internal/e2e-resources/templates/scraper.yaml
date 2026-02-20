@@ -14,7 +14,13 @@ rules:
       - "nodes/proxy"
       - "pods"
       - "services"
-    verbs: ["get", "list"]
+      - "endpoints"
+      - "namespaces"
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["discovery.k8s.io"]
+    resources:
+      - "endpointslices"
+    verbs: ["get", "list", "watch"]
   - nonResourceURLs: ["/metrics"]
     verbs: ["get"]
 ---
