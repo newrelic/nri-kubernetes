@@ -15,7 +15,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
 )
 
-// Test that creation fails when no client is provided (backward compatibility with Endpoints discoverer)
+// Test that creation fails when no client is provided (backward compatibility with Endpoints discoverer).
 func Test_endpointslice_discoverer_creation_fails_when_no_client_is_provided(t *testing.T) {
 	t.Parallel()
 
@@ -23,7 +23,7 @@ func Test_endpointslice_discoverer_creation_fails_when_no_client_is_provided(t *
 	assert.Error(t, err, "error expected since client is nil")
 }
 
-// Test basic functionality: single EndpointSlice with ready endpoints
+// Test basic functionality: single EndpointSlice with ready endpoints.
 func Test_endpointslice_discoverer_basic_functionality(t *testing.T) {
 	t.Parallel()
 
@@ -61,7 +61,7 @@ func Test_endpointslice_discoverer_basic_functionality(t *testing.T) {
 		},
 	}
 
-	client := testclient.NewSimpleClientset(slice)
+	client := testclient.NewSimpleClientset(slice) //nolint:staticcheck // Deprecated but no alternative.
 	config := discovery.EndpointsDiscoveryConfig{
 		Client: client,
 	}
@@ -77,7 +77,7 @@ func Test_endpointslice_discoverer_basic_functionality(t *testing.T) {
 	assert.Equal(t, []string{"10.0.0.1:8080", "10.0.0.2:8080"}, hosts)
 }
 
-// Test filtering not-ready endpoints
+// Test filtering not-ready endpoints.
 func Test_endpointslice_discoverer_filters_not_ready_endpoints(t *testing.T) {
 	t.Parallel()
 
@@ -117,7 +117,7 @@ func Test_endpointslice_discoverer_filters_not_ready_endpoints(t *testing.T) {
 		},
 	}
 
-	client := testclient.NewSimpleClientset(slice)
+	client := testclient.NewSimpleClientset(slice) //nolint:staticcheck // Deprecated but no alternative.
 	config := discovery.EndpointsDiscoveryConfig{Client: client}
 
 	// WHEN: Discover() is called
@@ -131,7 +131,7 @@ func Test_endpointslice_discoverer_filters_not_ready_endpoints(t *testing.T) {
 	assert.NotContains(t, hosts, "10.0.0.2:8080", "Not-ready endpoint should be filtered out")
 }
 
-// Test handling of nil Ready condition (should treat as ready for backward compatibility)
+// Test handling of nil Ready condition (should treat as ready for backward compatibility).
 func Test_endpointslice_discoverer_handles_nil_ready_condition(t *testing.T) {
 	t.Parallel()
 
@@ -158,7 +158,7 @@ func Test_endpointslice_discoverer_handles_nil_ready_condition(t *testing.T) {
 		},
 	}
 
-	client := testclient.NewSimpleClientset(slice)
+	client := testclient.NewSimpleClientset(slice) //nolint:staticcheck // Deprecated but no alternative.
 	config := discovery.EndpointsDiscoveryConfig{Client: client}
 
 	// WHEN: Discover() is called
@@ -171,7 +171,7 @@ func Test_endpointslice_discoverer_handles_nil_ready_condition(t *testing.T) {
 	assert.Equal(t, []string{"10.0.0.1:8080"}, hosts)
 }
 
-// Test handling of nil Port field
+// Test handling of nil Port field.
 func Test_endpointslice_discoverer_handles_nil_port(t *testing.T) {
 	t.Parallel()
 
@@ -198,7 +198,7 @@ func Test_endpointslice_discoverer_handles_nil_port(t *testing.T) {
 		},
 	}
 
-	client := testclient.NewSimpleClientset(slice)
+	client := testclient.NewSimpleClientset(slice) //nolint:staticcheck // Deprecated but no alternative.
 	config := discovery.EndpointsDiscoveryConfig{Client: client}
 
 	// WHEN: Discover() is called
@@ -211,7 +211,7 @@ func Test_endpointslice_discoverer_handles_nil_port(t *testing.T) {
 	assert.Empty(t, hosts, "Endpoints with nil port should be skipped")
 }
 
-// Test discovery across multiple EndpointSlice objects
+// Test discovery across multiple EndpointSlice objects.
 func Test_endpointslice_discoverer_multiple_slices(t *testing.T) {
 	t.Parallel()
 
@@ -256,7 +256,7 @@ func Test_endpointslice_discoverer_multiple_slices(t *testing.T) {
 		},
 	}
 
-	client := testclient.NewSimpleClientset(slice1, slice2)
+	client := testclient.NewSimpleClientset(slice1, slice2) //nolint:staticcheck // Deprecated but no alternative.
 	config := discovery.EndpointsDiscoveryConfig{Client: client}
 
 	// WHEN: Discover() is called
@@ -269,7 +269,7 @@ func Test_endpointslice_discoverer_multiple_slices(t *testing.T) {
 	assert.Equal(t, []string{"10.0.0.1:8080", "10.0.0.2:8080"}, hosts)
 }
 
-// Test deduplication across multiple slices
+// Test deduplication across multiple slices.
 func Test_endpointslice_discoverer_deduplication(t *testing.T) {
 	t.Parallel()
 
@@ -308,7 +308,7 @@ func Test_endpointslice_discoverer_deduplication(t *testing.T) {
 		},
 	}
 
-	client := testclient.NewSimpleClientset(slice1, slice2)
+	client := testclient.NewSimpleClientset(slice1, slice2) //nolint:staticcheck // Deprecated but no alternative.
 	config := discovery.EndpointsDiscoveryConfig{Client: client}
 
 	// WHEN: Discover() is called
@@ -322,12 +322,12 @@ func Test_endpointslice_discoverer_deduplication(t *testing.T) {
 	assert.Len(t, hosts, 1, "Duplicate endpoint should be deduplicated")
 }
 
-// Test empty results
+// Test empty results.
 func Test_endpointslice_discoverer_empty_results(t *testing.T) {
 	t.Parallel()
 
 	// GIVEN: No matching EndpointSlices
-	client := testclient.NewSimpleClientset()
+	client := testclient.NewSimpleClientset() //nolint:staticcheck // Deprecated but no alternative.
 	config := discovery.EndpointsDiscoveryConfig{Client: client}
 
 	// WHEN: Discover() is called
@@ -340,7 +340,7 @@ func Test_endpointslice_discoverer_empty_results(t *testing.T) {
 	assert.Empty(t, hosts)
 }
 
-// Test sorting of results
+// Test sorting of results.
 func Test_endpointslice_discoverer_sorting(t *testing.T) {
 	t.Parallel()
 
@@ -370,7 +370,7 @@ func Test_endpointslice_discoverer_sorting(t *testing.T) {
 		},
 	}
 
-	client := testclient.NewSimpleClientset(slice)
+	client := testclient.NewSimpleClientset(slice) //nolint:staticcheck // Deprecated but no alternative.
 	config := discovery.EndpointsDiscoveryConfig{Client: client}
 
 	// WHEN: Discover() is called
@@ -383,7 +383,7 @@ func Test_endpointslice_discoverer_sorting(t *testing.T) {
 	assert.Equal(t, []string{"10.0.0.1:8080", "10.0.0.5:8080", "10.0.0.9:8080"}, hosts)
 }
 
-// Test label selector filtering (same behavior as Endpoints discoverer)
+// Test label selector filtering (same behavior as Endpoints discoverer).
 type endpointSliceTestData struct {
 	configModifier func(s *discovery.EndpointsDiscoveryConfig)
 	result         []string
@@ -393,7 +393,7 @@ func Test_endpointslice_discovery_with_filters(t *testing.T) {
 	t.Parallel()
 
 	// Create test EndpointSlices matching the structure from legacy Endpoints tests
-	client := testclient.NewSimpleClientset(getFirstEndpointSlice(), getSecondEndpointSlice())
+	client := testclient.NewSimpleClientset(getFirstEndpointSlice(), getSecondEndpointSlice()) //nolint:staticcheck // Deprecated but no alternative.
 
 	testCases := map[string]endpointSliceTestData{
 		"not_matching_selector": {
@@ -409,7 +409,7 @@ func Test_endpointslice_discovery_with_filters(t *testing.T) {
 			result: []string{"1.2.3.4:80", "5.6.7.8:81"},
 		},
 		"no_selector_no_namespace_no_port": {
-			configModifier: func(s *discovery.EndpointsDiscoveryConfig) {
+			configModifier: func(_ *discovery.EndpointsDiscoveryConfig) {
 			},
 			result: []string{"1.2.3.4:80", "5.6.7.8:81"},
 		},
@@ -462,7 +462,7 @@ func Test_endpointslice_discovery_with_filters(t *testing.T) {
 	}
 }
 
-// Test multiple addresses per endpoint
+// Test multiple addresses per endpoint.
 func Test_endpointslice_discoverer_multiple_addresses_per_endpoint(t *testing.T) {
 	t.Parallel()
 
@@ -486,7 +486,7 @@ func Test_endpointslice_discoverer_multiple_addresses_per_endpoint(t *testing.T)
 		},
 	}
 
-	client := testclient.NewSimpleClientset(slice)
+	client := testclient.NewSimpleClientset(slice) //nolint:staticcheck // Deprecated but no alternative.
 	config := discovery.EndpointsDiscoveryConfig{Client: client}
 
 	// WHEN: Discover() is called
@@ -499,7 +499,7 @@ func Test_endpointslice_discoverer_multiple_addresses_per_endpoint(t *testing.T)
 	assert.Equal(t, []string{"10.0.0.1:8080", "10.0.0.2:8080"}, hosts)
 }
 
-// Test multiple ports per EndpointSlice
+// Test multiple ports per EndpointSlice.
 func Test_endpointslice_discoverer_multiple_ports(t *testing.T) {
 	t.Parallel()
 
@@ -522,7 +522,7 @@ func Test_endpointslice_discoverer_multiple_ports(t *testing.T) {
 		},
 	}
 
-	client := testclient.NewSimpleClientset(slice)
+	client := testclient.NewSimpleClientset(slice) //nolint:staticcheck // Deprecated but no alternative.
 	config := discovery.EndpointsDiscoveryConfig{Client: client}
 
 	// WHEN: Discover() is called
@@ -535,7 +535,7 @@ func Test_endpointslice_discoverer_multiple_ports(t *testing.T) {
 	assert.Equal(t, []string{"10.0.0.1:8080", "10.0.0.1:9090"}, hosts)
 }
 
-// Helper functions to create test EndpointSlices matching legacy Endpoints structure
+// Helper functions to create test EndpointSlices matching legacy Endpoints structure.
 func getFirstEndpointSlice() *discoveryv1.EndpointSlice {
 	return &discoveryv1.EndpointSlice{
 		ObjectMeta: metav1.ObjectMeta{
@@ -614,7 +614,7 @@ func Test_endpointslice_discoverer_with_timeout_wrapper(t *testing.T) {
 		},
 	}
 
-	client := testclient.NewSimpleClientset(slice)
+	client := testclient.NewSimpleClientset(slice) //nolint:staticcheck // Deprecated but no alternative.
 	config := discovery.EndpointsDiscoveryConfig{
 		Client:        client,
 		LabelSelector: "app=test",
@@ -642,7 +642,7 @@ func Test_endpointslice_discoverer_timeout_on_empty_results(t *testing.T) {
 	t.Parallel()
 
 	// GIVEN: No matching EndpointSlices (will return empty results)
-	client := testclient.NewSimpleClientset()
+	client := testclient.NewSimpleClientset() //nolint:staticcheck // Deprecated but no alternative.
 	config := discovery.EndpointsDiscoveryConfig{
 		Client:        client,
 		LabelSelector: "app=nonexistent",

@@ -49,7 +49,7 @@ func TestKSMScraperUsesEndpointSliceDiscoverer(t *testing.T) {
 		},
 	}
 
-	fakeK8s := fake.NewSimpleClientset(endpointSlice)
+	fakeK8s := fake.NewSimpleClientset(endpointSlice) //nolint:staticcheck // Deprecated but no alternative.
 
 	cfg := &config.Config{
 		KSM: config.KSM{
@@ -142,7 +142,7 @@ func TestKSMScraperDiscoveryWithEndpointSlices(t *testing.T) {
 		},
 	}
 
-	fakeK8s := fake.NewSimpleClientset(endpointSlice)
+	fakeK8s := fake.NewSimpleClientset(endpointSlice) //nolint:staticcheck // Deprecated but no alternative.
 
 	cfg := &config.Config{
 		KSM: config.KSM{
@@ -235,7 +235,7 @@ func TestKSMScraperWithCustomSelector(t *testing.T) {
 		Ports: []discoveryv1.EndpointPort{{Port: ptr.To(int32(8080))}},
 	}
 
-	fakeK8s := fake.NewSimpleClientset(matchingSlice, nonMatchingSlice)
+	fakeK8s := fake.NewSimpleClientset(matchingSlice, nonMatchingSlice) //nolint:staticcheck // Deprecated but no alternative.
 
 	cfg := &config.Config{
 		KSM: config.KSM{
@@ -309,7 +309,7 @@ func TestKSMScraperWithPortOverride(t *testing.T) {
 		},
 	}
 
-	fakeK8s := fake.NewSimpleClientset(endpointSlice)
+	fakeK8s := fake.NewSimpleClientset(endpointSlice) //nolint:staticcheck // Deprecated but no alternative.
 
 	cfg := &config.Config{
 		KSM: config.KSM{
@@ -373,7 +373,7 @@ func TestNoDeprecatedEndpointsAPIUsage(t *testing.T) {
 	// Additional runtime check: ensure the discoverer package exports EndpointSlice discoverer
 	cfg := discovery.EndpointsDiscoveryConfig{
 		LabelSelector: "test=true",
-		Client:        fake.NewSimpleClientset(),
+		Client:        fake.NewSimpleClientset(), //nolint:staticcheck // Deprecated but no alternative.//nolint:staticcheck // Deprecated but no alternative.
 	}
 
 	discoverer, err := discovery.NewEndpointSliceDiscoverer(cfg)

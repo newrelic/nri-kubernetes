@@ -36,6 +36,9 @@ type EndpointsDiscoverer interface {
 // ErrDiscoveryTimeout is returned by EndpointsDiscovererWithTimeout when discovery times out.
 var ErrDiscoveryTimeout = errors.New("timeout discovering endpoints")
 
+// ErrClientNotConfigured is returned when the Kubernetes client is not provided.
+var ErrClientNotConfigured = errors.New("client must be configured")
+
 // EndpointsDiscovererWithTimeout wraps an EndpointsDiscoverer with retry/timeout logic.
 // It polls the inner discoverer until endpoints are found or timeout is reached.
 type EndpointsDiscovererWithTimeout struct {
@@ -45,15 +48,15 @@ type EndpointsDiscovererWithTimeout struct {
 }
 
 // Discover polls the inner EndpointsDiscoverer every BackoffDelay until it returns:
-// - An error (fail immediately)
-// - A non-empty list of endpoints (success)
-// - Timeout expires (return ErrDiscoveryTimeout)
+// - An error (fail immediately).
+// - A non-empty list of endpoints (success).
+// - Timeout expires (return ErrDiscoveryTimeout).
 func (edt *EndpointsDiscovererWithTimeout) Discover() ([]string, error) {
 	start := time.Now()
 	for time.Since(start) < edt.Timeout {
 		endpoints, err := edt.EndpointsDiscoverer.Discover()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("discovering endpoints: %w", err)
 		}
 
 		if len(endpoints) > 0 {
@@ -74,9 +77,11 @@ type endpointSliceDiscoverer struct {
 
 // NewEndpointSliceDiscoverer creates a new EndpointsDiscoverer that uses the EndpointSlice API.
 // This is the modern replacement for the deprecated v1 Endpoints API.
+//
+//nolint:ireturn // Returning interface is correct design for abstraction.
 func NewEndpointSliceDiscoverer(config EndpointsDiscoveryConfig) (EndpointsDiscoverer, error) {
 	if config.Client == nil {
-		return nil, fmt.Errorf("client must be configured")
+		return nil, ErrClientNotConfigured
 	}
 
 	// Arbitrary value, same used in Prometheus and legacy Endpoints discoverer
@@ -107,6 +112,8 @@ func NewEndpointSliceDiscoverer(config EndpointsDiscoveryConfig) (EndpointsDisco
 
 // Discover returns a list of "host:port" strings for all ready endpoints in matching EndpointSlices.
 // The output is sorted alphabetically and deduplicated across multiple slices.
+//
+//nolint:gocognit,gocyclo,cyclop // Nested loops match EndpointSlice structure (slices->endpoints->addresses->ports).
 func (d *endpointSliceDiscoverer) Discover() ([]string, error) {
 	// If fixed endpoints are set, return them (same as legacy discoverer)
 	if len(d.fixedEndpointSorted) != 0 {
