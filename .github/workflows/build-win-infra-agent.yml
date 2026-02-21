@@ -118,3 +118,30 @@ jobs:
           echo "Agent version: $agentVersion"
 
           docker push newrelic/infrastructure-windows:$agentVersion-$matrixTag
+
+  scan:
+    name: Trivy scan for
+    needs: [ check-version-change, build ]
+    strategy:
+      fail-fast: false
+      matrix:
+        windows:
+          - tag: ltsc2022
+    runs-on: ubuntu-latest
+    env:
+      IMAGE: newrelic/infrastructure-windows:${{ needs.check-version-change.outputs.new_agent_version }}-${{ matrix.windows.tag }}
+    steps:
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: ${{ env.IMAGE }}
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          severity: 'HIGH,CRITICAL'
