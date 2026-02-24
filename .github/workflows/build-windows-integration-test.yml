@@ -30,6 +30,7 @@ on:
 permissions:
   contents: read
   pull-requests: read
+  security-events: write
 
 jobs:
   generate-matrix:
@@ -126,6 +127,24 @@ jobs:
         run: |
           docker push newrelic/nri-kubernetes-internal:$env:DOCKER_TAG
           Write-Output "Pushed newrelic/nri-kubernetes-internal:$env:DOCKER_TAG"
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: newrelic/nri-kubernetes-internal:${{ env.DOCKER_TAG }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          exit-code: '0'
+          ignore-unfixed: true
+          severity: 'HIGH,CRITICAL'
+          scanners: 'vuln'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+          category: 'trivy-windows-${{ matrix.windows.tag }}'
+
       - name: Output pushed image tag
         shell: powershell
         run: |
