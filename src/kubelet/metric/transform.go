@@ -42,3 +42,37 @@ func OneMetricPerLabel(rawLabels definition.FetchedValue) (definition.FetchedVal
 
 	return modified, nil
 }
+
+// PrefixFromMapAny transforms a map[string]interface{} to FetchedValues with a configurable prefix.
+// This is useful for diagnostic metrics that have mixed types (strings, ints, bools, floats).
+// The prefix is prepended to each key in the resulting FetchedValues.
+// All values are converted to strings since ATTRIBUTE type metrics only accept strings.
+func PrefixFromMapAny(prefix string) func(mapValue definition.FetchedValue) (definition.FetchedValue, error) {
+	return func(value definition.FetchedValue) (definition.FetchedValue, error) {
+		mapValue, ok := value.(map[string]interface{})
+		if !ok {
+			return value, fmt.Errorf("cannot make prefixes: value is not map[string]interface{}, got %T", value)
+		}
+
+		prefixed := make(definition.FetchedValues, len(mapValue))
+		for k, v := range mapValue {
+			// Convert all values to strings since ATTRIBUTE type only accepts strings
+			var strVal string
+			switch val := v.(type) {
+			case string:
+				strVal = val
+			case bool:
+				if val {
+					strVal = "true"
+				} else {
+					strVal = "false"
+				}
+			default:
+				strVal = fmt.Sprintf("%v", v)
+			}
+			prefixed[fmt.Sprintf("%s%v", prefix, k)] = strVal
+		}
+
+		return prefixed, nil
+	}
+}

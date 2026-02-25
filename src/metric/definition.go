@@ -1468,6 +1468,13 @@ func NewKubeletSpecs(interfaceCache *kubeletMetric.InterfaceCache) definition.Sp
 				{Name: "cpuRequestedCores", ValueFunc: cpuRequestedCores, Type: sdkMetric.GAUGE},
 				{Name: "kubeletVersion", ValueFunc: definition.FromRaw("kubeletVersion"), Type: sdkMetric.ATTRIBUTE},
 				{Name: "runningPods", ValueFunc: definition.FromRaw("runningPods"), Type: sdkMetric.GAUGE},
+
+				// zpages
+				{Name: "configz.*", ValueFunc: definition.Transform(definition.FromRaw("kubeletConfigzDiagnostics"), kubeletMetric.PrefixFromMapAny("configz.")), Type: sdkMetric.ATTRIBUTE, Optional: true},
+				{Name: "flagz.*", ValueFunc: definition.Transform(definition.FromRaw("kubeletFlagsDiagnostics"), kubeletMetric.PrefixFromMapAny("flagz.")), Type: sdkMetric.ATTRIBUTE, Optional: true},
+				{Name: "statusz.*", ValueFunc: definition.Transform(definition.FromRaw("kubeletStatuszDiagnostics"), kubeletMetric.PrefixFromMapAny("statusz.")), Type: sdkMetric.ATTRIBUTE, Optional: true},
+				{Name: "metrics.*", ValueFunc: definition.Transform(definition.FromRaw("kubeletMetricsDiagnostics"), kubeletMetric.PrefixFromMapAny("metrics.")), Type: sdkMetric.ATTRIBUTE, Optional: true},
+
 				// computed
 				{Name: "fsCapacityUtilization", ValueFunc: toUtilization(definition.FromRaw("fsUsedBytes"), definition.FromRaw("fsCapacityBytes")), Type: sdkMetric.GAUGE},
 				{Name: "allocatableCpuCoresUtilization", ValueFunc: toUtilization(_cpuUsedCores, definition.FromRaw("allocatableCpuCores")), Type: sdkMetric.GAUGE},
