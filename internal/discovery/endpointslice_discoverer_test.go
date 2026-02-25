@@ -15,11 +15,21 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
 )
 
+// newTestEndpointSliceDiscoverer is a test helper that creates a discoverer and registers cleanup.
+// This helper hides the awkwardness of the 3-return signature in tests.
+func newTestEndpointSliceDiscoverer(t *testing.T, config discovery.EndpointsDiscoveryConfig) discovery.EndpointsDiscoverer {
+	t.Helper()
+	discoverer, stopCh, err := discovery.NewEndpointSliceDiscoverer(config)
+	require.NoError(t, err)
+	t.Cleanup(func() { close(stopCh) })
+	return discoverer
+}
+
 // Test that creation fails when no client is provided (backward compatibility with Endpoints discoverer).
 func Test_endpointslice_discoverer_creation_fails_when_no_client_is_provided(t *testing.T) {
 	t.Parallel()
 
-	_, err := discovery.NewEndpointSliceDiscoverer(discovery.EndpointsDiscoveryConfig{})
+	_, _, err := discovery.NewEndpointSliceDiscoverer(discovery.EndpointsDiscoveryConfig{})
 	assert.Error(t, err, "error expected since client is nil")
 }
 
@@ -67,8 +77,7 @@ func Test_endpointslice_discoverer_basic_functionality(t *testing.T) {
 	}
 
 	// WHEN: Creating discoverer and calling Discover()
-	discoverer, err := discovery.NewEndpointSliceDiscoverer(config)
-	require.NoError(t, err)
+	discoverer := newTestEndpointSliceDiscoverer(t, config)
 
 	hosts, err := discoverer.Discover()
 
@@ -121,8 +130,7 @@ func Test_endpointslice_discoverer_filters_not_ready_endpoints(t *testing.T) {
 	config := discovery.EndpointsDiscoveryConfig{Client: client}
 
 	// WHEN: Discover() is called
-	discoverer, err := discovery.NewEndpointSliceDiscoverer(config)
-	require.NoError(t, err)
+	discoverer := newTestEndpointSliceDiscoverer(t, config)
 	hosts, err := discoverer.Discover()
 
 	// THEN: Only ready endpoints should be returned
@@ -162,8 +170,7 @@ func Test_endpointslice_discoverer_handles_nil_ready_condition(t *testing.T) {
 	config := discovery.EndpointsDiscoveryConfig{Client: client}
 
 	// WHEN: Discover() is called
-	discoverer, err := discovery.NewEndpointSliceDiscoverer(config)
-	require.NoError(t, err)
+	discoverer := newTestEndpointSliceDiscoverer(t, config)
 	hosts, err := discoverer.Discover()
 
 	// THEN: Should handle gracefully without panic and include endpoint
@@ -202,8 +209,7 @@ func Test_endpointslice_discoverer_handles_nil_port(t *testing.T) {
 	config := discovery.EndpointsDiscoveryConfig{Client: client}
 
 	// WHEN: Discover() is called
-	discoverer, err := discovery.NewEndpointSliceDiscoverer(config)
-	require.NoError(t, err)
+	discoverer := newTestEndpointSliceDiscoverer(t, config)
 	hosts, err := discoverer.Discover()
 
 	// THEN: Should handle gracefully without panic and skip the endpoint
@@ -260,8 +266,7 @@ func Test_endpointslice_discoverer_multiple_slices(t *testing.T) {
 	config := discovery.EndpointsDiscoveryConfig{Client: client}
 
 	// WHEN: Discover() is called
-	discoverer, err := discovery.NewEndpointSliceDiscoverer(config)
-	require.NoError(t, err)
+	discoverer := newTestEndpointSliceDiscoverer(t, config)
 	hosts, err := discoverer.Discover()
 
 	// THEN: All endpoints across slices should be discovered
@@ -312,8 +317,7 @@ func Test_endpointslice_discoverer_deduplication(t *testing.T) {
 	config := discovery.EndpointsDiscoveryConfig{Client: client}
 
 	// WHEN: Discover() is called
-	discoverer, err := discovery.NewEndpointSliceDiscoverer(config)
-	require.NoError(t, err)
+	discoverer := newTestEndpointSliceDiscoverer(t, config)
 	hosts, err := discoverer.Discover()
 
 	// THEN: Each unique host:port should appear only once
@@ -331,8 +335,7 @@ func Test_endpointslice_discoverer_empty_results(t *testing.T) {
 	config := discovery.EndpointsDiscoveryConfig{Client: client}
 
 	// WHEN: Discover() is called
-	discoverer, err := discovery.NewEndpointSliceDiscoverer(config)
-	require.NoError(t, err)
+	discoverer := newTestEndpointSliceDiscoverer(t, config)
 	hosts, err := discoverer.Discover()
 
 	// THEN: Should return empty slice without error
@@ -374,8 +377,7 @@ func Test_endpointslice_discoverer_sorting(t *testing.T) {
 	config := discovery.EndpointsDiscoveryConfig{Client: client}
 
 	// WHEN: Discover() is called
-	discoverer, err := discovery.NewEndpointSliceDiscoverer(config)
-	require.NoError(t, err)
+	discoverer := newTestEndpointSliceDiscoverer(t, config)
 	hosts, err := discoverer.Discover()
 
 	// THEN: Results should be sorted alphabetically
@@ -451,8 +453,7 @@ func Test_endpointslice_discovery_with_filters(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			t.Parallel()
 
-			d, err := discovery.NewEndpointSliceDiscoverer(c)
-			require.NoError(t, err)
+			d := newTestEndpointSliceDiscoverer(t, c)
 
 			e, err := d.Discover()
 			require.NoError(t, err)
@@ -490,8 +491,7 @@ func Test_endpointslice_discoverer_multiple_addresses_per_endpoint(t *testing.T)
 	config := discovery.EndpointsDiscoveryConfig{Client: client}
 
 	// WHEN: Discover() is called
-	discoverer, err := discovery.NewEndpointSliceDiscoverer(config)
-	require.NoError(t, err)
+	discoverer := newTestEndpointSliceDiscoverer(t, config)
 	hosts, err := discoverer.Discover()
 
 	// THEN: All addresses should be returned
@@ -526,8 +526,7 @@ func Test_endpointslice_discoverer_multiple_ports(t *testing.T) {
 	config := discovery.EndpointsDiscoveryConfig{Client: client}
 
 	// WHEN: Discover() is called
-	discoverer, err := discovery.NewEndpointSliceDiscoverer(config)
-	require.NoError(t, err)
+	discoverer := newTestEndpointSliceDiscoverer(t, config)
 	hosts, err := discoverer.Discover()
 
 	// THEN: All port combinations should be returned
@@ -621,8 +620,9 @@ func Test_endpointslice_discoverer_with_timeout_wrapper(t *testing.T) {
 	}
 
 	// WHEN: Creating discoverer with timeout wrapper
-	innerDiscoverer, err := discovery.NewEndpointSliceDiscoverer(config)
+	innerDiscoverer, stopCh, err := discovery.NewEndpointSliceDiscoverer(config)
 	require.NoError(t, err)
+	t.Cleanup(func() { close(stopCh) })
 
 	timeoutDiscoverer := &discovery.EndpointsDiscovererWithTimeout{
 		EndpointsDiscoverer: innerDiscoverer,
@@ -649,8 +649,9 @@ func Test_endpointslice_discoverer_timeout_on_empty_results(t *testing.T) {
 	}
 
 	// WHEN: Creating discoverer with short timeout
-	innerDiscoverer, err := discovery.NewEndpointSliceDiscoverer(config)
+	innerDiscoverer, stopCh, err := discovery.NewEndpointSliceDiscoverer(config)
 	require.NoError(t, err)
+	t.Cleanup(func() { close(stopCh) })
 
 	timeoutDiscoverer := &discovery.EndpointsDiscovererWithTimeout{
 		EndpointsDiscoverer: innerDiscoverer,

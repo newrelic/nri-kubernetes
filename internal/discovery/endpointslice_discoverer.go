@@ -70,18 +70,20 @@ func (edt *EndpointsDiscovererWithTimeout) Discover() ([]string, error) {
 }
 
 type endpointSliceDiscoverer struct {
-	lister              discoverylisters.EndpointSliceLister
-	port                int
-	fixedEndpointSorted []string
+	lister discoverylisters.EndpointSliceLister
+	port   int
 }
 
 // NewEndpointSliceDiscoverer creates a new EndpointsDiscoverer that uses the EndpointSlice API.
 // This is the modern replacement for the deprecated v1 Endpoints API.
 //
+// Returns the discoverer and a stop channel that must be closed to stop background goroutines.
+// The caller is responsible for closing the stop channel to prevent goroutine leaks.
+//
 //nolint:ireturn // Returning interface is correct design for abstraction.
-func NewEndpointSliceDiscoverer(config EndpointsDiscoveryConfig) (EndpointsDiscoverer, error) {
+func NewEndpointSliceDiscoverer(config EndpointsDiscoveryConfig) (EndpointsDiscoverer, chan<- struct{}, error) {
 	if config.Client == nil {
-		return nil, ErrClientNotConfigured
+		return nil, nil, ErrClientNotConfigured
 	}
 
 	// Arbitrary value, same used in Prometheus and legacy Endpoints discoverer
@@ -99,7 +101,7 @@ func NewEndpointSliceDiscoverer(config EndpointsDiscoveryConfig) (EndpointsDisco
 		return lister
 	}
 
-	return &endpointSliceDiscoverer{
+	discoverer := &endpointSliceDiscoverer{
 		lister: esl(
 			informers.WithNamespace(config.Namespace),
 			informers.WithTweakListOptions(func(options *metav1.ListOptions) {
@@ -107,7 +109,9 @@ func NewEndpointSliceDiscoverer(config EndpointsDiscoveryConfig) (EndpointsDisco
 			}),
 		),
 		port: config.Port,
-	}, nil
+	}
+
+	return discoverer, stopCh, nil
 }
 
 // Discover returns a list of "host:port" strings for all ready endpoints in matching EndpointSlices.
@@ -115,11 +119,6 @@ func NewEndpointSliceDiscoverer(config EndpointsDiscoveryConfig) (EndpointsDisco
 //
 //nolint:gocognit,gocyclo,cyclop // Nested loops match EndpointSlice structure (slices->endpoints->addresses->ports).
 func (d *endpointSliceDiscoverer) Discover() ([]string, error) {
-	// If fixed endpoints are set, return them (same as legacy discoverer)
-	if len(d.fixedEndpointSorted) != 0 {
-		return d.fixedEndpointSorted, nil
-	}
-
 	slices, err := d.lister.List(labels.Everything())
 	if err != nil {
 		return nil, fmt.Errorf("listing endpointslices: %w", err)

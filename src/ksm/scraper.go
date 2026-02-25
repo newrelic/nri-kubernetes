@@ -91,12 +91,13 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 	s.k8sVersion = k8sVersion
 
 	s.logger.Debugf("Building KSM discoverer")
-	endpointsDiscoverer, err := s.buildDiscoverer()
+	endpointsDiscoverer, endpointsCloser, err := s.buildDiscoverer()
 	if err != nil {
 		return nil, fmt.Errorf("building endpoints disoverer: %w", err)
 	}
 
 	s.endpointsDiscoverer = endpointsDiscoverer
+	s.informerClosers = append(s.informerClosers, endpointsCloser)
 
 	servicesLister, servicesCloser := discovery.NewServicesLister(providers.K8s)
 	s.servicesLister = servicesLister
@@ -168,9 +169,10 @@ func (s *Scraper) Close() {
 	}
 }
 
-// buildDiscoverer returns a discovery.EndpointsDiscoverer, configured to discover KSM endpoints in the cluster,
-// or to return the static endpoint defined by the user in the config.
-func (s *Scraper) buildDiscoverer() (discovery.EndpointsDiscoverer, error) {
+// buildDiscoverer returns a discovery.EndpointsDiscoverer and a stop channel, configured to discover KSM endpoints
+// in the cluster, or to return the static endpoint defined by the user in the config.
+// The stop channel must be closed to stop background informer goroutines.
+func (s *Scraper) buildDiscoverer() (discovery.EndpointsDiscoverer, chan<- struct{}, error) {
 	dc := discovery.EndpointsDiscoveryConfig{
 		LabelSelector: defaultLabelSelector,
 		Client:        s.K8s,
@@ -191,9 +193,9 @@ func (s *Scraper) buildDiscoverer() (discovery.EndpointsDiscoverer, error) {
 		dc.Port = s.config.KSM.Port
 	}
 
-	discoverer, err := discovery.NewEndpointSliceDiscoverer(dc)
+	discoverer, stopCh, err := discovery.NewEndpointSliceDiscoverer(dc)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	return &discovery.EndpointsDiscovererWithTimeout{
@@ -201,7 +203,7 @@ func (s *Scraper) buildDiscoverer() (discovery.EndpointsDiscoverer, error) {
 
 		BackoffDelay: s.config.KSM.Discovery.BackoffDelay,
 		Timeout:      s.config.KSM.Discovery.Timeout,
-	}, nil
+	}, stopCh, nil
 }
 
 func (s *Scraper) ksmURLs() ([]string, error) {
