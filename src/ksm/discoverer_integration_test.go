@@ -94,7 +94,7 @@ func TestKSMScraperUsesEndpointSliceDiscoverer(t *testing.T) {
 	require.NoError(t, err, "Scraper creation should succeed with EndpointSlice API")
 	require.NotNil(t, scraper, "Scraper should be initialized")
 
-	t.Log("✅ KSM scraper created successfully using EndpointSlice API")
+	t.Log("KSM scraper created successfully using EndpointSlice API")
 	t.Log("If this test fails after a code change, check if buildDiscoverer()")
 	t.Log("was accidentally changed back to NewEndpointsDiscoverer")
 }
