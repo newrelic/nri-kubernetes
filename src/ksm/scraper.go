@@ -169,9 +169,7 @@ func (s *Scraper) Close() {
 	}
 }
 
-// buildDiscoverer returns a discovery.EndpointsDiscoverer and a stop channel, configured to discover KSM endpoints
-// in the cluster, or to return the static endpoint defined by the user in the config.
-// The stop channel must be closed to stop background informer goroutines.
+//nolint:ireturn // Returning interface is correct design for abstraction.
 func (s *Scraper) buildDiscoverer() (discovery.EndpointsDiscoverer, chan<- struct{}, error) {
 	dc := discovery.EndpointsDiscoveryConfig{
 		LabelSelector: defaultLabelSelector,
@@ -195,7 +193,7 @@ func (s *Scraper) buildDiscoverer() (discovery.EndpointsDiscoverer, chan<- struc
 
 	discoverer, stopCh, err := discovery.NewEndpointSliceDiscoverer(dc)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("creating EndpointSlice discoverer: %w", err)
 	}
 
 	return &discovery.EndpointsDiscovererWithTimeout{

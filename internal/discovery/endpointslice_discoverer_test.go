@@ -15,6 +15,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
 )
 
+//nolint:ireturn // Returning interface is correct for test helper.
 func newTestEndpointSliceDiscoverer(t *testing.T, config discovery.EndpointsDiscoveryConfig) discovery.EndpointsDiscoverer {
 	t.Helper()
 	discoverer, stopCh, err := discovery.NewEndpointSliceDiscoverer(config)
