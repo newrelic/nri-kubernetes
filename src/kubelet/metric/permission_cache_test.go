@@ -8,6 +8,8 @@ import (
 )
 
 func TestPermissionCache_Basic(t *testing.T) {
+	t.Parallel()
+
 	cache := NewPermissionCache(5 * time.Minute)
 
 	// Initially unknown
@@ -27,7 +29,9 @@ func TestPermissionCache_Basic(t *testing.T) {
 }
 
 func TestPermissionCache_TTLExpiry(t *testing.T) {
-	// Use very short TTL for testing
+	t.Parallel()
+
+	// Use very short TTL for testing.
 	cache := NewPermissionCache(50 * time.Millisecond)
 
 	cache.SetDenied("/flagz", "403 Forbidden")
@@ -42,6 +46,8 @@ func TestPermissionCache_TTLExpiry(t *testing.T) {
 }
 
 func TestPermissionCache_DisabledWithZeroTTL(t *testing.T) {
+	t.Parallel()
+
 	cache := NewPermissionCache(0)
 
 	// With zero TTL, caching is disabled
@@ -51,6 +57,8 @@ func TestPermissionCache_DisabledWithZeroTTL(t *testing.T) {
 }
 
 func TestPermissionCache_NilSafe(t *testing.T) {
+	t.Parallel()
+
 	var cache *PermissionCache
 
 	// Should not panic
@@ -63,6 +71,8 @@ func TestPermissionCache_NilSafe(t *testing.T) {
 }
 
 func TestPermissionCache_Clear(t *testing.T) {
+	t.Parallel()
+
 	cache := NewPermissionCache(5 * time.Minute)
 
 	cache.SetDenied("/flagz", "403 Forbidden")
@@ -77,6 +87,8 @@ func TestPermissionCache_Clear(t *testing.T) {
 }
 
 func TestPermissionCache_MultipleEndpoints(t *testing.T) {
+	t.Parallel()
+
 	cache := NewPermissionCache(5 * time.Minute)
 
 	cache.SetAllowed("/configz")

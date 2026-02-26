@@ -8,9 +8,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+//nolint:funlen,maintidx // Test requires comprehensive metric coverage.
 func TestKubeletMetricsFetchFunc(t *testing.T) {
-	// Mock prometheus metric families for kubelet health metrics
-	mockFetcher := func(queries []prometheus.Query) ([]prometheus.MetricFamily, error) {
+	t.Parallel()
+
+	// Mock prometheus metric families for kubelet health metrics.
+	mockFetcher := func(_ []prometheus.Query) ([]prometheus.MetricFamily, error) {
 		return []prometheus.MetricFamily{
 			// PLEG metrics
 			{
@@ -308,8 +311,10 @@ func TestKubeletMetricsFetchFunc(t *testing.T) {
 }
 
 func TestKubeletMetricsFetchFunc_EmptyMetrics(t *testing.T) {
-	// Mock fetcher that returns empty metrics
-	mockFetcher := func(queries []prometheus.Query) ([]prometheus.MetricFamily, error) {
+	t.Parallel()
+
+	// Mock fetcher that returns empty metrics.
+	mockFetcher := func(_ []prometheus.Query) ([]prometheus.MetricFamily, error) {
 		return []prometheus.MetricFamily{}, nil
 	}
 
@@ -330,9 +335,11 @@ func TestKubeletMetricsFetchFunc_EmptyMetrics(t *testing.T) {
 }
 
 func TestKubeletHealthQueries(t *testing.T) {
-	// Verify that all important queries are present
+	t.Parallel()
+
+	// Verify that all important queries are present.
 	queryNames := make(map[string]bool)
-	for _, query := range kubeletHealthQueries {
+	for _, query := range GetKubeletHealthQueries() {
 		queryNames[query.MetricName] = true
 	}
 

@@ -42,9 +42,9 @@ func NewPermissionCache(ttl time.Duration) *PermissionCache {
 
 // Check returns the cached permission status for an endpoint.
 // Returns PermissionUnknown if:
-// - Caching is disabled (ttl=0)
-// - The entry doesn't exist
-// - The entry has expired
+// - Caching is disabled (ttl=0).
+// - The entry doesn't exist.
+// - The entry has expired.
 func (c *PermissionCache) Check(endpoint string) PermissionStatus {
 	if c == nil || c.ttl == 0 {
 		return PermissionUnknown

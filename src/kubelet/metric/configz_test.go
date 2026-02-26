@@ -1,6 +1,7 @@
 package metric
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -14,7 +15,8 @@ import (
 )
 
 func TestKubeletConfigFetcher_Fetch(t *testing.T) {
-	// Sample kubelet config response (simplified for testing)
+	t.Parallel()
+	// Sample kubelet config response (simplified for testing).
 	sampleConfig := kubeletConfigResponse{
 		ComponentConfig: KubeletConfigSnapshot{
 			MaxPods:                     intPtr(110),
@@ -43,9 +45,9 @@ func TestKubeletConfigFetcher_Fetch(t *testing.T) {
 				Mode: strPtr("Webhook"),
 			},
 			FeatureGates: map[string]bool{
-				"CPUManager":    true,
+				"CPUManager":                     true,
 				"RotateKubeletServerCertificate": true,
-				"SomeFeature":   false,
+				"SomeFeature":                    false,
 			},
 			ClusterDNS:    []string{"10.96.0.10"},
 			ClusterDomain: strPtr("cluster.local"),
@@ -58,7 +60,7 @@ func TestKubeletConfigFetcher_Fetch(t *testing.T) {
 	configJSON, err := json.Marshal(sampleConfig)
 	require.NoError(t, err)
 
-	// Create test server
+	// Create test server.
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, ConfigzPath, r.URL.Path)
 		w.WriteHeader(http.StatusOK)
@@ -66,19 +68,19 @@ func TestKubeletConfigFetcher_Fetch(t *testing.T) {
 	}))
 	defer server.Close()
 
-	// Create mock client
+	// Create mock client.
 	mockClient := &mockHTTPGetter{
 		server: server,
 	}
 
-	// Create fetcher
+	// Create fetcher.
 	fetcher := NewKubeletConfigFetcher(logutil.Discard, mockClient, "test-node")
 
-	// Fetch config
+	// Fetch config.
 	rawGroups, err := fetcher.Fetch()
 	require.NoError(t, err)
 
-	// Verify structure
+	// Verify structure.
 	require.NotNil(t, rawGroups)
 	nodeGroup, ok := rawGroups["node"]
 	require.True(t, ok, "node group should exist")
@@ -86,7 +88,7 @@ func TestKubeletConfigFetcher_Fetch(t *testing.T) {
 	nodeMetrics, ok := nodeGroup["test-node"]
 	require.True(t, ok, "test-node should exist in node group")
 
-	// Verify key metrics
+	// Verify key metrics.
 	assert.Equal(t, int32(110), nodeMetrics["kubeletMaxPods"])
 	assert.Equal(t, int64(4096), nodeMetrics["kubeletPodPidsLimit"])
 	assert.Equal(t, "static", nodeMetrics["kubeletCPUManagerPolicy"])
@@ -97,10 +99,10 @@ func TestKubeletConfigFetcher_Fetch(t *testing.T) {
 	assert.Equal(t, int32(0), nodeMetrics["kubeletReadOnlyPort"])
 	assert.Equal(t, false, nodeMetrics["kubeletReadOnlyPortEnabled"])
 
-	// Verify feature gates count
+	// Verify feature gates count.
 	assert.Equal(t, 2, nodeMetrics["kubeletFeatureGatesEnabledCount"])
 
-	// Verify JSON fields
+	// Verify JSON fields.
 	evictionHardJSON, ok := nodeMetrics["kubeletEvictionHard"].(string)
 	require.True(t, ok, "kubeletEvictionHard should be a JSON string")
 	var evictionHard map[string]string
@@ -108,14 +110,16 @@ func TestKubeletConfigFetcher_Fetch(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "100Mi", evictionHard["memory.available"])
 
-	// Verify fingerprint exists
+	// Verify fingerprint exists.
 	_, ok = nodeMetrics["kubeletConfigFingerprint"]
 	assert.True(t, ok, "config fingerprint should be present")
 }
 
+//nolint:dupl // Test structure is similar to other HTTP error tests but tests different component.
 func TestKubeletConfigFetcher_Fetch_HTTPError(t *testing.T) {
-	// Create test server that returns error
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	t.Parallel()
+	// Create test server that returns error.
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		_, _ = w.Write([]byte("Forbidden"))
 	}))
@@ -132,9 +136,11 @@ func TestKubeletConfigFetcher_Fetch_HTTPError(t *testing.T) {
 	assert.Contains(t, err.Error(), "returned status 403")
 }
 
+//nolint:dupl // Test structure is similar to other HTTP error tests but tests different component.
 func TestKubeletConfigFetcher_Fetch_InvalidJSON(t *testing.T) {
-	// Create test server that returns invalid JSON
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	t.Parallel()
+	// Create test server that returns invalid JSON.
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("not valid json"))
 	}))
@@ -152,74 +158,81 @@ func TestKubeletConfigFetcher_Fetch_InvalidJSON(t *testing.T) {
 }
 
 func TestCalculateConfigFingerprint(t *testing.T) {
+	t.Parallel()
 	config1 := &KubeletConfigSnapshot{
-		MaxPods:           intPtr(110),
-		CPUManagerPolicy:  strPtr("static"),
+		MaxPods:          intPtr(110),
+		CPUManagerPolicy: strPtr("static"),
 	}
 
 	config2 := &KubeletConfigSnapshot{
-		MaxPods:           intPtr(110),
-		CPUManagerPolicy:  strPtr("static"),
+		MaxPods:          intPtr(110),
+		CPUManagerPolicy: strPtr("static"),
 	}
 
 	config3 := &KubeletConfigSnapshot{
-		MaxPods:           intPtr(100), // Different value
-		CPUManagerPolicy:  strPtr("static"),
+		MaxPods:          intPtr(100), // Different value.
+		CPUManagerPolicy: strPtr("static"),
 	}
 
 	fetcher := NewKubeletConfigFetcher(logutil.Discard, nil, "test-node")
 
-	fp1, err := fetcher.calculateConfigFingerprint(config1)
-	require.NoError(t, err)
+	fp1 := fetcher.calculateConfigFingerprint(config1)
+	fp2 := fetcher.calculateConfigFingerprint(config2)
+	fp3 := fetcher.calculateConfigFingerprint(config3)
 
-	fp2, err := fetcher.calculateConfigFingerprint(config2)
-	require.NoError(t, err)
-
-	fp3, err := fetcher.calculateConfigFingerprint(config3)
-	require.NoError(t, err)
-
-	// Same configs should have same fingerprint
+	// Same configs should have same fingerprint.
 	assert.Equal(t, fp1, fp2)
 
-	// Different configs should have different fingerprints
+	// Different configs should have different fingerprints.
 	assert.NotEqual(t, fp1, fp3)
 }
 
 func TestConfigToRawMetrics_EmptyConfig(t *testing.T) {
+	t.Parallel()
 	config := &KubeletConfigSnapshot{}
 	fetcher := NewKubeletConfigFetcher(logutil.Discard, nil, "test-node")
 
-	metrics, err := fetcher.configToRawMetrics(config)
-	require.NoError(t, err)
+	metrics := fetcher.configToRawMetrics(config)
 
-	// Should still have fingerprint even for empty config
+	// Should still have fingerprint even for empty config.
 	_, ok := metrics["kubeletConfigFingerprint"]
 	assert.True(t, ok)
 }
 
-// Mock HTTP client for testing
+// Mock HTTP client for testing.
 type mockHTTPGetter struct {
 	server *httptest.Server
 }
 
+//nolint:wrapcheck // Test mock does not need error wrapping.
 func (m *mockHTTPGetter) Get(urlPath string) (*http.Response, error) {
-	// Build full URL
+	// Build full URL.
 	fullURL := fmt.Sprintf("%s%s", m.server.URL, urlPath)
-	return http.Get(fullURL)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, fullURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	return http.DefaultClient.Do(req)
 }
 
+//nolint:wrapcheck // Test mock does not need error wrapping.
 func (m *mockHTTPGetter) GetURI(uri url.URL) (*http.Response, error) {
-	return http.Get(uri.String())
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, uri.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	return http.DefaultClient.Do(req)
 }
 
+//nolint:wrapcheck // Test mock does not need error wrapping.
 func (m *mockHTTPGetter) Do(req *http.Request) (*http.Response, error) {
-	// Build full URL by replacing the request URL with the test server URL
+	// Build full URL by replacing the request URL with the test server URL.
 	fullURL := fmt.Sprintf("%s%s", m.server.URL, req.URL.Path)
 	req.URL, _ = url.Parse(fullURL)
 	return http.DefaultClient.Do(req)
 }
 
-// Helper functions for pointer creation
+// Helper functions for pointer creation.
 func intPtr(i int32) *int32 {
 	return &i
 }
