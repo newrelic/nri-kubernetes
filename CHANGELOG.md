@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### bugfix
+- Use different metric to get deployment name for ReplicaSet @jamescripter [#1421](https://github.com/newrelic/nri-kubernetes/pull/1421)
+
 ## v3.54.0 - 2026-02-16
 
 ### 🚀 Enhancements
