@@ -9,7 +9,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
 )
 
-const DEPLOYMENT_OWNER_KIND string = "Deployment"
+const deploymentOwnerKind string = "Deployment"
 
 // GetDeploymentNameForReplicaSet returns the name of the deployment that owns
 // a ReplicaSet, or returns an error if the owner is not a deployment.
@@ -25,8 +25,8 @@ func GetDeploymentNameForReplicaSet() definition.FetchFunc {
 			return nil, errors.New("error retrieving deployment name for replica set. failed to convert owner_kind field to string")
 		}
 
-		if ownerKind != DEPLOYMENT_OWNER_KIND {
-			return nil, fmt.Errorf("error retrieving deployment name for replica set. its owner_kind ('%s') is not '%s'", ownerKind, DEPLOYMENT_OWNER_KIND)
+		if ownerKind != deploymentOwnerKind {
+			return nil, fmt.Errorf("error retrieving deployment name for replica set. its owner_kind ('%s') is not '%s'", ownerKind, deploymentOwnerKind)
 		}
 
 		ownerNameRawVal, err := prometheus.FromLabelValue("kube_replicaset_owner", "owner_name")(groupLabel, entityID, groups)
