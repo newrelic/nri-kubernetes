@@ -9,7 +9,17 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
 )
 
-const deploymentOwnerKind string = "Deployment"
+var (
+	getDeploymentNameForReplicaSetErrTemplate = "error retrieving deployment name for replica set: %w"
+
+	ErrOwnerKindInvalid     = errors.New("failed to convert owner_kind field to string")
+	ErrNotOwnedByDeployment = errors.New("the owner_kind of this ReplicaSet is not Deployment")
+	ErrOwnerNameInvalid     = errors.New("failed to convert owner_name field to string")
+	ErrOwnerNameEmpty       = errors.New("owner_name field is empty")
+)
+
+const ownerKindForDeployment string = "Deployment"
+const errorTemplateForReplicaSetDeploymentNameRetrieval string = "error retrieving deployment name for replica set: %w"
 
 // GetDeploymentNameForReplicaSet returns the name of the deployment that owns
 // a ReplicaSet, or returns an error if the owner is not a deployment.
@@ -22,11 +32,11 @@ func GetDeploymentNameForReplicaSet() definition.FetchFunc {
 
 		ownerKind, ok := ownerKindRawVal.(string)
 		if !ok {
-			return nil, errors.New("error retrieving deployment name for replica set. failed to convert owner_kind field to string")
+			return nil, fmt.Errorf(getDeploymentNameForReplicaSetErrTemplate, ErrOwnerKindInvalid)
 		}
 
-		if ownerKind != deploymentOwnerKind {
-			return nil, fmt.Errorf("error retrieving deployment name for replica set. its owner_kind ('%s') is not '%s'", ownerKind, deploymentOwnerKind)
+		if ownerKind != ownerKindForDeployment {
+			return nil, fmt.Errorf("error retrieving deployment name for replica set. its owner_kind ('%s') is not '%s'", ownerKind, ownerKindForDeployment)
 		}
 
 		ownerNameRawVal, err := prometheus.FromLabelValue("kube_replicaset_owner", "owner_name")(groupLabel, entityID, groups)
@@ -36,11 +46,11 @@ func GetDeploymentNameForReplicaSet() definition.FetchFunc {
 
 		ownerName, ok := ownerNameRawVal.(string)
 		if !ok {
-			return nil, errors.New("error retrieving deployment name for replica set. failed to convert owner_name field to string")
+			return nil, fmt.Errorf("error retrieving deployment name for replica set. failed to convert owner_name field to string")
 		}
 
 		if ownerName == "" {
-			return nil, errors.New("error retrieving deployment name for replica set. owner_name field is empty")
+			return nil, fmt.Errorf("error retrieving deployment name for replica set. owner_name field is empty")
 		}
 
 		return ownerName, nil
