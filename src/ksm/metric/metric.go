@@ -27,7 +27,7 @@ func GetDeploymentNameForReplicaSet() definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 		ownerKindRawVal, err := prometheus.FromLabelValue("kube_replicaset_owner", "owner_kind")(groupLabel, entityID, groups)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s. %w", getDeploymentNameForReplicaSetErrTemplate, err)
 		}
 
 		ownerKind, ok := ownerKindRawVal.(string)
