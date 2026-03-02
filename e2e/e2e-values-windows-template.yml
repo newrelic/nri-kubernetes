@@ -1,8 +1,19 @@
 images:
   pullSecrets:
     - name: nri-kubernetes-internal-dockerhub
+  integration:
+    repository: newrelic/nri-kubernetes-internal
+    tag: $LINUX_TAG
 privileged: true
 enableWindows: true
+
+# Prevent the Linux kubelet DaemonSet from scheduling on any node.
+# A Linux node is required to run KSM, but we don't want Linux kubelet
+# metrics in the keyset — otherwise the metrics check can pass on Linux
+# data even when the Windows kubelet scraper is broken.
+kubelet:
+  nodeSelector:
+    fake-label-no-linux: "true"
 
 windowsOsList:
 #  # Limited support for only LTSC2019/LTSC2022: https://kubernetes.io/docs/setup/production-environment/windows/intro-windows-in-kubernetes/#windows-os-version-support

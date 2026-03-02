@@ -118,3 +118,41 @@ jobs:
           echo "Agent version: $agentVersion"
 
           docker push newrelic/infrastructure-windows:$agentVersion-$matrixTag
+
+  scan:
+    name: Trivy scan for
+    needs: [ check-version-change, build ]
+    strategy:
+      fail-fast: false
+      matrix:
+        windows:
+          - tag: ltsc2022
+    runs-on: ubuntu-latest
+    env:
+      IMAGE: newrelic/infrastructure-windows:${{ needs.check-version-change.outputs.new_agent_version }}-${{ matrix.windows.tag }}
+    steps:
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
+
+      - name: Run Trivy vulnerability scanner
+        id: trivy-scan
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@0.34.1
+        with:
+          image-ref: ${{ env.IMAGE }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'HIGH,CRITICAL'
+          scanners: 'vuln'
+
+      - name: Notify Slack on vulnerabilities found
+        if: steps.trivy-scan.outcome == 'failure'
+        uses: archive/github-actions-slack@v2.10.1
+        with:
+          slack-bot-user-oauth-access-token: ${{ secrets.K8S_AGENTS_SLACK_TOKEN }}
+          slack-channel: ${{ secrets.K8S_AGENTS_SLACK_CHANNEL }}
+          slack-text: "⚠️ `${{ github.repository }}`: Trivy found HIGH/CRITICAL vulnerabilities in `${{ env.IMAGE }}`. <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View scan results>."

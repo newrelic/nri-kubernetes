@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### bugfix
 - Account for counter resets when computing deltas for CPU CFS periods @jamescripter [#1375](https://github.com/newrelic/nri-kubernetes/pull/1375)
 
+## v3.55.0 - 2026-03-02
+
+### 🚀 Enhancements
+- Migrate KSM endpoint discovery from deprecated v1 Endpoints API to stable EndpointSlice API (discovery.k8s.io/v1) @TmNguyen12[#1413](https://github.com/newrelic/nri-kubernetes/pull/1413)
+
 ## v3.54.0 - 2026-02-16
 
 ### 🚀 Enhancements

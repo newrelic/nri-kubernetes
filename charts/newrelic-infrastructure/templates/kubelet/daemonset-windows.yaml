@@ -141,6 +141,11 @@ spec:
             - name: "NRIA_OVERRIDE_HOST_ROOT"
               value: ""
 
+            # Windows agent runs in secure forward only mode: it receives data from the integration sidecar
+            # rather than running its own plugins or host discovery.
+            - name: "NRIA_IS_SECURE_FORWARD_ONLY"
+              value: "true"
+
             - name: "NRI_KUBERNETES_NODE_NAME"
               valueFrom:
                 fieldRef:
