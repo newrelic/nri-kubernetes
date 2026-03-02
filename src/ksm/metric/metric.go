@@ -22,7 +22,7 @@ var (
 )
 
 // GetDeploymentNameForReplicaSet returns the name of the deployment that owns
-// a ReplicaSet, or returns an error if the owner is not a deployment.
+// a ReplicaSet, an error if the owner is not a deployment.
 func GetDeploymentNameForReplicaSet() definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 		ownerKindRawVal, err := prometheus.FromLabelValue("kube_replicaset_owner", "owner_kind")(groupLabel, entityID, groups)
