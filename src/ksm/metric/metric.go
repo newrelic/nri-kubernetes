@@ -9,10 +9,7 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
 )
 
-const (
-	getDeploymentNameForReplicaSetErrTemplate = "error retrieving deployment name for replica set"
-	deploymentOwnerKind                       = "Deployment"
-)
+const deploymentOwnerKind = "Deployment"
 
 var (
 	ErrOwnerKindInvalid     = errors.New("failed to convert owner_kind of ReplicaSet to string")
@@ -27,30 +24,30 @@ func GetDeploymentNameForReplicaSet() definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 		ownerKindRawVal, err := prometheus.FromLabelValue("kube_replicaset_owner", "owner_kind")(groupLabel, entityID, groups)
 		if err != nil {
-			return nil, fmt.Errorf("%s. %w", getDeploymentNameForReplicaSetErrTemplate, err)
+			return nil, fmt.Errorf("failed to fetch owner kind: %w", err)
 		}
 
 		ownerKind, ok := ownerKindRawVal.(string)
 		if !ok {
-			return nil, fmt.Errorf("%s. %w", getDeploymentNameForReplicaSetErrTemplate, ErrOwnerKindInvalid)
+			return nil, ErrOwnerKindInvalid
 		}
 
 		if ownerKind != deploymentOwnerKind {
-			return nil, fmt.Errorf("%s. %w", getDeploymentNameForReplicaSetErrTemplate, ErrNotOwnedByDeployment)
+			return nil, ErrNotOwnedByDeployment
 		}
 
 		ownerNameRawVal, err := prometheus.FromLabelValue("kube_replicaset_owner", "owner_name")(groupLabel, entityID, groups)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to fetch owner name: %w", err)
 		}
 
 		ownerName, ok := ownerNameRawVal.(string)
 		if !ok {
-			return nil, fmt.Errorf("%s. %w", getDeploymentNameForReplicaSetErrTemplate, ErrOwnerNameInvalid)
+			return nil, ErrOwnerNameInvalid
 		}
 
 		if ownerName == "" {
-			return nil, fmt.Errorf("%s. %w", getDeploymentNameForReplicaSetErrTemplate, ErrOwnerNameEmpty)
+			return nil, ErrOwnerNameEmpty
 		}
 
 		return ownerName, nil
