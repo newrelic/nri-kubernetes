@@ -101,7 +101,7 @@ func TestGetDeploymentNameForReplicaSet_ErrorOnEmptyData(t *testing.T) {
 		},
 	}
 	fetchedValue, err := GetDeploymentNameForReplicaSet()("replicaset", "kube-state-metrics-4044341274", raw)
-	assert.EqualError(t, err, "error retrieving deployment name for replica set. owner_name of ReplicaSet is empty")
+	assert.EqualError(t, err, "owner_name of ReplicaSet is empty")
 	assert.Empty(t, fetchedValue)
 }
 
