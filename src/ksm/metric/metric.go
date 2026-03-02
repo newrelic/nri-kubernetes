@@ -10,16 +10,14 @@ import (
 )
 
 var (
-	getDeploymentNameForReplicaSetErrTemplate = "error retrieving deployment name for replica set: %w"
+	getDeploymentNameForReplicaSetErrTemplate        = "error retrieving deployment name for replica set: %w"
+	deploymentOwnerKind                       string = "Deployment"
 
-	ErrOwnerKindInvalid     = errors.New("failed to convert owner_kind field to string")
-	ErrNotOwnedByDeployment = errors.New("the owner_kind of this ReplicaSet is not Deployment")
-	ErrOwnerNameInvalid     = errors.New("failed to convert owner_name field to string")
-	ErrOwnerNameEmpty       = errors.New("owner_name field is empty")
+	ErrOwnerKindInvalid     = errors.New("failed to convert owner_kind of ReplicaSet to string")
+	ErrNotOwnedByDeployment = errors.New("owner_kind of ReplicaSet is not " + deploymentOwnerKind)
+	ErrOwnerNameInvalid     = errors.New("failed to convert owner_name of ReplicaSet to string")
+	ErrOwnerNameEmpty       = errors.New("owner_name of ReplicaSet is empty")
 )
-
-const ownerKindForDeployment string = "Deployment"
-const errorTemplateForReplicaSetDeploymentNameRetrieval string = "error retrieving deployment name for replica set: %w"
 
 // GetDeploymentNameForReplicaSet returns the name of the deployment that owns
 // a ReplicaSet, or returns an error if the owner is not a deployment.
@@ -32,11 +30,11 @@ func GetDeploymentNameForReplicaSet() definition.FetchFunc {
 
 		ownerKind, ok := ownerKindRawVal.(string)
 		if !ok {
-			return nil, fmt.Errorf(getDeploymentNameForReplicaSetErrTemplate, ErrOwnerKindInvalid)
+			return nil, fmt.Errorf("%s: %w", getDeploymentNameForReplicaSetErrTemplate, ErrOwnerKindInvalid)
 		}
 
-		if ownerKind != ownerKindForDeployment {
-			return nil, fmt.Errorf("error retrieving deployment name for replica set. its owner_kind ('%s') is not '%s'", ownerKind, ownerKindForDeployment)
+		if ownerKind != deploymentOwnerKind {
+			return nil, fmt.Errorf("%s: %w", getDeploymentNameForReplicaSetErrTemplate, ErrNotOwnedByDeployment)
 		}
 
 		ownerNameRawVal, err := prometheus.FromLabelValue("kube_replicaset_owner", "owner_name")(groupLabel, entityID, groups)
@@ -46,11 +44,11 @@ func GetDeploymentNameForReplicaSet() definition.FetchFunc {
 
 		ownerName, ok := ownerNameRawVal.(string)
 		if !ok {
-			return nil, fmt.Errorf("error retrieving deployment name for replica set. failed to convert owner_name field to string")
+			return nil, fmt.Errorf("%s: %w", getDeploymentNameForReplicaSetErrTemplate, ErrOwnerNameInvalid)
 		}
 
 		if ownerName == "" {
-			return nil, fmt.Errorf("error retrieving deployment name for replica set. owner_name field is empty")
+			return nil, fmt.Errorf("%s: %w", getDeploymentNameForReplicaSetErrTemplate, ErrOwnerNameEmpty)
 		}
 
 		return ownerName, nil
