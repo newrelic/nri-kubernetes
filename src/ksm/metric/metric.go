@@ -9,10 +9,12 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
 )
 
-var (
-	getDeploymentNameForReplicaSetErrTemplate        = "error retrieving deployment name for replica set: %w"
-	deploymentOwnerKind                       string = "Deployment"
+const (
+	getDeploymentNameForReplicaSetErrTemplate = "error retrieving deployment name for replica set: %w"
+	deploymentOwnerKind                       = "Deployment"
+)
 
+var (
 	ErrOwnerKindInvalid     = errors.New("failed to convert owner_kind of ReplicaSet to string")
 	ErrNotOwnedByDeployment = errors.New("owner_kind of ReplicaSet is not " + deploymentOwnerKind)
 	ErrOwnerNameInvalid     = errors.New("failed to convert owner_name of ReplicaSet to string")
