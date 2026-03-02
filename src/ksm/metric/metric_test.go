@@ -62,6 +62,16 @@ var rawGroupWithReplicaSet = definition.RawGroups{
 					"replicaset": "kube-state-metrics-4044341274",
 				},
 			},
+			"kube_replicaset_owner": prometheus.Metric{
+				Value: prometheus.GaugeValue(1),
+				Labels: map[string]string{
+					"namespace":           "kube-system",
+					"replicaset":          "kube-state-metrics-4044341274",
+					"owner_kind":          "Deployment",
+					"owner_name":          "kube-state-metrics",
+					"owner_is_controller": "true",
+				},
+			},
 		},
 	},
 }
@@ -77,18 +87,21 @@ func TestGetDeploymentNameForReplicaSet_ErrorOnEmptyData(t *testing.T) {
 	raw := definition.RawGroups{
 		"replicaset": {
 			"kube-state-metrics-4044341274": definition.RawMetrics{
-				"kube_replicaset_created": prometheus.Metric{
-					Value: prometheus.GaugeValue(1507117436),
+				"kube_replicaset_owner": prometheus.Metric{
+					Value: prometheus.GaugeValue(1),
 					Labels: map[string]string{
-						"namespace":  "kube-system",
-						"replicaset": "",
+						"namespace":           "kube-system",
+						"replicaset":          "kube-state-metrics-4044341274",
+						"owner_kind":          "Deployment",
+						"owner_name":          "",
+						"owner_is_controller": "true",
 					},
 				},
 			},
 		},
 	}
 	fetchedValue, err := GetDeploymentNameForReplicaSet()("replicaset", "kube-state-metrics-4044341274", raw)
-	assert.EqualError(t, err, "error generating deployment name for replica set. replicaset field is empty")
+	assert.EqualError(t, err, "error retrieving deployment name for replica set. owner_name of ReplicaSet is empty")
 	assert.Empty(t, fetchedValue)
 }
 

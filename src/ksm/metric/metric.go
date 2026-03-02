@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	getDeploymentNameForReplicaSetErrTemplate = "error retrieving deployment name for replica set: %w"
+	getDeploymentNameForReplicaSetErrTemplate = "error retrieving deployment name for replica set"
 	deploymentOwnerKind                       = "Deployment"
 )
 
@@ -32,11 +32,11 @@ func GetDeploymentNameForReplicaSet() definition.FetchFunc {
 
 		ownerKind, ok := ownerKindRawVal.(string)
 		if !ok {
-			return nil, fmt.Errorf("%s: %w", getDeploymentNameForReplicaSetErrTemplate, ErrOwnerKindInvalid)
+			return nil, fmt.Errorf("%s. %w", getDeploymentNameForReplicaSetErrTemplate, ErrOwnerKindInvalid)
 		}
 
 		if ownerKind != deploymentOwnerKind {
-			return nil, fmt.Errorf("%s: %w", getDeploymentNameForReplicaSetErrTemplate, ErrNotOwnedByDeployment)
+			return nil, fmt.Errorf("%s. %w", getDeploymentNameForReplicaSetErrTemplate, ErrNotOwnedByDeployment)
 		}
 
 		ownerNameRawVal, err := prometheus.FromLabelValue("kube_replicaset_owner", "owner_name")(groupLabel, entityID, groups)
@@ -46,11 +46,11 @@ func GetDeploymentNameForReplicaSet() definition.FetchFunc {
 
 		ownerName, ok := ownerNameRawVal.(string)
 		if !ok {
-			return nil, fmt.Errorf("%s: %w", getDeploymentNameForReplicaSetErrTemplate, ErrOwnerNameInvalid)
+			return nil, fmt.Errorf("%s. %w", getDeploymentNameForReplicaSetErrTemplate, ErrOwnerNameInvalid)
 		}
 
 		if ownerName == "" {
-			return nil, fmt.Errorf("%s: %w", getDeploymentNameForReplicaSetErrTemplate, ErrOwnerNameEmpty)
+			return nil, fmt.Errorf("%s. %w", getDeploymentNameForReplicaSetErrTemplate, ErrOwnerNameEmpty)
 		}
 
 		return ownerName, nil
