@@ -1,6 +1,7 @@
 package metric
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -101,7 +102,7 @@ func TestGetDeploymentNameForReplicaSet_ErrorOnEmptyData(t *testing.T) {
 		},
 	}
 	fetchedValue, err := GetDeploymentNameForReplicaSet()("replicaset", "kube-state-metrics-4044341274", raw)
-	assert.EqualError(t, err, "owner_name of ReplicaSet is empty")
+	assert.True(t, errors.Is(err, ErrOwnerNameEmpty))
 	assert.Empty(t, fetchedValue)
 }
 
