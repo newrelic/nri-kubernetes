@@ -84,6 +84,7 @@ func TestGetDeploymentNameForReplicaSet_ValidName(t *testing.T) {
 }
 
 func TestGetDeploymentNameForReplicaSet_ErrorOnNonDeploymentOwnerKind(t *testing.T) {
+	t.Parallel()
 	raw := definition.RawGroups{
 		"replicaset": {
 			"kube-state-metrics-4044341274": definition.RawMetrics{
@@ -106,6 +107,7 @@ func TestGetDeploymentNameForReplicaSet_ErrorOnNonDeploymentOwnerKind(t *testing
 }
 
 func TestGetDeploymentNameForReplicaSet_ErrorOnEmptyOwnerName(t *testing.T) {
+	t.Parallel()
 	raw := definition.RawGroups{
 		"replicaset": {
 			"kube-state-metrics-4044341274": definition.RawMetrics{
@@ -127,7 +129,8 @@ func TestGetDeploymentNameForReplicaSet_ErrorOnEmptyOwnerName(t *testing.T) {
 	assert.Empty(t, fetchedValue)
 }
 
-func TestGetDeploymentNameForReplicaSet_OnMissingOwnerMetric(t *testing.T) {
+func TestGetDeploymentNameForReplicaSet_ErrorOnMissingOwnerMetric(t *testing.T) {
+	t.Parallel()
 	raw := definition.RawGroups{
 		"replicaset": {
 			"kube-state-metrics-4044341274": definition.RawMetrics{
@@ -146,7 +149,8 @@ func TestGetDeploymentNameForReplicaSet_OnMissingOwnerMetric(t *testing.T) {
 	assert.Empty(t, fetchedValue)
 }
 
-func TestGetDeploymentNameForReplicaSet_OnMissingOwnerNameMetric(t *testing.T) {
+func TestGetDeploymentNameForReplicaSet_ErrorOnMissingOwnerNameMetric(t *testing.T) {
+	t.Parallel()
 	raw := definition.RawGroups{
 		"replicaset": {
 			"kube-state-metrics-4044341274": definition.RawMetrics{
