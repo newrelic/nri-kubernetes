@@ -83,7 +83,29 @@ func TestGetDeploymentNameForReplicaSet_ValidName(t *testing.T) {
 	assert.Equal(t, expectedValue, fetchedValue)
 }
 
-func TestGetDeploymentNameForReplicaSet_ErrorOnEmptyData(t *testing.T) {
+func TestGetDeploymentNameForReplicaSet_ErrorOnNonDeploymentOwnerKind(t *testing.T) {
+	raw := definition.RawGroups{
+		"replicaset": {
+			"kube-state-metrics-4044341274": definition.RawMetrics{
+				"kube_replicaset_owner": prometheus.Metric{
+					Value: prometheus.GaugeValue(1),
+					Labels: map[string]string{
+						"namespace":           "kube-system",
+						"replicaset":          "kube-state-metrics-4044341274",
+						"owner_kind":          "Rollout", // like argo rollout
+						"owner_name":          "rollout-jf9sdja",
+						"owner_is_controller": "true",
+					},
+				},
+			},
+		},
+	}
+	fetchedValue, err := GetDeploymentNameForReplicaSet()("replicaset", "kube-state-metrics-4044341274", raw)
+	assert.EqualError(t, err, "owner_kind of ReplicaSet is not "+deploymentOwnerKind)
+	assert.Empty(t, fetchedValue)
+}
+
+func TestGetDeploymentNameForReplicaSet_ErrorOnEmptyOwnerName(t *testing.T) {
 	raw := definition.RawGroups{
 		"replicaset": {
 			"kube-state-metrics-4044341274": definition.RawMetrics{
