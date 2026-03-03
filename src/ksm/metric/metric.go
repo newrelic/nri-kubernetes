@@ -24,7 +24,7 @@ func GetDeploymentNameForReplicaSet() definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
 		ownerKindRawVal, err := prometheus.FromLabelValue("kube_replicaset_owner", "owner_kind")(groupLabel, entityID, groups)
 		if err != nil {
-			return nil, fmt.Errorf("failed to fetch owner kind: %w", err)
+			return nil, fmt.Errorf("failed to fetch owner_kind of ReplicaSet: %w", err)
 		}
 
 		ownerKind, ok := ownerKindRawVal.(string)
@@ -38,7 +38,7 @@ func GetDeploymentNameForReplicaSet() definition.FetchFunc {
 
 		ownerNameRawVal, err := prometheus.FromLabelValue("kube_replicaset_owner", "owner_name")(groupLabel, entityID, groups)
 		if err != nil {
-			return nil, fmt.Errorf("failed to fetch owner name: %w", err)
+			return nil, fmt.Errorf("failed to fetch owner_name of ReplicaSet: %w", err)
 		}
 
 		ownerName, ok := ownerNameRawVal.(string)

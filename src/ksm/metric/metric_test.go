@@ -127,6 +127,52 @@ func TestGetDeploymentNameForReplicaSet_ErrorOnEmptyOwnerName(t *testing.T) {
 	assert.Empty(t, fetchedValue)
 }
 
+func TestGetDeploymentNameForReplicaSet_OnMissingOwnerMetric(t *testing.T) {
+	raw := definition.RawGroups{
+		"replicaset": {
+			"kube-state-metrics-4044341274": definition.RawMetrics{
+				"kube_replicaset_created": prometheus.Metric{
+					Value: prometheus.GaugeValue(1),
+					Labels: map[string]string{
+						"namespace":  "kube-system",
+						"replicaset": "kube-state-metrics-4044341274",
+					},
+				},
+			},
+		},
+	}
+	fetchedValue, err := GetDeploymentNameForReplicaSet()("replicaset", "kube-state-metrics-4044341274", raw)
+	assert.EqualError(t, err, "failed to fetch owner_kind of ReplicaSet: metric \"kube_replicaset_owner\" not found")
+	assert.Empty(t, fetchedValue)
+}
+
+func TestGetDeploymentNameForReplicaSet_OnMissingOwnerNameMetric(t *testing.T) {
+	raw := definition.RawGroups{
+		"replicaset": {
+			"kube-state-metrics-4044341274": definition.RawMetrics{
+				"kube_replicaset_created": prometheus.Metric{
+					Value: prometheus.GaugeValue(1),
+					Labels: map[string]string{
+						"namespace":  "kube-system",
+						"replicaset": "kube-state-metrics-4044341274",
+					},
+				},
+				"kube_replicaset_owner": prometheus.Metric{
+					Value: prometheus.GaugeValue(1),
+					Labels: map[string]string{
+						"namespace":  "kube-system",
+						"replicaset": "kube-state-metrics-4044341274",
+						"owner_kind": "Deployment", // unexpected: this metric should have owner_name but it's missing
+					},
+				},
+			},
+		},
+	}
+	fetchedValue, err := GetDeploymentNameForReplicaSet()("replicaset", "kube-state-metrics-4044341274", raw)
+	assert.EqualError(t, err, "failed to fetch owner_name of ReplicaSet: metric \"kube_replicaset_owner\" not found")
+	assert.Empty(t, fetchedValue)
+}
+
 func TestGetDeploymentNameForPod_CreatedByReplicaSet(t *testing.T) {
 	expectedValue := "fluentd-elasticsearch"
 	fetchedValue, err := GetDeploymentNameForPod()("pod", "fluentd-elasticsearch-jnqb7", rawGroups)
