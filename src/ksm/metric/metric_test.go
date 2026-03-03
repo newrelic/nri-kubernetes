@@ -162,14 +162,15 @@ func TestGetDeploymentNameForReplicaSet_OnMissingOwnerNameMetric(t *testing.T) {
 					Labels: map[string]string{
 						"namespace":  "kube-system",
 						"replicaset": "kube-state-metrics-4044341274",
-						"owner_kind": "Deployment", // unexpected: this metric should have owner_name but it's missing
+						"owner_kind": "Deployment",
+						// unexpected: this metric should have owner_name but it's missing
 					},
 				},
 			},
 		},
 	}
 	fetchedValue, err := GetDeploymentNameForReplicaSet()("replicaset", "kube-state-metrics-4044341274", raw)
-	assert.EqualError(t, err, "failed to fetch owner_name of ReplicaSet: metric \"kube_replicaset_owner\" not found")
+	assert.EqualError(t, err, "failed to fetch owner_name of ReplicaSet: label \"owner_name\" not found on metric \"kube_replicaset_owner\": label not found on metric")
 	assert.Empty(t, fetchedValue)
 }
 
