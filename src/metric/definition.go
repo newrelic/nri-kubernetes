@@ -685,7 +685,7 @@ var KSMSpecs = definition.SpecGroups{
 			// namespace is here for backwards compatibility, we should use the namespaceName
 			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_replicaset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_replicaset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "deploymentName", ValueFunc: ksmMetric.GetDeploymentNameForReplicaSet(), Type: sdkMetric.ATTRIBUTE, Optional: true},
+			{Name: "deploymentName", ValueFunc: ksmMetric.GetDeploymentNameForReplicaSet, Type: sdkMetric.ATTRIBUTE, Optional: true},
 			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_replicaset_labels", "label"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "ownerName", ValueFunc: prometheus.FromLabelValue("kube_replicaset_owner", "owner_name"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "ownerKind", ValueFunc: prometheus.FromLabelValue("kube_replicaset_owner", "owner_kind"), Type: sdkMetric.ATTRIBUTE},
@@ -943,7 +943,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "isReady", ValueFunc: definition.Transform(fetchWithDefault(prometheus.FromLabelValue("kube_pod_status_ready", "condition"), "false"), toNumericBoolean), Type: sdkMetric.GAUGE},
 			{Name: "status", ValueFunc: prometheus.FromLabelValue("kube_pod_status_phase", "phase"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "isScheduled", ValueFunc: definition.Transform(prometheus.FromLabelValue("kube_pod_status_scheduled", "condition"), toNumericBoolean), Type: sdkMetric.GAUGE},
-			{Name: "deploymentName", ValueFunc: ksmMetric.GetDeploymentNameForPod(), Type: sdkMetric.ATTRIBUTE},
+			{Name: "deploymentName", ValueFunc: ksmMetric.GetDeploymentNameForPod, Type: sdkMetric.ATTRIBUTE},
 			{Name: "priorityClassName", ValueFunc: prometheus.FromLabelValue("kube_pod_info", "priority_class"), Type: sdkMetric.ATTRIBUTE, Optional: true},
 			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_pod_labels", "label"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "annotation.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_pod_annotations", "annotation"), Type: sdkMetric.ATTRIBUTE},

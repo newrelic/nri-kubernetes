@@ -78,7 +78,7 @@ var rawGroupWithReplicaSet = definition.RawGroups{
 
 func TestGetDeploymentNameForReplicaSet_ValidName(t *testing.T) {
 	expectedValue := "kube-state-metrics"
-	fetchedValue, err := GetDeploymentNameForReplicaSet()("replicaset", "kube-state-metrics-4044341274", rawGroupWithReplicaSet)
+	fetchedValue, err := GetDeploymentNameForReplicaSet("replicaset", "kube-state-metrics-4044341274", rawGroupWithReplicaSet)
 	assert.Nil(t, err)
 	assert.Equal(t, expectedValue, fetchedValue)
 }
@@ -101,7 +101,7 @@ func TestGetDeploymentNameForReplicaSet_ErrorOnNonDeploymentOwnerKind(t *testing
 			},
 		},
 	}
-	fetchedValue, err := GetDeploymentNameForReplicaSet()("replicaset", "kube-state-metrics-4044341274", raw)
+	fetchedValue, err := GetDeploymentNameForReplicaSet("replicaset", "kube-state-metrics-4044341274", raw)
 	assert.EqualError(t, err, "owner_kind of ReplicaSet is not "+deploymentOwnerKind)
 	assert.Empty(t, fetchedValue)
 }
@@ -124,7 +124,7 @@ func TestGetDeploymentNameForReplicaSet_ErrorOnEmptyOwnerName(t *testing.T) {
 			},
 		},
 	}
-	fetchedValue, err := GetDeploymentNameForReplicaSet()("replicaset", "kube-state-metrics-4044341274", raw)
+	fetchedValue, err := GetDeploymentNameForReplicaSet("replicaset", "kube-state-metrics-4044341274", raw)
 	assert.EqualError(t, err, "owner_name of ReplicaSet is empty")
 	assert.Empty(t, fetchedValue)
 }
@@ -144,7 +144,7 @@ func TestGetDeploymentNameForReplicaSet_ErrorOnMissingOwnerMetric(t *testing.T) 
 			},
 		},
 	}
-	fetchedValue, err := GetDeploymentNameForReplicaSet()("replicaset", "kube-state-metrics-4044341274", raw)
+	fetchedValue, err := GetDeploymentNameForReplicaSet("replicaset", "kube-state-metrics-4044341274", raw)
 	assert.EqualError(t, err, "failed to fetch owner_kind of ReplicaSet: metric \"kube_replicaset_owner\" not found")
 	assert.Empty(t, fetchedValue)
 }
@@ -173,14 +173,14 @@ func TestGetDeploymentNameForReplicaSet_ErrorOnMissingOwnerNameMetric(t *testing
 			},
 		},
 	}
-	fetchedValue, err := GetDeploymentNameForReplicaSet()("replicaset", "kube-state-metrics-4044341274", raw)
+	fetchedValue, err := GetDeploymentNameForReplicaSet("replicaset", "kube-state-metrics-4044341274", raw)
 	assert.EqualError(t, err, "failed to fetch owner_name of ReplicaSet: label \"owner_name\" not found on metric \"kube_replicaset_owner\": label not found on metric")
 	assert.Empty(t, fetchedValue)
 }
 
 func TestGetDeploymentNameForPod_CreatedByReplicaSet(t *testing.T) {
 	expectedValue := "fluentd-elasticsearch"
-	fetchedValue, err := GetDeploymentNameForPod()("pod", "fluentd-elasticsearch-jnqb7", rawGroups)
+	fetchedValue, err := GetDeploymentNameForPod("pod", "fluentd-elasticsearch-jnqb7", rawGroups)
 	assert.Nil(t, err)
 	assert.Equal(t, expectedValue, fetchedValue)
 }
@@ -201,7 +201,7 @@ func TestGetDeploymentNameForPod_NotCreatedByReplicaSet(t *testing.T) {
 		},
 	}
 
-	fetchedValue, err := GetDeploymentNameForPod()("pod", rawEntityID, raw)
+	fetchedValue, err := GetDeploymentNameForPod("pod", rawEntityID, raw)
 	assert.Nil(t, err)
 	assert.Empty(t, fetchedValue)
 }
@@ -222,7 +222,7 @@ func TestGetDeploymentNameForPod_ErrorOnEmptyData(t *testing.T) {
 		},
 	}
 
-	fetchedValue, err := GetDeploymentNameForPod()("pod", rawEntityID, raw)
+	fetchedValue, err := GetDeploymentNameForPod("pod", rawEntityID, raw)
 	assert.EqualError(t, err, "error generating deployment name for pod. created_by_kind field is empty")
 	assert.Empty(t, fetchedValue)
 
@@ -235,7 +235,7 @@ func TestGetDeploymentNameForPod_ErrorOnEmptyData(t *testing.T) {
 
 	raw["pod"]["kube-addon-manager-minikube"]["kube_pod_info"] = m
 
-	fetchedValue, err = GetDeploymentNameForPod()("pod", rawEntityID, raw)
+	fetchedValue, err = GetDeploymentNameForPod("pod", rawEntityID, raw)
 	assert.EqualError(t, err, "error generating deployment name for pod. created_by_name field is empty")
 	assert.Empty(t, fetchedValue)
 }
