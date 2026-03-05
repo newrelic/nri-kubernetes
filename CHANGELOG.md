@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### bugfix
+- Remove unnecesary factory function wrappers @jamescripter [#1429](https://github.com/newrelic/nri-kubernetes/pull/1429)
+
+### bugfix
 - Use different metric to get deployment name for ReplicaSet @jamescripter [#1421](https://github.com/newrelic/nri-kubernetes/pull/1421)
 
 ### bugfix
