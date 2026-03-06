@@ -685,7 +685,7 @@ var KSMSpecs = definition.SpecGroups{
 			// namespace is here for backwards compatibility, we should use the namespaceName
 			{Name: "namespace", ValueFunc: prometheus.FromLabelValue("kube_replicaset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "namespaceName", ValueFunc: prometheus.FromLabelValue("kube_replicaset_created", "namespace"), Type: sdkMetric.ATTRIBUTE},
-			{Name: "deploymentName", ValueFunc: ksmMetric.GetDeploymentNameForReplicaSet(), Type: sdkMetric.ATTRIBUTE},
+			{Name: "deploymentName", ValueFunc: ksmMetric.GetDeploymentNameForReplicaSet(), Type: sdkMetric.ATTRIBUTE, Optional: true},
 			{Name: "label.*", ValueFunc: prometheus.FromMetricWithPrefixedLabels("kube_replicaset_labels", "label"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "ownerName", ValueFunc: prometheus.FromLabelValue("kube_replicaset_owner", "owner_name"), Type: sdkMetric.ATTRIBUTE},
 			{Name: "ownerKind", ValueFunc: prometheus.FromLabelValue("kube_replicaset_owner", "owner_kind"), Type: sdkMetric.ATTRIBUTE},
@@ -1389,9 +1389,9 @@ func NewKubeletSpecs(interfaceCache *kubeletMetric.InterfaceCache) definition.Sp
 				{Name: "containerMemoryMappedFileBytes", ValueFunc: definition.FromRaw("container_memory_mapped_file"), Type: sdkMetric.GAUGE, Optional: true},
 				{Name: "containerOOMEventsDelta", ValueFunc: definition.FromRaw("container_oom_events_total"), Type: sdkMetric.PDELTA, Optional: true},
 				// In openshift (and possibly in other environments) these metrics were missing at first for pods that were not throttled.
-				{Name: "containerCpuCfsPeriodsDelta", ValueFunc: definition.FromRaw("container_cpu_cfs_periods_total"), Type: sdkMetric.DELTA, Optional: true},
-				{Name: "containerCpuCfsThrottledPeriodsDelta", ValueFunc: definition.FromRaw("container_cpu_cfs_throttled_periods_total"), Type: sdkMetric.DELTA, Optional: true},
-				{Name: "containerCpuCfsThrottledSecondsDelta", ValueFunc: definition.FromRaw("container_cpu_cfs_throttled_seconds_total"), Type: sdkMetric.DELTA, Optional: true},
+				{Name: "containerCpuCfsPeriodsDelta", ValueFunc: definition.FromRaw("container_cpu_cfs_periods_total"), Type: sdkMetric.PDELTA, Optional: true},
+				{Name: "containerCpuCfsThrottledPeriodsDelta", ValueFunc: definition.FromRaw("container_cpu_cfs_throttled_periods_total"), Type: sdkMetric.PDELTA, Optional: true},
+				{Name: "containerCpuCfsThrottledSecondsDelta", ValueFunc: definition.FromRaw("container_cpu_cfs_throttled_seconds_total"), Type: sdkMetric.PDELTA, Optional: true},
 				{Name: "containerCpuCfsPeriodsTotal", ValueFunc: definition.FromRaw("container_cpu_cfs_periods_total"), Type: sdkMetric.GAUGE, Optional: true},
 				{Name: "containerCpuCfsThrottledPeriodsTotal", ValueFunc: definition.FromRaw("container_cpu_cfs_throttled_periods_total"), Type: sdkMetric.GAUGE, Optional: true},
 				{Name: "containerCpuCfsThrottledSecondsTotal", ValueFunc: definition.FromRaw("container_cpu_cfs_throttled_seconds_total"), Type: sdkMetric.GAUGE, Optional: true},

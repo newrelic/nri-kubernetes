@@ -13,6 +13,7 @@ permissions:
   id-token: write
   contents: read
   pull-requests: read
+  security-events: write
 
 concurrency:
   group: windows-e2e-tests
@@ -28,6 +29,27 @@ jobs:
         id: random-string
         run: |
           echo "random_string=$(head -c20 /dev/urandom | base64 | tr -dc 'a-z' | head -c5)" >> $GITHUB_OUTPUT
+  create-linux-image:
+    name: Create Linux Image for E2E Test
+    needs: generate-key
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_BUILDKIT: '1'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
+      - name: Build and push Linux image
+        run: |
+          GOOS=linux GOARCH=amd64 make compile
+          docker build -t newrelic/nri-kubernetes-internal:linux-e2e-testing-${{ needs.generate-key.outputs.run_key }} .
+          docker push newrelic/nri-kubernetes-internal:linux-e2e-testing-${{ needs.generate-key.outputs.run_key }}
   create-windows-image:
     name: Create Windows Image for E2E Test
     needs: generate-key
@@ -40,7 +62,7 @@ jobs:
       K8S_AGENTS_DOCKERHUB_USERNAME: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
       K8S_AGENTS_DOCKERHUB_TOKEN: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
   e2e:
-    needs: [ create-windows-image, generate-key ]
+    needs: [ create-linux-image, create-windows-image, generate-key ]
     strategy:
       fail-fast: false
       matrix:
@@ -68,7 +90,7 @@ jobs:
           new_namespace="nr-$scenario_tag"
           echo "new_namespace=$new_namespace" >> "$GITHUB_OUTPUT"
       - name: Configure AWS Credentials via OIDC
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::${{ secrets.K8S_AWS_ACCOUNT_ID }}:role/${{ matrix.runner.iam_role }}
           aws-region: us-west-1
@@ -111,6 +133,7 @@ jobs:
         run: |
           export IMAGE_2019="newrelic/nri-kubernetes-internal:windows-ltsc2019-e2e-testing-${{ needs.generate-key.outputs.run_key }}"
           export IMAGE_2022="newrelic/nri-kubernetes-internal:windows-ltsc2022-e2e-testing-${{ needs.generate-key.outputs.run_key }}"
+          export LINUX_TAG="linux-e2e-testing-${{ needs.generate-key.outputs.run_key }}"
 
           envsubst < e2e/e2e-values-windows-template.yml > e2e/e2e-values-windows.yml
 

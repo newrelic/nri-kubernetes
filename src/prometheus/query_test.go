@@ -1,9 +1,11 @@
 package prometheus
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
@@ -374,4 +376,99 @@ func TestParseResponseWithInfoMetric(t *testing.T) {
 
 	verifyReplicaSetMetrics(t, metricFamiliesOne, expectedMetricNames)
 	verifyReplicaSetMetrics(t, metricFamiliesTwo, expectedMetricNames)
+}
+
+// TestFilterUnsupportedMetrics_LargeLines tests that the filter can handle metric lines
+// exceeding the default bufio.Scanner buffer size (64KB).
+func TestFilterUnsupportedMetrics_LargeLines(t *testing.T) {
+	t.Parallel()
+
+	// Create a metric line > 64KB with many labels
+	largeLabelValue := strings.Repeat("x", 70000)
+	input := fmt.Sprintf(`# TYPE test_metric gauge
+# HELP test_metric Test metric with large label value
+test_metric{large_label="%s",namespace="default"} 1.0
+# TYPE another_metric counter
+# HELP another_metric Another test metric
+another_metric{label="value"} 42
+`, largeLabelValue)
+
+	reader := strings.NewReader(input)
+	logger := logutil.Discard
+
+	// This should fail with the current implementation due to 64KB buffer limit
+	filtered, skipped, err := filterUnsupportedMetrics(reader, logger)
+
+	// After the fix, this should succeed
+	assert.NoError(t, err, "Should handle large metric lines without error")
+	assert.Empty(t, skipped, "No metrics should be skipped")
+
+	// Verify the lines were processed correctly
+	filteredContent, err := io.ReadAll(filtered)
+	assert.NoError(t, err)
+	assert.Contains(t, string(filteredContent), "test_metric")
+	assert.Contains(t, string(filteredContent), "another_metric")
+	assert.Contains(t, string(filteredContent), largeLabelValue, "Large label value should be preserved")
+}
+
+// TestFilterUnsupportedMetrics_MultipleLargeLines tests handling of multiple large metric lines.
+func TestFilterUnsupportedMetrics_MultipleLargeLines(t *testing.T) {
+	t.Parallel()
+
+	// Create multiple metric lines that exceed 64KB
+	largeLabelValue1 := strings.Repeat("a", 70000)
+	largeLabelValue2 := strings.Repeat("b", 80000)
+	input := fmt.Sprintf(`# TYPE first_metric gauge
+# HELP first_metric First test metric
+first_metric{large_label="%s"} 1.0
+# TYPE second_metric gauge
+# HELP second_metric Second test metric
+second_metric{large_label="%s"} 2.0
+`, largeLabelValue1, largeLabelValue2)
+
+	reader := strings.NewReader(input)
+	logger := logutil.Discard
+
+	filtered, skipped, err := filterUnsupportedMetrics(reader, logger)
+
+	assert.NoError(t, err, "Should handle multiple large metric lines without error")
+	assert.Empty(t, skipped, "No metrics should be skipped")
+
+	filteredContent, err := io.ReadAll(filtered)
+	assert.NoError(t, err)
+	assert.Contains(t, string(filteredContent), "first_metric")
+	assert.Contains(t, string(filteredContent), "second_metric")
+}
+
+// TestFilterUnsupportedMetrics_LargeLinesWithUnsupportedTypes tests that large lines
+// work correctly when mixed with unsupported metric types that need to be filtered.
+func TestFilterUnsupportedMetrics_LargeLinesWithUnsupportedTypes(t *testing.T) {
+	t.Parallel()
+
+	largeLabelValue := strings.Repeat("x", 70000)
+	input := fmt.Sprintf(`# TYPE supported_metric gauge
+# HELP supported_metric Supported metric with large label
+supported_metric{large_label="%s"} 1.0
+# TYPE unsupported_metric info
+# HELP unsupported_metric This should be filtered out
+unsupported_metric{label="value"} 1
+# TYPE another_supported_metric counter
+# HELP another_supported_metric Another supported metric
+another_supported_metric{label="test"} 42
+`, largeLabelValue)
+
+	reader := strings.NewReader(input)
+	logger := logutil.Discard
+
+	filtered, skipped, err := filterUnsupportedMetrics(reader, logger)
+
+	assert.NoError(t, err, "Should handle large lines with unsupported types")
+	assert.Len(t, skipped, 1, "Should skip one unsupported metric")
+	assert.Equal(t, "unsupported_metric", skipped[0])
+
+	filteredContent, err := io.ReadAll(filtered)
+	assert.NoError(t, err)
+	assert.Contains(t, string(filteredContent), "supported_metric")
+	assert.Contains(t, string(filteredContent), "another_supported_metric")
+	assert.NotContains(t, string(filteredContent), "unsupported_metric")
 }
