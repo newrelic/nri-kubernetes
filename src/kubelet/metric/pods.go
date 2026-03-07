@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -147,7 +148,16 @@ func NewPodsFetcher(log *log.Logger, c client.HTTPGetter, config *config.Config)
 	if config.FetchPodsFromKubeService {
 		log.Info("Using Kubernetes service to fetch pods.")
 
-		uri, _ := url.Parse(getKubeServiceHost())
+		uri, err := url.Parse(getKubeServiceHost())
+		if err != nil || uri == nil {
+			log.Warnf("Failed to parse kube service host URL: %v", err)
+			return &PodsFetcher{
+				logger:         log,
+				client:         c,
+				useKubeService: false,
+			}
+		}
+
 		uri.Path = path.Join(uri.Path, KubeServiceKubeletPodsPath)
 		uri.RawQuery = fmt.Sprintf(nodeSelectorQuery, config.NodeName)
 
@@ -173,7 +183,7 @@ func getKubeServiceHost() string {
 		return inClusterConfig.Host
 	}
 
-	return fmt.Sprintf("https://%s:%s", os.Getenv("KUBERNETES_SERVICE_HOST"), os.Getenv("KUBERNETES_SERVICE_PORT")) //nolint: nosprintfhostport
+	return "https://" + net.JoinHostPort(os.Getenv("KUBERNETES_SERVICE_HOST"), os.Getenv("KUBERNETES_SERVICE_PORT"))
 }
 
 func (podsFetcher *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]definition.RawMetrics {
