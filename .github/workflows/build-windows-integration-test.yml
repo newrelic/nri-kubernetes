@@ -128,7 +128,7 @@ jobs:
           docker push newrelic/nri-kubernetes-internal:$env:DOCKER_TAG
           Write-Output "Pushed newrelic/nri-kubernetes-internal:$env:DOCKER_TAG"
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.34.2
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: newrelic/nri-kubernetes-internal:${{ env.DOCKER_TAG }}
           format: 'sarif'
