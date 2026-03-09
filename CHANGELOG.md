@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### bugfix
+- Use actual applied container resources (`Pod.Status.ContainerStatuses[i].Resources`) over desired spec resources (`Pod.Spec.Containers[i].Resources`) where present to correctly report `cpuRequestedCores`, `memoryRequestedBytes`, and related metrics during in-place pod vertical scaling (K8s 1.33+ beta, 1.35+ GA) @kondracek-nr
+
 ### enhancement
 - Support OpenShift 4.20 @jamescripter [#1401](https://github.com/newrelic/nri-kubernetes/pull/1401)
 
