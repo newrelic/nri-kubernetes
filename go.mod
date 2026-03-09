@@ -1,6 +1,6 @@
 module github.com/newrelic/nri-kubernetes/v3
 
-go 1.25.7
+go 1.26.1
 
 require (
 	github.com/google/go-cmp v0.7.0
@@ -13,13 +13,13 @@ require (
 	github.com/sirupsen/logrus v1.9.4
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/text v0.33.0
+	golang.org/x/text v0.34.0
 	google.golang.org/protobuf v1.36.11
 	k8s.io/api v0.35.2
 	k8s.io/apimachinery v0.35.2
 	k8s.io/client-go v0.35.2
 	k8s.io/kubelet v0.35.2
-	k8s.io/utils v0.0.0-20251002143259-bc988d571ff4
+	k8s.io/utils v0.0.0-20260210185600-b8788abfbbc2
 )
 
 require (
@@ -69,4 +69,4 @@ require (
 )
 
 // To avoid CVE-2022-27191 triggering a security scan
-replace golang.org/x/crypto => golang.org/x/crypto v0.47.0
+replace golang.org/x/crypto => golang.org/x/crypto v0.48.0

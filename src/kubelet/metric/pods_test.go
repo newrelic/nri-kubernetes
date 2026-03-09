@@ -98,18 +98,36 @@ func TestFetchFunFromKubeService(test *testing.T) {
 }
 
 func TestBuildsHostFromEnvVars(test *testing.T) { //nolint: paralleltest
-	expectedIP := "123:45:67:89"
-	expectedPort := "1011"
-	expectedHost := fmt.Sprintf("https://%s:%s", expectedIP, expectedPort) //nolint: nosprintfhostport
+	cases := []struct {
+		name string
+		ip   string
+		port string
+		want string
+	}{
+		{
+			name: "IPv4",
+			ip:   "10.96.0.1",
+			port: "443",
+			want: "https://10.96.0.1:443",
+		},
+		{
+			name: "IPv6",
+			ip:   "fd00::1",
+			port: "443",
+			want: "https://[fd00::1]:443",
+		},
+	}
 
-	os.Setenv("KUBERNETES_SERVICE_HOST", expectedIP)
-	os.Setenv("KUBERNETES_SERVICE_PORT", expectedPort)
+	for _, tc := range cases {
+		os.Setenv("KUBERNETES_SERVICE_HOST", tc.ip)
+		os.Setenv("KUBERNETES_SERVICE_PORT", tc.port)
 
-	assert.Equal(test, expectedHost, getKubeServiceHost())
+		assert.Equal(test, tc.want, getKubeServiceHost(), tc.name)
+	}
 }
 
 func TestShouldUseKubeServiceURL(test *testing.T) { //nolint: paralleltest
-	expectedIP := "111:222:33:44"
+	expectedIP := "10.0.0.1"
 	expectedPort := "5555"
 	nodeName := "my_Node"
 	expectedURL := fmt.Sprintf("https://%s:%s/api/v1/pods?fieldSelector=spec.nodeName=%s", expectedIP, expectedPort, nodeName) //nolint: nosprintfhostport
@@ -136,6 +154,18 @@ func TestShouldUseKubeServiceURL(test *testing.T) { //nolint: paralleltest
 
 	assert.NoError(test, err)
 	assert.Equal(test, expectedURL, scrapedURL)
+}
+
+func TestFallsBackToKubeletWhenKubeServiceURLIsInvalid(test *testing.T) { //nolint: paralleltest
+	// %gg is an invalid percent-escape (g is not a hex digit), causing url.Parse to fail.
+	os.Setenv("KUBERNETES_SERVICE_HOST", "host%gg")
+	os.Setenv("KUBERNETES_SERVICE_PORT", "443")
+
+	fetcher := NewPodsFetcher(logutil.Debug, &testClient{handler: servePayload}, &config.Config{
+		Kubelet: config.Kubelet{FetchPodsFromKubeService: true},
+	})
+
+	assert.False(test, fetcher.useKubeService)
 }
 
 func TestShouldUseKubeletURLWhenBasicPodsFetcherBuilt(test *testing.T) {

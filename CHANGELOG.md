@@ -8,12 +8,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### enhancement
-- Add support for OpenShift 4.20 @jamescripter [#1401](https://github.com/newrelic/nri-kubernetes/pull/1401)
+- Support OpenShift 4.20 @jamescripter [#1401](https://github.com/newrelic/nri-kubernetes/pull/1401)
+
+### enhancement
+- Improve IP address handling for kube service URL @kondracek-nr
 
 ### bugfix
 - Use different metric to get deployment name for ReplicaSet @jamescripter [#1421](https://github.com/newrelic/nri-kubernetes/pull/1421)
-
-### bugfix
 - Account for counter resets when computing deltas for CPU CFS periods @jamescripter [#1375](https://github.com/newrelic/nri-kubernetes/pull/1375)
 
 ## v3.55.0 - 2026-03-02
