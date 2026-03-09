@@ -7,12 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancement
+## v3.56.0 - 2026-03-09
+
+### 🚀 Enhancements
 - Improve IP address handling for kube service URL @kondracek-nr
 
-### bugfix
+### 🐞 Bug fixes
 - Use different metric to get deployment name for ReplicaSet @jamescripter [#1421](https://github.com/newrelic/nri-kubernetes/pull/1421)
 - Account for counter resets when computing deltas for CPU CFS periods @jamescripter [#1375](https://github.com/newrelic/nri-kubernetes/pull/1375)
+
+### ⛓️ Dependencies
+- Updated kubernetes packages to v0.35.2
+- Updated aws-actions/configure-aws-credentials to v6
+- Updated go to v1.26.1
+- Updated golang.org/x/crypto to v0.48.0
+- Updated golang.org/x/text to v0.34.0
+- Updated k8s.io/utils digest to b8788ab
 
 ## v3.55.0 - 2026-03-02
 
