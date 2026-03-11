@@ -7,5 +7,21 @@ This means that this chart has 3 tolerations so a helper should be done per scra
     {{- toYaml .Values.ksm.tolerations -}}
 {{- else if include "newrelic.common.tolerations" . -}}
     {{- include "newrelic.common.tolerations" . -}}
+{{- else -}}
+    {{- /* Default KSM tolerations: tolerate node pressure conditions but not unschedulable nodes */ -}}
+- key: "node.kubernetes.io/disk-pressure"
+  operator: "Exists"
+  effect: "NoSchedule"
+- key: "node.kubernetes.io/memory-pressure"
+  operator: "Exists"
+  effect: "NoSchedule"
+- key: "node.kubernetes.io/pid-pressure"
+  operator: "Exists"
+  effect: "NoSchedule"
+- key: "node.kubernetes.io/network-unavailable"
+  operator: "Exists"
+  effect: "NoSchedule"
+- operator: "Exists"
+  effect: "NoExecute"
 {{- end -}}
 {{- end -}}
