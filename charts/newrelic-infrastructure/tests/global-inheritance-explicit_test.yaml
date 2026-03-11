@@ -64,7 +64,7 @@ tests:
   # LABELS - Explicit Global Value Tests
   # =============================================================================
   - it: labels - should inherit global.labels when no local labels are set
-    set:
+    set: &base
       licenseKey: test-key
       cluster: test
       global:
@@ -106,8 +106,7 @@ tests:
   # =============================================================================
   - it: podLabels - should inherit global.podLabels when no local podLabels are set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       global:
         podLabels:
           workload-type: monitoring
@@ -119,8 +118,7 @@ tests:
 
   - it: podLabels - should use local podLabels over global.podLabels when both are set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       podLabels:
         workload-type: observability
       global:
@@ -137,8 +135,7 @@ tests:
   # =============================================================================
   - it: images.registry - should inherit global.images.registry when no local registry is set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       global:
         images:
           registry: gcr.io/my-project
@@ -150,8 +147,7 @@ tests:
 
   - it: images.registry - should use local registry over global when both are set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       images:
         integration:
           registry: docker.io
@@ -169,8 +165,7 @@ tests:
   # =============================================================================
   - it: images.pullSecrets - should inherit global.images.pullSecrets when no local pullSecrets are set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       global:
         images:
           pullSecrets:
@@ -184,8 +179,7 @@ tests:
 
   - it: images.pullSecrets - should use local pullSecrets over global when both are set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       images:
         pullSecrets:
           - name: local-registry-secret
@@ -205,8 +199,7 @@ tests:
   # =============================================================================
   - it: serviceAccount.create - should inherit global.serviceAccount.create when no local create is set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       global:
         serviceAccount:
           create: false
@@ -217,8 +210,7 @@ tests:
 
   - it: serviceAccount.create - should use local create over global when both are set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       serviceAccount:
         create: true
       global:
@@ -232,8 +224,7 @@ tests:
 
   - it: serviceAccount.name - should inherit global.serviceAccount.name when no local name is set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       global:
         serviceAccount:
           name: my-global-sa
@@ -245,8 +236,7 @@ tests:
 
   - it: serviceAccount.name - should use local name over global when both are set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       serviceAccount:
         create: true
         name: my-local-sa
@@ -264,8 +254,7 @@ tests:
   # =============================================================================
   - it: priorityClassName - should inherit global.priorityClassName when no local priorityClassName is set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       global:
         priorityClassName: system-cluster-critical
     asserts:
@@ -276,8 +265,7 @@ tests:
 
   - it: priorityClassName - should use local priorityClassName over global when both are set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       priorityClassName: my-priority-class
       global:
         priorityClassName: system-cluster-critical
@@ -292,8 +280,7 @@ tests:
   # =============================================================================
   - it: dnsConfig - should inherit global.dnsConfig when no local dnsConfig is set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       global:
         dnsConfig:
           options:
@@ -309,8 +296,7 @@ tests:
 
   - it: dnsConfig - should use local dnsConfig over global when both are set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       dnsConfig:
         options:
           - name: ndots
@@ -333,8 +319,7 @@ tests:
   # =============================================================================
   - it: hostNetwork - should inherit global.hostNetwork when no local hostNetwork is set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       global:
         hostNetwork: true
     asserts:
@@ -345,8 +330,7 @@ tests:
 
   - it: hostNetwork - should use local hostNetwork over global when both are set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       hostNetwork: false
       global:
         hostNetwork: true
@@ -371,8 +355,7 @@ tests:
   # =============================================================================
   - it: podSecurityContext - should inherit global.podSecurityContext when no local is set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       global:
         podSecurityContext:
           fsGroup: 1000
@@ -384,8 +367,7 @@ tests:
 
   - it: podSecurityContext - should use local over global when both are set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       podSecurityContext:
         fsGroup: 2000
       global:
@@ -402,8 +384,7 @@ tests:
   # =============================================================================
   - it: containerSecurityContext - should inherit global.containerSecurityContext when no local is set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       global:
         containerSecurityContext:
           runAsUser: 1000
@@ -415,8 +396,7 @@ tests:
 
   - it: containerSecurityContext - should use local over global when both are set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       containerSecurityContext:
         runAsUser: 2000
       global:
@@ -433,8 +413,7 @@ tests:
   # =============================================================================
   - it: affinity - should inherit global.affinity when no local affinity is set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       global:
         affinity:
           nodeAffinity:
@@ -450,8 +429,7 @@ tests:
 
   - it: affinity - should use local affinity over global when both are set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -480,8 +458,7 @@ tests:
   # =============================================================================
   - it: tolerations - should inherit global.tolerations when local is empty
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       global:
         tolerations:
           - key: monitoring
@@ -500,8 +477,7 @@ tests:
 
   - it: tolerations - should use kubelet.tolerations over global when both are set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       kubelet:
         tolerations:
           - key: local-taint
@@ -534,8 +510,7 @@ tests:
   # =============================================================================
   - it: lowDataMode - should inherit global.lowDataMode when no local is set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       global:
         lowDataMode: true
     asserts:
@@ -546,8 +521,7 @@ tests:
 
   - it: lowDataMode - should use local lowDataMode over global when both are set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       common:
         config:
           interval: 20s
@@ -564,8 +538,7 @@ tests:
   # =============================================================================
   - it: nrStaging - should inherit global.nrStaging when no local is set
     set:
-      licenseKey: test-key
-      cluster: test
+      <<: *base
       global:
         nrStaging: true
     asserts:
@@ -655,8 +628,8 @@ tests:
 
   - it: customSecretLicenseKey - should default to generated secret name when neither global nor local is set
     set:
-      licenseKey: test-license
-      cluster: test-cluster
+      licenseKey: test-key
+      cluster: test
     asserts:
       - matchRegex:
           path: spec.template.spec.containers[1].env[0].valueFrom.secretKeyRef.name

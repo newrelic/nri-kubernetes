@@ -82,7 +82,7 @@ tests:
   # CUSTOM ATTRIBUTES - Explicit Global Value Tests
   # =============================================================================
   - it: customAttributes - should inherit global.customAttributes when no local customAttributes are set
-    set:
+    set: &base
       cluster: test
       licenseKey: test-key
       global:
@@ -101,8 +101,7 @@ tests:
 
   - it: customAttributes - should use local customAttributes over global.customAttributes when both are set
     set:
-      cluster: test
-      licenseKey: test-key
+      <<: *base
       customAttributes:
         environment: staging
         region: us-east-1
@@ -122,8 +121,7 @@ tests:
 
   - it: customAttributes - should merge local and global customAttributes when both are set
     set:
-      cluster: test
-      licenseKey: test-key
+      <<: *base
       customAttributes:
         environment: staging
       global:
@@ -144,8 +142,7 @@ tests:
   # =============================================================================
   - it: proxy - should inherit global.proxy when no local proxy is set
     set:
-      cluster: test
-      licenseKey: test-key
+      <<: *base
       global:
         proxy: https://proxy.example.com:8080
     asserts:
@@ -156,8 +153,7 @@ tests:
 
   - it: proxy - should use local proxy over global.proxy when both are set
     set:
-      cluster: test
-      licenseKey: test-key
+      <<: *base
       proxy: https://local-proxy.example.com:3128
       global:
         proxy: https://global-proxy.example.com:8080
@@ -172,8 +168,7 @@ tests:
   # =============================================================================
   - it: verboseLog - should inherit global.verboseLog when no local verboseLog is set
     set:
-      cluster: test
-      licenseKey: test-key
+      <<: *base
       global:
         verboseLog: true
     asserts:
@@ -192,8 +187,7 @@ tests:
 
   - it: verboseLog - should use local verboseLog over global.verboseLog when both are set
     set:
-      cluster: test
-      licenseKey: test-key
+      <<: *base
       verboseLog: false
       global:
         verboseLog: true
