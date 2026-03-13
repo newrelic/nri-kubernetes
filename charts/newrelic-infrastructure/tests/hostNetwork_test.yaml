@@ -32,10 +32,9 @@ tests:
           path: spec.template.spec.hostNetwork
           value: false
         template: templates/kubelet/daemonset.yaml
-      - equal:
+      - isNull:
           path: spec.template.spec.hostNetwork
-          value: false
-        template: templates/kubelet/daemonset-windows.yaml
+        template: templates/kubelet/daemonset-windows.yaml  # Windows defaults to unprivileged mode (windows.privileged: false)
 
 
   - it: hostNetwork is false if nothing is set
@@ -43,6 +42,7 @@ tests:
       enableWindows: true
       licenseKey: test
       cluster: test
+      privileged: false  # Test unprivileged mode
       global.hostNetwork: null
       hostNetwork: null
       controlPlane.hostNetwork: null
@@ -59,9 +59,8 @@ tests:
           path: spec.template.spec.hostNetwork
           value: false
         template: templates/kubelet/daemonset.yaml
-      - equal:
+      - isNull:
           path: spec.template.spec.hostNetwork
-          value: false
         template: templates/kubelet/daemonset-windows.yaml
 
   - it: hostNetwork is set by the common library
@@ -69,6 +68,7 @@ tests:
       enableWindows: true
       licenseKey: test
       cluster: test
+      privileged: false  # Test unprivileged mode
       global.hostNetwork: null
       hostNetwork: true
       controlPlane.hostNetwork: null
@@ -85,16 +85,16 @@ tests:
           path: spec.template.spec.hostNetwork
           value: true
         template: templates/kubelet/daemonset.yaml
-      - equal:
+      - isNull:
           path: spec.template.spec.hostNetwork
-          value: false # Windows should still be false
-        template: templates/kubelet/daemonset-windows.yaml
+        template: templates/kubelet/daemonset-windows.yaml  # Windows in unprivileged mode doesn't render hostNetwork
 
   - it: controlPlane hostNetwork is overridable to true
     set:
       enableWindows: true
       licenseKey: test
       cluster: test
+      privileged: false  # Test unprivileged mode
       global.hostNetwork: null
       hostNetwork: false
       controlPlane.hostNetwork: true
@@ -111,9 +111,8 @@ tests:
           path: spec.template.spec.hostNetwork
           value: false
         template: templates/kubelet/daemonset.yaml
-      - equal:
+      - isNull:
           path: spec.template.spec.hostNetwork
-          value: false
         template: templates/kubelet/daemonset-windows.yaml
 
   - it: controlPlane hostNetwork is overridable to false
@@ -121,6 +120,7 @@ tests:
       enableWindows: true
       licenseKey: test
       cluster: test
+      privileged: false  # Test unprivileged mode
       global.hostNetwork: null
       hostNetwork: true
       controlPlane.hostNetwork: false
@@ -137,9 +137,8 @@ tests:
           path: spec.template.spec.hostNetwork
           value: true
         template: templates/kubelet/daemonset.yaml
-      - equal:
+      - isNull:
           path: spec.template.spec.hostNetwork
-          value: false
         template: templates/kubelet/daemonset-windows.yaml
 
   - it: ksm hostNetwork is overridable to true
@@ -147,6 +146,7 @@ tests:
       enableWindows: true
       licenseKey: test
       cluster: test
+      privileged: false  # Test unprivileged mode
       global.hostNetwork: null
       hostNetwork: false
       ksm.hostNetwork: true
@@ -163,9 +163,8 @@ tests:
           path: spec.template.spec.hostNetwork
           value: false
         template: templates/kubelet/daemonset.yaml
-      - equal:
+      - isNull:
           path: spec.template.spec.hostNetwork
-          value: false
         template: templates/kubelet/daemonset-windows.yaml
 
   - it: ksm hostNetwork is overridable to false
@@ -173,6 +172,7 @@ tests:
       enableWindows: true
       licenseKey: test
       cluster: test
+      privileged: false  # Test unprivileged mode
       global.hostNetwork: null
       hostNetwork: true
       ksm.hostNetwork: false
@@ -189,9 +189,8 @@ tests:
           path: spec.template.spec.hostNetwork
           value: true
         template: templates/kubelet/daemonset.yaml
-      - equal:
+      - isNull:
           path: spec.template.spec.hostNetwork
-          value: false
         template: templates/kubelet/daemonset-windows.yaml
 
   - it: kubelet hostNetwork is overridable to true
@@ -199,6 +198,7 @@ tests:
       enableWindows: true
       licenseKey: test
       cluster: test
+      privileged: false  # Test unprivileged mode
       global.hostNetwork: null
       hostNetwork: false
       kubelet.hostNetwork: true
@@ -215,9 +215,8 @@ tests:
           path: spec.template.spec.hostNetwork
           value: true
         template: templates/kubelet/daemonset.yaml
-      - equal:
+      - isNull:
           path: spec.template.spec.hostNetwork
-          value: false
         template: templates/kubelet/daemonset-windows.yaml
 
   - it: kubelet hostNetwork is overridable to false
@@ -225,6 +224,7 @@ tests:
       enableWindows: true
       licenseKey: test
       cluster: test
+      privileged: false  # Test unprivileged mode
       global.hostNetwork: null
       hostNetwork: true
       kubelet.hostNetwork: false
@@ -241,7 +241,6 @@ tests:
           path: spec.template.spec.hostNetwork
           value: false
         template: templates/kubelet/daemonset.yaml
-      - equal:
+      - isNull:
           path: spec.template.spec.hostNetwork
-          value: false
         template: templates/kubelet/daemonset-windows.yaml
