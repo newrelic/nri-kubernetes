@@ -162,6 +162,31 @@ type Kubelet struct {
 	// InitBackoff is the delay between retry attempts during kubelet client initialization.
 	// Only used if InitTimeout > 0.
 	InitBackoff time.Duration `mapstructure:"initBackoff"`
+
+	// Diagnostics controls configuration scraping from kubelet diagnostic endpoints.
+	Diagnostics KubeletDiagnostics `mapstructure:"diagnostics"`
+}
+
+// KubeletDiagnostics contains configuration for scraping kubelet diagnostic endpoints.
+type KubeletDiagnostics struct {
+	// Configz controls whether to scrape the /configz endpoint for kubelet configuration.
+	Configz DiagnosticEndpointConfig `mapstructure:"configz"`
+	// Flags controls whether to scrape the /flags endpoint for kubelet command-line flags.
+	Flags DiagnosticEndpointConfig `mapstructure:"flags"`
+	// Metrics controls whether to scrape the /metrics endpoint for kubelet health metrics.
+	Metrics DiagnosticEndpointConfig `mapstructure:"metrics"`
+	// Statusz controls whether to scrape the /statusz endpoint for kubelet component health status.
+	Statusz DiagnosticEndpointConfig `mapstructure:"statusz"`
+	// PermissionCacheTTL controls how long to cache permission check results for diagnostic endpoints.
+	// When an endpoint returns 403 Forbidden, we cache this and skip the endpoint for this duration.
+	// Default: 5 minutes. Set to 0 to disable caching (check every time).
+	PermissionCacheTTL time.Duration `mapstructure:"permissionCacheTTL"`
+}
+
+// DiagnosticEndpointConfig contains configuration for a diagnostic endpoint.
+type DiagnosticEndpointConfig struct {
+	// Enabled controls whether this diagnostic endpoint should be scraped.
+	Enabled bool `mapstructure:"enabled"`
 }
 
 // ControlPlane contains config options for the control plane scraper.
@@ -308,10 +333,17 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	v.SetDefault("kubelet|retries", DefaultRetries)
 	v.SetDefault("kubelet|scraperMaxReruns", DefaultScraperMaxReruns)
 	v.SetDefault("kubelet|fetchPodsFromKubeService", false)
+
+	// z-pages
+	v.SetDefault("kubelet|diagnostics|configz|enabled", false)
+	v.SetDefault("kubelet|diagnostics|flags|enabled", false)
+	v.SetDefault("kubelet|diagnostics|metrics|enabled", false)
+	v.SetDefault("kubelet|diagnostics|statusz|enabled", false)
+	v.SetDefault("kubelet|diagnostics|permissionCacheTTL", 5*time.Minute)
+
 	// initTimeout and initBackoff intentionally have no defaults
 	// When missing from config, they default to 0s (legacy behavior: no retry)
 	// When present in config, their values are used (e.g., 180s enables retry)
-
 	v.SetDefault("controlPlane|timeout", DefaultTimeout)
 	v.SetDefault("controlPlane|retries", DefaultRetries)
 

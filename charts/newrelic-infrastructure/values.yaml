@@ -615,6 +615,10 @@ rbac:
   # When false (default), uses nodes/proxy which could be exploited to access kubelet write endpoints.
   # See: https://kubernetes.io/docs/reference/access-authn-authz/kubelet-authn-authz/#fine-grained-authorization
   kubeletFineGrainedAuth: false
+  # rbac.diagnosticEndpoints -- Whether to create RBAC rules for kubelet diagnostic endpoints.
+  # Required for /flagz endpoint access when ComponentFlagz feature gate is enabled on kubelet.
+  # Not needed for /configz, /metrics, or /statusz which use different authorization paths.
+  diagnosticEndpoints: false
 
 # -- Sets pod/node affinities set almost globally. (See [Affinities and tolerations](README.md#affinities-and-tolerations))
 affinity: {}
