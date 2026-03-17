@@ -104,8 +104,8 @@ spec:
             {{- with .Values.controlPlane.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- with .Values.controlPlane.resources }}
-          resources: {{ toYaml . | nindent 12 }}
+          {{- with include "nriKubernetes.controlPlane.resources.controlplane" . | fromYaml }}
+          resources: {{- toYaml . | nindent 12 }}
           {{- end }}
         - name: forwarder
           image: {{ include "newrelic.common.images.image" ( dict "imageRoot" .Values.images.forwarder "context" .) }}
@@ -164,8 +164,8 @@ spec:
             {{- with .Values.controlPlane.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- with .Values.controlPlane.resources }}
-          resources: {{ toYaml . | nindent 12 }}
+          {{- with include "nriKubernetes.controlPlane.resources.forwarder" . | fromYaml }}
+          resources: {{- toYaml . | nindent 12 }}
           {{- end }}
       volumes:
         - name: nri-kubernetes-config
