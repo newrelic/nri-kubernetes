@@ -31,22 +31,20 @@ plane pods by setting `controlPlane.hostNetwork: true`. Alternatively, you can d
 `controlPlane.enabled: false`.
 {{- end }}
 
-{{- if and .Values.enableWindows (include "nriKubernetes.windows.privileged" .) }}
-Warning:
-========
+{{- if and .Values.enableWindows (not (include "nriKubernetes.windows.privileged" .)) }}
+Note:
+=====
 
-Windows privileged mode is enabled (windows.privileged: true). The Windows kubelet DaemonSet will run as
-HostProcess containers, which execute directly on the Windows host with elevated privileges.
+Windows nodes are running in unprivileged mode (windows.privileged: false). The Windows kubelet
+DaemonSet will use standard container isolation instead of HostProcess containers.
 
-HostProcess containers:
-  - Both containers run as NT AUTHORITY\Local service
-  - Have full access to the host filesystem via CONTAINER_SANDBOX_MOUNT_POINT
-  - Require hostNetwork: true (pods use the host's network namespace)
-  - Are supported on Windows Server 2019 and later
+In unprivileged mode:
+  - Containers run as ContainerUser
+  - Host filesystem access is not available
+  - hostNetwork is disabled; the agent uses NRIA_HOST for autodiscovery
 
-This mode provides full monitoring capabilities including network statistics, but requires
-administrative privileges on Windows nodes. If you need to run in a more restricted environment, set
-`windows.privileged: false` to use standard container isolation.
+For full monitoring capabilities including network statistics, set `windows.privileged: true`
+(the default) to run as HostProcess containers with elevated privileges.
 {{- end }}
 
 {{- if and (include "newrelic.fargate" .) .Values.kubelet.affinity }}

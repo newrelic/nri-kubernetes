@@ -32,9 +32,10 @@ tests:
           path: spec.template.spec.hostNetwork
           value: false
         template: templates/kubelet/daemonset.yaml
-      - isNull:
+      - equal:
           path: spec.template.spec.hostNetwork
-        template: templates/kubelet/daemonset-windows.yaml  # Windows defaults to unprivileged mode (windows.privileged: false)
+          value: true
+        template: templates/kubelet/daemonset-windows.yaml  # Windows defaults to privileged mode (windows.privileged: true)
 
 
   - it: hostNetwork is false if nothing is set
@@ -43,6 +44,8 @@ tests:
       licenseKey: test
       cluster: test
       privileged: false  # Test unprivileged mode
+      windows:
+        privileged: false
       global.hostNetwork: null
       hostNetwork: null
       controlPlane.hostNetwork: null
@@ -69,6 +72,8 @@ tests:
       licenseKey: test
       cluster: test
       privileged: false  # Test unprivileged mode
+      windows:
+        privileged: false
       global.hostNetwork: null
       hostNetwork: true
       controlPlane.hostNetwork: null
@@ -95,6 +100,8 @@ tests:
       licenseKey: test
       cluster: test
       privileged: false  # Test unprivileged mode
+      windows:
+        privileged: false
       global.hostNetwork: null
       hostNetwork: false
       controlPlane.hostNetwork: true
@@ -121,6 +128,8 @@ tests:
       licenseKey: test
       cluster: test
       privileged: false  # Test unprivileged mode
+      windows:
+        privileged: false
       global.hostNetwork: null
       hostNetwork: true
       controlPlane.hostNetwork: false
@@ -147,6 +156,8 @@ tests:
       licenseKey: test
       cluster: test
       privileged: false  # Test unprivileged mode
+      windows:
+        privileged: false
       global.hostNetwork: null
       hostNetwork: false
       ksm.hostNetwork: true
@@ -173,6 +184,8 @@ tests:
       licenseKey: test
       cluster: test
       privileged: false  # Test unprivileged mode
+      windows:
+        privileged: false
       global.hostNetwork: null
       hostNetwork: true
       ksm.hostNetwork: false
@@ -199,6 +212,8 @@ tests:
       licenseKey: test
       cluster: test
       privileged: false  # Test unprivileged mode
+      windows:
+        privileged: false
       global.hostNetwork: null
       hostNetwork: false
       kubelet.hostNetwork: true
@@ -225,6 +240,8 @@ tests:
       licenseKey: test
       cluster: test
       privileged: false  # Test unprivileged mode
+      windows:
+        privileged: false
       global.hostNetwork: null
       hostNetwork: true
       kubelet.hostNetwork: false
