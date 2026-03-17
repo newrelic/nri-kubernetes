@@ -203,6 +203,8 @@ tests:
       cluster: test
       enableWindows: true
       privileged: false  # Test unprivileged mode
+      windows:
+        privileged: false
     asserts:
       - equal:
           path: spec.template.spec.containers[0].securityContext
@@ -237,27 +239,27 @@ tests:
         documentIndex: 1
         template: templates/kubelet/daemonset-windows.yaml
 
-  - it: Linux should default to privileged while Windows defaults to unprivileged
+  - it: Linux and Windows both default to privileged
     set:
       licenseKey: test
       cluster: test
       enableWindows: true
-      # Note: privileged defaults to true, windows.privileged defaults to false
+      # Note: privileged defaults to true, windows.privileged defaults to true
     asserts:
       # Linux kubelet agent container should run as root (privileged mode)
       - equal:
           path: spec.template.spec.containers[1].securityContext.runAsUser
           value: 0
         template: templates/kubelet/daemonset.yaml
-      # Windows containers should be unprivileged by default
+      # Windows containers should be privileged by default
       - equal:
           path: spec.template.spec.containers[0].securityContext.windowsOptions.hostProcess
-          value: false
+          value: true
         documentIndex: 0
         template: templates/kubelet/daemonset-windows.yaml
       - equal:
           path: spec.template.spec.containers[1].securityContext.windowsOptions.hostProcess
-          value: false
+          value: true
         documentIndex: 0
         template: templates/kubelet/daemonset-windows.yaml
 
@@ -267,6 +269,8 @@ tests:
       cluster: test
       enableWindows: true
       privileged: false  # Test unprivileged mode
+      windows:
+        privileged: false
       global.containerSecurityContext:
         runAsUser: 1000
         runAsGroup: 2000

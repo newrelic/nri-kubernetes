@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### 🚀 Enhancements
 - Support OpenShift 4.20 @jamescripter [#1401](https://github.com/newrelic/nri-kubernetes/pull/1401)
+- Enable Windows HostProcess (privileged) containers by default; set `windows.privileged: false` to opt out @kondracek-nr
 
 ### 🧪 Testing
 - Upgrade helm-unittest from 0.3.1 to 1.0.3 for improved test framework compatibility
