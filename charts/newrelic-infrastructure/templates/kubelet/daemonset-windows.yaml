@@ -100,8 +100,8 @@ spec:
             {{- with $.Values.kubelet.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- with $.Values.kubelet.resources }}
-          resources: {{ toYaml . | nindent 12 }}
+          {{- with include "nriKubernetes.kubelet.resources.windows.kubelet" $ | fromYaml }}
+          resources: {{- toYaml . | nindent 12 }}
           {{- end }}
         - name: agent
           {{- if ne .imageTagSuffix "" }}
@@ -192,8 +192,8 @@ spec:
             {{- with $.Values.kubelet.extraVolumeMounts }}
             {{- toYaml $ | nindent 12 }}
             {{- end }}
-          {{- with $.Values.kubelet.resources }}
-          resources: {{ toYaml . | nindent 12 }}
+          {{- with include "nriKubernetes.kubelet.resources.windows.agent" $ | fromYaml }}
+          resources: {{- toYaml . | nindent 12 }}
           {{- end }}
       volumes:
         - name: nri-kubernetes-config
