@@ -204,7 +204,9 @@ Infrastructure Agent integrations (Kafka, Cassandra, Redis, etc.) are not suppor
 | controlPlane.config.scheduler | object | Common settings for most K8s distributions. | Scheduler monitoring configuration |
 | controlPlane.config.scheduler.enabled | bool | `true` | Enable scheduler monitoring. |
 | controlPlane.config.timeout | string | `"10s"` | Timeout for the Kubernetes APIs contacted by the integration |
+| controlPlane.controlplane.resources | object | 100m/150M -/300M | Resources for the controlplane scraper container. |
 | controlPlane.enabled | bool | `true` | Deploy control plane monitoring component. |
+| controlPlane.forwarder.resources | object | 100m/150M -/300M | Resources for the k8s-events-forwarder sidecar container. |
 | controlPlane.hostNetwork | bool | `true` | Run Control Plane scraper with `hostNetwork`. `hostNetwork` is required for most control plane configurations, as they only accept connections from localhost. |
 | controlPlane.kind | string | `"DaemonSet"` | How to deploy the control plane scraper. If autodiscovery is in use, it should be `DaemonSet`. Advanced users using static endpoints set this to `Deployment` to avoid reporting metrics twice. |
 | controlPlane.tolerations | list | Schedules in all tainted nodes | Tolerations for the control plane DaemonSet. |
@@ -234,11 +236,12 @@ Infrastructure Agent integrations (Kafka, Cassandra, Redis, etc.) are not suppor
 | ksm.config.timeout | string | `"10s"` | Timeout for the ksm API contacted by the integration |
 | ksm.enableResourceQuotaSamples | bool | `true` | Enable to collect metrics for resource quota. |
 | ksm.enabled | bool | `true` | Enable cluster state monitoring. Advanced users only. Setting this to `false` is not supported and will break the New Relic experience. |
-| ksm.forwarder | object | 100m/150M -/850M | Resources for the Frowarder pod. large clusters. |
+| ksm.forwarder.resources | object | 100m/150M -/850M | Resources for the Forwarder sidecar container. |
 | ksm.hostNetwork | bool | Not set | Sets pod's hostNetwork. When set bypasses global/common variable |
-| ksm.ksm | object | 100m/150M -/850M | Resources for the KSM scraper pod. Keep in mind that sharding is not supported at the moment, so memory usage for this component ramps up quickly on large clusters. |
+| ksm.ksm.resources | object | 100m/150M -/850M | Resources for the KSM scraper container. Keep in mind that sharding is not supported at the moment, so memory usage for this component ramps up quickly on large clusters. |
 | ksm.tolerations | list | Tolerates common node pressure taints but not unschedulable nodes | Tolerations for the KSM Deployment. |
 | kubelet | object | See `values.yaml` | Configuration for the DaemonSet that collects metrics from the Kubelet. |
+| kubelet.agent.resources | object | 100m/150M -/300M | Resources for the infrastructure-bundle agent sidecar container. |
 | kubelet.agentConfig | object | `{}` | Config for the Infrastructure agent that will forward the metrics to the backend and will run the integrations in this cluster. It will be merged with the configuration in `.common.agentConfig`. You can see all the agent configurations in [New Relic docs](https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/) e.g. you can set `passthrough_environment` int the [config file](https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/configure-infrastructure-agent/#config-file) so the agent let use that environment variables to the integrations. |
 | kubelet.config.initBackoff | string | `"5s"` | Delay between retry attempts during kubelet client initialization. Only used if initTimeout > 0. |
 | kubelet.config.initTimeout | string | `"180s"` | Total timeout for kubelet connection retries during pod initialization. Useful for environments like EKS/GKE where kubelet certificates may take 1-2 minutes to provision after node startup. Set to 0s to disable retries and use legacy behavior (fail immediately). |
@@ -251,7 +254,10 @@ Infrastructure Agent integrations (Kafka, Cassandra, Redis, etc.) are not suppor
 | kubelet.extraVolumeMounts | list | `[]` | Defines where to mount volumes specified with `extraVolumes` |
 | kubelet.extraVolumes | list | `[]` | Volumes to mount in the containers |
 | kubelet.hostNetwork | bool | Not set | Sets pod's hostNetwork. When set bypasses global/common variable. Note - does not apply to Windows nodes |
+| kubelet.kubelet.resources | object | 100m/150M -/300M | Resources for the kubelet scraper container. |
 | kubelet.tolerations | list | Schedules in all tainted nodes | Tolerations for the control plane DaemonSet. |
+| kubelet.windows.agent.resources | object | 100m/150M -/300M | Resources for the Windows agent sidecar container. |
+| kubelet.windows.kubelet.resources | object | 100m/150M -/300M | Resources for the Windows kubelet scraper container. |
 | kubelet.windowsNodeSelector | object | `{}` | Node selector for the Windows kubelet DaemonSet. |
 | labels | object | `{}` | Additional labels for chart objects. Can be configured also with `global.labels` |
 | licenseKey | string | `""` | This set this license key to use. Can be configured also with `global.licenseKey` |

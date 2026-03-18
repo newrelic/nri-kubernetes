@@ -125,6 +125,38 @@ future. Please migrate your agent config to the new format in the `common.agentC
 {{- fail (printf "\n\n%s\n%s" (include "newrelic.compatibility.message.common" . ) $errors )  }}
 {{- end }}
 
+{{- if .Values.kubelet.resources }}
+WARNING: `kubelet.resources` behavior is changing
+==================================================
+
+Currently, `kubelet.resources` applies the same resource values to all containers in the kubelet
+pod (including Windows). New per-container fields are now available and preferred. In a future
+release, `kubelet.resources` will be repurposed for pod-level resource setting (once Kubernetes
+pod-level resources become generally available), and container-level fallback will be removed.
+
+To silence this warning and gain independent per-container control, migrate to:
+  Linux:
+    kubelet.kubelet.resources  (nri-kubernetes scraper container)
+    kubelet.agent.resources    (infrastructure-bundle agent sidecar)
+  Windows:
+    kubelet.windows.kubelet.resources  (nri-kubernetes scraper container)
+    kubelet.windows.agent.resources    (infrastructure-bundle agent sidecar)
+
+{{- end }}
+{{- if .Values.controlPlane.resources }}
+WARNING: `controlPlane.resources` behavior is changing
+=======================================================
+
+Currently, `controlPlane.resources` applies the same resource values to both containers in the
+control plane pod. New per-container fields are now available and preferred. In a future release,
+`controlPlane.resources` will be repurposed for pod-level resource setting (once Kubernetes
+pod-level resources become generally available), and container-level fallback will be removed.
+
+To silence this warning and gain independent per-container control, migrate to:
+  controlPlane.controlplane.resources  (nri-kubernetes scraper container)
+  controlPlane.forwarder.resources     (k8s-events-forwarder sidecar)
+
+{{- end }}
 {{- if .Values.rbac.kubeletFineGrainedAuth }}
 
 Kubelet Authorization: Fine-Grained Mode (KEP-2862)
