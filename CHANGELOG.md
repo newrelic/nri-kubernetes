@@ -7,12 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### security
+## v3.57.0 - 2026-03-16
+
+### 🛡️ Security notices
 - Add response body size limits to kubelet API reads to prevent OOM from misconfigured endpoints @kondracek-nr [#1403](https://github.com/newrelic/nri-kubernetes/pull/1403)
 - Validate `networkRouteFile` config path to prevent path traversal @kondracek-nr [#1403](https://github.com/newrelic/nri-kubernetes/pull/1403)
 - Replace deprecated `io/ioutil` with `io` package @kondracek-nr [#1403](https://github.com/newrelic/nri-kubernetes/pull/1403)
 
-### enhancement
+### 🚀 Enhancements
 - Support OpenShift 4.20 @jamescripter [#1401](https://github.com/newrelic/nri-kubernetes/pull/1401)
 
 ### 🧪 Testing
