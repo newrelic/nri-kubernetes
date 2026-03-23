@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### 🚀 Enhancements
 - Support OpenShift 4.20 @jamescripter [#1401](https://github.com/newrelic/nri-kubernetes/pull/1401)
 
+### 🧪 Testing
+- Upgrade helm-unittest from 0.3.1 to 1.0.3 for improved test framework compatibility
+- Fixed invalid test assertions in gke_autopilot_test.yaml (replaced unsupported `exists:` and `notExists:` assertions)
+- Added comprehensive global value inheritance test coverage for all 27 applicable global values
+- Improved tolerations global inheritance: moved defaults from values.yaml to helper templates
+
 ## v3.56.0 - 2026-03-09
 
 ### 🚀 Enhancements

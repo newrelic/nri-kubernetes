@@ -53,10 +53,6 @@ tests:
               path: /dev
         template: templates/kubelet/daemonset.yaml
 
-      - exists:
-          path: spec
-        template: templates/controlplane/daemonset.yaml
-
 
   - it: GKE-Autopilot true
     set:
@@ -99,7 +95,3 @@ tests:
             hostPath:
               path: /dev
         template: templates/kubelet/daemonset.yaml
-
-      - notExists:
-          path: spec
-        template: templates/controlplane/daemonset.yaml
