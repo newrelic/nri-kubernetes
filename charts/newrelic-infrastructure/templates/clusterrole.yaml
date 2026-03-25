@@ -31,9 +31,10 @@ rules:
     resources:
       - "services"
       {{- if .Values.rbac.kubeletFineGrainedAuth }}
-      - "nodes/status"  # Port discovery only (kubelet client init); avoids implicit nodes/proxy grant
+      - "nodes/status"  # Port discovery and node data; avoids implicit nodes/proxy grant
       {{- else }}
       - "nodes"
+      - "nodes/status"  # Required for port discovery and node data (REST calls to nodes/status subresource)
       {{- end }}
       - "namespaces"
       - "pods"
