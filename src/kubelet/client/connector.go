@@ -11,8 +11,9 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/transport"
 
@@ -189,10 +190,29 @@ func (dp *defaultConnector) getPort() (int32, error) {
 		return dp.config.Kubelet.Port, nil
 	}
 
-	// We pay the price of a single call getting a node to avoid asking the user the Kubelet port.
-	node, err := dp.kc.CoreV1().Nodes().Get(context.Background(), dp.config.NodeName, metav1.GetOptions{})
+	// We pay the price of a single call to nodes/status to avoid asking the user the Kubelet port.
+	// We use the status subresource rather than the full node resource to avoid requiring broad `nodes`
+	// RBAC access, which would implicitly grant nodes/proxy and defeat fine-grained kubelet auth.
+	// We build the client from inClusterConfig rather than dp.kc so that the REST client is always
+	// properly initialized (fake kubernetes clients return a nil REST client).
+	cfg := *dp.inClusterConfig
+	cfg.APIPath = "/api"
+	cfg.GroupVersion = &corev1.SchemeGroupVersion
+	cfg.NegotiatedSerializer = scheme.Codecs.WithoutConversion()
+	rc, err := rest.RESTClientFor(&cfg)
 	if err != nil {
-		return 0, fmt.Errorf("getting node %q: %w", dp.config.NodeName, err)
+		return 0, fmt.Errorf("building REST client for node status: %w", err)
+	}
+
+	node := &corev1.Node{}
+	err = rc.Get().
+		Resource("nodes").
+		Name(dp.config.NodeName).
+		SubResource("status").
+		Do(context.Background()).
+		Into(node)
+	if err != nil {
+		return 0, fmt.Errorf("getting node %q status: %w", dp.config.NodeName, err)
 	}
 
 	port := node.Status.DaemonEndpoints.KubeletEndpoint.Port

@@ -299,9 +299,15 @@ func setupKubelet(c *config.Config, clients *clusterClients, namespaceCache *dis
 		CAdvisor: clients.cAdvisor,
 	}
 
+	restConfig, err := getK8sConfig(c)
+	if err != nil {
+		return nil, fmt.Errorf("getting k8s config for kubelet scraper: %w", err)
+	}
+
 	scraperOpts := []kubelet.ScraperOpt{
 		kubelet.WithLogger(logger),
 		kubelet.WithInterfaceCache(interfaceCache),
+		kubelet.WithRestConfig(restConfig),
 	}
 
 	if c.NamespaceSelector != nil {

@@ -1,6 +1,7 @@
 package client_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -308,6 +309,15 @@ func TestClientTimeoutAndRetries(t *testing.T) {
 	var requestsReceived int
 	s := httptest.NewTLSServer(http.HandlerFunc(
 		func(rw http.ResponseWriter, r *http.Request) {
+			// Serve node status for port discovery before applying delay logic.
+			if r.URL.Path == fmt.Sprintf("/api/v1/nodes/%s/status", nodeName) {
+				u, _ := url.Parse("https://" + r.Host)
+				port, _ := strconv.Atoi(u.Port())
+				rw.Header().Set("Content-Type", "application/json")
+				rw.WriteHeader(http.StatusOK)
+				_ = json.NewEncoder(rw).Encode(getTestNode(int32(port))) //nolint:gosec
+				return
+			}
 			requestsReceived++
 			if requestsReceived == 1 && r.RequestURI != path.Join(apiProxy, healthz) {
 				time.Sleep(timeout * 2)
@@ -358,7 +368,7 @@ func getTestData(s *httptest.Server) (*fake.Clientset, *config.Config, *rest.Con
 	u, _ := url.Parse(s.URL)
 	port, _ := strconv.Atoi(u.Port())
 
-	c := fake.NewSimpleClientset(getTestNode(port))
+	c := fake.NewSimpleClientset(getTestNode(int32(port)))
 
 	cf := &config.Config{
 		NodeName:               nodeName,
@@ -376,7 +386,7 @@ func getTestData(s *httptest.Server) (*fake.Clientset, *config.Config, *rest.Con
 	return c, cf, inClusterConfig
 }
 
-func getTestNode(port int) *v1.Node {
+func getTestNode(port int32) *v1.Node {
 	return &v1.Node{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: nodeName,
@@ -384,7 +394,7 @@ func getTestNode(port int) *v1.Node {
 		Status: v1.NodeStatus{
 			DaemonEndpoints: v1.NodeDaemonEndpoints{
 				KubeletEndpoint: v1.DaemonEndpoint{
-					Port: int32(port),
+					Port: port,
 				},
 			},
 		},
@@ -418,6 +428,18 @@ func handler(l sync.Locker, requestsReceived map[string]*http.Request, endpoints
 		l.Lock()
 		requestsReceived[r.RequestURI] = r
 		l.Unlock()
+
+		// Serve node status for port discovery (nodes/status subresource).
+		// The port is not known at handler creation time, so we parse it from the Host header.
+		if r.URL.Path == fmt.Sprintf("/api/v1/nodes/%s/status", nodeName) {
+			u, _ := url.Parse("https://" + r.Host)
+			port, _ := strconv.Atoi(u.Port())
+			node := getTestNode(int32(port)) //nolint:gosec
+			rw.Header().Set("Content-Type", "application/json")
+			rw.WriteHeader(http.StatusOK)
+			_ = json.NewEncoder(rw).Encode(node)
+			return
+		}
 
 		for _, e := range endpoints {
 			if e == r.RequestURI {

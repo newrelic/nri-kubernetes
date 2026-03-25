@@ -30,7 +30,11 @@ rules:
   - apiGroups: [ "" ]
     resources:
       - "services"
+      {{- if .Values.rbac.kubeletFineGrainedAuth }}
+      - "nodes/status"  # Port discovery only (kubelet client init); avoids implicit nodes/proxy grant
+      {{- else }}
       - "nodes"
+      {{- end }}
       - "namespaces"
       - "pods"
     verbs: [ "get", "list", "watch" ]

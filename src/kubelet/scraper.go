@@ -8,6 +8,7 @@ import (
 	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 	listersv1 "k8s.io/client-go/listers/core/v1"
+	"k8s.io/client-go/rest"
 
 	"github.com/newrelic/nri-kubernetes/v3/internal/config"
 	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
@@ -35,6 +36,7 @@ type Scraper struct {
 	Providers
 	logger                  *log.Logger
 	config                  *config.Config
+	inClusterConfig         *rest.Config
 	k8sVersion              *version.Info
 	defaultNetworkInterface string
 	nodeGetter              listersv1.NodeLister
@@ -74,9 +76,19 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 		return nil, fmt.Errorf("fetching K8s version: %w", err)
 	}
 
-	nodeGetter, nodeCloser := discovery.NewNodeLister(providers.K8s)
-	s.nodeGetter = nodeGetter
-	s.informerClosers = append(s.informerClosers, nodeCloser)
+	if s.inClusterConfig != nil {
+		// Use REST calls to nodes/status — requires only get nodes/status, not list/watch nodes.
+		// This avoids the implicit nodes/proxy grant that comes with the nodes resource.
+		nodeGetter, err := discovery.NewRestNodeLister(s.inClusterConfig)
+		if err != nil {
+			return nil, fmt.Errorf("building REST node lister: %w", err)
+		}
+		s.nodeGetter = nodeGetter
+	} else {
+		nodeGetter, nodeCloser := discovery.NewNodeLister(providers.K8s)
+		s.nodeGetter = nodeGetter
+		s.informerClosers = append(s.informerClosers, nodeCloser)
+	}
 
 	//TODO we can add a cache and retrieve the data more frequently if we notice this value can change often
 	s.defaultNetworkInterface, err = network.DefaultInterface(config.Kubelet.NetworkRouteFile)
@@ -140,6 +152,17 @@ func WithFilterer(filterer discovery.NamespaceFilterer) ScraperOpt {
 func WithInterfaceCache(cache *kubeletMetric.InterfaceCache) ScraperOpt {
 	return func(s *Scraper) error {
 		s.interfaceCache = cache
+		return nil
+	}
+}
+
+// WithRestConfig sets the in-cluster REST config. When provided, the scraper uses
+// direct REST calls to nodes/status for node data instead of a list/watch informer.
+// This is required for kubeletFineGrainedAuth mode, where the SA only has nodes/status
+// permission and not the broader nodes resource (which would implicitly grant nodes/proxy).
+func WithRestConfig(restConfig *rest.Config) ScraperOpt {
+	return func(s *Scraper) error {
+		s.inClusterConfig = restConfig
 		return nil
 	}
 }
