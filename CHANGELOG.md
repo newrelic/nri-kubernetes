@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### breaking
+- Windows pods now run in privileged mode by default, unlocking host metric collection on Windows. The agent image has moved from `newrelic/infrastructure-windows` to `newrelic/infrastructure-bundle` to align with Linux. If you have pinned `images.windowsAgent`, update it to the new image. To opt out of privileged mode, set `windows.privileged: false`. @kondracek-nr [#1409](https://github.com/newrelic/nri-kubernetes/pull/1409)
+
 ## v3.57.0 - 2026-03-16
 
 ### 🛡️ Security notices
@@ -16,7 +19,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### 🚀 Enhancements
 - Support OpenShift 4.20 @jamescripter [#1401](https://github.com/newrelic/nri-kubernetes/pull/1401)
-- Enable Windows HostProcess (privileged) containers by default; set `windows.privileged: false` to opt out @kondracek-nr
 
 ### 🧪 Testing
 - Upgrade helm-unittest from 0.3.1 to 1.0.3 for improved test framework compatibility

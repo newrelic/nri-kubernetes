@@ -111,7 +111,7 @@ tests:
         template: templates/kubelet/daemonset-windows.yaml
       - equal:
           path: spec.template.spec.containers[1].command[2]
-          value: "$env:CONTAINER_SANDBOX_MOUNT_POINT\\start.ps1"
+          value: "& \"$env:CONTAINER_SANDBOX_MOUNT_POINT\\Program Files\\New Relic\\newrelic-infra\\newrelic-infra.exe\""
         template: templates/kubelet/daemonset-windows.yaml
 
   - it: should enable hostNetwork in privileged mode
