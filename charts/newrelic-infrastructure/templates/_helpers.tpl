@@ -148,26 +148,9 @@ Outputs "true" when privileged, outputs nothing (empty string) when unprivileged
 {{- end -}}
 {{- end -}}
 
-{{- /* Windows image string processing */ -}}
-{{- /* Windows Agent is more complicated because of how we've set up agent build automation. */ -}}
-{{- /* This may be simplified once infrastructure-bundle accommodates Windows. */ -}}
-{{- define "nriKubernetes.windowsImageRep" -}}
-{{ if ne .Values.images.windowsAgent.repository "newrelic/infrastructure" }}
-.Values.images.windowsAgent.repository
-{{- else -}}
-repository: newrelic/infrastructure-windows
-{{ end }}
-{{- end -}}
-
-{{- define "nriKubernetes.updatedWindowsAgentImageDict" -}}
-{{- $updatedWindowsImageRepository := fromYaml ( include "nriKubernetes.windowsImageRep" . ) -}}
-{{- $baseWindowsImageDict := .Values.images.windowsAgent }}
-{{- $windowsImageDict := mustMergeOverwrite $baseWindowsImageDict $updatedWindowsImageRepository -}}
-{{- toYaml $windowsImageDict -}}
-{{- end -}}
-
+{{- /* Windows Agent */ -}}
 {{- define "nriKubernetes.windowsAgentImage" -}}
-  {{ include "newrelic.common.images.image" ( dict "imageRoot" (include "nriKubernetes.updatedWindowsAgentImageDict" . | fromYaml) "context" $ ) }}
+  {{ include "newrelic.common.images.image" ( dict "imageRoot" $.Values.images.windowsAgent "context" $ ) }}
 {{- end}}
 
 {{- /* Windows Integration */ -}}

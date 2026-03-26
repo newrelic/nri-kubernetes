@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### breaking
+- Windows pods now run in privileged mode by default, unlocking host metric collection on Windows. The agent image has moved from `newrelic/infrastructure-windows` to `newrelic/infrastructure-bundle` to align with Linux. If you have pinned `images.windowsAgent`, update it to the new image. To opt out of privileged mode, set `windows.privileged: false`. @kondracek-nr [#1409](https://github.com/newrelic/nri-kubernetes/pull/1409)
+
 ### enhancement
 - Add per-container resource settings for kubelet (`kubelet.kubelet.resources`, `kubelet.agent.resources`) and controlplane (`controlPlane.controlplane.resources`, `controlPlane.forwarder.resources`) DaemonSets. `kubelet.resources` and `controlPlane.resources` continue to work as a fallback but their behavior will change in the future: they will be repurposed for pod-level resource setting once Kubernetes pod-level resources become generally available. @kondracek-nr [#1436](https://github.com/newrelic/nri-kubernetes/pull/1436)
 
@@ -19,7 +22,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### 🚀 Enhancements
 - Support OpenShift 4.20 @jamescripter [#1401](https://github.com/newrelic/nri-kubernetes/pull/1401)
-- Enable Windows HostProcess (privileged) containers by default; set `windows.privileged: false` to opt out @kondracek-nr
 
 ### 🧪 Testing
 - Upgrade helm-unittest from 0.3.1 to 1.0.3 for improved test framework compatibility
