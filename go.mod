@@ -9,11 +9,11 @@ require (
 	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/prom2json v1.3.2
 	github.com/segmentio/go-camelcase v0.0.0-20160726192923-7085f1e3c734
-	github.com/sirupsen/logrus v1.9.0
+	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.0
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/net v0.17.0
-	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b
+	golang.org/x/oauth2 v0.27.0
 	k8s.io/api v0.25.3
 	k8s.io/apimachinery v0.25.3
 	k8s.io/client-go v0.25.3
