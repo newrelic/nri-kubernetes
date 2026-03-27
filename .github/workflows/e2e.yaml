@@ -18,7 +18,7 @@ jobs:
         privilegedMode: [ "normal", "unprivileged" ]
         # Latest patch version can be found in https://github.com/kubernetes/website/blob/main/content/en/releases/patch-releases.md
         # Some versions might not be available yet in https://storage.googleapis.com/kubernetes-release/release/v1.X.Y/bin/linux/amd64/kubelet
-        k8sVersion: [ "v1.16.15", "v1.17.17", "v1.18.20", "v1.19.14", "v1.20.10", "v1.21.4", "v1.22.0" ]
+        k8sVersion: [ "v1.34.0", "v1.33.0", "v1.32.0", "v1.31.0", "v1.30.0" ]
     env:
       DOCKER_BUILDKIT: '1' # Setting DOCKER_BUILDKIT=1 ensures TARGETOS and TARGETARCH are populated
     steps:
@@ -32,8 +32,7 @@ jobs:
           minikube version: v1.38.1
           kubernetes version: ${{ matrix.k8sVersion }}
           github token: ${{ secrets.GITHUB_TOKEN }}
-          driver: docker
-          start args: "--container-runtime=${{ matrix.cri }}"
+          driver: none # required for nri-kubernetes, as metrics gathered for the host are tested as well
       - name: Compile and Build Image
         run: |
           GOOS=linux GOARCH=amd64 make compile # Set GOOS and GOARCH explicitly since Dockerfile expects them in the binary name
