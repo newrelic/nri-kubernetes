@@ -11,7 +11,7 @@ on:
 jobs:
   e2eTests:
     if: ${{ ! contains(github.event.pull_request.labels.*.name, 'ci/skip-e2e') }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       max-parallel: 7 # len(k8sVersion) is a good number to have here
       matrix:
