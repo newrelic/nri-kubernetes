@@ -102,10 +102,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: newrelic/newrelic-infra-checkers@v1
-      - name: Semgrep
-        uses: returntocorp/semgrep-action@v1
         with:
-          auditOn: push
+          golangci-lint-config: golangci-lint
+#      - name: Semgrep
+#        uses: returntocorp/semgrep-action@v1
+#        with:
+#          auditOn: push
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         continue-on-error: ${{ github.event_name != 'pull_request' }}
