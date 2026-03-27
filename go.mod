@@ -1,6 +1,6 @@
 module github.com/newrelic/nri-kubernetes/v2
 
-go 1.21
+go 1.23.0
 
 require (
 	github.com/golang/protobuf v1.5.2
@@ -18,7 +18,6 @@ require (
 	k8s.io/apimachinery v0.25.3
 	k8s.io/client-go v0.25.3
 	k8s.io/kubelet v0.25.3
-
 )
 
 require (
@@ -53,7 +52,6 @@ require (
 	golang.org/x/term v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
-	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
