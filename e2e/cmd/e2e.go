@@ -285,6 +285,7 @@ func (e *testEnv) waitForKSM() (*v1.Pod, error) {
 	if err != nil {
 		return nil, fmt.Errorf("kube-state-metrics pod is not ready: %s", err)
 	}
+	e.logger.Debugf("kube-state-metrics pod IS ready")
 	return &foundPod, nil
 }
 
