@@ -1,6 +1,7 @@
 package jsonschema
 
 import (
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 
@@ -64,6 +65,9 @@ func MatchEntities(data []*sdk.EntityData, schemaFileByJobByType map[string]Even
 			expectedEvents[event] = jobName
 		}
 	}
+
+	jsonData, _ := json.MarshalIndent(data, "", "  ")
+	fmt.Printf("DEBUG: Data as JSON:\n%s\n", jsonData)
 
 	for _, entityData := range data {
 		metric := mergeMetricSets(entityData.Metrics)
