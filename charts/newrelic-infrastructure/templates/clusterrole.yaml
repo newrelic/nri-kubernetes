@@ -8,9 +8,11 @@ rules:
   - apiGroups: [""]
     resources:
       - "nodes"
-      - "nodes/metrics"
-      - "nodes/stats"
+      - "nodes/metrics" # Allows /metrics and /metrics/cadvisor
+      - "nodes/stats"   # Allows /stats/summary
       - "nodes/proxy"
+      - "nodes/pods"     # Allows /pods
+      - "nodes/healthz"  # Allows /healthz (used for connection testing)
       - "pods"
       - "services"
     verbs: ["get", "list"]
