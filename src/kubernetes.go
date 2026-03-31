@@ -37,11 +37,11 @@ type argumentList struct {
 	DiscoveryCacheDir                 string `default:"/var/cache/nr-kubernetes" help:"The location of the cached values for discovered endpoints. Obsolete, use CacheDir instead."`
 	CacheDir                          string `default:"/var/cache/nr-kubernetes" help:"The location where to store various cached data."`
 	DiscoveryCacheTTL                 string `default:"1h" help:"Duration since the discovered endpoints are stored in the cache until they expire. Valid time units: 'ns', 'us', 'ms', 's', 'm', 'h'"`
-	DiscoveryCacheTTLJitter           int    `default:"0" help:"Total percentage how much the TTL can be randomly reduced or increased to spead load on the API server for discovery. E.g. 100% can either double the TTL or reduce it to 0."`
+	DiscoveryCacheTTLJitter           int    `default:"0" help:"Total percentage how much the TTL can be randomly reduced or increased to speed load on the API server for discovery. E.g. 100% can either double the TTL or reduce it to 0."`
 	APIServerCacheTTL                 string `default:"5m" help:"Duration to cache responses from the API Server. Valid time units: 'ns', 'us', 'ms', 's', 'm', 'h'. Set to 0s to disable"`
-	APIServerCacheTTLJitter           int    `default:"0" help:"Total percentage how much the TTL can be randomly reduced or increased to spead load on the API server for API metrics. E.g. 100% can either double the TTL or reduce it to 0."`
+	APIServerCacheTTLJitter           int    `default:"0" help:"Total percentage how much the TTL can be randomly reduced or increased to speed load on the API server for API metrics. E.g. 100% can either double the TTL or reduce it to 0."`
 	APIServerCacheK8SVersionTTL       string `default:"3h" help:"Duration to cache the kubernetes version responses from the API Server. Valid time units: 'ns', 'us', 'ms', 's', 'm', 'h'. Set to 0s to disable"`
-	APIServerCacheK8SVersionTTLJitter int    `default:"0" help:"Total percentage how much the TTL can be randomly reduced or increased to spead load on the API server for K8s version discovery. E.g. 100% can either double the TTL or reduce it to 0."`
+	APIServerCacheK8SVersionTTLJitter int    `default:"0" help:"Total percentage how much the TTL can be randomly reduced or increased to speed load on the API server for K8s version discovery. E.g. 100% can either double the TTL or reduce it to 0."`
 	EtcdTLSSecretName                 string `help:"Name of the secret that stores your ETCD TLS configuration"`
 	EtcdTLSSecretNamespace            string `default:"default" help:"Namespace in which the ETCD TLS secret lives"`
 	DisableKubeStateMetrics           bool   `default:"false" help:"Used to disable KSM data fetching. Defaults to 'false''"`

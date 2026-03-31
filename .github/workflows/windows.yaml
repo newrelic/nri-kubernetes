@@ -63,7 +63,7 @@ jobs:
             -f Dockerfile.windows `
             -t newrelic/infrastructure:${{ env.AGENT_VERSION }}-windows-${{ matrix.windows.tag }} .
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v4
         with:
           path: |
             %LocalAppData%\go-build
