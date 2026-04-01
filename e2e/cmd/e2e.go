@@ -528,6 +528,23 @@ func (se *scenarioEnv) testEventTypes(output map[string]*integrationData) error 
 		i := sdk.IntegrationProtocol2{}
 		err := json.Unmarshal(o.stdOut, &i)
 		if err != nil {
+			// TODO: REMOVE THIS
+			// Print o.stdOut for debugging
+			stdOutStr := string(o.stdOut)
+			fmt.Printf("Failed to unmarshal stdOut for pod %s. Raw stdOut:\n", podName)
+
+			// Try to parse as JSON first to pretty print
+			var jsonObj interface{}
+			if jsonErr := json.Unmarshal(o.stdOut, &jsonObj); jsonErr == nil {
+				if prettyJSON, prettyErr := json.MarshalIndent(jsonObj, "", "  "); prettyErr == nil {
+					fmt.Printf("StdOut (formatted JSON):\n%s\n", string(prettyJSON))
+				} else {
+					fmt.Printf("StdOut (string):\n%s\n", stdOutStr)
+				}
+			} else {
+				fmt.Printf("StdOut (string):\n%s\n", stdOutStr)
+			}
+
 			return err
 		}
 		err = jsonschema.MatchIntegration(&i)

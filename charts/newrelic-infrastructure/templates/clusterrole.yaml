@@ -7,15 +7,23 @@ metadata:
 rules:
   - apiGroups: [""]
     resources:
-      - "nodes"
       - "nodes/metrics" # Allows /metrics and /metrics/cadvisor
       - "nodes/stats"   # Allows /stats/summary
       - "nodes/proxy"
       - "nodes/pods"     # Allows /pods
       - "nodes/healthz"  # Allows /healthz (used for connection testing)
-      - "pods"
-      - "services"
     verbs: ["get", "list"]
+  - apiGroups: [ "" ]
+    resources:
+      - "services"
+      - "nodes"
+      - "namespaces"
+      - "pods"
+    verbs: [ "get", "list", "watch" ]
+  - apiGroups: ["discovery.k8s.io"]
+    resources:
+      - "endpointslices"
+    verbs: ["get", "list", "watch"]
   - nonResourceURLs: ["/metrics"]
     verbs: ["get"]
 {{- if .Values.rbac.pspEnabled }}
