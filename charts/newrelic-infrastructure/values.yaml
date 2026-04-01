@@ -53,8 +53,8 @@ images:
   # @default -- See `values.yaml`
   windowsAgent:
     registry: ""
-    repository: newrelic/infrastructure
-    tag: 1.72.9
+    repository: newrelic/infrastructure-bundle
+    tag: 3.3.20
     pullPolicy: IfNotPresent
 
 # -- Enable Windows node monitoring.
@@ -83,6 +83,15 @@ windowsOsList:
     agentImage: ""
     # @ignored
     integrationImage: ""
+
+# Windows-specific configuration
+windows:
+  # -- (bool) Override privileged mode for Windows nodes.
+  # When null, inherits from global 'privileged' setting.
+  # Set to false to disable HostProcess mode on Windows while keeping Linux privileged.
+  # HostProcess containers run directly on the Windows host (not in a container) and require hostNetwork: true.
+  # @default -- `true`
+  privileged: true
 
 # -- Config that applies to all instances of the solution: kubelet, ksm, control plane and sidecars.
 # @default -- See `values.yaml`
