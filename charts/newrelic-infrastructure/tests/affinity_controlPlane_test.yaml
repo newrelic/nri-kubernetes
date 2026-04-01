@@ -51,9 +51,6 @@ tests:
                   - matchExpressions:
                       - key: node-role.kubernetes.io/etcd
                         operator: Exists
-                  - matchExpressions:
-                      - key: node.kubernetes.io/microk8s-controlplane
-                        operator: Exists
         template: templates/controlplane/daemonset.yaml
 
   - it: affinity is set by common-library's global
@@ -112,9 +109,6 @@ tests:
                         operator: Exists
                   - matchExpressions:
                       - key: node-role.kubernetes.io/etcd
-                        operator: Exists
-                  - matchExpressions:
-                      - key: node.kubernetes.io/microk8s-controlplane
                         operator: Exists
         template: templates/controlplane/daemonset.yaml
 
