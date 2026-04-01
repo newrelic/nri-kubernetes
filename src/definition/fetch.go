@@ -39,10 +39,8 @@ func FromRaw(metricKey string) FetchFunc {
 		}
 
 		// TODO: REMOVE THIS
-		if metricKey == "containerImageID" {
-			if groupsJSON, err := json.MarshalIndent(groups, "", "  "); err == nil {
-				fmt.Printf("Groups for containerImageID:\n%s\n", string(groupsJSON))
-			}
+		if groupsJSON, err := json.MarshalIndent(groups, "", "  "); err == nil {
+			fmt.Printf("Groups for containerImageID:\n%s\n", string(groupsJSON))
 		}
 
 		entity, ok := group[entityID]
