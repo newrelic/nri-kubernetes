@@ -1,17 +1,18 @@
 run:
   timeout: 5m
-  skip-dirs:
+
+issues:
+  exclude-dirs:
     - vendor
 
 linters:
   enable:
-    - deadcode
+    - unused      # replaces deprecated deadcode
     - errcheck
     - gofmt
-    - golint
+    - revive      # replaces deprecated golint
     - goimports
     - govet
-    - interfacer
     - gosimple
   enable-all: false
   disable-all: true

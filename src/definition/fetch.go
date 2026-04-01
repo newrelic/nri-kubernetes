@@ -1,6 +1,7 @@
 package definition
 
 import (
+	"encoding/json"
 	"fmt"
 )
 
@@ -35,6 +36,11 @@ func FromRaw(metricKey string) FetchFunc {
 		group, ok := groups[groupLabel]
 		if !ok {
 			return nil, fmt.Errorf("group %q not found", groupLabel)
+		}
+
+		// TODO: REMOVE THIS
+		if groupsJSON, err := json.MarshalIndent(groups, "", "  "); err == nil {
+			fmt.Printf("Groups for containerImageID:\n%s\n", string(groupsJSON))
 		}
 
 		entity, ok := group[entityID]

@@ -1,6 +1,6 @@
 module github.com/newrelic/nri-kubernetes/v2
 
-go 1.21
+go 1.23.0
 
 require (
 	github.com/golang/protobuf v1.5.2
@@ -9,16 +9,15 @@ require (
 	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/prom2json v1.3.2
 	github.com/segmentio/go-camelcase v0.0.0-20160726192923-7085f1e3c734
-	github.com/sirupsen/logrus v1.9.0
+	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.0
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/net v0.17.0
-	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b
+	golang.org/x/oauth2 v0.27.0
 	k8s.io/api v0.25.3
 	k8s.io/apimachinery v0.25.3
 	k8s.io/client-go v0.25.3
 	k8s.io/kubelet v0.25.3
-
 )
 
 require (
@@ -53,7 +52,6 @@ require (
 	golang.org/x/term v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
-	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

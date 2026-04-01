@@ -285,6 +285,7 @@ func (e *testEnv) waitForKSM() (*v1.Pod, error) {
 	if err != nil {
 		return nil, fmt.Errorf("kube-state-metrics pod is not ready: %s", err)
 	}
+	e.logger.Debugf("kube-state-metrics pod IS ready")
 	return &foundPod, nil
 }
 
@@ -376,6 +377,18 @@ func (se *scenarioEnv) executeTests(ksmPod *v1.Pod, releaseName string) error {
 		func() error {
 			err := se.testEventTypes(output)
 			if err != nil {
+				// TODO: REMOVE THIS
+				// Print output for debugging
+				if outputStr, ok := interface{}(output).(string); ok {
+					fmt.Printf("Output (string): %s\n", outputStr)
+				} else {
+					if outputJSON, jsonErr := json.MarshalIndent(output, "", "  "); jsonErr == nil {
+						fmt.Printf("Output (JSON):\n%s\n", string(outputJSON))
+					} else {
+						fmt.Printf("Output (raw): %+v\n", output)
+					}
+				}
+
 				var otherErr error
 				output, otherErr = se.executeIntegrationForAllPods(ksmPod, podsList)
 				if otherErr != nil {
@@ -391,6 +404,7 @@ func (se *scenarioEnv) executeTests(ksmPod *v1.Pod, releaseName string) error {
 		}),
 	)
 	if err != nil {
+
 		execErr.errs = append(execErr.errs, fmt.Errorf("failure during JSON schema validation, %s", err))
 	}
 	if len(execErr.errs) > 0 {
@@ -514,6 +528,23 @@ func (se *scenarioEnv) testEventTypes(output map[string]*integrationData) error 
 		i := sdk.IntegrationProtocol2{}
 		err := json.Unmarshal(o.stdOut, &i)
 		if err != nil {
+			// TODO: REMOVE THIS
+			// Print o.stdOut for debugging
+			stdOutStr := string(o.stdOut)
+			fmt.Printf("Failed to unmarshal stdOut for pod %s. Raw stdOut:\n", podName)
+
+			// Try to parse as JSON first to pretty print
+			var jsonObj interface{}
+			if jsonErr := json.Unmarshal(o.stdOut, &jsonObj); jsonErr == nil {
+				if prettyJSON, prettyErr := json.MarshalIndent(jsonObj, "", "  "); prettyErr == nil {
+					fmt.Printf("StdOut (formatted JSON):\n%s\n", string(prettyJSON))
+				} else {
+					fmt.Printf("StdOut (string):\n%s\n", stdOutStr)
+				}
+			} else {
+				fmt.Printf("StdOut (string):\n%s\n", stdOutStr)
+			}
+
 			return err
 		}
 		err = jsonschema.MatchIntegration(&i)

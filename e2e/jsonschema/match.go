@@ -65,6 +65,10 @@ func MatchEntities(data []*sdk.EntityData, schemaFileByJobByType map[string]Even
 		}
 	}
 
+	//// TODO: Remove this
+	//jsonData, _ := json.MarshalIndent(data, "", "  ")
+	//fmt.Printf("DEBUG: Data as JSON:\n%s\n", jsonData)
+
 	for _, entityData := range data {
 		metric := mergeMetricSets(entityData.Metrics)
 
