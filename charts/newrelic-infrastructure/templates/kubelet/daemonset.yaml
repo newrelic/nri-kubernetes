@@ -116,8 +116,8 @@ spec:
             {{- with .Values.kubelet.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- with .Values.kubelet.resources }}
-          resources: {{ toYaml . | nindent 12 }}
+          {{- with include "nriKubernetes.kubelet.resources.kubelet" . | fromYaml }}
+          resources: {{- toYaml . | nindent 12 }}
           {{- end }}
         - name: agent
           image: {{ include "newrelic.common.images.image" ( dict "imageRoot" .Values.images.agent "context" .) }}
@@ -221,8 +221,8 @@ spec:
             {{- with .Values.kubelet.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          {{- with .Values.kubelet.resources }}
-          resources: {{ toYaml . | nindent 12 }}
+          {{- with include "nriKubernetes.kubelet.resources.agent" . | fromYaml }}
+          resources: {{- toYaml . | nindent 12 }}
           {{- end }}
       volumes:
         {{- if include "nriKubernetes.privileged" . }}
