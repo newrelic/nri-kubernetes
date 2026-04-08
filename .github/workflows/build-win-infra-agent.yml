@@ -1,11 +1,10 @@
 name: Build Windows Infrastructure Agent Image
 
+# The push trigger has been disabled because the Windows infrastructure agent image
+# is now provided by the infrastructure-bundle instead of being built here.
+# This workflow is kept for reference and can be triggered manually if needed.
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'charts/newrelic-infrastructure/values.yaml'
+  workflow_dispatch:
 
 permissions:
   contents: read
