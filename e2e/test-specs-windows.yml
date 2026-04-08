@@ -195,11 +195,11 @@ scenarios:
           expected_results:
             - key: "created"
               lowerBoundedValue: 0.0
-        - query: FROM Metric SELECT latest(k8s.pod.isReady) as 'ready', latest(k8s.pod.isScheduled) as 'scheduled', latest(k8s.status) as 'status' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName like '${SCENARIO_TAG}-resources-win-2022-cronjob-%' FACET k8s.nodeName as 'nodename' since 20 minutes ago
+        - query: FROM Metric SELECT latest(k8s.pod.isReady) as 'ready', latest(k8s.pod.isScheduled) as 'scheduled', latest(k8s.status) as 'status' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName like '${SCENARIO_TAG}-resources-win-2022-cronjob-%' FACET k8s.nodeName as 'nodename' since 10 minutes ago
           expected_results:
             - key: "ready"
               lowerBoundedValue: 0.0
-        - query: FROM Metric SELECT latest(k8s.pod.isReady) as 'ready', latest(k8s.pod.isScheduled) as 'scheduled', latest(k8s.status) as 'status' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName like '${SCENARIO_TAG}-resources-win-2022-cronjob-%' FACET k8s.nodeName as 'nodename' since 20 minutes ago
+        - query: FROM Metric SELECT latest(k8s.pod.isReady) as 'ready', latest(k8s.pod.isScheduled) as 'scheduled', latest(k8s.status) as 'status' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.podName like '${SCENARIO_TAG}-resources-win-2022-cronjob-%' FACET k8s.nodeName as 'nodename' since 10 minutes ago
           expected_results:
             - key: "scheduled"
               lowerBoundedValue: 0.0
