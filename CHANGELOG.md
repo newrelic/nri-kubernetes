@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### bugfix
+- Use actual applied container resources (`Pod.Status.ContainerStatuses[i].Resources`) over desired spec resources (`Pod.Spec.Containers[i].Resources`) where present to correctly report `cpuRequestedCores`, `memoryRequestedBytes`, and related metrics during in-place pod vertical scaling (K8s 1.33+ beta, 1.35+ GA) @kondracek-nr
+
 ### enhancement
 - Add per-container resource settings for kubelet (`kubelet.kubelet.resources`, `kubelet.agent.resources`) and controlplane (`controlPlane.controlplane.resources`, `controlPlane.forwarder.resources`) DaemonSets. `kubelet.resources` and `controlPlane.resources` continue to work as a fallback but their behavior will change in the future: they will be repurposed for pod-level resource setting once Kubernetes pod-level resources become generally available. @kondracek-nr [#1436](https://github.com/newrelic/nri-kubernetes/pull/1436)
 

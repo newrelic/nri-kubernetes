@@ -14,6 +14,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/newrelic/nri-kubernetes/v3/internal/config"
@@ -462,4 +463,93 @@ func TestFetchPodData_WithPriorityClassNameOnly(t *testing.T) {
 	_, hasPriority := result["priority"]
 	assert.False(t, hasPriority, "priority should not be present when nil")
 	assert.Equal(t, "system-cluster-critical", result["priorityClassName"])
+}
+
+// TestFetchContainersData_InPlaceVerticalScaling verifies that when
+// ContainerStatus.Resources is populated (K8s 1.33+ in-place pod vertical scaling),
+// the actual applied resources are used instead of Spec resources (desired state).
+func TestFetchContainersData_InPlaceVerticalScaling(t *testing.T) {
+	t.Parallel()
+
+	specCPU := resource.MustParse("100m")
+	specMemory := resource.MustParse("128Mi")
+	statusCPU := resource.MustParse("200m") // resized up
+	statusMemory := resource.MustParse("256Mi")
+
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-pod",
+			Namespace: "default",
+		},
+		Spec: corev1.PodSpec{
+			NodeName: "test-node",
+			Containers: []corev1.Container{
+				{
+					Name:  "app",
+					Image: "app:latest",
+					Resources: corev1.ResourceRequirements{
+						Requests: corev1.ResourceList{
+							corev1.ResourceCPU:    specCPU,
+							corev1.ResourceMemory: specMemory,
+						},
+						Limits: corev1.ResourceList{
+							corev1.ResourceCPU:    specCPU,
+							corev1.ResourceMemory: specMemory,
+						},
+					},
+				},
+				{
+					Name:  "sidecar",
+					Image: "sidecar:latest",
+					Resources: corev1.ResourceRequirements{
+						Requests: corev1.ResourceList{
+							corev1.ResourceCPU:    specCPU,
+							corev1.ResourceMemory: specMemory,
+						},
+					},
+				},
+			},
+		},
+		Status: corev1.PodStatus{
+			HostIP: "192.168.0.1",
+			ContainerStatuses: []corev1.ContainerStatus{
+				{
+					Name: "app",
+					// Resources populated: actual applied state after resize
+					Resources: &corev1.ResourceRequirements{
+						Requests: corev1.ResourceList{
+							corev1.ResourceCPU:    statusCPU,
+							corev1.ResourceMemory: statusMemory,
+						},
+						Limits: corev1.ResourceList{
+							corev1.ResourceCPU:    statusCPU,
+							corev1.ResourceMemory: statusMemory,
+						},
+					},
+				},
+				{
+					Name:      "sidecar",
+					Resources: nil, // no status resources; fall back to spec
+				},
+			},
+		},
+	}
+
+	podFetcher := &PodsFetcher{}
+	result := podFetcher.fetchContainersData(pod)
+
+	appID := "default_test-pod_app"
+	sidecarID := "default_test-pod_sidecar"
+
+	// "app" container: status resources should take precedence
+	assert.Equal(t, statusCPU.MilliValue(), result[appID]["cpuRequestedCores"], "app: should use status CPU request")
+	assert.Equal(t, statusCPU.MilliValue(), result[appID]["cpuLimitCores"], "app: should use status CPU limit")
+	assert.Equal(t, statusMemory.Value(), result[appID]["memoryRequestedBytes"], "app: should use status memory request")
+	assert.Equal(t, statusMemory.Value(), result[appID]["memoryLimitBytes"], "app: should use status memory limit")
+
+	// "sidecar" container: status resources nil, should fall back to spec
+	assert.Equal(t, specCPU.MilliValue(), result[sidecarID]["cpuRequestedCores"], "sidecar: should fall back to spec CPU request")
+	assert.Equal(t, specMemory.Value(), result[sidecarID]["memoryRequestedBytes"], "sidecar: should fall back to spec memory request")
+	_, hasLimit := result[sidecarID]["cpuLimitCores"]
+	assert.False(t, hasLimit, "sidecar: no CPU limit in spec, should not be set")
 }

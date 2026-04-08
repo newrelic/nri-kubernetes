@@ -194,6 +194,24 @@ func (podsFetcher *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]defi
 	statuses := make(map[string]definition.RawMetrics)
 	fillContainerStatuses(pod, statuses)
 
+	// Build lookup map for actual applied resources per container name.
+	// As of K8s 1.33 (beta, on by default) / 1.35 (GA), in-place pod vertical scaling means
+	// Pod.Spec.Containers[i].Resources is the desired state, not the actual state.
+	// Pod.Status.ContainerStatuses[i].Resources holds the actual applied resources.
+	containerStatusByName := make(map[string]*v1.ContainerStatus)
+	for i := range pod.Status.ContainerStatuses {
+		cs := &pod.Status.ContainerStatuses[i]
+		containerStatusByName[cs.Name] = cs
+	}
+	for idx, initContainer := range pod.Spec.InitContainers {
+		if initContainer.RestartPolicy != nil && *initContainer.RestartPolicy == v1.ContainerRestartPolicyAlways {
+			if idx < len(pod.Status.InitContainerStatuses) {
+				cs := &pod.Status.InitContainerStatuses[idx]
+				containerStatusByName[cs.Name] = cs
+			}
+		}
+	}
+
 	metrics := make(map[string]definition.RawMetrics)
 	containers := pod.Spec.Containers
 
@@ -218,19 +236,25 @@ func (podsFetcher *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]defi
 			metrics[id]["nodeIP"] = v
 		}
 
-		if v, ok := c.Resources.Requests[v1.ResourceCPU]; ok {
+		// Prefer status resources (actual applied) over spec resources (desired state).
+		resources := c.Resources
+		if cs, ok := containerStatusByName[c.Name]; ok && cs.Resources != nil {
+			resources = *cs.Resources
+		}
+
+		if v, ok := resources.Requests[v1.ResourceCPU]; ok {
 			metrics[id]["cpuRequestedCores"] = v.MilliValue()
 		}
 
-		if v, ok := c.Resources.Limits[v1.ResourceCPU]; ok {
+		if v, ok := resources.Limits[v1.ResourceCPU]; ok {
 			metrics[id]["cpuLimitCores"] = v.MilliValue()
 		}
 
-		if v, ok := c.Resources.Requests[v1.ResourceMemory]; ok {
+		if v, ok := resources.Requests[v1.ResourceMemory]; ok {
 			metrics[id]["memoryRequestedBytes"] = v.Value()
 		}
 
-		if v, ok := c.Resources.Limits[v1.ResourceMemory]; ok {
+		if v, ok := resources.Limits[v1.ResourceMemory]; ok {
 			metrics[id]["memoryLimitBytes"] = v.Value()
 		}
 
