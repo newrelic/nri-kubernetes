@@ -209,7 +209,7 @@ Infrastructure Agent integrations (Kafka, Cassandra, Redis, etc.) are not suppor
 | controlPlane.forwarder.resources | object | 100m/150M -/300M | Resources for the k8s-events-forwarder sidecar container. |
 | controlPlane.hostNetwork | bool | `true` | Run Control Plane scraper with `hostNetwork`. `hostNetwork` is required for most control plane configurations, as they only accept connections from localhost. |
 | controlPlane.kind | string | `"DaemonSet"` | How to deploy the control plane scraper. If autodiscovery is in use, it should be `DaemonSet`. Advanced users using static endpoints set this to `Deployment` to avoid reporting metrics twice. |
-| controlPlane.tolerations | list | Schedules in all tainted nodes | Tolerations for the control plane DaemonSet. |
+| controlPlane.tolerations | list | Schedules in all tainted nodes | Tolerations for the control plane DaemonSet. tolerations:   - operator: "Exists"     effect: "NoSchedule"   - operator: "Exists"     effect: "NoExecute" |
 | customAttributes | object | `{}` | Adds extra attributes to the cluster and all the metrics emitted to the backend. Can be configured also with `global.customAttributes` |
 | customSecretLicenseKey | string | `""` | In case you don't want to have the license key in you values, this allows you to point to which secret key is the license key located. Can be configured also with `global.customSecretLicenseKey` |
 | customSecretName | string | `""` | In case you don't want to have the license key in you values, this allows you to point to a user created secret to get the key from there. Can be configured also with `global.customSecretName` |
@@ -239,7 +239,7 @@ Infrastructure Agent integrations (Kafka, Cassandra, Redis, etc.) are not suppor
 | ksm.forwarder.resources | object | 100m/150M -/850M | Resources for the Forwarder sidecar container. |
 | ksm.hostNetwork | bool | Not set | Sets pod's hostNetwork. When set bypasses global/common variable |
 | ksm.ksm.resources | object | 100m/150M -/850M | Resources for the KSM scraper container. Keep in mind that sharding is not supported at the moment, so memory usage for this component ramps up quickly on large clusters. |
-| ksm.tolerations | list | Tolerates common node pressure taints but not unschedulable nodes | Tolerations for the KSM Deployment. |
+| ksm.tolerations | list | Tolerates common node pressure taints but not unschedulable nodes | Tolerations for the KSM Deployment. tolerations:   - key: "node.kubernetes.io/disk-pressure"     operator: "Exists"     effect: "NoSchedule"   - key: "node.kubernetes.io/memory-pressure"     operator: "Exists"     effect: "NoSchedule"   - key: "node.kubernetes.io/pid-pressure"     operator: "Exists"     effect: "NoSchedule"   - key: "node.kubernetes.io/network-unavailable"     operator: "Exists"     effect: "NoSchedule"   - operator: "Exists"     effect: "NoExecute" |
 | kubelet | object | See `values.yaml` | Configuration for the DaemonSet that collects metrics from the Kubelet. |
 | kubelet.agent.resources | object | 100m/150M -/300M | Resources for the infrastructure-bundle agent sidecar container. |
 | kubelet.agentConfig | object | `{}` | Config for the Infrastructure agent that will forward the metrics to the backend and will run the integrations in this cluster. It will be merged with the configuration in `.common.agentConfig`. You can see all the agent configurations in [New Relic docs](https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/) e.g. you can set `passthrough_environment` int the [config file](https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/configure-infrastructure-agent/#config-file) so the agent let use that environment variables to the integrations. |
@@ -255,7 +255,7 @@ Infrastructure Agent integrations (Kafka, Cassandra, Redis, etc.) are not suppor
 | kubelet.extraVolumes | list | `[]` | Volumes to mount in the containers |
 | kubelet.hostNetwork | bool | Not set | Sets pod's hostNetwork. When set bypasses global/common variable. Note - does not apply to Windows nodes |
 | kubelet.kubelet.resources | object | 100m/150M -/300M | Resources for the kubelet scraper container. |
-| kubelet.tolerations | list | Schedules in all tainted nodes | Tolerations for the control plane DaemonSet. |
+| kubelet.tolerations | list | Schedules in all tainted nodes | Tolerations for the kubelet DaemonSet. tolerations:   - operator: "Exists"     effect: "NoSchedule"   - operator: "Exists"     effect: "NoExecute" |
 | kubelet.windows.agent.resources | object | 100m/150M -/300M | Resources for the Windows agent sidecar container. |
 | kubelet.windows.kubelet.resources | object | 100m/150M -/300M | Resources for the Windows kubelet scraper container. |
 | kubelet.windowsNodeSelector | object | `{}` | Node selector for the Windows kubelet DaemonSet. |
@@ -284,6 +284,7 @@ Infrastructure Agent integrations (Kafka, Cassandra, Redis, etc.) are not suppor
 | tolerations | list | `[]` | Sets pod's tolerations to node taints almost globally. (See [Affinities and tolerations](README.md#affinities-and-tolerations)) |
 | updateStrategy | object | See `values.yaml` | Update strategy for the deployed DaemonSets. |
 | verboseLog | bool | `false` | Sets the debug logs to this integration or all integrations if it is set globally. Can be configured also with `global.verboseLog` |
+| windows.privileged | bool | `true` | Override privileged mode for Windows nodes. When null, inherits from global 'privileged' setting. Set to false to disable HostProcess mode on Windows while keeping Linux privileged. HostProcess containers run directly on the Windows host (not in a container) and require hostNetwork: true. |
 | windowsOsList | list | `[{"buildNumber":"10.0.17763","imageTagSuffix":"ltsc2019","version":"ltsc2019"},{"buildNumber":"10.0.20348","imageTagSuffix":"ltsc2022","version":"ltsc2022"}]` | Additional configuration for Windows node DaemonSets. |
 
 ## Maintainers
