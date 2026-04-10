@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### enhancement
+- Add pod sample attributes for resource utilization, requests, and limits
+
+### enhancement
 - Add per-container resource settings for kubelet (`kubelet.kubelet.resources`, `kubelet.agent.resources`) and controlplane (`controlPlane.controlplane.resources`, `controlPlane.forwarder.resources`) DaemonSets. `kubelet.resources` and `controlPlane.resources` continue to work as a fallback but their behavior will change in the future: they will be repurposed for pod-level resource setting once Kubernetes pod-level resources become generally available. @kondracek-nr [#1436](https://github.com/newrelic/nri-kubernetes/pull/1436)
 
 ## v3.57.0 - 2026-03-16
