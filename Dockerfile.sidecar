@@ -1,0 +1,38 @@
+# Dockerfile for bundled sidecar image (agent + nri-kubernetes v3)
+# This creates a single-container image suitable for Fargate sidecar injection
+
+ARG MODE=normal
+ARG BASE_IMAGE=newrelic/infrastructure-bundle:3.3.17
+
+FROM $BASE_IMAGE AS base
+
+# Set by docker automatically
+ARG TARGETOS
+ARG TARGETARCH
+
+# Add nri-kubernetes binary
+ADD --chmod=755 bin/nri-kubernetes-${TARGETOS}-${TARGETARCH} /var/db/newrelic-infra/newrelic-integrations/bin/nri-kubernetes
+
+# Add the startup script that runs both agent and nri-kubernetes
+COPY deploy/sidecar/run.sh /run.sh
+RUN chmod +x /run.sh
+
+# Add default nri-kubernetes config for sidecar mode
+COPY deploy/sidecar/nri-kubernetes.yml /etc/newrelic-infra/nri-kubernetes.yml
+
+# Add agent config with HTTP server enabled
+COPY deploy/sidecar/newrelic-infra.yml /etc/newrelic-infra.yml
+
+FROM base AS branch-normal
+USER root
+
+FROM base AS branch-unprivileged
+RUN addgroup -g 2000 nri-agent && adduser -D -u 1000 -G nri-agent nri-agent
+USER nri-agent
+
+ENV NRIA_OVERRIDE_HOST_ROOT ""
+ENV NRIA_IS_SECURE_FORWARD_ONLY true
+
+FROM branch-${MODE}
+
+ENTRYPOINT ["/sbin/tini", "--", "/run.sh"]

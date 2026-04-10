@@ -15,6 +15,14 @@ customSecretLicenseKey: ""
 # -- This chart has support for GKE_AUTOPILOT, if booting in an autopilot cluster, set this to "GKE_AUTOPILOT"
 provider:
 
+# -- (bool) Enable EKS Fargate support. When enabled:
+# - The kubelet DaemonSet will be excluded from Fargate nodes via node affinity (eks.amazonaws.com/compute-type != fargate)
+# - The control plane DaemonSet will be completely disabled (control plane metrics are not available on Fargate)
+# - The newrelic-infra-operator should be used to inject the integration as a sidecar into pods running on Fargate nodes
+# Can be configured also with `global.fargate`
+# @default -- `false`
+fargate:
+
 # -- Images used by the chart for the integration and agents.
 # @default -- See `values.yaml`
 images:
