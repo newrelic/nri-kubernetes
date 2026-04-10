@@ -247,7 +247,7 @@ tests:
         documentIndex: 1
         template: templates/kubelet/daemonset-windows.yaml
 
-  - it: daemonset-windows - windowsNodeSelector replaces windows default nodeSelector
+  - it: daemonset-windows - windowsNodeSelector merges with windows default nodeSelector
     set:
       enableWindows: true
       licenseKey: test
@@ -279,12 +279,16 @@ tests:
       - equal:
           path: spec.template.spec.nodeSelector
           value:
+            kubernetes.io/os: windows
+            node.kubernetes.io/windows-build: 10.0.17763
             disktype: hd
         documentIndex: 0
         template: templates/kubelet/daemonset-windows.yaml
       - equal:
           path: spec.template.spec.nodeSelector
           value:
+            kubernetes.io/os: windows
+            node.kubernetes.io/windows-build: 10.0.20348
             disktype: hd
         documentIndex: 1
         template: templates/kubelet/daemonset-windows.yaml
