@@ -445,6 +445,50 @@ scenarios:
           expected_results:
             - key: "Pod Scheduled"
               value: 1.0
+        - query: FROM Metric SELECT max(k8s.pod.cpuUsedCores) AS 'CPU usage (cores)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-deployment' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-deployment%'
+          expected_results:
+            - key: "CPU usage (cores)"
+              lowerBoundedValue: 0.01
+        - query: FROM Metric SELECT max(k8s.pod.memoryUsedBytes) AS 'Memory usage (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-deployment' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-deployment%'
+          expected_results:
+            - key: "Memory usage (bytes)"
+              lowerBoundedValue: 0.01
+        - query: FROM Metric SELECT max(k8s.pod.memoryWorkingSetBytes) AS 'Memory working set (bytes)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-deployment' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-deployment%'
+          expected_results:
+            - key: "Memory working set (bytes)"
+              lowerBoundedValue: 0.01
+        - query: FROM Metric SELECT max(k8s.pod.cpuRequestedCores) AS 'CPU requested (cores)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-deployment' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-deployment%'
+          expected_results:
+            - key: "CPU requested (cores)"
+              value: 0.05
+        - query: FROM Metric SELECT max(k8s.pod.memoryRequestedBytes) AS 'Memory requested (MiB)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-deployment' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-deployment%'
+          expected_results:
+            - key: "Memory requested (MiB)"
+              value: 20
+        - query: FROM Metric SELECT max(k8s.pod.cpuLimitCores) AS 'CPU limit (cores)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-deployment' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-deployment%'
+          expected_results:
+            - key: "CPU limit (cores)"
+              value: 0.1
+        - query: FROM Metric SELECT max(k8s.pod.memoryLimitBytes) AS 'Memory limit (MiB)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-deployment' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-deployment%'
+          expected_results:
+            - key: "Memory limit (MiB)"
+              value: 40
+        - query: FROM Metric SELECT max(k8s.pod.cpuCoresUtilization) AS 'CPU limit utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-deployment' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-deployment%'
+          expected_results:
+            - key: "CPU limit utilization (%)"
+              lowerBoundedValue: 0.01
+        - query: FROM Metric SELECT max(k8s.pod.requestedCpuCoresUtilization) AS 'CPU request utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-deployment' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-deployment%'
+          expected_results:
+            - key: "CPU request utilization (%)"
+              lowerBoundedValue: 0.01
+        - query: FROM Metric SELECT max(k8s.pod.memoryUtilization) AS 'Memory limit utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-deployment' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-deployment%'
+          expected_results:
+            - key: "Memory limit utilization (%)"
+              lowerBoundedValue: 0.01
+        - query: FROM Metric SELECT max(k8s.pod.requestedMemoryUtilization) AS 'Memory request utilization (%)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-deployment' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-deployment%'
+          expected_results:
+            - key: "Memory request utilization (%)"
+              lowerBoundedValue: 0.01
         - query: FROM Metric SELECT max(k8s.pod.netTxBytesPerSecond) / 1000 AS 'Transferred (KBps)' WHERE k8s.namespaceName = 'nr-${SCENARIO_TAG}' AND k8s.deploymentName = '${SCENARIO_TAG}-resources-deployment' AND k8s.podName LIKE '${SCENARIO_TAG}-resources-deployment%'
           expected_results:
             - key: "Transferred (KBps)"
