@@ -368,6 +368,10 @@ func (podsFetcher *PodsFetcher) fetchPodData(pod *v1.Pod) definition.RawMetrics 
 		metrics["priority"] = *pod.Spec.Priority
 	}
 
+	if pod.Spec.PriorityClassName != "" {
+		metrics["priorityClassName"] = pod.Spec.PriorityClassName
+	}
+
 	if pod.Spec.Resources != nil {
 		if v, ok := pod.Spec.Resources.Requests[v1.ResourceCPU]; ok {
 			metrics["cpuRequestedCores"] = v.MilliValue()
