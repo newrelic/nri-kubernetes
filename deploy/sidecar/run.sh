@@ -18,7 +18,7 @@ AGENT_PID=$!
 echo "Waiting for infrastructure agent to start..."
 RETRIES=30
 while [ $RETRIES -gt 0 ]; do
-    if curl -sf http://localhost:${NRI_KUBERNETES_SINK_HTTP_PORT:-8001}/healthz > /dev/null 2>&1; then
+    if curl -sf http://localhost:${NRI_KUBERNETES_SINK_HTTP_PORT:-8001}/v1/data/ready > /dev/null 2>&1; then
         echo "Infrastructure agent is ready"
         break
     fi
