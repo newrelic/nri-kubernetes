@@ -12,7 +12,8 @@ ARG TARGETARCH
 
 # Add nri-kubernetes binary
 RUN mkdir -p /var/db/newrelic-infra/newrelic-integrations/bin
-COPY --chmod=755 bin/nri-kubernetes-${TARGETOS}-${TARGETARCH} /var/db/newrelic-infra/newrelic-integrations/bin/nri-kubernetes
+COPY --chmod=755 bin/nri-kubernetes-${TARGETOS}-${TARGETARCH} /var/db/newrelic-infra/newrelic-integrations/bin/
+RUN mv /var/db/newrelic-infra/newrelic-integrations/bin/nri-kubernetes-${TARGETOS}-${TARGETARCH} /var/db/newrelic-infra/newrelic-integrations/bin/nri-kubernetes
 
 # Add the startup script that runs both agent and nri-kubernetes
 COPY deploy/sidecar/run.sh /run.sh
