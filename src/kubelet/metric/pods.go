@@ -372,6 +372,24 @@ func (podsFetcher *PodsFetcher) fetchPodData(pod *v1.Pod) definition.RawMetrics 
 		metrics["priorityClassName"] = pod.Spec.PriorityClassName
 	}
 
+	if pod.Spec.Resources != nil {
+		if v, ok := pod.Spec.Resources.Requests[v1.ResourceCPU]; ok {
+			metrics["cpuRequestedCores"] = v.MilliValue()
+		}
+
+		if v, ok := pod.Spec.Resources.Limits[v1.ResourceCPU]; ok {
+			metrics["cpuLimitCores"] = v.MilliValue()
+		}
+
+		if v, ok := pod.Spec.Resources.Requests[v1.ResourceMemory]; ok {
+			metrics["memoryRequestedBytes"] = v.Value()
+		}
+
+		if v, ok := pod.Spec.Resources.Limits[v1.ResourceMemory]; ok {
+			metrics["memoryLimitBytes"] = v.Value()
+		}
+	}
+
 	labels := podLabels(pod)
 	if len(labels) > 0 {
 		metrics["labels"] = labels
