@@ -1,0 +1,49 @@
+# Default configuration for nri-kubernetes in sidecar mode
+# This config is optimized for Fargate/sidecar deployments where:
+# - The sidecar runs alongside application pods
+# - KSM runs separately in the cluster (not in sidecar)
+# - Control plane metrics are not available
+#
+# Environment variables with NRI_KUBERNETES_ prefix will override these values:
+# - NRI_KUBERNETES_CLUSTERNAME -> clusterName
+# - NRI_KUBERNETES_NODENAME -> nodeName
+# - NRI_KUBERNETES_NODEIP -> nodeIP
+# - NRI_KUBERNETES_VERBOSE -> verbose
+# - NRI_KUBERNETES_SINK_HTTP_PORT -> sink.http.port
+# - NRI_KUBERNETES_SINK_HTTP_TIMEOUT -> sink.http.timeout
+# - NRI_KUBERNETES_SINK_HTTP_RETRIES -> sink.http.retries
+
+# Cluster name - override via NRI_KUBERNETES_CLUSTERNAME env var
+clusterName: "cluster"
+
+# Scrape interval
+interval: 15s
+
+# Log level - override via NRI_KUBERNETES_VERBOSE env var
+verbose: false
+
+# Node identification - set via downward API env vars in pod spec
+nodeName: ""
+nodeIP: ""
+
+# Sink configuration - send metrics to infrastructure agent HTTP server
+sink:
+  type: http
+  http:
+    port: 8001
+    timeout: 30s
+    retries: 0  # Disable retries - agent is local, no need for retries
+
+# Kubelet scraper - enabled for pod/container metrics
+kubelet:
+  enabled: true
+  timeout: 10s
+  retries: 3
+
+# KSM scraper - disabled in sidecar mode (runs separately in cluster)
+ksm:
+  enabled: false
+
+# Control plane scraper - disabled in sidecar mode (not available in Fargate)
+controlPlane:
+  enabled: false
