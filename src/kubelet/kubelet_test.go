@@ -142,6 +142,54 @@ func kubeletExclusions() []exclude.Func {
 	// TODO: Unclear why we need to exclude node utilization metrics.
 	nodeUtilizationMetrics := []string{"allocatableCpuCoresUtilization", "allocatableMemoryUtilization"}
 
+	// Diagnostic metrics from /configz, /flags, /flagz, /statusz, /metrics endpoints
+	// These are optional and only present when diagnostic features are enabled
+	diagnosticMetrics := []string{
+		// /configz endpoint metrics
+		"kubeletConfigFingerprint", "kubeletMaxPods", "kubeletPodPidsLimit",
+		"kubeletImageGCHighThresholdPercent", "kubeletImageGCLowThresholdPercent",
+		"kubeletEvictionHard", "kubeletEvictionSoft",
+		"kubeletCPUManagerPolicy", "kubeletMemoryManagerPolicy",
+		"kubeletTopologyManagerPolicy", "kubeletTopologyManagerScope",
+		"kubeletKubeReserved", "kubeletSystemReserved", "kubeletReservedSystemCPUs",
+		"kubeletProtectKernelDefaults", "kubeletSeccompDefault", "kubeletEnableDebuggingHandlers",
+		"kubeletAnonymousAuthEnabled", "kubeletWebhookAuthEnabled", "kubeletAuthorizationMode",
+		"kubeletFeatureGates", "kubeletFeatureGatesEnabledCount",
+		"kubeletClusterDNS", "kubeletClusterDomain", "kubeletHairpinMode", "kubeletMaxOpenFiles",
+		"kubeletContainerRuntimeEndpoint", "kubeletCgroupDriver", "kubeletCgroupsPerQOS",
+		"kubeletPort", "kubeletReadOnlyPort", "kubeletReadOnlyPortEnabled",
+		"kubeletServerTLSBootstrap", "kubeletTLSMinVersion",
+		"kubeletShutdownGracePeriod", "kubeletShutdownGracePeriodCriticalPods",
+		"kubeletMemoryThrottlingFactor", "kubeletMemorySwapBehavior",
+		// /flags and /flagz endpoint metrics
+		"kubeletFlagsFingerprint", "kubeletFlagAddress", "kubeletFlagPort",
+		"kubeletFlagReadOnlyPort", "kubeletFlagReadOnlyPortEnabled",
+		"kubeletFlagAnonymousAuth", "kubeletFlagAuthorizationMode", "kubeletFlagClientCAFile",
+		"kubeletFlagRotateCertificates", "kubeletFlagServerTLSBootstrap",
+		"kubeletFlagMaxPods", "kubeletFlagPodPidsLimit",
+		"kubeletFlagKubeReserved", "kubeletFlagSystemReserved", "kubeletFlagEvictionHard",
+		"kubeletFlagContainerRuntimeEndpoint", "kubeletFlagCgroupDriver",
+		"kubeletFlagClusterDNS", "kubeletFlagClusterDomain", "kubeletFlagNetworkPlugin", "kubeletFlagNodeIP",
+		"kubeletFlagFeatureGates", "kubeletFlagRegisterNode", "kubeletFlagRegisterSchedulable",
+		"kubeletFlagNodeLabels", "kubeletFlagCPUManagerPolicy", "kubeletFlagMemoryManagerPolicy",
+		"kubeletFlagTopologyManagerPolicy", "kubeletFlagReservedSystemCPUs", "kubeletFlagCloudProvider",
+		"kubeletFlagEnableDebuggingHandlers", "kubeletFlagEnableContentionProfiling",
+		"kubeletFlagAllowPrivileged", "kubeletFlagHostnameOverride",
+		"kubeletFlagLogLevel", "kubeletFlagVerbosity",
+		// /statusz endpoint metrics
+		"kubeletStatuszFingerprint", "kubeletStatuszResponseFormat",
+		"kubeletStatuszHealthy", "kubeletStatuszOverallStatus",
+		"kubeletStatuszComponentsJSON", "kubeletStatuszUnhealthyComponents", "kubeletStatuszRawResponse",
+		// /metrics endpoint metrics
+		"kubeletPLEGRelistDurationSeconds", "kubeletPLEGRelistIntervalSeconds",
+		"kubeletPodStartDurationSeconds", "kubeletPodWorkerDurationSeconds",
+		"kubeletImagePullDurationSeconds",
+		"kubeletEvictionsTotal", "kubeletEvictionStatsAgeSeconds",
+		"kubeletRunningContainers", "kubeletNodeConfigError", "kubeletNodeNameMetric",
+		// Wildcard diagnostic maps (Option B)
+		"kubeletConfigz.*", "kubeletFlags.*", "kubeletStatusz.*", "kubeletMetrics.*",
+	}
+
 	// Pods and containers that are not in a running state will not have these metrics.
 	notRunningMetrics := []string{"memoryUsedBytes", "memoryWorkingSetBytes", "cpuUsedCores", "requestedMemoryUtilization",
 		"fsAvailableBytes", "fsCapacityBytes", "fsUsedBytes", "fsUsedPercent", "fsInodesFree", "fsInodes", "memoryUtilization",
@@ -165,6 +213,10 @@ func kubeletExclusions() []exclude.Func {
 
 		// Node utilization  metrics.
 		exclude.Exclude(exclude.Groups("node"), exclude.Metrics(nodeUtilizationMetrics...)),
+
+		// Diagnostic metrics from /configz, /flags, /flagz, /statusz, /metrics endpoints
+		// These are optional and only present when diagnostic features are enabled
+		exclude.Exclude(exclude.Groups("node"), exclude.Metrics(diagnosticMetrics...)),
 
 		// Exclude limits/requested metrics for nodes, pods and containers
 		exclude.Exclude(
