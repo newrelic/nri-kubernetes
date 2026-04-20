@@ -693,8 +693,8 @@ var KSMSpecs = definition.SpecGroups{
 			// computed
 			{
 				Name: "podsMissing", ValueFunc: Subtract(
-					definition.Transform(prometheus.FromValue("kube_replicaset_spec_replicas"), fromPrometheusNumeric),
-					definition.Transform(prometheus.FromValue("kube_replicaset_status_ready_replicas"), fromPrometheusNumeric)),
+				definition.Transform(prometheus.FromValue("kube_replicaset_spec_replicas"), fromPrometheusNumeric),
+				definition.Transform(prometheus.FromValue("kube_replicaset_status_ready_replicas"), fromPrometheusNumeric)),
 				Type: sdkMetric.GAUGE,
 			},
 		},
@@ -707,6 +707,7 @@ var KSMSpecs = definition.SpecGroups{
 			{Name: "createdAt", ValueFunc: prometheus.FromValue("kube_statefulset_created"), Type: sdkMetric.GAUGE},
 			{Name: "podsDesired", ValueFunc: prometheus.FromValue("kube_statefulset_replicas"), Type: sdkMetric.GAUGE},
 			{Name: "podsReady", ValueFunc: prometheus.FromValue("kube_statefulset_status_replicas_ready"), Type: sdkMetric.GAUGE},
+			{Name: "podsAvailable", ValueFunc: prometheus.FromValue("kube_statefulset_status_replicas_available"), Type: sdkMetric.GAUGE},
 			{Name: "podsCurrent", ValueFunc: prometheus.FromValue("kube_statefulset_status_replicas_current"), Type: sdkMetric.GAUGE},
 			{Name: "podsTotal", ValueFunc: prometheus.FromValue("kube_statefulset_status_replicas"), Type: sdkMetric.GAUGE},
 			{Name: "podsUpdated", ValueFunc: prometheus.FromValue("kube_statefulset_status_replicas_updated"), Type: sdkMetric.GAUGE},
@@ -720,8 +721,14 @@ var KSMSpecs = definition.SpecGroups{
 			// computed
 			{
 				Name: "podsMissing", ValueFunc: Subtract(
-					definition.Transform(prometheus.FromValue("kube_statefulset_replicas"), fromPrometheusNumeric),
-					definition.Transform(prometheus.FromValue("kube_statefulset_status_replicas_ready"), fromPrometheusNumeric)),
+				definition.Transform(prometheus.FromValue("kube_statefulset_replicas"), fromPrometheusNumeric),
+				definition.Transform(prometheus.FromValue("kube_statefulset_status_replicas_ready"), fromPrometheusNumeric)),
+				Type: sdkMetric.GAUGE,
+			},
+			{
+				Name: "podsUnavailable", ValueFunc: Subtract(
+				definition.Transform(prometheus.FromValue("kube_statefulset_replicas"), fromPrometheusNumeric),
+				definition.Transform(prometheus.FromValue("kube_statefulset_status_replicas_available"), fromPrometheusNumeric)),
 				Type: sdkMetric.GAUGE,
 			},
 		},
@@ -747,8 +754,8 @@ var KSMSpecs = definition.SpecGroups{
 			// computed
 			{
 				Name: "podsMissing", ValueFunc: Subtract(
-					definition.Transform(prometheus.FromValue("kube_daemonset_status_desired_number_scheduled"), fromPrometheusNumeric),
-					definition.Transform(prometheus.FromValue("kube_daemonset_status_number_ready"), fromPrometheusNumeric)),
+				definition.Transform(prometheus.FromValue("kube_daemonset_status_desired_number_scheduled"), fromPrometheusNumeric),
+				definition.Transform(prometheus.FromValue("kube_daemonset_status_number_ready"), fromPrometheusNumeric)),
 				Type: sdkMetric.GAUGE,
 			},
 		},
@@ -795,8 +802,8 @@ var KSMSpecs = definition.SpecGroups{
 			// computed
 			{
 				Name: "podsMissing", ValueFunc: Subtract(
-					definition.Transform(prometheus.FromValue("kube_deployment_spec_replicas"), fromPrometheusNumeric),
-					definition.Transform(prometheus.FromValue("kube_deployment_status_replicas"), fromPrometheusNumeric)),
+				definition.Transform(prometheus.FromValue("kube_deployment_spec_replicas"), fromPrometheusNumeric),
+				definition.Transform(prometheus.FromValue("kube_deployment_status_replicas"), fromPrometheusNumeric)),
 				Type: sdkMetric.GAUGE,
 			},
 		},
