@@ -257,10 +257,15 @@ func (podsFetcher *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]defi
 func fillContainerStatuses(pod *v1.Pod, dest map[string]definition.RawMetrics) {
 	containerStatuses := pod.Status.ContainerStatuses
 
-	// Add sidecar containers
-	for idx, initContainer := range pod.Spec.InitContainers {
+	// Add sidecar containers (init containers with RestartPolicy Always)
+	for _, initContainer := range pod.Spec.InitContainers {
 		if initContainer.RestartPolicy != nil && *initContainer.RestartPolicy == v1.ContainerRestartPolicyAlways {
-			containerStatuses = append(containerStatuses, pod.Status.InitContainerStatuses[idx])
+			for _, st := range pod.Status.InitContainerStatuses {
+				if st.Name == initContainer.Name {
+					containerStatuses = append(containerStatuses, st)
+					break
+				}
+			}
 		}
 	}
 
