@@ -6,6 +6,12 @@ ARG BASE_IMAGE=newrelic/infrastructure-bundle:3.3.20
 
 FROM $BASE_IMAGE AS base
 
+# The infrastructure-bundle base image sets NRIA_OVERRIDE_HOST_ROOT=/host for
+# DaemonSet deployments where the host's /proc and /sys are bind-mounted.
+# Fargate sidecars have no such mounts, so reset this here. Containers share
+# the host kernel, so reading /proc directly gives accurate host data.
+ENV NRIA_OVERRIDE_HOST_ROOT=""
+
 # Set by docker automatically
 ARG TARGETOS
 ARG TARGETARCH
@@ -32,7 +38,6 @@ FROM base AS branch-unprivileged
 RUN addgroup -g 2000 nri-agent && adduser -D -u 1000 -G nri-agent nri-agent
 USER nri-agent
 
-ENV NRIA_OVERRIDE_HOST_ROOT ""
 ENV NRIA_IS_SECURE_FORWARD_ONLY true
 
 FROM branch-${MODE}
