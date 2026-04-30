@@ -150,7 +150,7 @@ jobs:
 
       - name: Notify Slack on vulnerabilities found
         if: steps.trivy-scan.outcome == 'failure'
-        uses: archive/github-actions-slack@v2.11.0
+        uses: archive/github-actions-slack@v3.1.0
         with:
           slack-bot-user-oauth-access-token: ${{ secrets.K8S_AGENTS_SLACK_TOKEN }}
           slack-channel: ${{ secrets.K8S_AGENTS_SLACK_CHANNEL }}
