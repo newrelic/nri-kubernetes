@@ -1332,9 +1332,9 @@ func NewKubeletSpecs(interfaceCache *kubeletMetric.InterfaceCache) definition.Sp
 			NamespaceGetter: kubeletMetric.FromLabelGetNamespace,
 			Specs: []definition.Spec{
 				// /stats/summary endpoint
-				{Name: "cpuUsedCores", ValueFunc: _cpuUsedCores, Type: sdkMetric.GAUGE},
-				{Name: "memoryUsedBytes", ValueFunc: definition.FromRaw("usageBytes"), Type: sdkMetric.GAUGE},
-				{Name: "memoryWorkingSetBytes", ValueFunc: workingSetBytes, Type: sdkMetric.GAUGE},
+				{Name: "cpuUsedCores", ValueFunc: _cpuUsedCores, Type: sdkMetric.GAUGE, Optional: true},
+				{Name: "memoryUsedBytes", ValueFunc: definition.FromRaw("usageBytes"), Type: sdkMetric.GAUGE, Optional: true},
+				{Name: "memoryWorkingSetBytes", ValueFunc: workingSetBytes, Type: sdkMetric.GAUGE, Optional: true},
 				{Name: "net.rxBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("rxBytes", interfaceCache), Type: sdkMetric.RATE},
 				{Name: "net.txBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("txBytes", interfaceCache), Type: sdkMetric.RATE},
 				{Name: "net.errorsPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("errors", interfaceCache), Type: sdkMetric.RATE},
