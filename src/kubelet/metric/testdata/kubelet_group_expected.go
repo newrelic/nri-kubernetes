@@ -52,6 +52,7 @@ var ExpectedGroupData = definition.RawGroups{
 					"errors":  uint64(0),
 				},
 			},
+			"usageNanoCores": uint64(17428240),
 		},
 		"kube-system_kube-state-metrics-57f4659995-6n2qq": {
 			"createdKind":    "ReplicaSet",
