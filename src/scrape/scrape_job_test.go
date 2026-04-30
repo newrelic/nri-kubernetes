@@ -85,6 +85,17 @@ var expectedEntities = []*integration.Entity{
 					"label.pod-template-generation":  "1",
 					"displayName":                    "newrelic-infra-rz225", // From entity attributes
 					"clusterName":                    "test-cluster",         // From entity attributes
+					"cpuCoresUtilization":            float64(10),
+					"cpuLimitCores":                  float64(1),
+					"cpuRequestedCores":              float64(0.5),
+					"cpuUsedCores":                   float64(0.1),
+					"memoryLimitBytes":               float64(100),
+					"memoryRequestedBytes":           float64(50),
+					"memoryUsedBytes":                float64(10),
+					"memoryUtilization":              float64(10),
+					"memoryWorkingSetBytes":          float64(10),
+					"requestedCpuCoresUtilization":   float64(20),
+					"requestedMemoryUtilization":     float64(20),
 				},
 			},
 		},
