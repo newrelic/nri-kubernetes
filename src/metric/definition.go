@@ -27,8 +27,8 @@ const (
 var (
 	workingSetBytes   = definition.FromRaw("workingSetBytes")
 	_cpuUsedCores     = definition.TransformAndFilter(definition.FromRaw("usageNanoCores"), fromNano, filterCPUUsedCores) //nolint: gochecknoglobals // significant refactoring
-	cpuLimitCores     = definition.Transform(definition.FromRaw(attrCPULimit), toCores)
-	cpuRequestedCores = definition.Transform(definition.FromRaw(attrCPURequests), toCores)
+	cpuLimitCores     = definition.Transform(definition.FromRaw("cpuLimitCores"), toCores)
+	cpuRequestedCores = definition.Transform(definition.FromRaw("cpuRequestedCores"), toCores)
 	processOpenFds    = prometheus.FromValueWithOverriddenName("process_open_fds", "processOpenFds")
 	processMaxFds     = prometheus.FromValueWithOverriddenName("process_max_fds", "processMaxFds")
 )
