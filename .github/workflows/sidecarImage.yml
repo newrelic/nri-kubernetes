@@ -68,7 +68,7 @@ jobs:
       - name: Build docker images
         run: |
           docker buildx build --platform=$DOCKER_PLATFORMS \
-            --build-arg "MODE=unprivileged"
+            --build-arg "MODE=unprivileged" \
             -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG \
             -f Dockerfile.sidecar \
             .
