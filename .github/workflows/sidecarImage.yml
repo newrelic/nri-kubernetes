@@ -1,6 +1,8 @@
 name: Sidecar build
 
 on:
+  schedule:
+    - cron: "0 4 * * *"
   push:
     branches:
       - try-fg-v3
@@ -66,7 +68,7 @@ jobs:
       - name: Build docker images
         run: |
           docker buildx build --platform=$DOCKER_PLATFORMS \
-            --build-arg "MODE=unprivileged" `
+            --build-arg "MODE=unprivileged"
             -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG \
             -f Dockerfile.sidecar \
             .
@@ -93,3 +95,15 @@ jobs:
             -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG \
             -f Dockerfile.sidecar \
             .
+
+  notify-failure:
+    if: ${{ always() && failure() }}
+    needs: [build, docker]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify failure via Slack
+        uses: archive/github-actions-slack@v2.10.1
+        with:
+          slack-bot-user-oauth-access-token: ${{ secrets.K8S_AGENTS_SLACK_TOKEN }}
+          slack-channel: ${{ secrets.K8S_AGENTS_SLACK_CHANNEL }}
+          slack-text: "❌ `${{ env.ORIGINAL_REPO_NAME }}`: <${{ github.server_url }}/${{ env.ORIGINAL_REPO_NAME }}/actions/runs/${{ github.run_id }}|'Nightly and main build' failed>."
