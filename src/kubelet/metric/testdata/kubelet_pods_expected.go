@@ -49,6 +49,10 @@ var ExpectedRawData = definition.RawGroups{
 				"name":                     "newrelic-infra",
 				"pod-template-generation":  "1",
 			},
+			"cpuLimitCores":        int64(1000),
+			"cpuRequestedCores":    int64(500),
+			"memoryLimitBytes":     int64(104857600),
+			"memoryRequestedBytes": int64(52428800),
 		},
 		"kube-system_kube-state-metrics-57f4659995-6n2qq": {
 			"createdKind":    "ReplicaSet",
