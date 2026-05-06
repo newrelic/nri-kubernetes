@@ -81,3 +81,47 @@ func OneAttributePerAllocatable(rawResources definition.FetchedValue) (definitio
 func OneAttributePerCapacity(rawResources definition.FetchedValue) (definition.FetchedValue, error) {
 	return oneAttributePerResource(rawResources, resourceTypeCapacity)
 }
+
+// AllocatableCPUCores returns a FetchFunc that extracts the allocatable CPU cores
+// directly from the "allocatable" ResourceList stored in RawGroups.
+// This is needed for utilization ratio computations where FromRaw("allocatableCpuCores")
+// cannot be used — that key only exists as output of the allocatable.* transform,
+// never as a raw group key.
+func AllocatableCPUCores() definition.FetchFunc {
+	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
+		raw, err := definition.FromRaw("allocatable")(groupLabel, entityID, groups)
+		if err != nil {
+			return nil, err
+		}
+		resources, ok := raw.(v1.ResourceList)
+		if !ok {
+			return nil, fmt.Errorf("unexpected type for allocatable: %T", raw)
+		}
+		qty, found := resources[v1.ResourceCPU]
+		if !found {
+			return nil, fmt.Errorf("cpu not found in allocatable resources")
+		}
+		return qty.AsApproximateFloat64(), nil
+	}
+}
+
+// AllocatableMemoryBytes returns a FetchFunc that extracts the allocatable memory bytes
+// directly from the "allocatable" ResourceList stored in RawGroups.
+// Same rationale as AllocatableCPUCores.
+func AllocatableMemoryBytes() definition.FetchFunc {
+	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
+		raw, err := definition.FromRaw("allocatable")(groupLabel, entityID, groups)
+		if err != nil {
+			return nil, err
+		}
+		resources, ok := raw.(v1.ResourceList)
+		if !ok {
+			return nil, fmt.Errorf("unexpected type for allocatable: %T", raw)
+		}
+		qty, found := resources[v1.ResourceMemory]
+		if !found {
+			return nil, fmt.Errorf("memory not found in allocatable resources")
+		}
+		return qty.Value(), nil
+	}
+}
