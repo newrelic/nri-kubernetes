@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancement
+## v4.1.0 - 2026-05-06
+
+### 🚀 Enhancements
 - Add pod sample attributes for resource utilization, requests, and limits @jamescripter [#1453](https://github.com/newrelic/nri-kubernetes/pull/1453)
+
+### ⛓️ Dependencies
+- Updated golang.org/x/text to v0.36.0
 
 ## v4.0.1 - 2026-04-16
 
