@@ -95,11 +95,11 @@ func AllocatableCPUCores() definition.FetchFunc {
 		}
 		resources, ok := raw.(v1.ResourceList)
 		if !ok {
-			return nil, fmt.Errorf("unexpected type for allocatable: %T", raw)
+			return nil, fmt.Errorf("unexpected type for allocatable: %T", raw) //nolint:err113
 		}
 		qty, found := resources[v1.ResourceCPU]
 		if !found {
-			return nil, fmt.Errorf("cpu not found in allocatable resources")
+			return nil, fmt.Errorf("cpu not found in allocatable resources") //nolint:err113
 		}
 		return qty.AsApproximateFloat64(), nil
 	}
@@ -116,11 +116,11 @@ func AllocatableMemoryBytes() definition.FetchFunc {
 		}
 		resources, ok := raw.(v1.ResourceList)
 		if !ok {
-			return nil, fmt.Errorf("unexpected type for allocatable: %T", raw)
+			return nil, fmt.Errorf("unexpected type for allocatable: %T", raw) //nolint:err113
 		}
 		qty, found := resources[v1.ResourceMemory]
 		if !found {
-			return nil, fmt.Errorf("memory not found in allocatable resources")
+			return nil, fmt.Errorf("memory not found in allocatable resources") //nolint:err113
 		}
 		return qty.Value(), nil
 	}
