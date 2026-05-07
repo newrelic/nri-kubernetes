@@ -291,6 +291,7 @@ func fillContainerStatuses(pod *v1.Pod, dest map[string]definition.RawMetrics) {
 			dest[id]["lastTerminatedTimestamp"] = lastTerminatedFinishedAt
 		case c.State.Waiting != nil:
 			dest[id]["status"] = "Waiting"
+			dest[id]["isReady"] = false
 			dest[id]["reason"] = c.State.Waiting.Reason
 			dest[id]["restartCount"] = c.RestartCount
 			dest[id]["lastTerminatedExitCode"] = lastTerminatedExitCode
@@ -298,6 +299,7 @@ func fillContainerStatuses(pod *v1.Pod, dest map[string]definition.RawMetrics) {
 			dest[id]["lastTerminatedTimestamp"] = lastTerminatedFinishedAt
 		case c.State.Terminated != nil:
 			dest[id]["status"] = "Terminated"
+			dest[id]["isReady"] = false
 			dest[id]["reason"] = c.State.Terminated.Reason
 			dest[id]["restartCount"] = c.RestartCount
 			dest[id]["lastTerminatedExitCode"] = lastTerminatedExitCode
@@ -305,6 +307,7 @@ func fillContainerStatuses(pod *v1.Pod, dest map[string]definition.RawMetrics) {
 			dest[id]["lastTerminatedTimestamp"] = lastTerminatedFinishedAt
 		default:
 			dest[id]["status"] = "Unknown"
+			dest[id]["isReady"] = false
 		}
 	}
 }

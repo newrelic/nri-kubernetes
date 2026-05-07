@@ -4,6 +4,9 @@ import (
 	"testing"
 	"time"
 
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+
 	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
 	"github.com/stretchr/testify/assert"
@@ -889,4 +892,122 @@ func Test_KSM_LabelAndAnnotationExtraction_WithKSMSpecs(t *testing.T) {
 	annotations, err = getSpec("pod", "annotation.*").ValueFunc("pod", "my-pod", raw)
 	require.NoError(t, err)
 	assert.Equal(t, definition.FetchedValues{"annotation.owner": "bob"}, annotations)
+}
+
+func nodeSpecByName(t *testing.T, name string) definition.Spec {
+	t.Helper()
+	for _, spec := range KubeletSpecs["node"].Specs {
+		if spec.Name == name {
+			return spec
+		}
+	}
+	t.Fatalf("spec %q not found in KubeletSpecs[\"node\"]", name)
+	return definition.Spec{}
+}
+
+func TestAllocatableCpuCoresUtilization(t *testing.T) {
+	spec := nodeSpecByName(t, "allocatableCpuCoresUtilization")
+
+	t.Run("computes utilization from allocatable ResourceList and usageNanoCores", func(t *testing.T) {
+		raw := definition.RawGroups{
+			"node": {
+				"test-node": definition.RawMetrics{
+					// 250m allocatable CPU, 125m used → 50%
+					"allocatable": v1.ResourceList{
+						v1.ResourceCPU: resource.MustParse("250m"),
+					},
+					"usageNanoCores": uint64(125_000_000),
+				},
+			},
+		}
+		val, err := spec.ValueFunc("node", "test-node", raw)
+		require.NoError(t, err)
+		assert.InDelta(t, float64(50), val, 0.01)
+	})
+
+	t.Run("errors when allocatable cpu is missing", func(t *testing.T) {
+		raw := definition.RawGroups{
+			"node": {
+				"test-node": definition.RawMetrics{
+					"allocatable": v1.ResourceList{
+						v1.ResourceMemory: resource.MustParse("512Mi"),
+					},
+					"usageNanoCores": uint64(125_000_000),
+				},
+			},
+		}
+		val, err := spec.ValueFunc("node", "test-node", raw)
+		assert.Error(t, err)
+		assert.Nil(t, val)
+	})
+
+	t.Run("errors when usageNanoCores is missing", func(t *testing.T) {
+		raw := definition.RawGroups{
+			"node": {
+				"test-node": definition.RawMetrics{
+					"allocatable": v1.ResourceList{
+						v1.ResourceCPU: resource.MustParse("250m"),
+					},
+				},
+			},
+		}
+		val, err := spec.ValueFunc("node", "test-node", raw)
+		assert.Error(t, err)
+		assert.Nil(t, val)
+	})
+}
+
+func TestAllocatableMemoryUtilization(t *testing.T) {
+	spec := nodeSpecByName(t, "allocatableMemoryUtilization")
+
+	t.Run("computes utilization from allocatable ResourceList and memoryWorkingSetBytes", func(t *testing.T) {
+		raw := definition.RawGroups{
+			"node": {
+				"test-node": definition.RawMetrics{
+					// 512Mi allocatable, 256Mi used → 50%
+					"allocatable": v1.ResourceList{
+						v1.ResourceMemory: resource.MustParse("512Mi"),
+					},
+					"memoryWorkingSetBytes": uint64(256 * 1024 * 1024),
+				},
+			},
+		}
+		val, err := spec.ValueFunc("node", "test-node", raw)
+		require.NoError(t, err)
+		assert.InDelta(t, float64(50), val, 0.01)
+	})
+
+	t.Run("errors when only workingSetBytes present (container key, not node key)", func(t *testing.T) {
+		// Regression: old definition used FromRaw("workingSetBytes") which is the
+		// container key. Node raw groups use "memoryWorkingSetBytes".
+		raw := definition.RawGroups{
+			"node": {
+				"test-node": definition.RawMetrics{
+					"allocatable": v1.ResourceList{
+						v1.ResourceMemory: resource.MustParse("512Mi"),
+					},
+					"workingSetBytes": uint64(256 * 1024 * 1024), // wrong key
+				},
+			},
+		}
+		val, err := spec.ValueFunc("node", "test-node", raw)
+		assert.Error(t, err)
+		assert.Nil(t, val)
+	})
+
+	t.Run("errors when allocatable memory is missing", func(t *testing.T) {
+		raw := definition.RawGroups{
+			"node": {
+				"test-node": definition.RawMetrics{
+					"allocatable": v1.ResourceList{
+						v1.ResourceCPU: resource.MustParse("250m"),
+					},
+					"memoryWorkingSetBytes": uint64(256 * 1024 * 1024),
+				},
+			},
+		}
+		val, err := spec.ValueFunc("node", "test-node", raw)
+		assert.Error(t, err)
+		assert.Nil(t, val)
+	})
 }
