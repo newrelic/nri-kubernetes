@@ -12,11 +12,17 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 )
 
+const (
+	testGroupLabel = "node"
+	testEntityID   = "test-node"
+	testRawKey     = string(resourceTypeAllocatable)
+)
+
 func rawGroupsWithAllocatable(allocatable v1.ResourceList) definition.RawGroups {
 	return definition.RawGroups{
-		"node": {
-			"test-node": definition.RawMetrics{
-				"allocatable": allocatable,
+		testGroupLabel: {
+			testEntityID: definition.RawMetrics{
+				testRawKey: allocatable,
 			},
 		},
 	}
@@ -74,85 +80,98 @@ func TestOneAttributePerResource(t *testing.T) {
 }
 
 func TestAllocatableCPUCores(t *testing.T) {
+	t.Parallel()
+
 	t.Run("returns cpu cores as float64", func(t *testing.T) {
+		t.Parallel()
 		raw := rawGroupsWithAllocatable(v1.ResourceList{
 			v1.ResourceCPU: resource.MustParse("250m"),
 		})
-		val, err := AllocatableCPUCores()("node", "test-node", raw)
+		val, err := AllocatableCPUCores()(testGroupLabel, testEntityID, raw)
 		require.NoError(t, err)
 		assert.InDelta(t, 0.25, val, 0.0001)
 	})
 
 	t.Run("uses AsApproximateFloat64 to avoid rounding", func(t *testing.T) {
+		t.Parallel()
 		raw := rawGroupsWithAllocatable(v1.ResourceList{
 			v1.ResourceCPU: resource.MustParse("1985m"),
 		})
-		val, err := AllocatableCPUCores()("node", "test-node", raw)
+		val, err := AllocatableCPUCores()(testGroupLabel, testEntityID, raw)
 		require.NoError(t, err)
 		assert.InDelta(t, 1.985, val, 0.0001)
 	})
 
 	t.Run("errors when cpu not present in allocatable", func(t *testing.T) {
+		t.Parallel()
 		raw := rawGroupsWithAllocatable(v1.ResourceList{
 			v1.ResourceMemory: resource.MustParse("512Mi"),
 		})
-		val, err := AllocatableCPUCores()("node", "test-node", raw)
+		val, err := AllocatableCPUCores()(testGroupLabel, testEntityID, raw)
 		assert.Error(t, err)
 		assert.Nil(t, val)
 	})
 
 	t.Run("errors when allocatable key missing from raw groups", func(t *testing.T) {
+		t.Parallel()
 		raw := definition.RawGroups{
-			"node": {"test-node": definition.RawMetrics{}},
+			testGroupLabel: {testEntityID: definition.RawMetrics{}},
 		}
-		val, err := AllocatableCPUCores()("node", "test-node", raw)
+		val, err := AllocatableCPUCores()(testGroupLabel, testEntityID, raw)
 		assert.Error(t, err)
 		assert.Nil(t, val)
 	})
 
 	t.Run("errors when allocatable value is wrong type", func(t *testing.T) {
+		t.Parallel()
 		raw := definition.RawGroups{
-			"node": {"test-node": definition.RawMetrics{"allocatable": "not-a-resource-list"}},
+			testGroupLabel: {testEntityID: definition.RawMetrics{testRawKey: "not-a-resource-list"}},
 		}
-		val, err := AllocatableCPUCores()("node", "test-node", raw)
+		val, err := AllocatableCPUCores()(testGroupLabel, testEntityID, raw)
 		assert.Error(t, err)
 		assert.Nil(t, val)
 	})
 }
 
 func TestAllocatableMemoryBytes(t *testing.T) {
+	t.Parallel()
+
 	t.Run("returns memory as int64 bytes", func(t *testing.T) {
+		t.Parallel()
 		raw := rawGroupsWithAllocatable(v1.ResourceList{
 			v1.ResourceMemory: resource.MustParse("512Mi"),
 		})
-		val, err := AllocatableMemoryBytes()("node", "test-node", raw)
+		val, err := AllocatableMemoryBytes()(testGroupLabel, testEntityID, raw)
 		require.NoError(t, err)
 		assert.Equal(t, int64(512*1024*1024), val)
 	})
 
 	t.Run("errors when memory not present in allocatable", func(t *testing.T) {
+		t.Parallel()
 		raw := rawGroupsWithAllocatable(v1.ResourceList{
 			v1.ResourceCPU: resource.MustParse("250m"),
 		})
-		val, err := AllocatableMemoryBytes()("node", "test-node", raw)
+		val, err := AllocatableMemoryBytes()(testGroupLabel, testEntityID, raw)
 		assert.Error(t, err)
 		assert.Nil(t, val)
 	})
 
 	t.Run("errors when allocatable key missing from raw groups", func(t *testing.T) {
+		t.Parallel()
 		raw := definition.RawGroups{
-			"node": {"test-node": definition.RawMetrics{}},
+			testGroupLabel: {testEntityID: definition.RawMetrics{}},
 		}
-		val, err := AllocatableMemoryBytes()("node", "test-node", raw)
+		val, err := AllocatableMemoryBytes()(testGroupLabel, testEntityID, raw)
 		assert.Error(t, err)
 		assert.Nil(t, val)
 	})
 
 	t.Run("errors when allocatable value is wrong type", func(t *testing.T) {
+		t.Parallel()
 		raw := definition.RawGroups{
-			"node": {"test-node": definition.RawMetrics{"allocatable": "not-a-resource-list"}},
+			testGroupLabel: {testEntityID: definition.RawMetrics{testRawKey: "not-a-resource-list"}},
 		}
-		val, err := AllocatableMemoryBytes()("node", "test-node", raw)
+		val, err := AllocatableMemoryBytes()(testGroupLabel, testEntityID, raw)
 		assert.Error(t, err)
 		assert.Nil(t, val)
 	})
