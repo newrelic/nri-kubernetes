@@ -921,7 +921,7 @@ func TestAllocatableCpuCoresUtilization(t *testing.T) {
 			testNodeGroup: {
 				testNodeEntity: definition.RawMetrics{
 					// 250m allocatable CPU, 125m used → 50%
-					testAllocKey:   v1.ResourceList{v1.ResourceCPU: resource.MustParse("250m")},
+					testAllocKey:     v1.ResourceList{v1.ResourceCPU: resource.MustParse("250m")},
 					"usageNanoCores": uint64(125_000_000),
 				},
 			},
@@ -936,7 +936,7 @@ func TestAllocatableCpuCoresUtilization(t *testing.T) {
 		raw := definition.RawGroups{
 			testNodeGroup: {
 				testNodeEntity: definition.RawMetrics{
-					testAllocKey:   v1.ResourceList{v1.ResourceMemory: resource.MustParse("512Mi")},
+					testAllocKey:     v1.ResourceList{v1.ResourceMemory: resource.MustParse("512Mi")},
 					"usageNanoCores": uint64(125_000_000),
 				},
 			},
@@ -971,7 +971,7 @@ func TestAllocatableMemoryUtilization(t *testing.T) {
 			testNodeGroup: {
 				testNodeEntity: definition.RawMetrics{
 					// 512Mi allocatable, 256Mi used → 50%
-					testAllocKey:          v1.ResourceList{v1.ResourceMemory: resource.MustParse("512Mi")},
+					testAllocKey:            v1.ResourceList{v1.ResourceMemory: resource.MustParse("512Mi")},
 					"memoryWorkingSetBytes": uint64(256 * 1024 * 1024),
 				},
 			},
@@ -988,7 +988,7 @@ func TestAllocatableMemoryUtilization(t *testing.T) {
 		raw := definition.RawGroups{
 			testNodeGroup: {
 				testNodeEntity: definition.RawMetrics{
-					testAllocKey:    v1.ResourceList{v1.ResourceMemory: resource.MustParse("512Mi")},
+					testAllocKey:      v1.ResourceList{v1.ResourceMemory: resource.MustParse("512Mi")},
 					"workingSetBytes": uint64(256 * 1024 * 1024), // wrong key
 				},
 			},
@@ -1003,7 +1003,7 @@ func TestAllocatableMemoryUtilization(t *testing.T) {
 		raw := definition.RawGroups{
 			testNodeGroup: {
 				testNodeEntity: definition.RawMetrics{
-					testAllocKey:          v1.ResourceList{v1.ResourceCPU: resource.MustParse("250m")},
+					testAllocKey:            v1.ResourceList{v1.ResourceCPU: resource.MustParse("250m")},
 					"memoryWorkingSetBytes": uint64(256 * 1024 * 1024),
 				},
 			},
