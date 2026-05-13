@@ -12,8 +12,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Add `AllocatableCPUCores` and `AllocatableMemoryBytes` fetch functions to correctly compute node CPU/memory utilization ratios from the raw allocatable `ResourceList`
 - Fix `allocatableCpuCoresUtilization` and `allocatableMemoryUtilization` metric definitions to use the correct raw keys (`usageNanoCores` / `memoryWorkingSetBytes`)
 - Set `isReady=false` for containers in Waiting, Terminated, or Unknown state instead of omitting the metric
-
-### ⚙️ Config
 - Add `networkRouteFile: /proc/1/net/route` to the Fargate sidecar `nri-kubernetes.yml` to resolve network interface detection on Fargate nodes
 
 ## v3.57.0 - 2026-03-16
