@@ -230,6 +230,10 @@ kubelet:
     initTimeout: 180s
     # -- Delay between retry attempts during kubelet client initialization. Only used if initTimeout > 0.
     initBackoff: 5s
+    # -- When empty (default), kubelet TLS verification is skipped (back-compat).
+    # -- For clusters with kubelet TLS bootstrap enabled, set to /var/run/secrets/kubernetes.io/serviceaccount/ca.crt.
+    # -- Path to a PEM-encoded CA bundle used to verify the kubelet's serving certificate.
+    caBundlePath: ""
   # port:
   # scheme:
 

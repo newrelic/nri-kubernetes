@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- Add `kubelet.config.caBundlePath` option to enable kubelet TLS verification against an operator-supplied PEM CA bundle. Default empty string preserves existing behavior (TLS verification skipped). See `_claude/kubelet-tls-verification-testing-guide.md` for per-platform setup.
+
 ## v4.1.0 - 2026-05-06
 
 ### 🚀 Enhancements
