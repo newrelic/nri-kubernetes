@@ -1,4 +1,4 @@
-{{- if (.Values.kubelet.enabled) }}
+{{- if and (.Values.kubelet.enabled) (.Values.enableLinux) }}
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:

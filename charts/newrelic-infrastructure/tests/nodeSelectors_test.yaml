@@ -292,3 +292,28 @@ tests:
             disktype: hd
         documentIndex: 1
         template: templates/kubelet/daemonset-windows.yaml
+
+# enableLinux
+  - it: enableLinux false - Linux kubelet daemonset is not created
+    set:
+      enableLinux: false
+      licenseKey: test
+      cluster: test
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: templates/kubelet/daemonset.yaml
+
+  - it: enableLinux false with enableWindows true - Windows daemonsets are still created
+    set:
+      enableLinux: false
+      enableWindows: true
+      licenseKey: test
+      cluster: test
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: templates/kubelet/daemonset.yaml
+      - hasDocuments:
+          count: 2
+        template: templates/kubelet/daemonset-windows.yaml
