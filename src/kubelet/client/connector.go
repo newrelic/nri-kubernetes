@@ -194,8 +194,7 @@ func (dp *defaultConnector) checkLocalConnection(tripperWithBearerTokenRefreshin
 func (dp *defaultConnector) logKubeletTLSPosture() {
 	if dp.config.Kubelet.CABundlePath == "" {
 		dp.logger.Infof("Scraper→kubelet HTTPS: server certificate verification DISABLED " +
-			"(kubelet.caBundlePath is empty). Backwards-compatible default; accepts any " +
-			"server cert, vulnerable to MITM at the scraper→kubelet hop.")
+			"(kubelet.caBundlePath is empty). Backwards-compatible default; accepts any cert")
 		return
 	}
 	dp.logger.Infof("Scraper→kubelet HTTPS: server certificate verification ENABLED, "+
