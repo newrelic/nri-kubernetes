@@ -327,9 +327,12 @@ func tripperWithBearerTokenAndRefresh(tokenFile, caBundlePath string) (http.Roun
 		return nil, err
 	}
 
+	// Here we're using the default http.Transport configuration, but with a modified TLS config.
+	// The DefaultTransport is casted to an http.RoundTripper interface, so we need to convert it back.
 	t := http.DefaultTransport.(*http.Transport).Clone()
 	t.TLSClientConfig = tlsConfig
 
+	// Use the default kubernetes Bearer token authentication RoundTripper
 	tripperWithBearerRefreshing, err := transport.NewBearerAuthWithRefreshRoundTripper("", tokenFile, t)
 	if err != nil {
 		return nil, fmt.Errorf("creating bearerAuthWithRefreshRoundTripper: %w", err)
@@ -339,10 +342,8 @@ func tripperWithBearerTokenAndRefresh(tokenFile, caBundlePath string) (http.Roun
 }
 
 // buildKubeletTLSConfig returns the *tls.Config used for direct kubelet HTTPS
-// connections. When caBundlePath is empty, verification is skipped (back-compat
-// default — see _claude/security-kubelet-tls-insecureskipverify.md). When set,
+// connections. When caBundlePath is empty, verification is skipped. When set,
 // the bundle is loaded into the RootCAs pool and verification is enabled.
-// MinVersion is pinned to TLS 1.2 in both modes.
 func buildKubeletTLSConfig(caBundlePath string) (*tls.Config, error) {
 	cfg := &tls.Config{
 		InsecureSkipVerify: caBundlePath == "",
