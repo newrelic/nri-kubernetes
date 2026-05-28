@@ -1,5 +1,15 @@
 except_metrics: [
   k8s.node.netErrorsPerSecond,
   k8s.node.netRxBytesPerSecond,
-  k8s.node.netTxBytesPerSecond
+  k8s.node.netTxBytesPerSecond,
+
+  # pod-level resource settings are only possible in versions >=1.34
+  "k8s.pod.cpuRequestedCores",
+  "k8s.pod.cpuLimitCores",
+  "k8s.pod.memoryRequestedBytes",
+  "k8s.pod.memoryLimitBytes",
+  "k8s.pod.requestedCpuCoresUtilization",
+  "k8s.pod.cpuCoresUtilization",
+  "k8s.pod.requestedMemoryUtilization",
+  "k8s.pod.memoryUtilization"
 ]

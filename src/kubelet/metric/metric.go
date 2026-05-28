@@ -142,6 +142,14 @@ func fetchPodStats(pod v1.PodStats) (definition.RawMetrics, string, error) {
 		r["interfaces"] = interfaces
 	}
 
+	if pod.CPU != nil {
+		AddUint64RawMetric(r, "usageNanoCores", pod.CPU.UsageNanoCores)
+	}
+	if pod.Memory != nil {
+		AddUint64RawMetric(r, "usageBytes", pod.Memory.UsageBytes)
+		AddUint64RawMetric(r, "workingSetBytes", pod.Memory.WorkingSetBytes)
+	}
+
 	rawEntityID := fmt.Sprintf("%s_%s", r["namespace"], r["podName"])
 
 	return r, rawEntityID, nil

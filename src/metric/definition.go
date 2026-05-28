@@ -13,6 +13,16 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
 )
 
+const (
+	attrCPUUsage         = "cpuUsedCores"
+	attrCPURequests      = "cpuRequestedCores"
+	attrCPULimit         = "cpuLimitCores"
+	attrMemoryUsage      = "memoryUsedBytes"
+	attrMemoryWorkingSet = "memoryWorkingSetBytes"
+	attrMemoryRequests   = "memoryRequestedBytes"
+	attrMemoryLimit      = "memoryLimitBytes"
+)
+
 // Fetch Functions for computed metrics
 var (
 	workingSetBytes        = definition.FromRaw("workingSetBytes")
@@ -1334,6 +1344,9 @@ func NewKubeletSpecs(interfaceCache *kubeletMetric.InterfaceCache) definition.Sp
 			NamespaceGetter: kubeletMetric.FromLabelGetNamespace,
 			Specs: []definition.Spec{
 				// /stats/summary endpoint
+				{Name: attrCPUUsage, ValueFunc: _cpuUsedCores, Type: sdkMetric.GAUGE, Optional: true},
+				{Name: attrMemoryUsage, ValueFunc: definition.FromRaw("usageBytes"), Type: sdkMetric.GAUGE, Optional: true},
+				{Name: attrMemoryWorkingSet, ValueFunc: workingSetBytes, Type: sdkMetric.GAUGE, Optional: true},
 				{Name: "net.rxBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("rxBytes", interfaceCache), Type: sdkMetric.RATE},
 				{Name: "net.txBytesPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("txBytes", interfaceCache), Type: sdkMetric.RATE},
 				{Name: "net.errorsPerSecond", ValueFunc: kubeletMetric.FromRawWithFallbackToDefaultInterface("errors", interfaceCache), Type: sdkMetric.RATE},
@@ -1366,6 +1379,16 @@ func NewKubeletSpecs(interfaceCache *kubeletMetric.InterfaceCache) definition.Sp
 				{Name: "label.*", ValueFunc: definition.Transform(definition.FromRaw("labels"), kubeletMetric.OneMetricPerLabel), Type: sdkMetric.ATTRIBUTE},
 				{Name: "reason", ValueFunc: definition.FromRaw("reason"), Type: sdkMetric.ATTRIBUTE, Optional: true},
 				{Name: "message", ValueFunc: definition.FromRaw("message"), Type: sdkMetric.ATTRIBUTE, Optional: true},
+				{Name: attrCPURequests, ValueFunc: cpuRequestedCores, Type: sdkMetric.GAUGE, Optional: true},
+				{Name: attrCPULimit, ValueFunc: cpuLimitCores, Type: sdkMetric.GAUGE, Optional: true},
+				{Name: attrMemoryRequests, ValueFunc: definition.FromRaw("memoryRequestedBytes"), Type: sdkMetric.GAUGE, Optional: true},
+				{Name: attrMemoryLimit, ValueFunc: definition.FromRaw("memoryLimitBytes"), Type: sdkMetric.GAUGE, Optional: true},
+
+				// computed
+				{Name: "requestedCpuCoresUtilization", ValueFunc: toUtilization(_cpuUsedCores, cpuRequestedCores), Type: sdkMetric.GAUGE, Optional: true},
+				{Name: "cpuCoresUtilization", ValueFunc: toUtilization(_cpuUsedCores, cpuLimitCores), Type: sdkMetric.GAUGE, Optional: true},
+				{Name: "requestedMemoryUtilization", ValueFunc: toUtilization(definition.FromRaw("usageBytes"), definition.FromRaw("memoryRequestedBytes")), Type: sdkMetric.GAUGE, Optional: true},
+				{Name: "memoryUtilization", ValueFunc: toUtilization(definition.FromRaw("usageBytes"), definition.FromRaw("memoryLimitBytes")), Type: sdkMetric.GAUGE, Optional: true},
 			},
 		},
 		"container": {
@@ -1374,9 +1397,9 @@ func NewKubeletSpecs(interfaceCache *kubeletMetric.InterfaceCache) definition.Sp
 			NamespaceGetter: kubeletMetric.FromLabelGetNamespace,
 			Specs: []definition.Spec{
 				// /stats/summary endpoint
-				{Name: "memoryUsedBytes", ValueFunc: definition.FromRaw("usageBytes"), Type: sdkMetric.GAUGE},
-				{Name: "memoryWorkingSetBytes", ValueFunc: workingSetBytes, Type: sdkMetric.GAUGE},
-				{Name: "cpuUsedCores", ValueFunc: _cpuUsedCores, Type: sdkMetric.GAUGE},
+				{Name: attrMemoryUsage, ValueFunc: definition.FromRaw("usageBytes"), Type: sdkMetric.GAUGE},
+				{Name: attrMemoryWorkingSet, ValueFunc: workingSetBytes, Type: sdkMetric.GAUGE},
+				{Name: attrCPUUsage, ValueFunc: _cpuUsedCores, Type: sdkMetric.GAUGE},
 				{Name: "fsAvailableBytes", ValueFunc: definition.FromRaw("fsAvailableBytes"), Type: sdkMetric.GAUGE},
 				{Name: "fsCapacityBytes", ValueFunc: definition.FromRaw("fsCapacityBytes"), Type: sdkMetric.GAUGE},
 				{Name: "fsUsedBytes", ValueFunc: definition.FromRaw("fsUsedBytes"), Type: sdkMetric.GAUGE},
@@ -1413,10 +1436,10 @@ func NewKubeletSpecs(interfaceCache *kubeletMetric.InterfaceCache) definition.Sp
 				{Name: "nodeIP", ValueFunc: definition.FromRaw("nodeIP"), Type: sdkMetric.ATTRIBUTE},
 				{Name: "restartCount", ValueFunc: definition.FromRaw("restartCount"), Type: sdkMetric.GAUGE},
 				{Name: "restartCountDelta", ValueFunc: definition.FromRaw("restartCount"), Type: sdkMetric.PDELTA},
-				{Name: "cpuRequestedCores", ValueFunc: cpuRequestedCores, Type: sdkMetric.GAUGE, Optional: true},
-				{Name: "cpuLimitCores", ValueFunc: cpuLimitCores, Type: sdkMetric.GAUGE, Optional: true},
-				{Name: "memoryRequestedBytes", ValueFunc: definition.FromRaw("memoryRequestedBytes"), Type: sdkMetric.GAUGE, Optional: true},
-				{Name: "memoryLimitBytes", ValueFunc: definition.FromRaw("memoryLimitBytes"), Type: sdkMetric.GAUGE, Optional: true},
+				{Name: attrCPURequests, ValueFunc: cpuRequestedCores, Type: sdkMetric.GAUGE, Optional: true},
+				{Name: attrCPULimit, ValueFunc: cpuLimitCores, Type: sdkMetric.GAUGE, Optional: true},
+				{Name: attrMemoryRequests, ValueFunc: definition.FromRaw("memoryRequestedBytes"), Type: sdkMetric.GAUGE, Optional: true},
+				{Name: attrMemoryLimit, ValueFunc: definition.FromRaw("memoryLimitBytes"), Type: sdkMetric.GAUGE, Optional: true},
 				{Name: "status", ValueFunc: definition.FromRaw("status"), Type: sdkMetric.ATTRIBUTE},
 				{Name: "isReady", ValueFunc: definition.Transform(definition.FromRaw("isReady"), toNumericBoolean), Type: sdkMetric.GAUGE},
 				{Name: "reason", ValueFunc: definition.FromRaw("reason"), Type: sdkMetric.ATTRIBUTE, Optional: true}, // Previously called statusWaitingReason
@@ -1438,11 +1461,11 @@ func NewKubeletSpecs(interfaceCache *kubeletMetric.InterfaceCache) definition.Sp
 			TypeGenerator: kubeletMetric.FromRawGroupsEntityTypeGenerator,
 			Specs: []definition.Spec{
 				{Name: "nodeName", ValueFunc: definition.FromRaw("nodeName"), Type: sdkMetric.ATTRIBUTE},
-				{Name: "cpuUsedCores", ValueFunc: _cpuUsedCores, Type: sdkMetric.GAUGE},
+				{Name: attrCPUUsage, ValueFunc: _cpuUsedCores, Type: sdkMetric.GAUGE},
 				{Name: "cpuUsedCoreMilliseconds", ValueFunc: definition.Transform(definition.FromRaw("usageCoreNanoSeconds"), fromNanoToMilli), Type: sdkMetric.GAUGE},
-				{Name: "memoryUsedBytes", ValueFunc: definition.FromRaw("memoryUsageBytes"), Type: sdkMetric.GAUGE},
+				{Name: attrMemoryUsage, ValueFunc: definition.FromRaw("memoryUsageBytes"), Type: sdkMetric.GAUGE},
 				{Name: "memoryAvailableBytes", ValueFunc: definition.FromRaw("memoryAvailableBytes"), Type: sdkMetric.GAUGE},
-				{Name: "memoryWorkingSetBytes", ValueFunc: definition.FromRaw("memoryWorkingSetBytes"), Type: sdkMetric.GAUGE},
+				{Name: attrMemoryWorkingSet, ValueFunc: definition.FromRaw("memoryWorkingSetBytes"), Type: sdkMetric.GAUGE},
 				{Name: "memoryRssBytes", ValueFunc: definition.FromRaw("memoryRssBytes"), Type: sdkMetric.GAUGE},
 				{Name: "memoryPageFaults", ValueFunc: definition.FromRaw("memoryPageFaults"), Type: sdkMetric.GAUGE},
 				{Name: "memoryMajorPageFaultsPerSecond", ValueFunc: definition.FromRaw("memoryMajorPageFaults"), Type: sdkMetric.RATE},
@@ -1466,8 +1489,8 @@ func NewKubeletSpecs(interfaceCache *kubeletMetric.InterfaceCache) definition.Sp
 				{Name: "capacity.*", ValueFunc: definition.Transform(definition.FromRaw("capacity"), kubeletMetric.OneAttributePerCapacity), Type: sdkMetric.GAUGE},
 				{Name: "condition.*", ValueFunc: definition.Transform(definition.FromRaw("conditions"), kubeletMetric.PrefixFromMapInt("condition.")), Type: sdkMetric.GAUGE},
 				{Name: "unschedulable", ValueFunc: definition.Transform(definition.FromRaw("unschedulable"), toNumericBoolean), Type: sdkMetric.GAUGE},
-				{Name: "memoryRequestedBytes", ValueFunc: definition.FromRaw("memoryRequestedBytes"), Type: sdkMetric.GAUGE},
-				{Name: "cpuRequestedCores", ValueFunc: cpuRequestedCores, Type: sdkMetric.GAUGE},
+				{Name: attrMemoryRequests, ValueFunc: definition.FromRaw("memoryRequestedBytes"), Type: sdkMetric.GAUGE},
+				{Name: attrCPURequests, ValueFunc: cpuRequestedCores, Type: sdkMetric.GAUGE},
 				{Name: "kubeletVersion", ValueFunc: definition.FromRaw("kubeletVersion"), Type: sdkMetric.ATTRIBUTE},
 				{Name: "runningPods", ValueFunc: definition.FromRaw("runningPods"), Type: sdkMetric.GAUGE},
 				// computed
@@ -1750,7 +1773,7 @@ func filterCPUUsedCores(fetchedValue definition.FetchedValue, groupLabel, entity
 		return nil, errEntityCheck
 	}
 
-	value, ok := entity["cpuLimitCores"]
+	value, ok := entity[attrCPULimit]
 	if !ok {
 		// there is likely no CPU limit set for the container which means we have to assume a reasonable value
 		// since there is no way to know the max cpu cores for the current node, use default max of 96 cores supported by most cloud providers

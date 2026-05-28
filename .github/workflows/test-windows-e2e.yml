@@ -43,7 +43,7 @@ jobs:
         with:
           go-version-file: 'go.mod'
       - name: Login to DockerHub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
           password: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
@@ -107,7 +107,7 @@ jobs:
         run: |
             echo "Output from build-windows-integration-test: ${{ needs.create-windows-image.outputs.image }}"
       - name: Login to DockerHub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
           password: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
