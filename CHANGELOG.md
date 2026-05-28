@@ -12,8 +12,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Pinned `MinVersion: tls.VersionTLS12` on the kubelet HTTPS transport in both verified and skip-verification modes. [#1466](https://github.com/newrelic/nri-kubernetes/pull/1466)
 
 ### enhancement
-- Add `kubelet.config.caBundlePath` option to enable kubelet TLS verification against an operator-supplied PEM CA bundle. Default empty string preserves existing behavior (TLS verification skipped). See `_claude/kubelet-tls-verification-testing-guide.md` for per-platform setup.
-- The kubelet connector now logs its TLS posture once at startup so operators can confirm whether verification is enabled.
+- Add `kubelet.config.caBundlePath` option to enable kubelet TLS verification against an operator-supplied PEM CA bundle. [#1466](https://github.com/newrelic/nri-kubernetes/pull/1466)
+## v4.1.1 - 2026-05-18
+
+### ⛓️ Dependencies
+- Updated go module directive to v1.26.3
 
 ## v4.1.0 - 2026-05-06
 
