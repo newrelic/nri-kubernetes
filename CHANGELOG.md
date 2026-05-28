@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### security
+- Resolved CodeQL `go/disabled-certificate-check` (CWE-295) at `src/kubelet/client/connector.go` by replacing the literal `InsecureSkipVerify: true` assignment with a config-driven value derived from `kubelet.caBundlePath`. Default behavior is unchanged.
+- Pinned `MinVersion: tls.VersionTLS12` on the kubelet HTTPS transport in both verified and skip-verification modes.
+
 ### enhancement
 - Add `kubelet.config.caBundlePath` option to enable kubelet TLS verification against an operator-supplied PEM CA bundle. Default empty string preserves existing behavior (TLS verification skipped). See `_claude/kubelet-tls-verification-testing-guide.md` for per-platform setup.
+- The kubelet connector now logs its TLS posture once at startup so operators can confirm whether verification is enabled.
 
 ## v4.1.0 - 2026-05-06
 

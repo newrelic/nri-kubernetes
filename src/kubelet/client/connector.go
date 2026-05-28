@@ -189,17 +189,17 @@ func (dp *defaultConnector) checkLocalConnection(tripperWithBearerTokenRefreshin
 	return nil, fmt.Errorf("no connection succeeded through localhost: %w", err)
 }
 
-// logKubeletTLSPosture emits a single log line at connector setup describing
-// whether the kubelet HTTPS path will verify the server certificate. Operators
-// can use this to confirm their caBundlePath setting was loaded as expected.
+// This only describes scraper→kubelet hop — it says nothing about
+// the kubelet's own TLS posture toward the API server or any other endpoint.
 func (dp *defaultConnector) logKubeletTLSPosture() {
 	if dp.config.Kubelet.CABundlePath == "" {
-		dp.logger.Warnf("kubelet TLS verification is DISABLED (kubelet.caBundlePath is empty). " +
-			"This is the default for backwards compatibility but skips kubelet certificate validation. " +
-			"See _claude/kubelet-tls-verification-testing-guide.md to enable verification.")
+		dp.logger.Infof("Scraper→kubelet HTTPS: server certificate verification DISABLED " +
+			"(kubelet.caBundlePath is empty). Backwards-compatible default; accepts any " +
+			"server cert, vulnerable to MITM at the scraper→kubelet hop.")
 		return
 	}
-	dp.logger.Infof("kubelet TLS verification ENABLED using CA bundle at %q", dp.config.Kubelet.CABundlePath)
+	dp.logger.Infof("Scraper→kubelet HTTPS: server certificate verification ENABLED, "+
+		"validating against CA bundle %q", dp.config.Kubelet.CABundlePath)
 }
 
 func (dp *defaultConnector) getPort() (int32, error) {
