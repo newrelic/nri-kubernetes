@@ -162,6 +162,12 @@ type Kubelet struct {
 	// InitBackoff is the delay between retry attempts during kubelet client initialization.
 	// Only used if InitTimeout > 0.
 	InitBackoff time.Duration `mapstructure:"initBackoff"`
+
+	// CABundlePath is the absolute path to a PEM-encoded CA bundle used to verify
+	// the kubelet's serving certificate. When empty (default), TLS verification is
+	// skipped (back-compat). When set, the bundle is loaded into the TLS RootCAs
+	// pool and InsecureSkipVerify is disabled.
+	CABundlePath string `mapstructure:"caBundlePath"`
 }
 
 // ControlPlane contains config options for the control plane scraper.
