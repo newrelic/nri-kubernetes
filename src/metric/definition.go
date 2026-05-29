@@ -25,14 +25,14 @@ const (
 
 // Fetch Functions for computed metrics
 var (
-	workingSetBytes        = definition.FromRaw("workingSetBytes")
+	workingSetBytes        = definition.FromRaw("workingSetBytes")                                                             //nolint: gochecknoglobals // significant refactoring
 	_cpuUsedCores          = definition.TransformAndFilter(definition.FromRaw("usageNanoCores"), fromNano, filterCPUUsedCores) //nolint: gochecknoglobals // significant refactoring
-	cpuLimitCores          = definition.Transform(definition.FromRaw("cpuLimitCores"), toCores)
-	cpuRequestedCores      = definition.Transform(definition.FromRaw("cpuRequestedCores"), toCores)
-	processOpenFds         = prometheus.FromValueWithOverriddenName("process_open_fds", "processOpenFds")
-	processMaxFds          = prometheus.FromValueWithOverriddenName("process_max_fds", "processMaxFds")
-	allocatableCPUCores    = kubeletMetric.AllocatableCPUCores()
-	allocatableMemoryBytes = kubeletMetric.AllocatableMemoryBytes()
+	cpuLimitCores          = definition.Transform(definition.FromRaw("cpuLimitCores"), toCores)                                //nolint: gochecknoglobals // significant refactoring
+	cpuRequestedCores      = definition.Transform(definition.FromRaw("cpuRequestedCores"), toCores)                            //nolint: gochecknoglobals // significant refactoring
+	processOpenFds         = prometheus.FromValueWithOverriddenName("process_open_fds", "processOpenFds")                      //nolint: gochecknoglobals // significant refactoring
+	processMaxFds          = prometheus.FromValueWithOverriddenName("process_max_fds", "processMaxFds")                        //nolint: gochecknoglobals // significant refactoring
+	allocatableCPUCores    = kubeletMetric.AllocatableCPUCores()                                                               //nolint: gochecknoglobals // significant refactoring
+	allocatableMemoryBytes = kubeletMetric.AllocatableMemoryBytes()                                                            //nolint: gochecknoglobals // significant refactoring
 )
 
 // APIServerSpecs are the metric specifications we want to collect
@@ -705,8 +705,8 @@ var KSMSpecs = definition.SpecGroups{
 			// computed
 			{
 				Name: "podsMissing", ValueFunc: Subtract(
-					definition.Transform(prometheus.FromValue("kube_replicaset_spec_replicas"), fromPrometheusNumeric),
-					definition.Transform(prometheus.FromValue("kube_replicaset_status_ready_replicas"), fromPrometheusNumeric)),
+				definition.Transform(prometheus.FromValue("kube_replicaset_spec_replicas"), fromPrometheusNumeric),
+				definition.Transform(prometheus.FromValue("kube_replicaset_status_ready_replicas"), fromPrometheusNumeric)),
 				Type: sdkMetric.GAUGE,
 			},
 		},
@@ -732,8 +732,8 @@ var KSMSpecs = definition.SpecGroups{
 			// computed
 			{
 				Name: "podsMissing", ValueFunc: Subtract(
-					definition.Transform(prometheus.FromValue("kube_statefulset_replicas"), fromPrometheusNumeric),
-					definition.Transform(prometheus.FromValue("kube_statefulset_status_replicas_ready"), fromPrometheusNumeric)),
+				definition.Transform(prometheus.FromValue("kube_statefulset_replicas"), fromPrometheusNumeric),
+				definition.Transform(prometheus.FromValue("kube_statefulset_status_replicas_ready"), fromPrometheusNumeric)),
 				Type: sdkMetric.GAUGE,
 			},
 		},
@@ -759,8 +759,8 @@ var KSMSpecs = definition.SpecGroups{
 			// computed
 			{
 				Name: "podsMissing", ValueFunc: Subtract(
-					definition.Transform(prometheus.FromValue("kube_daemonset_status_desired_number_scheduled"), fromPrometheusNumeric),
-					definition.Transform(prometheus.FromValue("kube_daemonset_status_number_ready"), fromPrometheusNumeric)),
+				definition.Transform(prometheus.FromValue("kube_daemonset_status_desired_number_scheduled"), fromPrometheusNumeric),
+				definition.Transform(prometheus.FromValue("kube_daemonset_status_number_ready"), fromPrometheusNumeric)),
 				Type: sdkMetric.GAUGE,
 			},
 		},
@@ -807,8 +807,8 @@ var KSMSpecs = definition.SpecGroups{
 			// computed
 			{
 				Name: "podsMissing", ValueFunc: Subtract(
-					definition.Transform(prometheus.FromValue("kube_deployment_spec_replicas"), fromPrometheusNumeric),
-					definition.Transform(prometheus.FromValue("kube_deployment_status_replicas"), fromPrometheusNumeric)),
+				definition.Transform(prometheus.FromValue("kube_deployment_spec_replicas"), fromPrometheusNumeric),
+				definition.Transform(prometheus.FromValue("kube_deployment_status_replicas"), fromPrometheusNumeric)),
 				Type: sdkMetric.GAUGE,
 			},
 		},
