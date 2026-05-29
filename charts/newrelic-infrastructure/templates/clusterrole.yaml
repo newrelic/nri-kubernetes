@@ -40,6 +40,18 @@ rules:
     verbs: ["get", "list", "watch"]
   - nonResourceURLs: ["/metrics"]
     verbs: ["get"]
+  {{- if .Values.rbac.diagnosticEndpoints }}
+  # Optional: RBAC for kubelet diagnostic endpoints (requires feature gates on kubelet)
+  # - /configz: kubelet configuration (ComponentConfigz feature gate, default enabled)
+  # - /flagz: kubelet command-line flags (ComponentFlagz feature gate, alpha in 1.32+)
+  # - /statusz: kubelet component health status (ComponentStatusz feature gate, alpha in 1.31+)
+  - apiGroups: [""]
+    resources:
+      - "nodes/configz"
+      - "nodes/flagz"
+      - "nodes/statusz"
+    verbs: ["get"]
+  {{- end }}
   {{- if .Values.rbac.pspEnabled }}
   - apiGroups:
       - extensions

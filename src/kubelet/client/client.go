@@ -100,6 +100,30 @@ func (client *Client) Get(urlPath string) (*http.Response, error) {
 	return result, nil
 }
 
+// GetWithAccept implements HTTPGetterWithAccept interface by sending GET request with Accept header.
+// This enables content negotiation with the kubelet for endpoints that support multiple formats.
+func (client *Client) GetWithAccept(urlPath string, accept string) (*http.Response, error) {
+	e := client.endpoint
+	e.Path = path.Join(client.endpoint.Path, urlPath)
+
+	r, err := http.NewRequestWithContext(context.Background(), http.MethodGet, e.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request to: %s. Got error: %w", e.String(), err)
+	}
+
+	if accept != "" {
+		r.Header.Set("Accept", accept)
+	}
+
+	client.logger.Debugf("Calling Kubelet endpoint: %s (Accept: %s)", r.URL.String(), accept)
+
+	result, err := client.doer.Do(r)
+	if err != nil {
+		return nil, fmt.Errorf("error getting url %s: %w", e.String(), err)
+	}
+	return result, nil
+}
+
 func (client *Client) GetURI(uri url.URL) (*http.Response, error) {
 	r, err := http.NewRequestWithContext(context.Background(), http.MethodGet, uri.String(), nil)
 	if err != nil {
@@ -111,6 +135,23 @@ func (client *Client) GetURI(uri url.URL) (*http.Response, error) {
 	result, err := client.doer.Do(r)
 	if err != nil {
 		return nil, fmt.Errorf("error getting url %s: %w ", uri.String(), err)
+	}
+	return result, nil
+}
+
+// Do implements client.HTTPDoer interface by executing custom HTTP requests.
+// This allows setting custom headers (e.g., Accept header for content negotiation).
+func (client *Client) Do(req *http.Request) (*http.Response, error) {
+	// Construct full URL by combining endpoint with request path
+	e := client.endpoint
+	e.Path = path.Join(client.endpoint.Path, req.URL.Path)
+	req.URL = &e
+
+	client.logger.Debugf("Calling Kubelet endpoint: %s", req.URL.String())
+
+	result, err := client.doer.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error making request to %s: %w", req.URL.String(), err)
 	}
 	return result, nil
 }

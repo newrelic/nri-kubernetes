@@ -331,16 +331,24 @@ func populateValue(ms *metric.Set, spec *definition.Spec, val definition.Fetched
 }
 
 // populateMetricsFromMap adds multiple metrics that all share a single type from the spec.
+// It continues processing all keys even if some fail, collecting errors.
 func populateMetricsFromMap(ms *metric.Set, metrics definition.FetchedValues, sourceType metric.SourceType) (bool, error) {
 	if len(metrics) == 0 {
 		return false, nil
 	}
+	var populated bool
+	var firstErr error
 	for k, v := range metrics {
 		if err := ms.SetMetric(k, v, sourceType); err != nil {
-			return false, fmt.Errorf("%w %q: %w", ErrSetMetric, k, err)
+			if firstErr == nil {
+				firstErr = fmt.Errorf("%w %q: %w", ErrSetMetric, k, err)
+			}
+			// Continue processing remaining keys instead of returning immediately
+			continue
 		}
+		populated = true
 	}
-	return true, nil
+	return populated, firstErr
 }
 
 // populateSingleMetric adds a single metric to the metric set.

@@ -190,6 +190,7 @@ func fillGroupsAndMergeNonExistent(destination definition.RawGroups, from defini
 			continue
 		}
 
+		// Merge metrics from source entities that exist in destination
 		for entityID, e := range destination[l] {
 			if _, ok := g[entityID]; !ok {
 				continue
@@ -199,6 +200,13 @@ func fillGroupsAndMergeNonExistent(destination definition.RawGroups, from defini
 				if _, ok := e[k]; !ok {
 					e[k] = v
 				}
+			}
+		}
+
+		// Also add entities from source that don't exist in destination
+		for entityID, sourceMetrics := range g {
+			if _, ok := destination[l][entityID]; !ok {
+				destination[l][entityID] = sourceMetrics
 			}
 		}
 	}
