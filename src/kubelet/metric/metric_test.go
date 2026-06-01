@@ -725,3 +725,24 @@ func TestGetMetricsData_MalformedJSON(t *testing.T) {
 	assert.Nil(t, summary)
 	assert.ErrorContains(t, err, "unmarshaling the response body")
 }
+
+func TestFromLabelGetNamespace(t *testing.T) {
+	assert.Equal(t, "my-ns", FromLabelGetNamespace(definition.RawMetrics{"namespace": "my-ns"}))
+	assert.Equal(t, "", FromLabelGetNamespace(definition.RawMetrics{}))
+	assert.Equal(t, "", FromLabelGetNamespace(definition.RawMetrics{"namespace": 42}))
+}
+
+func TestPrefixFromMapInt(t *testing.T) {
+	fn := PrefixFromMapInt("pre.")
+
+	val, err := fn(map[string]int{"a": 1, "b": 2})
+	require.NoError(t, err)
+	fv, ok := val.(definition.FetchedValues)
+	require.True(t, ok)
+	assert.Equal(t, 1, fv["pre.a"])
+	assert.Equal(t, 2, fv["pre.b"])
+
+	val, err = fn("not-a-map")
+	assert.Error(t, err)
+	assert.Equal(t, "not-a-map", val)
+}

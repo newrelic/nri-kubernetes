@@ -894,6 +894,102 @@ func Test_KSM_LabelAndAnnotationExtraction_WithKSMSpecs(t *testing.T) {
 	assert.Equal(t, definition.FetchedValues{"annotation.owner": "bob"}, annotations)
 }
 
+func TestFromNanoToMilli_Error(t *testing.T) {
+	v, err := fromNanoToMilli("not-a-uint64")
+	assert.Nil(t, v)
+	assert.Error(t, err)
+}
+
+func TestToTimestamp_Error(t *testing.T) {
+	v, err := toTimestamp("not-a-time")
+	assert.Nil(t, v)
+	assert.Error(t, err)
+}
+
+func TestSubtract_LeftError(t *testing.T) {
+	sub := Subtract(definition.FromRaw("missing"), definition.FromRaw("right"))
+	result, err := sub("g", "e", definition.RawGroups{})
+	assert.Error(t, err)
+	assert.Nil(t, result)
+}
+
+func TestSubtract_RightError(t *testing.T) {
+	raw := definition.RawGroups{"g": {"e": {"left": float64(10)}}}
+	sub := Subtract(definition.FromRaw("left"), definition.FromRaw("missing"))
+	result, err := sub("g", "e", raw)
+	assert.Error(t, err)
+	assert.Nil(t, result)
+}
+
+func TestFromPrometheusNumeric_CounterValue(t *testing.T) {
+	v, err := fromPrometheusNumeric(prometheus.CounterValue(7))
+	assert.Equal(t, float64(7), v)
+	assert.NoError(t, err)
+}
+
+func TestFromPrometheusNumeric_Error(t *testing.T) {
+	v, err := fromPrometheusNumeric("not-numeric")
+	assert.Nil(t, v)
+	assert.Error(t, err)
+}
+
+func TestFetchWithDefault(t *testing.T) {
+	raw := definition.RawGroups{"g": {"e": {"key": "value"}}}
+
+	fn := fetchWithDefault(definition.FromRaw("key"), "default")
+	val, err := fn("g", "e", raw)
+	assert.NoError(t, err)
+	assert.Equal(t, "value", val)
+
+	fn = fetchWithDefault(definition.FromRaw("missing"), "default")
+	val, err = fn("g", "e", raw)
+	assert.NoError(t, err)
+	assert.Equal(t, "default", val)
+}
+
+func TestIsPersistentVolume(t *testing.T) {
+	fn := isPersistentVolume()
+
+	raw := definition.RawGroups{"volume": {"v1": {"pvcName": "my-pvc"}}}
+	val, err := fn("volume", "v1", raw)
+	assert.NoError(t, err)
+	assert.Equal(t, "true", val)
+
+	raw = definition.RawGroups{"volume": {"v1": {}}}
+	val, err = fn("volume", "v1", raw)
+	assert.NoError(t, err)
+	assert.Equal(t, "false", val)
+}
+
+func TestToComplementPercentage(t *testing.T) {
+	fn := toComplementPercentage("used", "available")
+
+	raw := definition.RawGroups{"g": {"e": {"used": uint64(100), "available": uint64(900)}}}
+	val, err := fn("g", "e", raw)
+	assert.NoError(t, err)
+	assert.InDelta(t, float64(10), val, 0.001)
+
+	raw = definition.RawGroups{"g": {"e": {"used": uint64(100)}}}
+	val, err = fn("g", "e", raw)
+	assert.Error(t, err)
+	assert.Nil(t, val)
+
+	raw = definition.RawGroups{"g": {"e": {"available": uint64(900)}}}
+	val, err = fn("g", "e", raw)
+	assert.Error(t, err)
+	assert.Nil(t, val)
+}
+
+func TestConvertValue_IntTypes(t *testing.T) {
+	v, err := convertValue(uint(42))
+	assert.Equal(t, float64(42), v)
+	assert.NoError(t, err)
+
+	v, err = convertValue(int64(42))
+	assert.Equal(t, float64(42), v)
+	assert.NoError(t, err)
+}
+
 const (
 	testNodeGroup  = "node"
 	testNodeEntity = "test-node"
