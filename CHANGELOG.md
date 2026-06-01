@@ -7,12 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### security
+## v4.2.0 - 2026-06-01
+
+### ⛓️ Dependencies
+- Updated go module directive to v1.26.3
+
+### 🛡️ Security notices
 - Resolved CodeQL `go/disabled-certificate-check` (CWE-295) at `src/kubelet/client/connector.go` by replacing the literal `InsecureSkipVerify: true` assignment with a config-driven value derived from `kubelet.caBundlePath`. Default behavior is unchanged. [#1466](https://github.com/newrelic/nri-kubernetes/pull/1466)
 - Pinned `MinVersion: tls.VersionTLS12` on the kubelet HTTPS transport in both verified and skip-verification modes. [#1466](https://github.com/newrelic/nri-kubernetes/pull/1466)
 
-### enhancement
-- Add `kubelet.config.caBundlePath` option to enable kubelet TLS verification against an operator-supplied PEM CA bundle. [#1466](https://github.com/newrelic/nri-kubernetes/pull/1466)
 ## v4.1.1 - 2026-05-18
 
 ### ⛓️ Dependencies
