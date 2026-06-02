@@ -727,12 +727,14 @@ func TestGetMetricsData_MalformedJSON(t *testing.T) {
 }
 
 func TestFromLabelGetNamespace(t *testing.T) {
+	t.Parallel()
 	assert.Equal(t, "my-ns", FromLabelGetNamespace(definition.RawMetrics{"namespace": "my-ns"}))
 	assert.Equal(t, "", FromLabelGetNamespace(definition.RawMetrics{}))
 	assert.Equal(t, "", FromLabelGetNamespace(definition.RawMetrics{"namespace": 42}))
 }
 
 func TestPrefixFromMapInt(t *testing.T) {
+	t.Parallel()
 	fn := PrefixFromMapInt("pre.")
 
 	val, err := fn(map[string]int{"a": 1, "b": 2})
