@@ -25,12 +25,14 @@ const (
 
 // Fetch Functions for computed metrics
 var (
-	workingSetBytes   = definition.FromRaw("workingSetBytes")
-	_cpuUsedCores     = definition.TransformAndFilter(definition.FromRaw("usageNanoCores"), fromNano, filterCPUUsedCores) //nolint: gochecknoglobals // significant refactoring
-	cpuLimitCores     = definition.Transform(definition.FromRaw("cpuLimitCores"), toCores)
-	cpuRequestedCores = definition.Transform(definition.FromRaw("cpuRequestedCores"), toCores)
-	processOpenFds    = prometheus.FromValueWithOverriddenName("process_open_fds", "processOpenFds")
-	processMaxFds     = prometheus.FromValueWithOverriddenName("process_max_fds", "processMaxFds")
+	workingSetBytes        = definition.FromRaw("workingSetBytes")                                                             //nolint: gochecknoglobals // significant refactoring
+	_cpuUsedCores          = definition.TransformAndFilter(definition.FromRaw("usageNanoCores"), fromNano, filterCPUUsedCores) //nolint: gochecknoglobals // significant refactoring
+	cpuLimitCores          = definition.Transform(definition.FromRaw("cpuLimitCores"), toCores)                                //nolint: gochecknoglobals // significant refactoring
+	cpuRequestedCores      = definition.Transform(definition.FromRaw("cpuRequestedCores"), toCores)                            //nolint: gochecknoglobals // significant refactoring
+	processOpenFds         = prometheus.FromValueWithOverriddenName("process_open_fds", "processOpenFds")                      //nolint: gochecknoglobals // significant refactoring
+	processMaxFds          = prometheus.FromValueWithOverriddenName("process_max_fds", "processMaxFds")                        //nolint: gochecknoglobals // significant refactoring
+	allocatableCPUCores    = kubeletMetric.AllocatableCPUCores()                                                               //nolint: gochecknoglobals // significant refactoring
+	allocatableMemoryBytes = kubeletMetric.AllocatableMemoryBytes()                                                            //nolint: gochecknoglobals // significant refactoring
 )
 
 // APIServerSpecs are the metric specifications we want to collect
@@ -1493,8 +1495,8 @@ func NewKubeletSpecs(interfaceCache *kubeletMetric.InterfaceCache) definition.Sp
 				{Name: "runningPods", ValueFunc: definition.FromRaw("runningPods"), Type: sdkMetric.GAUGE},
 				// computed
 				{Name: "fsCapacityUtilization", ValueFunc: toUtilization(definition.FromRaw("fsUsedBytes"), definition.FromRaw("fsCapacityBytes")), Type: sdkMetric.GAUGE},
-				{Name: "allocatableCpuCoresUtilization", ValueFunc: toUtilization(_cpuUsedCores, definition.FromRaw("allocatableCpuCores")), Type: sdkMetric.GAUGE},
-				{Name: "allocatableMemoryUtilization", ValueFunc: toUtilization(workingSetBytes, definition.FromRaw("allocatableMemoryBytes")), Type: sdkMetric.GAUGE},
+				{Name: "allocatableCpuCoresUtilization", ValueFunc: toUtilization(_cpuUsedCores, allocatableCPUCores), Type: sdkMetric.GAUGE},
+				{Name: "allocatableMemoryUtilization", ValueFunc: toUtilization(definition.FromRaw("memoryWorkingSetBytes"), allocatableMemoryBytes), Type: sdkMetric.GAUGE},
 			},
 		},
 		"volume": {

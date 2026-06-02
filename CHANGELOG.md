@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- Add Fargate sidecar support: reset `NRIA_OVERRIDE_HOST_ROOT` in `Dockerfile.sidecar` so the agent reads `/proc` directly instead of the non-existent `/host/proc` mount
+- Add `AllocatableCPUCores` and `AllocatableMemoryBytes` fetch functions to correctly compute node CPU/memory utilization ratios from the raw allocatable `ResourceList`
+- Fix `allocatableCpuCoresUtilization` and `allocatableMemoryUtilization` metric definitions to use the correct raw keys (`usageNanoCores` / `memoryWorkingSetBytes`)
+- Set `isReady=false` for containers in Waiting, Terminated, or Unknown state instead of omitting the metric
+- Add `networkRouteFile: /proc/1/net/route` to the Fargate sidecar `nri-kubernetes.yml` to resolve network interface detection on Fargate nodes
+
 ## v4.2.0 - 2026-06-01
 
 ### ⛓️ Dependencies

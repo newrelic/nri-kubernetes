@@ -6,6 +6,27 @@ templates:
   - templates/agent-configmap.yaml
   - templates/secret.yaml
 tests:
+  - it: controlplane is disabled in fargate mode
+    set:
+      licenseKey: test
+      cluster: test
+      fargate: true
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: templates/controlplane/daemonset.yaml
+
+  - it: controlplane is disabled in fargate mode with global.fargate
+    set:
+      licenseKey: test
+      cluster: test
+      global:
+        fargate: true
+    asserts:
+      - hasDocuments:
+          count: 0
+        template: templates/controlplane/daemonset.yaml
+
   - it: empty affinity defaults to control plane nodes
     set:
       licenseKey: test

@@ -366,10 +366,78 @@ func TestFetchContainersData_WithSidecarContainers(t *testing.T) {
 	assert.Equal(t, true, result[sidecarAID]["isReady"])
 	assert.Equal(t, int32(2), result[sidecarAID]["restartCount"])
 	assert.Equal(t, startedAt, result[sidecarAID]["startedAt"])
+	assert.Equal(t, false, result[sidecarBID]["isReady"], "Waiting container should report isReady=false")
 	assert.Equal(t, "OOMKilled", result[sidecarBID]["lastTerminatedExitReason"])
 	assert.Equal(t, int32(137), result[sidecarBID]["lastTerminatedExitCode"])
 	assert.Equal(t, "192.168.0.33", result[sidecarAID]["nodeIP"])
 	assert.Equal(t, "192.168.0.33", result[sidecarBID]["nodeIP"])
+}
+
+const (
+	testContainerName = "app"
+	testNodeName      = "node"
+)
+
+func TestFillContainerStatuses_IsReadyForAllStates(t *testing.T) {
+	t.Parallel()
+
+	namespace := "default"
+	podName := "test-pod"
+
+	makePod := func() *corev1.Pod {
+		return &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{Name: podName, Namespace: namespace},
+			Spec:       corev1.PodSpec{NodeName: testNodeName},
+		}
+	}
+
+	t.Run("Running container sets isReady from c.Ready", func(t *testing.T) {
+		t.Parallel()
+		pod := makePod()
+		pod.Status.ContainerStatuses = []corev1.ContainerStatus{
+			{Name: testContainerName, Ready: true, State: corev1.ContainerState{Running: &corev1.ContainerStateRunning{}}},
+		}
+		dest := make(map[string]definition.RawMetrics)
+		fillContainerStatuses(pod, dest)
+		id := fmt.Sprintf("%s_%s_%s", namespace, podName, testContainerName)
+		assert.Equal(t, true, dest[id]["isReady"])
+	})
+
+	t.Run("Waiting container sets isReady=false", func(t *testing.T) {
+		t.Parallel()
+		pod := makePod()
+		pod.Status.ContainerStatuses = []corev1.ContainerStatus{
+			{Name: testContainerName, Ready: false, State: corev1.ContainerState{Waiting: &corev1.ContainerStateWaiting{Reason: "CrashLoopBackOff"}}},
+		}
+		dest := make(map[string]definition.RawMetrics)
+		fillContainerStatuses(pod, dest)
+		id := fmt.Sprintf("%s_%s_%s", namespace, podName, testContainerName)
+		assert.Equal(t, false, dest[id]["isReady"])
+	})
+
+	t.Run("Terminated container sets isReady=false", func(t *testing.T) {
+		t.Parallel()
+		pod := makePod()
+		pod.Status.ContainerStatuses = []corev1.ContainerStatus{
+			{Name: testContainerName, Ready: false, State: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{ExitCode: 0}}},
+		}
+		dest := make(map[string]definition.RawMetrics)
+		fillContainerStatuses(pod, dest)
+		id := fmt.Sprintf("%s_%s_%s", namespace, podName, testContainerName)
+		assert.Equal(t, false, dest[id]["isReady"])
+	})
+
+	t.Run("Unknown state sets isReady=false", func(t *testing.T) {
+		t.Parallel()
+		pod := makePod()
+		pod.Status.ContainerStatuses = []corev1.ContainerStatus{
+			{Name: testContainerName, Ready: false, State: corev1.ContainerState{}}, // all nil → Unknown
+		}
+		dest := make(map[string]definition.RawMetrics)
+		fillContainerStatuses(pod, dest)
+		id := fmt.Sprintf("%s_%s_%s", namespace, podName, testContainerName)
+		assert.Equal(t, false, dest[id]["isReady"])
+	})
 }
 
 func TestFetchPodData_WithPriority(t *testing.T) {
