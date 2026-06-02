@@ -895,8 +895,8 @@ func Test_KSM_LabelAndAnnotationExtraction_WithKSMSpecs(t *testing.T) {
 }
 
 const (
-	rawKeyPVCName    = "pvcName"
-	rawGroupVolume   = "volume"
+	rawKeyPVCName  = "pvcName"
+	rawGroupVolume = "volume"
 )
 
 func TestFromNanoToMilli_Error(t *testing.T) {
