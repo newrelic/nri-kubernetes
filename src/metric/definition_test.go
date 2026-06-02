@@ -894,7 +894,10 @@ func Test_KSM_LabelAndAnnotationExtraction_WithKSMSpecs(t *testing.T) {
 	assert.Equal(t, definition.FetchedValues{"annotation.owner": "bob"}, annotations)
 }
 
-const rawKeyPVCName = "pvcName"
+const (
+	rawKeyPVCName    = "pvcName"
+	rawGroupVolume   = "volume"
+)
 
 func TestFromNanoToMilli_Error(t *testing.T) {
 	t.Parallel()
@@ -960,13 +963,13 @@ func TestIsPersistentVolume(t *testing.T) {
 	t.Parallel()
 	fn := isPersistentVolume()
 
-	raw := definition.RawGroups{"volume": {"v1": {rawKeyPVCName: "my-pvc"}}}
-	val, err := fn("volume", "v1", raw)
+	raw := definition.RawGroups{rawGroupVolume: {"v1": {rawKeyPVCName: "my-pvc"}}}
+	val, err := fn(rawGroupVolume, "v1", raw)
 	assert.NoError(t, err)
 	assert.Equal(t, "true", val)
 
-	raw = definition.RawGroups{"volume": {"v1": {}}}
-	val, err = fn("volume", "v1", raw)
+	raw = definition.RawGroups{rawGroupVolume: {"v1": {}}}
+	val, err = fn(rawGroupVolume, "v1", raw)
 	assert.NoError(t, err)
 	assert.Equal(t, "false", val)
 }
