@@ -37,7 +37,7 @@ jobs:
           VERSION=${{ github.ref_name || inputs.tag }}
           make compile TAG=${VERSION}
       - name: Upload artifact for docker build step
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           retention-days: 1
           name: nri-kubernetes-${{ matrix.goos }}-${{ matrix.goarch }}
@@ -64,7 +64,7 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       - name: Download all artifacts from build job
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           path: bin
 
