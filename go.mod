@@ -19,7 +19,7 @@ require (
 	k8s.io/apimachinery v0.36.1
 	k8s.io/client-go v0.36.1
 	k8s.io/kubelet v0.36.1
-	k8s.io/utils v0.0.0-20260319190234-28399d86e0b5
+	k8s.io/utils v0.0.0-20260507154919-ff6756f316d2
 )
 
 require (
