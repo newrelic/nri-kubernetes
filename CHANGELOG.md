@@ -7,12 +7,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancement
+## v4.3.0 - 2026-06-08
+
+### 🚀 Enhancements
 - Add Fargate sidecar support: reset `NRIA_OVERRIDE_HOST_ROOT` in `Dockerfile.sidecar` so the agent reads `/proc` directly instead of the non-existent `/host/proc` mount
 - Add `AllocatableCPUCores` and `AllocatableMemoryBytes` fetch functions to correctly compute node CPU/memory utilization ratios from the raw allocatable `ResourceList`
-- Fix `allocatableCpuCoresUtilization` and `allocatableMemoryUtilization` metric definitions to use the correct raw keys (`usageNanoCores` / `memoryWorkingSetBytes`)
+- Fix `allocatableCpuCoresUtilization` and `allocatableMemoryUtilization` metric definitions to use the correct raw keys (`usageNanoCores` / `memoryWorkingSetBytes`\)
 - Set `isReady=false` for containers in Waiting, Terminated, or Unknown state instead of omitting the metric
 - Add `networkRouteFile: /proc/1/net/route` to the Fargate sidecar `nri-kubernetes.yml` to resolve network interface detection on Fargate nodes
+
+### ⛓️ Dependencies
+- Updated golang.org/x/text to v0.37.0
+- Updated github.com/prometheus/common to v0.68.1 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.68.1)
+- Updated golang version to v1.26.4
+- Updated kubernetes monorepo to v0.36.1
+- Updated k8s.io/utils digest to ff6756f
 
 ## v4.2.0 - 2026-06-01
 
