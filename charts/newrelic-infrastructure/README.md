@@ -216,6 +216,7 @@ Infrastructure Agent integrations (Kafka, Cassandra, Redis, etc.) are not suppor
 | dnsConfig | object | `{}` | Sets pod's dnsConfig. Can be configured also with `global.dnsConfig` |
 | enableProcessMetrics | bool | `false` | Collect detailed metrics from processes running in the host. This defaults to true for accounts created before July 20, 2020. ref: https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/new-relic-infrastructure-agent-1120 |
 | enableWindows | bool | `false` | Enable Windows node monitoring. |
+| fargate | bool | `false` | Enable EKS Fargate support. When enabled: - The kubelet DaemonSet will be excluded from Fargate nodes via node affinity (eks.amazonaws.com/compute-type != fargate) - The control plane DaemonSet will be completely disabled (control plane metrics are not available on Fargate) - The newrelic-infra-operator should be used to inject the integration as a sidecar into pods running on Fargate nodes Can be configured also with `global.fargate` |
 | fedramp.enabled | bool | `false` | Enables FedRAMP. Can be configured also with `global.fedramp.enabled` |
 | fullnameOverride | string | `""` | Override the full name of the release |
 | hostNetwork | bool | `false` | Sets pod's hostNetwork. Can be configured also with `global.hostNetwork` |
