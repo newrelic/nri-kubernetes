@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v4.3.1 - 2026-06-15
+
+### ⛓️ Dependencies
+- Updated alpine to v3.24.0
+
 ## v4.3.0 - 2026-06-08
 
 ### 🚀 Enhancements
