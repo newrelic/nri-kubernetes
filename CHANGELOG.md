@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### bugfix
+- Fix fillContainerStatuses panics @changliu-wk [#1488](https://github.com/newrelic/nri-kubernetes/pull/1488)
+
 ## v4.3.2 - 2026-06-22
 
 ### ⛓️ Dependencies
