@@ -25,7 +25,7 @@ jobs:
         goos: [ linux ]
         goarch: [ amd64, arm64, arm ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
@@ -51,7 +51,7 @@ jobs:
       DOCKER_IMAGE_NAME: newrelic/nri-kubernetes
       DOCKER_PLATFORMS: "linux/amd64,linux/arm64,linux/arm" # Must be consistent with the matrix from the job above
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set image tag
         run: |
