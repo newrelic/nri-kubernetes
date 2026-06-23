@@ -260,9 +260,9 @@ func fillContainerStatuses(pod *v1.Pod, dest map[string]definition.RawMetrics) {
 	// Add sidecar containers (init containers with RestartPolicy Always)
 	for _, initContainer := range pod.Spec.InitContainers {
 		if initContainer.RestartPolicy != nil && *initContainer.RestartPolicy == v1.ContainerRestartPolicyAlways {
-			for _, st := range pod.Status.InitContainerStatuses {
-				if st.Name == initContainer.Name {
-					containerStatuses = append(containerStatuses, st)
+			for _, initContainerStatus := range pod.Status.InitContainerStatuses {
+				if initContainerStatus.Name == initContainer.Name {
+					containerStatuses = append(containerStatuses, initContainerStatus)
 					break
 				}
 			}

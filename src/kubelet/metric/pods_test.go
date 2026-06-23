@@ -380,7 +380,7 @@ func TestFetchContainersData_WithoutOrderOfInitContainers(t *testing.T) {
 	restartPolicyAlways := corev1.ContainerRestartPolicyAlways
 	podName := "test-pod"
 	namespace := "default"
-	sideCarAContainerName := "sidecar"
+	sideCarAContainerName := "sidecar-a"
 	sideCarBContainerName := "sidecar-b"
 	initContainerName := "normal-init"
 
@@ -457,7 +457,7 @@ func TestFetchContainersData_WithoutOrderOfInitContainers(t *testing.T) {
 	sidecarAID := fmt.Sprintf("%s_%s_%s", namespace, podName, sideCarAContainerName)
 	sidecarBID := fmt.Sprintf("%s_%s_%s", namespace, podName, sideCarBContainerName)
 	assert.Equal(t, 2, len(result), "expected only the sidecar containers to be processed")
-	assert.Contains(t, result, sidecarAID, "expected sidecar to be present as a key")
+	assert.Contains(t, result, sidecarAID, "expected sidecar-a to be present as a key")
 	assert.Contains(t, result, sidecarBID, "expected sidecar-b to be present as a key")
 
 	assert.Equal(t, "Running", result[sidecarAID]["status"])
@@ -478,7 +478,7 @@ func TestFetchContainersData_WithLessInitContainerStatuses(t *testing.T) {
 	restartPolicyAlways := corev1.ContainerRestartPolicyAlways
 	podName := "test-pod"
 	namespace := "default"
-	sideCarAContainerName := "sidecar"
+	sideCarAContainerName := "sidecar-a"
 	sideCarBContainerName := "sidecar-b"
 	initContainerName := "normal-init"
 
@@ -526,7 +526,7 @@ func TestFetchContainersData_WithLessInitContainerStatuses(t *testing.T) {
 	sidecarAID := fmt.Sprintf("%s_%s_%s", namespace, podName, sideCarAContainerName)
 	sidecarBID := fmt.Sprintf("%s_%s_%s", namespace, podName, sideCarBContainerName)
 	assert.Equal(t, 2, len(result), "expected only the sidecar containers to be processed")
-	assert.Contains(t, result, sidecarAID, "expected sidecar to be present as a key")
+	assert.Contains(t, result, sidecarAID, "expected sidecar-a to be present as a key")
 	assert.Contains(t, result, sidecarBID, "expected sidecar-b to be present as a key")
 
 	assert.Equal(t, "Running", result[sidecarAID]["status"])
