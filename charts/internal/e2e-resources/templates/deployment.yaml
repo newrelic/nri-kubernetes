@@ -27,6 +27,13 @@ spec:
         app: deployment
     spec:
       priorityClassName: system-node-critical
+      resources:
+        requests:
+          cpu: 50m
+          memory: 20Mi
+        limits:
+          cpu: 100m
+          memory: 40Mi
       containers:
         - name: compute-pi-digits
           image: docker.io/library/perl:5.34.0

@@ -2,26 +2,55 @@ package metric
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
 )
 
-// GetDeploymentNameForReplicaSet returns the name of the deployment has created
-// a ReplicaSet.
+const deploymentOwnerKind = "Deployment"
+
+var (
+	ErrOwnerKindInvalid     = errors.New("failed to convert owner_kind of ReplicaSet to string")
+	ErrNotOwnedByDeployment = errors.New("owner_kind of ReplicaSet is not " + deploymentOwnerKind)
+	ErrOwnerNameInvalid     = errors.New("failed to convert owner_name of ReplicaSet to string")
+	ErrOwnerNameEmpty       = errors.New("owner_name of ReplicaSet is empty")
+)
+
+// GetDeploymentNameForReplicaSet returns the name of the deployment that owns
+// a ReplicaSet, an error if the owner is not a deployment.
 func GetDeploymentNameForReplicaSet() definition.FetchFunc {
 	return func(groupLabel, entityID string, groups definition.RawGroups) (definition.FetchedValue, error) {
-		replicasetName, err := prometheus.FromLabelValue("kube_replicaset_created", "replicaset")(groupLabel, entityID, groups)
+		ownerKindRawVal, err := prometheus.FromLabelValue("kube_replicaset_owner", "owner_kind")(groupLabel, entityID, groups)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to fetch owner_kind of ReplicaSet: %w", err)
 		}
 
-		if replicasetName.(string) == "" {
-			return nil, errors.New("error generating deployment name for replica set. replicaset field is empty")
+		ownerKind, ok := ownerKindRawVal.(string)
+		if !ok {
+			return nil, ErrOwnerKindInvalid
 		}
 
-		return replicasetNameToDeploymentName(replicasetName.(string)), nil
+		if ownerKind != deploymentOwnerKind {
+			return nil, ErrNotOwnedByDeployment
+		}
+
+		ownerNameRawVal, err := prometheus.FromLabelValue("kube_replicaset_owner", "owner_name")(groupLabel, entityID, groups)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch owner_name of ReplicaSet: %w", err)
+		}
+
+		ownerName, ok := ownerNameRawVal.(string)
+		if !ok {
+			return nil, ErrOwnerNameInvalid
+		}
+
+		if ownerName == "" {
+			return nil, ErrOwnerNameEmpty
+		}
+
+		return ownerName, nil
 	}
 }
 

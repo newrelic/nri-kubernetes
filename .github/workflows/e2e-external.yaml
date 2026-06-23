@@ -23,16 +23,16 @@ jobs:
     env:
       DOCKER_BUILDKIT: '1' # Setting DOCKER_BUILDKIT=1 ensures TARGETOS and TARGETARCH are populated
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
       - name: Setup Minikube
-        uses: manusa/actions-setup-minikube@v2.15.0
+        uses: manusa/actions-setup-minikube@v2.18.0
         with:
-          minikube version: v1.37.0
+          minikube version: v1.38.1
           kubernetes version: ${{ matrix.k8sVersion }}
           github token: ${{ secrets.GITHUB_TOKEN }}
           driver: docker

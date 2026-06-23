@@ -1,11 +1,10 @@
 name: Build Windows Infrastructure Agent Image
 
+# The push trigger has been disabled because the Windows infrastructure agent image
+# is now provided by the infrastructure-bundle instead of being built here.
+# This workflow is kept for reference and can be triggered manually if needed.
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'charts/newrelic-infrastructure/values.yaml'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -17,7 +16,7 @@ jobs:
       version_changed: ${{ steps.version-check.outputs.version_changed }}
       new_agent_version: ${{ steps.version-check.outputs.new_agent_version }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 2 # Fetch the latest commit and its parent
       - name: Check if latest commit modifies images.windowsAgent.tag (version)
@@ -60,7 +59,7 @@ jobs:
     env:
       AGENT_VERSION: ${{ needs.check-version-change.outputs.new_agent_version }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
@@ -104,7 +103,7 @@ jobs:
             -t newrelic/infrastructure-windows:$agentVersion-$matrixTag .
 
       - name: Login to DockerHub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
           password: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
@@ -118,3 +117,41 @@ jobs:
           echo "Agent version: $agentVersion"
 
           docker push newrelic/infrastructure-windows:$agentVersion-$matrixTag
+
+  scan:
+    name: Trivy scan for
+    needs: [ check-version-change, build ]
+    strategy:
+      fail-fast: false
+      matrix:
+        windows:
+          - tag: ltsc2022
+    runs-on: ubuntu-latest
+    env:
+      IMAGE: newrelic/infrastructure-windows:${{ needs.check-version-change.outputs.new_agent_version }}-${{ matrix.windows.tag }}
+    steps:
+      - name: Login to DockerHub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
+
+      - name: Run Trivy vulnerability scanner
+        id: trivy-scan
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'HIGH,CRITICAL'
+          scanners: 'vuln'
+
+      - name: Notify Slack on vulnerabilities found
+        if: steps.trivy-scan.outcome == 'failure'
+        uses: archive/github-actions-slack@v3.1.0
+        with:
+          slack-bot-user-oauth-access-token: ${{ secrets.K8S_AGENTS_SLACK_TOKEN }}
+          slack-channel: ${{ secrets.K8S_AGENTS_SLACK_CHANNEL }}
+          slack-text: "⚠️ `${{ github.repository }}`: Trivy found HIGH/CRITICAL vulnerabilities in `${{ env.IMAGE }}`. <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View scan results>."

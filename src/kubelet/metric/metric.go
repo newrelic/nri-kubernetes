@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -17,6 +17,9 @@ import (
 // StatsSummaryPath is the path where kubelet serves a summary with several information.
 const StatsSummaryPath = "/stats/summary"
 
+// maxErrorBodyBytes caps the error response body read at 1MB. This is only used for logging.
+const maxErrorBodyBytes = 1 * 1024 * 1024
+
 // GetMetricsData calls kubelet /stats/summary endpoint and returns unmarshalled response
 func GetMetricsData(c client.HTTPGetter) (*v1.Summary, error) {
 	resp, err := c.Get(StatsSummaryPath)
@@ -26,7 +29,7 @@ func GetMetricsData(c client.HTTPGetter) (*v1.Summary, error) {
 	defer resp.Body.Close() // nolint: errcheck
 
 	if resp.StatusCode != http.StatusOK {
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(io.LimitReader(resp.Body, maxErrorBodyBytes))
 
 		bodyErr := fmt.Errorf("response body: %s", string(body))
 
@@ -137,6 +140,14 @@ func fetchPodStats(pod v1.PodStats) (definition.RawMetrics, string, error) {
 			interfaces[i.Name] = interfaceMetrics
 		}
 		r["interfaces"] = interfaces
+	}
+
+	if pod.CPU != nil {
+		AddUint64RawMetric(r, "usageNanoCores", pod.CPU.UsageNanoCores)
+	}
+	if pod.Memory != nil {
+		AddUint64RawMetric(r, "usageBytes", pod.Memory.UsageBytes)
+		AddUint64RawMetric(r, "workingSetBytes", pod.Memory.WorkingSetBytes)
 	}
 
 	rawEntityID := fmt.Sprintf("%s_%s", r["namespace"], r["podName"])

@@ -4,6 +4,9 @@ import (
 	"testing"
 	"time"
 
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+
 	"github.com/newrelic/nri-kubernetes/v3/src/definition"
 	"github.com/newrelic/nri-kubernetes/v3/src/prometheus"
 	"github.com/stretchr/testify/assert"
@@ -889,4 +892,235 @@ func Test_KSM_LabelAndAnnotationExtraction_WithKSMSpecs(t *testing.T) {
 	annotations, err = getSpec("pod", "annotation.*").ValueFunc("pod", "my-pod", raw)
 	require.NoError(t, err)
 	assert.Equal(t, definition.FetchedValues{"annotation.owner": "bob"}, annotations)
+}
+
+const (
+	rawKeyPVCName  = "pvcName"
+	rawGroupVolume = "volume"
+)
+
+func TestFromNanoToMilli_Error(t *testing.T) {
+	t.Parallel()
+	v, err := fromNanoToMilli("not-a-uint64")
+	assert.Nil(t, v)
+	assert.Error(t, err)
+}
+
+func TestToTimestamp_Error(t *testing.T) {
+	t.Parallel()
+	v, err := toTimestamp("not-a-time")
+	assert.Nil(t, v)
+	assert.Error(t, err)
+}
+
+func TestSubtract_LeftError(t *testing.T) {
+	t.Parallel()
+	sub := Subtract(definition.FromRaw("missing"), definition.FromRaw("right"))
+	result, err := sub("g", "e", definition.RawGroups{})
+	assert.Error(t, err)
+	assert.Nil(t, result)
+}
+
+func TestSubtract_RightError(t *testing.T) {
+	t.Parallel()
+	raw := definition.RawGroups{"g": {"e": {"left": float64(10)}}}
+	sub := Subtract(definition.FromRaw("left"), definition.FromRaw("missing"))
+	result, err := sub("g", "e", raw)
+	assert.Error(t, err)
+	assert.Nil(t, result)
+}
+
+func TestFromPrometheusNumeric_CounterValue(t *testing.T) {
+	t.Parallel()
+	v, err := fromPrometheusNumeric(prometheus.CounterValue(7))
+	assert.Equal(t, float64(7), v)
+	assert.NoError(t, err)
+}
+
+func TestFromPrometheusNumeric_Error(t *testing.T) {
+	t.Parallel()
+	v, err := fromPrometheusNumeric("not-numeric")
+	assert.Nil(t, v)
+	assert.Error(t, err)
+}
+
+func TestFetchWithDefault(t *testing.T) {
+	t.Parallel()
+	raw := definition.RawGroups{"g": {"e": {"key": "value"}}}
+
+	fn := fetchWithDefault(definition.FromRaw("key"), "default")
+	val, err := fn("g", "e", raw)
+	assert.NoError(t, err)
+	assert.Equal(t, "value", val)
+
+	fn = fetchWithDefault(definition.FromRaw("missing"), "default")
+	val, err = fn("g", "e", raw)
+	assert.NoError(t, err)
+	assert.Equal(t, "default", val)
+}
+
+func TestIsPersistentVolume(t *testing.T) {
+	t.Parallel()
+	fn := isPersistentVolume()
+
+	raw := definition.RawGroups{rawGroupVolume: {"v1": {rawKeyPVCName: "my-pvc"}}}
+	val, err := fn(rawGroupVolume, "v1", raw)
+	assert.NoError(t, err)
+	assert.Equal(t, "true", val)
+
+	raw = definition.RawGroups{rawGroupVolume: {"v1": {}}}
+	val, err = fn(rawGroupVolume, "v1", raw)
+	assert.NoError(t, err)
+	assert.Equal(t, "false", val)
+}
+
+func TestToComplementPercentage(t *testing.T) {
+	t.Parallel()
+	fn := toComplementPercentage("used", "available")
+
+	raw := definition.RawGroups{"g": {"e": {"used": uint64(100), "available": uint64(900)}}}
+	val, err := fn("g", "e", raw)
+	assert.NoError(t, err)
+	assert.InDelta(t, float64(10), val, 0.001)
+
+	raw = definition.RawGroups{"g": {"e": {"used": uint64(100)}}}
+	val, err = fn("g", "e", raw)
+	assert.Error(t, err)
+	assert.Nil(t, val)
+
+	raw = definition.RawGroups{"g": {"e": {"available": uint64(900)}}}
+	val, err = fn("g", "e", raw)
+	assert.Error(t, err)
+	assert.Nil(t, val)
+}
+
+func TestConvertValue_IntTypes(t *testing.T) {
+	t.Parallel()
+	v, err := convertValue(uint(42))
+	assert.Equal(t, float64(42), v)
+	assert.NoError(t, err)
+
+	v, err = convertValue(int64(42))
+	assert.Equal(t, float64(42), v)
+	assert.NoError(t, err)
+}
+
+const (
+	testNodeGroup  = "node"
+	testNodeEntity = "test-node"
+	testAllocKey   = "allocatable"
+)
+
+func nodeSpecByName(t *testing.T, name string) definition.Spec {
+	t.Helper()
+	for _, spec := range KubeletSpecs["node"].Specs {
+		if spec.Name == name {
+			return spec
+		}
+	}
+	t.Fatalf("spec %q not found in KubeletSpecs[\"node\"]", name)
+	return definition.Spec{}
+}
+
+func TestAllocatableCpuCoresUtilization(t *testing.T) {
+	t.Parallel()
+	spec := nodeSpecByName(t, "allocatableCpuCoresUtilization")
+
+	t.Run("computes utilization from allocatable ResourceList and usageNanoCores", func(t *testing.T) {
+		t.Parallel()
+		raw := definition.RawGroups{
+			testNodeGroup: {
+				testNodeEntity: definition.RawMetrics{
+					// 250m allocatable CPU, 125m used → 50%
+					testAllocKey:     v1.ResourceList{v1.ResourceCPU: resource.MustParse("250m")},
+					"usageNanoCores": uint64(125_000_000),
+				},
+			},
+		}
+		val, err := spec.ValueFunc(testNodeGroup, testNodeEntity, raw)
+		require.NoError(t, err)
+		assert.InDelta(t, float64(50), val, 0.01)
+	})
+
+	t.Run("errors when allocatable cpu is missing", func(t *testing.T) {
+		t.Parallel()
+		raw := definition.RawGroups{
+			testNodeGroup: {
+				testNodeEntity: definition.RawMetrics{
+					testAllocKey:     v1.ResourceList{v1.ResourceMemory: resource.MustParse("512Mi")},
+					"usageNanoCores": uint64(125_000_000),
+				},
+			},
+		}
+		val, err := spec.ValueFunc(testNodeGroup, testNodeEntity, raw)
+		assert.Error(t, err)
+		assert.Nil(t, val)
+	})
+
+	t.Run("errors when usageNanoCores is missing", func(t *testing.T) {
+		t.Parallel()
+		raw := definition.RawGroups{
+			testNodeGroup: {
+				testNodeEntity: definition.RawMetrics{
+					testAllocKey: v1.ResourceList{v1.ResourceCPU: resource.MustParse("250m")},
+				},
+			},
+		}
+		val, err := spec.ValueFunc(testNodeGroup, testNodeEntity, raw)
+		assert.Error(t, err)
+		assert.Nil(t, val)
+	})
+}
+
+func TestAllocatableMemoryUtilization(t *testing.T) {
+	t.Parallel()
+	spec := nodeSpecByName(t, "allocatableMemoryUtilization")
+
+	t.Run("computes utilization from allocatable ResourceList and memoryWorkingSetBytes", func(t *testing.T) {
+		t.Parallel()
+		raw := definition.RawGroups{
+			testNodeGroup: {
+				testNodeEntity: definition.RawMetrics{
+					// 512Mi allocatable, 256Mi used → 50%
+					testAllocKey:            v1.ResourceList{v1.ResourceMemory: resource.MustParse("512Mi")},
+					"memoryWorkingSetBytes": uint64(256 * 1024 * 1024),
+				},
+			},
+		}
+		val, err := spec.ValueFunc(testNodeGroup, testNodeEntity, raw)
+		require.NoError(t, err)
+		assert.InDelta(t, float64(50), val, 0.01)
+	})
+
+	t.Run("errors when only workingSetBytes present (container key, not node key)", func(t *testing.T) {
+		t.Parallel()
+		// Regression: old definition used FromRaw("workingSetBytes") which is the
+		// container key. Node raw groups use "memoryWorkingSetBytes".
+		raw := definition.RawGroups{
+			testNodeGroup: {
+				testNodeEntity: definition.RawMetrics{
+					testAllocKey:      v1.ResourceList{v1.ResourceMemory: resource.MustParse("512Mi")},
+					"workingSetBytes": uint64(256 * 1024 * 1024), // wrong key
+				},
+			},
+		}
+		val, err := spec.ValueFunc(testNodeGroup, testNodeEntity, raw)
+		assert.Error(t, err)
+		assert.Nil(t, val)
+	})
+
+	t.Run("errors when allocatable memory is missing", func(t *testing.T) {
+		t.Parallel()
+		raw := definition.RawGroups{
+			testNodeGroup: {
+				testNodeEntity: definition.RawMetrics{
+					testAllocKey:            v1.ResourceList{v1.ResourceCPU: resource.MustParse("250m")},
+					"memoryWorkingSetBytes": uint64(256 * 1024 * 1024),
+				},
+			},
+		}
+		val, err := spec.ValueFunc(testNodeGroup, testNodeEntity, raw)
+		assert.Error(t, err)
+		assert.Nil(t, val)
+	})
 }

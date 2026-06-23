@@ -8,14 +8,11 @@ templates:
   - templates/agent-configmap.yaml
   - templates/secret.yaml
 tests:
-  - it: kubelet tolerations uses its defaults with everything null/empty
+  - it: kubelet tolerations have permissive defaults when nothing is set (infrastructure monitoring runs on all nodes)
     set:
       enableWindows: true
       licenseKey: test
       cluster: test
-      global: {}
-      tolerations: []
-      ksm.tolerations: []
     asserts:
       - template: templates/kubelet/daemonset.yaml
         equal:

@@ -62,6 +62,16 @@ var rawGroupWithReplicaSet = definition.RawGroups{
 					"replicaset": "kube-state-metrics-4044341274",
 				},
 			},
+			"kube_replicaset_owner": prometheus.Metric{
+				Value: prometheus.GaugeValue(1),
+				Labels: map[string]string{
+					"namespace":           "kube-system",
+					"replicaset":          "kube-state-metrics-4044341274",
+					"owner_kind":          "Deployment",
+					"owner_name":          "kube-state-metrics",
+					"owner_is_controller": "true",
+				},
+			},
 		},
 	},
 }
@@ -73,22 +83,98 @@ func TestGetDeploymentNameForReplicaSet_ValidName(t *testing.T) {
 	assert.Equal(t, expectedValue, fetchedValue)
 }
 
-func TestGetDeploymentNameForReplicaSet_ErrorOnEmptyData(t *testing.T) {
+func TestGetDeploymentNameForReplicaSet_ErrorOnNonDeploymentOwnerKind(t *testing.T) {
+	t.Parallel()
 	raw := definition.RawGroups{
 		"replicaset": {
 			"kube-state-metrics-4044341274": definition.RawMetrics{
-				"kube_replicaset_created": prometheus.Metric{
-					Value: prometheus.GaugeValue(1507117436),
+				"kube_replicaset_owner": prometheus.Metric{
+					Value: prometheus.GaugeValue(1),
 					Labels: map[string]string{
-						"namespace":  "kube-system",
-						"replicaset": "",
+						"namespace":           "kube-system",
+						"replicaset":          "kube-state-metrics-4044341274",
+						"owner_kind":          "Rollout", // like argo rollout
+						"owner_name":          "rollout-jf9sdja",
+						"owner_is_controller": "true",
 					},
 				},
 			},
 		},
 	}
 	fetchedValue, err := GetDeploymentNameForReplicaSet()("replicaset", "kube-state-metrics-4044341274", raw)
-	assert.EqualError(t, err, "error generating deployment name for replica set. replicaset field is empty")
+	assert.EqualError(t, err, "owner_kind of ReplicaSet is not "+deploymentOwnerKind)
+	assert.Empty(t, fetchedValue)
+}
+
+func TestGetDeploymentNameForReplicaSet_ErrorOnEmptyOwnerName(t *testing.T) {
+	t.Parallel()
+	raw := definition.RawGroups{
+		"replicaset": {
+			"kube-state-metrics-4044341274": definition.RawMetrics{
+				"kube_replicaset_owner": prometheus.Metric{
+					Value: prometheus.GaugeValue(1),
+					Labels: map[string]string{
+						"namespace":           "kube-system",
+						"replicaset":          "kube-state-metrics-4044341274",
+						"owner_kind":          "Deployment",
+						"owner_name":          "",
+						"owner_is_controller": "true",
+					},
+				},
+			},
+		},
+	}
+	fetchedValue, err := GetDeploymentNameForReplicaSet()("replicaset", "kube-state-metrics-4044341274", raw)
+	assert.EqualError(t, err, "owner_name of ReplicaSet is empty")
+	assert.Empty(t, fetchedValue)
+}
+
+func TestGetDeploymentNameForReplicaSet_ErrorOnMissingOwnerMetric(t *testing.T) {
+	t.Parallel()
+	raw := definition.RawGroups{
+		"replicaset": {
+			"kube-state-metrics-4044341274": definition.RawMetrics{
+				"kube_replicaset_created": prometheus.Metric{
+					Value: prometheus.GaugeValue(1),
+					Labels: map[string]string{
+						"namespace":  "kube-system",
+						"replicaset": "kube-state-metrics-4044341274",
+					},
+				},
+			},
+		},
+	}
+	fetchedValue, err := GetDeploymentNameForReplicaSet()("replicaset", "kube-state-metrics-4044341274", raw)
+	assert.EqualError(t, err, "failed to fetch owner_kind of ReplicaSet: metric \"kube_replicaset_owner\" not found")
+	assert.Empty(t, fetchedValue)
+}
+
+func TestGetDeploymentNameForReplicaSet_ErrorOnMissingOwnerNameMetric(t *testing.T) {
+	t.Parallel()
+	raw := definition.RawGroups{
+		"replicaset": {
+			"kube-state-metrics-4044341274": definition.RawMetrics{
+				"kube_replicaset_created": prometheus.Metric{
+					Value: prometheus.GaugeValue(1),
+					Labels: map[string]string{
+						"namespace":  "kube-system",
+						"replicaset": "kube-state-metrics-4044341274",
+					},
+				},
+				"kube_replicaset_owner": prometheus.Metric{
+					Value: prometheus.GaugeValue(1),
+					Labels: map[string]string{
+						"namespace":  "kube-system",
+						"replicaset": "kube-state-metrics-4044341274",
+						"owner_kind": "Deployment",
+						// unexpected: this metric should have owner_name but it's missing
+					},
+				},
+			},
+		},
+	}
+	fetchedValue, err := GetDeploymentNameForReplicaSet()("replicaset", "kube-state-metrics-4044341274", raw)
+	assert.EqualError(t, err, "failed to fetch owner_name of ReplicaSet: label \"owner_name\" not found on metric \"kube_replicaset_owner\": label not found on metric")
 	assert.Empty(t, fetchedValue)
 }
 

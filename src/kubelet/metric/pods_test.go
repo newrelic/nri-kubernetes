@@ -98,18 +98,36 @@ func TestFetchFunFromKubeService(test *testing.T) {
 }
 
 func TestBuildsHostFromEnvVars(test *testing.T) { //nolint: paralleltest
-	expectedIP := "123:45:67:89"
-	expectedPort := "1011"
-	expectedHost := fmt.Sprintf("https://%s:%s", expectedIP, expectedPort) //nolint: nosprintfhostport
+	cases := []struct {
+		name string
+		ip   string
+		port string
+		want string
+	}{
+		{
+			name: "IPv4",
+			ip:   "10.96.0.1",
+			port: "443",
+			want: "https://10.96.0.1:443",
+		},
+		{
+			name: "IPv6",
+			ip:   "fd00::1",
+			port: "443",
+			want: "https://[fd00::1]:443",
+		},
+	}
 
-	os.Setenv("KUBERNETES_SERVICE_HOST", expectedIP)
-	os.Setenv("KUBERNETES_SERVICE_PORT", expectedPort)
+	for _, tc := range cases {
+		os.Setenv("KUBERNETES_SERVICE_HOST", tc.ip)
+		os.Setenv("KUBERNETES_SERVICE_PORT", tc.port)
 
-	assert.Equal(test, expectedHost, getKubeServiceHost())
+		assert.Equal(test, tc.want, getKubeServiceHost(), tc.name)
+	}
 }
 
 func TestShouldUseKubeServiceURL(test *testing.T) { //nolint: paralleltest
-	expectedIP := "111:222:33:44"
+	expectedIP := "10.0.0.1"
 	expectedPort := "5555"
 	nodeName := "my_Node"
 	expectedURL := fmt.Sprintf("https://%s:%s/api/v1/pods?fieldSelector=spec.nodeName=%s", expectedIP, expectedPort, nodeName) //nolint: nosprintfhostport
@@ -136,6 +154,18 @@ func TestShouldUseKubeServiceURL(test *testing.T) { //nolint: paralleltest
 
 	assert.NoError(test, err)
 	assert.Equal(test, expectedURL, scrapedURL)
+}
+
+func TestFallsBackToKubeletWhenKubeServiceURLIsInvalid(test *testing.T) { //nolint: paralleltest
+	// %gg is an invalid percent-escape (g is not a hex digit), causing url.Parse to fail.
+	os.Setenv("KUBERNETES_SERVICE_HOST", "host%gg")
+	os.Setenv("KUBERNETES_SERVICE_PORT", "443")
+
+	fetcher := NewPodsFetcher(logutil.Debug, &testClient{handler: servePayload}, &config.Config{
+		Kubelet: config.Kubelet{FetchPodsFromKubeService: true},
+	})
+
+	assert.False(test, fetcher.useKubeService)
 }
 
 func TestShouldUseKubeletURLWhenBasicPodsFetcherBuilt(test *testing.T) {
@@ -336,6 +366,7 @@ func TestFetchContainersData_WithSidecarContainers(t *testing.T) {
 	assert.Equal(t, true, result[sidecarAID]["isReady"])
 	assert.Equal(t, int32(2), result[sidecarAID]["restartCount"])
 	assert.Equal(t, startedAt, result[sidecarAID]["startedAt"])
+	assert.Equal(t, false, result[sidecarBID]["isReady"], "Waiting container should report isReady=false")
 	assert.Equal(t, "OOMKilled", result[sidecarBID]["lastTerminatedExitReason"])
 	assert.Equal(t, int32(137), result[sidecarBID]["lastTerminatedExitCode"])
 	assert.Equal(t, "192.168.0.33", result[sidecarAID]["nodeIP"])
@@ -515,6 +546,73 @@ func TestFetchContainersData_WithLessInitContainerStatuses(t *testing.T) {
 
 	assert.Equal(t, "192.168.0.33", result[sidecarAID]["nodeIP"])
 	assert.Equal(t, "192.168.0.33", result[sidecarBID]["nodeIP"])
+}
+
+const (
+	testContainerName = "app"
+	testNodeName      = "node"
+)
+
+func TestFillContainerStatuses_IsReadyForAllStates(t *testing.T) {
+	t.Parallel()
+
+	namespace := "default"
+	podName := "test-pod"
+
+	makePod := func() *corev1.Pod {
+		return &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{Name: podName, Namespace: namespace},
+			Spec:       corev1.PodSpec{NodeName: testNodeName},
+		}
+	}
+
+	t.Run("Running container sets isReady from c.Ready", func(t *testing.T) {
+		t.Parallel()
+		pod := makePod()
+		pod.Status.ContainerStatuses = []corev1.ContainerStatus{
+			{Name: testContainerName, Ready: true, State: corev1.ContainerState{Running: &corev1.ContainerStateRunning{}}},
+		}
+		dest := make(map[string]definition.RawMetrics)
+		fillContainerStatuses(pod, dest)
+		id := fmt.Sprintf("%s_%s_%s", namespace, podName, testContainerName)
+		assert.Equal(t, true, dest[id]["isReady"])
+	})
+
+	t.Run("Waiting container sets isReady=false", func(t *testing.T) {
+		t.Parallel()
+		pod := makePod()
+		pod.Status.ContainerStatuses = []corev1.ContainerStatus{
+			{Name: testContainerName, Ready: false, State: corev1.ContainerState{Waiting: &corev1.ContainerStateWaiting{Reason: "CrashLoopBackOff"}}},
+		}
+		dest := make(map[string]definition.RawMetrics)
+		fillContainerStatuses(pod, dest)
+		id := fmt.Sprintf("%s_%s_%s", namespace, podName, testContainerName)
+		assert.Equal(t, false, dest[id]["isReady"])
+	})
+
+	t.Run("Terminated container sets isReady=false", func(t *testing.T) {
+		t.Parallel()
+		pod := makePod()
+		pod.Status.ContainerStatuses = []corev1.ContainerStatus{
+			{Name: testContainerName, Ready: false, State: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{ExitCode: 0}}},
+		}
+		dest := make(map[string]definition.RawMetrics)
+		fillContainerStatuses(pod, dest)
+		id := fmt.Sprintf("%s_%s_%s", namespace, podName, testContainerName)
+		assert.Equal(t, false, dest[id]["isReady"])
+	})
+
+	t.Run("Unknown state sets isReady=false", func(t *testing.T) {
+		t.Parallel()
+		pod := makePod()
+		pod.Status.ContainerStatuses = []corev1.ContainerStatus{
+			{Name: testContainerName, Ready: false, State: corev1.ContainerState{}}, // all nil → Unknown
+		}
+		dest := make(map[string]definition.RawMetrics)
+		fillContainerStatuses(pod, dest)
+		id := fmt.Sprintf("%s_%s_%s", namespace, podName, testContainerName)
+		assert.Equal(t, false, dest[id]["isReady"])
+	})
 }
 
 func TestFetchPodData_WithPriority(t *testing.T) {
