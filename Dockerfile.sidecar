@@ -12,6 +12,11 @@ FROM $BASE_IMAGE AS base
 # the host kernel, so reading /proc directly gives accurate host data.
 ENV NRIA_OVERRIDE_HOST_ROOT=""
 
+# Upgrade Alpine packages to pick up patched libcrypto3/libssl3/libexpat.
+# Go binary CVEs (stdlib, containerd) in bundled agent/integrations are tracked
+# upstream in infrastructure-bundle and will be resolved when those binaries are rebuilt.
+RUN apk upgrade --no-cache
+
 # Set by docker automatically
 ARG TARGETOS
 ARG TARGETARCH
