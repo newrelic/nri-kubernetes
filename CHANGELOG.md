@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### bugfix
+- Fix sidecar release workflow: update `docker/setup-qemu-action` to v4 so the sidecar image build no longer fails on the multi-arch QEMU setup step [#1488](https://github.com/newrelic/nri-kubernetes/pull/1490)
+- Add `.trivyignore` to suppress `CVE-2026-42504` (stdlib) and `CVE-2026-53488` (containerd) in pre-compiled binaries bundled inside `infrastructure-bundle`; these are tracked upstream and not fixable here [#1488](https://github.com/newrelic/nri-kubernetes/pull/1490)
+
 ## v4.3.2 - 2026-06-22
 
 ### ⛓️ Dependencies
