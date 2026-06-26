@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- Support Kubernetes 1.35 @jamescripter [#1493](https://github.com/newrelic/nri-kubernetes/pull/1493)
+
 ## v4.3.2 - 2026-06-22
 
 ### ⛓️ Dependencies
