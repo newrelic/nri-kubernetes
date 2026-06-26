@@ -138,7 +138,7 @@ func TestScraper(t *testing.T) {
 }
 
 func TestScraper_FilterNamespace(t *testing.T) {
-	version := testutil.Version(testutil.LatestVersion())
+	version := testutil.LatestVersion()
 	t.Run(fmt.Sprintf("for_version_%s", version), func(t *testing.T) {
 		testServer, err := version.Server()
 		require.NoError(t, err)
