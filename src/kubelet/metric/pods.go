@@ -270,12 +270,12 @@ func (podsFetcher *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]defi
 func getContainerStatusesByName(pod *v1.Pod) map[string]*v1.ContainerStatus {
 	containerStatusByName := make(map[string]*v1.ContainerStatus)
 	for i := range pod.Status.ContainerStatuses {
-		cs := &pod.Status.ContainerStatuses[i]
-		containerStatusByName[cs.Name] = cs
+		containerStatus := &pod.Status.ContainerStatuses[i]
+		containerStatusByName[containerStatus.Name] = containerStatus
 	}
 
 	// Add sidecar containers
-	for idx, initContainer := range pod.Spec.InitContainers {
+	for _, initContainer := range pod.Spec.InitContainers {
 		if initContainer.RestartPolicy != nil && *initContainer.RestartPolicy == v1.ContainerRestartPolicyAlways {
 			for _, initContainerStatus := range pod.Status.InitContainerStatuses {
 				if initContainerStatus.Name == initContainer.Name {
