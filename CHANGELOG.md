@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v4.3.3 - 2026-06-29
+
+### ⛓️ Dependencies
+- Updated golang.org/x/text to v0.38.0
+- Updated kubernetes monorepo to v0.36.2
+- Updated github.com/prometheus/common to v0.69.0 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.69.0)
+
 ## v4.3.2 - 2026-06-22
 
 ### ⛓️ Dependencies
