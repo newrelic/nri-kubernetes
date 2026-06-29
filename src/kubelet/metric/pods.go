@@ -200,7 +200,7 @@ func (podsFetcher *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]defi
 	metrics := make(map[string]definition.RawMetrics)
 	containers := pod.Spec.Containers
 
-	// Add sidecar containers
+	// Add sidecar containers (init containers with RestartPolicy Always)
 	for _, initContainer := range pod.Spec.InitContainers {
 		if initContainer.RestartPolicy != nil && *initContainer.RestartPolicy == v1.ContainerRestartPolicyAlways {
 			containers = append(containers, initContainer)
