@@ -22,9 +22,11 @@ import (
 )
 
 // KubeletPodsPath is the path where kubelet serves information about pods.
-const KubeletPodsPath = "/pods"
-const KubeServiceKubeletPodsPath = "/api/v1/pods"
-const nodeSelectorQuery = "fieldSelector=spec.nodeName=%s"
+const (
+	KubeletPodsPath            = "/pods"
+	KubeServiceKubeletPodsPath = "/api/v1/pods"
+	nodeSelectorQuery          = "fieldSelector=spec.nodeName=%s"
+)
 
 // PodsFetcher queries the kubelet and fetches the information of pods
 // running on the node. It contains an in-memory cache to store the
@@ -188,25 +190,8 @@ func getKubeServiceHost() string {
 
 func (podsFetcher *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]definition.RawMetrics {
 	statuses := make(map[string]definition.RawMetrics)
-	fillContainerStatuses(pod, statuses)
-
-	// Build lookup map for actual applied resources per container name.
-	// As of K8s 1.33 (beta, on by default) / 1.35 (GA), in-place pod vertical scaling means
-	// Pod.Spec.Containers[i].Resources is the desired state, not the actual state.
-	// Pod.Status.ContainerStatuses[i].Resources holds the actual applied resources.
-	containerStatusByName := make(map[string]*v1.ContainerStatus)
-	for i := range pod.Status.ContainerStatuses {
-		cs := &pod.Status.ContainerStatuses[i]
-		containerStatusByName[cs.Name] = cs
-	}
-	for idx, initContainer := range pod.Spec.InitContainers {
-		if initContainer.RestartPolicy != nil && *initContainer.RestartPolicy == v1.ContainerRestartPolicyAlways {
-			if idx < len(pod.Status.InitContainerStatuses) {
-				cs := &pod.Status.InitContainerStatuses[idx]
-				containerStatusByName[cs.Name] = cs
-			}
-		}
-	}
+	containerStatusByName := getContainerStatusesByName(pod)
+	fillContainerStatuses(pod, containerStatusByName, statuses)
 
 	metrics := make(map[string]definition.RawMetrics)
 	containers := pod.Spec.Containers
@@ -231,6 +216,10 @@ func (podsFetcher *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]defi
 		if v := pod.Status.HostIP; v != "" {
 			metrics[id]["nodeIP"] = v
 		}
+
+		// As of K8s 1.33 (beta, on by default) / 1.35 (GA), in-place pod vertical scaling means
+		// Pod.Spec.Containers[i].Resources is the desired state, not the actual state.
+		// Pod.Status.ContainerStatuses[i].Resources holds the actual applied resources.
 
 		// Prefer status resources (actual applied) over spec resources (desired state).
 		resources := c.Resources
@@ -274,18 +263,28 @@ func (podsFetcher *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]defi
 	return metrics
 }
 
-func fillContainerStatuses(pod *v1.Pod, dest map[string]definition.RawMetrics) {
-	containerStatuses := pod.Status.ContainerStatuses
+func getContainerStatusesByName(pod *v1.Pod) map[string]*v1.ContainerStatus {
+	containerStatusByName := make(map[string]*v1.ContainerStatus)
+	for i := range pod.Status.ContainerStatuses {
+		cs := &pod.Status.ContainerStatuses[i]
+		containerStatusByName[cs.Name] = cs
+	}
 
 	// Add sidecar containers
 	for idx, initContainer := range pod.Spec.InitContainers {
 		if initContainer.RestartPolicy != nil && *initContainer.RestartPolicy == v1.ContainerRestartPolicyAlways {
-			containerStatuses = append(containerStatuses, pod.Status.InitContainerStatuses[idx])
+			if idx < len(pod.Status.InitContainerStatuses) {
+				cs := &pod.Status.InitContainerStatuses[idx]
+				containerStatusByName[cs.Name] = cs
+			}
 		}
 	}
 
-	for _, c := range containerStatuses {
-		name := c.Name
+	return containerStatusByName
+}
+
+func fillContainerStatuses(pod *v1.Pod, containerStatuses map[string]*v1.ContainerStatus, dest map[string]definition.RawMetrics) {
+	for name, c := range containerStatuses {
 		id := containerID(pod, name)
 
 		// Set the ExitCode. Zero if no terminated Exit Code.
