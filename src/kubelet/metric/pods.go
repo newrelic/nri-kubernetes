@@ -274,7 +274,7 @@ func getContainerStatusesByName(pod *v1.Pod) map[string]*v1.ContainerStatus {
 		containerStatusByName[containerStatus.Name] = containerStatus
 	}
 
-	// Add sidecar containers
+	// Add sidecar containers (init containers with RestartPolicy Always)
 	for _, initContainer := range pod.Spec.InitContainers {
 		if initContainer.RestartPolicy != nil && *initContainer.RestartPolicy == v1.ContainerRestartPolicyAlways {
 			for _, initContainerStatus := range pod.Status.InitContainerStatuses {
