@@ -574,7 +574,8 @@ func TestFillContainerStatuses_IsReadyForAllStates(t *testing.T) {
 			{Name: testContainerName, Ready: true, State: corev1.ContainerState{Running: &corev1.ContainerStateRunning{}}},
 		}
 		dest := make(map[string]definition.RawMetrics)
-		fillContainerStatuses(pod, dest)
+		containerStatusByName := getContainerStatusesByName(pod)
+		fillContainerStatuses(pod, containerStatusByName, dest)
 		id := fmt.Sprintf("%s_%s_%s", namespace, podName, testContainerName)
 		assert.Equal(t, true, dest[id]["isReady"])
 	})
@@ -586,7 +587,8 @@ func TestFillContainerStatuses_IsReadyForAllStates(t *testing.T) {
 			{Name: testContainerName, Ready: false, State: corev1.ContainerState{Waiting: &corev1.ContainerStateWaiting{Reason: "CrashLoopBackOff"}}},
 		}
 		dest := make(map[string]definition.RawMetrics)
-		fillContainerStatuses(pod, dest)
+		containerStatusByName := getContainerStatusesByName(pod)
+		fillContainerStatuses(pod, containerStatusByName, dest)
 		id := fmt.Sprintf("%s_%s_%s", namespace, podName, testContainerName)
 		assert.Equal(t, false, dest[id]["isReady"])
 	})
@@ -598,7 +600,8 @@ func TestFillContainerStatuses_IsReadyForAllStates(t *testing.T) {
 			{Name: testContainerName, Ready: false, State: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{ExitCode: 0}}},
 		}
 		dest := make(map[string]definition.RawMetrics)
-		fillContainerStatuses(pod, dest)
+		containerStatusByName := getContainerStatusesByName(pod)
+		fillContainerStatuses(pod, containerStatusByName, dest)
 		id := fmt.Sprintf("%s_%s_%s", namespace, podName, testContainerName)
 		assert.Equal(t, false, dest[id]["isReady"])
 	})
@@ -610,7 +613,8 @@ func TestFillContainerStatuses_IsReadyForAllStates(t *testing.T) {
 			{Name: testContainerName, Ready: false, State: corev1.ContainerState{}}, // all nil → Unknown
 		}
 		dest := make(map[string]definition.RawMetrics)
-		fillContainerStatuses(pod, dest)
+		containerStatusByName := getContainerStatusesByName(pod)
+		fillContainerStatuses(pod, containerStatusByName, dest)
 		id := fmt.Sprintf("%s_%s_%s", namespace, podName, testContainerName)
 		assert.Equal(t, false, dest[id]["isReady"])
 	})
