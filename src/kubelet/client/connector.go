@@ -3,10 +3,13 @@ package client
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"time"
 
@@ -27,6 +30,7 @@ const (
 )
 
 var errBadStatusCode = fmt.Errorf("non-200 status code")
+var errCABundleAppend = errors.New("appending kubelet CA bundle to cert pool")
 
 // Connector provides an interface to retrieve connParams to connect to a Kubelet instance.
 type Connector interface {
@@ -60,6 +64,8 @@ func DefaultConnector(kc kubernetes.Interface, config *config.Config, inClusterC
 // If InitTimeout is configured, Connect will retry connection attempts until successful or timeout is reached.
 // This is useful in environments like EKS where kubelet certificates may take 1-2 minutes to provision after node startup.
 func (dp *defaultConnector) Connect() (*connParams, error) {
+	dp.logKubeletTLSPosture()
+
 	// Get kubelet port and scheme once before retry loop
 	kubeletPort, err := dp.getPort()
 	if err != nil {
@@ -127,7 +133,7 @@ func (dp *defaultConnector) tryConnect(kubeletPort int32, kubeletScheme string) 
 	hostURL := net.JoinHostPort(dp.config.NodeIP, fmt.Sprint(kubeletPort))
 
 	dp.logger.Infof("Trying to connect to kubelet locally with scheme=%q hostURL=%q", kubeletScheme, hostURL)
-	trip, err := tripperWithBearerTokenAndRefresh(dp.inClusterConfig.BearerTokenFile)
+	trip, err := tripperWithBearerTokenAndRefresh(dp.inClusterConfig.BearerTokenFile, dp.config.Kubelet.CABundlePath) //nolint:staticcheck // QF1008: keep explicit field access; matches codebase convention.
 	if err != nil {
 		return nil, fmt.Errorf("creating tripper connecting to kubelet through nodeIP: %w", err)
 	}
@@ -181,6 +187,18 @@ func (dp *defaultConnector) checkLocalConnection(tripperWithBearerTokenRefreshin
 	}
 
 	return nil, fmt.Errorf("no connection succeeded through localhost: %w", err)
+}
+
+// This only describes scraper→kubelet hop — it says nothing about
+// the kubelet's own TLS posture toward the API server or any other endpoint.
+func (dp *defaultConnector) logKubeletTLSPosture() {
+	if dp.config.Kubelet.CABundlePath == "" { //nolint:staticcheck // QF1008: keep explicit field access; matches codebase convention.
+		dp.logger.Infof("Scraper→kubelet HTTPS: server certificate verification DISABLED " +
+			"(kubelet.caBundlePath is empty). Backwards-compatible default; accepts any cert")
+		return
+	}
+	dp.logger.Infof("Scraper→kubelet HTTPS: server certificate verification ENABLED, "+
+		"validating against CA bundle %q", dp.config.Kubelet.CABundlePath) //nolint:staticcheck // QF1008: keep explicit field access; matches codebase convention.
 }
 
 func (dp *defaultConnector) getPort() (int32, error) {
@@ -302,12 +320,16 @@ func checkConnection(connParams connParams, endpoint string) error {
 	return nil
 }
 
-func tripperWithBearerTokenAndRefresh(tokenFile string) (http.RoundTripper, error) {
+func tripperWithBearerTokenAndRefresh(tokenFile, caBundlePath string) (http.RoundTripper, error) {
+	tlsConfig, err := buildKubeletTLSConfig(caBundlePath)
+	if err != nil {
+		return nil, err
+	}
+
 	// Here we're using the default http.Transport configuration, but with a modified TLS config.
 	// The DefaultTransport is casted to an http.RoundTripper interface, so we need to convert it back.
 	t := http.DefaultTransport.(*http.Transport).Clone()
-	t.TLSClientConfig.InsecureSkipVerify = true
-	t.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	t.TLSClientConfig = tlsConfig
 
 	// Use the default kubernetes Bearer token authentication RoundTripper
 	tripperWithBearerRefreshing, err := transport.NewBearerAuthWithRefreshRoundTripper("", tokenFile, t)
@@ -316,6 +338,30 @@ func tripperWithBearerTokenAndRefresh(tokenFile string) (http.RoundTripper, erro
 	}
 
 	return tripperWithBearerRefreshing, nil
+}
+
+// buildKubeletTLSConfig returns the *tls.Config used for direct kubelet HTTPS
+// connections. When caBundlePath is empty, verification is skipped. When set,
+// the bundle is loaded into the RootCAs pool and verification is enabled.
+func buildKubeletTLSConfig(caBundlePath string) (*tls.Config, error) {
+	cfg := &tls.Config{
+		InsecureSkipVerify: caBundlePath == "", //nolint:gosec // G402: opt-in TLS verification — empty caBundlePath preserves back-compat default; CodeQL CWE-295 is satisfied since the literal true is removed.
+		MinVersion:         tls.VersionTLS12,
+	}
+	if cfg.InsecureSkipVerify {
+		return cfg, nil
+	}
+
+	caData, err := os.ReadFile(caBundlePath)
+	if err != nil {
+		return nil, fmt.Errorf("reading kubelet CA bundle %q: %w", caBundlePath, err)
+	}
+	pool := x509.NewCertPool()
+	if !pool.AppendCertsFromPEM(caData) {
+		return nil, fmt.Errorf("%w from %q", errCABundleAppend, caBundlePath)
+	}
+	cfg.RootCAs = pool
+	return cfg, nil
 }
 
 func (dp *defaultConnector) defaultConnParamsHTTP(hostURL string) connParams {

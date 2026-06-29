@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   e2eTests-external:
-    name: Run E2E Tests (External Contribution)
+    name: Run E2E Tests
     # Do not run e2e tests if PR has skip-e2e label or if it's a non-forked repo (internal contribution)
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'ci/skip-e2e') && github.event.pull_request.head.repo.full_name != 'newrelic/nri-kubernetes' }}
     runs-on: ubuntu-latest
@@ -23,7 +23,7 @@ jobs:
     env:
       DOCKER_BUILDKIT: '1' # Setting DOCKER_BUILDKIT=1 ensures TARGETOS and TARGETARCH are populated
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - uses: actions/setup-go@v6

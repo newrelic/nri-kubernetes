@@ -1,4 +1,4 @@
-name: Nightly and main build
+name: Sidecar build
 
 on:
   schedule:
@@ -32,7 +32,7 @@ jobs:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
         run: |
-          make compile TAG=nightly-$(git rev-parse --short HEAD)
+          make compile TAG=testing-$(git rev-parse --short HEAD)
       - name: Upload artifact for docker build step
         uses: actions/upload-artifact@v7
         with:
@@ -46,13 +46,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DOCKER_IMAGE_NAME: newrelic/nri-kubernetes
-      DOCKER_IMAGE_TAG: main
+      DOCKER_IMAGE_TAG: sidecar
       DOCKER_PLATFORMS: "linux/amd64,linux/arm64,linux/arm" # Must be consistent with the matrix from the job above
     steps:
       - uses: actions/checkout@v7
-      - name: Setting nightly tag if schedule
-        if: ${{ github.event.schedule }}
-        run: echo "DOCKER_IMAGE_TAG=nightly" >> $GITHUB_ENV
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
       - name: Set up Docker Buildx
@@ -71,7 +68,9 @@ jobs:
       - name: Build docker images
         run: |
           docker buildx build --platform=$DOCKER_PLATFORMS \
+            --build-arg "MODE=unprivileged" \
             -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG \
+            -f Dockerfile.sidecar \
             .
 
       - name: Build and load x64 image for security scanning
@@ -79,6 +78,7 @@ jobs:
         run: |
           docker buildx build --load --platform=linux/amd64 \
             -t $DOCKER_IMAGE_NAME:ci-scan \
+            -f Dockerfile.sidecar \
             .
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@v0.36.0
@@ -93,6 +93,7 @@ jobs:
         run: |
           docker buildx build --push --platform=$DOCKER_PLATFORMS \
             -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG \
+            -f Dockerfile.sidecar \
             .
 
   notify-failure:

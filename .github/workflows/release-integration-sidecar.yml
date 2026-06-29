@@ -1,11 +1,13 @@
-name: Nightly and main build
+name: Release nri-kubernetes sidecar image
 
 on:
-  schedule:
-    - cron: "0 4 * * *"
-  push:
-    branches:
-      - main
+  release:
+    types: [prereleased, released]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to build (e.g. v3.2.1)'
+        required: true
 
 permissions:
   contents: read
@@ -32,7 +34,8 @@ jobs:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
         run: |
-          make compile TAG=nightly-$(git rev-parse --short HEAD)
+          VERSION=${{ github.ref_name || inputs.tag }}
+          make compile TAG=${VERSION}
       - name: Upload artifact for docker build step
         uses: actions/upload-artifact@v7
         with:
@@ -41,18 +44,20 @@ jobs:
           path: bin/nri-kubernetes-${{ matrix.goos }}-${{ matrix.goarch }}
 
   docker:
-    name: Build and push images
+    name: Build and push sidecar image
     needs: [ build ]
     runs-on: ubuntu-latest
     env:
       DOCKER_IMAGE_NAME: newrelic/nri-kubernetes
-      DOCKER_IMAGE_TAG: main
       DOCKER_PLATFORMS: "linux/amd64,linux/arm64,linux/arm" # Must be consistent with the matrix from the job above
     steps:
       - uses: actions/checkout@v7
-      - name: Setting nightly tag if schedule
-        if: ${{ github.event.schedule }}
-        run: echo "DOCKER_IMAGE_TAG=nightly" >> $GITHUB_ENV
+
+      - name: Set image tag
+        run: |
+          VERSION=${{ github.ref_name || inputs.tag }}
+          echo "DOCKER_IMAGE_TAG=${VERSION}-sidecar" >> $GITHUB_ENV
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
       - name: Set up Docker Buildx
@@ -68,31 +73,29 @@ jobs:
           username: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
           password: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
 
-      - name: Build docker images
-        run: |
-          docker buildx build --platform=$DOCKER_PLATFORMS \
-            -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG \
-            .
-
       - name: Build and load x64 image for security scanning
-        # We need to build a single-arch image again to be able to --load it into the host
         run: |
           docker buildx build --load --platform=linux/amd64 \
+            --build-arg "MODE=unprivileged" \
             -t $DOCKER_IMAGE_NAME:ci-scan \
+            -f Dockerfile.sidecar \
             .
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: '${{ env.DOCKER_IMAGE_NAME }}:ci-scan'
           format: 'table'
-          exit-code: '0'
+          exit-code: '1'
           ignore-unfixed: true
           severity: 'HIGH,CRITICAL'
 
-      - name: Push versioned images
+      - name: Push sidecar image
         run: |
           docker buildx build --push --platform=$DOCKER_PLATFORMS \
+            --build-arg "MODE=unprivileged" \
             -t $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG \
+            -f Dockerfile.sidecar \
             .
 
   notify-failure:
@@ -105,4 +108,4 @@ jobs:
         with:
           slack-bot-user-oauth-access-token: ${{ secrets.K8S_AGENTS_SLACK_TOKEN }}
           slack-channel: ${{ secrets.K8S_AGENTS_SLACK_CHANNEL }}
-          slack-text: "❌ `${{ env.ORIGINAL_REPO_NAME }}`: <${{ github.server_url }}/${{ env.ORIGINAL_REPO_NAME }}/actions/runs/${{ github.run_id }}|'Nightly and main build' failed>."
+          slack-text: "❌ `${{ env.ORIGINAL_REPO_NAME }}`: <${{ github.server_url }}/${{ env.ORIGINAL_REPO_NAME }}/actions/runs/${{ github.run_id }}|Sidecar release failed> for tag `${{ github.ref_name || inputs.tag }}`."

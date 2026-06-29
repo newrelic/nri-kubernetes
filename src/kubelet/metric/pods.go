@@ -257,10 +257,15 @@ func (podsFetcher *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]defi
 func fillContainerStatuses(pod *v1.Pod, dest map[string]definition.RawMetrics) {
 	containerStatuses := pod.Status.ContainerStatuses
 
-	// Add sidecar containers
-	for idx, initContainer := range pod.Spec.InitContainers {
+	// Add sidecar containers (init containers with RestartPolicy Always)
+	for _, initContainer := range pod.Spec.InitContainers {
 		if initContainer.RestartPolicy != nil && *initContainer.RestartPolicy == v1.ContainerRestartPolicyAlways {
-			containerStatuses = append(containerStatuses, pod.Status.InitContainerStatuses[idx])
+			for _, initContainerStatus := range pod.Status.InitContainerStatuses {
+				if initContainerStatus.Name == initContainer.Name {
+					containerStatuses = append(containerStatuses, initContainerStatus)
+					break
+				}
+			}
 		}
 	}
 
@@ -291,6 +296,7 @@ func fillContainerStatuses(pod *v1.Pod, dest map[string]definition.RawMetrics) {
 			dest[id]["lastTerminatedTimestamp"] = lastTerminatedFinishedAt
 		case c.State.Waiting != nil:
 			dest[id]["status"] = "Waiting"
+			dest[id]["isReady"] = false
 			dest[id]["reason"] = c.State.Waiting.Reason
 			dest[id]["restartCount"] = c.RestartCount
 			dest[id]["lastTerminatedExitCode"] = lastTerminatedExitCode
@@ -298,6 +304,7 @@ func fillContainerStatuses(pod *v1.Pod, dest map[string]definition.RawMetrics) {
 			dest[id]["lastTerminatedTimestamp"] = lastTerminatedFinishedAt
 		case c.State.Terminated != nil:
 			dest[id]["status"] = "Terminated"
+			dest[id]["isReady"] = false
 			dest[id]["reason"] = c.State.Terminated.Reason
 			dest[id]["restartCount"] = c.RestartCount
 			dest[id]["lastTerminatedExitCode"] = lastTerminatedExitCode
@@ -305,6 +312,7 @@ func fillContainerStatuses(pod *v1.Pod, dest map[string]definition.RawMetrics) {
 			dest[id]["lastTerminatedTimestamp"] = lastTerminatedFinishedAt
 		default:
 			dest[id]["status"] = "Unknown"
+			dest[id]["isReady"] = false
 		}
 	}
 }

@@ -216,6 +216,7 @@ Infrastructure Agent integrations (Kafka, Cassandra, Redis, etc.) are not suppor
 | dnsConfig | object | `{}` | Sets pod's dnsConfig. Can be configured also with `global.dnsConfig` |
 | enableProcessMetrics | bool | `false` | Collect detailed metrics from processes running in the host. This defaults to true for accounts created before July 20, 2020. ref: https://docs.newrelic.com/docs/release-notes/infrastructure-release-notes/infrastructure-agent-release-notes/new-relic-infrastructure-agent-1120 |
 | enableWindows | bool | `false` | Enable Windows node monitoring. |
+| fargate | bool | `false` | Enable EKS Fargate support. When enabled: - The kubelet DaemonSet will be excluded from Fargate nodes via node affinity (eks.amazonaws.com/compute-type != fargate) - The control plane DaemonSet will be completely disabled (control plane metrics are not available on Fargate) - The newrelic-infra-operator should be used to inject the integration as a sidecar into pods running on Fargate nodes Can be configured also with `global.fargate` |
 | fedramp.enabled | bool | `false` | Enables FedRAMP. Can be configured also with `global.fedramp.enabled` |
 | fullnameOverride | string | `""` | Override the full name of the release |
 | hostNetwork | bool | `false` | Sets pod's hostNetwork. Can be configured also with `global.hostNetwork` |
@@ -243,6 +244,7 @@ Infrastructure Agent integrations (Kafka, Cassandra, Redis, etc.) are not suppor
 | kubelet | object | See `values.yaml` | Configuration for the DaemonSet that collects metrics from the Kubelet. |
 | kubelet.agent.resources | object | 100m/150M -/300M | Resources for the infrastructure-bundle agent sidecar container. |
 | kubelet.agentConfig | object | `{}` | Config for the Infrastructure agent that will forward the metrics to the backend and will run the integrations in this cluster. It will be merged with the configuration in `.common.agentConfig`. You can see all the agent configurations in [New Relic docs](https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/) e.g. you can set `passthrough_environment` int the [config file](https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/configure-infrastructure-agent/#config-file) so the agent let use that environment variables to the integrations. |
+| kubelet.config.caBundlePath | string | `""` | Path to a PEM-encoded CA bundle used to verify the kubelet's serving certificate. |
 | kubelet.config.initBackoff | string | `"5s"` | Delay between retry attempts during kubelet client initialization. Only used if initTimeout > 0. |
 | kubelet.config.initTimeout | string | `"180s"` | Total timeout for kubelet connection retries during pod initialization. Useful for environments like EKS/GKE where kubelet certificates may take 1-2 minutes to provision after node startup. Set to 0s to disable retries and use legacy behavior (fail immediately). |
 | kubelet.config.retries | int | `3` | Number of retries after timeout expired |

@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### bugfix
+- Fix fillContainerStatuses panics @changliu-wk [#1488](https://github.com/newrelic/nri-kubernetes/pull/1488)
+
+## v4.3.3 - 2026-06-29
+
+### ⛓️ Dependencies
+- Updated golang.org/x/text to v0.38.0
+- Updated kubernetes monorepo to v0.36.2
+- Updated github.com/prometheus/common to v0.69.0 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.69.0)
+
+## v4.3.2 - 2026-06-22
+
+### ⛓️ Dependencies
+- Updated alpine to v3.24.1
+
+## v4.3.1 - 2026-06-15
+
+### ⛓️ Dependencies
+- Updated alpine to v3.24.0
+
+## v4.3.0 - 2026-06-08
+
+### 🚀 Enhancements
+- Add Fargate sidecar support: reset `NRIA_OVERRIDE_HOST_ROOT` in `Dockerfile.sidecar` so the agent reads `/proc` directly instead of the non-existent `/host/proc` mount
+- Add `AllocatableCPUCores` and `AllocatableMemoryBytes` fetch functions to correctly compute node CPU/memory utilization ratios from the raw allocatable `ResourceList`
+- Fix `allocatableCpuCoresUtilization` and `allocatableMemoryUtilization` metric definitions to use the correct raw keys (`usageNanoCores` / `memoryWorkingSetBytes`\)
+- Set `isReady=false` for containers in Waiting, Terminated, or Unknown state instead of omitting the metric
+- Add `networkRouteFile: /proc/1/net/route` to the Fargate sidecar `nri-kubernetes.yml` to resolve network interface detection on Fargate nodes
+
+### ⛓️ Dependencies
+- Updated golang.org/x/text to v0.37.0
+- Updated github.com/prometheus/common to v0.68.1 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.68.1)
+- Updated golang version to v1.26.4
+- Updated kubernetes monorepo to v0.36.1
+- Updated k8s.io/utils digest to ff6756f
+
+## v4.2.0 - 2026-06-01
+
+### ⛓️ Dependencies
+- Updated go module directive to v1.26.3
+
+### 🛡️ Security notices
+- Resolved CodeQL `go/disabled-certificate-check` (CWE-295) at `src/kubelet/client/connector.go` by replacing the literal `InsecureSkipVerify: true` assignment with a config-driven value derived from `kubelet.caBundlePath`. Default behavior is unchanged. [#1466](https://github.com/newrelic/nri-kubernetes/pull/1466)
+- Pinned `MinVersion: tls.VersionTLS12` on the kubelet HTTPS transport in both verified and skip-verification modes. [#1466](https://github.com/newrelic/nri-kubernetes/pull/1466)
+
 ## v4.1.1 - 2026-05-18
 
 ### ⛓️ Dependencies
