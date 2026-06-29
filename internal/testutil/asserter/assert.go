@@ -109,6 +109,9 @@ func (a Asserter) Assert(t *testing.T) {
 		}
 
 		for _, spec := range group.Specs {
+			if spec.Optional {
+				continue
+			}
 			for _, entity := range entities {
 				if EntityMetricTypeIs(entity, spec.Name, spec.Type) {
 					continue

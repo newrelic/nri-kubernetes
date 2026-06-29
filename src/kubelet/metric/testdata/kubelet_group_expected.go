@@ -52,6 +52,13 @@ var ExpectedGroupData = definition.RawGroups{
 					"errors":  uint64(0),
 				},
 			},
+			"usageNanoCores":       uint64(16874347),
+			"cpuRequestedCores":    int64(500),
+			"cpuLimitCores":        int64(1000),
+			"usageBytes":           uint64(52617216),
+			"workingSetBytes":      uint64(50044928),
+			"memoryRequestedBytes": int64(52428800),
+			"memoryLimitBytes":     int64(104857600),
 		},
 		"kube-system_kube-state-metrics-57f4659995-6n2qq": {
 			"createdKind":    "ReplicaSet",
@@ -85,6 +92,9 @@ var ExpectedGroupData = definition.RawGroups{
 					"errors":  uint64(0),
 				},
 			},
+			"usageBytes":      uint64(54046720),
+			"usageNanoCores":  uint64(1393100),
+			"workingSetBytes": uint64(53444608),
 		},
 		"default_sh-7c95664875-4btqh": {
 			"createdKind":    "ReplicaSet",

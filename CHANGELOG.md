@@ -8,10 +8,99 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### bugfix
-- Use actual applied container resources (`Pod.Status.ContainerStatuses[i].Resources`) over desired spec resources (`Pod.Spec.Containers[i].Resources`) where present to correctly report `cpuRequestedCores`, `memoryRequestedBytes`, and related metrics during in-place pod vertical scaling (K8s 1.33+ beta, 1.35+ GA) @kondracek-nr
+- Fix fillContainerStatuses panics @changliu-wk [#1488](https://github.com/newrelic/nri-kubernetes/pull/1488)
+- Use actual applied container resources (`Pod.Status.ContainerStatuses[i].Resources`) over desired spec resources (`Pod.Spec.Containers[i].Resources`) where present to correctly report `cpuRequestedCores`, `memoryRequestedBytes`, and related metrics during in-place pod vertical scaling (K8s 1.33+ beta, 1.35+ GA) @kondracek-nr [#1433](https://github.com/newrelic/nri-kubernetes/pull/1433)
 
-### enhancement
+## v4.3.3 - 2026-06-29
+
+### ⛓️ Dependencies
+- Updated golang.org/x/text to v0.38.0
+- Updated kubernetes monorepo to v0.36.2
+- Updated github.com/prometheus/common to v0.69.0 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.69.0)
+
+## v4.3.2 - 2026-06-22
+
+### ⛓️ Dependencies
+- Updated alpine to v3.24.1
+
+## v4.3.1 - 2026-06-15
+
+### ⛓️ Dependencies
+- Updated alpine to v3.24.0
+
+## v4.3.0 - 2026-06-08
+
+### 🚀 Enhancements
+- Add Fargate sidecar support: reset `NRIA_OVERRIDE_HOST_ROOT` in `Dockerfile.sidecar` so the agent reads `/proc` directly instead of the non-existent `/host/proc` mount
+- Add `AllocatableCPUCores` and `AllocatableMemoryBytes` fetch functions to correctly compute node CPU/memory utilization ratios from the raw allocatable `ResourceList`
+- Fix `allocatableCpuCoresUtilization` and `allocatableMemoryUtilization` metric definitions to use the correct raw keys (`usageNanoCores` / `memoryWorkingSetBytes`\)
+- Set `isReady=false` for containers in Waiting, Terminated, or Unknown state instead of omitting the metric
+- Add `networkRouteFile: /proc/1/net/route` to the Fargate sidecar `nri-kubernetes.yml` to resolve network interface detection on Fargate nodes
+
+### ⛓️ Dependencies
+- Updated golang.org/x/text to v0.37.0
+- Updated github.com/prometheus/common to v0.68.1 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.68.1)
+- Updated golang version to v1.26.4
+- Updated kubernetes monorepo to v0.36.1
+- Updated k8s.io/utils digest to ff6756f
+
+## v4.2.0 - 2026-06-01
+
+### ⛓️ Dependencies
+- Updated go module directive to v1.26.3
+
+### 🛡️ Security notices
+- Resolved CodeQL `go/disabled-certificate-check` (CWE-295) at `src/kubelet/client/connector.go` by replacing the literal `InsecureSkipVerify: true` assignment with a config-driven value derived from `kubelet.caBundlePath`. Default behavior is unchanged. [#1466](https://github.com/newrelic/nri-kubernetes/pull/1466)
+- Pinned `MinVersion: tls.VersionTLS12` on the kubelet HTTPS transport in both verified and skip-verification modes. [#1466](https://github.com/newrelic/nri-kubernetes/pull/1466)
+
+## v4.1.1 - 2026-05-18
+
+### ⛓️ Dependencies
+- Updated go module directive to v1.26.3
+
+## v4.1.0 - 2026-05-06
+
+### 🚀 Enhancements
+- Add pod sample attributes for resource utilization, requests, and limits @jamescripter [#1453](https://github.com/newrelic/nri-kubernetes/pull/1453)
+
+### ⛓️ Dependencies
+- Updated golang.org/x/text to v0.36.0
+
+## v4.0.1 - 2026-04-16
+
+### ⛓️ Dependencies
+- Updated alpine to v3.23.4
+- Updated go to v1.26.2
+
+## v4.0.0 - 2026-04-09
+
+### ⚠️️ Breaking changes ⚠️
+- Windows pods now run in privileged mode by default, unlocking host metric collection on Windows. The agent image has moved from `newrelic/infrastructure-windows` to `newrelic/infrastructure-bundle` to align with Linux. If you have pinned `images.windowsAgent`, update it to the new image. To opt out of privileged mode, set `windows.privileged: false`. @kondracek-nr [#1409](https://github.com/newrelic/nri-kubernetes/pull/1409)
+
+### 🚀 Enhancements
+- Add per-container resource settings for kubelet (`kubelet.kubelet.resources`, `kubelet.agent.resources`) and controlplane (`controlPlane.controlplane.resources`, `controlPlane.forwarder.resources`) DaemonSets. `kubelet.resources` and `controlPlane.resources` continue to work as a fallback but their behavior will change in the future: they will be repurposed for pod-level resource setting once Kubernetes pod-level resources become generally available. @kondracek-nr [#1436](https://github.com/newrelic/nri-kubernetes/pull/1436)
+
+### ⛓️ Dependencies
+- Updated golang.org/x/text to v0.35.0
+- Updated kubernetes monorepo to v0.35.3
+- Updated k8s.io/utils digest
+- Updated codecov/codecov-action to v6
+
+## v3.57.0 - 2026-03-16
+
+### 🛡️ Security notices
+- Add response body size limits to kubelet API reads to prevent OOM from misconfigured endpoints @kondracek-nr [#1403](https://github.com/newrelic/nri-kubernetes/pull/1403)
+- Validate `networkRouteFile` config path to prevent path traversal @kondracek-nr [#1403](https://github.com/newrelic/nri-kubernetes/pull/1403)
+- Replace deprecated `io/ioutil` with `io` package @kondracek-nr [#1403](https://github.com/newrelic/nri-kubernetes/pull/1403)
+
+### 🚀 Enhancements
 - Support OpenShift 4.20 @jamescripter [#1401](https://github.com/newrelic/nri-kubernetes/pull/1401)
+
+### 🧪 Testing
+- Upgrade helm-unittest from 0.3.1 to 1.0.3 for improved test framework compatibility
+- Fixed invalid test assertions in gke_autopilot_test.yaml (replaced unsupported `exists:` and `notExists:` assertions)
+- Added comprehensive global value inheritance test coverage for all 27 applicable global values
+- Improved tolerations global inheritance: moved defaults from values.yaml to helper templates
 
 ## v3.56.0 - 2026-03-09
 
@@ -39,6 +128,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### 🚀 Enhancements
 - Add handling for fine-grained kubectl permissions @kondracek-nr [#1389](https://github.com/newrelic/nri-kubernetes/pull/1389)
+- Introduce HostProcess Windows containers and "privileged" mode support to collect host metrics on Windows nodes. Inherits global or chart-specific "privileged" setting by default, but also allows users to override this for their Windows nodes - see values.yaml. @kondracek-nr [#1361](https://github.com/newrelic/nri-kubernetes/pull/1361)
 
 ### 🐞 Bug fixes
 - fixes "bufio.Scanner: token too long" bug by increasing default buffer size @TmNguyen12 [#1407](https://github.com/newrelic/nri-kubernetes/pull/1407)

@@ -132,30 +132,115 @@ readOnlyRootFilesystem: true
 {{- end -}}
 {{- end -}}
 
-{{- /* Windows image string processing */ -}}
-{{- /* Windows Agent is more complicated because of how we've set up agent build automation. */ -}}
-{{- /* This may be simplified once infrastructure-bundle accommodates Windows. */ -}}
-{{- define "nriKubernetes.windowsImageRep" -}}
-{{ if ne .Values.images.windowsAgent.repository "newrelic/infrastructure" }}
-.Values.images.windowsAgent.repository
+{{/*
+Windows-specific privileged mode check.
+Returns the privileged mode for Windows nodes, checking windows.privileged first,
+then falling back to the global privileged setting.
+Outputs "true" when privileged, outputs nothing (empty string) when unprivileged.
+*/}}
+{{- define "nriKubernetes.windows.privileged" -}}
+{{- if kindIs "bool" .Values.windows.privileged -}}
+    {{- if .Values.windows.privileged -}}
+        {{- .Values.windows.privileged -}}
+    {{- end -}}
 {{- else -}}
-repository: newrelic/infrastructure-windows
-{{ end }}
+    {{- include "nriKubernetes.privileged" . -}}
+{{- end -}}
 {{- end -}}
 
-{{- define "nriKubernetes.updatedWindowsAgentImageDict" -}}
-{{- $updatedWindowsImageRepository := fromYaml ( include "nriKubernetes.windowsImageRep" . ) -}}
-{{- $baseWindowsImageDict := .Values.images.windowsAgent }}
-{{- $windowsImageDict := mustMergeOverwrite $baseWindowsImageDict $updatedWindowsImageRepository -}}
-{{- toYaml $windowsImageDict -}}
-{{- end -}}
-
+{{- /* Windows Agent */ -}}
 {{- define "nriKubernetes.windowsAgentImage" -}}
-  {{ include "newrelic.common.images.image" ( dict "imageRoot" (include "nriKubernetes.updatedWindowsAgentImageDict" . | fromYaml) "context" $ ) }}
+  {{ include "newrelic.common.images.image" ( dict "imageRoot" $.Values.images.windowsAgent "context" $ ) }}
 {{- end}}
 
 {{- /* Windows Integration */ -}}
 {{- define "nriKubernetes.windowsIntegrationImage" -}}
   {{ include "newrelic.common.images.image" ( dict "imageRoot" $.Values.images.windowsIntegration "context" $ ) }}
 {{- end}}
+
+
+
+{{/*
+Returns resources for the kubelet scraper container.
+If .kubelet.resources is set it takes precedence over per-container values (behavior-change
+period — .kubelet.resources will become pod-level once K8s pod-level resources are GA).
+Otherwise uses the per-container .kubelet.kubelet.resources default.
+*/}}
+{{- define "nriKubernetes.kubelet.resources.kubelet" -}}
+{{- if .Values.kubelet.resources -}}
+{{- toYaml .Values.kubelet.resources -}}
+{{- else -}}
+{{- toYaml .Values.kubelet.kubelet.resources -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Returns resources for the kubelet agent sidecar container.
+If .kubelet.resources is set it takes precedence over per-container values (behavior-change
+period — .kubelet.resources will become pod-level once K8s pod-level resources are GA).
+Otherwise uses the per-container .kubelet.agent.resources default.
+*/}}
+{{- define "nriKubernetes.kubelet.resources.agent" -}}
+{{- if .Values.kubelet.resources -}}
+{{- toYaml .Values.kubelet.resources -}}
+{{- else -}}
+{{- toYaml .Values.kubelet.agent.resources -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Returns resources for the Windows kubelet scraper container.
+If .kubelet.resources is set it takes precedence over per-container values (behavior-change
+period — .kubelet.resources will become pod-level once K8s pod-level resources are GA).
+Otherwise uses the per-container .kubelet.windows.kubelet.resources default.
+*/}}
+{{- define "nriKubernetes.kubelet.resources.windows.kubelet" -}}
+{{- if .Values.kubelet.resources -}}
+{{- toYaml .Values.kubelet.resources -}}
+{{- else -}}
+{{- toYaml .Values.kubelet.windows.kubelet.resources -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Returns resources for the Windows agent sidecar container.
+If .kubelet.resources is set it takes precedence over per-container values (behavior-change
+period — .kubelet.resources will become pod-level once K8s pod-level resources are GA).
+Otherwise uses the per-container .kubelet.windows.agent.resources default.
+*/}}
+{{- define "nriKubernetes.kubelet.resources.windows.agent" -}}
+{{- if .Values.kubelet.resources -}}
+{{- toYaml .Values.kubelet.resources -}}
+{{- else -}}
+{{- toYaml .Values.kubelet.windows.agent.resources -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Returns resources for the controlplane scraper container.
+If .controlPlane.resources is set it takes precedence over per-container values (behavior-change
+period — .controlPlane.resources will become pod-level once K8s pod-level resources are GA).
+Otherwise uses the per-container .controlPlane.controlplane.resources default.
+*/}}
+{{- define "nriKubernetes.controlPlane.resources.controlplane" -}}
+{{- if .Values.controlPlane.resources -}}
+{{- toYaml .Values.controlPlane.resources -}}
+{{- else -}}
+{{- toYaml .Values.controlPlane.controlplane.resources -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Returns resources for the controlplane forwarder sidecar container.
+If .controlPlane.resources is set it takes precedence over per-container values (behavior-change
+period — .controlPlane.resources will become pod-level once K8s pod-level resources are GA).
+Otherwise uses the per-container .controlPlane.forwarder.resources default.
+*/}}
+{{- define "nriKubernetes.controlPlane.resources.forwarder" -}}
+{{- if .Values.controlPlane.resources -}}
+{{- toYaml .Values.controlPlane.resources -}}
+{{- else -}}
+{{- toYaml .Values.controlPlane.forwarder.resources -}}
+{{- end -}}
+{{- end -}}
 

@@ -1,8 +1,47 @@
-suite: test interval
+suite: test interval validation
 templates:
   - templates/NOTES.txt
+
 tests:
-  - it: Fails to render with large intervals
+  # Valid intervals - should render successfully
+  - it: Accepts minimum valid interval (10s)
+    set:
+      licenseKey: test
+      cluster: test
+      common:
+        config:
+          interval: 10s
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: templates/NOTES.txt
+
+  - it: Accepts middle range interval (15s)
+    set:
+      licenseKey: test
+      cluster: test
+      common:
+        config:
+          interval: 15s
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: templates/NOTES.txt
+
+  - it: Accepts maximum valid interval (40s)
+    set:
+      licenseKey: test
+      cluster: test
+      common:
+        config:
+          interval: 40s
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: templates/NOTES.txt
+
+  # Invalid intervals - should fail validation
+  - it: Rejects interval larger than 40s
     set:
       licenseKey: test
       cluster: test
@@ -11,8 +50,9 @@ tests:
           interval: 41s
     asserts:
       - failedTemplate:
-          errorPattern: 'raw: Intervals larger than 40s are not supported'
-  - it: Fails to render with small intervals
+          errorPattern: "Intervals larger than 40s are not supported"
+
+  - it: Rejects interval smaller than 10s
     set:
       licenseKey: test
       cluster: test
@@ -21,8 +61,9 @@ tests:
           interval: 1s
     asserts:
       - failedTemplate:
-          errorPattern: "raw: Intervals smaller than 10s are not supported"
-  - it: Non-seconds intervals are rejected
+          errorPattern: "Intervals smaller than 10s are not supported"
+
+  - it: Rejects non-seconds intervals
     set:
       licenseKey: test
       cluster: test
@@ -31,4 +72,4 @@ tests:
           interval: 1m
     asserts:
       - failedTemplate:
-          errorPattern: "raw: Interval must be between 10s and 40s"
+          errorPattern: "Interval must be between 10s and 40s"

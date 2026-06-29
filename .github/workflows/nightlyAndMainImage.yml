@@ -23,7 +23,7 @@ jobs:
         goos: [ linux ]
         goarch: [ amd64, arm64, arm ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
@@ -34,7 +34,7 @@ jobs:
         run: |
           make compile TAG=nightly-$(git rev-parse --short HEAD)
       - name: Upload artifact for docker build step
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           retention-days: 1
           name: nri-kubernetes-${{ matrix.goos }}-${{ matrix.goarch }}
@@ -49,21 +49,21 @@ jobs:
       DOCKER_IMAGE_TAG: main
       DOCKER_PLATFORMS: "linux/amd64,linux/arm64,linux/arm" # Must be consistent with the matrix from the job above
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setting nightly tag if schedule
         if: ${{ github.event.schedule }}
         run: echo "DOCKER_IMAGE_TAG=nightly" >> $GITHUB_ENV
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Download all artifacts from build job
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           path: bin
 
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
           password: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
@@ -81,7 +81,7 @@ jobs:
             -t $DOCKER_IMAGE_NAME:ci-scan \
             .
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: '${{ env.DOCKER_IMAGE_NAME }}:ci-scan'
           format: 'table'
@@ -101,7 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Notify failure via Slack
-        uses: archive/github-actions-slack@v2.10.1
+        uses: archive/github-actions-slack@v3.1.0
         with:
           slack-bot-user-oauth-access-token: ${{ secrets.K8S_AGENTS_SLACK_TOKEN }}
           slack-channel: ${{ secrets.K8S_AGENTS_SLACK_CHANNEL }}

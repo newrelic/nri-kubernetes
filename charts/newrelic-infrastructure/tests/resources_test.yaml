@@ -1,0 +1,410 @@
+suite: Container-level resources
+templates:
+  - templates/kubelet/daemonset.yaml
+  - templates/kubelet/daemonset-windows.yaml
+  - templates/kubelet/scraper-configmap.yaml
+  - templates/kubelet/agent-configmap.yaml
+  - templates/kubelet/integrations-configmap.yaml
+  - templates/controlplane/daemonset.yaml
+  - templates/controlplane/scraper-configmap.yaml
+  - templates/controlplane/agent-configmap.yaml
+  - templates/secret.yaml
+release:
+  name: my-release
+  namespace: my-namespace
+tests:
+
+  # ---- kubelet (Linux) ----
+
+  - it: kubelet and agent containers get default resources
+    set:
+      licenseKey: test
+      cluster: test
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            limits:
+              memory: 300M
+            requests:
+              cpu: 100m
+              memory: 150M
+        template: templates/kubelet/daemonset.yaml
+      - equal:
+          path: spec.template.spec.containers[1].resources
+          value:
+            limits:
+              memory: 300M
+            requests:
+              cpu: 100m
+              memory: 150M
+        template: templates/kubelet/daemonset.yaml
+
+  - it: kubelet and agent containers can have independent resources
+    set:
+      licenseKey: test
+      cluster: test
+      kubelet.kubelet.resources.limits.memory: 200M
+      kubelet.kubelet.resources.requests.cpu: 50m
+      kubelet.kubelet.resources.requests.memory: 100M
+      kubelet.agent.resources.limits.memory: 400M
+      kubelet.agent.resources.requests.cpu: 150m
+      kubelet.agent.resources.requests.memory: 200M
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            limits:
+              memory: 200M
+            requests:
+              cpu: 50m
+              memory: 100M
+        template: templates/kubelet/daemonset.yaml
+      - equal:
+          path: spec.template.spec.containers[1].resources
+          value:
+            limits:
+              memory: 400M
+            requests:
+              cpu: 150m
+              memory: 200M
+        template: templates/kubelet/daemonset.yaml
+
+  - it: kubelet.resources takes precedence over per-container settings when set
+    set:
+      licenseKey: test
+      cluster: test
+      kubelet.resources.limits.memory: 500M
+      kubelet.resources.requests.cpu: 200m
+      kubelet.resources.requests.memory: 250M
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            limits:
+              memory: 500M
+            requests:
+              cpu: 200m
+              memory: 250M
+        template: templates/kubelet/daemonset.yaml
+      - equal:
+          path: spec.template.spec.containers[1].resources
+          value:
+            limits:
+              memory: 500M
+            requests:
+              cpu: 200m
+              memory: 250M
+        template: templates/kubelet/daemonset.yaml
+
+  - it: kubelet.resources overrides per-container settings when both are set
+    set:
+      licenseKey: test
+      cluster: test
+      kubelet.resources.limits.memory: 500M
+      kubelet.resources.requests.cpu: 200m
+      kubelet.resources.requests.memory: 250M
+      kubelet.kubelet.resources.limits.memory: 999M
+      kubelet.kubelet.resources.requests.cpu: 999m
+      kubelet.kubelet.resources.requests.memory: 999M
+      kubelet.agent.resources.limits.memory: 999M
+      kubelet.agent.resources.requests.cpu: 999m
+      kubelet.agent.resources.requests.memory: 999M
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            limits:
+              memory: 500M
+            requests:
+              cpu: 200m
+              memory: 250M
+        template: templates/kubelet/daemonset.yaml
+      - equal:
+          path: spec.template.spec.containers[1].resources
+          value:
+            limits:
+              memory: 500M
+            requests:
+              cpu: 200m
+              memory: 250M
+        template: templates/kubelet/daemonset.yaml
+
+  # ---- controlPlane ----
+
+  - it: controlplane and forwarder containers get default resources
+    set:
+      licenseKey: test
+      cluster: test
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            limits:
+              memory: 300M
+            requests:
+              cpu: 100m
+              memory: 150M
+        template: templates/controlplane/daemonset.yaml
+      - equal:
+          path: spec.template.spec.containers[1].resources
+          value:
+            limits:
+              memory: 300M
+            requests:
+              cpu: 100m
+              memory: 150M
+        template: templates/controlplane/daemonset.yaml
+
+  - it: controlplane and forwarder containers can have independent resources
+    set:
+      licenseKey: test
+      cluster: test
+      controlPlane.controlplane.resources.limits.memory: 200M
+      controlPlane.controlplane.resources.requests.cpu: 50m
+      controlPlane.controlplane.resources.requests.memory: 100M
+      controlPlane.forwarder.resources.limits.memory: 400M
+      controlPlane.forwarder.resources.requests.cpu: 150m
+      controlPlane.forwarder.resources.requests.memory: 200M
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            limits:
+              memory: 200M
+            requests:
+              cpu: 50m
+              memory: 100M
+        template: templates/controlplane/daemonset.yaml
+      - equal:
+          path: spec.template.spec.containers[1].resources
+          value:
+            limits:
+              memory: 400M
+            requests:
+              cpu: 150m
+              memory: 200M
+        template: templates/controlplane/daemonset.yaml
+
+  - it: controlPlane.resources takes precedence over per-container settings when set
+    set:
+      licenseKey: test
+      cluster: test
+      controlPlane.resources.limits.memory: 500M
+      controlPlane.resources.requests.cpu: 200m
+      controlPlane.resources.requests.memory: 250M
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            limits:
+              memory: 500M
+            requests:
+              cpu: 200m
+              memory: 250M
+        template: templates/controlplane/daemonset.yaml
+      - equal:
+          path: spec.template.spec.containers[1].resources
+          value:
+            limits:
+              memory: 500M
+            requests:
+              cpu: 200m
+              memory: 250M
+        template: templates/controlplane/daemonset.yaml
+
+  - it: controlPlane.resources overrides per-container settings when both are set
+    set:
+      licenseKey: test
+      cluster: test
+      controlPlane.resources.limits.memory: 500M
+      controlPlane.resources.requests.cpu: 200m
+      controlPlane.resources.requests.memory: 250M
+      controlPlane.controlplane.resources.limits.memory: 999M
+      controlPlane.controlplane.resources.requests.cpu: 999m
+      controlPlane.controlplane.resources.requests.memory: 999M
+      controlPlane.forwarder.resources.limits.memory: 999M
+      controlPlane.forwarder.resources.requests.cpu: 999m
+      controlPlane.forwarder.resources.requests.memory: 999M
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            limits:
+              memory: 500M
+            requests:
+              cpu: 200m
+              memory: 250M
+        template: templates/controlplane/daemonset.yaml
+      - equal:
+          path: spec.template.spec.containers[1].resources
+          value:
+            limits:
+              memory: 500M
+            requests:
+              cpu: 200m
+              memory: 250M
+        template: templates/controlplane/daemonset.yaml
+
+  # ---- kubelet (Windows) ----
+
+  - it: Windows kubelet and agent containers get default resources
+    set:
+      licenseKey: test
+      cluster: test
+      enableWindows: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            limits:
+              memory: 300M
+            requests:
+              cpu: 100m
+              memory: 150M
+        documentIndex: 0
+        template: templates/kubelet/daemonset-windows.yaml
+      - equal:
+          path: spec.template.spec.containers[1].resources
+          value:
+            limits:
+              memory: 300M
+            requests:
+              cpu: 100m
+              memory: 150M
+        documentIndex: 0
+        template: templates/kubelet/daemonset-windows.yaml
+
+  - it: Windows kubelet and agent containers can have independent resources
+    set:
+      licenseKey: test
+      cluster: test
+      enableWindows: true
+      kubelet.windows.kubelet.resources.limits.memory: 200M
+      kubelet.windows.kubelet.resources.requests.cpu: 50m
+      kubelet.windows.kubelet.resources.requests.memory: 100M
+      kubelet.windows.agent.resources.limits.memory: 400M
+      kubelet.windows.agent.resources.requests.cpu: 150m
+      kubelet.windows.agent.resources.requests.memory: 200M
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            limits:
+              memory: 200M
+            requests:
+              cpu: 50m
+              memory: 100M
+        documentIndex: 0
+        template: templates/kubelet/daemonset-windows.yaml
+      - equal:
+          path: spec.template.spec.containers[1].resources
+          value:
+            limits:
+              memory: 400M
+            requests:
+              cpu: 150m
+              memory: 200M
+        documentIndex: 0
+        template: templates/kubelet/daemonset-windows.yaml
+
+  - it: kubelet.resources takes precedence over Windows per-container settings when set
+    set:
+      licenseKey: test
+      cluster: test
+      enableWindows: true
+      kubelet.resources.limits.memory: 500M
+      kubelet.resources.requests.cpu: 200m
+      kubelet.resources.requests.memory: 250M
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            limits:
+              memory: 500M
+            requests:
+              cpu: 200m
+              memory: 250M
+        documentIndex: 0
+        template: templates/kubelet/daemonset-windows.yaml
+      - equal:
+          path: spec.template.spec.containers[1].resources
+          value:
+            limits:
+              memory: 500M
+            requests:
+              cpu: 200m
+              memory: 250M
+        documentIndex: 0
+        template: templates/kubelet/daemonset-windows.yaml
+
+  - it: kubelet.resources overrides Windows per-container settings when both are set
+    set:
+      licenseKey: test
+      cluster: test
+      enableWindows: true
+      kubelet.resources.limits.memory: 500M
+      kubelet.resources.requests.cpu: 200m
+      kubelet.resources.requests.memory: 250M
+      kubelet.windows.kubelet.resources.limits.memory: 999M
+      kubelet.windows.kubelet.resources.requests.cpu: 999m
+      kubelet.windows.kubelet.resources.requests.memory: 999M
+      kubelet.windows.agent.resources.limits.memory: 999M
+      kubelet.windows.agent.resources.requests.cpu: 999m
+      kubelet.windows.agent.resources.requests.memory: 999M
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            limits:
+              memory: 500M
+            requests:
+              cpu: 200m
+              memory: 250M
+        documentIndex: 0
+        template: templates/kubelet/daemonset-windows.yaml
+      - equal:
+          path: spec.template.spec.containers[1].resources
+          value:
+            limits:
+              memory: 500M
+            requests:
+              cpu: 200m
+              memory: 250M
+        documentIndex: 0
+        template: templates/kubelet/daemonset-windows.yaml
+
+  - it: Windows resources are independent from Linux per-container resources
+    set:
+      licenseKey: test
+      cluster: test
+      enableWindows: true
+      kubelet.kubelet.resources.limits.memory: 999M
+      kubelet.agent.resources.limits.memory: 999M
+      kubelet.windows.kubelet.resources.limits.memory: 200M
+      kubelet.windows.kubelet.resources.requests.cpu: 50m
+      kubelet.windows.kubelet.resources.requests.memory: 100M
+      kubelet.windows.agent.resources.limits.memory: 150M
+      kubelet.windows.agent.resources.requests.cpu: 50m
+      kubelet.windows.agent.resources.requests.memory: 75M
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources
+          value:
+            limits:
+              memory: 200M
+            requests:
+              cpu: 50m
+              memory: 100M
+        documentIndex: 0
+        template: templates/kubelet/daemonset-windows.yaml
+      - equal:
+          path: spec.template.spec.containers[1].resources
+          value:
+            limits:
+              memory: 150M
+            requests:
+              cpu: 50m
+              memory: 75M
+        documentIndex: 0
+        template: templates/kubelet/daemonset-windows.yaml

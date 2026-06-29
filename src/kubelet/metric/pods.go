@@ -3,7 +3,7 @@ package metric
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -27,6 +27,10 @@ const (
 	KubeServiceKubeletPodsPath = "/api/v1/pods"
 	nodeSelectorQuery          = "fieldSelector=spec.nodeName=%s"
 )
+
+// maxPodsResponseBytes caps the kubelet /pods response read at 100MB to prevent OOM.
+// Normal responses are typically 1-10MB even on large nodes.
+const maxPodsResponseBytes = 100 * 1024 * 1024
 
 // PodsFetcher queries the kubelet and fetches the information of pods
 // running on the node. It contains an in-memory cache to store the
@@ -57,7 +61,7 @@ func (podsFetcher *PodsFetcher) DoPodsFetch() (definition.RawGroups, error) {
 		return nil, fmt.Errorf("error calling kubelet %s path. Status code %d", KubeletPodsPath, r.StatusCode)
 	}
 
-	rawPods, err := ioutil.ReadAll(r.Body)
+	rawPods, err := io.ReadAll(io.LimitReader(r.Body, maxPodsResponseBytes))
 	if err != nil {
 		return nil, fmt.Errorf("error reading response from kubelet %s path. %s", KubeletPodsPath, err)
 	}
@@ -273,9 +277,11 @@ func getContainerStatusesByName(pod *v1.Pod) map[string]*v1.ContainerStatus {
 	// Add sidecar containers
 	for idx, initContainer := range pod.Spec.InitContainers {
 		if initContainer.RestartPolicy != nil && *initContainer.RestartPolicy == v1.ContainerRestartPolicyAlways {
-			if idx < len(pod.Status.InitContainerStatuses) {
-				cs := &pod.Status.InitContainerStatuses[idx]
-				containerStatusByName[cs.Name] = cs
+			for _, initContainerStatus := range pod.Status.InitContainerStatuses {
+				if initContainerStatus.Name == initContainer.Name {
+					containerStatusByName[initContainerStatus.Name] = &initContainerStatus
+					break
+				}
 			}
 		}
 	}
@@ -310,6 +316,7 @@ func fillContainerStatuses(pod *v1.Pod, containerStatuses map[string]*v1.Contain
 			dest[id]["lastTerminatedTimestamp"] = lastTerminatedFinishedAt
 		case c.State.Waiting != nil:
 			dest[id]["status"] = "Waiting"
+			dest[id]["isReady"] = false
 			dest[id]["reason"] = c.State.Waiting.Reason
 			dest[id]["restartCount"] = c.RestartCount
 			dest[id]["lastTerminatedExitCode"] = lastTerminatedExitCode
@@ -317,6 +324,7 @@ func fillContainerStatuses(pod *v1.Pod, containerStatuses map[string]*v1.Contain
 			dest[id]["lastTerminatedTimestamp"] = lastTerminatedFinishedAt
 		case c.State.Terminated != nil:
 			dest[id]["status"] = "Terminated"
+			dest[id]["isReady"] = false
 			dest[id]["reason"] = c.State.Terminated.Reason
 			dest[id]["restartCount"] = c.RestartCount
 			dest[id]["lastTerminatedExitCode"] = lastTerminatedExitCode
@@ -324,6 +332,7 @@ func fillContainerStatuses(pod *v1.Pod, containerStatuses map[string]*v1.Contain
 			dest[id]["lastTerminatedTimestamp"] = lastTerminatedFinishedAt
 		default:
 			dest[id]["status"] = "Unknown"
+			dest[id]["isReady"] = false
 		}
 	}
 }
@@ -389,6 +398,24 @@ func (podsFetcher *PodsFetcher) fetchPodData(pod *v1.Pod) definition.RawMetrics 
 
 	if pod.Spec.PriorityClassName != "" {
 		metrics["priorityClassName"] = pod.Spec.PriorityClassName
+	}
+
+	if pod.Spec.Resources != nil {
+		if v, ok := pod.Spec.Resources.Requests[v1.ResourceCPU]; ok {
+			metrics["cpuRequestedCores"] = v.MilliValue()
+		}
+
+		if v, ok := pod.Spec.Resources.Limits[v1.ResourceCPU]; ok {
+			metrics["cpuLimitCores"] = v.MilliValue()
+		}
+
+		if v, ok := pod.Spec.Resources.Requests[v1.ResourceMemory]; ok {
+			metrics["memoryRequestedBytes"] = v.Value()
+		}
+
+		if v, ok := pod.Spec.Resources.Limits[v1.ResourceMemory]; ok {
+			metrics["memoryLimitBytes"] = v.Value()
+		}
 	}
 
 	labels := podLabels(pod)
