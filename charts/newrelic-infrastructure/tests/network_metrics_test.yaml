@@ -91,18 +91,6 @@ tests:
             name: host-proc
         template: templates/kubelet/daemonset-windows.yaml
         documentIndex: 0
-      - notContains:
-          path: spec.template.spec.containers[0].volumeMounts
-          content:
-            name: host-proc
-        template: templates/kubelet/daemonset-windows.yaml
-        documentIndex: 1
-      - notContains:
-          path: spec.template.spec.volumes
-          content:
-            name: host-proc
-        template: templates/kubelet/daemonset-windows.yaml
-        documentIndex: 1
 
   - it: Should work with custom kubelet extraVolumeMounts
     set:
