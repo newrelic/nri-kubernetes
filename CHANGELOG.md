@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### enhancement
 - Support Kubernetes 1.35 @jamescripter [#1493](https://github.com/newrelic/nri-kubernetes/pull/1493)
 
+### bugfix
+- Fix fillContainerStatuses panics @changliu-wk [#1488](https://github.com/newrelic/nri-kubernetes/pull/1488)
+
 ## v4.3.3 - 2026-06-29
 
 ### ⛓️ Dependencies
