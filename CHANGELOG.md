@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### bugfix
+## v4.3.4 - 2026-06-30
+
+### 🐞 Bug fixes
 - Fix fillContainerStatuses panics @changliu-wk [#1488](https://github.com/newrelic/nri-kubernetes/pull/1488)
+
+### ⛓️ Dependencies
+- Updated k8s.io/utils digest to be93311
 
 ## v4.3.3 - 2026-06-29
 
