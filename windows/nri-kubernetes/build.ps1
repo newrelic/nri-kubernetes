@@ -4,7 +4,7 @@
 #>
 
 param(
-    [string]$WinVersion = "ltsc2019",
+    [string]$WinVersion = "ltsc2022",
     [string]$BinaryName = "nri-kubernetes",
     [string]$BinDir = "bin",
     [string]$Commit = (git rev-parse HEAD).Trim(),

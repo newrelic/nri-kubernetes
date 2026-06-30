@@ -82,13 +82,7 @@ not having your expected behavior has any predefined value.
 
 #### Windows node selector
 If `enableWindows` is set to `true`, the predefined `nodeSelector` settings are important. If it is necessary to change these, please be cognizant of which
-nodes are being targeted. The default `nodeSelector` settings allow the pods to run on Windows nodes corresponding to the relevant Windows Server versions (2019 & 2022).
-```yaml
-nodeSelector:
-  kubernetes.io/os: windows
-  node.kubernetes.io/windows-build: 10.0.17763 # Windows Server 2019
-```
-
+nodes are being targeted. The default `nodeSelector` settings allow the pods to run on Windows nodes corresponding to Windows Server 2022.
 ```yaml
 nodeSelector:
   kubernetes.io/os: windows
@@ -153,19 +147,14 @@ rbac:
 ### More on Windows
 
 #### DaemonSet creation
-As mentioned above, you may set `enableWindows` to `true` to enable Windows support in this chart. When enabled, this chart will create kubelet DaemonSets for the LTSC 2019
-& LTSC 2022 versions of Windows Server, which will schedule pods to their corresponding nodes.
+As mentioned above, you may set `enableWindows` to `true` to enable Windows support in this chart. When enabled, this chart will create kubelet DaemonSets for the LTSC 2022 version of Windows Server, which will schedule pods to their corresponding nodes.
 
-Please note that by default, the chart will create DaemonSets for _both_ stated Windows versions. If, for example, the target Kubernetes cluster does not include LTSC 2019 nodes,
-a DaemonSet will still be created but will indicate no desired pods.
-
-Example `kubectl -n newrelic get daemonsets` output where the cluster has two Linux nodes, one Windows LTSC 2022 node, and no Windows LTSC 2019 nodes:
+Example `kubectl -n newrelic get daemonsets` output where the cluster has two Linux nodes and one Windows LTSC 2022 node:
 ```shell
 kubectl -n newrelic get daemonsets
 NAME                                                DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR                                                          AGE
 <...snip...>
 newrelic-bundle-nrk8s-kubelet                       2         2         2       2            2           kubernetes.io/os=linux                                                 24h
-newrelic-bundle-nrk8s-kubelet-windows-ltsc2019      0         0         0       0            0           kubernetes.io/os=windows,node.kubernetes.io/windows-build=10.0.17763   24h
 newrelic-bundle-nrk8s-kubelet-windows-ltsc2022      1         1         1       1            1           kubernetes.io/os=windows,node.kubernetes.io/windows-build=10.0.20348   24h
 ```
 
@@ -287,7 +276,6 @@ Infrastructure Agent integrations (Kafka, Cassandra, Redis, etc.) are not suppor
 | updateStrategy | object | See `values.yaml` | Update strategy for the deployed DaemonSets. |
 | verboseLog | bool | `false` | Sets the debug logs to this integration or all integrations if it is set globally. Can be configured also with `global.verboseLog` |
 | windows.privileged | bool | `true` | Override privileged mode for Windows nodes. When null, inherits from global 'privileged' setting. Set to false to disable HostProcess mode on Windows while keeping Linux privileged. HostProcess containers run directly on the Windows host (not in a container) and require hostNetwork: true. |
-| windowsOsList | list | `[{"buildNumber":"10.0.17763","imageTagSuffix":"ltsc2019","version":"ltsc2019"},{"buildNumber":"10.0.20348","imageTagSuffix":"ltsc2022","version":"ltsc2022"}]` | Additional configuration for Windows node DaemonSets. |
 
 ## Maintainers
 

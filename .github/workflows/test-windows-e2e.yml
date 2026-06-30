@@ -57,8 +57,6 @@ jobs:
     needs: generate-key
     uses: "./.github/workflows/build-windows-integration-test.yml"
     with:
-      # leave this empty to build both ltsc2019 and ltsc2022
-      only_this_windows_version_tag:
       scenario_tag: ${{ needs.generate-key.outputs.run_key }}
     secrets:
       K8S_AGENTS_DOCKERHUB_USERNAME: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
@@ -133,7 +131,6 @@ jobs:
           helm repo update
       - name: Add PullSecret to e2e-values.yml
         run: |
-          export IMAGE_2019="newrelic/nri-kubernetes-internal:windows-ltsc2019-e2e-testing-${{ needs.generate-key.outputs.run_key }}"
           export IMAGE_2022="newrelic/nri-kubernetes-internal:windows-ltsc2022-e2e-testing-${{ needs.generate-key.outputs.run_key }}"
           export LINUX_TAG="linux-e2e-testing-${{ needs.generate-key.outputs.run_key }}"
 
