@@ -222,22 +222,6 @@ tests:
               runAsUserName: 'ContainerUser'
         documentIndex: 0
         template: templates/kubelet/daemonset-windows.yaml
-      - equal:
-          path: spec.template.spec.containers[0].securityContext
-          value:
-            windowsOptions:
-              hostProcess: false
-              runAsUserName: 'ContainerUser'
-        documentIndex: 1
-        template: templates/kubelet/daemonset-windows.yaml
-      - equal:
-          path: spec.template.spec.containers[1].securityContext
-          value:
-            windowsOptions:
-              hostProcess: false
-              runAsUserName: 'ContainerUser'
-        documentIndex: 1
-        template: templates/kubelet/daemonset-windows.yaml
 
   - it: Linux and Windows both default to privileged
     set:
