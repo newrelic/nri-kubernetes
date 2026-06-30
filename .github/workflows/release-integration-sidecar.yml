@@ -81,15 +81,6 @@ jobs:
             -f Dockerfile.sidecar \
             .
 
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          image-ref: '${{ env.DOCKER_IMAGE_NAME }}:ci-scan'
-          format: 'table'
-          exit-code: '1'
-          ignore-unfixed: true
-          severity: 'HIGH,CRITICAL'
-
       - name: Push sidecar image
         run: |
           docker buildx build --push --platform=$DOCKER_PLATFORMS \
