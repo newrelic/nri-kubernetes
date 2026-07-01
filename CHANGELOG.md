@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### bugfix
+- fix sidecar image tag, strip "v" prefix
+
 ## v4.3.5 - 2026-07-01
 
 ### 🐞 Bug fixes
