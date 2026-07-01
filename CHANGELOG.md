@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### bugfix
+## v4.3.5 - 2026-07-01
+
+### 🐞 Bug fixes
 - Fix sidecar release GHA @dbudziwojski [#1497](https://github.com/newrelic/nri-kubernetes/pull/1497)
 
 ## v4.3.4 - 2026-06-30
