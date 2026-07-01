@@ -55,7 +55,7 @@ jobs:
 
       - name: Set image tag
         run: |
-          VERSION=${{ github.ref_name || inputs.tag }}
+          VERSION=$(echo "${{ github.ref_name || inputs.tag }}" | sed 's/^v//')
           echo "DOCKER_IMAGE_TAG=${VERSION}-sidecar" >> $GITHUB_ENV
 
       - name: Set up QEMU
