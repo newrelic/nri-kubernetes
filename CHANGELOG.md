@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### bugfix
-- fix sidecar image tag, strip "v" prefix
+- fix sidecar image tag, strip "v" prefix. @danielstokes [#1500](https://github.com/newrelic/nri-kubernetes/pull/1500)
 
 ## v4.3.5 - 2026-07-01
 
