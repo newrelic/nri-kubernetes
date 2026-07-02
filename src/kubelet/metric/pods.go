@@ -22,9 +22,11 @@ import (
 )
 
 // KubeletPodsPath is the path where kubelet serves information about pods.
-const KubeletPodsPath = "/pods"
-const KubeServiceKubeletPodsPath = "/api/v1/pods"
-const nodeSelectorQuery = "fieldSelector=spec.nodeName=%s"
+const (
+	KubeletPodsPath            = "/pods"
+	KubeServiceKubeletPodsPath = "/api/v1/pods"
+	nodeSelectorQuery          = "fieldSelector=spec.nodeName=%s"
+)
 
 // maxPodsResponseBytes caps the kubelet /pods response read at 100MB to prevent OOM.
 // Normal responses are typically 1-10MB even on large nodes.
@@ -192,12 +194,13 @@ func getKubeServiceHost() string {
 
 func (podsFetcher *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]definition.RawMetrics {
 	statuses := make(map[string]definition.RawMetrics)
-	fillContainerStatuses(pod, statuses)
+	containerStatusByName := getContainerStatusesByName(pod)
+	fillContainerStatuses(pod, containerStatusByName, statuses)
 
 	metrics := make(map[string]definition.RawMetrics)
 	containers := pod.Spec.Containers
 
-	// Add sidecar containers
+	// Add sidecar containers (init containers with RestartPolicy Always)
 	for _, initContainer := range pod.Spec.InitContainers {
 		if initContainer.RestartPolicy != nil && *initContainer.RestartPolicy == v1.ContainerRestartPolicyAlways {
 			containers = append(containers, initContainer)
@@ -218,19 +221,29 @@ func (podsFetcher *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]defi
 			metrics[id]["nodeIP"] = v
 		}
 
-		if v, ok := c.Resources.Requests[v1.ResourceCPU]; ok {
+		// As of K8s 1.33 (beta, on by default) / 1.35 (GA), in-place pod vertical scaling means
+		// Pod.Spec.Containers[i].Resources is the desired state, not the actual state.
+		// Pod.Status.ContainerStatuses[i].Resources holds the actual applied resources.
+
+		// Prefer status resources (actual applied) over spec resources (desired state).
+		resources := c.Resources
+		if cs, ok := containerStatusByName[c.Name]; ok && cs.Resources != nil {
+			resources = *cs.Resources
+		}
+
+		if v, ok := resources.Requests[v1.ResourceCPU]; ok {
 			metrics[id]["cpuRequestedCores"] = v.MilliValue()
 		}
 
-		if v, ok := c.Resources.Limits[v1.ResourceCPU]; ok {
+		if v, ok := resources.Limits[v1.ResourceCPU]; ok {
 			metrics[id]["cpuLimitCores"] = v.MilliValue()
 		}
 
-		if v, ok := c.Resources.Requests[v1.ResourceMemory]; ok {
+		if v, ok := resources.Requests[v1.ResourceMemory]; ok {
 			metrics[id]["memoryRequestedBytes"] = v.Value()
 		}
 
-		if v, ok := c.Resources.Limits[v1.ResourceMemory]; ok {
+		if v, ok := resources.Limits[v1.ResourceMemory]; ok {
 			metrics[id]["memoryLimitBytes"] = v.Value()
 		}
 
@@ -254,23 +267,30 @@ func (podsFetcher *PodsFetcher) fetchContainersData(pod *v1.Pod) map[string]defi
 	return metrics
 }
 
-func fillContainerStatuses(pod *v1.Pod, dest map[string]definition.RawMetrics) {
-	containerStatuses := pod.Status.ContainerStatuses
+func getContainerStatusesByName(pod *v1.Pod) map[string]*v1.ContainerStatus {
+	containerStatusByName := make(map[string]*v1.ContainerStatus)
+	for i := range pod.Status.ContainerStatuses {
+		containerStatus := &pod.Status.ContainerStatuses[i]
+		containerStatusByName[containerStatus.Name] = containerStatus
+	}
 
 	// Add sidecar containers (init containers with RestartPolicy Always)
 	for _, initContainer := range pod.Spec.InitContainers {
 		if initContainer.RestartPolicy != nil && *initContainer.RestartPolicy == v1.ContainerRestartPolicyAlways {
 			for _, initContainerStatus := range pod.Status.InitContainerStatuses {
 				if initContainerStatus.Name == initContainer.Name {
-					containerStatuses = append(containerStatuses, initContainerStatus)
+					containerStatusByName[initContainerStatus.Name] = &initContainerStatus
 					break
 				}
 			}
 		}
 	}
 
-	for _, c := range containerStatuses {
-		name := c.Name
+	return containerStatusByName
+}
+
+func fillContainerStatuses(pod *v1.Pod, containerStatuses map[string]*v1.ContainerStatus, dest map[string]definition.RawMetrics) {
+	for name, c := range containerStatuses {
 		id := containerID(pod, name)
 
 		// Set the ExitCode. Zero if no terminated Exit Code.
