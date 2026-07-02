@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### bugfix
+- Use actual applied container resources (`Pod.Status.ContainerStatuses[i].Resources`) over desired spec resources (`Pod.Spec.Containers[i].Resources`) where present to correctly report `cpuRequestedCores`, `memoryRequestedBytes`, and related metrics during in-place pod vertical scaling (K8s 1.33+ beta, 1.35+ GA) @kondracek-nr [#1433](https://github.com/newrelic/nri-kubernetes/pull/1433)
+
 ## v4.3.6 - 2026-07-01
 
 ### 🐞 Bug fixes
@@ -21,7 +24,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### 🐞 Bug fixes
 - Fix fillContainerStatuses panics @changliu-wk [#1488](https://github.com/newrelic/nri-kubernetes/pull/1488)
-- Use actual applied container resources (`Pod.Status.ContainerStatuses[i].Resources`) over desired spec resources (`Pod.Spec.Containers[i].Resources`) where present to correctly report `cpuRequestedCores`, `memoryRequestedBytes`, and related metrics during in-place pod vertical scaling (K8s 1.33+ beta, 1.35+ GA) @kondracek-nr [#1433](https://github.com/newrelic/nri-kubernetes/pull/1433)
 
 ### ⛓️ Dependencies
 - Updated k8s.io/utils digest to be93311
