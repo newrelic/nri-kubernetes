@@ -281,7 +281,8 @@ Infrastructure Agent integrations (Kafka, Cassandra, Redis, etc.) are not suppor
 
 * [danielstokes](https://github.com/danielstokes)
 * [dbudziwojskiNR](https://github.com/dbudziwojskiNR)
-* [kondracek-nr](https://github.com/kondracek-nr)
+* [jamescripter](https://github.com/jamescripter)
+* [NRhzhao](https://github.com/NRhzhao)
 * [Philip-R-Beckwith](https://github.com/Philip-R-Beckwith)
 * [TmNguyen12](https://github.com/TmNguyen12)
 

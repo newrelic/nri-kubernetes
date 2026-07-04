@@ -11,7 +11,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Support Kubernetes 1.35 @jamescripter [#1493](https://github.com/newrelic/nri-kubernetes/pull/1493)
 
 ### bugfix
+- Use actual applied container resources (`Pod.Status.ContainerStatuses[i].Resources`) over desired spec resources (`Pod.Spec.Containers[i].Resources`) where present to correctly report `cpuRequestedCores`, `memoryRequestedBytes`, and related metrics during in-place pod vertical scaling (K8s 1.33+ beta, 1.35+ GA) @kondracek-nr [#1433](https://github.com/newrelic/nri-kubernetes/pull/1433)
+
+## v4.3.6 - 2026-07-01
+
+### 🐞 Bug fixes
+- fix sidecar image tag, strip "v" prefix. @danielstokes [#1500](https://github.com/newrelic/nri-kubernetes/pull/1500)
+
+## v4.3.5 - 2026-07-01
+
+### 🐞 Bug fixes
+- Fix sidecar release GHA @dbudziwojski [#1497](https://github.com/newrelic/nri-kubernetes/pull/1497)
+
+## v4.3.4 - 2026-06-30
+
+### 🐞 Bug fixes
 - Fix fillContainerStatuses panics @changliu-wk [#1488](https://github.com/newrelic/nri-kubernetes/pull/1488)
+
+### ⛓️ Dependencies
+- Updated k8s.io/utils digest to be93311
 
 ## v4.3.3 - 2026-06-29
 

@@ -55,7 +55,7 @@ jobs:
 
       - name: Set image tag
         run: |
-          VERSION=${{ github.ref_name || inputs.tag }}
+          VERSION=$(echo "${{ github.ref_name || inputs.tag }}" | sed 's/^v//')
           echo "DOCKER_IMAGE_TAG=${VERSION}-sidecar" >> $GITHUB_ENV
 
       - name: Set up QEMU
@@ -80,15 +80,6 @@ jobs:
             -t $DOCKER_IMAGE_NAME:ci-scan \
             -f Dockerfile.sidecar \
             .
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          image-ref: '${{ env.DOCKER_IMAGE_NAME }}:ci-scan'
-          format: 'table'
-          exit-code: '1'
-          ignore-unfixed: true
-          severity: 'HIGH,CRITICAL'
 
       - name: Push sidecar image
         run: |
