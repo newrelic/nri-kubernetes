@@ -10,6 +10,10 @@ on:
   workflow_dispatch:
   workflow_call:
     inputs:
+      only_this_windows_version_tag:
+        description: (ltsc2019 or ltsc2022) Specify the Windows version to build. Leave blank for both 2019 and 2022.
+        type: string
+        required: false
       scenario_tag:
         description: Tag for the scenario being tested
         type: string
@@ -29,9 +33,34 @@ permissions:
   security-events: write
 
 jobs:
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        run: |
+          if [[ -n "${{ inputs.only_this_windows_version_tag }}" ]]; then
+            tag="${{ inputs.only_this_windows_version_tag }}"
+            last4="${tag: -4}"
+            echo "Last 4 digits of tag: $last4"
+          fi
+
+          if [[ -z "${{ inputs.only_this_windows_version_tag }}" ]]; then
+            echo "matrix={\"windows\":[{\"runner\":\"windows-x64-8-core\",\"tag\":\"ltsc2019\"},{\"runner\":\"windows-x64-8-core\",\"tag\":\"ltsc2022\"}]}" >> $GITHUB_OUTPUT
+          else
+            echo "matrix={\"windows\":[{\"runner\":\"windows-x64-8-core\",\"tag\":\"${{ inputs.only_this_windows_version_tag }}\"}]}" >> $GITHUB_OUTPUT
+          fi
+
+          echo "Final matrix: $(cat $GITHUB_OUTPUT)"
+
   build:
     name: Build integration for
-    runs-on: windows-x64-8-core
+    needs: generate-matrix
+    strategy:
+      fail-fast: true
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    runs-on: ${{ matrix.windows.runner }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v6
@@ -53,7 +82,7 @@ jobs:
           COMMIT: ${{ github.sha }}
           DATE: ${{ needs.build-env-args.outputs.date }}
           TAG: "e2e-testing-${{ github.sha }}"
-          WIN_VERSION: ltsc2022
+          WIN_VERSION: ${{ matrix.windows.tag }}
           WIN_DIR: 'windows/nri-kubernetes'
         run: |
             $scriptPath = Join-Path $env:WIN_DIR "build.ps1"
@@ -63,6 +92,7 @@ jobs:
         shell: powershell
         env:
           COMMIT: ${{ github.sha }}
+          MATRIX_TAG: ${{ matrix.windows.tag }}
           WIN_DIR: 'windows/nri-kubernetes'
           SCENARIO_TAG: ${{ inputs.scenario_tag }}
         run: |
@@ -71,14 +101,14 @@ jobs:
             Write-Output "Using scenario tag: $env:tag"
           }
 
-          $env:DOCKER_TAG = "windows-ltsc2022-e2e-testing-$env:tag"
+          $env:DOCKER_TAG = "windows-${{ matrix.windows.tag }}-e2e-testing-$env:tag"
           echo "DOCKER_TAG=$env:DOCKER_TAG" | Out-File -FilePath $env:GITHUB_ENV -Append
 
           $dockerfilePath = Join-Path $env:WIN_DIR "Dockerfile.windows"
           
           ls
           docker build --platform windows/amd64 -f $dockerfilePath `
-            --build-arg BASE_IMAGE_TAG=ltsc2022 `
+            --build-arg BASE_IMAGE_TAG=${{ matrix.windows.tag }} `
             --build-arg "COMMIT=${env:COMMIT}" `
             --build-arg "DATE=${env:DATE}" `
             --build-arg "TAG=$env:DOCKER_TAG" `
@@ -113,7 +143,7 @@ jobs:
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: 'trivy-results.sarif'
-          category: 'trivy-windows-ltsc2022'
+          category: 'trivy-windows-${{ matrix.windows.tag }}'
 
       - name: Output pushed image tag
         shell: powershell
