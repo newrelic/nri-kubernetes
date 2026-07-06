@@ -10,7 +10,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### enhancement
 - Support Kubernetes 1.35 @jamescripter [#1493](https://github.com/newrelic/nri-kubernetes/pull/1493)
 
-### bugfix
+### enhancement
+- Support Kubernetes 1.35 @jamescripter [#1493](https://github.com/newrelic/nri-kubernetes/pull/1493)
+
+## v4.3.7 - 2026-07-06
+
+### 🐞 Bug fixes
 - Use actual applied container resources (`Pod.Status.ContainerStatuses[i].Resources`) over desired spec resources (`Pod.Spec.Containers[i].Resources`) where present to correctly report `cpuRequestedCores`, `memoryRequestedBytes`, and related metrics during in-place pod vertical scaling (K8s 1.33+ beta, 1.35+ GA) @kondracek-nr [#1433](https://github.com/newrelic/nri-kubernetes/pull/1433)
 
 ## v4.3.6 - 2026-07-01
