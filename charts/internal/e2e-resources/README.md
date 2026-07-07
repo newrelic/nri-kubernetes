@@ -40,6 +40,7 @@ This chart creates e2e resources for nri-kubernetes.
 | persistentVolumeClaim.enabled | bool | `true` | Create PVCs |
 | scraper.enabled | bool | `false` | Deploy the scraper pod |
 | statefulSet.enabled | bool | `true` | Deploy a dummy statefulSet |
+| windows.is2019 | bool | `false` | Deploy resources on Windows Server 2019 nodes |
 | windows.is2022 | bool | `false` | Deploy resources on Windows Server 2022 nodes |
 
 ----------------------------------------------
