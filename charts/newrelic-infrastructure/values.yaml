@@ -74,9 +74,16 @@ enableWindows: false
 # because Kubernetes only supports process isolation and not Hyper-V isolation (as of March 2025).
 # -- Additional configuration for Windows node DaemonSets.
 windowsOsList:
-  # Support for LTSC2022
+  # Support for only LTSC2019/LTSC2022
   # @default -- See `values.yaml`
   # https://kubernetes.io/docs/setup/production-environment/windows/intro-windows-in-kubernetes/#windows-os-version-support
+  - version: ltsc2019
+    imageTagSuffix: ltsc2019
+    buildNumber: 10.0.17763
+    # @ignored
+    agentImage: ""
+    # @ignored
+    integrationImage: ""
   - version: ltsc2022
     imageTagSuffix: ltsc2022
     buildNumber: 10.0.20348

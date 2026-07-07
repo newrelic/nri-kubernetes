@@ -1,6 +1,6 @@
 # nri-kubernetes - Windows Integration Build Automation
 
-This folder contains files and scripts used for automating the build process of the Kubernetes integration for Windows. These scripts are run via GitHub Actions and result in a Windows-compatible image for LTSC 2022. 
+This folder contains files and scripts used for automating the build process of the Kubernetes integration for Windows. These scripts are run via GitHub Actions and result in Windows-compatible images for LTSC 2019 and LTSC 2022. 
 
 The target Dockerhub repository is [newrelic/nri-kubernetes](https://hub.docker.com/r/newrelic/nri-kubernetes). We use a combined manifest to support both Windows and Linux images having the same image tag.
 

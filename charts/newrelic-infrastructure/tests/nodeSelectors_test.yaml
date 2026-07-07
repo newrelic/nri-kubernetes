@@ -194,8 +194,15 @@ tests:
           path: spec.template.spec.nodeSelector
           value:
             kubernetes.io/os: windows
-            node.kubernetes.io/windows-build: 10.0.20348
+            node.kubernetes.io/windows-build: 10.0.17763
         documentIndex: 0
+        template: templates/kubelet/daemonset-windows.yaml
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            kubernetes.io/os: windows
+            node.kubernetes.io/windows-build: 10.0.20348
+        documentIndex: 1
         template: templates/kubelet/daemonset-windows.yaml
 
   - it: daemonset-windows - nodeSelector does NOT populate the windows' daemonsets from global by common-library
@@ -229,8 +236,15 @@ tests:
           path: spec.template.spec.nodeSelector
           value:
             kubernetes.io/os: windows
-            node.kubernetes.io/windows-build: 10.0.20348
+            node.kubernetes.io/windows-build: 10.0.17763
         documentIndex: 0
+        template: templates/kubelet/daemonset-windows.yaml
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            kubernetes.io/os: windows
+            node.kubernetes.io/windows-build: 10.0.20348
+        documentIndex: 1
         template: templates/kubelet/daemonset-windows.yaml
 
   - it: daemonset-windows - windowsNodeSelector merges with windows default nodeSelector
@@ -266,7 +280,15 @@ tests:
           path: spec.template.spec.nodeSelector
           value:
             kubernetes.io/os: windows
-            node.kubernetes.io/windows-build: 10.0.20348
+            node.kubernetes.io/windows-build: 10.0.17763
             disktype: hd
         documentIndex: 0
+        template: templates/kubelet/daemonset-windows.yaml
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            kubernetes.io/os: windows
+            node.kubernetes.io/windows-build: 10.0.20348
+            disktype: hd
+        documentIndex: 1
         template: templates/kubelet/daemonset-windows.yaml
