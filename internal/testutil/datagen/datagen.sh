@@ -48,18 +48,18 @@ MINIKUBE_PROFILE="${MINIKUBE_PROFILE}-${1/./-}"
 # Supported Kubernetes versions to test against in format "v1.31.1".  Specify one patch version per supported minor version.
 # The patch version is used for the test, but the test is considered valid for all patches in the minor version.
 K8S_PATCH_VERSIONS=(
+  "v1.35.0"
   "v1.34.0"
   "v1.33.0"
   "v1.32.0"
   "v1.31.0"
-  "v1.30.0"
 )
 # KSM version to use for the K8S_PATCH_VERSIONS, matched by index.
 KSM_IMAGE_VERSIONS=(
+  "v2.19.0"
   "v2.16.0"
   "v2.16.0"
   "v2.16.0"
-  "v2.13.0"
   "v2.13.0"
 )
 # K8S_MINOR_VERSIONS are formatted like "1.28".
