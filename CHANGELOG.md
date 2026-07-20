@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v4.4.1 - 2026-07-20
+
+### ⛓️ Dependencies
+- Updated golang.org/x/text to v0.40.0
+- Updated k8s.io/utils digest to cf1189d
+- Updated go module directive to v1.26.5
+- Updated github.com/prometheus/common to v0.70.0 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.70.0)
+
 ## v4.4.0 - 2026-07-13
 
 ### 🚀 Enhancements
