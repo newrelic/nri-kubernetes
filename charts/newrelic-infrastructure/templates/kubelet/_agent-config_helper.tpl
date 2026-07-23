@@ -36,7 +36,8 @@ NRIA_PASSTHROUGH_ENVIRONMENT, always including `CLUSTER_NAME` plus any user-defi
 `kubelet.extraPassthroughEnv`.
 */ -}}
 {{- define "nriKubernetes.kubelet.passthroughEnv" -}}
-{{- $passthroughEnv := concat (list "CLUSTER_NAME") .Values.kubelet.extraPassthroughEnv -}}
+{{- $extraPassthroughEnv := .Values.kubelet.extraPassthroughEnv | default list -}}
+{{- $passthroughEnv := concat (list "CLUSTER_NAME") $extraPassthroughEnv -}}
 {{- join "," $passthroughEnv -}}
 {{- end -}}
 
