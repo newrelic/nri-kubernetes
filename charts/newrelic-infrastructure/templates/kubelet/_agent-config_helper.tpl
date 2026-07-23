@@ -29,3 +29,15 @@ enable_process_metrics: {{ .Values.enableProcessMetrics }}
 
 {{- mustMergeOverwrite $agentDefaults $kubelet $agentConfig $kubeletAgentConfig $customAttributes | toYaml -}}
 {{- end -}}
+
+{{- /*
+Builds the comma-separated list of environment variable names or regexes to be passed into
+NRIA_PASSTHROUGH_ENVIRONMENT, always including `CLUSTER_NAME` plus any user-defined
+`kubelet.extraPassthroughEnv`.
+*/ -}}
+{{- define "nriKubernetes.kubelet.passthroughEnv" -}}
+{{- $extraPassthroughEnv := .Values.kubelet.extraPassthroughEnv | default list -}}
+{{- $passthroughEnv := concat (list "CLUSTER_NAME") $extraPassthroughEnv -}}
+{{- join "," $passthroughEnv -}}
+{{- end -}}
+
