@@ -205,7 +205,7 @@ spec:
             - name: "CLUSTER_NAME"
               value: {{ include "newrelic.common.cluster" $ }}
             - name: "NRIA_PASSTHROUGH_ENVIRONMENT"
-              value: "CLUSTER_NAME"
+              value: {{ include "nriKubernetes.kubelet.passthroughEnv" $ | quote }}
 
             {{- /* Needed for autodiscovery when hostNetwork=false (unprivileged mode) */}}
             {{- if not (include "nriKubernetes.windows.privileged" $) }}

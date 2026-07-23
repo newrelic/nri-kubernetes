@@ -1,0 +1,71 @@
+suite: test NRIA_PASSTHROUGH_ENVIRONMENT
+templates:
+  - templates/kubelet/daemonset.yaml
+  - templates/kubelet/daemonset-windows.yaml
+  - templates/kubelet/scraper-configmap.yaml
+  - templates/kubelet/agent-configmap.yaml
+  - templates/kubelet/integrations-configmap.yaml
+  - templates/agent-configmap.yaml
+  - templates/secret.yaml
+tests:
+  - it: only contains CLUSTER_NAME by default
+    set:
+      enableWindows: true
+      licenseKey: test
+      cluster: test
+    asserts:
+      - template: templates/kubelet/daemonset.yaml
+        contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: "NRIA_PASSTHROUGH_ENVIRONMENT"
+            value: "CLUSTER_NAME"
+      - template: templates/kubelet/daemonset-windows.yaml
+        contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: "NRIA_PASSTHROUGH_ENVIRONMENT"
+            value: "CLUSTER_NAME"
+
+  - it: appends a single extraPassthroughEnv entry after CLUSTER_NAME
+    set:
+      enableWindows: true
+      licenseKey: test
+      cluster: test
+      kubelet.extraPassthroughEnv:
+        - MY_ENV_VAR
+    asserts:
+      - template: templates/kubelet/daemonset.yaml
+        contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: "NRIA_PASSTHROUGH_ENVIRONMENT"
+            value: "CLUSTER_NAME,MY_ENV_VAR"
+      - template: templates/kubelet/daemonset-windows.yaml
+        contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: "NRIA_PASSTHROUGH_ENVIRONMENT"
+            value: "CLUSTER_NAME,MY_ENV_VAR"
+
+  - it: joins multiple extraPassthroughEnv entries into a csv after CLUSTER_NAME
+    set:
+      enableWindows: true
+      licenseKey: test
+      cluster: test
+      kubelet.extraPassthroughEnv:
+        - FOO
+        - BAR
+    asserts:
+      - template: templates/kubelet/daemonset.yaml
+        contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: "NRIA_PASSTHROUGH_ENVIRONMENT"
+            value: "CLUSTER_NAME,FOO,BAR"
+      - template: templates/kubelet/daemonset-windows.yaml
+        contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: "NRIA_PASSTHROUGH_ENVIRONMENT"
+            value: "CLUSTER_NAME,FOO,BAR"
