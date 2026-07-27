@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path"
@@ -15,6 +16,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 
+	"github.com/newrelic/nri-kubernetes/v3/internal/cloud"
 	"github.com/newrelic/nri-kubernetes/v3/internal/config"
 	"github.com/newrelic/nri-kubernetes/v3/internal/discovery"
 	"github.com/newrelic/nri-kubernetes/v3/src/client"
@@ -132,9 +134,13 @@ func main() {
 	// Create the interface cache for network metric optimization
 	interfaceCache := kubeletMetric.NewInterfaceCache()
 
+	// Best-effort auto-detection of the cluster name from the cloud provider.
+	// Emitted as the cloud.k8s.cluster.name attribute; never overrides clusterName.
+	cloudClusterName := detectCloudClusterName(c, clients.k8s)
+
 	var kubeletScraper *kubelet.Scraper
 	if c.Kubelet.Enabled {
-		kubeletScraper, err = setupKubelet(c, clients, namespaceCache, interfaceCache)
+		kubeletScraper, err = setupKubelet(c, clients, namespaceCache, interfaceCache, cloudClusterName)
 		if err != nil {
 			logger.Errorf("setting up kubelet scraper: %v", err)
 			os.Exit(exitSetup)
@@ -144,7 +150,7 @@ func main() {
 
 	var ksmScraper *ksm.Scraper
 	if c.KSM.Enabled {
-		ksmScraper, err = setupKSM(c, clients, namespaceCache)
+		ksmScraper, err = setupKSM(c, clients, namespaceCache, cloudClusterName)
 		if err != nil {
 			logger.Errorf("setting up ksm scraper: %v", err)
 			os.Exit(exitSetup)
@@ -154,7 +160,7 @@ func main() {
 
 	var controlplaneScraper *controlplane.Scraper
 	if c.ControlPlane.Enabled {
-		controlplaneScraper, err = setupControlPlane(c, clients)
+		controlplaneScraper, err = setupControlPlane(c, clients, cloudClusterName)
 		if err != nil {
 			logger.Errorf("setting up control plane scraper: %v", err)
 			os.Exit(exitSetup)
@@ -245,13 +251,35 @@ func runScrapers(c *config.Config, ksmScraper *ksm.Scraper, kubeletScraper *kube
 	return nil
 }
 
-func setupKSM(c *config.Config, clients *clusterClients, namespaceCache *discovery.NamespaceInMemoryStore) (*ksm.Scraper, error) {
+// detectCloudClusterName attempts to auto-detect the cluster name from the cloud
+// provider hosting this node. It is best-effort: on failure (or when disabled) it
+// returns an empty string and the integration proceeds without the attribute.
+func detectCloudClusterName(c *config.Config, k8s kubernetes.Interface) string {
+	if !c.CloudClusterNameDetection {
+		return ""
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	name, provider, err := cloud.DetectClusterName(ctx, logger, k8s, c.NodeName)
+	if err != nil {
+		logger.Debugf("could not auto-detect cloud cluster name: %v", err)
+		return ""
+	}
+	if name != "" {
+		logger.Infof("detected cloud cluster name %q from provider %s", name, provider)
+	}
+	return name
+}
+
+func setupKSM(c *config.Config, clients *clusterClients, namespaceCache *discovery.NamespaceInMemoryStore, cloudClusterName string) (*ksm.Scraper, error) {
 	providers := ksm.Providers{
 		K8s: clients.k8s,
 		KSM: clients.ksm,
 	}
 
-	scraperOpts := []ksm.ScraperOpt{ksm.WithLogger(logger)}
+	scraperOpts := []ksm.ScraperOpt{ksm.WithLogger(logger), ksm.WithCloudClusterName(cloudClusterName)}
 
 	if c.NamespaceSelector != nil {
 		nsFilter := discovery.NewNamespaceFilter(c.NamespaceSelector, clients.k8s, logger)
@@ -269,7 +297,7 @@ func setupKSM(c *config.Config, clients *clusterClients, namespaceCache *discove
 	return ksmScraper, nil
 }
 
-func setupControlPlane(c *config.Config, clients *clusterClients) (*controlplane.Scraper, error) {
+func setupControlPlane(c *config.Config, clients *clusterClients, cloudClusterName string) (*controlplane.Scraper, error) {
 	providers := controlplane.Providers{
 		K8s: clients.k8s,
 	}
@@ -284,6 +312,7 @@ func setupControlPlane(c *config.Config, clients *clusterClients) (*controlplane
 		providers,
 		controlplane.WithLogger(logger),
 		controlplane.WithRestConfig(restConfig),
+		controlplane.WithCloudClusterName(cloudClusterName),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("building control plane scraper: %w", err)
@@ -292,7 +321,7 @@ func setupControlPlane(c *config.Config, clients *clusterClients) (*controlplane
 	return controlplaneScraper, nil
 }
 
-func setupKubelet(c *config.Config, clients *clusterClients, namespaceCache *discovery.NamespaceInMemoryStore, interfaceCache *kubeletMetric.InterfaceCache) (*kubelet.Scraper, error) {
+func setupKubelet(c *config.Config, clients *clusterClients, namespaceCache *discovery.NamespaceInMemoryStore, interfaceCache *kubeletMetric.InterfaceCache, cloudClusterName string) (*kubelet.Scraper, error) {
 	providers := kubelet.Providers{
 		K8s:      clients.k8s,
 		Kubelet:  clients.kubelet,
@@ -302,6 +331,7 @@ func setupKubelet(c *config.Config, clients *clusterClients, namespaceCache *dis
 	scraperOpts := []kubelet.ScraperOpt{
 		kubelet.WithLogger(logger),
 		kubelet.WithInterfaceCache(interfaceCache),
+		kubelet.WithCloudClusterName(cloudClusterName),
 	}
 
 	if c.NamespaceSelector != nil {

@@ -63,7 +63,7 @@ func IntegrationPopulator(config *definition.IntegrationPopulateConfig) (bool, [
 	}
 
 	if populated {
-		if err := populateCluster(config.Integration, config.ClusterName, config.K8sVersion); err != nil {
+		if err := populateCluster(config.Integration, config.ClusterName, config.CloudClusterName, config.K8sVersion); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -107,12 +107,15 @@ func processEntities(unitsToProcess []processingUnit, config *definition.Integra
 			continue
 		}
 
-		attrs := make([]attribute.Attribute, len(extraAttributes), len(extraAttributes)+2)
+		attrs := make([]attribute.Attribute, len(extraAttributes), len(extraAttributes)+3)
 		copy(attrs, extraAttributes)
 		attrs = append(attrs,
 			attribute.Attr("clusterName", config.ClusterName),
 			attribute.Attr("displayName", e.Metadata.Name),
 		)
+		if config.CloudClusterName != "" {
+			attrs = append(attrs, attribute.Attr("cloud.k8s.cluster.name", config.CloudClusterName))
+		}
 		e.AddAttributes(attrs...)
 
 		msTypeGuesser := config.MsTypeGuesser
@@ -352,7 +355,7 @@ func populateSingleMetric(ms *metric.Set, name string, value interface{}, source
 }
 
 // populateCluster fills cluster-level data.
-func populateCluster(i *integration.Integration, clusterName string, k8sVersion fmt.Stringer) error {
+func populateCluster(i *integration.Integration, clusterName, cloudClusterName string, k8sVersion fmt.Stringer) error {
 	e, err := i.Entity(clusterName, "k8s:cluster")
 	if err != nil {
 		// Add context to the error from the SDK.
@@ -368,6 +371,12 @@ func populateCluster(i *integration.Integration, clusterName string, k8sVersion 
 	err = ms.SetMetric("clusterName", clusterName, metric.ATTRIBUTE)
 	if err != nil {
 		return fmt.Errorf("could not set clusterName metric: %w", err)
+	}
+
+	if cloudClusterName != "" {
+		if err = ms.SetMetric("cloud.k8s.cluster.name", cloudClusterName, metric.ATTRIBUTE); err != nil {
+			return fmt.Errorf("could not set cloud.k8s.cluster.name metric: %w", err)
+		}
 	}
 
 	k8sVersionStr := k8sVersion.String()

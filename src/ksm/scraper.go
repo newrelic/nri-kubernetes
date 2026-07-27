@@ -35,6 +35,7 @@ type Scraper struct {
 	Providers
 	logger              *log.Logger
 	config              *config.Config
+	cloudClusterName    string
 	k8sVersion          *version.Info
 	endpointsDiscoverer discovery.EndpointsDiscoverer
 	servicesLister      listersv1.ServiceLister
@@ -57,6 +58,14 @@ func WithLogger(logger *log.Logger) ScraperOpt {
 func WithFilterer(filterer discovery.NamespaceFilterer) ScraperOpt {
 	return func(s *Scraper) error {
 		s.Filterer = filterer
+		return nil
+	}
+}
+
+// WithCloudClusterName returns an OptionFunc to set the cloud-detected cluster name.
+func WithCloudClusterName(name string) ScraperOpt {
+	return func(s *Scraper) error {
+		s.cloudClusterName = name
 		return nil
 	}
 }
@@ -134,7 +143,7 @@ func (s *Scraper) Run(i *integration.Integration) error {
 		job := scrape.NewScrapeJob("kube-state-metrics", grouper, metric.KSMSpecs, scrape.JobWithFilterer(s.Filterer))
 
 		s.logger.Debugf("Running KSM job")
-		r := job.Populate(i, s.config.ClusterName, s.logger, s.k8sVersion)
+		r := job.Populate(i, s.config.ClusterName, s.cloudClusterName, s.logger, s.k8sVersion)
 		if r.Errors != nil {
 			if r.Populated {
 				s.logger.Tracef("Error populating KSM metrics: %v", r.Error())

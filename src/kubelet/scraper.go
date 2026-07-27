@@ -35,6 +35,7 @@ type Scraper struct {
 	Providers
 	logger                  *log.Logger
 	config                  *config.Config
+	cloudClusterName        string
 	k8sVersion              *version.Info
 	defaultNetworkInterface string
 	nodeGetter              listersv1.NodeLister
@@ -108,7 +109,7 @@ func (s *Scraper) Run(i *integration.Integration) error {
 	specs := metric.NewKubeletSpecs(s.interfaceCache)
 	job := scrape.NewScrapeJob("kubelet", kubeletGrouper, specs, scrape.JobWithFilterer(s.Filterer))
 
-	r := job.Populate(i, s.config.ClusterName, s.logger, s.k8sVersion)
+	r := job.Populate(i, s.config.ClusterName, s.cloudClusterName, s.logger, s.k8sVersion)
 	if r.Errors != nil {
 		s.logger.Debugf("Errors while scraping Kubelet: %q", r.Errors)
 	}
@@ -140,6 +141,14 @@ func WithFilterer(filterer discovery.NamespaceFilterer) ScraperOpt {
 func WithInterfaceCache(cache *kubeletMetric.InterfaceCache) ScraperOpt {
 	return func(s *Scraper) error {
 		s.interfaceCache = cache
+		return nil
+	}
+}
+
+// WithCloudClusterName returns an OptionFunc to set the cloud-detected cluster name.
+func WithCloudClusterName(name string) ScraperOpt {
+	return func(s *Scraper) error {
+		s.cloudClusterName = name
 		return nil
 	}
 }

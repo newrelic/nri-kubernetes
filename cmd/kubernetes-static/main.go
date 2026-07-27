@@ -131,7 +131,7 @@ func main() {
 
 		logger.Infof("Starting job: %s", job.Name)
 
-		result := job.Populate(i, "test-cluster", logger, k8sVersion)
+		result := job.Populate(i, "test-cluster", "", logger, k8sVersion)
 
 		if result.Populated {
 			logger.Infof("Successfully populated job: %s", job.Name)
