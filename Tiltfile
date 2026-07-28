@@ -21,15 +21,15 @@ if live_reload:
     '%s-binary' % project_name,
     'GOOS=linux make compile',
     deps=[
-            "./src",
-            "./internal",
-            "./cmd"
-        ],
-    )
+      "./src",
+      "./internal",
+      "./cmd"
+    ],
+  )
 
   # Use custom Dockerfile for Tilt builds, which only takes locally built daemon binary for live reloading.
   dockerfile = '''
-    FROM alpine:3.17.3
+    FROM alpine:3.24.1
     COPY %s /usr/local/bin/%s
   ''' % (binary_name, project_name)
 
