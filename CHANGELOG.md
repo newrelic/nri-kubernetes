@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### enhancement
+- Allow configuring passthrough environment variables for On-host integrations via `kubelet.extraPassthroughEnv`. Resolves #1491. @dbudziwojski [#1513](https://github.com/newrelic/nri-kubernetes/pull/1513)
+
 ## v4.4.1 - 2026-07-20
 
 ### ⛓️ Dependencies
