@@ -10,7 +10,6 @@ USER ContainerAdministrator
 
 WORKDIR C:\\app
 
-# CVE-2013-3900: enable strict PE signature padding validation
 RUN reg add "HKLM\Software\Microsoft\Cryptography\Wintrust\Config" /v EnableCertPaddingCheck /t REG_SZ /d 1 /f
 RUN reg add "HKLM\Software\Wow6432Node\Microsoft\Cryptography\Wintrust\Config" /v EnableCertPaddingCheck /t REG_SZ /d 1 /f
 
