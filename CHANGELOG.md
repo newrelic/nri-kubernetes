@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### Security
+- Feature Request prevent scanners from flagging CVE-2013-3900 on this image. No added support for WinVerifyTrust @philip-r-beckwith [#1518](https://github.com/newrelic/nri-kubernetes/pull/1518)
+
 ## v4.5.0 - 2026-07-31
 
 ### 🚀 Enhancements
