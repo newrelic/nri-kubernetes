@@ -7,8 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### Security
+## v4.6.0 - 2026-08-10
+
+### 🛡️ Security notices
 - Feature Request prevent scanners from flagging CVE-2013-3900 on this image. No added support for WinVerifyTrust @philip-r-beckwith [#1518](https://github.com/newrelic/nri-kubernetes/pull/1518)
+
+### ⛓️ Dependencies
+- Updated google.golang.org/protobuf digest
+- Updated github.com/prometheus/common to v0.70.1 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.70.1)
+- Updated kubernetes monorepo to v0.36.3
 
 ## v4.5.0 - 2026-07-31
 
