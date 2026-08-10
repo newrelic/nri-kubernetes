@@ -41,8 +41,14 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: "docker.io/newrelic/nri-kubernetes:1.0.0"
+          value: "docker.io/newrelic/nri-kubernetes:1.0.0-ltsc2019"
         template: templates/kubelet/daemonset-windows.yaml
+        documentIndex: 0
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "docker.io/newrelic/nri-kubernetes:1.0.0-ltsc2022"
+        template: templates/kubelet/daemonset-windows.yaml
+        documentIndex: 1
 
   - it: Should set the image tag correctly for Windows-based agent image - default
     set:
@@ -213,6 +219,48 @@ tests:
       - equal:
           path: spec.template.spec.containers[1].image
           value: "myreg/winrepo/k8s-agent:2.0.0-2022"
+        template: templates/kubelet/daemonset-windows.yaml
+        documentIndex: 1
+
+  - it: global registry is used for Windows integration image with default repository
+    set:
+      licenseKey: test
+      cluster: test
+      enableWindows: true
+      images.windowsIntegration.tag: 1.0.0
+      global:
+        images:
+          registry: global-registry
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "global-registry/newrelic/nri-kubernetes:1.0.0-ltsc2019"
+        template: templates/kubelet/daemonset-windows.yaml
+        documentIndex: 0
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "global-registry/newrelic/nri-kubernetes:1.0.0-ltsc2022"
+        template: templates/kubelet/daemonset-windows.yaml
+        documentIndex: 1
+
+  - it: global registry is used for Windows agent image with default repository
+    set:
+      licenseKey: test
+      cluster: test
+      enableWindows: true
+      images.windowsAgent.tag: v2.0.0
+      global:
+        images:
+          registry: global-registry
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: "global-registry/newrelic/infrastructure-bundle:v2.0.0-ltsc2019"
+        template: templates/kubelet/daemonset-windows.yaml
+        documentIndex: 0
+      - equal:
+          path: spec.template.spec.containers[1].image
+          value: "global-registry/newrelic/infrastructure-bundle:v2.0.0-ltsc2022"
         template: templates/kubelet/daemonset-windows.yaml
         documentIndex: 1
 

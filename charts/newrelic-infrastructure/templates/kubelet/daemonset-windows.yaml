@@ -70,7 +70,7 @@ spec:
       {{- end }}
       containers:
         - name: kubelet
-          {{- if and (ne $.Values.images.windowsIntegration.registry "") (ne .imageTagSuffix "") }}
+          {{- if ne .imageTagSuffix "" }}
           image: {{ default (printf "%s-%s" ((include "nriKubernetes.windowsIntegrationImage" $) | trimAll "\"") .imageTagSuffix | quote) .integrationImage }}
           {{- else }}
           image: {{ default (include "nriKubernetes.windowsIntegrationImage" $) .integrationImage }}
