@@ -28,10 +28,10 @@ const (
 
 const defaultHTTPTimeout = 2 * time.Second
 
-// DetectClusterName reads the node's spec.providerID to pick the provider, then
-// queries that provider's metadata for the cluster name. Errors are returned for
+// DetectClusterId reads the node's spec.providerID to pick the provider, then
+// queries that provider's metadata for the cluster id. Errors are returned for
 // logging only; the caller treats an empty name as "not detected".
-func DetectClusterName(ctx context.Context, logger *log.Logger, k8s kubernetes.Interface, nodeName string) (string, Provider, error) {
+func DetectClusterId(ctx context.Context, logger *log.Logger, k8s kubernetes.Interface, nodeName string) (string, Provider, error) {
 	if logger == nil {
 		logger = logutil.Discard
 	}

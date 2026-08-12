@@ -35,7 +35,7 @@ type Scraper struct {
 	Providers
 	logger                  *log.Logger
 	config                  *config.Config
-	cloudClusterName        string
+	cloudClusterId          string
 	k8sVersion              *version.Info
 	defaultNetworkInterface string
 	nodeGetter              listersv1.NodeLister
@@ -79,7 +79,7 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 	s.nodeGetter = nodeGetter
 	s.informerClosers = append(s.informerClosers, nodeCloser)
 
-	//TODO we can add a cache and retrieve the data more frequently if we notice this value can change often
+	// TODO we can add a cache and retrieve the data more frequently if we notice this value can change often
 	s.defaultNetworkInterface, err = network.DefaultInterface(config.Kubelet.NetworkRouteFile)
 	if err != nil {
 		s.logger.Warnf("Error finding default network interface: %v", err)
@@ -109,7 +109,7 @@ func (s *Scraper) Run(i *integration.Integration) error {
 	specs := metric.NewKubeletSpecs(s.interfaceCache)
 	job := scrape.NewScrapeJob("kubelet", kubeletGrouper, specs, scrape.JobWithFilterer(s.Filterer))
 
-	r := job.Populate(i, s.config.ClusterName, s.cloudClusterName, s.logger, s.k8sVersion)
+	r := job.Populate(i, s.config.ClusterName, s.cloudClusterId, s.logger, s.k8sVersion)
 	if r.Errors != nil {
 		s.logger.Debugf("Errors while scraping Kubelet: %q", r.Errors)
 	}
@@ -145,10 +145,10 @@ func WithInterfaceCache(cache *kubeletMetric.InterfaceCache) ScraperOpt {
 	}
 }
 
-// WithCloudClusterName returns an OptionFunc to set the cloud-detected cluster name.
-func WithCloudClusterName(name string) ScraperOpt {
+// WithCloudClusterId returns an OptionFunc to set the cloud-detected cluster id.
+func WithCloudClusterId(id string) ScraperOpt {
 	return func(s *Scraper) error {
-		s.cloudClusterName = name
+		s.cloudClusterId = id
 		return nil
 	}
 }

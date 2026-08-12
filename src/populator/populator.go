@@ -63,7 +63,7 @@ func IntegrationPopulator(config *definition.IntegrationPopulateConfig) (bool, [
 	}
 
 	if populated {
-		if err := populateCluster(config.Integration, config.ClusterName, config.CloudClusterName, config.K8sVersion); err != nil {
+		if err := populateCluster(config.Integration, config.ClusterName, config.CloudClusterId, config.K8sVersion); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -113,8 +113,8 @@ func processEntities(unitsToProcess []processingUnit, config *definition.Integra
 			attribute.Attr("clusterName", config.ClusterName),
 			attribute.Attr("displayName", e.Metadata.Name),
 		)
-		if config.CloudClusterName != "" {
-			attrs = append(attrs, attribute.Attr("cloud.k8s.cluster.name", config.CloudClusterName))
+		if config.CloudClusterId != "" {
+			attrs = append(attrs, attribute.Attr("cloud.resource_id", config.CloudClusterId))
 		}
 		e.AddAttributes(attrs...)
 
@@ -374,8 +374,8 @@ func populateCluster(i *integration.Integration, clusterName, cloudClusterName s
 	}
 
 	if cloudClusterName != "" {
-		if err = ms.SetMetric("cloud.k8s.cluster.name", cloudClusterName, metric.ATTRIBUTE); err != nil {
-			return fmt.Errorf("could not set cloud.k8s.cluster.name metric: %w", err)
+		if err = ms.SetMetric("cloud.resource_id", cloudClusterName, metric.ATTRIBUTE); err != nil {
+			return fmt.Errorf("could not set cloud.resource_id metric: %w", err)
 		}
 	}
 

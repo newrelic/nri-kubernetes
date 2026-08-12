@@ -31,15 +31,15 @@ type Providers struct {
 // Scraper takes care of getting metrics all control plane instances based on the configuration.
 type Scraper struct {
 	Providers
-	logger           *log.Logger
-	config           *config.Config
-	cloudClusterName string
-	k8sVersion       *version.Info
-	components       []component
-	informerClosers  []chan<- struct{}
-	podDiscoverer    discoverer.PodDiscoverer
-	inClusterConfig  *rest.Config
-	authenticator    authenticator.Authenticator
+	logger          *log.Logger
+	config          *config.Config
+	cloudClusterId  string
+	k8sVersion      *version.Info
+	components      []component
+	informerClosers []chan<- struct{}
+	podDiscoverer   discoverer.PodDiscoverer
+	inClusterConfig *rest.Config
+	authenticator   authenticator.Authenticator
 }
 
 // ScraperOpt are options that can be used to configure the Scraper.
@@ -63,11 +63,10 @@ func WithRestConfig(restConfig *rest.Config) ScraperOpt {
 	}
 }
 
-// WithCloudClusterName returns an OptionFunc to set the cloud-detected cluster name.
-func WithCloudClusterName(name string) ScraperOpt {
+// WithCloudClusterId returns an OptionFunc to set the cloud-detected cluster id.
+func WithCloudClusterId(id string) ScraperOpt {
 	return func(s *Scraper) error {
-		s.cloudClusterName = name
-
+		s.cloudClusterId = id
 		return nil
 	}
 }
@@ -179,7 +178,7 @@ func (s *Scraper) Run(i *integration.Integration) error {
 	for _, job := range jobs {
 		s.logger.Debugf("Running job: %s", job.Name)
 
-		result := job.Populate(i, s.config.ClusterName, s.cloudClusterName, s.logger, s.k8sVersion)
+		result := job.Populate(i, s.config.ClusterName, s.cloudClusterId, s.logger, s.k8sVersion)
 
 		if len(result.Errors) > 0 {
 			if result.Populated {

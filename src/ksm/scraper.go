@@ -19,9 +19,11 @@ import (
 	"github.com/newrelic/nri-kubernetes/v3/src/scrape"
 )
 
-const defaultLabelSelector = "app.kubernetes.io/name=kube-state-metrics"
-const defaultScheme = "http"
-const ksmMetricsPath = "metrics"
+const (
+	defaultLabelSelector = "app.kubernetes.io/name=kube-state-metrics"
+	defaultScheme        = "http"
+	ksmMetricsPath       = "metrics"
+)
 
 // Providers is a struct holding pointers to all the clients Scraper needs to get data from.
 // TODO: Extract this out of the KSM package.
@@ -35,7 +37,7 @@ type Scraper struct {
 	Providers
 	logger              *log.Logger
 	config              *config.Config
-	cloudClusterName    string
+	cloudClusterId      string
 	k8sVersion          *version.Info
 	endpointsDiscoverer discovery.EndpointsDiscoverer
 	servicesLister      listersv1.ServiceLister
@@ -62,10 +64,10 @@ func WithFilterer(filterer discovery.NamespaceFilterer) ScraperOpt {
 	}
 }
 
-// WithCloudClusterName returns an OptionFunc to set the cloud-detected cluster name.
-func WithCloudClusterName(name string) ScraperOpt {
+// WithCloudClusterId returns an OptionFunc to set the cloud-detected cluster id.
+func WithCloudClusterId(id string) ScraperOpt {
 	return func(s *Scraper) error {
-		s.cloudClusterName = name
+		s.cloudClusterId = id
 		return nil
 	}
 }
@@ -143,7 +145,7 @@ func (s *Scraper) Run(i *integration.Integration) error {
 		job := scrape.NewScrapeJob("kube-state-metrics", grouper, metric.KSMSpecs, scrape.JobWithFilterer(s.Filterer))
 
 		s.logger.Debugf("Running KSM job")
-		r := job.Populate(i, s.config.ClusterName, s.cloudClusterName, s.logger, s.k8sVersion)
+		r := job.Populate(i, s.config.ClusterName, s.cloudClusterId, s.logger, s.k8sVersion)
 		if r.Errors != nil {
 			if r.Populated {
 				s.logger.Tracef("Error populating KSM metrics: %v", r.Error())

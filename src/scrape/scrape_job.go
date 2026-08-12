@@ -50,7 +50,7 @@ func JobWithFilterer(filterer discovery.NamespaceFilterer) JobOpt {
 func (s *Job) Populate(
 	i *integration.Integration,
 	clusterName string,
-	cloudClusterName string,
+	cloudClusterId string,
 	logger *log.Logger,
 	k8sVersion *version.Info,
 ) data.PopulateResult {
@@ -66,14 +66,14 @@ func (s *Job) Populate(
 	}
 
 	config := &definition.IntegrationPopulateConfig{
-		Integration:      i,
-		ClusterName:      clusterName,
-		CloudClusterName: cloudClusterName,
-		K8sVersion:       k8sVersion,
-		Specs:            s.Specs,
-		MsTypeGuesser:    definition.K8sMetricSetTypeGuesser,
-		Groups:           groups,
-		Filterer:         s.Filterer,
+		Integration:    i,
+		ClusterName:    clusterName,
+		CloudClusterId: cloudClusterId,
+		K8sVersion:     k8sVersion,
+		Specs:          s.Specs,
+		MsTypeGuesser:  definition.K8sMetricSetTypeGuesser,
+		Groups:         groups,
+		Filterer:       s.Filterer,
 	}
 	ok, populateErrs := populator.IntegrationPopulator(config)
 

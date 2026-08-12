@@ -16,12 +16,12 @@ const (
 type GuessFunc func(groupLabel string) (string, error)
 
 type IntegrationPopulateConfig struct {
-	Integration      *integration.Integration
-	ClusterName      string
-	CloudClusterName string
-	K8sVersion       fmt.Stringer
-	MsTypeGuesser    GuessFunc
-	Groups           RawGroups
-	Specs            SpecGroups
-	Filterer         discovery.NamespaceFilterer
+	Integration    *integration.Integration
+	ClusterName    string
+	CloudClusterId string
+	K8sVersion     fmt.Stringer
+	MsTypeGuesser  GuessFunc
+	Groups         RawGroups
+	Specs          SpecGroups
+	Filterer       discovery.NamespaceFilterer
 }

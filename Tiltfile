@@ -4,9 +4,9 @@
 
 project_name = 'nri-kubernetes'
 # If using a cloud cluster, change this to the cluster you want to use
-cluster_name = 'minikube'
+cluster_name = 'dbudziwojski-aks-tsty'
 # If using a cloud cluster, set this to the repository you want to push the image to. If using a local cluster, leave this empty.
-repository = ''
+repository = 'k8sagentsuserreg.azurecr.io'
 
 live_reload = True
 
@@ -80,6 +80,22 @@ metadata:
 """
 k8s_yaml([blob(ns_yaml_str)])
 
-k8s_yaml(helm('./charts/newrelic-infrastructure', name='nr', namespace='nri-k8s-dev', values=['values-dev.yaml', 'values-local.yaml']))
+k8s_yaml(helm(
+    './charts/newrelic-infrastructure',
+    name='nr',
+    namespace='nri-k8s-dev',
+    values=['values-dev.yaml', 'values-local.yaml'],
+    set=[
+        'images.integration.registry=%s' % repository,
+        'images.windowsIntegration.registry=%s' % repository
+    ]
+))
 
-k8s_yaml(helm('./charts/internal/e2e-resources', name='e2e-resources', namespace='nri-k8s-dev'))
+k8s_yaml(helm(
+    './charts/internal/e2e-resources',
+    name='e2e-resources',
+    namespace='nri-k8s-dev',
+    set=[
+        'demo.enabled=true'
+    ]
+))
