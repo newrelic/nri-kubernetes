@@ -1,6 +1,10 @@
 package cloud
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
+)
 
 func Test_parseAzureProviderID(t *testing.T) {
 	type args struct {
@@ -45,6 +49,57 @@ func Test_parseAzureProviderID(t *testing.T) {
 			}
 			if gotResourceGroup != tt.wantResourceGroup {
 				t.Errorf("parseAzureProviderID() gotResourceGroup = %v, want %v", gotResourceGroup, tt.wantResourceGroup)
+			}
+		})
+	}
+}
+
+func Test_detectAKS(t *testing.T) {
+	type args struct {
+		providerID string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantID  string
+		wantErr bool
+	}{
+		{
+			name: "assemblesARMID",
+			args: args{
+				"azure:///subscriptions/f038e9fc-3c25-459e-9bea-879af3be645e/resourceGroups/mc_k8sagentsusersresourcegroup_ttrojan-aks-tsty_westus2/providers/Microsoft.Compute/virtualMachineScaleSets/aks-linux-38321548-vmss/virtualMachines/0",
+			},
+			wantID: "/subscriptions/f038e9fc-3c25-459e-9bea-879af3be645e/resourceGroups/k8sagentsusersresourcegroup/providers/Microsoft.ContainerService/managedClusters/ttrojan-aks-tsty",
+		},
+		{
+			name: "errorOnCustomNodeResourceGroup",
+			args: args{
+				"azure:///subscriptions/f038e9fc-3c25-459e-9bea-879af3be645e/resourceGroups/custom-node-rg/providers/Microsoft.Compute/virtualMachineScaleSets/aks-linux-38321548-vmss/virtualMachines/0",
+			},
+			wantErr: true,
+		},
+		{
+			name: "errorOnInvalidProviderID",
+			args: args{
+				"azure:///subs/f038e9fc-3c25-459e-9bea-879af3be645e/rgs/mc_rg_cluster_westus2",
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotID, err := detectAKS(logutil.Discard, tt.args.providerID)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("detectAKS() expected error, got id %q", gotID)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("detectAKS() unexpected error = %v", err)
+			}
+			if gotID != tt.wantID {
+				t.Errorf("detectAKS() = %q, want %q", gotID, tt.wantID)
 			}
 		})
 	}

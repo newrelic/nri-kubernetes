@@ -22,7 +22,7 @@ const nodeGroupComponentCount = 4
 // resource group, which by default is named MC_<rg>_<cluster>_<region>. This is
 // best-effort: it breaks with a custom --node-resource-group, or when the resource
 // group or cluster name contains underscores.
-func detectAKS(logger *log.Logger, providerID string) (string, error) {
+var detectAKS = func(logger *log.Logger, providerID string) (string, error) {
 	subscriptionID, nodeRG := parseAzureProviderID(providerID)
 	resourceGroup, cluster := parseAKSNodeResourceGroup(nodeRG)
 

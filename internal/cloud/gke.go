@@ -8,10 +8,12 @@ import (
 	"strings"
 )
 
-// detectGKE assembles the GKE cluster link /projects/<projectId>/{locations/zones}/<location/zone>/clusters/<clusterName>.
+// detectGKE assembles the GKE cluster link /projects/<projectId>/locations/<location>/clusters/<clusterName>.
 // projectId comes from the node's providerID (falling back to the metadata server);
 // clusterName and location come from the GKE metadata server instance attributes.
-func detectGKE(ctx context.Context, providerID string) (string, error) {
+// cluster-location is a zone for zonal clusters and a region for regional clusters;
+// GKE's locations path accepts both, so no zonal/regional branching is needed.
+var detectGKE = func(ctx context.Context, providerID string) (string, error) {
 	name, err := gkeMetadata(ctx, "/instance/attributes/cluster-name")
 	if err != nil {
 		return "", fmt.Errorf("querying GKE cluster-name: %w", err)

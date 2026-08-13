@@ -17,7 +17,7 @@ const eksClusterNameTag = "aws:eks:cluster-name"
 
 // detectEKS assembles the EKS cluster ARN arn:<partition>:eks:<region>:<accountId>:cluster/<clusterName>.
 // EC2 API via Pod Identity / IRSA is required since IMDS does not have the cluster name.
-func detectEKS(ctx context.Context, logger *log.Logger, providerID string) (string, error) {
+var detectEKS = func(ctx context.Context, logger *log.Logger, providerID string) (string, error) {
 	availabilityZone, instanceID := parseAWSProviderID(providerID)
 	region := azToRegion(availabilityZone)
 
