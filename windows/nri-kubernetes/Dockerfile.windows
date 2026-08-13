@@ -10,6 +10,9 @@ USER ContainerAdministrator
 
 WORKDIR C:\\app
 
+RUN reg add "HKLM\Software\Microsoft\Cryptography\Wintrust\Config" /v EnableCertPaddingCheck /t REG_SZ /d 1 /f
+RUN reg add "HKLM\Software\Wow6432Node\Microsoft\Cryptography\Wintrust\Config" /v EnableCertPaddingCheck /t REG_SZ /d 1 /f
+
 COPY bin\\nri-kubernetes-windows-${BASE_IMAGE_TAG}-amd64.exe "C:\\app\\nri-kubernetes.exe"
 
 ENTRYPOINT ["C:\\app\\nri-kubernetes.exe"]
