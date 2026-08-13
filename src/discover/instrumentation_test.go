@@ -74,24 +74,24 @@ func emptyCtx() clusterInstrumentationCtx {
 }
 
 func TestDetectPodInstrumentation_nrAPMEnvVar(t *testing.T) {
-	p := pod(nil, []corev1.EnvVar{{Name: "NEW_RELIC_LICENSE_KEY"}}, "redis:7")
+	p := pod(nil, []corev1.EnvVar{{Name: envNRLicenseKey}}, "redis:7")
 	s := detectPodInstrumentation(p, WorkloadTypeRedis, emptyCtx())
 	assert.True(t, s.APMPresent)
-	assert.Equal(t, "instrumented", s.Status)
+	assert.Equal(t, StatusInstrumented, s.Status)
 }
 
 func TestDetectPodInstrumentation_otelEnvVar(t *testing.T) {
-	p := pod(nil, []corev1.EnvVar{{Name: "OTEL_SERVICE_NAME", Value: "redis-svc"}}, "redis:7")
+	p := pod(nil, []corev1.EnvVar{{Name: envOTelServiceName, Value: "redis-svc"}}, "redis:7")
 	s := detectPodInstrumentation(p, WorkloadTypeRedis, emptyCtx())
 	assert.True(t, s.OTelPresent)
-	assert.Equal(t, "instrumented", s.Status)
+	assert.Equal(t, StatusInstrumented, s.Status)
 }
 
 func TestDetectPodInstrumentation_otelSidecar(t *testing.T) {
 	p := pod(nil, nil, "redis:7", "otel/opentelemetry-collector:0.90.0")
 	s := detectPodInstrumentation(p, WorkloadTypeRedis, emptyCtx())
 	assert.True(t, s.OTelPresent)
-	assert.Equal(t, "instrumented", s.Status)
+	assert.Equal(t, StatusInstrumented, s.Status)
 }
 
 func TestDetectPodInstrumentation_otelOperatorAnnotation(t *testing.T) {
@@ -100,7 +100,7 @@ func TestDetectPodInstrumentation_otelOperatorAnnotation(t *testing.T) {
 	}, nil, "redis:7")
 	s := detectPodInstrumentation(p, WorkloadTypeRedis, emptyCtx())
 	assert.True(t, s.OTelPresent)
-	assert.Equal(t, "instrumented", s.Status)
+	assert.Equal(t, StatusInstrumented, s.Status)
 }
 
 func TestDetectPodInstrumentation_infraAgentAndOHI(t *testing.T) {
@@ -112,7 +112,7 @@ func TestDetectPodInstrumentation_infraAgentAndOHI(t *testing.T) {
 	s := detectPodInstrumentation(p, WorkloadTypeRedis, ctx)
 	assert.True(t, s.InfraAgentDeployed)
 	assert.True(t, s.OHIConfigured)
-	assert.Equal(t, "instrumented", s.Status)
+	assert.Equal(t, StatusInstrumented, s.Status)
 }
 
 func TestDetectPodInstrumentation_infraAgentWithoutOHI(t *testing.T) {
@@ -124,27 +124,27 @@ func TestDetectPodInstrumentation_infraAgentWithoutOHI(t *testing.T) {
 	s := detectPodInstrumentation(p, WorkloadTypeRedis, ctx)
 	assert.True(t, s.InfraAgentDeployed)
 	assert.False(t, s.OHIConfigured)
-	assert.Equal(t, "partial", s.Status)
+	assert.Equal(t, StatusPartial, s.Status)
 }
 
 func TestDetectPodInstrumentation_prometheusScraped(t *testing.T) {
 	p := pod(map[string]string{"prometheus.io/scrape": "true"}, nil, "redis:7")
 	s := detectPodInstrumentation(p, WorkloadTypeRedis, emptyCtx())
 	assert.True(t, s.PrometheusScraped)
-	assert.Equal(t, "partial", s.Status)
+	assert.Equal(t, StatusPartial, s.Status)
 }
 
 func TestDetectPodInstrumentation_nrAnnotated(t *testing.T) {
-	p := pod(map[string]string{"newrelic.io/integrations-src": "redis"}, nil, "redis:7")
+	p := pod(map[string]string{"newrelic.io/integrations-src": string(WorkloadTypeRedis)}, nil, "redis:7")
 	s := detectPodInstrumentation(p, WorkloadTypeRedis, emptyCtx())
 	assert.True(t, s.NRAnnotated)
-	assert.Equal(t, "partial", s.Status)
+	assert.Equal(t, StatusPartial, s.Status)
 }
 
 func TestDetectPodInstrumentation_noSignals(t *testing.T) {
 	p := pod(nil, nil, "redis:7")
 	s := detectPodInstrumentation(p, WorkloadTypeRedis, emptyCtx())
-	assert.Equal(t, "not_instrumented", s.Status)
+	assert.Equal(t, StatusNotInstrumented, s.Status)
 	assert.False(t, s.APMPresent)
 	assert.False(t, s.OTelPresent)
 	assert.False(t, s.InfraAgentDeployed)
@@ -156,7 +156,7 @@ func TestDetectPodInstrumentation_envVarNameCheckedNotValue(t *testing.T) {
 	// We only check Name, so this still counts as APM present.
 	p := pod(nil, []corev1.EnvVar{
 		{
-			Name: "NEW_RELIC_LICENSE_KEY",
+			Name: envNRLicenseKey,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{Key: "licenseKey"},
 			},

@@ -43,7 +43,7 @@ type Config struct {
 func LoadConfig(filePath, fileName string) (*Config, error) {
 	v := viper.NewWithOptions(viper.KeyDelimiter("|"))
 
-	v.SetDefault("clusterName", "cluster")
+	v.SetDefault(metricClusterName, "cluster")
 	v.SetDefault("verbose", false)
 	v.SetDefault("interval", DefaultInterval)
 

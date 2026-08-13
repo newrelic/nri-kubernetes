@@ -3,6 +3,7 @@ package discover
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -24,6 +25,16 @@ const (
 
 	// listTimeout is the per-call timeout for Kubernetes API list operations.
 	listTimeout = 30 * time.Second
+
+	kindStatefulSet = "StatefulSet"
+
+	invCatWorkload        = "workload"
+	invCatLabels          = "labels"
+	invCatStorage         = "storage"
+	invCatInstrumentation = "instrumentation"
+
+	metricClusterName = "clusterName"
+	metricImage       = "image"
 )
 
 // Providers holds the Kubernetes clients needed by the Scraper.
@@ -53,10 +64,10 @@ func WithFilterer(filterer discovery.NamespaceFilterer) ScraperOpt {
 // Scraper fetches Kubernetes object metadata and emits NR inventory entities
 // for infrastructure workloads (databases, message brokers, caches, etc.).
 type Scraper struct {
-	config    *Config
-	k8s       kubernetes.Interface
-	filterer  discovery.NamespaceFilterer
-	logger    *log.Logger
+	config   *Config
+	k8s      kubernetes.Interface
+	filterer discovery.NamespaceFilterer
+	logger   *log.Logger
 }
 
 // NewScraper constructs a Scraper with the given config, providers, and options.
@@ -121,7 +132,7 @@ func (s *Scraper) Run(i *sdk.Integration) error {
 
 	configMaps, err := s.k8s.CoreV1().ConfigMaps(s.config.NRNamespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
-		// Non-fatal: if the NR namespace doesn't exist yet, OHI detection returns false.
+		// Non-fatal: if the NR namespace does not exist yet, OHI detection returns false.
 		s.logger.Warnf("listing configmaps in namespace %q: %v — OHI detection disabled", s.config.NRNamespace, err)
 		configMaps = &corev1.ConfigMapList{}
 	}
@@ -167,15 +178,15 @@ func (s *Scraper) classify(
 			dp.ownerKind = ref.Kind
 			dp.ownerName = ref.Name
 		}
-		if ref.Kind == "StatefulSet" {
-			dp.ownerKind = "StatefulSet"
+		if ref.Kind == kindStatefulSet {
+			dp.ownerKind = kindStatefulSet
 			dp.ownerName = ref.Name
 			dp.isStateful = true
 		}
 	}
 
 	// Cross-check against the StatefulSet index to confirm the SS exists.
-	if dp.ownerKind == "StatefulSet" {
+	if dp.ownerKind == kindStatefulSet {
 		key := pod.Namespace + "/" + dp.ownerName
 		if _, ok := ssIndex[key]; ok {
 			dp.isStateful = true
@@ -195,7 +206,7 @@ func (s *Scraper) classify(
 	if len(dp.pvcNames) == 0 && dp.isStateful {
 		for _, pvc := range pvcIndex[pod.Namespace] {
 			for _, ref := range pvc.OwnerReferences {
-				if ref.Kind == "StatefulSet" && ref.Name == dp.ownerName {
+				if ref.Kind == kindStatefulSet && ref.Name == dp.ownerName {
 					dp.pvcNames = append(dp.pvcNames, pvc.Name)
 				}
 			}
@@ -217,7 +228,7 @@ func (s *Scraper) classify(
 
 // isInfrastructure returns true for pods that represent infrastructure workloads.
 // We emit entities for pods that are StatefulSet-owned, PVC-backed, or match a
-// known classifier.  Plain Deployment pods with no storage and no match are skipped.
+// known classifier. Plain Deployment pods (frontend apps, etc.) are skipped.
 func isInfrastructure(dp discoveredPod) bool {
 	return dp.isStateful || len(dp.pvcNames) > 0 || dp.workloadType != WorkloadTypeUnknown
 }
@@ -233,11 +244,9 @@ func (s *Scraper) populateEntity(i *sdk.Integration, dp discoveredPod) error {
 	}
 
 	e.AddAttributes(
-		attribute.Attr("clusterName", s.config.ClusterName),
+		attribute.Attr(metricClusterName, s.config.ClusterName),
 		attribute.Attr("displayName", pod.Name),
 	)
-
-	// --- Inventory (delta-based; only changes are transmitted) ---
 
 	inv := func(category, key string, val interface{}) {
 		if setErr := e.Inventory.SetItem(category, key, val); setErr != nil {
@@ -245,46 +254,43 @@ func (s *Scraper) populateEntity(i *sdk.Integration, dp discoveredPod) error {
 		}
 	}
 
-	inv("workload", "type", string(dp.workloadType))
-	inv("workload", "namespace", pod.Namespace)
-	inv("workload", "podName", pod.Name)
-	inv("workload", "nodeName", pod.Spec.NodeName)
-	inv("workload", "phase", string(pod.Status.Phase))
-	inv("workload", "ownerKind", dp.ownerKind)
-	inv("workload", "ownerName", dp.ownerName)
-	inv("workload", "isStateful", fmt.Sprintf("%t", dp.isStateful))
+	inv(invCatWorkload, "type", string(dp.workloadType))
+	inv(invCatWorkload, "namespace", pod.Namespace)
+	inv(invCatWorkload, "podName", pod.Name)
+	inv(invCatWorkload, "nodeName", pod.Spec.NodeName)
+	inv(invCatWorkload, "phase", string(pod.Status.Phase))
+	inv(invCatWorkload, "ownerKind", dp.ownerKind)
+	inv(invCatWorkload, "ownerName", dp.ownerName)
+	inv(invCatWorkload, "isStateful", strconv.FormatBool(dp.isStateful))
 
 	imgs := containerImages(&pod)
 	if len(imgs) > 0 {
-		inv("workload", "image", imgs[0])
+		inv(invCatWorkload, metricImage, imgs[0])
 		if len(imgs) > 1 {
-			inv("workload", "allImages", strings.Join(imgs, ","))
+			inv(invCatWorkload, "allImages", strings.Join(imgs, ","))
 		}
 	}
 
 	if len(dp.pvcNames) > 0 {
-		inv("storage", "pvcs", strings.Join(dp.pvcNames, ","))
+		inv(invCatStorage, "pvcs", strings.Join(dp.pvcNames, ","))
 	}
 
 	if len(dp.serviceNames) > 0 {
-		inv("workload", "services", strings.Join(dp.serviceNames, ","))
+		inv(invCatWorkload, "services", strings.Join(dp.serviceNames, ","))
 	}
 
 	for k, v := range pod.Labels {
-		inv("labels", k, v)
+		inv(invCatLabels, k, v)
 	}
 
-	// --- Instrumentation signals (inventory, delta-based) ---
 	instr := dp.instrumentation
-	inv("instrumentation", "status", instr.Status)
-	inv("instrumentation", "infraAgentDeployed", fmt.Sprintf("%t", instr.InfraAgentDeployed))
-	inv("instrumentation", "ohiConfigured", fmt.Sprintf("%t", instr.OHIConfigured))
-	inv("instrumentation", "apmPresent", fmt.Sprintf("%t", instr.APMPresent))
-	inv("instrumentation", "otelPresent", fmt.Sprintf("%t", instr.OTelPresent))
-	inv("instrumentation", "prometheusScraped", fmt.Sprintf("%t", instr.PrometheusScraped))
-	inv("instrumentation", "nrAnnotated", fmt.Sprintf("%t", instr.NRAnnotated))
-
-	// --- MetricSet (always transmitted; queryable via NRQL) ---
+	inv(invCatInstrumentation, "status", instr.Status)
+	inv(invCatInstrumentation, "infraAgentDeployed", strconv.FormatBool(instr.InfraAgentDeployed))
+	inv(invCatInstrumentation, "ohiConfigured", strconv.FormatBool(instr.OHIConfigured))
+	inv(invCatInstrumentation, "apmPresent", strconv.FormatBool(instr.APMPresent))
+	inv(invCatInstrumentation, "otelPresent", strconv.FormatBool(instr.OTelPresent))
+	inv(invCatInstrumentation, "prometheusScraped", strconv.FormatBool(instr.PrometheusScraped))
+	inv(invCatInstrumentation, "nrAnnotated", strconv.FormatBool(instr.NRAnnotated))
 
 	ms := e.NewMetricSet(metricSetType)
 
@@ -294,7 +300,7 @@ func (s *Scraper) populateEntity(i *sdk.Integration, dp discoveredPod) error {
 		}
 	}
 
-	attr("clusterName", s.config.ClusterName)
+	attr(metricClusterName, s.config.ClusterName)
 	attr("workloadType", string(dp.workloadType))
 	attr("namespace", pod.Namespace)
 	attr("podName", pod.Name)
@@ -302,20 +308,18 @@ func (s *Scraper) populateEntity(i *sdk.Integration, dp discoveredPod) error {
 	attr("phase", string(pod.Status.Phase))
 	attr("ownerKind", dp.ownerKind)
 	attr("ownerName", dp.ownerName)
-	attr("isStateful", fmt.Sprintf("%t", dp.isStateful))
+	attr("isStateful", strconv.FormatBool(dp.isStateful))
 	if len(imgs) > 0 {
-		attr("image", imgs[0])
+		attr(metricImage, imgs[0])
 	}
 	attr("instrumentationStatus", instr.Status)
-	attr("infraAgentDeployed", fmt.Sprintf("%t", instr.InfraAgentDeployed))
-	attr("ohiConfigured", fmt.Sprintf("%t", instr.OHIConfigured))
-	attr("apmPresent", fmt.Sprintf("%t", instr.APMPresent))
-	attr("otelPresent", fmt.Sprintf("%t", instr.OTelPresent))
+	attr("infraAgentDeployed", strconv.FormatBool(instr.InfraAgentDeployed))
+	attr("ohiConfigured", strconv.FormatBool(instr.OHIConfigured))
+	attr("apmPresent", strconv.FormatBool(instr.APMPresent))
+	attr("otelPresent", strconv.FormatBool(instr.OTelPresent))
 
 	return nil
 }
-
-// --- Index builders ---
 
 // indexStatefulSets builds a "namespace/name" presence set.
 func indexStatefulSets(sss []appsv1.StatefulSet) map[string]struct{} {
@@ -343,8 +347,6 @@ func indexServicesByNamespace(svcs []corev1.Service) map[string][]corev1.Service
 	}
 	return idx
 }
-
-// --- Helpers ---
 
 // selectorMatchesPod returns true when all selector key-value pairs are present
 // in podLabels (empty selector never matches).

@@ -7,10 +7,31 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+// Instrumentation status values returned in InstrumentationStatus.Status.
+const (
+	StatusInstrumented    = "instrumented"
+	StatusPartial         = "partial"
+	StatusNotInstrumented = "not_instrumented"
+)
+
+// NR APM env var names — checked by name only, value is never read.
+const (
+	envNRLicenseKey    = "NEW_RELIC_LICENSE_KEY"
+	envNRLicenseKeyAlt = "NEWRELIC_LICENSE_KEY"
+	envNRAppName       = "NEW_RELIC_APP_NAME"
+)
+
+// OTel SDK / auto-instrumentation env var names.
+const (
+	envOTelServiceName  = "OTEL_SERVICE_NAME"
+	envOTelEndpoint     = "OTEL_EXPORTER_OTLP_ENDPOINT"
+	envOTelResourceAttr = "OTEL_RESOURCE_ATTRIBUTES"
+)
+
 // InstrumentationStatus summarises observability coverage for a discovered workload.
 // Each field is a distinct signal; Status is the derived summary across all of them.
 type InstrumentationStatus struct {
-	// Status is "instrumented", "partial", or "not_instrumented".
+	// Status is one of StatusInstrumented, StatusPartial, or StatusNotInstrumented.
 	Status string
 
 	// InfraAgentDeployed is true when a NR infrastructure DaemonSet is running on the cluster.
@@ -62,7 +83,7 @@ func ohiConfigMapSubstrings() map[WorkloadType][]string {
 	return map[WorkloadType][]string{
 		WorkloadTypeRedis:         {"nri-redis"},
 		WorkloadTypeKafka:         {"nri-kafka"},
-		WorkloadTypeZookeeper:     {"nri-zookeeper", "nri-kafka"}, // ZK is often bundled alongside Kafka
+		WorkloadTypeZookeeper:     {"nri-zookeeper", "nri-kafka"}, // ZK is often bundled alongside Kafka.
 		WorkloadTypePostgres:      {"nri-postgresql", "nri-postgres"},
 		WorkloadTypeMySQL:         {"nri-mysql"},
 		WorkloadTypeMongoDB:       {"nri-mongodb"},
@@ -79,9 +100,9 @@ func ohiConfigMapSubstrings() map[WorkloadType][]string {
 // Returned as a function to avoid gochecknoglobals.
 func nrAPMEnvVarNames() map[string]struct{} {
 	return map[string]struct{}{
-		"NEW_RELIC_LICENSE_KEY": {},
-		"NEW_RELIC_APP_NAME":    {},
-		"NEWRELIC_LICENSE_KEY":  {},
+		envNRLicenseKey:    {},
+		envNRAppName:       {},
+		envNRLicenseKeyAlt: {},
 	}
 }
 
@@ -89,9 +110,9 @@ func nrAPMEnvVarNames() map[string]struct{} {
 // Returned as a function to avoid gochecknoglobals.
 func otelEnvVarNames() map[string]struct{} {
 	return map[string]struct{}{
-		"OTEL_SERVICE_NAME":           {},
-		"OTEL_EXPORTER_OTLP_ENDPOINT": {},
-		"OTEL_RESOURCE_ATTRIBUTES":    {},
+		envOTelServiceName:  {},
+		envOTelEndpoint:     {},
+		envOTelResourceAttr: {},
 	}
 }
 
@@ -150,7 +171,6 @@ func detectPodInstrumentation(pod *corev1.Pod, wt WorkloadType, ctx clusterInstr
 		OHIConfigured:      ctx.ohiConfiguredFor[wt],
 	}
 
-	// --- Targeted annotation checks (key prefix only, three patterns) ---
 	for k, v := range pod.Annotations {
 		kLower := strings.ToLower(k)
 		switch {
@@ -159,12 +179,10 @@ func detectPodInstrumentation(pod *corev1.Pod, wt WorkloadType, ctx clusterInstr
 		case strings.HasPrefix(kLower, "newrelic.io/"):
 			s.NRAnnotated = true
 		case strings.HasPrefix(kLower, "instrumentation.opentelemetry.io/"):
-			// OTel Operator auto-instrumentation annotation — treat as OTel signal.
 			s.OTelPresent = true
 		}
 	}
 
-	// --- Container-level env var and image checks ---
 	apmEnvVars := nrAPMEnvVarNames()
 	otelEnvVars := otelEnvVarNames()
 	otelSidecars := otelSidecarImageSubstrings()
@@ -192,22 +210,18 @@ func detectPodInstrumentation(pod *corev1.Pod, wt WorkloadType, ctx clusterInstr
 
 // deriveStatus maps the individual boolean signals to the three-value summary string.
 //
-//   "instrumented"     — active, specific telemetry collection confirmed for this workload.
-//   "partial"          — some monitoring infrastructure is present but the specific workload
-//                        OHI is not configured, or only generic scraping is set up.
-//   "not_instrumented" — no monitoring signals detected.
+// StatusInstrumented     — active, specific telemetry collection confirmed for this workload.
+// StatusPartial          — monitoring infrastructure is present but the specific workload
+// OHI is not configured, or only generic scraping is set up.
+// StatusNotInstrumented  — no monitoring signals detected.
 func deriveStatus(s InstrumentationStatus) string {
-	// "instrumented": we have a complete picture — either the NR OHI is wired up for
-	// this specific workload type, or an APM / OTel agent is inside the process.
 	if (s.InfraAgentDeployed && s.OHIConfigured) || s.APMPresent || s.OTelPresent {
-		return "instrumented"
+		return StatusInstrumented
 	}
 
-	// "partial": the NR infra agent or Prometheus is present at the cluster level,
-	// but it is not specifically configured for this workload type.
 	if s.InfraAgentDeployed || s.PrometheusScraped || s.NRAnnotated {
-		return "partial"
+		return StatusPartial
 	}
 
-	return "not_instrumented"
+	return StatusNotInstrumented
 }

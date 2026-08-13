@@ -12,17 +12,17 @@ func TestClassify_byLabel(t *testing.T) {
 		labels map[string]string
 		want   WorkloadType
 	}{
-		{"redis app.kubernetes.io/name", map[string]string{"app.kubernetes.io/name": "redis"}, WorkloadTypeRedis},
+		{"redis app.kubernetes.io/name", map[string]string{labelKeyAppName: string(WorkloadTypeRedis)}, WorkloadTypeRedis},
 		{"kafka strimzi label key", map[string]string{"strimzi.io/kind": "Kafka"}, WorkloadTypeKafka},
-		{"kafka app label", map[string]string{"app": "kafka"}, WorkloadTypeKafka},
-		{"postgres app label", map[string]string{"app": "postgresql"}, WorkloadTypePostgres},
-		{"mysql app label", map[string]string{"app.kubernetes.io/name": "mysql"}, WorkloadTypeMySQL},
-		{"mongodb app label", map[string]string{"app.kubernetes.io/name": "mongodb"}, WorkloadTypeMongoDB},
-		{"zookeeper app label", map[string]string{"app": "zookeeper"}, WorkloadTypeZookeeper},
-		{"elasticsearch app label", map[string]string{"app.kubernetes.io/name": "elasticsearch"}, WorkloadTypeElasticsearch},
-		{"rabbitmq app label", map[string]string{"app.kubernetes.io/name": "rabbitmq"}, WorkloadTypeRabbitMQ},
-		{"memcached app label", map[string]string{"app.kubernetes.io/name": "memcached"}, WorkloadTypeMemcached},
-		{"no match", map[string]string{"app": "frontend"}, WorkloadTypeUnknown},
+		{"kafka app label", map[string]string{labelKeyApp: string(WorkloadTypeKafka)}, WorkloadTypeKafka},
+		{"postgres app label", map[string]string{labelKeyApp: "postgresql"}, WorkloadTypePostgres},
+		{"mysql app label", map[string]string{labelKeyAppName: string(WorkloadTypeMySQL)}, WorkloadTypeMySQL},
+		{"mongodb app label", map[string]string{labelKeyAppName: string(WorkloadTypeMongoDB)}, WorkloadTypeMongoDB},
+		{"zookeeper app label", map[string]string{labelKeyApp: string(WorkloadTypeZookeeper)}, WorkloadTypeZookeeper},
+		{"elasticsearch app label", map[string]string{labelKeyAppName: string(WorkloadTypeElasticsearch)}, WorkloadTypeElasticsearch},
+		{"rabbitmq app label", map[string]string{labelKeyAppName: string(WorkloadTypeRabbitMQ)}, WorkloadTypeRabbitMQ},
+		{"memcached app label", map[string]string{labelKeyAppName: string(WorkloadTypeMemcached)}, WorkloadTypeMemcached},
+		{"no match", map[string]string{labelKeyApp: "frontend"}, WorkloadTypeUnknown},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -42,7 +42,7 @@ func TestClassify_byImage(t *testing.T) {
 		{"bitnami redis", []string{"docker.io/bitnami/redis:latest"}, WorkloadTypeRedis},
 		{"bitnami kafka", []string{"docker.io/bitnami/kafka:3.6"}, WorkloadTypeKafka},
 		{"confluent kafka", []string{"confluentinc/cp-kafka:7.5.0"}, WorkloadTypeKafka},
-		{"postgres", []string{"postgres:15"}, WorkloadTypePostgres},
+		{string(WorkloadTypePostgres), []string{"postgres:15"}, WorkloadTypePostgres},
 		{"bitnami postgresql", []string{"bitnami/postgresql:15.3.0"}, WorkloadTypePostgres},
 		{"mysql", []string{"mysql:8.0"}, WorkloadTypeMySQL},
 		{"mariadb", []string{"mariadb:10.11"}, WorkloadTypeMySQL},
@@ -65,8 +65,7 @@ func TestClassify_byImage(t *testing.T) {
 }
 
 func TestClassify_labelBeatsImage(t *testing.T) {
-	// A pod labelled as redis but running a generic image should classify as redis.
-	got := Classify([]string{"my-custom-redis-fork:1.0"}, map[string]string{"app.kubernetes.io/name": "redis"})
+	got := Classify([]string{"my-custom-redis-fork:1.0"}, map[string]string{labelKeyAppName: string(WorkloadTypeRedis)})
 	assert.Equal(t, WorkloadTypeRedis, got)
 }
 
@@ -75,11 +74,11 @@ func TestStripImageMeta(t *testing.T) {
 		in   string
 		want string
 	}{
-		{"redis:7.0.12", "redis"},
+		{"redis:7.0.12", string(WorkloadTypeRedis)},
 		{"docker.io/bitnami/redis:latest", "bitnami/redis"},
 		{"gcr.io/google-containers/pause:3.6", "google-containers/pause"},
 		{"confluentinc/cp-kafka:7.5.0", "confluentinc/cp-kafka"},
-		{"postgres", "postgres"},
+		{string(WorkloadTypePostgres), string(WorkloadTypePostgres)},
 		{"localhost/myimage:dev", "myimage"},
 		{"registry.k8s.io/kube-apiserver:v1.28.0", "kube-apiserver"},
 		{"image@sha256:abc123", "image"},

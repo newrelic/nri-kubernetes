@@ -22,6 +22,18 @@ const (
 	WorkloadTypeUnknown       WorkloadType = "unknown"
 )
 
+// Label keys whose values carry workload identity.
+const (
+	labelKeyAppName      = "app.kubernetes.io/name"
+	labelKeyAppComponent = "app.kubernetes.io/component"
+	labelKeyApp          = "app"
+	labelKeyHelmChart    = "helm.sh/chart"
+)
+
+// mariaDBName is used as a label value and image substring alongside WorkloadTypeMySQL,
+// since MariaDB is API-compatible with MySQL and shares the same workload type.
+const mariaDBName = "mariadb"
+
 // workloadSignal defines how to recognise a workload type from pod metadata.
 type workloadSignal struct {
 	workloadType WorkloadType
@@ -63,8 +75,8 @@ func workloadSignals() []workloadSignal {
 		},
 		{
 			workloadType:    WorkloadTypeMySQL,
-			labelValues:     []string{wt(WorkloadTypeMySQL), "mariadb"},
-			imageSubstrings: []string{wt(WorkloadTypeMySQL), "bitnami/mysql", "mariadb", "bitnami/mariadb", "percona/percona-xtradb"},
+			labelValues:     []string{wt(WorkloadTypeMySQL), mariaDBName},
+			imageSubstrings: []string{wt(WorkloadTypeMySQL), "bitnami/mysql", mariaDBName, "bitnami/mariadb", "percona/percona-xtradb"},
 		},
 		{
 			workloadType:    WorkloadTypeMongoDB,
@@ -103,10 +115,10 @@ func workloadSignals() []workloadSignal {
 // in priority order. Returned as a function to avoid gochecknoglobals.
 func labelDiscoveryKeys() []string {
 	return []string{
-		"app.kubernetes.io/name",
-		"app.kubernetes.io/component",
-		"app",
-		"helm.sh/chart", // Helm chart names often embed the workload type
+		labelKeyAppName,
+		labelKeyAppComponent,
+		labelKeyApp,
+		labelKeyHelmChart,
 	}
 }
 
@@ -159,9 +171,9 @@ func Classify(images []string, podLabels map[string]string) WorkloadType {
 // stripImageMeta removes the registry host and tag from an image reference so
 // that "docker.io/bitnami/redis:7.0.12" becomes "bitnami/redis".
 func stripImageMeta(image string) string {
-	// Remove tag / digest
+	// Remove tag / digest.
 	if idx := strings.LastIndex(image, ":"); idx > 0 {
-		// Ensure the colon is not part of a port in the registry host
+		// Ensure the colon is not part of a port in the registry host.
 		afterColon := image[idx+1:]
 		if !strings.Contains(afterColon, "/") {
 			image = image[:idx]
