@@ -177,7 +177,7 @@ spec:
             - name: "CLUSTER_NAME"
               value: {{ include "newrelic.common.cluster" . }}
             - name: "NRIA_PASSTHROUGH_ENVIRONMENT"
-              value: "CLUSTER_NAME"
+              value: {{ include "nriKubernetes.kubelet.passthroughEnv" . | quote }}
 
             {{- /* Needed for autodiscovery since hostNetwork=false */}}
             - name: "NRIA_HOST"
