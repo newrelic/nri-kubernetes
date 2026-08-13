@@ -38,63 +38,64 @@ type workloadSignal struct {
 // workloadSignals returns the signal table ordered most-specific first.
 // Returned as a function (not a package-level var) to avoid gochecknoglobals.
 func workloadSignals() []workloadSignal {
+	wt := func(t WorkloadType) string { return string(t) }
 	return []workloadSignal{
-	{
-		workloadType:    WorkloadTypeRedis,
-		labelValues:     []string{"redis"},
-		imageSubstrings: []string{"redis"},
-	},
-	{
-		workloadType:    WorkloadTypeKafka,
-		labelValues:     []string{"kafka"},
-		labelKeyExact:   []string{"strimzi.io/kind"},
-		imageSubstrings: []string{"cp-kafka", "bitnami/kafka", "strimzi/kafka", "apache/kafka"},
-	},
-	{
-		workloadType:    WorkloadTypeZookeeper,
-		labelValues:     []string{"zookeeper"},
-		imageSubstrings: []string{"zookeeper", "cp-zookeeper", "bitnami/zookeeper"},
-	},
-	{
-		workloadType:    WorkloadTypePostgres,
-		labelValues:     []string{"postgresql", "postgres"},
-		imageSubstrings: []string{"postgres", "bitnami/postgresql", "timescaledb", "crunchy-postgres"},
-	},
-	{
-		workloadType:    WorkloadTypeMySQL,
-		labelValues:     []string{"mysql", "mariadb"},
-		imageSubstrings: []string{"mysql", "bitnami/mysql", "mariadb", "bitnami/mariadb", "percona/percona-xtradb"},
-	},
-	{
-		workloadType:    WorkloadTypeMongoDB,
-		labelValues:     []string{"mongodb"},
-		imageSubstrings: []string{"mongo", "bitnami/mongodb", "percona/percona-server-mongodb"},
-	},
-	{
-		workloadType:    WorkloadTypeCassandra,
-		labelValues:     []string{"cassandra"},
-		imageSubstrings: []string{"cassandra", "bitnami/cassandra", "scylladb/scylla"},
-	},
-	{
-		workloadType:    WorkloadTypeElasticsearch,
-		labelValues:     []string{"elasticsearch"},
-		imageSubstrings: []string{"elasticsearch", "bitnami/elasticsearch", "elastic/elasticsearch"},
-	},
-	{
-		workloadType:    WorkloadTypeOpenSearch,
-		labelValues:     []string{"opensearch"},
-		imageSubstrings: []string{"opensearch", "opensearchproject/opensearch"},
-	},
-	{
-		workloadType:    WorkloadTypeRabbitMQ,
-		labelValues:     []string{"rabbitmq"},
-		imageSubstrings: []string{"rabbitmq", "bitnami/rabbitmq"},
-	},
-	{
-		workloadType:    WorkloadTypeMemcached,
-		labelValues:     []string{"memcached"},
-		imageSubstrings: []string{"memcached", "bitnami/memcached"},
-	},
+		{
+			workloadType:    WorkloadTypeRedis,
+			labelValues:     []string{wt(WorkloadTypeRedis)},
+			imageSubstrings: []string{wt(WorkloadTypeRedis)},
+		},
+		{
+			workloadType:    WorkloadTypeKafka,
+			labelValues:     []string{wt(WorkloadTypeKafka)},
+			labelKeyExact:   []string{"strimzi.io/kind"},
+			imageSubstrings: []string{"cp-kafka", "bitnami/kafka", "strimzi/kafka", "apache/kafka"},
+		},
+		{
+			workloadType:    WorkloadTypeZookeeper,
+			labelValues:     []string{wt(WorkloadTypeZookeeper)},
+			imageSubstrings: []string{wt(WorkloadTypeZookeeper), "cp-zookeeper", "bitnami/zookeeper"},
+		},
+		{
+			workloadType:    WorkloadTypePostgres,
+			labelValues:     []string{"postgresql", wt(WorkloadTypePostgres)},
+			imageSubstrings: []string{wt(WorkloadTypePostgres), "bitnami/postgresql", "timescaledb", "crunchy-postgres"},
+		},
+		{
+			workloadType:    WorkloadTypeMySQL,
+			labelValues:     []string{wt(WorkloadTypeMySQL), "mariadb"},
+			imageSubstrings: []string{wt(WorkloadTypeMySQL), "bitnami/mysql", "mariadb", "bitnami/mariadb", "percona/percona-xtradb"},
+		},
+		{
+			workloadType:    WorkloadTypeMongoDB,
+			labelValues:     []string{wt(WorkloadTypeMongoDB)},
+			imageSubstrings: []string{"mongo", "bitnami/mongodb", "percona/percona-server-mongodb"},
+		},
+		{
+			workloadType:    WorkloadTypeCassandra,
+			labelValues:     []string{wt(WorkloadTypeCassandra)},
+			imageSubstrings: []string{wt(WorkloadTypeCassandra), "bitnami/cassandra", "scylladb/scylla"},
+		},
+		{
+			workloadType:    WorkloadTypeElasticsearch,
+			labelValues:     []string{wt(WorkloadTypeElasticsearch)},
+			imageSubstrings: []string{wt(WorkloadTypeElasticsearch), "bitnami/elasticsearch", "elastic/elasticsearch"},
+		},
+		{
+			workloadType:    WorkloadTypeOpenSearch,
+			labelValues:     []string{wt(WorkloadTypeOpenSearch)},
+			imageSubstrings: []string{wt(WorkloadTypeOpenSearch), "opensearchproject/opensearch"},
+		},
+		{
+			workloadType:    WorkloadTypeRabbitMQ,
+			labelValues:     []string{wt(WorkloadTypeRabbitMQ)},
+			imageSubstrings: []string{wt(WorkloadTypeRabbitMQ), "bitnami/rabbitmq"},
+		},
+		{
+			workloadType:    WorkloadTypeMemcached,
+			labelValues:     []string{wt(WorkloadTypeMemcached)},
+			imageSubstrings: []string{wt(WorkloadTypeMemcached), "bitnami/memcached"},
+		},
 	}
 }
 
