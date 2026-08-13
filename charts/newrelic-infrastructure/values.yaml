@@ -110,6 +110,11 @@ common:
     # behave properly. Any non-nil value will override the `lowDataMode` default.
     # @default -- `15s` (See [Low data mode](README.md#low-data-mode))
     interval:
+    # common.config.cloudClusterIdDetection -- (bool) Auto-detect the cloud provider's cluster resource id
+    # (EKS ARN, AKS ARM id, or GKE link) from the node and emit it as the `cloud.resource_id` attribute.
+    # On EKS this requires the pod to have AWS credentials (Pod Identity or IRSA) with `ec2:DescribeInstances`.
+    # @default -- `true`
+    cloudClusterIdDetection:
     # -- Config for filtering ksm and kubelet metrics by namespace.
     namespaceSelector: {}
     # If you want to include only namespaces with a given label you could do so by adding:

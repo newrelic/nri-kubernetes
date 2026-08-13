@@ -46,6 +46,18 @@ file, the value there is `nil`. If any value is set there, the `lowDataMode` tog
 Setting this interval above 40 seconds can make you experience issues with the Kubernetes Cluster Explorer so this chart limits setting the interval
 inside the range of 10 to 40 seconds.
 
+### Cloud resource id detection
+
+By default the integration auto-detects the underlying cloud provider's cluster resource id from the node's `spec.providerID` and emits it on the samples as the `cloud.resource_id` attribute:
+
+- **EKS** — the cluster ARN, e.g. `arn:aws:eks:us-east-1:123456789012:cluster/my-cluster`.
+- **AKS** — the cluster ARM id, e.g. `/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.ContainerService/managedClusters/<cluster>`.
+- **GKE** — the cluster link, e.g. `/projects/<project>/locations/<location>/clusters/<cluster>`.
+
+Detection is best-effort and never overrides the configured `cluster` name; if it fails the attribute is simply omitted. Disable it with `common.config.cloudClusterIdDetection: false`.
+
+**EKS requirement:** detection queries the EC2 API, so the integration's ServiceAccount must have AWS credentials via [EKS Pod Identity](https://docs.aws.amazon.com/eks/latest/userguide/pod-identities.html) or [IRSA](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html) with the `ec2:DescribeInstances` permission. Without credentials, EKS detection is skipped (non-fatal). AKS and GKE need no extra permissions.
+
 ### Affinities and tolerations
 
 The New Relic common library allows to set affinities, tolerations, and node selectors globally using e.g. `.global.affinity` to ease the configuration

@@ -4,9 +4,9 @@
 
 project_name = 'nri-kubernetes'
 # If using a cloud cluster, change this to the cluster you want to use
-cluster_name = 'dbudziwojski-aks-tsty'
+cluster_name = 'minikube'
 # If using a cloud cluster, set this to the repository you want to push the image to. If using a local cluster, leave this empty.
-repository = 'k8sagentsuserreg.azurecr.io'
+repository = ''
 
 live_reload = True
 
