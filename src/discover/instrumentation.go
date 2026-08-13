@@ -44,51 +44,66 @@ type clusterInstrumentationCtx struct {
 	ohiConfiguredFor   map[WorkloadType]bool
 }
 
-// nrInfraDaemonSetNames are the DaemonSet names used by the various nri-bundle release names.
-var nrInfraDaemonSetNames = map[string]struct{}{
-	"newrelic-infrastructure":          {},
-	"nrk8s-infrastructure":             {},
-	"nri-bundle-nrk8s-infrastructure":  {},
-	"newrelic-infra":                   {},
+// nrInfraDaemonSetNames returns the set of DaemonSet names used by nri-bundle releases.
+// Returned as a function to avoid gochecknoglobals.
+func nrInfraDaemonSetNames() map[string]struct{} {
+	return map[string]struct{}{
+		"newrelic-infrastructure":         {},
+		"nrk8s-infrastructure":            {},
+		"nri-bundle-nrk8s-infrastructure": {},
+		"newrelic-infra":                  {},
+	}
 }
 
-// ohiConfigMapSubstrings maps each workload type to the nri-* substrings we look for
-// in ConfigMap names when deciding whether the OHI is configured.
-var ohiConfigMapSubstrings = map[WorkloadType][]string{
-	WorkloadTypeRedis:         {"nri-redis"},
-	WorkloadTypeKafka:         {"nri-kafka"},
-	WorkloadTypeZookeeper:     {"nri-zookeeper", "nri-kafka"}, // ZK is often bundled alongside Kafka
-	WorkloadTypePostgres:      {"nri-postgresql", "nri-postgres"},
-	WorkloadTypeMySQL:         {"nri-mysql"},
-	WorkloadTypeMongoDB:       {"nri-mongodb"},
-	WorkloadTypeCassandra:     {"nri-cassandra"},
-	WorkloadTypeElasticsearch: {"nri-elasticsearch"},
-	WorkloadTypeOpenSearch:    {"nri-elasticsearch", "nri-opensearch"},
-	WorkloadTypeRabbitMQ:      {"nri-rabbitmq"},
-	WorkloadTypeMemcached:     {"nri-memcached"},
+// ohiConfigMapSubstrings returns the nri-* substrings to look for in ConfigMap names
+// when deciding whether the OHI for a given workload type is configured.
+// Returned as a function to avoid gochecknoglobals.
+func ohiConfigMapSubstrings() map[WorkloadType][]string {
+	return map[WorkloadType][]string{
+		WorkloadTypeRedis:         {"nri-redis"},
+		WorkloadTypeKafka:         {"nri-kafka"},
+		WorkloadTypeZookeeper:     {"nri-zookeeper", "nri-kafka"}, // ZK is often bundled alongside Kafka
+		WorkloadTypePostgres:      {"nri-postgresql", "nri-postgres"},
+		WorkloadTypeMySQL:         {"nri-mysql"},
+		WorkloadTypeMongoDB:       {"nri-mongodb"},
+		WorkloadTypeCassandra:     {"nri-cassandra"},
+		WorkloadTypeElasticsearch: {"nri-elasticsearch"},
+		WorkloadTypeOpenSearch:    {"nri-elasticsearch", "nri-opensearch"},
+		WorkloadTypeRabbitMQ:      {"nri-rabbitmq"},
+		WorkloadTypeMemcached:     {"nri-memcached"},
+	}
 }
 
-// nrAPMEnvVarNames signals a NR APM agent inside the container.
+// nrAPMEnvVarNames returns env var names whose presence signals a NR APM agent.
 // We check the env var NAME only — never the value — so license key secrets are not read.
-var nrAPMEnvVarNames = map[string]struct{}{
-	"NEW_RELIC_LICENSE_KEY": {},
-	"NEW_RELIC_APP_NAME":    {},
-	"NEWRELIC_LICENSE_KEY":  {},
+// Returned as a function to avoid gochecknoglobals.
+func nrAPMEnvVarNames() map[string]struct{} {
+	return map[string]struct{}{
+		"NEW_RELIC_LICENSE_KEY": {},
+		"NEW_RELIC_APP_NAME":    {},
+		"NEWRELIC_LICENSE_KEY":  {},
+	}
 }
 
-// otelEnvVarNames signals OpenTelemetry SDK / auto-instrumentation inside the container.
-var otelEnvVarNames = map[string]struct{}{
-	"OTEL_SERVICE_NAME":           {},
-	"OTEL_EXPORTER_OTLP_ENDPOINT": {},
-	"OTEL_RESOURCE_ATTRIBUTES":    {},
+// otelEnvVarNames returns env var names whose presence signals OTel instrumentation.
+// Returned as a function to avoid gochecknoglobals.
+func otelEnvVarNames() map[string]struct{} {
+	return map[string]struct{}{
+		"OTEL_SERVICE_NAME":           {},
+		"OTEL_EXPORTER_OTLP_ENDPOINT": {},
+		"OTEL_RESOURCE_ATTRIBUTES":    {},
+	}
 }
 
-// otelSidecarImageSubstrings identify an OTel collector running as a sidecar container.
-var otelSidecarImageSubstrings = []string{
-	"otel/opentelemetry-collector",
-	"otelcol",
-	"otel-collector",
-	"newrelic/newrelic-otel-collector",
+// otelSidecarImageSubstrings returns image substrings that identify an OTel collector sidecar.
+// Returned as a function to avoid gochecknoglobals.
+func otelSidecarImageSubstrings() []string {
+	return []string{
+		"otel/opentelemetry-collector",
+		"otelcol",
+		"otel-collector",
+		"newrelic/newrelic-otel-collector",
+	}
 }
 
 // buildClusterCtx runs once per scrape cycle. It takes the pre-fetched DaemonSet and
@@ -99,8 +114,9 @@ func buildClusterCtx(daemonSets []appsv1.DaemonSet, configMaps []corev1.ConfigMa
 		ohiConfiguredFor: make(map[WorkloadType]bool),
 	}
 
+	dsNames := nrInfraDaemonSetNames()
 	for _, ds := range daemonSets {
-		if _, ok := nrInfraDaemonSetNames[ds.Name]; ok {
+		if _, ok := dsNames[ds.Name]; ok {
 			ctx.infraAgentDeployed = true
 			break
 		}
@@ -112,7 +128,7 @@ func buildClusterCtx(daemonSets []appsv1.DaemonSet, configMaps []corev1.ConfigMa
 		cmNames = append(cmNames, strings.ToLower(cm.Name))
 	}
 
-	for wt, substrings := range ohiConfigMapSubstrings {
+	for wt, substrings := range ohiConfigMapSubstrings() {
 		for _, name := range cmNames {
 			for _, substr := range substrings {
 				if strings.Contains(name, substr) {
@@ -149,17 +165,20 @@ func detectPodInstrumentation(pod *corev1.Pod, wt WorkloadType, ctx clusterInstr
 	}
 
 	// --- Container-level env var and image checks ---
+	apmEnvVars := nrAPMEnvVarNames()
+	otelEnvVars := otelEnvVarNames()
+	otelSidecars := otelSidecarImageSubstrings()
 	for _, c := range pod.Spec.Containers {
 		for _, env := range c.Env {
-			if _, ok := nrAPMEnvVarNames[env.Name]; ok {
+			if _, ok := apmEnvVars[env.Name]; ok {
 				s.APMPresent = true
 			}
-			if _, ok := otelEnvVarNames[env.Name]; ok {
+			if _, ok := otelEnvVars[env.Name]; ok {
 				s.OTelPresent = true
 			}
 		}
 		imgLower := strings.ToLower(c.Image)
-		for _, substr := range otelSidecarImageSubstrings {
+		for _, substr := range otelSidecars {
 			if strings.Contains(imgLower, substr) {
 				s.OTelPresent = true
 				break

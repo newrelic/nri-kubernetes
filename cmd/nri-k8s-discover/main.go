@@ -31,6 +31,7 @@ const (
 	exitLoop
 )
 
+//nolint:gochecknoglobals // set via ldflags at build time
 var (
 	integrationVersion = "0.0.0"
 	gitCommit          = ""

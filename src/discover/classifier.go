@@ -35,8 +35,10 @@ type workloadSignal struct {
 	imageSubstrings []string
 }
 
-// signals is ordered from most-specific to least-specific so the first match wins.
-var signals = []workloadSignal{
+// workloadSignals returns the signal table ordered most-specific first.
+// Returned as a function (not a package-level var) to avoid gochecknoglobals.
+func workloadSignals() []workloadSignal {
+	return []workloadSignal{
 	{
 		workloadType:    WorkloadTypeRedis,
 		labelValues:     []string{"redis"},
@@ -93,15 +95,18 @@ var signals = []workloadSignal{
 		labelValues:     []string{"memcached"},
 		imageSubstrings: []string{"memcached", "bitnami/memcached"},
 	},
+	}
 }
 
-// labelDiscoveryKeys are the label keys whose values carry workload identity.
-// Checked in order; first non-empty value wins.
-var labelDiscoveryKeys = []string{
-	"app.kubernetes.io/name",
-	"app.kubernetes.io/component",
-	"app",
-	"helm.sh/chart", // Helm chart names often embed the workload type
+// labelDiscoveryKeys returns the label keys whose values carry workload identity,
+// in priority order. Returned as a function to avoid gochecknoglobals.
+func labelDiscoveryKeys() []string {
+	return []string{
+		"app.kubernetes.io/name",
+		"app.kubernetes.io/component",
+		"app",
+		"helm.sh/chart", // Helm chart names often embed the workload type
+	}
 }
 
 // Classify infers the workload type from pod labels and container images.
@@ -110,7 +115,8 @@ var labelDiscoveryKeys = []string{
 func Classify(images []string, podLabels map[string]string) WorkloadType {
 	// 1a. Check for operator-specific label keys (e.g. strimzi.io/kind).
 	//     These are definitive signals regardless of their value.
-	for _, sig := range signals {
+	sigs := workloadSignals()
+	for _, sig := range sigs {
 		for _, k := range sig.labelKeyExact {
 			if _, has := podLabels[k]; has {
 				return sig.workloadType
@@ -119,13 +125,13 @@ func Classify(images []string, podLabels map[string]string) WorkloadType {
 	}
 
 	// 1b. Check well-known label keys whose values identify the workload.
-	for _, key := range labelDiscoveryKeys {
+	for _, key := range labelDiscoveryKeys() {
 		val, ok := podLabels[key]
 		if !ok || val == "" {
 			continue
 		}
 		valLower := strings.ToLower(val)
-		for _, sig := range signals {
+		for _, sig := range sigs {
 			for _, lv := range sig.labelValues {
 				if strings.Contains(valLower, lv) {
 					return sig.workloadType
@@ -137,7 +143,7 @@ func Classify(images []string, podLabels map[string]string) WorkloadType {
 	// 2. Check container images (strip registry host and tag first).
 	for _, image := range images {
 		bare := stripImageMeta(image)
-		for _, sig := range signals {
+		for _, sig := range sigs {
 			for _, substr := range sig.imageSubstrings {
 				if strings.Contains(bare, substr) {
 					return sig.workloadType
