@@ -3,7 +3,7 @@ package cloud
 import (
 	"context"
 	"fmt"
-	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -15,44 +15,42 @@ import (
 // eksClusterNameTag is the tag EKS automatically applies to member EC2 instances.
 const eksClusterNameTag = "aws:eks:cluster-name"
 
-// detectEKS resolves the cluster name, preferring IMDS instance tags (no AWS
-// credentials required) and falling back to the EC2 API using Pod Identity / IRSA
-// credentials when IMDS is unavailable or metadata tags are not enabled.
-func detectEKS(ctx context.Context, logger *log.Logger, region, instanceID string) (string, error) {
-	if name, err := eksClusterNameFromIMDS(ctx); err == nil && name != "" {
-		return name, nil
-	} else if err != nil {
-		logger.Debugf("cloud: EKS IMDS tag lookup failed, trying AWS API: %v", err)
+// detectEKS assembles the EKS cluster ARN arn:<partition>:eks:<region>:<accountId>:cluster/<clusterName>.
+// EC2 API via Pod Identity / IRSA is required since IMDS does not have the cluster name.
+func detectEKS(ctx context.Context, logger *log.Logger, providerID string) (string, error) {
+	availabilityZone, instanceID := parseAWSProviderID(providerID)
+	region := azToRegion(availabilityZone)
+
+	clusterName, accountID, err := eksIdentityFromAPI(ctx, region, instanceID)
+	if err != nil {
+		return "", fmt.Errorf("EKS detection failed (API): %w", err)
 	}
 
-	name, err := eksClusterNameFromAPI(ctx, region, instanceID)
-	if err != nil {
-		return "", fmt.Errorf("EKS detection failed (IMDS and API): %w", err)
+	if region == "" || accountID == "" || clusterName == "" {
+		return "", fmt.Errorf("incomplete EKS identity: region=%q account=%q cluster=%q", region, accountID, clusterName)
 	}
-	return name, nil
+	return fmt.Sprintf("arn:%s:eks:%s:%s:cluster/%s", awsPartition(region), region, accountID, clusterName), nil
 }
 
-func eksClusterNameFromIMDS(ctx context.Context) (string, error) {
-	tokenReq, err := http.NewRequestWithContext(ctx, http.MethodPut, awsIMDSBaseURL+"/api/token", nil)
-	if err != nil {
-		return "", fmt.Errorf("building IMDS token request: %w", err)
+// parseAWSProviderID extracts availability zone and instance-id from aws:///<az>/<instance-id>.
+func parseAWSProviderID(providerID string) (availabilityZone, instanceID string) {
+	re := regexp.MustCompile("^aws:///([a-zA-Z0-9._\\-()]+)/([a-zA-Z0-9._\\-()]+)$")
+	matches := re.FindStringSubmatch(providerID)
+	if matches == nil {
+		return "", ""
 	}
-	tokenReq.Header.Set("X-aws-ec2-metadata-token-ttl-seconds", "60")
-	token, err := doMetadataGet(tokenReq)
-	if err != nil {
-		return "", fmt.Errorf("getting IMDSv2 token: %w", err)
-	}
+	return matches[1], matches[2]
+}
 
-	tagReq, err := http.NewRequestWithContext(ctx, http.MethodGet, awsIMDSBaseURL+"/meta-data/tags/instance/"+eksClusterNameTag, nil)
-	if err != nil {
-		return "", fmt.Errorf("building IMDS tag request: %w", err)
+// azToRegion strips the trailing AZ letter from an availability zone (us-east-1a -> us-east-1).
+func azToRegion(az string) string {
+	if az == "" {
+		return ""
 	}
-	tagReq.Header.Set("X-aws-ec2-metadata-token", token)
-	name, err := doMetadataGet(tagReq)
-	if err != nil {
-		return "", fmt.Errorf("reading %s tag from IMDS: %w", eksClusterNameTag, err)
+	if last := az[len(az)-1]; last >= 'a' && last <= 'z' {
+		return az[:len(az)-1]
 	}
-	return strings.TrimSpace(name), nil
+	return az
 }
 
 // ec2DescribeInstancesAPI is the subset of the EC2 client used here, for test injection.
@@ -70,26 +68,40 @@ var newEC2Client = func(ctx context.Context, region string) (ec2DescribeInstance
 	return ec2.NewFromConfig(cfg), nil
 }
 
-func eksClusterNameFromAPI(ctx context.Context, region, instanceID string) (string, error) {
+// eksIdentityFromAPI reads the cluster name (instance tag) and account id (reservation
+// owner) via the EC2 API, using Pod Identity / IRSA credentials.
+func eksIdentityFromAPI(ctx context.Context, region, instanceID string) (clusterName, accountID string, err error) {
 	if region == "" || instanceID == "" {
-		return "", fmt.Errorf("missing region/instance-id from providerID")
+		return "", "", fmt.Errorf("missing region/instance-id from providerID")
 	}
 	client, err := newEC2Client(ctx, region)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	out, err := client.DescribeInstances(ctx, &ec2.DescribeInstancesInput{InstanceIds: []string{instanceID}})
 	if err != nil {
-		return "", fmt.Errorf("describing instance %s: %w", instanceID, err)
+		return "", "", fmt.Errorf("describing instance %s: %w", instanceID, err)
 	}
 	for _, r := range out.Reservations {
 		for _, inst := range r.Instances {
 			for _, tag := range inst.Tags {
 				if aws.ToString(tag.Key) == eksClusterNameTag {
-					return aws.ToString(tag.Value), nil
+					return aws.ToString(tag.Value), aws.ToString(r.OwnerId), nil
 				}
 			}
 		}
 	}
-	return "", fmt.Errorf("tag %s not found on instance %s", eksClusterNameTag, instanceID)
+	return "", "", fmt.Errorf("tag %s not found on instance %s", eksClusterNameTag, instanceID)
+}
+
+// awsPartition returns the ARN partition for a region.
+func awsPartition(region string) string {
+	switch {
+	case strings.HasPrefix(region, "us-gov-"):
+		return "aws-us-gov"
+	case strings.HasPrefix(region, "cn-"):
+		return "aws-cn"
+	default:
+		return "aws"
+	}
 }
