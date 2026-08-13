@@ -32,9 +32,8 @@ type Config struct {
 	LogLevel string `mapstructure:"logLevel"`
 	// ClusterName is a unique, human-readable name for the cluster. Will be used to qualify entities and displayNames.
 	ClusterName string `mapstructure:"clusterName"`
-	// CloudClusterIdDetection controls whether the cluster id is auto-detected from the
-	// cloud provider (GKE/AKS/EKS) and emitted as the `cloud.resource_id` attribute. Defaults to true.
-	CloudClusterIdDetection bool `mapstructure:"cloudClusterIdDetection"`
+	// DisableCloudClusterIdDetection disables auto-detecting the cloud resource id from the cloud provider (GKE/AKS/EKS).
+	DisableCloudClusterIdDetection bool `mapstructure:"disableCloudClusterIdDetection"`
 	// KubeconfigPath is the path to a local kube/config file. If empty, in-cluster config will be used.
 	KubeconfigPath string `mapstructure:"kubeconfigPath"`
 	// NodeIP is the main IP for the node where the integration is running. Used to connect to the Kubelet.
@@ -299,7 +298,7 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	// We need to assure that defaults have been set in order to bind env variables.
 	// https://github.com/spf13/viper/issues/584
 	v.SetDefault("clusterName", "cluster")
-	v.SetDefault("cloudClusterIdDetection", true)
+	v.SetDefault("disableCloudClusterIdDetection", false)
 	v.SetDefault("verbose", false)
 	v.SetDefault("kubelet|networkRouteFile", DefaultNetworkRouteFile)
 	v.SetDefault("nodeName", "node")

@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### enhancement
-- Automatically detect cluster resource ids (EKS ARN, AKS ARM id, or GKE link). Configurable with `common.config.cloudClusterIdDetection: true/false`
+- Automatically detect cluster resource ids (EKS ARN, AKS ARM id, or GKE link). Configurable with `common.config.disableCloudClusterIdDetection: true/false`
   @dbudziwojski [#1520](https://github.com/newrelic/nri-kubernetes/pull/1520)
 
 ## v4.6.0 - 2026-08-10

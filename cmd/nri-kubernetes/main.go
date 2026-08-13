@@ -255,7 +255,7 @@ func runScrapers(c *config.Config, ksmScraper *ksm.Scraper, kubeletScraper *kube
 // provider hosting this node. It is best-effort: on failure (or when disabled) it
 // returns an empty string and the integration proceeds without the attribute.
 func detectCloudClusterId(c *config.Config, k8s kubernetes.Interface) string {
-	if !c.CloudClusterIdDetection {
+	if c.DisableCloudClusterIdDetection {
 		return ""
 	}
 
