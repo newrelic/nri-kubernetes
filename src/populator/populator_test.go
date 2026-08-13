@@ -1009,7 +1009,7 @@ func TestPopulateCluster(t *testing.T) {
 	k8sVersion := mockVersion{version: k8sVersionStr}
 
 	// --- 2. Execute the function under test ---
-	err = populateCluster(intgr, clusterName, k8sVersion)
+	err = populateCluster(intgr, clusterName, "", k8sVersion)
 
 	// --- 3. Assertions ---
 

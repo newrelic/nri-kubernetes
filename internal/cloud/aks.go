@@ -1,71 +1,60 @@
 package cloud
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
+	"regexp"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
-	corev1 "k8s.io/api/core/v1"
 )
 
-// aksClusterLabel is a AKS node label whose value is the node resource group (MC_ form).
-const aksClusterLabel = "kubernetes.azure.com/cluster"
+// nodeGroupComponentCount is the number of parts in a node resource group named.
+const nodeGroupComponentCount = 4
 
-// nodeGroupComponentCound is the number of parts in a node resource group MC_<resourceGroup>_<clusterName>_<region>.
-const nodeGroupComponentCound = 4
+// detectAKS assembles the AKS cluster ARM id
+// /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.ContainerService/managedClusters/<cluster>.
+//
+// All inputs come from the node's spec.providerID:
+//
+// azure:///subscriptions/<sub>/resourceGroups/MC_<rg>_<cluster>_<region>/providers/Microsoft.Compute/...
+//
+// The cluster name and original resource group are parsed from the node (managed)
+// resource group, which by default is named MC_<rg>_<cluster>_<region>. This is
+// best-effort: it breaks with a custom --node-resource-group, or when the resource
+// group or cluster name contains underscores.
+func detectAKS(logger *log.Logger, providerID string) (string, error) {
+	subscriptionID, nodeRG := parseAzureProviderID(providerID)
+	resourceGroup, cluster := parseAKSNodeResourceGroup(nodeRG)
 
-// detectAKS attempts to parse the AKS cluster name from the node (managed) resource group,
-// which by default is named MC_<resourceGroup>_<clusterName>_<region>. This is
-// best-effort: it breaks when the cluster name or resource group contains underscores.
-func detectAKS(ctx context.Context, logger *log.Logger, node *corev1.Node) (string, error) {
-	rg, err := azureNodeResourceGroup(ctx)
-	if err != nil {
-		logger.Debugf("cloud: AKS IMDS lookup failed, falling back to node label: %v", err)
-		rg = node.Labels[aksClusterLabel]
+	if subscriptionID == "" || resourceGroup == "" || cluster == "" {
+		return "", fmt.Errorf("cannot assemble AKS resource id from providerID %q (custom node resource groups and names with underscores are unsupported)", providerID)
 	}
-	name := parseAKSClusterName(rg)
-	if name == "" {
-		return "", fmt.Errorf("cannot parse AKS cluster name from resource group %q (cluster names and resource group names with underscores are unsupported)", rg)
-	}
-	logger.Debugf("cloud: parsed AKS cluster name %q from %q (best-effort)", name, rg)
-	return name, nil
+
+	id := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.ContainerService/managedClusters/%s",
+		subscriptionID, resourceGroup, cluster)
+	logger.Debugf("cloud: assembled AKS resource id %q from node resource group %q (best-effort)", id, nodeRG)
+	return id, nil
 }
 
-func azureNodeResourceGroup(ctx context.Context) (string, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, azureIMDSBaseURL+"/instance?api-version=2021-02-01", nil)
-	if err != nil {
-		return "", fmt.Errorf("building Azure IMDS request: %w", err)
+// parseAzureProviderID extracts the subscription id and resource group from providerID.
+func parseAzureProviderID(providerID string) (subscriptionID, resourceGroup string) {
+	re := regexp.MustCompile("^azure:///subscriptions/([a-zA-Z0-9._\\-()]+)/resourceGroups/([a-zA-Z0-9._\\-()]+)/providers/([a-zA-Z0-9._\\-()]+)/virtualMachineScaleSets/([a-zA-Z0-9._\\-()]+)/virtualMachines/([a-zA-Z0-9._\\-()]+)$")
+	matches := re.FindStringSubmatch(providerID)
+	if matches == nil {
+		return "", ""
 	}
-	req.Header.Set("Metadata", "true")
-
-	body, err := doMetadataGet(req)
-	if err != nil {
-		return "", err
-	}
-	var meta struct {
-		Compute struct {
-			ResourceGroupName string `json:"resourceGroupName"`
-		} `json:"compute"`
-	}
-	if err := json.Unmarshal([]byte(body), &meta); err != nil {
-		return "", fmt.Errorf("decoding Azure IMDS response: %w", err)
-	}
-	return meta.Compute.ResourceGroupName, nil
+	return matches[1], matches[2]
 }
 
-// parseAKSClusterName extracts the cluster name from a node resource group named
-// MC_<resourceGroup>_<clusterName>_<region>. Returns "" if it does not match.
-func parseAKSClusterName(rg string) string {
-	if !strings.HasPrefix(rg, "MC_") {
-		return ""
+// parseAKSNodeResourceGroup splits a node resource group into its resource group and cluster name.
+func parseAKSNodeResourceGroup(nodeRG string) (resourceGroup, cluster string) {
+	if !strings.HasPrefix(strings.ToLower(nodeRG), "mc_") {
+		return "", ""
 	}
-	parts := strings.Split(rg, "_")
-	if len(parts) != nodeGroupComponentCound {
-		return ""
+	parts := strings.Split(nodeRG, "_")
+	if len(parts) != nodeGroupComponentCount {
+		return "", ""
 	}
-	// region is the last segment, cluster name is the second-to-last.
-	return parts[len(parts)-2]
+	// MC_<resourceGroup>_<clusterName>_<region>
+	return parts[1], parts[2]
 }

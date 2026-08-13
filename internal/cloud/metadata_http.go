@@ -10,9 +10,8 @@ import (
 
 // Metadata endpoints. Declared as vars so tests can point them at httptest servers.
 var (
-	gkeMetadataBaseURL = "http://metadata.google.internal/computeMetadata/v1"
-	azureIMDSBaseURL   = "http://169.254.169.254/metadata"
 	awsIMDSBaseURL     = "http://169.254.169.254/latest"
+	gkeMetadataBaseURL = "http://metadata.google.internal/computeMetadata/v1"
 )
 
 const maxMetadataBodyBytes = 1 * 1024 * 1024

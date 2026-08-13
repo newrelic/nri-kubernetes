@@ -299,7 +299,7 @@ func LoadConfig(filePath string, fileName string) (*Config, error) {
 	// We need to assure that defaults have been set in order to bind env variables.
 	// https://github.com/spf13/viper/issues/584
 	v.SetDefault("clusterName", "cluster")
-	v.SetDefault("cloudClusterNameDetection", true)
+	v.SetDefault("cloudClusterIdDetection", true)
 	v.SetDefault("verbose", false)
 	v.SetDefault("kubelet|networkRouteFile", DefaultNetworkRouteFile)
 	v.SetDefault("nodeName", "node")
