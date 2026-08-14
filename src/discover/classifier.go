@@ -146,19 +146,19 @@ func Classify(images []string, podLabels map[string]string) WorkloadType {
 	return WorkloadTypeUnknown
 }
 
-// Helper 1: Handles operator-specific exact key matching
+// Helper 1: Handles operator-specific exact key matching.
 func checkLabelKeys(podLabels map[string]string, sigs []workloadSignal) (WorkloadType, bool) {
 	for _, sig := range sigs {
 		for _, k := range sig.labelKeyExact {
 			if _, has := podLabels[k]; has {
-				return sig.workloadType, true
+				return sig.workloadType, statusTrue
 			}
 		}
 	}
 	return "", false
 }
 
-// Helper 2: Handles discovery key substring matching
+// Helper 2: Handles discovery key substring matching.
 func checkLabelValues(podLabels map[string]string, sigs []workloadSignal) (WorkloadType, bool) {
 	for _, key := range labelDiscoveryKeys() {
 		val, ok := podLabels[key]
@@ -169,7 +169,7 @@ func checkLabelValues(podLabels map[string]string, sigs []workloadSignal) (Workl
 		for _, sig := range sigs {
 			for _, lv := range sig.labelValues {
 				if strings.Contains(valLower, lv) {
-					return sig.workloadType, true
+					return sig.workloadType, statusTrue
 				}
 			}
 		}
@@ -177,14 +177,14 @@ func checkLabelValues(podLabels map[string]string, sigs []workloadSignal) (Workl
 	return "", false
 }
 
-// Helper 3: Handles image substring matching
+// Helper 3: Handles image substring matching.
 func checkImages(images []string, sigs []workloadSignal) (WorkloadType, bool) {
 	for _, image := range images {
 		bare := stripImageMeta(image)
 		for _, sig := range sigs {
 			for _, substr := range sig.imageSubstrings {
 				if strings.Contains(bare, substr) {
-					return sig.workloadType, true
+					return sig.workloadType, statusTrue
 				}
 			}
 		}

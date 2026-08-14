@@ -96,7 +96,7 @@ func TestDetectPodInstrumentation_otelSidecar(t *testing.T) {
 
 func TestDetectPodInstrumentation_otelOperatorAnnotation(t *testing.T) {
 	p := pod(map[string]string{
-		"instrumentation.opentelemetry.io/inject-java": "true",
+		"instrumentation.opentelemetry.io/inject-java": strTrue,
 	}, nil, "redis:7")
 	s := detectPodInstrumentation(p, WorkloadTypeRedis, emptyCtx())
 	assert.True(t, s.OTelPresent)
@@ -105,8 +105,8 @@ func TestDetectPodInstrumentation_otelOperatorAnnotation(t *testing.T) {
 
 func TestDetectPodInstrumentation_infraAgentAndOHI(t *testing.T) {
 	ctx := clusterInstrumentationCtx{
-		infraAgentDeployed: true,
-		ohiConfiguredFor:   map[WorkloadType]bool{WorkloadTypeRedis: true},
+		infraAgentDeployed: statusTrue,
+		ohiConfiguredFor:   map[WorkloadType]bool{WorkloadTypeRedis: statusTrue},
 	}
 	p := pod(nil, nil, "redis:7")
 	s := detectPodInstrumentation(p, WorkloadTypeRedis, ctx)
@@ -117,7 +117,7 @@ func TestDetectPodInstrumentation_infraAgentAndOHI(t *testing.T) {
 
 func TestDetectPodInstrumentation_infraAgentWithoutOHI(t *testing.T) {
 	ctx := clusterInstrumentationCtx{
-		infraAgentDeployed: true,
+		infraAgentDeployed: statusTrue,
 		ohiConfiguredFor:   map[WorkloadType]bool{},
 	}
 	p := pod(nil, nil, "redis:7")
@@ -128,7 +128,7 @@ func TestDetectPodInstrumentation_infraAgentWithoutOHI(t *testing.T) {
 }
 
 func TestDetectPodInstrumentation_prometheusScraped(t *testing.T) {
-	p := pod(map[string]string{"prometheus.io/scrape": "true"}, nil, "redis:7")
+	p := pod(map[string]string{"prometheus.io/scrape": strTrue}, nil, "redis:7")
 	s := detectPodInstrumentation(p, WorkloadTypeRedis, emptyCtx())
 	assert.True(t, s.PrometheusScraped)
 	assert.Equal(t, StatusPartial, s.Status)

@@ -8,6 +8,7 @@ import (
 )
 
 const statusTrue = true
+const strTrue = "true"
 
 // Instrumentation status values returned in InstrumentationStatus.Status.
 const (
@@ -30,7 +31,7 @@ const (
 	envOTelResourceAttr = "OTEL_RESOURCE_ATTRIBUTES"
 )
 
-// InstrumentationStatus summarises observability coverage for a discovered workload.
+// InstrumentationStatus summarizes observability coverage for a discovered workload.
 // Each field is a distinct signal; Status is the derived summary across all of them.
 type InstrumentationStatus struct {
 	// Status is one of StatusInstrumented, StatusPartial, or StatusNotInstrumented.
@@ -188,7 +189,7 @@ func checkAnnotations(annotations map[string]string, s *InstrumentationStatus) {
 	for k, v := range annotations {
 		kLower := strings.ToLower(k)
 		switch {
-		case kLower == "prometheus.io/scrape" && v == "true":
+		case kLower == "prometheus.io/scrape" && v == strTrue:
 			s.PrometheusScraped = statusTrue
 		case strings.HasPrefix(kLower, "newrelic.io/"):
 			s.NRAnnotated = statusTrue
