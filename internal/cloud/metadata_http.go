@@ -10,8 +10,8 @@ import (
 )
 
 // Metadata endpoints. Declared as vars so tests can point them at httptest servers.
-var (
-	gkeMetadataBaseURL = "http://metadata.google.internal/computeMetadata/v1"
+const (
+	defaultGKEMetadataBaseURL = "http://metadata.google.internal/computeMetadata/v1"
 )
 
 var errUnexpectedStatus = errors.New("unexpected metadata response status")

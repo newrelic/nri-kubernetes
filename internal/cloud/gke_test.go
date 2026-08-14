@@ -8,6 +8,7 @@ import (
 )
 
 func Test_parseGCEProviderID(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		providerID   string
@@ -54,6 +55,7 @@ func Test_parseGCEProviderID(t *testing.T) {
 }
 
 func Test_detectGKE(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		providerID  string
@@ -104,11 +106,7 @@ func Test_detectGKE(t *testing.T) {
 			}))
 			defer srv.Close()
 
-			old := gkeMetadataBaseURL
-			gkeMetadataBaseURL = srv.URL
-			defer func() { gkeMetadataBaseURL = old }()
-
-			got, err := detectGKE(context.Background(), tt.providerID)
+			got, err := gkeDetector{metadataBaseURL: srv.URL}.detect(context.Background(), tt.providerID)
 			if err != nil {
 				t.Fatalf("detectGKE() unexpected error = %v", err)
 			}

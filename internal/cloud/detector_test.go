@@ -4,27 +4,21 @@ import (
 	"context"
 	"testing"
 
-	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
-
-	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
 )
 
-// Test_DetectClusterId verifies that DetectClusterId routes to the correct provider
-// based on the node's spec.providerID. The per-provider assembly logic is covered by
-// Test_detectGKE / Test_detectEKS / Test_detectAKS; here the detectors are stubbed so
-// the test asserts routing only.
-func Test_DetectClusterId(t *testing.T) {
-	const nodeName = "node-1"
+// fakeDetector is a stub providerDetector used to test routing in isolation.
+type fakeDetector struct {
+	id  string
+	err error
+}
 
-	// Stub the provider detectors and restore them afterwards.
-	origGKE, origEKS, origAKS := detectGKE, detectEKS, detectAKS
-	defer func() { detectGKE, detectEKS, detectAKS = origGKE, origEKS, origAKS }()
-	detectGKE = func(context.Context, string) (string, error) { return "gke-id", nil }
-	detectEKS = func(context.Context, *log.Logger, string) (string, error) { return "eks-id", nil }
-	detectAKS = func(*log.Logger, string) (string, error) { return "aks-id", nil }
+func (f fakeDetector) detect(context.Context, string) (string, error) { return f.id, f.err }
+
+func Test_DetectClusterID(t *testing.T) {
+	t.Parallel()
 
 	tests := []struct {
 		name         string
@@ -61,27 +55,42 @@ func Test_DetectClusterId(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+			detector := &Detector{
+				gke: fakeDetector{id: "gke-id"},
+				eks: fakeDetector{id: "eks-id"},
+				aks: fakeDetector{id: "aks-id"},
+			}
 			k8s := fake.NewSimpleClientset(&corev1.Node{
-				ObjectMeta: metav1.ObjectMeta{Name: nodeName},
+				ObjectMeta: metav1.ObjectMeta{Name: "node-1"},
 				Spec:       corev1.NodeSpec{ProviderID: tt.providerID},
 			})
 
-			gotID, gotProvider, err := DetectClusterId(context.Background(), logutil.Discard, k8s, nodeName)
+			gotID, gotProvider, err := detector.DetectClusterID(context.Background(), k8s, "node-1")
 			if gotProvider != tt.wantProvider {
-				t.Errorf("DetectClusterId() provider = %q, want %q", gotProvider, tt.wantProvider)
+				t.Errorf("DetectClusterID() provider = %q, want %q", gotProvider, tt.wantProvider)
 			}
 			if tt.wantErr {
 				if err == nil {
-					t.Fatalf("DetectClusterId() expected error, got id %q", gotID)
+					t.Fatalf("DetectClusterID() expected error, got id %q", gotID)
 				}
 				return
 			}
 			if err != nil {
-				t.Fatalf("DetectClusterId() unexpected error = %v", err)
+				t.Fatalf("DetectClusterID() unexpected error = %v", err)
 			}
 			if gotID != tt.wantID {
-				t.Errorf("DetectClusterId() id = %q, want %q", gotID, tt.wantID)
+				t.Errorf("DetectClusterID() id = %q, want %q", gotID, tt.wantID)
 			}
 		})
+	}
+}
+
+func Test_DetectClusterID_NodeNotFound(t *testing.T) {
+	t.Parallel()
+	detector := NewDetector(nil)
+	k8s := fake.NewSimpleClientset() // no nodes
+
+	if _, _, err := detector.DetectClusterID(context.Background(), k8s, "missing-node"); err == nil {
+		t.Fatal("DetectClusterID() expected error for missing node, got nil")
 	}
 }

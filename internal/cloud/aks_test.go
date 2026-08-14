@@ -1,12 +1,14 @@
 package cloud
 
 import (
+	"context"
 	"testing"
 
 	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
 )
 
 func Test_parseAzureProviderID(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		providerID string
 	}
@@ -56,6 +58,7 @@ func Test_parseAzureProviderID(t *testing.T) {
 }
 
 func Test_detectAKS(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		providerID string
 	}
@@ -90,7 +93,7 @@ func Test_detectAKS(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			gotID, err := detectAKS(logutil.Discard, tt.args.providerID)
+			gotID, err := aksDetector{logger: logutil.Discard}.detect(context.Background(), tt.args.providerID)
 			if tt.wantErr {
 				if err == nil {
 					t.Fatalf("detectAKS() expected error, got id %q", gotID)
@@ -108,6 +111,7 @@ func Test_detectAKS(t *testing.T) {
 }
 
 func Test_parseAKSNodeResourceGroup(t *testing.T) {
+	t.Parallel()
 	type args struct {
 		nodeRG string
 	}

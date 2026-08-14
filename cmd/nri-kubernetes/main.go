@@ -263,7 +263,7 @@ func detectCloudClusterId(c *config.Config, k8s kubernetes.Interface) string {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	id, provider, err := cloud.DetectClusterId(ctx, logger, k8s, c.NodeName)
+	id, provider, err := cloud.NewDetector(logger).DetectClusterID(ctx, k8s, c.NodeName)
 	if err != nil {
 		logger.Debugf("could not auto-detect cloud cluster id: %v", err)
 		return ""

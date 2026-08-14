@@ -7,11 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-
-	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
 )
 
 func Test_parseAWSProviderID(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		providerID   string
@@ -49,6 +48,7 @@ func Test_parseAWSProviderID(t *testing.T) {
 }
 
 func Test_azToRegion(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		az   string
 		want string
@@ -70,6 +70,7 @@ func Test_azToRegion(t *testing.T) {
 }
 
 func Test_awsPartition(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		region string
 		want   AwsPartition
@@ -100,17 +101,18 @@ func (s stubEC2) DescribeInstances(context.Context, *ec2.DescribeInstancesInput,
 }
 
 func reservationWithTags(ownerID string, tags map[string]string) []ec2types.Reservation {
-	var t []ec2types.Tag
+	ec2Tags := make([]ec2types.Tag, 0, len(tags))
 	for k, v := range tags {
-		t = append(t, ec2types.Tag{Key: aws.String(k), Value: aws.String(v)})
+		ec2Tags = append(ec2Tags, ec2types.Tag{Key: aws.String(k), Value: aws.String(v)})
 	}
 	return []ec2types.Reservation{{
 		OwnerId:   aws.String(ownerID),
-		Instances: []ec2types.Instance{{Tags: t}},
+		Instances: []ec2types.Instance{{Tags: ec2Tags}},
 	}}
 }
 
 func Test_detectEKS(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		providerID   string
@@ -151,13 +153,11 @@ func Test_detectEKS(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			old := newEC2Client
-			newEC2Client = func(context.Context, string) (ec2DescribeInstancesAPI, error) {
+			d := eksDetector{newEC2Client: func(context.Context, string) (ec2DescribeInstancesAPI, error) {
 				return stubEC2{out: &ec2.DescribeInstancesOutput{Reservations: tt.reservations}}, nil
-			}
-			defer func() { newEC2Client = old }()
+			}}
 
-			got, err := detectEKS(context.Background(), logutil.Discard, tt.providerID)
+			got, err := d.detect(context.Background(), tt.providerID)
 			if tt.wantErr {
 				if err == nil {
 					t.Fatalf("detectEKS() expected error, got id %q", got)
