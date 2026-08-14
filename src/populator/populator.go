@@ -107,7 +107,7 @@ func processEntities(unitsToProcess []processingUnit, config *definition.Integra
 			continue
 		}
 
-		additionalAttributeCount := 3 //clusterName, displayName, cloud.resource_id (optional).
+		additionalAttributeCount := 3 // clusterName, displayName, cloud.resource_id (optional).
 		attrs := make([]attribute.Attribute, len(extraAttributes), len(extraAttributes)+additionalAttributeCount)
 		copy(attrs, extraAttributes)
 		attrs = append(attrs,

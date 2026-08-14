@@ -35,7 +35,7 @@ type Scraper struct {
 	Providers
 	logger                  *log.Logger
 	config                  *config.Config
-	cloudClusterId          string
+	cloudClusterID          string
 	k8sVersion              *version.Info
 	defaultNetworkInterface string
 	nodeGetter              listersv1.NodeLister
@@ -45,7 +45,7 @@ type Scraper struct {
 	interfaceCache          *kubeletMetric.InterfaceCache
 }
 
-// ScraperOpt are options that can be used to configure the Scraper
+// ScraperOpt are options that can be used to configure the Scraper.
 type ScraperOpt func(s *Scraper) error
 
 // NewScraper builds a new Scraper, initializing its internal informers. After use, informers should be closed by calling
@@ -109,7 +109,7 @@ func (s *Scraper) Run(i *integration.Integration) error {
 	specs := metric.NewKubeletSpecs(s.interfaceCache)
 	job := scrape.NewScrapeJob("kubelet", kubeletGrouper, specs, scrape.JobWithFilterer(s.Filterer))
 
-	r := job.Populate(i, s.config.ClusterName, s.cloudClusterId, s.logger, s.k8sVersion)
+	r := job.Populate(i, s.config.ClusterName, s.cloudClusterID, s.logger, s.k8sVersion)
 	if r.Errors != nil {
 		s.logger.Debugf("Errors while scraping Kubelet: %q", r.Errors)
 	}
@@ -145,10 +145,10 @@ func WithInterfaceCache(cache *kubeletMetric.InterfaceCache) ScraperOpt {
 	}
 }
 
-// WithCloudClusterId returns an OptionFunc to set the cloud-detected cluster id.
-func WithCloudClusterId(id string) ScraperOpt {
+// WithCloudClusterID returns an OptionFunc to set the cloud-detected cluster id.
+func WithCloudClusterID(id string) ScraperOpt {
 	return func(s *Scraper) error {
-		s.cloudClusterId = id
+		s.cloudClusterID = id
 		return nil
 	}
 }

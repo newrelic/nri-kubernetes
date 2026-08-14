@@ -32,8 +32,8 @@ type Config struct {
 	LogLevel string `mapstructure:"logLevel"`
 	// ClusterName is a unique, human-readable name for the cluster. Will be used to qualify entities and displayNames.
 	ClusterName string `mapstructure:"clusterName"`
-	// DisableCloudClusterIdDetection disables auto-detecting the cloud resource id from the cloud provider (GKE/AKS/EKS).
-	DisableCloudClusterIdDetection bool `mapstructure:"disableCloudClusterIdDetection"`
+	// DisableCloudClusterIDDetection disables auto-detecting the cloud resource id from the cloud provider (GKE/AKS/EKS).
+	DisableCloudClusterIDDetection bool `mapstructure:"disableCloudClusterIdDetection"`
 	// KubeconfigPath is the path to a local kube/config file. If empty, in-cluster config will be used.
 	KubeconfigPath string `mapstructure:"kubeconfigPath"`
 	// NodeIP is the main IP for the node where the integration is running. Used to connect to the Kubelet.
