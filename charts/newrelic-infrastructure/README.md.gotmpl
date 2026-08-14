@@ -54,7 +54,7 @@ By default the integration auto-detects the underlying cloud provider's cluster 
 - **AKS** — the cluster ARM id, e.g. `/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.ContainerService/managedClusters/<cluster>`.
 - **GKE** — the cluster link, e.g. `/projects/<project>/locations/<location>/clusters/<cluster>`.
 
-Detection is best-effort and never overrides the configured `cluster` name; if it fails the attribute is simply omitted. Disable it with `common.config.cloudClusterIdDetection: false`.
+Detection is best-effort and never overrides the configured `cluster` name; if it fails the attribute is simply omitted. Disable it with `common.config.disableCloudClusterIdDetection: true`.
 
 **EKS requirement:** detection queries the EC2 API, so the integration's ServiceAccount must have AWS credentials via [EKS Pod Identity](https://docs.aws.amazon.com/eks/latest/userguide/pod-identities.html) or [IRSA](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html) with the `ec2:DescribeInstances` permission. Without credentials, EKS detection is skipped (non-fatal). AKS and GKE need no extra permissions.
 
