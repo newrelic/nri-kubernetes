@@ -17,7 +17,7 @@ func Test_parseAzureProviderID(t *testing.T) {
 		wantResourceGroup  string
 	}{
 		{
-			name: "parseCorrectly",
+			name: "parseCorrectly", //nolint:goconst
 			args: args{
 				"azure:///subscriptions/f038e9fc-3c25-459e-9bea-879af3be645e/resourceGroups/mc_k8sagentsusersresourcegroup_ttrojan-aks-tsty_westus2/providers/Microsoft.Compute/virtualMachineScaleSets/aks-linux-38321548-vmss/virtualMachines/0",
 			},
@@ -43,6 +43,7 @@ func Test_parseAzureProviderID(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			gotSubscriptionID, gotResourceGroup := parseAzureProviderID(tt.args.providerID)
 			if gotSubscriptionID != tt.wantSubscriptionID {
 				t.Errorf("parseAzureProviderID() gotSubscriptionID = %v, want %v", gotSubscriptionID, tt.wantSubscriptionID)
@@ -88,6 +89,7 @@ func Test_detectAKS(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			gotID, err := detectAKS(logutil.Discard, tt.args.providerID)
 			if tt.wantErr {
 				if err == nil {
@@ -150,6 +152,7 @@ func Test_parseAKSNodeResourceGroup(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			gotResourceGroup, gotCluster := parseAKSNodeResourceGroup(tt.args.nodeRG)
 			if gotResourceGroup != tt.wantResourceGroup {
 				t.Errorf("parseAKSNodeResourceGroup() gotResourceGroup = %v, want %v", gotResourceGroup, tt.wantResourceGroup)

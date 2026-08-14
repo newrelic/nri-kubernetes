@@ -39,7 +39,7 @@ var detectGKE = func(ctx context.Context, providerID string) (string, error) {
 
 // parseGCEProviderID extracts project, zone and instance from providerID.
 func parseGCEProviderID(providerID string) (projectID, zone, instance string) {
-	re := regexp.MustCompile("^gce://([a-zA-Z0-9._\\-()]+)/([a-zA-Z0-9._\\-()]+)/([a-zA-Z0-9._\\-()]+)$")
+	re := regexp.MustCompile(`^gce://([a-zA-Z0-9._\-()]+)/([a-zA-Z0-9._\-()]+)/([a-zA-Z0-9._\-()]+)$`)
 	matches := re.FindStringSubmatch(providerID)
 	if matches == nil {
 		return "", "", ""

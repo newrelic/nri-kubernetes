@@ -10,7 +10,6 @@ import (
 
 // Metadata endpoints. Declared as vars so tests can point them at httptest servers.
 var (
-	awsIMDSBaseURL     = "http://169.254.169.254/latest"
 	gkeMetadataBaseURL = "http://metadata.google.internal/computeMetadata/v1"
 )
 

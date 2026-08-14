@@ -15,6 +15,14 @@ import (
 // eksClusterNameTag is the tag EKS automatically applies to member EC2 instances.
 const eksClusterNameTag = "aws:eks:cluster-name"
 
+type AwsPartition string
+
+const (
+	DefaultPartition AwsPartition = "aws"
+	GovPartition     AwsPartition = "aws-us-gov"
+	ChinaPartition   AwsPartition = "aws-cn"
+)
+
 // detectEKS assembles the EKS cluster ARN arn:<partition>:eks:<region>:<accountId>:cluster/<clusterName>.
 // EC2 API via Pod Identity / IRSA is required since IMDS does not have the cluster name.
 var detectEKS = func(ctx context.Context, logger *log.Logger, providerID string) (string, error) {
@@ -34,7 +42,7 @@ var detectEKS = func(ctx context.Context, logger *log.Logger, providerID string)
 
 // parseAWSProviderID extracts availability zone and instance-id from aws:///<az>/<instance-id>.
 func parseAWSProviderID(providerID string) (availabilityZone, instanceID string) {
-	re := regexp.MustCompile("^aws:///([a-zA-Z0-9._\\-()]+)/([a-zA-Z0-9._\\-()]+)$")
+	re := regexp.MustCompile(`^aws:///([a-zA-Z0-9._\-()]+)/([a-zA-Z0-9._\-()]+)$`)
 	matches := re.FindStringSubmatch(providerID)
 	if matches == nil {
 		return "", ""
@@ -95,13 +103,13 @@ func eksIdentityFromAPI(ctx context.Context, region, instanceID string) (cluster
 }
 
 // awsPartition returns the ARN partition for a region.
-func awsPartition(region string) string {
+func awsPartition(region string) AwsPartition {
 	switch {
 	case strings.HasPrefix(region, "us-gov-"):
-		return "aws-us-gov"
+		return GovPartition
 	case strings.HasPrefix(region, "cn-"):
-		return "aws-cn"
+		return ChinaPartition
 	default:
-		return "aws"
+		return DefaultPartition
 	}
 }

@@ -19,14 +19,14 @@ func Test_parseAWSProviderID(t *testing.T) {
 		wantInstance string
 	}{
 		{
-			name:         "parseCorrectly",
+			name:         "parseCorrectly", //nolint:goconst
 			providerID:   "aws:///us-east-1a/i-0abc123def456",
 			wantAZ:       "us-east-1a",
 			wantInstance: "i-0abc123def456",
 		},
 		{
 			name:         "emptyOnWrongPrefix",
-			providerID:   "gce://my-project/us-central1-a/gke-node",
+			providerID:   "gce://my-project/us-central1-b/gke-node",
 			wantAZ:       "",
 			wantInstance: "",
 		},
@@ -39,6 +39,7 @@ func Test_parseAWSProviderID(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			gotAZ, gotInstance := parseAWSProviderID(tt.providerID)
 			if gotAZ != tt.wantAZ || gotInstance != tt.wantInstance {
 				t.Errorf("parseAWSProviderID() = %q, %q; want %q, %q", gotAZ, gotInstance, tt.wantAZ, tt.wantInstance)
@@ -55,11 +56,12 @@ func Test_azToRegion(t *testing.T) {
 		{"us-east-1a", "us-east-1"},
 		{"us-gov-west-1a", "us-gov-west-1"},
 		{"eu-central-1b", "eu-central-1"},
-		{"us-east-1", "us-east-1"}, // already a region (trailing digit)
+		{"us-east-2", "us-east-2"}, // already a region (trailing digit)
 		{"", ""},
 	}
 	for _, tt := range tests {
 		t.Run(tt.az, func(t *testing.T) {
+			t.Parallel()
 			if got := azToRegion(tt.az); got != tt.want {
 				t.Errorf("azToRegion(%q) = %q, want %q", tt.az, got, tt.want)
 			}
@@ -70,15 +72,16 @@ func Test_azToRegion(t *testing.T) {
 func Test_awsPartition(t *testing.T) {
 	tests := []struct {
 		region string
-		want   string
+		want   AwsPartition
 	}{
-		{"us-east-1", "aws"},
-		{"eu-west-3", "aws"},
-		{"us-gov-west-1", "aws-us-gov"},
-		{"cn-north-1", "aws-cn"},
+		{"us-east-1", DefaultPartition},
+		{"eu-west-3", DefaultPartition},
+		{"us-gov-west-1", GovPartition},
+		{"cn-north-1", ChinaPartition},
 	}
 	for _, tt := range tests {
 		t.Run(tt.region, func(t *testing.T) {
+			t.Parallel()
 			if got := awsPartition(tt.region); got != tt.want {
 				t.Errorf("awsPartition(%q) = %q, want %q", tt.region, got, tt.want)
 			}
@@ -147,6 +150,7 @@ func Test_detectEKS(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			old := newEC2Client
 			newEC2Client = func(context.Context, string) (ec2DescribeInstancesAPI, error) {
 				return stubEC2{out: &ec2.DescribeInstancesOutput{Reservations: tt.reservations}}, nil

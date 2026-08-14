@@ -38,7 +38,7 @@ var detectAKS = func(logger *log.Logger, providerID string) (string, error) {
 
 // parseAzureProviderID extracts the subscription id and resource group from providerID.
 func parseAzureProviderID(providerID string) (subscriptionID, resourceGroup string) {
-	re := regexp.MustCompile("^azure:///subscriptions/([a-zA-Z0-9._\\-()]+)/resourceGroups/([a-zA-Z0-9._\\-()]+)/providers/([a-zA-Z0-9._\\-()]+)/virtualMachineScaleSets/([a-zA-Z0-9._\\-()]+)/virtualMachines/([a-zA-Z0-9._\\-()]+)$")
+	re := regexp.MustCompile(`^azure:///subscriptions/([a-zA-Z0-9._\-()]+)/resourceGroups/([a-zA-Z0-9._\-()]+)/providers/([a-zA-Z0-9._\-()]+)/virtualMachineScaleSets/([a-zA-Z0-9._\-()]+)/virtualMachines/([a-zA-Z0-9._\-()]+)$`)
 	matches := re.FindStringSubmatch(providerID)
 	if matches == nil {
 		return "", ""

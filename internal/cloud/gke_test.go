@@ -16,7 +16,7 @@ func Test_parseGCEProviderID(t *testing.T) {
 		wantInstance string
 	}{
 		{
-			name:         "parseCorrectly",
+			name:         "parseCorrectly", //nolint:goconst
 			providerID:   "gce://my-project/us-central1-a/gke-cluster-default-pool-abc",
 			wantProject:  "my-project",
 			wantZone:     "us-central1-a",
@@ -24,7 +24,7 @@ func Test_parseGCEProviderID(t *testing.T) {
 		},
 		{
 			name:         "emptyOnWrongPrefix",
-			providerID:   "aws:///us-east-1a/i-0abc",
+			providerID:   "aws:///us-east-2a/i-0abc",
 			wantZone:     "",
 			wantInstance: "",
 		},
@@ -43,6 +43,7 @@ func Test_parseGCEProviderID(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			gotProject, gotZone, gotInstance := parseGCEProviderID(tt.providerID)
 			if gotProject != tt.wantProject || gotZone != tt.wantZone || gotInstance != tt.wantInstance {
 				t.Errorf("parseGCEProviderID() = %q, %q, %q; want %q, %q, %q",
@@ -63,16 +64,16 @@ func Test_detectGKE(t *testing.T) {
 		{
 			name:        "zonalCluster",
 			providerID:  "gce://my-project/us-central1-a/gke-node",
-			clusterName: "my-cluster",
+			clusterName: "my-zonal-cluster",
 			location:    "us-central1-a",
-			wantID:      "/projects/my-project/locations/us-central1-a/clusters/my-cluster",
+			wantID:      "/projects/my-project/locations/us-central1-a/clusters/my-zonal-cluster",
 		},
 		{
 			name:        "regionalCluster",
 			providerID:  "gce://my-project/us-central1-a/gke-node",
-			clusterName: "my-cluster",
+			clusterName: "my-regional-cluster",
 			location:    "us-central1",
-			wantID:      "/projects/my-project/locations/us-central1/clusters/my-cluster",
+			wantID:      "/projects/my-project/locations/us-central1/clusters/my-regional-cluster",
 		},
 		{
 			name:        "projectFromMetadataFallback",
@@ -84,6 +85,7 @@ func Test_detectGKE(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.Header.Get("Metadata-Flavor") != "Google" {
 					w.WriteHeader(http.StatusForbidden)

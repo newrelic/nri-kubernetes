@@ -259,7 +259,8 @@ func detectCloudClusterId(c *config.Config, k8s kubernetes.Interface) string {
 		return ""
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	timeout := 10 * time.Second
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	id, provider, err := cloud.DetectClusterId(ctx, logger, k8s, c.NodeName)

@@ -35,19 +35,19 @@ func Test_DetectClusterId(t *testing.T) {
 	}{
 		{
 			name:         "routesGKE",
-			providerID:   "gce://my-project/us-central1-a/gke-node",
+			providerID:   "gce://my-project/us-west1-a/gke-node",
 			wantID:       "gke-id",
 			wantProvider: ProviderGKE,
 		},
 		{
 			name:         "routesEKS",
-			providerID:   "aws:///us-east-1a/i-0abc",
+			providerID:   "aws:///us-west-1a/i-0abc",
 			wantID:       "eks-id",
 			wantProvider: ProviderEKS,
 		},
 		{
 			name:         "routesAKS",
-			providerID:   "azure:///subscriptions/sub/resourceGroups/mc_rg_cluster_westus2/providers/Microsoft.Compute/virtualMachineScaleSets/vmss/virtualMachines/0",
+			providerID:   "azure:///subscriptions/sub/resourceGroups/mc_rg_cluster_westus1/providers/Microsoft.Compute/virtualMachineScaleSets/vmss/virtualMachines/0",
 			wantID:       "aks-id",
 			wantProvider: ProviderAKS,
 		},
@@ -60,6 +60,7 @@ func Test_DetectClusterId(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			k8s := fake.NewSimpleClientset(&corev1.Node{
 				ObjectMeta: metav1.ObjectMeta{Name: nodeName},
 				Spec:       corev1.NodeSpec{ProviderID: tt.providerID},
