@@ -34,7 +34,7 @@ const (
 // since MariaDB is API-compatible with MySQL and shares the same workload type.
 const mariaDBName = "mariadb"
 
-// workloadSignal defines how to recognise a workload type from pod metadata.
+// workloadSignal defines how to recognize a workload type from pod metadata.
 type workloadSignal struct {
 	workloadType WorkloadType
 	// labelValues is checked against the value of well-known label keys.
@@ -126,18 +126,40 @@ func labelDiscoveryKeys() []string {
 // Labels are checked first (higher confidence), then images.
 // Returns WorkloadTypeUnknown if no signal matches.
 func Classify(images []string, podLabels map[string]string) WorkloadType {
-	// 1a. Check for operator-specific label keys (e.g. strimzi.io/kind).
-	//     These are definitive signals regardless of their value.
 	sigs := workloadSignals()
-	for _, sig := range sigs {
-		for _, k := range sig.labelKeyExact {
-			if _, has := podLabels[k]; has {
-				return sig.workloadType
-			}
-		}
+
+	// 1a. Check for operator-specific label keys.
+	if wt, found := checkLabelKeys(podLabels, sigs); found {
+		return wt
 	}
 
 	// 1b. Check well-known label keys whose values identify the workload.
+	if wt, found := checkLabelValues(podLabels, sigs); found {
+		return wt
+	}
+
+	// 2. Check container images.
+	if wt, found := checkImages(images, sigs); found {
+		return wt
+	}
+
+	return WorkloadTypeUnknown
+}
+
+// Helper 1: Handles operator-specific exact key matching
+func checkLabelKeys(podLabels map[string]string, sigs []workloadSignal) (WorkloadType, bool) {
+	for _, sig := range sigs {
+		for _, k := range sig.labelKeyExact {
+			if _, has := podLabels[k]; has {
+				return sig.workloadType, true
+			}
+		}
+	}
+	return "", false
+}
+
+// Helper 2: Handles discovery key substring matching
+func checkLabelValues(podLabels map[string]string, sigs []workloadSignal) (WorkloadType, bool) {
 	for _, key := range labelDiscoveryKeys() {
 		val, ok := podLabels[key]
 		if !ok || val == "" {
@@ -147,25 +169,27 @@ func Classify(images []string, podLabels map[string]string) WorkloadType {
 		for _, sig := range sigs {
 			for _, lv := range sig.labelValues {
 				if strings.Contains(valLower, lv) {
-					return sig.workloadType
+					return sig.workloadType, true
 				}
 			}
 		}
 	}
+	return "", false
+}
 
-	// 2. Check container images (strip registry host and tag first).
+// Helper 3: Handles image substring matching
+func checkImages(images []string, sigs []workloadSignal) (WorkloadType, bool) {
 	for _, image := range images {
 		bare := stripImageMeta(image)
 		for _, sig := range sigs {
 			for _, substr := range sig.imageSubstrings {
 				if strings.Contains(bare, substr) {
-					return sig.workloadType
+					return sig.workloadType, true
 				}
 			}
 		}
 	}
-
-	return WorkloadTypeUnknown
+	return "", false
 }
 
 // stripImageMeta removes the registry host and tag from an image reference so

@@ -26,7 +26,7 @@ type Config struct {
 	Interval       time.Duration `mapstructure:"interval"`
 
 	Sink struct {
-		Type string                 `mapstructure:"type"`
+		Type string                  `mapstructure:"type"`
 		HTTP internalconfig.HTTPSink `mapstructure:"http"`
 	} `mapstructure:"sink"`
 

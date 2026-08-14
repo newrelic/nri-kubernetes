@@ -171,7 +171,19 @@ func detectPodInstrumentation(pod *corev1.Pod, wt WorkloadType, ctx clusterInstr
 		OHIConfigured:      ctx.ohiConfiguredFor[wt],
 	}
 
-	for k, v := range pod.Annotations {
+	// 1. Check annotations
+	checkAnnotations(pod.Annotations, &s)
+
+	// 2. Check container specs (Env vars and Sidecars)
+	checkContainers(pod.Spec.Containers, &s)
+
+	s.Status = deriveStatus(s)
+	return s
+}
+
+// Helper 1: Evaluates annotations for scraping and telemetry signals
+func checkAnnotations(annotations map[string]string, s *InstrumentationStatus) {
+	for k, v := range annotations {
 		kLower := strings.ToLower(k)
 		switch {
 		case kLower == "prometheus.io/scrape" && v == "true":
@@ -182,11 +194,14 @@ func detectPodInstrumentation(pod *corev1.Pod, wt WorkloadType, ctx clusterInstr
 			s.OTelPresent = true
 		}
 	}
+}
 
+// Helper 2: Loops through containers to inspect environments and images
+func checkContainers(containers []corev1.Container, s *InstrumentationStatus) {
 	apmEnvVars := nrAPMEnvVarNames()
 	otelEnvVars := otelEnvVarNames()
 	otelSidecars := otelSidecarImageSubstrings()
-	for _, c := range pod.Spec.Containers {
+	for _, c := range containers {
 		for _, env := range c.Env {
 			if _, ok := apmEnvVars[env.Name]; ok {
 				s.APMPresent = true
@@ -203,9 +218,6 @@ func detectPodInstrumentation(pod *corev1.Pod, wt WorkloadType, ctx clusterInstr
 			}
 		}
 	}
-
-	s.Status = deriveStatus(s)
-	return s
 }
 
 // deriveStatus maps the individual boolean signals to the three-value summary string.
