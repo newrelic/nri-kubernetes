@@ -1,12 +1,15 @@
 package cloud
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
 )
+
+var errUnsupportedAKSResourceID = errors.New("cannot assemble AKS resource id from providerID (custom node resource groups and names with underscores are unsupported)")
 
 // nodeGroupComponentCount is the number of parts in a node resource group named.
 const nodeGroupComponentCount = 4
@@ -27,7 +30,7 @@ var detectAKS = func(logger *log.Logger, providerID string) (string, error) {
 	resourceGroup, cluster := parseAKSNodeResourceGroup(nodeRG)
 
 	if subscriptionID == "" || resourceGroup == "" || cluster == "" {
-		return "", fmt.Errorf("cannot assemble AKS resource id from providerID %q (custom node resource groups and names with underscores are unsupported)", providerID)
+		return "", fmt.Errorf("%w: %q", errUnsupportedAKSResourceID, providerID)
 	}
 
 	id := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.ContainerService/managedClusters/%s",

@@ -2,6 +2,7 @@ package cloud
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -12,6 +13,8 @@ import (
 
 	"github.com/newrelic/nri-kubernetes/v3/internal/logutil"
 )
+
+var errUnrecognizedProviderID = errors.New("unrecognized providerID")
 
 type Provider string
 
@@ -48,6 +51,6 @@ func DetectClusterId(ctx context.Context, logger *log.Logger, k8s kubernetes.Int
 		id, err := detectAKS(logger, providerID)
 		return id, ProviderAKS, err
 	default:
-		return "", ProviderUnknown, fmt.Errorf("unrecognized providerID %q", providerID)
+		return "", ProviderUnknown, fmt.Errorf("%w: %q", errUnrecognizedProviderID, providerID)
 	}
 }

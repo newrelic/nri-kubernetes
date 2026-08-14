@@ -1,6 +1,7 @@
 package cloud
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,6 +13,8 @@ import (
 var (
 	gkeMetadataBaseURL = "http://metadata.google.internal/computeMetadata/v1"
 )
+
+var errUnexpectedStatus = errors.New("unexpected metadata response status")
 
 const maxMetadataBodyBytes = 1 * 1024 * 1024
 
@@ -38,7 +41,7 @@ func doMetadataGet(req *http.Request) (string, error) {
 		return "", fmt.Errorf("reading response body: %w", err)
 	}
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("unexpected status %d: %s", resp.StatusCode, string(body))
+		return "", fmt.Errorf("%w %d: %s", errUnexpectedStatus, resp.StatusCode, string(body))
 	}
 	return string(body), nil
 }

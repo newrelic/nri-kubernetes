@@ -2,6 +2,7 @@ package cloud
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -10,6 +11,12 @@ import (
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	log "github.com/sirupsen/logrus"
+)
+
+var (
+	errIncompleteEKSMetadata  = errors.New("incomplete EKS metadata")
+	errMissingRegionInstance  = errors.New("missing region/instance-id from providerID")
+	errClusterNameTagNotFound = errors.New("cluster-name tag not found on instance")
 )
 
 // eksClusterNameTag is the tag EKS automatically applies to member EC2 instances.
@@ -35,7 +42,7 @@ var detectEKS = func(ctx context.Context, logger *log.Logger, providerID string)
 	}
 
 	if region == "" || accountID == "" || clusterName == "" {
-		return "", fmt.Errorf("incomplete EKS identity: region=%q account=%q cluster=%q", region, accountID, clusterName)
+		return "", fmt.Errorf("%w: region=%q account=%q cluster=%q", errIncompleteEKSMetadata, region, accountID, clusterName)
 	}
 	return fmt.Sprintf("arn:%s:eks:%s:%s:cluster/%s", awsPartition(region), region, accountID, clusterName), nil
 }
@@ -80,7 +87,7 @@ var newEC2Client = func(ctx context.Context, region string) (ec2DescribeInstance
 // owner) via the EC2 API, using Pod Identity / IRSA credentials.
 func eksIdentityFromAPI(ctx context.Context, region, instanceID string) (clusterName, accountID string, err error) {
 	if region == "" || instanceID == "" {
-		return "", "", fmt.Errorf("missing region/instance-id from providerID")
+		return "", "", errMissingRegionInstance
 	}
 	client, err := newEC2Client(ctx, region)
 	if err != nil {
@@ -99,7 +106,7 @@ func eksIdentityFromAPI(ctx context.Context, region, instanceID string) (cluster
 			}
 		}
 	}
-	return "", "", fmt.Errorf("tag %s not found on instance %s", eksClusterNameTag, instanceID)
+	return "", "", fmt.Errorf("%w: tag %s instance %s", errClusterNameTagNotFound, eksClusterNameTag, instanceID)
 }
 
 // awsPartition returns the ARN partition for a region.

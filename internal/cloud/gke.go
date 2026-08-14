@@ -2,11 +2,14 @@ package cloud
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
 )
+
+var errIncompleteGKEMetadata = errors.New("incomplete GKE metadata")
 
 // detectGKE assembles the GKE cluster link /projects/<projectId>/locations/<location>/clusters/<clusterName>.
 // projectId comes from the node's providerID (falling back to the metadata server);
@@ -32,7 +35,7 @@ var detectGKE = func(ctx context.Context, providerID string) (string, error) {
 	}
 
 	if projectID == "" || location == "" || name == "" {
-		return "", fmt.Errorf("incomplete GKE metadata: project=%q location=%q cluster=%q", projectID, location, name)
+		return "", fmt.Errorf("%w: project=%q location=%q cluster=%q", errIncompleteGKEMetadata, projectID, location, name)
 	}
 	return fmt.Sprintf("/projects/%s/locations/%s/clusters/%s", projectID, location, name), nil
 }
