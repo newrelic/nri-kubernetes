@@ -7,6 +7,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+const statusTrue = true
+
 // Instrumentation status values returned in InstrumentationStatus.Status.
 const (
 	StatusInstrumented    = "instrumented"
@@ -187,11 +189,11 @@ func checkAnnotations(annotations map[string]string, s *InstrumentationStatus) {
 		kLower := strings.ToLower(k)
 		switch {
 		case kLower == "prometheus.io/scrape" && v == "true":
-			s.PrometheusScraped = true
+			s.PrometheusScraped = statusTrue
 		case strings.HasPrefix(kLower, "newrelic.io/"):
-			s.NRAnnotated = true
+			s.NRAnnotated = statusTrue
 		case strings.HasPrefix(kLower, "instrumentation.opentelemetry.io/"):
-			s.OTelPresent = true
+			s.OTelPresent = statusTrue
 		}
 	}
 }
@@ -204,16 +206,16 @@ func checkContainers(containers []corev1.Container, s *InstrumentationStatus) {
 	for _, c := range containers {
 		for _, env := range c.Env {
 			if _, ok := apmEnvVars[env.Name]; ok {
-				s.APMPresent = true
+				s.APMPresent = statusTrue
 			}
 			if _, ok := otelEnvVars[env.Name]; ok {
-				s.OTelPresent = true
+				s.OTelPresent = statusTrue
 			}
 		}
 		imgLower := strings.ToLower(c.Image)
 		for _, substr := range otelSidecars {
 			if strings.Contains(imgLower, substr) {
-				s.OTelPresent = true
+				s.OTelPresent = statusTrue
 				break
 			}
 		}
