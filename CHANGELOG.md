@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### enhancement
 - Allow configuring passthrough environment variables for On-host integrations via `kubelet.extraPassthroughEnv`. Resolves #1491. @dbudziwojski [#1513](https://github.com/newrelic/nri-kubernetes/pull/1513)
+- Add `gkeAutopilotAllowList` value. When running with `provider=GKE_AUTOPILOT`, setting this to `true` restores privileged/host access (privileged securityContext, hostPath volumes, `/dev`, `NRIA_OVERRIDE_HOST_ROOT`) for workloads on Google's GKE Autopilot allowlist, while keeping the Autopilot connectivity settings (`/metrics` test endpoint, `fetchPodsFromKubeService`). The chart fails to render if the flag is set without `provider=GKE_AUTOPILOT`.
 
 ## v4.4.1 - 2026-07-20
 
