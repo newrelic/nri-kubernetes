@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v4.6.1 - 2026-08-17
+
+### ⛓️ Dependencies
+- Updated google.golang.org/protobuf to v1.36.12
+- Updated github.com/sirupsen/logrus to v1.10.0 - [Changelog 🔗](https://github.com/sirupsen/logrus/releases/tag/v1.10.0)
+
 ## v4.6.0 - 2026-08-10
 
 ### 🛡️ Security notices
