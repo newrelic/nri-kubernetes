@@ -68,7 +68,7 @@ func (s *Job) Populate(
 	config := &definition.IntegrationPopulateConfig{
 		Integration:    i,
 		ClusterName:    clusterName,
-		CloudClusterId: cloudClusterID,
+		CloudClusterID: cloudClusterID,
 		K8sVersion:     k8sVersion,
 		Specs:          s.Specs,
 		MsTypeGuesser:  definition.K8sMetricSetTypeGuesser,

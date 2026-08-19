@@ -18,7 +18,7 @@ type GuessFunc func(groupLabel string) (string, error)
 type IntegrationPopulateConfig struct {
 	Integration    *integration.Integration
 	ClusterName    string
-	CloudClusterId string
+	CloudClusterID string
 	K8sVersion     fmt.Stringer
 	MsTypeGuesser  GuessFunc
 	Groups         RawGroups
