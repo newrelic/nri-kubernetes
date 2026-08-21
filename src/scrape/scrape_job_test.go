@@ -219,7 +219,7 @@ func TestPopulateK8s(t *testing.T) {
 	testJob := NewScrapeJob("test", &grouperMock{}, kubeletSpecs)
 
 	k8sVersion := &version.Info{GitVersion: "v1.15.42"}
-	errPopulate := testJob.Populate(intgr, "test-cluster", logutil.Debug, k8sVersion)
+	errPopulate := testJob.Populate(intgr, "test-cluster", "", logutil.Debug, k8sVersion)
 	assert.Empty(t, errPopulate.Errors)
 
 	expectedInventory := inventory.New()
@@ -268,7 +268,7 @@ func TestRestartCountDeltaValues(t *testing.T) {
 	k8sVersion := &version.Info{GitVersion: "v1.15.42"}
 	// Populate data several times to check expected deltas
 	for i := 0; i < len(expectedRestartCountDeltas); i++ {
-		errPopulate := testJob.Populate(intgr, "test-cluster", logutil.Debug, k8sVersion)
+		errPopulate := testJob.Populate(intgr, "test-cluster", "", logutil.Debug, k8sVersion)
 		assert.Empty(t, errPopulate.Errors)
 		time.Sleep(time.Second)
 	}

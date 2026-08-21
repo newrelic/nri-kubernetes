@@ -30,7 +30,7 @@ func TestSetupKubelet(t *testing.T) {
 	providers := clusterClients{
 		k8s: fake.NewSimpleClientset(),
 	}
-	scraper, err := setupKubelet(&c, &providers, namespaceCache, interfaceCache)
+	scraper, err := setupKubelet(&c, &providers, namespaceCache, interfaceCache, "")
 	assert.NoError(t, err)
 	assert.NotEmpty(t, scraper)
 	assert.NotEmpty(t, scraper.Filterer)
@@ -52,7 +52,7 @@ func TestSetupKSM(t *testing.T) {
 	providers := clusterClients{
 		k8s: fake.NewSimpleClientset(),
 	}
-	scraper, err := setupKSM(&c, &providers, namespaceCache)
+	scraper, err := setupKSM(&c, &providers, namespaceCache, "")
 	assert.NoError(t, err)
 	assert.NotEmpty(t, scraper)
 	assert.NotEmpty(t, scraper.Filterer)

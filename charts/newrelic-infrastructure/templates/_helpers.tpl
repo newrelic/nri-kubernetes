@@ -87,11 +87,12 @@ true
 
 
 {{- define "newrelic.integrationConfigDefaults" -}}
-{{- if include "newrelic.common.lowDataMode" . -}}
+disableCloudClusterIdDetection: false
+{{ if include "newrelic.common.lowDataMode" . -}}
 interval: 30s
-{{- else  -}}
+{{ else  -}}
 interval: 15s
-{{- end -}}
+{{ end -}}
 {{- end -}}
 
 
