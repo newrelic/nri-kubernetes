@@ -232,6 +232,7 @@ Infrastructure Agent integrations (Kafka, Cassandra, Redis, etc.) are not suppor
 | fargate | bool | `false` | Enable EKS Fargate support. When enabled: - The kubelet DaemonSet will be excluded from Fargate nodes via node affinity (eks.amazonaws.com/compute-type != fargate) - The control plane DaemonSet will be completely disabled (control plane metrics are not available on Fargate) - The newrelic-infra-operator should be used to inject the integration as a sidecar into pods running on Fargate nodes Can be configured also with `global.fargate` |
 | fedramp.enabled | bool | `false` | Enables FedRAMP. Can be configured also with `global.fedramp.enabled` |
 | fullnameOverride | string | `""` | Override the full name of the release |
+| gkeAutopilotAllowList | bool | `false` | When this workload is on Google's GKE Autopilot allowlist, restores privileged mode (privileged securityContext, hostPath, `/dev`, `NRIA_OVERRIDE_HOST_ROOT`) while keeping the GKE Autopilot connectivity settings (`/metrics` endpoint, `fetchPodsFromKubeService`). Requires `provider=GKE_AUTOPILOT`. |
 | hostNetwork | bool | `false` | Sets pod's hostNetwork. Can be configured also with `global.hostNetwork` |
 | images | object | See `values.yaml` | Images used by the chart for the integration and agents. |
 | images.agent | object | See `values.yaml` | Image for the New Relic Infrastructure Agent plus integrations. |

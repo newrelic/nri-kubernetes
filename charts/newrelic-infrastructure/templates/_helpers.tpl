@@ -127,8 +127,15 @@ readOnlyRootFilesystem: true
 {{- end -}}
 {{- end -}}
 
+{{/*
+Privileged mode is forced off on GKE Autopilot, since privileged/host access is
+normally rejected there. When the workload is on Google's Autopilot allowlist
+(gkeAutopilotAllowList=true), privileged access is permitted again, so we honor
+the underlying common.privileged setting. Connectivity workarounds (test endpoint,
+fetchPodsFromKubeService) and controlPlane are unaffected by this flag.
+*/}}
 {{- define "nriKubernetes.privileged" -}}
-{{- if and (include "newrelic.common.privileged" .) (not (include "newrelic.common.gkeAutopilot" .)) -}}
+{{- if and (include "newrelic.common.privileged" .) (or (not (include "newrelic.common.gkeAutopilot" .)) .Values.gkeAutopilotAllowList) -}}
 {{- include "newrelic.common.privileged" . -}}
 {{- end -}}
 {{- end -}}
