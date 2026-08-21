@@ -46,10 +46,11 @@ func JobWithFilterer(filterer discovery.NamespaceFilterer) JobOpt {
 	}
 }
 
-// Populate will get the data using the given Group, transform it, and push it to the given Integration
+// Populate will get the data using the given Group, transform it, and push it to the given Integration.
 func (s *Job) Populate(
 	i *integration.Integration,
 	clusterName string,
+	cloudClusterID string,
 	logger *log.Logger,
 	k8sVersion *version.Info,
 ) data.PopulateResult {
@@ -65,13 +66,14 @@ func (s *Job) Populate(
 	}
 
 	config := &definition.IntegrationPopulateConfig{
-		Integration:   i,
-		ClusterName:   clusterName,
-		K8sVersion:    k8sVersion,
-		Specs:         s.Specs,
-		MsTypeGuesser: definition.K8sMetricSetTypeGuesser,
-		Groups:        groups,
-		Filterer:      s.Filterer,
+		Integration:    i,
+		ClusterName:    clusterName,
+		CloudClusterID: cloudClusterID,
+		K8sVersion:     k8sVersion,
+		Specs:          s.Specs,
+		MsTypeGuesser:  definition.K8sMetricSetTypeGuesser,
+		Groups:         groups,
+		Filterer:       s.Filterer,
 	}
 	ok, populateErrs := populator.IntegrationPopulator(config)
 

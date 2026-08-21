@@ -35,6 +35,7 @@ type Scraper struct {
 	Providers
 	logger                  *log.Logger
 	config                  *config.Config
+	cloudClusterID          string
 	k8sVersion              *version.Info
 	defaultNetworkInterface string
 	nodeGetter              listersv1.NodeLister
@@ -44,7 +45,7 @@ type Scraper struct {
 	interfaceCache          *kubeletMetric.InterfaceCache
 }
 
-// ScraperOpt are options that can be used to configure the Scraper
+// ScraperOpt are options that can be used to configure the Scraper.
 type ScraperOpt func(s *Scraper) error
 
 // NewScraper builds a new Scraper, initializing its internal informers. After use, informers should be closed by calling
@@ -78,7 +79,7 @@ func NewScraper(config *config.Config, providers Providers, options ...ScraperOp
 	s.nodeGetter = nodeGetter
 	s.informerClosers = append(s.informerClosers, nodeCloser)
 
-	//TODO we can add a cache and retrieve the data more frequently if we notice this value can change often
+	// TODO we can add a cache and retrieve the data more frequently if we notice this value can change often
 	s.defaultNetworkInterface, err = network.DefaultInterface(config.Kubelet.NetworkRouteFile)
 	if err != nil {
 		s.logger.Warnf("Error finding default network interface: %v", err)
@@ -108,7 +109,7 @@ func (s *Scraper) Run(i *integration.Integration) error {
 	specs := metric.NewKubeletSpecs(s.interfaceCache)
 	job := scrape.NewScrapeJob("kubelet", kubeletGrouper, specs, scrape.JobWithFilterer(s.Filterer))
 
-	r := job.Populate(i, s.config.ClusterName, s.logger, s.k8sVersion)
+	r := job.Populate(i, s.config.ClusterName, s.cloudClusterID, s.logger, s.k8sVersion)
 	if r.Errors != nil {
 		s.logger.Debugf("Errors while scraping Kubelet: %q", r.Errors)
 	}
@@ -140,6 +141,14 @@ func WithFilterer(filterer discovery.NamespaceFilterer) ScraperOpt {
 func WithInterfaceCache(cache *kubeletMetric.InterfaceCache) ScraperOpt {
 	return func(s *Scraper) error {
 		s.interfaceCache = cache
+		return nil
+	}
+}
+
+// WithCloudClusterID returns an OptionFunc to set the cloud-detected cluster id.
+func WithCloudClusterID(id string) ScraperOpt {
+	return func(s *Scraper) error {
+		s.cloudClusterID = id
 		return nil
 	}
 }

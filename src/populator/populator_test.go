@@ -285,6 +285,46 @@ func TestIntegrationPopulator_CorrectValue(t *testing.T) {
 	assert.Contains(t, intgr.Entities, expectedEntityData2)
 }
 
+// TestIntegrationPopulator_SetsCloudResourceIDAttribute verifies that, when a cloud
+// resource id is configured, every populated entity has 'cloud.resource_id'.
+func TestIntegrationPopulator_SetsCloudResourceIDAttribute(t *testing.T) {
+	const cloudClusterID = "arn:aws:eks:us-east-1:123456789012:cluster/tommy"
+
+	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
+	require.NoError(t, err)
+
+	config := testConfig(intgr)
+	config.CloudClusterID = cloudClusterID
+
+	populated, errs := IntegrationPopulator(config)
+	require.True(t, populated)
+	require.Empty(t, errs)
+
+	for _, e := range intgr.Entities {
+		require.Len(t, e.Metrics, 1)
+		assert.Equal(t, cloudClusterID, e.Metrics[0].Metrics["cloud.resource_id"])
+	}
+	assert.Equal(t, 3, len(intgr.Entities), "expected all data entities to be populated")
+}
+
+// TestIntegrationPopulator_OmitsCloudResourceIDWhenEmpty verifies that no
+// cloud.resource_id attribute is emitted when no cloud resource id is configured.
+func TestIntegrationPopulator_OmitsCloudResourceIDWhenEmpty(t *testing.T) {
+	intgr, err := integration.New("nr.test", "1.0.0", integration.InMemoryStore())
+	require.NoError(t, err)
+
+	config := testConfig(intgr) // CloudClusterID is empty
+
+	populated, errs := IntegrationPopulator(config)
+	require.True(t, populated)
+	require.Empty(t, errs)
+
+	for _, e := range intgr.Entities {
+		require.Len(t, e.Metrics, 1)
+		assert.NotContains(t, e.Metrics[0].Metrics, "cloud.resource_id")
+	}
+}
+
 func TestIntegrationPopulator_PartialResult(t *testing.T) {
 	metricSpecsWithIncompatibleType := definition.SpecGroups{
 		"test": definition.SpecGroup{
@@ -1009,7 +1049,7 @@ func TestPopulateCluster(t *testing.T) {
 	k8sVersion := mockVersion{version: k8sVersionStr}
 
 	// --- 2. Execute the function under test ---
-	err = populateCluster(intgr, clusterName, k8sVersion)
+	err = populateCluster(intgr, clusterName, "", k8sVersion)
 
 	// --- 3. Assertions ---
 
@@ -1039,6 +1079,7 @@ func TestPopulateCluster(t *testing.T) {
 	metricSet := clusterEntity.Metrics[0]
 	assert.Equal(t, "K8sClusterSample", metricSet.Metrics["event_type"])
 	assert.Equal(t, clusterName, metricSet.Metrics["clusterName"])
+	assert.Empty(t, metricSet.Metrics["cloud.resource_id"])
 	assert.Equal(t, k8sVersionStr, metricSet.Metrics["clusterK8sVersion"])
 }
 

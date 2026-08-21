@@ -33,6 +33,7 @@ type Scraper struct {
 	Providers
 	logger          *log.Logger
 	config          *config.Config
+	cloudClusterID  string
 	k8sVersion      *version.Info
 	components      []component
 	informerClosers []chan<- struct{}
@@ -58,6 +59,14 @@ func WithRestConfig(restConfig *rest.Config) ScraperOpt {
 	return func(s *Scraper) error {
 		s.inClusterConfig = restConfig
 
+		return nil
+	}
+}
+
+// WithCloudClusterID returns an OptionFunc to set the cloud-detected cluster id.
+func WithCloudClusterID(id string) ScraperOpt {
+	return func(s *Scraper) error {
+		s.cloudClusterID = id
 		return nil
 	}
 }
@@ -169,7 +178,7 @@ func (s *Scraper) Run(i *integration.Integration) error {
 	for _, job := range jobs {
 		s.logger.Debugf("Running job: %s", job.Name)
 
-		result := job.Populate(i, s.config.ClusterName, s.logger, s.k8sVersion)
+		result := job.Populate(i, s.config.ClusterName, s.cloudClusterID, s.logger, s.k8sVersion)
 
 		if len(result.Errors) > 0 {
 			if result.Populated {

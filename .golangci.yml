@@ -27,7 +27,7 @@ linters:
     - gocyclo
     - godot
     - goheader
-    - gomodguard
+    - gomodguard_v2
     - goprintffuncname
     - gosec
     - govet
@@ -43,7 +43,6 @@ linters:
     - nilnil
     - noctx
     - nolintlint
-    - nonamedreturns
     - nosprintfhostport
     - paralleltest
     - prealloc
@@ -61,6 +60,7 @@ linters:
     - wastedassign
     - whitespace
     - wrapcheck
+    - nakedret
   settings:
     dupl:
       threshold: 100
@@ -89,6 +89,8 @@ linters:
       require-explanation: false
       require-specific: true
       allow-unused: false
+    nakedret:
+      max-func-lines: 0
   exclusions:
     generated: lax
     presets:

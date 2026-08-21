@@ -1,6 +1,6 @@
 # e2e-resources
 
-![Version: 1.13.0-devel](https://img.shields.io/badge/Version-1.13.0--devel-informational?style=flat-square)
+![Version: 1.16.0-devel](https://img.shields.io/badge/Version-1.16.0--devel-informational?style=flat-square)
 
 This chart creates e2e resources for nri-kubernetes.
 
@@ -16,8 +16,8 @@ This chart creates e2e resources for nri-kubernetes.
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://helm-charts.newrelic.com | common-library | 1.3.1 |
-| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.30.1 |
+| https://helm-charts.newrelic.com | common-library | 2.3.3 |
+| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 6.1.5 |
 
 ## Values
 
@@ -30,16 +30,30 @@ This chart creates e2e resources for nri-kubernetes.
 | failingJob.enabled | bool | `true` | Deploy a failing job |
 | fileSystemTest | object | `{"fileName":"pi.txt"}` | Variables for filesystem testing |
 | hpa.enabled | bool | `true` | Enable hpa resources |
+| kube-state-metrics.metricAnnotationsAllowList[0] | string | `"resourcequotas=[owner,description]"` |  |
+| kube-state-metrics.metricAnnotationsAllowList[1] | string | `"namespaces=[owner,description]"` |  |
+| kube-state-metrics.metricAnnotationsAllowList[2] | string | `"deployments=[owner,description]"` |  |
+| kube-state-metrics.metricAnnotationsAllowList[3] | string | `"pods=[owner,description]"` |  |
+| kube-state-metrics.metricLabelsAllowlist[0] | string | `"resourcequotas=[environment,team]"` |  |
+| kube-state-metrics.metricLabelsAllowlist[1] | string | `"namespaces=[environment,team]"` |  |
+| kube-state-metrics.metricLabelsAllowlist[2] | string | `"deployments=[environment,team]"` |  |
+| kube-state-metrics.metricLabelsAllowlist[3] | string | `"pods=[environment,team]"` |  |
+| kube-state-metrics.podSecurityContext | object | `{}` |  |
+| kube-state-metrics.securityContext.enabled | bool | `false` |  |
 | loadBalancerService.annotations | object | `{}` |  |
 | loadBalancerService.enabled | bool | `true` | Deploy a loadBalancer service |
 | loadBalancerService.fakeIP | string | `""` | If set, will deploy service with a loadBalancerIP set to this value |
 | openShift.enabled | bool | `false` |  |
 | pending.enabled | bool | `true` | Enable crashing and pending pods |
 | persistentVolume.enabled | bool | `true` | Create PVs |
-| persistentVolume.multiNode | bool | `true` | Changes PV type to run on multi-node clusters (e.g. GKE, OpenShift on GCP) |
+| persistentVolume.hostPath | string | `"/var/tmp/e2e-storage"` | hostPath for the PersistentVolume (default: /mnt/, for OpenShift use: /var/tmp/e2e-storage) |
+| persistentVolume.multiNode | bool | `false` | Changes PV type to run on multi-node clusters (e.g. GKE, OpenShift on GCP) |
 | persistentVolumeClaim.enabled | bool | `true` | Create PVCs |
 | scraper.enabled | bool | `false` | Deploy the scraper pod |
+| statefulSet.containerSecurityContext | object | `{}` |  |
 | statefulSet.enabled | bool | `true` | Deploy a dummy statefulSet |
+| statefulSet.podSecurityContext.fsGroup | int | `0` |  |
+| statefulSet.podSecurityContext.runAsUser | int | `0` |  |
 | windows.is2019 | bool | `false` | Deploy resources on Windows Server 2019 nodes |
 | windows.is2022 | bool | `false` | Deploy resources on Windows Server 2022 nodes |
 

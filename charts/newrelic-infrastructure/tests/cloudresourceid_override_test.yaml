@@ -1,0 +1,17 @@
+suite: test disableCloudClusterIdDetection override
+templates:
+  - templates/controlplane/scraper-configmap.yaml
+  - templates/ksm/scraper-configmap.yaml
+  - templates/kubelet/scraper-configmap.yaml
+tests:
+  - it: Does not fail with override
+    set:
+      licenseKey: test
+      cluster: test
+      common:
+        config:
+          disableCloudClusterIdDetection: true
+    asserts:
+      - matchRegex:
+          path: data["nri-kubernetes.yml"]
+          pattern: 'disableCloudClusterIdDetection: true'
