@@ -9,7 +9,6 @@ import (
 	"github.com/sethgrid/pester"
 )
 
-// Metadata endpoints. Declared as vars so tests can point them at httptest servers.
 const (
 	defaultGKEMetadataBaseURL = "http://metadata.google.internal/computeMetadata/v1"
 )
