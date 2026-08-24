@@ -22,7 +22,7 @@ jobs:
         goarch: [ amd64, arm64, arm ]
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: 'go.mod'
       - name: Build integration
@@ -46,7 +46,7 @@ jobs:
       - uses: helm/chart-testing-action@v2.8.0
       - uses: azure/setup-helm@v5
         with:
-          version: v4.2.3 #Do NOT update to v4 until https://github.com/helm-unittest/helm-unittest/issues/777 is resolved
+          version: v4.2.4 #Do NOT update to v4 until https://github.com/helm-unittest/helm-unittest/issues/777 is resolved
 
       - name: Lint charts
         run: ct --config .github/ct.yaml lint --debug
@@ -78,7 +78,7 @@ jobs:
           kubernetes version: ${{ matrix.kubernetes-version }}
           github token: ${{ secrets.GITHUB_TOKEN }}
           driver: docker
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         if: steps.list-changed.outputs.changed == 'true'
         with:
           go-version-file: 'go.mod'
@@ -102,7 +102,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: 'go.mod'
       - name: Run tests
@@ -119,7 +119,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: 'go.mod'
       - uses: newrelic/newrelic-infra-checkers@v1

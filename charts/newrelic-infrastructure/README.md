@@ -49,6 +49,18 @@ file, the value there is `nil`. If any value is set there, the `lowDataMode` tog
 Setting this interval above 40 seconds can make you experience issues with the Kubernetes Cluster Explorer so this chart limits setting the interval
 inside the range of 10 to 40 seconds.
 
+### Cloud resource id detection
+
+By default the integration auto-detects the underlying cloud provider's cluster resource id from the node's `spec.providerID` and emits it on the samples as the `cloud.resource_id` attribute:
+
+- **EKS** — the cluster ARN, e.g. `arn:aws:eks:us-east-1:123456789012:cluster/my-cluster`.
+- **AKS** — the cluster ARM id, e.g. `/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.ContainerService/managedClusters/<cluster>`.
+- **GKE** — the cluster link, e.g. `/projects/<project>/locations/<location>/clusters/<cluster>`.
+
+Detection is best-effort. If detection fails, the attribute is simply omitted. Disable it with `common.config.disableCloudClusterIdDetection: true`.
+
+**EKS requirement:** detection queries the EC2 API, so the integration's ServiceAccount must have AWS credentials via [EKS Pod Identity](https://docs.aws.amazon.com/eks/latest/userguide/pod-identities.html) or [IRSA](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html) with the `ec2:DescribeInstances` permission. Without credentials, EKS detection is skipped (non-fatal). AKS and GKE need no extra permissions.
+
 ### Affinities and tolerations
 
 The New Relic common library allows to set affinities, tolerations, and node selectors globally using e.g. `.global.affinity` to ease the configuration
@@ -188,6 +200,7 @@ Infrastructure Agent integrations (Kafka, Cassandra, Redis, etc.) are not suppor
 | cluster | string | `""` | Name of the Kubernetes cluster monitored. Can be configured also with `global.cluster` |
 | common | object | See `values.yaml` | Config that applies to all instances of the solution: kubelet, ksm, control plane and sidecars. |
 | common.agentConfig | object | `{}` | Config for the Infrastructure agent. Will be used by the forwarder sidecars and the agent running integrations. See: https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/ |
+| common.config.disableCloudClusterIdDetection | bool | `false` | Disable auto-detecting the cloud provider's cluster resource id (EKS ARN, AKS ARM id, or GKE link). On EKS, detection requires the pod to have AWS credentials (Pod Identity or IRSA) with `ec2:DescribeInstances` |
 | common.config.interval | duration | `15s` (See [Low data mode](README.md#low-data-mode)) | Intervals larger than 40s are not supported and will cause the NR UI to not behave properly. Any non-nil value will override the `lowDataMode` default. |
 | common.config.namespaceSelector | object | `{}` | Config for filtering ksm and kubelet metrics by namespace. |
 | containerSecurityContext | object | `{}` | Sets security context (at container level). Can be configured also with `global.containerSecurityContext` |
@@ -244,7 +257,7 @@ Infrastructure Agent integrations (Kafka, Cassandra, Redis, etc.) are not suppor
 | ksm.tolerations | list | Tolerates common node pressure taints but not unschedulable nodes | Tolerations for the KSM Deployment. tolerations:   - key: "node.kubernetes.io/disk-pressure"     operator: "Exists"     effect: "NoSchedule"   - key: "node.kubernetes.io/memory-pressure"     operator: "Exists"     effect: "NoSchedule"   - key: "node.kubernetes.io/pid-pressure"     operator: "Exists"     effect: "NoSchedule"   - key: "node.kubernetes.io/network-unavailable"     operator: "Exists"     effect: "NoSchedule"   - operator: "Exists"     effect: "NoExecute" |
 | kubelet | object | See `values.yaml` | Configuration for the DaemonSet that collects metrics from the Kubelet. |
 | kubelet.agent.resources | object | 100m/150M -/300M | Resources for the infrastructure-bundle agent sidecar container. |
-| kubelet.agentConfig | object | `{}` | Config for the Infrastructure agent that will forward the metrics to the backend and will run the integrations in this cluster. It will be merged with the configuration in `.common.agentConfig`. You can see all the agent configurations in [New Relic docs](https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/) e.g. you can set `passthrough_environment` int the [config file](https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/configure-infrastructure-agent/#config-file) so the agent let use that environment variables to the integrations. |
+| kubelet.agentConfig | object | `{}` | Config for the Infrastructure agent that will forward the metrics to the backend and will run the integrations in this cluster. It will be merged with the configuration in `.common.agentConfig`. You can see all the agent configurations in [New Relic docs](https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/infrastructure-agent-configuration-settings/) e.g. you can change the `event_queue_depth` in the [config file](https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/configuration/configure-infrastructure-agent/#config-file) |
 | kubelet.config.caBundlePath | string | `""` | Path to a PEM-encoded CA bundle used to verify the kubelet's serving certificate. |
 | kubelet.config.initBackoff | string | `"5s"` | Delay between retry attempts during kubelet client initialization. Only used if initTimeout > 0. |
 | kubelet.config.initTimeout | string | `"180s"` | Total timeout for kubelet connection retries during pod initialization. Useful for environments like EKS/GKE where kubelet certificates may take 1-2 minutes to provision after node startup. Set to 0s to disable retries and use legacy behavior (fail immediately). |
@@ -254,6 +267,7 @@ Infrastructure Agent integrations (Kafka, Cassandra, Redis, etc.) are not suppor
 | kubelet.enabled | bool | `true` | Enable kubelet monitoring. Advanced users only. Setting this to `false` is not supported and will break the New Relic experience. |
 | kubelet.extraEnv | list | `[]` | Add user environment variables to the agent |
 | kubelet.extraEnvFrom | list | `[]` | Add user environment from configMaps or secrets as variables to the agent |
+| kubelet.extraPassthroughEnv | list | `[]` | List of additional environment variable names or regexes to passthrough to Infrastructure agent On-host integrations. These environment variables must already be passed in with `extraEnv` or `extraEnvFrom` above |
 | kubelet.extraVolumeMounts | list | `[]` | Defines where to mount volumes specified with `extraVolumes` |
 | kubelet.extraVolumes | list | `[]` | Volumes to mount in the containers |
 | kubelet.hostNetwork | bool | Not set | Sets pod's hostNetwork. When set bypasses global/common variable. Note - does not apply to Windows nodes |

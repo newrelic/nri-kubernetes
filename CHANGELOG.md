@@ -7,7 +7,39 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancement
+## v4.7.0 - 2026-08-24
+
+### 🛡️ Security notices
+- Reverts #1518 that prevented scanners from flagging CVE-2013-3900 on this image but did not add support for WinVerifyTrust. @dbudziwojski [#1524](https://github.com/newrelic/nri-kubernetes/pull/1524)
+
+### 🚀 Enhancements
+- Automatically detect cluster resource ids (EKS ARN, AKS ARM id, or GKE link). Configurable with `common.config.disableCloudClusterIdDetection: true/false` @dbudziwojski [#1520](https://github.com/newrelic/nri-kubernetes/pull/1520)
+
+### ⛓️ Dependencies
+- Updated github.com/sirupsen/logrus to v1.10.1 - [Changelog 🔗](https://github.com/sirupsen/logrus/releases/tag/v1.10.1)
+- Updated golang.org/x/text to v0.41.0
+- Updated aws-sdk-go-v2 monorepo
+- Updated kubernetes monorepo to v0.36.4
+
+## v4.6.1 - 2026-08-17
+
+### ⛓️ Dependencies
+- Updated google.golang.org/protobuf to v1.36.12
+- Updated github.com/sirupsen/logrus to v1.10.0 - [Changelog 🔗](https://github.com/sirupsen/logrus/releases/tag/v1.10.0)
+
+## v4.6.0 - 2026-08-10
+
+### 🛡️ Security notices
+- Feature Request prevent scanners from flagging CVE-2013-3900 on this image. No added support for WinVerifyTrust @philip-r-beckwith [#1518](https://github.com/newrelic/nri-kubernetes/pull/1518)
+
+### ⛓️ Dependencies
+- Updated google.golang.org/protobuf digest
+- Updated github.com/prometheus/common to v0.70.1 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.70.1)
+- Updated kubernetes monorepo to v0.36.3
+
+## v4.5.0 - 2026-07-31
+
+### 🚀 Enhancements
 - Allow configuring passthrough environment variables for On-host integrations via `kubelet.extraPassthroughEnv`. Resolves #1491. @dbudziwojski [#1513](https://github.com/newrelic/nri-kubernetes/pull/1513)
 - Add `gkeAutopilotAllowList` value to restore privileged/host access on GKE Autopilot. Only available to customers enrolled in Google's GKE Autopilot partner allowlist program. Requires `provider=GKE_AUTOPILOT`. [#1526](https://github.com/newrelic/nri-kubernetes/pull/1526)
 

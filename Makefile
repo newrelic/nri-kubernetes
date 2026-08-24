@@ -104,7 +104,7 @@ local-env-start:
 
 .PHONY: tilt-up
 tilt-up:
-	eval $$(minikube docker-env); tilt up ; tilt down
+	tilt up ; tilt down
 
 # rt-update-changelog runs the release-toolkit run.sh script by piping it into bash to update the CHANGELOG.md.
 # It also passes down to the script all the flags added to the make target. To check all the accepted flags,
