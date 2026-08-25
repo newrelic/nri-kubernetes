@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## Unreleased
+
+### dependency
+- Updated go to v1.26 @dbudziwojski [#1529](https://github.com/newrelic/nri-kubernetes/pull/1529)
+
 ## v4.7.0 - 2026-08-24
 
 ### 🛡️ Security notices
