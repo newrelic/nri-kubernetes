@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v4.7.1 - 2026-08-31
+
+### ⛓️ Dependencies
+- Updated aws-sdk-go-v2 monorepo
+- Updated github.com/sirupsen/logrus to v1.10.2 - [Changelog 🔗](https://github.com/sirupsen/logrus/releases/tag/v1.10.2)
+
 ## v4.7.0 - 2026-08-24
 
 ### 🛡️ Security notices
