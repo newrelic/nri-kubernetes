@@ -15,6 +15,12 @@ customSecretLicenseKey: ""
 # -- This chart has support for GKE_AUTOPILOT, if booting in an autopilot cluster, set this to "GKE_AUTOPILOT"
 provider:
 
+# -- (bool) When this workload is on Google's GKE Autopilot allowlist, restores privileged mode (privileged
+# securityContext, hostPath, `/dev`, `NRIA_OVERRIDE_HOST_ROOT`) while keeping the GKE Autopilot connectivity
+# settings (`/metrics` endpoint, `fetchPodsFromKubeService`). Requires `provider=GKE_AUTOPILOT`.
+# @default -- `false`
+gkeAutopilotAllowList:
+
 # -- (bool) Enable EKS Fargate support. When enabled:
 # - The kubelet DaemonSet will be excluded from Fargate nodes via node affinity (eks.amazonaws.com/compute-type != fargate)
 # - The control plane DaemonSet will be completely disabled (control plane metrics are not available on Fargate)

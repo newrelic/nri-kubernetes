@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### 🚀 Enhancements
 - Allow configuring passthrough environment variables for On-host integrations via `kubelet.extraPassthroughEnv`. Resolves #1491. @dbudziwojski [#1513](https://github.com/newrelic/nri-kubernetes/pull/1513)
+- Add `gkeAutopilotAllowList` value to restore privileged/host access on GKE Autopilot. Only available to customers enrolled in Google's GKE Autopilot partner allowlist program. Requires `provider=GKE_AUTOPILOT`. [#1526](https://github.com/newrelic/nri-kubernetes/pull/1526)
 
 ## v4.4.1 - 2026-07-20
 
