@@ -1,0 +1,66 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nri-k8s-discover
+  namespace: newrelic
+---
+# ClusterRole: read-only access to cluster-scoped and cross-namespace resources.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: nri-k8s-discover
+rules:
+  # Core resources for workload discovery
+  - apiGroups: [""]
+    resources:
+      - pods
+      - persistentvolumeclaims
+      - services
+      - namespaces
+    verbs: ["get", "list", "watch"]
+  # StatefulSets signal stateful infrastructure; DaemonSets detect the NR infra agent
+  - apiGroups: ["apps"]
+    resources:
+      - statefulsets
+      - daemonsets
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: nri-k8s-discover
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: nri-k8s-discover
+subjects:
+  - kind: ServiceAccount
+    name: nri-k8s-discover
+    namespace: newrelic
+---
+# Role: ConfigMap read access is scoped to the NR namespace only
+# (OHI configs live there; we don't need to read ConfigMaps cluster-wide).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: nri-k8s-discover-configmaps
+  namespace: newrelic
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: nri-k8s-discover-configmaps
+  namespace: newrelic
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: nri-k8s-discover-configmaps
+subjects:
+  - kind: ServiceAccount
+    name: nri-k8s-discover
+    namespace: newrelic
