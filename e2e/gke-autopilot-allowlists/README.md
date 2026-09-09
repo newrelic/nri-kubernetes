@@ -15,9 +15,9 @@ nri-kubernetes workload on GKE Autopilot and that the expected node/host metrics
 | `../e2e-values-gke-autopilot-node.yml` / `-pod.yml` | Helm values per shape (kubelet DaemonSet only; ksm + controlPlane disabled). |
 | `../run-gke-autopilot-e2e.sh` | The runner. |
 
-The two CRs are byte-identical copies of the submission candidates in the gke-autopilot-allowlist
-staging repo (`allowListToSubmit/finalized_v3/`). Keep them in sync: they are both the test fixtures
-here and the source the future drift-check diffs against.
+These two CRs are the New Relic `WorkloadAllowlist` submission candidates for GKE Autopilot — the same
+manifests submitted to Google. Keep them in sync with what is submitted: they are both the test
+fixtures here and the source a drift-check would diff against.
 
 ## Image source: released vs local
 
