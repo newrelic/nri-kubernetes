@@ -1,0 +1,29 @@
+# GKE Autopilot e2e — POD-SCOPED shape (hostNetwork OFF).
+# Pairs with allowlist CR newrelic-nri-kubernetes-pod-scoped-hostnet-off. Same privileged host
+# layer (CPU/mem/disk/process, node-scoped) but host.net.*/NetworkSample are POD-netns-scoped
+# (agent eth0), not node network (see test-specs-gke-autopilot.yml, scenario gke-ap-pod).
+# controlPlane stays disabled (hostNetwork:true, Warden-blocked, collects nothing on GKE). ksm is
+# enabled to match the proven v2 config; the chart runs only a KSM *scraper* (no bundled KSM), and the
+# asserted k8s.node/pod/container metrics come from the kubelet, not KSM.
+provider: GKE_AUTOPILOT
+gkeAutopilotAllowList: true
+
+# Collect host process metrics so ProcessSample is emitted. No allowlist change needed — Google's
+# generated CR is byte-identical with process metrics on (CLAUDE.md §5).
+enableProcessMetrics: true
+
+kubelet:
+  enabled: true
+  # Pod-scoped shape: host network off.
+  hostNetwork: false
+
+ksm:
+  enabled: true
+controlPlane:
+  enabled: false
+
+# Image is controlled by the runner (run-gke-autopilot-e2e.sh), not this file:
+#   released -> chart defaults (published newrelic/nri-kubernetes)
+#   local    -> runner injects --set images.integration.registry/tag/pullPolicy for the dev build,
+#               pushed to a path ending in `newrelic/nri-kubernetes` so the CR image regex matches.
+# The agent container always stays the released infrastructure-bundle.

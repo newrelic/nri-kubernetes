@@ -1,0 +1,98 @@
+# =============================================================================
+# nri-kubernetes — POD-SCOPED shape (hostNetwork: OFF). Least-privilege tier.
+# priv + hostpath, NO host namespaces. Buys the host.* layer (CPU/mem/disk/load/
+# process) + System/Storage/ProcessSample — all NODE-scoped — EXCEPT host.net.*/
+# NetworkSample, which here report the agent pod's own eth0 (POD-netns), not node
+# network. For node-level network use newrelic-nri-kubernetes-node-scoped-hostnet-on.
+# Chart shape: provider=GKE_AUTOPILOT + gkeAutopilotAllowList=true, hostNetwork unset.
+# Derived from the node-on CR by dropping `hostNetwork:true` + the hostnamespaces
+# exemption; all other matching (regex image, RE2 env families, volumes) is identical.
+# Google Q3 (2026-09-08): host-namespace matching is EXACT — this is a separate
+# submission from the node-on shape and admits ONLY hostNetwork:false workloads.
+# =============================================================================
+apiVersion: auto.gke.io/v1
+kind: WorkloadAllowlist
+metadata:
+    name: newrelic-nri-kubernetes-pod-scoped-hostnet-off
+    annotations:
+        autopilot.gke.io/no-connect: "true"
+exemptions:
+    - autogke-disallow-privilege
+    - autogke-no-write-mode-hostpath
+matchingCriteria:
+    containers:
+        - name: kubelet
+          image: ^(.*/)?newrelic/nri-kubernetes$
+          env:
+            # RE2 family absorbs future NRI_KUBERNETES_* vars without re-submitting.
+            - name: ^NRI_KUBERNETES_.*$
+          volumeMounts:
+            - mountPath: /etc/newrelic-infra/nri-kubernetes.yml
+              name: nri-kubernetes-config
+              subPath: nri-kubernetes.yml
+            - mountPath: /host/proc
+              name: host-proc
+              readOnly: true
+        - name: agent
+          image: ^(.*/)?newrelic/infrastructure-bundle$
+          args:
+            - newrelic-infra
+          env:
+            # RE2 families collapse the NRIA_* / NRI_KUBERNETES_* vars; CLUSTER_NAME
+            # is the lone singleton with no shared prefix.
+            - name: ^NRIA_.*$
+            - name: ^NRI_KUBERNETES_.*$
+            - name: CLUSTER_NAME
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - mountPath: /etc/newrelic-infra.yml
+              name: config
+              subPath: newrelic-infra.yml
+            - mountPath: /etc/newrelic-infra/integrations.d/
+              name: nri-integrations-cfg-volume
+            - mountPath: /dev
+              name: dev
+            - mountPath: /run/containerd/containerd.sock
+              name: host-containerd-socket
+            - mountPath: /var/run/docker.sock
+              name: host-docker-socket
+            - mountPath: /var/log
+              name: log
+            - mountPath: /host
+              name: host-volume
+              readOnly: true
+            - mountPath: /var/db/newrelic-infra/data
+              name: agent-tmpfs-data
+            - mountPath: /var/db/newrelic-infra/user_data
+              name: agent-tmpfs-user-data
+            - mountPath: /tmp
+              name: agent-tmpfs-tmp
+    volumes:
+        - hostPath:
+            path: /dev
+          name: dev
+        - hostPath:
+            path: /run/containerd/containerd.sock
+          name: host-containerd-socket
+        - hostPath:
+            path: /var/run/docker.sock
+          name: host-docker-socket
+        - hostPath:
+            path: /var/log
+          name: log
+        - hostPath:
+            path: /
+          name: host-volume
+        - hostPath:
+            path: /proc
+          name: host-proc
+        - name: agent-tmpfs-data
+        - name: agent-tmpfs-user-data
+        - name: agent-tmpfs-tmp
+        - configMap: {}
+          name: nri-kubernetes-config
+        - configMap: {}
+          name: config
+        - configMap: {}
+          name: nri-integrations-cfg-volume

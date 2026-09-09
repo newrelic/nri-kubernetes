@@ -1,0 +1,120 @@
+description: |
+  MANUAL GKE Autopilot allowlist confirmation for nri-kubernetes.
+  NOT wired into any .github/workflows/* — run only via ../e2e/run-gke-autopilot-e2e.sh against an
+  existing GKE Autopilot cluster (gke-autopilot-truong), never minikube.
+
+  Two scenarios, one per WorkloadAllowlist shape. Each applies its CR, deploys ONLY the kubelet
+  DaemonSet (ksm + controlPlane disabled in the values so the workload matches the CR exactly), and
+  asserts the curated metric set that shape should produce. See gke-autopilot-allowlists/README.md.
+
+  The runner exports ${LICENSE_KEY}, ${IMAGE_SET_ARGS} (image override; empty for released images),
+  and ${STAGING_SET_ARGS} (--set global.nrStaging=true when REGION=Staging, else empty).
+
+  Query scoping: the e2e-action ALWAYS appends " WHERE <custom_test_key> = '<SCENARIO_TAG>'" to every
+  query (newrelic-integration-e2e-action client.go). So:
+    - custom_test_key is `clusterName` — the attribute nri sets on BOTH Metric (k8s.*) and the
+      infra-agent host events (SystemSample/ProcessSample/NetworkSample). global.cluster=SCENARIO_TAG
+      makes clusterName == the scenario tag.
+    - Our queries carry NO top-level WHERE of their own (metric-name filters go inside filter(...)),
+      so the appended clause is the ONLY WHERE — avoids the invalid double-WHERE.
+
+custom_test_key: clusterName
+
+scenarios:
+  # ===========================================================================
+  # NODE-SCOPED shape (hostNetwork ON) — CR newrelic-nri-kubernetes-node-scoped-hostnet-on
+  # Expect: k8s.* baseline + host layer, with host.net.*/NetworkSample scoped to the NODE.
+  # ===========================================================================
+  - description: |
+      GKE Autopilot node-scoped (hostNetwork on): privileged kubelet workload admitted by the
+      node-scoped allowlist; asserts k8s.* baseline + node-scoped host layer.
+    before:
+      - helm dependency update ../charts/newrelic-infrastructure
+      - kubectl apply -f gke-autopilot-allowlists/newrelic-nri-kubernetes-node-scoped-hostnet-on.workloadallowlist.yaml
+      - helm upgrade --install ${SCENARIO_TAG} --namespace nr-${SCENARIO_TAG} --create-namespace ../charts/newrelic-infrastructure --values e2e-values-gke-autopilot-node.yml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG} ${IMAGE_SET_ARGS} ${STAGING_SET_ARGS}
+      # Real-cluster ingest is slower than minikube; give data time to land.
+      - sleep 90
+    after:
+      - kubectl logs --selector app.kubernetes.io/name=newrelic-infrastructure --namespace nr-${SCENARIO_TAG} --all-containers --prefix=true
+      - kubectl get pods --namespace nr-${SCENARIO_TAG} -o wide
+      - helm delete ${SCENARIO_TAG} --namespace nr-${SCENARIO_TAG}
+      - kubectl delete -f gke-autopilot-allowlists/newrelic-nri-kubernetes-node-scoped-hostnet-on.workloadallowlist.yaml
+    tests:
+      nrqls:
+        # ---- k8s baseline (kubelet-derived; privilege-independent, confirms the agent scrapes) ----
+        # nri-kubernetes emits k8s data as K8s*Sample EVENTS (not k8s.* Metric), scoped by clusterName
+        # (same attribute as the host layer), so the action's appended " WHERE clusterName='<tag>'" works.
+        - query: FROM K8sNodeSample SELECT count(*) AS 'K8sNodeSample'
+          expected_results:
+            - key: "K8sNodeSample"
+              lowerBoundedValue: 1.0
+        - query: FROM K8sPodSample SELECT count(*) AS 'K8sPodSample'
+          expected_results:
+            - key: "K8sPodSample"
+              lowerBoundedValue: 1.0
+        - query: FROM K8sContainerSample SELECT count(*) AS 'K8sContainerSample'
+          expected_results:
+            - key: "K8sContainerSample"
+              lowerBoundedValue: 1.0
+        # ---- host layer: the value-add of the allowlist (privileged host access) ----
+        # The host layer lands as infra-agent EVENTS, NOT `host.*` Metric names (confirmed in the v2
+        # results: `metricName LIKE 'host.%'` is legitimately empty), so assert the event types.
+        - query: FROM SystemSample SELECT count(*) AS 'SystemSample'
+          expected_results:
+            - key: "SystemSample"
+              lowerBoundedValue: 1.0
+        - query: FROM ProcessSample SELECT count(*) AS 'ProcessSample'
+          expected_results:
+            - key: "ProcessSample"
+              lowerBoundedValue: 1.0
+        # ---- node-scoped network: many interfaces (node eth0 + cilium_*/lxc*), proves NODE scope ----
+        # Floor of 2 distinguishes the node shape from the pod shape (agent eth0 only). Tune the floor
+        # to the node's real interface count on first run.
+        - query: FROM NetworkSample SELECT uniqueCount(interfaceName) AS 'net ifaces'
+          expected_results:
+            - key: "net ifaces"
+              lowerBoundedValue: 2.0
+
+  # ===========================================================================
+  # POD-SCOPED shape (hostNetwork OFF) — CR newrelic-nri-kubernetes-pod-scoped-hostnet-off
+  # Expect: same k8s.* + host CPU/mem/disk/process (node-scoped), but NetworkSample POD-scoped (eth0).
+  # ===========================================================================
+  - description: |
+      GKE Autopilot pod-scoped (hostNetwork off): privileged kubelet workload admitted by the
+      pod-scoped allowlist; asserts k8s.* baseline + host layer with pod-netns-scoped network.
+    before:
+      - helm dependency update ../charts/newrelic-infrastructure
+      - kubectl apply -f gke-autopilot-allowlists/newrelic-nri-kubernetes-pod-scoped-hostnet-off.workloadallowlist.yaml
+      - helm upgrade --install ${SCENARIO_TAG} --namespace nr-${SCENARIO_TAG} --create-namespace ../charts/newrelic-infrastructure --values e2e-values-gke-autopilot-pod.yml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG} ${IMAGE_SET_ARGS} ${STAGING_SET_ARGS}
+      - sleep 90
+    after:
+      - kubectl logs --selector app.kubernetes.io/name=newrelic-infrastructure --namespace nr-${SCENARIO_TAG} --all-containers --prefix=true
+      - kubectl get pods --namespace nr-${SCENARIO_TAG} -o wide
+      - helm delete ${SCENARIO_TAG} --namespace nr-${SCENARIO_TAG}
+      - kubectl delete -f gke-autopilot-allowlists/newrelic-nri-kubernetes-pod-scoped-hostnet-off.workloadallowlist.yaml
+    tests:
+      nrqls:
+        - query: FROM K8sNodeSample SELECT count(*) AS 'K8sNodeSample'
+          expected_results:
+            - key: "K8sNodeSample"
+              lowerBoundedValue: 1.0
+        - query: FROM K8sPodSample SELECT count(*) AS 'K8sPodSample'
+          expected_results:
+            - key: "K8sPodSample"
+              lowerBoundedValue: 1.0
+        # host layer present (node-scoped resource metrics; same TUNE-ON-FIRST-RUN caveat as above)
+        - query: FROM SystemSample SELECT count(*) AS 'SystemSample'
+          expected_results:
+            - key: "SystemSample"
+              lowerBoundedValue: 1.0
+        - query: FROM ProcessSample SELECT count(*) AS 'ProcessSample'
+          expected_results:
+            - key: "ProcessSample"
+              lowerBoundedValue: 1.0
+        # Network present but POD-scoped (agent eth0). The e2e schema has no upper bound, so we only
+        # assert presence here; the node-vs-pod interface-count DISTINCTION is an observational check
+        # documented in the README (compare this scenario's `net ifaces` to the node scenario's).
+        - query: FROM NetworkSample SELECT uniqueCount(interfaceName) AS 'net ifaces'
+          expected_results:
+            - key: "net ifaces"
+              lowerBoundedValue: 1.0
