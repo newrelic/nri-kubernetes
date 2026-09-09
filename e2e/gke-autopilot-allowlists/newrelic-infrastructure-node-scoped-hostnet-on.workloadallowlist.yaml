@@ -1,11 +1,9 @@
-# =============================================================================
-# nri-kubernetes — NODE-SCOPED shape (hostNetwork: ON).
-# priv + hostpath + hostnamespaces. host.net.*/NetworkSample are NODE-scoped
-# (node IP + cilium_*/lxc* ifaces) because hostNetwork:true. Full ~270 metricNames.
-# Pair: newrelic-infrastructure-pod-scoped-hostnet-off (same workload, hostNetwork OFF).
-# Google Q3 (2026-09-08): Warden does EXACT host-namespace matching, so the two shapes
-# are separate submissions — this CR admits ONLY hostNetwork:true workloads.
-# =============================================================================
+# newrelic-infrastructure (nri-kubernetes) — node-scoped shape.
+# Chart values that produce this workload:
+#   provider: GKE_AUTOPILOT
+#   gkeAutopilotAllowlist: true    # restores privileged mode on Autopilot
+#   kubelet.hostNetwork: true      # node-scoped network (host.net.* / NetworkSample)
+# Host-namespace matching is exact; pairs with newrelic-infrastructure-pod-scoped-hostnet-off.
 apiVersion: auto.gke.io/v1
 kind: WorkloadAllowlist
 minGKEVersion: 1.32.2-gke.1652000
@@ -23,7 +21,6 @@ matchingCriteria:
         - name: kubelet
           image: ^(.*/)?newrelic/nri-kubernetes$
           env:
-            # RE2 family absorbs future NRI_KUBERNETES_* vars without re-submitting.
             - name: ^NRI_KUBERNETES_.*$
           volumeMounts:
             - mountPath: /etc/newrelic-infra/nri-kubernetes.yml
@@ -37,8 +34,6 @@ matchingCriteria:
           args:
             - newrelic-infra
           env:
-            # RE2 families collapse the NRIA_* / NRI_KUBERNETES_* vars; CLUSTER_NAME
-            # is the lone singleton with no shared prefix.
             - name: ^NRIA_.*$
             - name: ^NRI_KUBERNETES_.*$
             - name: CLUSTER_NAME
