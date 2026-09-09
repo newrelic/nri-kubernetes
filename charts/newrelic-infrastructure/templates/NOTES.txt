@@ -12,7 +12,7 @@
 {{- end }}
 {{- end }}
 
-{{- if and .Values.gkeAutopilotAllowlist (not (include "newrelic.common.gkeAutopilot" .)) }}
+{{- if and (include "newrelic.common.gkeAutopilotAllowlist" .) (not (include "newrelic.common.gkeAutopilot" .)) }}
 {{ fail "gkeAutopilotAllowlist can only be set to true when provider=GKE_AUTOPILOT" }}
 {{- end }}
 
