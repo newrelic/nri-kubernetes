@@ -1,7 +1,8 @@
 # newrelic-infrastructure (nri-kubernetes) — node-scoped shape.
 # Chart values that produce this workload:
 #   provider: GKE_AUTOPILOT
-#   gkeAutopilotAllowlist: true    # restores privileged mode on Autopilot
+#   privileged: true               # chart default; the agent runs privileged
+#   gkeAutopilotAllowlist: true    # re-permits privileged on Autopilot (gates on privileged above)
 #   kubelet.hostNetwork: true      # node-scoped network (host.net.* / NetworkSample)
 # Host-namespace matching is exact; pairs with newrelic-infrastructure-pod-scoped-hostnet-off.
 apiVersion: auto.gke.io/v1
