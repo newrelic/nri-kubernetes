@@ -38,12 +38,12 @@ echo "Logging this run to: $RUN_LOG"
 echo "Latest run always at: $RESULTS_DIR/latest.log"
 echo
 
-DEFAULT_KUBE_CONTEXT="gke_k8s-o11y-team_us-west2_gke-autopilot-truong"
+DEFAULT_KUBE_CONTEXT="$(kubectl config current-context 2>/dev/null || true)"   # your active context; the runner only verifies it, never switches
 DEFAULT_REGION="US"               # US | EU | Staging | Local (GKE Autopilot testing uses a prod account)
 DEFAULT_IMAGE_SOURCE="released"   # released | local
 # local mode only. host/project; the image is pushed as $REGISTRY/newrelic/nri-kubernetes:$TAG so the
 # CR image regex ^(.*/)?newrelic/nri-kubernetes$ still matches.
-DEFAULT_REGISTRY="us-west2-docker.pkg.dev/k8s-o11y-team"
+DEFAULT_REGISTRY=""               # no default; set to a registry your cluster can pull from (local mode only)
 DEFAULT_TAG="e2e-gke-ap"
 
 PROMPTED=()

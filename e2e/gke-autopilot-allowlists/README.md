@@ -31,9 +31,9 @@ The runner asks which images the workload should run (`IMAGE_SOURCE`):
 
 ## Prerequisites
 
-- An existing GKE Autopilot cluster you can reach (default context
-  `gke_k8s-o11y-team_us-west2_gke-autopilot-truong`). The `WorkloadAllowlist` CRD only exists on
-  Autopilot, and applying a CR directly requires a "blessed" project.
+- An existing GKE Autopilot cluster you can reach (the runner defaults to your active kube-context and
+  only verifies it, never switches). The `WorkloadAllowlist` CRD only exists on Autopilot, and applying
+  a CR directly requires a "blessed" project.
 - A New Relic production account: `ACCOUNT_ID`, a USER API key, an INGEST license key.
 - `helm`, `kubectl`, `go`. **Local mode only:** `docker`, `make compile-multiarch`, and a container
   registry the cluster can pull from (Artifact Registry).
@@ -67,12 +67,12 @@ The e2e assertion schema has a lower bound but no upper bound, so the node-vs-po
 observational check: compare the `net ifaces` value logged by each scenario. Node should be clearly
 higher than pod.
 
-## First-run tuning
+## Host-layer query model
 
-The host-layer queries are seeded. On the first run, confirm against NRDB whether the host layer
-lands as `SystemSample`/`ProcessSample`/`NetworkSample` events (scoped by `clusterName`) or as
-`host.*` Metric names, and keep the queries that populate. Search `test-specs-gke-autopilot.yml` for
-`TUNE ON FIRST RUN`.
+The host layer lands as infra-agent **events** — `SystemSample` / `ProcessSample` / `NetworkSample`,
+scoped by `clusterName` — **not** as `host.*` Metric names (`metricName LIKE 'host.%'` is empty). The
+scenarios assert those event types accordingly. If you re-run against a different cluster or agent
+version, sanity-check that these events populate for your `clusterName`.
 
 ## Negative check (manual)
 
