@@ -154,8 +154,8 @@ if [[ "$IMAGE_SOURCE" == "local" ]]; then
   echo "Building + pushing MULTI-ARCH image $IMAGE_REF (linux/amd64,linux/arm64)…"
   export DOCKER_BUILDKIT=1
   # buildx --push publishes a multi-arch manifest directly. amd64 is required for GKE Autopilot nodes;
-  # arm64 covers arm node pools. The Dockerfile COPYs bin/nri-kubernetes-${TARGETOS}-${TARGETARCH},
-  # so each platform gets its matching prebuilt binary (no emulation needed).
+  # arm64 covers arm node pools. The Dockerfile's COPY step pulls in
+  # bin/nri-kubernetes-${TARGETOS}-${TARGETARCH}, so each platform gets its matching prebuilt binary.
   if ! ( cd "$REPO_ROOT" && docker buildx build --platform linux/amd64,linux/arm64 --tag "$IMAGE_REF" --push . ); then
     cat <<EOF
 
