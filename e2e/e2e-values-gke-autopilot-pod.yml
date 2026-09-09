@@ -1,6 +1,8 @@
 # GKE Autopilot e2e — pod-scoped shape (hostNetwork off).
 # Pairs with the newrelic-infrastructure-hostnet-off allowlist CR.
 provider: GKE_AUTOPILOT
+# privileged (chart default) pinned explicitly; gkeAutopilotAllowlist re-permits it on Autopilot
+privileged: true
 gkeAutopilotAllowlist: true
 # host process metrics -> ProcessSample (no allowlist change; Google's CR is byte-identical)
 enableProcessMetrics: true
