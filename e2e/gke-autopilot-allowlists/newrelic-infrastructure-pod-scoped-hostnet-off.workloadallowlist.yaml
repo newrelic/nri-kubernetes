@@ -1,23 +1,26 @@
 # =============================================================================
-# nri-kubernetes — NODE-SCOPED shape (hostNetwork: ON).
-# priv + hostpath + hostnamespaces. host.net.*/NetworkSample are NODE-scoped
-# (node IP + cilium_*/lxc* ifaces) because hostNetwork:true. Full ~270 metricNames.
-# Pair: newrelic-nri-kubernetes-pod-scoped-hostnet-off (same workload, hostNetwork OFF).
-# Google Q3 (2026-09-08): Warden does EXACT host-namespace matching, so the two shapes
-# are separate submissions — this CR admits ONLY hostNetwork:true workloads.
+# nri-kubernetes — POD-SCOPED shape (hostNetwork: OFF). Least-privilege tier.
+# priv + hostpath, NO host namespaces. Buys the host.* layer (CPU/mem/disk/load/
+# process) + System/Storage/ProcessSample — all NODE-scoped — EXCEPT host.net.*/
+# NetworkSample, which here report the agent pod's own eth0 (POD-netns), not node
+# network. For node-level network use newrelic-infrastructure-node-scoped-hostnet-on.
+# Chart shape: provider=GKE_AUTOPILOT + gkeAutopilotAllowlist=true, hostNetwork unset.
+# Derived from the node-on CR by dropping `hostNetwork:true` + the hostnamespaces
+# exemption; all other matching (regex image, RE2 env families, volumes) is identical.
+# Google Q3 (2026-09-08): host-namespace matching is EXACT — this is a separate
+# submission from the node-on shape and admits ONLY hostNetwork:false workloads.
 # =============================================================================
 apiVersion: auto.gke.io/v1
 kind: WorkloadAllowlist
+minGKEVersion: 1.32.2-gke.1652000
 metadata:
-    name: newrelic-nri-kubernetes-node-scoped-hostnet-on
+    name: newrelic-infrastructure-pod-scoped-hostnet-off
     annotations:
         autopilot.gke.io/no-connect: "true"
 exemptions:
     - autogke-disallow-privilege
     - autogke-no-write-mode-hostpath
-    - autogke-disallow-hostnamespaces
 matchingCriteria:
-    hostNetwork: true
     containers:
         - name: kubelet
           image: ^(.*/)?newrelic/nri-kubernetes$

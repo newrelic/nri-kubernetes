@@ -8,8 +8,8 @@ nri-kubernetes workload on GKE Autopilot and that the expected node/host metrics
 
 | File | Purpose |
 |---|---|
-| `newrelic-nri-kubernetes-node-scoped-hostnet-on.workloadallowlist.yaml` | Fixture CR, node-scoped shape (`hostNetwork: true`). |
-| `newrelic-nri-kubernetes-pod-scoped-hostnet-off.workloadallowlist.yaml` | Fixture CR, pod-scoped shape (`hostNetwork: false`). |
+| `newrelic-infrastructure-node-scoped-hostnet-on.workloadallowlist.yaml` | Fixture CR, node-scoped shape (`hostNetwork: true`). |
+| `newrelic-infrastructure-pod-scoped-hostnet-off.workloadallowlist.yaml` | Fixture CR, pod-scoped shape (`hostNetwork: false`). |
 | `.env.example` | Template for the runner config (copy to `.env`, which is gitignored). |
 | `../test-specs-gke-autopilot.yml` | The two scenarios and their metric assertions. |
 | `../e2e-values-gke-autopilot-node.yml` / `-pod.yml` | Helm values per shape (kubelet DaemonSet only; ksm + controlPlane disabled). |
@@ -82,7 +82,7 @@ should deny the privileged pod.
 ```bash
 # released images (default). For a local dev image, append the same --set images.integration.* flags
 # the runner uses.
-kubectl delete -f gke-autopilot-allowlists/newrelic-nri-kubernetes-node-scoped-hostnet-on.workloadallowlist.yaml
+kubectl delete -f gke-autopilot-allowlists/newrelic-infrastructure-node-scoped-hostnet-on.workloadallowlist.yaml
 helm upgrade --install neg --namespace nr-neg --create-namespace ../charts/newrelic-infrastructure \
   --values e2e-values-gke-autopilot-node.yml --set global.licenseKey=$LICENSE_KEY --set global.cluster=neg
 kubectl get pods -n nr-neg   # expect the kubelet pod blocked by Warden

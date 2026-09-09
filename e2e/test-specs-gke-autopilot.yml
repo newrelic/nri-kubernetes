@@ -22,7 +22,7 @@ custom_test_key: clusterName
 
 scenarios:
   # ===========================================================================
-  # NODE-SCOPED shape (hostNetwork ON) — CR newrelic-nri-kubernetes-node-scoped-hostnet-on
+  # NODE-SCOPED shape (hostNetwork ON) — CR newrelic-infrastructure-node-scoped-hostnet-on
   # Expect: k8s.* baseline + host layer, with host.net.*/NetworkSample scoped to the NODE.
   # ===========================================================================
   - description: |
@@ -30,7 +30,7 @@ scenarios:
       node-scoped allowlist; asserts k8s.* baseline + node-scoped host layer.
     before:
       - helm dependency update ../charts/newrelic-infrastructure
-      - kubectl apply -f gke-autopilot-allowlists/newrelic-nri-kubernetes-node-scoped-hostnet-on.workloadallowlist.yaml
+      - kubectl apply -f gke-autopilot-allowlists/newrelic-infrastructure-node-scoped-hostnet-on.workloadallowlist.yaml
       - helm upgrade --install ${SCENARIO_TAG} --namespace nr-${SCENARIO_TAG} --create-namespace ../charts/newrelic-infrastructure --values e2e-values-gke-autopilot-node.yml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG} ${IMAGE_SET_ARGS} ${STAGING_SET_ARGS}
       # Real-cluster ingest is slower than minikube; give data time to land.
       - sleep 90
@@ -38,7 +38,7 @@ scenarios:
       - kubectl logs --selector app.kubernetes.io/name=newrelic-infrastructure --namespace nr-${SCENARIO_TAG} --all-containers --prefix=true
       - kubectl get pods --namespace nr-${SCENARIO_TAG} -o wide
       - helm delete ${SCENARIO_TAG} --namespace nr-${SCENARIO_TAG}
-      - kubectl delete -f gke-autopilot-allowlists/newrelic-nri-kubernetes-node-scoped-hostnet-on.workloadallowlist.yaml
+      - kubectl delete -f gke-autopilot-allowlists/newrelic-infrastructure-node-scoped-hostnet-on.workloadallowlist.yaml
     tests:
       nrqls:
         # ---- k8s baseline (kubelet-derived; privilege-independent, confirms the agent scrapes) ----
@@ -76,7 +76,7 @@ scenarios:
               lowerBoundedValue: 2.0
 
   # ===========================================================================
-  # POD-SCOPED shape (hostNetwork OFF) — CR newrelic-nri-kubernetes-pod-scoped-hostnet-off
+  # POD-SCOPED shape (hostNetwork OFF) — CR newrelic-infrastructure-pod-scoped-hostnet-off
   # Expect: same k8s.* + host CPU/mem/disk/process (node-scoped), but NetworkSample POD-scoped (eth0).
   # ===========================================================================
   - description: |
@@ -84,14 +84,14 @@ scenarios:
       pod-scoped allowlist; asserts k8s.* baseline + host layer with pod-netns-scoped network.
     before:
       - helm dependency update ../charts/newrelic-infrastructure
-      - kubectl apply -f gke-autopilot-allowlists/newrelic-nri-kubernetes-pod-scoped-hostnet-off.workloadallowlist.yaml
+      - kubectl apply -f gke-autopilot-allowlists/newrelic-infrastructure-pod-scoped-hostnet-off.workloadallowlist.yaml
       - helm upgrade --install ${SCENARIO_TAG} --namespace nr-${SCENARIO_TAG} --create-namespace ../charts/newrelic-infrastructure --values e2e-values-gke-autopilot-pod.yml --set global.licenseKey=${LICENSE_KEY} --set global.cluster=${SCENARIO_TAG} ${IMAGE_SET_ARGS} ${STAGING_SET_ARGS}
       - sleep 90
     after:
       - kubectl logs --selector app.kubernetes.io/name=newrelic-infrastructure --namespace nr-${SCENARIO_TAG} --all-containers --prefix=true
       - kubectl get pods --namespace nr-${SCENARIO_TAG} -o wide
       - helm delete ${SCENARIO_TAG} --namespace nr-${SCENARIO_TAG}
-      - kubectl delete -f gke-autopilot-allowlists/newrelic-nri-kubernetes-pod-scoped-hostnet-off.workloadallowlist.yaml
+      - kubectl delete -f gke-autopilot-allowlists/newrelic-infrastructure-pod-scoped-hostnet-off.workloadallowlist.yaml
     tests:
       nrqls:
         - query: FROM K8sNodeSample SELECT count(*) AS 'K8sNodeSample'
