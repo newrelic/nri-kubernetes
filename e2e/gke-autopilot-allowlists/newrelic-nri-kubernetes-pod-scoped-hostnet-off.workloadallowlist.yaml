@@ -4,7 +4,7 @@
 # process) + System/Storage/ProcessSample — all NODE-scoped — EXCEPT host.net.*/
 # NetworkSample, which here report the agent pod's own eth0 (POD-netns), not node
 # network. For node-level network use newrelic-nri-kubernetes-node-scoped-hostnet-on.
-# Chart shape: provider=GKE_AUTOPILOT + gkeAutopilotAllowList=true, hostNetwork unset.
+# Chart shape: provider=GKE_AUTOPILOT + gkeAutopilotAllowlist=true, hostNetwork unset.
 # Derived from the node-on CR by dropping `hostNetwork:true` + the hostnamespaces
 # exemption; all other matching (regex image, RE2 env families, volumes) is identical.
 # Google Q3 (2026-09-08): host-namespace matching is EXACT — this is a separate
