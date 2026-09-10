@@ -1,0 +1,19 @@
+# GKE Autopilot e2e — pod-scoped shape (hostNetwork off).
+# Pairs with the newrelic-infrastructure-hostnet-off allowlist CR.
+provider: GKE_AUTOPILOT
+# privileged (chart default) pinned explicitly; gkeAutopilotAllowlist re-permits it on Autopilot
+privileged: true
+gkeAutopilotAllowlist: true
+# host process metrics -> ProcessSample (no allowlist change; Google's CR is byte-identical)
+enableProcessMetrics: true
+
+kubelet:
+  enabled: true
+  hostNetwork: false
+
+# controlPlane off: hostNetwork is Warden-blocked and collects nothing on GKE Autopilot.
+# ksm on to match the validated config (the asserted k8s.* come from the kubelet, not KSM).
+ksm:
+  enabled: true
+controlPlane:
+  enabled: false
