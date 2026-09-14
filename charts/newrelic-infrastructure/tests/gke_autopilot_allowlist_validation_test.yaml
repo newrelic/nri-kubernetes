@@ -1,0 +1,46 @@
+suite: test gkeAutopilotAllowlist validation
+templates:
+  - templates/NOTES.txt
+
+tests:
+  # Valid: allowlist alongside provider=GKE_AUTOPILOT - should render successfully
+  - it: Accepts gkeAutopilotAllowlist when provider=GKE_AUTOPILOT
+    set:
+      licenseKey: test
+      cluster: test
+      common:
+        config:
+          interval: 15s
+      gkeAutopilot: true
+      gkeAutopilotAllowlist: true
+    asserts:
+      - hasDocuments:
+          count: 1
+        template: templates/NOTES.txt
+
+  # Invalid: allowlist without provider=GKE_AUTOPILOT - should fail validation
+  - it: Rejects gkeAutopilotAllowlist without provider=GKE_AUTOPILOT
+    set:
+      licenseKey: test
+      cluster: test
+      common:
+        config:
+          interval: 15s
+      gkeAutopilotAllowlist: true
+    asserts:
+      - failedTemplate:
+          errorPattern: "gkeAutopilotAllowlist can only be set to true when provider=GKE_AUTOPILOT"
+
+  # Invalid: allowlist via global scope without provider=GKE_AUTOPILOT - should also fail
+  - it: Rejects global.gkeAutopilotAllowlist without provider=GKE_AUTOPILOT
+    set:
+      licenseKey: test
+      cluster: test
+      common:
+        config:
+          interval: 15s
+      global:
+        gkeAutopilotAllowlist: true
+    asserts:
+      - failedTemplate:
+          errorPattern: "gkeAutopilotAllowlist can only be set to true when provider=GKE_AUTOPILOT"
