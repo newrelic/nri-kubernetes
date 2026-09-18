@@ -10,6 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### dependency
 - Updated go to v1.26.6 @dbudziwojski [#1529](https://github.com/newrelic/nri-kubernetes/pull/1529)
 
+## v4.7.3 - 2026-09-14
+
+### ⛓️ Dependencies
+- Updated github.com/aws/aws-sdk-go-v2/service/ec2 to v1.330.0
+- Updated aws-sdk-go-v2 monorepo
+
+## v4.7.2 - 2026-09-07
+
+### ⛓️ Dependencies
+- Updated aws-sdk-go-v2 monorepo
+- Updated kubernetes monorepo to v0.37.0
+- Updated github.com/aws/aws-sdk-go-v2/service/ec2 to v1.328.0
+
 ## v4.7.1 - 2026-08-31
 
 ### ⛓️ Dependencies
