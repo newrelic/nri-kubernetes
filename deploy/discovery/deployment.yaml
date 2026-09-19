@@ -1,0 +1,65 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nri-k8s-discover
+  namespace: newrelic
+  labels:
+    app.kubernetes.io/name: nri-k8s-discover
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nri-k8s-discover
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nri-k8s-discover
+    spec:
+      serviceAccountName: nri-k8s-discover
+      containers:
+        - name: discovery
+          image: newrelic/nri-kubernetes:latest  # replace with the image built from this repo
+          command: ["/nri-k8s-discover"]
+          env:
+            - name: NRI_K8S_DISCOVER_CLUSTER_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.annotations['cluster-name']
+            # Sink to the infra agent sidecar via HTTP (same pattern as the main agent)
+            - name: NRI_K8S_DISCOVER_SINK_HTTP_PORT
+              value: "8001"
+          volumeMounts:
+            - name: config
+              mountPath: /etc/newrelic-infra
+        - name: agent
+          image: newrelic/infrastructure:latest
+          env:
+            - name: NRIA_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: newrelic-license-key
+                  key: licenseKey
+            - name: NRIA_VERBOSE
+              value: "0"
+          volumeMounts:
+            - name: config
+              mountPath: /etc/newrelic-infra
+      volumes:
+        - name: config
+          configMap:
+            name: nri-k8s-discover-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nri-k8s-discover-config
+  namespace: newrelic
+data:
+  nri-k8s-discover.yml: |
+    clusterName: my-cluster
+    interval: 60s
+    sink:
+      type: http
+      http:
+        port: 8001
