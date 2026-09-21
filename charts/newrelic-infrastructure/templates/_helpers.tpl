@@ -128,7 +128,7 @@ readOnlyRootFilesystem: true
 {{- end -}}
 
 {{- define "nriKubernetes.privileged" -}}
-{{- if and (include "newrelic.common.privileged" .) (not (include "newrelic.common.gkeAutopilot" .)) -}}
+{{- if and (include "newrelic.common.privileged" .) (or (not (include "newrelic.common.gkeAutopilot" .)) (include "newrelic.common.gkeAutopilotAllowlist" .)) -}}
 {{- include "newrelic.common.privileged" . -}}
 {{- end -}}
 {{- end -}}
