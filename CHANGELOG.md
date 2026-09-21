@@ -10,6 +10,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### enhancement
 - Add support for Kubernetes 1.36, remove support for 1.31 [#1539](https://github.com/newrelic/nri-kubernetes/pull/1539)
 
+### dependency
+- Updated go to v1.26.6 @dbudziwojski [#1529](https://github.com/newrelic/nri-kubernetes/pull/1529)
+
+## v4.7.4 - 2026-09-21
+
+### ⛓️ Dependencies
+- Updated aws-sdk-go-v2 monorepo
+- Updated github.com/aws/aws-sdk-go-v2/service/ec2 to v1.334.0
+- Updated alpine to v3.24.2
+
 ## v4.7.3 - 2026-09-14
 
 ### ⛓️ Dependencies
