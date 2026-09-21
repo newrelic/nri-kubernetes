@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+
 ### dependency
 - Updated go to v1.26.6 @dbudziwojski [#1529](https://github.com/newrelic/nri-kubernetes/pull/1529)
 
