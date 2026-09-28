@@ -7,8 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### enhancement
-- Add support for Kubernetes 1.36, remove support for 1.31 [#1539](https://github.com/newrelic/nri-kubernetes/pull/1539)
+### breaking
+- Add a pod-level `fsGroup: 1000` security context default to the `newrelic-infrastructure` chart, and bump the infrastructure agent image tag to `4.0.0` and the events forwarder image tag to `2.0.0` to align with the latest infrastructure agent security requirements. If you set a custom `securityContext` or pin agent image tags, review your configuration after upgrading. @philip-r-beckwith [#1547](https://github.com/newrelic/nri-kubernetes/pull/1547)
+
+## v4.8.0 - 2026-09-28
 
 ### dependency
 - Updated go to v1.26.6 @dbudziwojski [#1529](https://github.com/newrelic/nri-kubernetes/pull/1529)
