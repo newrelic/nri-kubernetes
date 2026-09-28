@@ -13,6 +13,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### dependency
 - Updated go to v1.26.6 @dbudziwojski [#1529](https://github.com/newrelic/nri-kubernetes/pull/1529)
 
+### 🚀 Enhancements
+- Add support for Kubernetes 1.36, remove support for 1.31 [#1539](https://github.com/newrelic/nri-kubernetes/pull/1539)
+
+### ⛓️ Dependencies
+- Updated github.com/aws/aws-sdk-go-v2/service/ec2 to v1.336.0
+- Updated go module directive to v1.27.1
+- Updated github.com/prometheus/common to v0.71.0 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.71.0)
+- Updated aws-sdk-go-v2 monorepo
+
 ## v4.7.4 - 2026-09-21
 
 ### ⛓️ Dependencies
