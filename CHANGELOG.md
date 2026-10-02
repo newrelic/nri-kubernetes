@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### breaking
+- Image dependency bump(s): newrelic/k8s-events-forwarder:2.0.0 & newrelic/infrastructure-bundle: 3.0.0.  @philip-r-beckwith [#1547](https://github.com/newrelic/nri-kubernetes/pull/1547)
+- Adds a default `fsGroup` to the pod level security context. fsGroup is required to run newrelic/k8s-events-forwarder and newrelic/infrastructure-bundle images. @philip-r-beckwith [#1547](https://github.com/newrelic/nri-kubernetes/pull/1547)
+
 ## v4.8.0 - 2026-09-28
 
 ### dependency
