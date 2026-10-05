@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v4.8.1 - 2026-10-05
+
+### ⛓️ Dependencies
+- Updated kubernetes monorepo to v0.37.1
+- Updated github.com/prometheus/common to v0.72.0 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.72.0)
+- Updated github.com/aws/aws-sdk-go-v2/service/ec2 to v1.338.0
+
 ## v4.8.0 - 2026-09-28
 
 ### dependency
