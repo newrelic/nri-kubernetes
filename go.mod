@@ -5,7 +5,7 @@ go 1.27.1
 require (
 	github.com/aws/aws-sdk-go-v2 v1.47.3
 	github.com/aws/aws-sdk-go-v2/config v1.33.9
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.338.4
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.339.0
 	github.com/google/go-cmp v0.7.0
 	github.com/newrelic/infra-integrations-sdk v3.8.2+incompatible
 	github.com/pkg/errors v0.9.1
