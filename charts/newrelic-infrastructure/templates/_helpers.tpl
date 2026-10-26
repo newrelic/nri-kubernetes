@@ -121,6 +121,23 @@ readOnlyRootFilesystem: true
 {{- toYaml $finalSecurityContext -}}
 {{- end -}}
 
+{{- /* These are the pod-level defaults used for all workloads in this chart */ -}}
+{{- define "nriKubernetes.securityContext.podDefaults" -}}
+fsGroup: 1000
+{{- end -}}
+
+
+{{- define "nriKubernetes.securityContext.pod" -}}
+{{- $defaults := fromYaml ( include "nriKubernetes.securityContext.podDefaults" . ) -}}
+{{- $commonLibrary := include "newrelic.common.securityContext.pod" . | fromYaml -}}
+
+{{- if $commonLibrary -}}
+{{- toYaml $commonLibrary -}}
+{{- else -}}
+{{- toYaml $defaults -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "nriKubernetes.controlPlane.enabled" -}}
 {{- if and .Values.controlPlane.enabled (not (include "newrelic.common.gkeAutopilot" .) ) -}}
 {{- .Values.controlPlane.enabled -}}
