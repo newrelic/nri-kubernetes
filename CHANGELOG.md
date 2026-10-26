@@ -11,6 +11,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Image dependency bump(s): newrelic/k8s-events-forwarder:2.0.0 & newrelic/infrastructure-bundle: 3.0.0.  @philip-r-beckwith [#1547](https://github.com/newrelic/nri-kubernetes/pull/1547)
 - Adds a default `fsGroup` to the pod level security context. fsGroup is required to run newrelic/k8s-events-forwarder and newrelic/infrastructure-bundle images. @philip-r-beckwith [#1547](https://github.com/newrelic/nri-kubernetes/pull/1547)
 
+## v4.8.3 - 2026-10-26
+
+### ⛓️ Dependencies
+- Updated go module directive to v1.27.2
+- Updated alpine to v3.24.3
+- Updated github.com/aws/aws-sdk-go-v2/service/ec2 to v1.340.0
+- Updated aws-sdk-go-v2 monorepo
+
+## v4.8.2 - 2026-10-19
+
+### ⛓️ Dependencies
+- Updated github.com/aws/aws-sdk-go-v2/service/ec2 to v1.339.0
+- Updated aws-sdk-go-v2 monorepo
+- Updated golang.org/x/text to v0.43.0
+
+## v4.8.1 - 2026-10-05
+
+### ⛓️ Dependencies
+- Updated kubernetes monorepo to v0.37.1
+- Updated github.com/prometheus/common to v0.72.0 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.72.0)
+- Updated github.com/aws/aws-sdk-go-v2/service/ec2 to v1.338.0
+
 ## v4.8.0 - 2026-09-28
 
 ### dependency
