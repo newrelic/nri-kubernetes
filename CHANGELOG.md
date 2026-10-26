@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v4.8.3 - 2026-10-26
+
+### ⛓️ Dependencies
+- Updated go module directive to v1.27.2
+- Updated alpine to v3.24.3
+- Updated github.com/aws/aws-sdk-go-v2/service/ec2 to v1.340.0
+- Updated aws-sdk-go-v2 monorepo
+
 ## v4.8.2 - 2026-10-19
 
 ### ⛓️ Dependencies
