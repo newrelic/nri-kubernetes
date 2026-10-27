@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### security
+## v4.9.0 - 2026-10-27
+
+### 🛡️ Security notices
 - Bump forwarder to 1.80.7 and infrastructure-bundle to 3.5.6 @TmNguyen12 [#1559](https://github.com/newrelic/nri-kubernetes/pull/1559)
+
+### ⛓️ Dependencies
+- Updated go module directive to v1.27.3
+- Updated github.com/aws/aws-sdk-go-v2/config to v1.33.11
 
 ## v4.8.3 - 2026-10-26
 
