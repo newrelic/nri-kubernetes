@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### security
+- Bump forwarder to 1.80.7 and infrastructure-bundle to 3.5.6 @TmNguyen12 [#1559](https://github.com/newrelic/nri-kubernetes/pull/1559)
+
 ## v4.8.3 - 2026-10-26
 
 ### ⛓️ Dependencies
