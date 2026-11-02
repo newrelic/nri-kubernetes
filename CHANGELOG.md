@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v4.9.1 - 2026-11-02
+
+### ⛓️ Dependencies
+- Updated aws-sdk-go-v2 monorepo
+- Updated github.com/aws/aws-sdk-go-v2/service/ec2 to v1.343.0
+- Updated github.com/aws/aws-sdk-go-v2/config to v1.33.13
+
 ## v4.9.0 - 2026-10-27
 
 ### 🛡️ Security notices
