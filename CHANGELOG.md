@@ -10,6 +10,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### dependency
 - Update golang.org/x/net to v0.61.0 @dbudziwojski [#1554](https://github.com/newrelic/nri-kubernetes/pull/1554)
 
+## v4.9.1 - 2026-11-02
+
+### ⛓️ Dependencies
+- Updated aws-sdk-go-v2 monorepo
+- Updated github.com/aws/aws-sdk-go-v2/service/ec2 to v1.343.0
+- Updated github.com/aws/aws-sdk-go-v2/config to v1.33.13
+
+## v4.9.0 - 2026-10-27
+
+### 🛡️ Security notices
+- Bump forwarder to 1.80.7 and infrastructure-bundle to 3.5.6 @TmNguyen12 [#1559](https://github.com/newrelic/nri-kubernetes/pull/1559)
+
+### ⛓️ Dependencies
+- Updated go module directive to v1.27.3
+- Updated github.com/aws/aws-sdk-go-v2/config to v1.33.11
+
+## v4.8.3 - 2026-10-26
+
+### ⛓️ Dependencies
+- Updated go module directive to v1.27.2
+- Updated alpine to v3.24.3
+- Updated github.com/aws/aws-sdk-go-v2/service/ec2 to v1.340.0
+- Updated aws-sdk-go-v2 monorepo
+
 ## v4.8.2 - 2026-10-19
 
 ### ⛓️ Dependencies
