@@ -127,7 +127,7 @@ jobs:
         run: |
           docker push newrelic/nri-kubernetes-internal:$env:DOCKER_TAG
           Write-Output "Pushed newrelic/nri-kubernetes-internal:$env:DOCKER_TAG"
-      # TODO: remove (and skip-setup-trivy) once https://github.com/aquasecurity/setup-trivy/issues/42 is fixed:
+      # TODO: remove and skip-setup-trivy (NR-645482) once https://github.com/aquasecurity/setup-trivy/issues/42 is fixed:
       # setup-trivy's installer downloads from get.trivy.dev, which has returned NXDOMAIN since 2026-11-03.
       - name: Install Trivy from GitHub release
         shell: powershell
