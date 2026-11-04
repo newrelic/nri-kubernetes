@@ -136,11 +136,30 @@ jobs:
           username: ${{ secrets.K8S_AGENTS_DOCKERHUB_USERNAME }}
           password: ${{ secrets.K8S_AGENTS_DOCKERHUB_TOKEN }}
 
+      # TODO: remove (and skip-setup-trivy) once https://github.com/aquasecurity/setup-trivy/issues/42 is fixed:
+      # setup-trivy's installer downloads from get.trivy.dev, which has returned NXDOMAIN since 2026-11-03.
+      - name: Install Trivy from GitHub release
+        shell: powershell
+        env:
+          TRIVY_VERSION: 0.70.0
+        run: |
+          $base = "https://github.com/aquasecurity/trivy/releases/download/v$env:TRIVY_VERSION"
+          $zip = "trivy_$($env:TRIVY_VERSION)_windows-64bit.zip"
+          Invoke-WebRequest -UseBasicParsing "$base/$zip" -OutFile $zip
+          Invoke-WebRequest -UseBasicParsing "$base/trivy_$($env:TRIVY_VERSION)_checksums.txt" -OutFile trivy-checksums.txt
+          $want = ((Select-String -Path trivy-checksums.txt -SimpleMatch " $zip").Line -split '\s+')[0]
+          $got = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
+          if ($want -ne $got) { throw "Trivy checksum mismatch: want $want, got $got" }
+          Expand-Archive $zip -DestinationPath "$env:RUNNER_TEMP\trivy"
+          Add-Content -Path $env:GITHUB_PATH -Value "$env:RUNNER_TEMP\trivy"
+          Write-Output "Installed Trivy $env:TRIVY_VERSION (sha256 $got)"
+
       - name: Run Trivy vulnerability scanner
         id: trivy-scan
         continue-on-error: true
         uses: aquasecurity/trivy-action@v0.36.0
         with:
+          skip-setup-trivy: true
           image-ref: ${{ env.IMAGE }}
           format: 'table'
           exit-code: '1'
