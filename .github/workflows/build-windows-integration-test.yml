@@ -133,17 +133,17 @@ jobs:
         shell: powershell
         env:
           TRIVY_VERSION: 0.70.0
+          # sha256 of trivy_0.70.0_windows-64bit.zip from the release's checksums.txt; update together with TRIVY_VERSION.
+          TRIVY_SHA256: eea5442eab86f9e26cd718d7618d43899e72a83767619e8bee47911bddbfb825
         run: |
-          $base = "https://github.com/aquasecurity/trivy/releases/download/v$env:TRIVY_VERSION"
+          $ProgressPreference = 'SilentlyContinue'
           $zip = "trivy_$($env:TRIVY_VERSION)_windows-64bit.zip"
-          Invoke-WebRequest -UseBasicParsing "$base/$zip" -OutFile $zip
-          Invoke-WebRequest -UseBasicParsing "$base/trivy_$($env:TRIVY_VERSION)_checksums.txt" -OutFile trivy-checksums.txt
-          $want = ((Select-String -Path trivy-checksums.txt -SimpleMatch " $zip").Line -split '\s+')[0]
+          Invoke-WebRequest -UseBasicParsing "https://github.com/aquasecurity/trivy/releases/download/v$env:TRIVY_VERSION/$zip" -OutFile $zip
           $got = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
-          if ($want -ne $got) { throw "Trivy checksum mismatch: want $want, got $got" }
-          Expand-Archive $zip -DestinationPath "$env:RUNNER_TEMP\trivy"
+          if ($got -ne $env:TRIVY_SHA256) { throw "Trivy checksum mismatch: want $env:TRIVY_SHA256, got $got" }
+          Expand-Archive $zip -DestinationPath "$env:RUNNER_TEMP\trivy" -Force
           Add-Content -Path $env:GITHUB_PATH -Value "$env:RUNNER_TEMP\trivy"
-          Write-Output "Installed Trivy $env:TRIVY_VERSION (sha256 $got)"
+          & "$env:RUNNER_TEMP\trivy\trivy.exe" --version
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@v0.36.0
         with:
