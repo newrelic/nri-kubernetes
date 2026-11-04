@@ -16,10 +16,11 @@ scenarios:
     after:
       - kubectl logs --selector app.kubernetes.io/name=newrelic-infrastructure --namespace nr-${SCENARIO_TAG} --all-containers --prefix=true
       - kubectl get pods --namespace nr-${SCENARIO_TAG}
+      - helm delete ${SCENARIO_TAG} --namespace nr-${SCENARIO_TAG}
       # --wait: the e2e workflows run this spec twice on the same cluster, and the next run's
       # e2e-resources install fails if nri-test-namespace is still terminating.
+      # Kept last: the runner stops at the first failing after: command, so a timeout here skips nothing.
       - helm delete ${SCENARIO_TAG}-resources --namespace nr-${SCENARIO_TAG} --wait --timeout 3m
-      - helm delete ${SCENARIO_TAG} --namespace nr-${SCENARIO_TAG}
     tests:
       nrqls:
 #        START PersistentVolume
