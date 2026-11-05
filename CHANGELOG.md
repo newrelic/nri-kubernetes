@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### dependency
+- Update golang.org/x/net to v0.62.0 @dbudziwojski [#1554](https://github.com/newrelic/nri-kubernetes/pull/1554)
+
 ## v4.9.1 - 2026-11-02
 
 ### ⛓️ Dependencies
