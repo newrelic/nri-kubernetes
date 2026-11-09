@@ -7,8 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## v4.9.2 - 2026-11-09
+
 ### dependency
 - Update golang.org/x/net to v0.62.0 @dbudziwojski [#1554](https://github.com/newrelic/nri-kubernetes/pull/1554)
+
+### ⛓️ Dependencies
+- Updated kubernetes monorepo to v0.37.2
+- Updated k8s.io/utils digest to ca04ba5
+- Updated github.com/prometheus/common to v0.73.1 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.73.1)
+- Updated alpine to v3.24.4
 
 ## v4.9.1 - 2026-11-02
 
