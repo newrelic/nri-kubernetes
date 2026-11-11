@@ -127,9 +127,27 @@ jobs:
         run: |
           docker push newrelic/nri-kubernetes-internal:$env:DOCKER_TAG
           Write-Output "Pushed newrelic/nri-kubernetes-internal:$env:DOCKER_TAG"
+      # TODO: remove and skip-setup-trivy (NR-645482) once https://github.com/aquasecurity/setup-trivy/issues/42 is fixed:
+      # setup-trivy's installer downloads from get.trivy.dev, which has returned NXDOMAIN since 2026-11-03.
+      - name: Install Trivy from GitHub release
+        shell: powershell
+        env:
+          TRIVY_VERSION: 0.70.0
+          # sha256 of trivy_0.70.0_windows-64bit.zip from the release's checksums.txt; update together with TRIVY_VERSION.
+          TRIVY_SHA256: eea5442eab86f9e26cd718d7618d43899e72a83767619e8bee47911bddbfb825
+        run: |
+          $ProgressPreference = 'SilentlyContinue'
+          $zip = "trivy_$($env:TRIVY_VERSION)_windows-64bit.zip"
+          Invoke-WebRequest -UseBasicParsing "https://github.com/aquasecurity/trivy/releases/download/v$env:TRIVY_VERSION/$zip" -OutFile $zip
+          $got = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
+          if ($got -ne $env:TRIVY_SHA256) { throw "Trivy checksum mismatch: want $env:TRIVY_SHA256, got $got" }
+          Expand-Archive $zip -DestinationPath "$env:RUNNER_TEMP\trivy" -Force
+          Add-Content -Path $env:GITHUB_PATH -Value "$env:RUNNER_TEMP\trivy"
+          & "$env:RUNNER_TEMP\trivy\trivy.exe" --version
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@v0.36.0
         with:
+          skip-setup-trivy: true
           image-ref: newrelic/nri-kubernetes-internal:${{ env.DOCKER_TAG }}
           format: 'sarif'
           output: 'trivy-results.sarif'
