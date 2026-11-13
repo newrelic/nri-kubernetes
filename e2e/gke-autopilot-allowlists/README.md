@@ -26,8 +26,9 @@ The runner asks which images the workload runs (`IMAGE_SOURCE`):
 - `released` (default): the published `newrelic/nri-kubernetes` image (chart default). No registry, no
   build, no push. Confirms the allowlist against the shipped artifact, and it's the quickest path.
 - `local`: build the integration image from source, push it to a registry the cluster can pull, then run
-  that. Confirms your source/chart changes. Requires `REGISTRY` plus docker auth. The image is pushed to
-  a path ending in `newrelic/nri-kubernetes` so the CR image regex still matches.
+  that. Confirms your source/chart changes. Requires `REGISTRY` plus docker auth. The approved CRs pin the
+  image to `^(docker\.io/)?newrelic/nri-kubernetes$`, so an image from any other registry is denied by
+  Warden unless you loosen the `image` regex in a local copy of the CR.
 
 ## Prerequisites
 

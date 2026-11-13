@@ -41,8 +41,8 @@ echo
 DEFAULT_KUBE_CONTEXT="$(kubectl config current-context 2>/dev/null || true)"   # your active context; the runner only verifies it, never switches
 DEFAULT_REGION="US"               # US | EU | Staging | Local (GKE Autopilot testing uses a prod account)
 DEFAULT_IMAGE_SOURCE="released"   # released | local
-# local mode only. host/project; the image is pushed as $REGISTRY/newrelic/nri-kubernetes:$TAG so the
-# CR image regex ^(.*/)?newrelic/nri-kubernetes$ still matches.
+# local mode only. host/project; the image is pushed as $REGISTRY/newrelic/nri-kubernetes:$TAG. The approved
+# CR image regex is ^(docker\.io/)?newrelic/nri-kubernetes$, so a non-docker.io registry is denied by Warden.
 DEFAULT_REGISTRY=""               # no default; set to a registry your cluster can pull from (local mode only)
 DEFAULT_TAG="e2e-gke-ap"
 
