@@ -12,6 +12,10 @@
 {{- end }}
 {{- end }}
 
+{{- if and (include "newrelic.common.gkeAutopilotAllowlist" .) (not (include "newrelic.common.gkeAutopilot" .)) }}
+{{ fail "gkeAutopilotAllowlist can only be set to true when provider=GKE_AUTOPILOT" }}
+{{- end }}
+
 {{- if or (not .Values.ksm.enabled) (not .Values.kubelet.enabled) }}
 Warning:
 ========
