@@ -7,6 +7,79 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### breaking
+- Image dependency bump(s): newrelic/k8s-events-forwarder:2.0.2 & newrelic/infrastructure-bundle:3.6.3.  @philip-r-beckwith [#1547](https://github.com/newrelic/nri-kubernetes/pull/1547)
+- Adds a default `fsGroup` to the pod level security context. fsGroup is required to run newrelic/k8s-events-forwarder and newrelic/infrastructure-bundle images. @philip-r-beckwith [#1547](https://github.com/newrelic/nri-kubernetes/pull/1547)
+## v4.9.2 - 2026-11-09
+
+### dependency
+- Update golang.org/x/net to v0.62.0 @dbudziwojski [#1554](https://github.com/newrelic/nri-kubernetes/pull/1554)
+
+### ⛓️ Dependencies
+- Updated kubernetes monorepo to v0.37.2
+- Updated k8s.io/utils digest to ca04ba5
+- Updated github.com/prometheus/common to v0.73.1 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.73.1)
+- Updated alpine to v3.24.4
+
+## v4.9.1 - 2026-11-02
+
+### ⛓️ Dependencies
+- Updated aws-sdk-go-v2 monorepo
+- Updated github.com/aws/aws-sdk-go-v2/service/ec2 to v1.343.0
+- Updated github.com/aws/aws-sdk-go-v2/config to v1.33.13
+
+## v4.9.0 - 2026-10-27
+
+### 🛡️ Security notices
+- Bump forwarder to 1.80.7 and infrastructure-bundle to 3.5.6 @TmNguyen12 [#1559](https://github.com/newrelic/nri-kubernetes/pull/1559)
+
+### ⛓️ Dependencies
+- Updated go module directive to v1.27.3
+- Updated github.com/aws/aws-sdk-go-v2/config to v1.33.11
+
+## v4.8.3 - 2026-10-26
+
+### ⛓️ Dependencies
+- Updated go module directive to v1.27.2
+- Updated alpine to v3.24.3
+- Updated github.com/aws/aws-sdk-go-v2/service/ec2 to v1.340.0
+- Updated aws-sdk-go-v2 monorepo
+
+## v4.8.2 - 2026-10-19
+
+### ⛓️ Dependencies
+- Updated github.com/aws/aws-sdk-go-v2/service/ec2 to v1.339.0
+- Updated aws-sdk-go-v2 monorepo
+- Updated golang.org/x/text to v0.43.0
+
+## v4.8.1 - 2026-10-05
+
+### ⛓️ Dependencies
+- Updated kubernetes monorepo to v0.37.1
+- Updated github.com/prometheus/common to v0.72.0 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.72.0)
+- Updated github.com/aws/aws-sdk-go-v2/service/ec2 to v1.338.0
+
+## v4.8.0 - 2026-09-28
+
+### dependency
+- Updated go to v1.26.6 @dbudziwojski [#1529](https://github.com/newrelic/nri-kubernetes/pull/1529)
+
+### 🚀 Enhancements
+- Add support for Kubernetes 1.36, remove support for 1.31 [#1539](https://github.com/newrelic/nri-kubernetes/pull/1539)
+
+### ⛓️ Dependencies
+- Updated github.com/aws/aws-sdk-go-v2/service/ec2 to v1.336.0
+- Updated go module directive to v1.27.1
+- Updated github.com/prometheus/common to v0.71.0 - [Changelog 🔗](https://github.com/prometheus/common/releases/tag/v0.71.0)
+- Updated aws-sdk-go-v2 monorepo
+
+## v4.7.4 - 2026-09-21
+
+### ⛓️ Dependencies
+- Updated aws-sdk-go-v2 monorepo
+- Updated github.com/aws/aws-sdk-go-v2/service/ec2 to v1.334.0
+- Updated alpine to v3.24.2
+
 ## v4.7.3 - 2026-09-14
 
 ### ⛓️ Dependencies

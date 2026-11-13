@@ -55,7 +55,7 @@ spec:
       {{- with include "newrelic.common.priorityClassName" . }}
       priorityClassName: {{ . }}
       {{- end }}
-      {{- with include "newrelic.common.securityContext.pod" . }}
+      {{- with include "nriKubernetes.securityContext.pod" . }}
       securityContext:
         {{- . | nindent 8 }}
       {{- end }}

@@ -1,4 +1,4 @@
-# These metrics are not present on 1.31 when deploying to a cloud provider (control plane metrics missing) and testing Windows (other metrics missing)
+# These metrics are not present when testing Windows
 except_metrics: [
   # Linux-specific container metrics (not available on Windows)
   "k8s.container.fsInodes",
@@ -82,6 +82,5 @@ except_metrics: [
   "k8s.pod.requestedCpuCoresUtilization",
   "k8s.pod.cpuCoresUtilization",
   "k8s.pod.requestedMemoryUtilization",
-  "k8s.pod.memoryUtilization",
-  "k8s.container.cpuCoresUtilization"
+  "k8s.pod.memoryUtilization"
 ]

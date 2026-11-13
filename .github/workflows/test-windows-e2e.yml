@@ -69,18 +69,18 @@ jobs:
       fail-fast: false
       matrix:
         runner:
-          - kubernetes_version: 'v1.31.0'
-            values_template: 'e2e-values-windows-k8s-1-31-template.yml'
-            spec_file: 'test-specs-windows-k8s-1-31.yml'
-            exceptions_file: '1_31-exceptions-windows.yml'
-            eks_cluster_name: 'test-win-1-31'
-            iam_role: 'gha-role-test-win-1-31'
-          - kubernetes_version: 'v1.35.0'
-            values_template: 'e2e-values-windows-k8s-1-35-template.yml'
-            spec_file: 'test-specs-windows-k8s-1-35.yml'
-            exceptions_file: '1_35-exceptions-windows.yml'
-            eks_cluster_name: 'test-win-1-35'
-            iam_role: 'gha-role-test-win-1-35'
+          - kubernetes_version: 'v1.32.0'
+            values_template: 'e2e-values-windows-k8s-1-32-template.yml'
+            spec_file: 'test-specs-windows-k8s-1-32.yml'
+            exceptions_file: '1_32-exceptions-windows.yml'
+            eks_cluster_name: 'test-win-1-32'
+            iam_role: 'gha-role-test-win-1-32'
+          - kubernetes_version: 'v1.36.0'
+            values_template: 'e2e-values-windows-k8s-1-36-template.yml'
+            spec_file: 'test-specs-windows-k8s-1-36.yml'
+            exceptions_file: '1_36-exceptions-windows.yml'
+            eks_cluster_name: 'test-win-1-36'
+            iam_role: 'gha-role-test-win-1-36'
     name: E2E Test on EKS
     runs-on: ubuntu-latest
     steps:
