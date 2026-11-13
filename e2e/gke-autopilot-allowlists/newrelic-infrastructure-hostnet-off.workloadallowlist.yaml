@@ -12,19 +12,19 @@ metadata:
     name: newrelic-infrastructure-hostnet-off
     annotations:
         autopilot.gke.io/no-connect: "true"
-        # provenance — informational only, not part of matchingCriteria (last live-verified)
-        newrelic.com/tested-chart-version: "4.6.2"
-        newrelic.com/tested-app-version: "4.7.2"
-        newrelic.com/tested-images: "newrelic/infrastructure-bundle:3.3.36; newrelic/nri-kubernetes:4.7.2; newrelic/k8s-events-forwarder:1.78.1"
-        newrelic.com/tested-gke-version: "1.35.6-gke.125x000"
-        newrelic.com/tested-date: "2026-09-09"
+        # provenance (comments, not annotations: Warden requires every CR annotation on the pod; last live-verified)
+        # tested-chart-version: 4.7.2
+        # tested-app-version: 4.8.2
+        # tested-images: newrelic/infrastructure-bundle:3.3.36; newrelic/nri-kubernetes:4.8.2; newrelic/k8s-events-forwarder:1.78.1
+        # tested-gke-version: 1.35.8-gke.1796000
+        # tested-date: 2026-10-23
 exemptions:
     - autogke-disallow-privilege
     - autogke-no-write-mode-hostpath
 matchingCriteria:
     containers:
         - name: kubelet
-          image: ^(.*/)?newrelic/nri-kubernetes$
+          image: ^(docker\.io/)?newrelic/nri-kubernetes$
           env:
             - name: ^NRI_KUBERNETES_.*$
           volumeMounts:
@@ -35,7 +35,7 @@ matchingCriteria:
               name: host-proc
               readOnly: true
         - name: agent
-          image: ^(.*/)?newrelic/infrastructure-bundle$
+          image: ^(docker\.io/)?newrelic/infrastructure-bundle$
           args:
             - newrelic-infra
           env:
