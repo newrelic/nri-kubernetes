@@ -51,15 +51,11 @@ K8S_PATCH_VERSIONS=(
   "v1.36.0"
   "v1.35.0"
   "v1.34.0"
-  "v1.33.0"
-  "v1.32.0"
 )
 # KSM version to use for the K8S_PATCH_VERSIONS, matched by index.
 KSM_IMAGE_VERSIONS=(
   "v2.19.0"
   "v2.19.0"
-  "v2.16.0"
-  "v2.16.0"
   "v2.16.0"
 )
 # K8S_MINOR_VERSIONS are formatted like "1.28".
