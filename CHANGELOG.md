@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## v5.0.0 - 2026-11-16
 
+### 🚀 Enhancements
+- Add `gkeAutopilotAllowlist` value to restore privileged/host access on GKE Autopilot. [#1526](https://github.com/newrelic/nri-kubernetes/pull/1526)
+
 ### dependency
 - Update golang.org/x/net to v0.62.0 @dbudziwojski [#1554](https://github.com/newrelic/nri-kubernetes/pull/1554)
 ### ⛓️ Dependencies
@@ -151,7 +154,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### 🚀 Enhancements
 - Allow configuring passthrough environment variables for On-host integrations via `kubelet.extraPassthroughEnv`. Resolves #1491. @dbudziwojski [#1513](https://github.com/newrelic/nri-kubernetes/pull/1513)
-- Add `gkeAutopilotAllowlist` value to restore privileged/host access on GKE Autopilot. [#1526](https://github.com/newrelic/nri-kubernetes/pull/1526)
 
 ## v4.4.1 - 2026-07-20
 
